@@ -292,6 +292,22 @@ describe('ProgressTimeline', () => {
     expect(screen.getByText('stopping after this step…')).toBeInTheDocument();
   });
 
+  it('says a cut stream reconnects below the grid, quietly, until a stop says more', () => {
+    const { unmount } = render(
+      <ProgressTimeline run={run(FIRST.slice(0, 2), { reconnecting: true })} />
+    );
+    const grid = screen.getByRole('table', { name: 'Progress' });
+    expect(grid.nextElementSibling).toHaveTextContent(/^connection lost · reconnecting…$/);
+    expect(grid.nextElementSibling).toHaveStyle({ color: 'var(--ink-muted)' });
+    expect(screen.getByTestId('loader-spinner')).toBeInTheDocument();
+    unmount();
+    render(
+      <ProgressTimeline run={run(FIRST.slice(0, 2), { reconnecting: true, stopping: true })} />
+    );
+    expect(screen.queryByText('connection lost · reconnecting…')).not.toBeInTheDocument();
+    expect(screen.getByText('stopping after this step…')).toBeInTheDocument();
+  });
+
   it('shows the site loader beside the run, outside its live region, from the queue to the stop', () => {
     const { unmount } = render(<ProgressTimeline run={run([['queued', null]])} />);
     const loader = screen.getByTestId('loader-spinner');

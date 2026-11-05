@@ -155,6 +155,7 @@ admin lane.
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget` (the user's own daily token budget), `service_paused` (since 2026-11-02: the whole service spent its day budget, from a turn's refusal or the dataset route's `429`), `unsupported_content`, `rate_limited` and `daily_limit` (the user's message limits per minute and per day, and since 2026-10-14 the paste limits, which the data panel reports from the dataset route's `429`), `session_closed` (the session closed after three scope refusals), `other_library` (a request for this plot in another library or language, answered with a pointer to the catalogue), `locked_out` (the user is paused for the day after three attack verdicts; these are the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
 | `agent_session_saved` | `include_data` | useAgentSession.ts | The admin saved the session as a JSON file with `.save()` in the chat header's "⋯" menu (admin lane only since 2026-11-02), and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (the admin's default), so the file holds each version's data file, else `no`. A failed save fires nothing |
 | `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts | The user sent quick feedback with `.send()`, on a result version from its result card or on the chat itself from the control below the composer, and the BFF stored it as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the `# include data.csv` box was ticked (the admin's default; unticked on the public lane), so the case holds the data file, else `no`; `subject` is `result` for a version and `chat` for the chat (since 2026-10-12, for a session that made no plot). An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
+| `agent_turn_resumed` | `outcome` | useAgentSession.ts | A turn's stream was cut after its first event (it failed, as with an HTTP/3 error between the browser and the edge, or ended without `done`), and the page read the rest of the turn again (`GET /agent/session/turn`, after 1, 2, 4 and 8 seconds). `outcome` ∈ `resumed` (a read reached the turn's `done`, so the page showed its result instead of an error), `gone` (the server holds another turn, or the session ended) or `failed` (every read failed; the page showed the error). Once per cut; a stop or a closed page fires nothing. The origin's logs cannot see such a cut, so this is how often the edge loses a stream |
 
 `copy_code` on a result card carries `method: agent` and `page: agent_chat`
 plus the `spec` and `library` of the version.
@@ -522,7 +523,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `version` | The data version an undo restored (`1` is the paste, `2`, `3+`) | `agent_data_undo` |
 | `kind` | What a file brought into the agent chat was, by its first bytes (`text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary`, `unknown`), or the format the server found when it converted the file (`xlsx`, `xlsm`, `xlsb`, `xls`, `ods`, `parquet`, `feather`, `arrow`, `npy`, `npz`); on this site only, the bots site's `kind` is another property | `agent_data_file` |
 | `encoding` | The text encoding the browser read a dropped file with (`utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none`) | `agent_data_file` |
-| `outcome` | What happened to a dropped file (`attached`, `removed`, `sheet`, `refused`, `failed`, `too_large`, `busy`, `unreadable`; `filled`, `replaced` and `kept` until 2026-11-05) | `agent_data_file` |
+| `outcome` | What happened to a dropped file (`attached`, `removed`, `sheet`, `refused`, `failed`, `too_large`, `busy`, `unreadable`; `filled`, `replaced` and `kept` until 2026-11-05), or to a cut turn the page read again (`resumed`, `gone`, `failed`) | `agent_data_file`, `agent_turn_resumed` |
 | `as` | How the agent chat's message box took a paste or a file (`data`: an attachment for the dataset route; `message`: typed text) | `agent_input_routed` |
 | `via` | Where that input came from (`paste`, `file`) | `agent_input_routed` |
 | `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
@@ -602,6 +603,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `agent_guardrail_block` | Custom Event | Track agent chat refusals and failed-closed guard checks |
 | `agent_session_saved` | Custom Event | Track how often admins save an agent chat session as a file, and with the data or without |
 | `agent_result_feedback` | Custom Event | Track quick feedback on agent chat results by reaction, and how often the case holds the data |
+| `agent_turn_resumed` | Custom Event | Track how often the agent chat's stream is cut mid-turn, and how often the page reads the result anyway |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
 | `INP` | Custom Event | Interaction to Next Paint (Core Web Vital) |
@@ -686,6 +688,7 @@ User lands on anyplot.ai
 | `agent_guardrail_block` | `reason` | useAgentSession.ts |
 | `agent_session_saved` | `include_data` | useAgentSession.ts |
 | `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts |
+| `agent_turn_resumed` | `outcome` | useAgentSession.ts |
 | `search` | `query`, `category` | FilterBar.tsx |
 | `search_no_results` | `query` | FilterBar.tsx |
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts |
@@ -913,6 +916,7 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_data_file`, `agent_plot_rendered`, `agent_guardrail_block`, `agent_session_saved`), enum properties only
 - [ ] Agent chat paste routing (`agent_input_routed` with `as` and `via`): register the goal and the two properties in Plausible after the deploy
 - [x] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
+- [ ] Agent chat cut streams (`agent_turn_resumed` with `outcome`): register the goal in Plausible after the deploy
 
 ### Plausible dashboard checklist
 

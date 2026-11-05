@@ -45,8 +45,9 @@ export function stepOneLine(state: AgentSessionState, action = '.create_plot()')
     : `${head}check the preview and the bindings above, then ${action}`;
 }
 
-/** What the thread's in-progress line says: the turn's kind, or that it stops. */
-export type PendingReply = 'summarize_data' | 'example_data' | 'message' | 'stopping';
+/** What the thread's in-progress line says: the turn's kind, that it stops, or that it reconnects. */
+export type PendingReply =
+  'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting';
 
 /**
  * The in-progress line in the assistant's slot of the thread, while a turn
@@ -62,6 +63,8 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
   if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
+  // A cut stream the page reads again: the turn's only indicator, also after its reply arrived.
+  if (run.reconnecting && !run.stopping) return 'reconnecting';
   const last = state.items[state.items.length - 1];
   if (!last || (last.kind !== 'user' && last.kind !== 'action')) return null;
   return run.stopping ? 'stopping' : run.kind;

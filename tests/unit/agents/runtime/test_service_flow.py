@@ -179,10 +179,12 @@ async def open_session(
 
 
 def parse_sse(text: str) -> list[tuple[str, dict[str, Any]]]:
+    """The `(event, data)` pairs of an SSE answer; a `: ping` comment (a step quiet for a heartbeat) is no event."""
     events = []
     for block in text.strip().split("\n\n"):
-        lines = dict(line.split(": ", 1) for line in block.splitlines() if ": " in line)
-        events.append((lines["event"], json.loads(lines["data"])))
+        lines = dict(line.split(": ", 1) for line in block.splitlines() if ": " in line and not line.startswith(":"))
+        if lines:
+            events.append((lines["event"], json.loads(lines["data"])))
     return events
 
 

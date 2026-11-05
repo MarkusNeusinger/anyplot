@@ -67,6 +67,7 @@ PUBLIC_ROUTES = [
     ("POST", "/agent/session/dataset/to_long", None),
     ("GET", "/agent/session/dataset/data.csv", None),
     ("POST", "/agent/session/messages", {"action": "create_plot"}),
+    ("GET", "/agent/session/turn", None),
     ("POST", "/agent/session/cancel", None),
     ("POST", "/agent/session/outcome", {"action": "copied_code"}),
     ("POST", "/agent/session/versions/1/render", {"theme": "dark"}),
@@ -517,6 +518,37 @@ class TestCapacity:
         ]
         assert seen == [1] and PUBLIC_STREAMS.open == 0
         assert upstream.requests[0].url.path == f"/v1/sessions/{SID}/messages"
+
+    def test_a_turn_read_holds_a_slot_and_names_the_session_and_the_run_in_headers_only(self, client, upstream) -> None:
+        """Cloud Run logs every URL with the client's address: the run id travels in `Last-Event-ID`."""
+        run = "0123456789abcdef"
+        seen: list[int] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(PUBLIC_STREAMS.open)
+            body = f"id: {run}.3\nevent: done\ndata: {{}}\n\n"
+            return httpx.Response(200, text=body, headers={"Content-Type": "text/event-stream"})
+
+        upstream.handler = handler
+
+        response = client.get("/agent/session/turn", headers={**SESSION, "Last-Event-ID": f"{run}.2"})
+
+        assert response.status_code == 200 and f"id: {run}.3\n" in response.text
+        assert seen == [1] and PUBLIC_STREAMS.open == 0
+        assert SID not in str(response.request.url) and run not in str(response.request.url)
+        sent = upstream.requests[0]
+        assert (sent.url.path, sent.headers["Last-Event-ID"]) == (f"/v1/sessions/{SID}/turn", f"{run}.2")
+        assert sent.headers["X-Anyplot-Tier"] == "public"
+
+    def test_a_turn_read_past_the_instances_stream_cap_never_reaches_upstream(
+        self, client, upstream, monkeypatch
+    ) -> None:
+        monkeypatch.setattr(settings, "agent_public_max_streams", 0)
+
+        response = client.get("/agent/session/turn", headers={**SESSION, "Last-Event-ID": "0123456789abcdef.2"})
+
+        assert response.status_code == 503 and response.json()["detail"] == "capacity"
+        assert upstream.requests == [] and PUBLIC_STREAMS.open == 0
 
 
 class TestFeedback:

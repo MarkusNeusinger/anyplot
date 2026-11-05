@@ -25,8 +25,9 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
+| `GET /v1/sessions/{sid}/turn` | header `Last-Event-ID: <run_id>.<n>` | SSE `anyplot/1`: the session's latest turn from its event `n + 1` on, as the turn's stream sent it, live until that stream ends; for a page that lost the stream (`agents/turn_log.py`); a read, which never holds or stops the run | `404 not_found` (another turn is the latest, or none), `422` (an id of another form) |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
@@ -150,7 +151,7 @@ import re
 import secrets
 import sys
 import time
-from collections.abc import AsyncIterator, Callable, Collection
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Collection
 from dataclasses import asdict, dataclass, field, replace
 from typing import Annotated, Any, Literal, TextIO, get_args
 
@@ -311,6 +312,7 @@ from agents.renderer.wire import (
     MAX_SHEET_NAME_CHARS,
 )
 from agents.stream import MAX_DONE_ROLES, Translator
+from agents.turn_log import EVENT_ID_PATTERN, PING, TurnLog, logged, parse_event_id
 from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.spec_roles import MAP_SPECS, DataRole
 
@@ -652,6 +654,9 @@ class Runtime:
     converting: set[str] = field(default_factory=set)
     """The sessions with a file conversion in flight: one per session at a time (`409 run_active` for a second)."""
     eligibility_cache: dict[tuple[str, str], Eligibility] = field(default_factory=dict)
+    turns: dict[str, TurnLog] = field(default_factory=dict)
+    """The latest turn's numbered events per session (`agents/turn_log.py`), which `GET .../turn` reads to the end
+    for a page that lost the turn's stream; replaced by the session's next turn, dropped with the session."""
     runner: Runner | None = None
     queue: RunQueue | None = None
     clock: Callable[[], float] = time.monotonic
@@ -684,10 +689,17 @@ class Runtime:
         event.actions = EventActions(state_delta=delta)
         await self.session_service.append_event(session=session, event=event)
 
+    def start_turn(self, sid: str, run_id: str) -> TurnLog:
+        """The log of the session's new turn, in place of its previous turn's."""
+        log = TurnLog(run_id)
+        self.turns[sid] = log
+        return log
+
     async def purge(self, user: str, sid: str, services: Services) -> None:
         run = self.active.pop(sid, None)
         if run is not None:
             self.stop(run)
+        self.turns.pop(sid, None)
         await self.session_service.delete_session(app_name=APP_NAME, user_id=user, session_id=sid)
         services.purge_session(sid)
         telemetry.forget(sid)
@@ -2324,7 +2336,7 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
     )
 
 
-async def _refused(translator: Translator, ledger: RequestLedger, facts: TurnFacts) -> AsyncIterator[str]:
+async def _refused(translator: Translator, ledger: RequestLedger, facts: TurnFacts) -> AsyncGenerator[str, None]:
     """A turn the ledger refused before the scope judge and any model call: `ready`, the refusal, `done`."""
     yield translator.ready()
     for chunk in translator.refusal():
@@ -2334,17 +2346,25 @@ async def _refused(translator: Translator, ledger: RequestLedger, facts: TurnFac
     yield translator.done()
 
 
+def _turn_stream(
+    chunks: AsyncGenerator[str, None], log: TurnLog, background: BackgroundTask | None = None
+) -> StreamingResponse:
+    """A turn's SSE response: `chunks` with every event numbered and kept in the session's turn log."""
+    return StreamingResponse(
+        logged(chunks, log),
+        media_type="text/event-stream",
+        headers={**_NO_STORE, "X-Accel-Buffering": "no"},
+        background=background,
+    )
+
+
 def _refuse_now(
-    translator: Translator, ledger: RequestLedger, facts: TurnFacts, code: str, hook: str, **fields: Any
+    translator: Translator, ledger: RequestLedger, facts: TurnFacts, log: TurnLog, code: str, hook: str, **fields: Any
 ) -> StreamingResponse:
     """The fixed refusal `code` as the whole turn, sent before the judge: no model call, no queue, no message counted."""
     ledger.refuse(code, refusal(code, ledger.lang))
     attribution(hook, ledger, verdict=code, **fields)
-    return StreamingResponse(
-        _refused(translator, ledger, facts),
-        media_type="text/event-stream",
-        headers={**_NO_STORE, "X-Accel-Buffering": "no"},
-    )
+    return _turn_stream(_refused(translator, ledger, facts), log)
 
 
 async def _produce(
@@ -2421,6 +2441,8 @@ async def post_message(
         language=view.language if view else None,
     )
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
+    # Every turn, a refused one too, is the session's latest: a page that lost its stream reads the rest from here.
+    log = runtime.start_turn(sid, translator.run_id)
     # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
     # A closed session answers `session_closed` first: its third `attack` refusal also reaches the strike lockout,
     # which would otherwise mask the closure behind `budget` here (the lockout still covers the user's other sessions).
@@ -2434,18 +2456,18 @@ async def post_message(
     # An admin is exempt from all but the strikes and the global budget (`plugins/ledger.py`, the ledger's tier).
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
-        return _refuse_now(translator, ledger, facts, SESSION_CLOSED, "session_closed", refusals=refused)
+        return _refuse_now(translator, ledger, facts, log, SESSION_CLOSED, "session_closed", refusals=refused)
     if services.usage.locked_out(user, settings):
         # Past the day's `attack` strikes: its own refusal, never the misleading "usage limit" text (2026-10-14).
-        return _refuse_now(translator, ledger, facts, LOCKED_OUT, "budget_halt", agent="route")
+        return _refuse_now(translator, ledger, facts, log, LOCKED_OUT, "budget_halt", agent="route")
     if not budget_allows(ledger, services.usage, settings):
         # The refusal the root would send, sent now: a user over the daily budget spends nothing. When only the
         # service's day budget is spent, every user gets `service_paused`, which says their own limit is untouched.
         code = day_refusal(services.usage, user, settings, tier=tier)
-        return _refuse_now(translator, ledger, facts, code, "budget_halt", agent="route")
+        return _refuse_now(translator, ledger, facts, log, code, "budget_halt", agent="route")
     limit = services.usage.message_limit(user, settings, tier)
     if limit is not None:
-        return _refuse_now(translator, ledger, facts, limit, "message_limit")
+        return _refuse_now(translator, ledger, facts, log, limit, "message_limit")
     services.usage.add_message(user)
     run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
     # Registered here so a second request cannot slip in before the stream starts; the
@@ -2490,7 +2512,7 @@ async def post_message(
             ledger.paste_context = "\n\n".join(blocks)
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
-    async def stream() -> AsyncIterator[str]:
+    async def stream() -> AsyncGenerator[str, None]:
         token = CURRENT_LEDGER.set(ledger)
         deadline = RunDeadline(run, settings.request_deadline_s)
         outbox: asyncio.Queue[StreamNote] = asyncio.Queue()
@@ -2504,7 +2526,15 @@ async def post_message(
             deadline.arm(runtime.now())
             producer = asyncio.create_task(_produce(runtime, user, sid, message, run, outbox))
             while True:
-                note = await outbox.get()
+                try:
+                    # A model call or a render sends nothing for a minute or more: a comment every heartbeat keeps
+                    # bytes on the BFF's hop, as the BFF's own pings do on the browser's. The timeout wraps the
+                    # wait only, never a yield (PEP 789).
+                    async with asyncio.timeout(HEARTBEAT_S):
+                        note = await outbox.get()
+                except TimeoutError:
+                    yield PING
+                    continue
                 if note[0] == "queued":
                     yield translator.queued(note[1].position, note[1].waiting)
                 elif note[0] == "event":
@@ -2560,12 +2590,7 @@ async def post_message(
         switch = ledger.switch_request if failure is None else None
         yield translator.done(**sync, switch=switch)
 
-    return StreamingResponse(
-        stream(),
-        media_type="text/event-stream",
-        headers={**_NO_STORE, "X-Accel-Buffering": "no"},
-        background=BackgroundTask(runtime.finish, sid, run),
-    )
+    return _turn_stream(stream(), log, BackgroundTask(runtime.finish, sid, run))
 
 
 @app.post("/v1/sessions/{sid}/cancel", status_code=204, dependencies=v1_dependencies)
@@ -2576,6 +2601,33 @@ async def cancel(sid: SessionId, user: User, runtime: RuntimeDep) -> Response:
     if run is not None:
         runtime.stop(run)
     return Response(status_code=204, headers=_NO_STORE)
+
+
+@app.get("/v1/sessions/{sid}/turn", dependencies=v1_dependencies)
+async def get_turn(
+    sid: SessionId,
+    user: User,
+    runtime: RuntimeDep,
+    last_event_id: Annotated[str, Header(alias="Last-Event-ID", pattern=EVENT_ID_PATTERN)],
+) -> StreamingResponse:
+    """The rest of the session's latest turn as SSE, for a page that lost the turn's stream (`agents/turn_log.py`).
+
+    `Last-Event-ID` names the turn and the last event the page read (`<run_id>.<n>`): the events after it, as the
+    turn's stream sent them, then each new one until the turn's stream ends, with a ping every heartbeat. A read
+    only: it never holds, starts or stops the run, and a turn whose stream ended without `done` (its client went,
+    which cancels it) ends the read the same way. `404 not_found` when the session's latest turn is another one
+    (or none: a turn of a restarted instance) or the page claims more events than the turn has.
+    """
+    await runtime.session(user, sid)
+    named = parse_event_id(last_event_id)
+    log = runtime.turns.get(sid)
+    if named is None or log is None or log.run_id != named[0] or named[1] > len(log.events):
+        raise AgentsError(404, "not_found")
+    return StreamingResponse(
+        log.follow(named[1], heartbeat_s=HEARTBEAT_S),
+        media_type="text/event-stream",
+        headers={**_NO_STORE, "X-Accel-Buffering": "no"},
+    )
 
 
 class RenderThemeBody(_Body):
