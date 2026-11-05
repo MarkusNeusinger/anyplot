@@ -1705,7 +1705,7 @@ export function useAgentSession({
    * as the server's binding check has it: the same series twice is never meant. The member that
    * held it takes this member's column instead, so the two swap and both series stay (owner
    * decision of 2026-11-05: `y1` Sales and `y2` Cost, `y2` set to Sales, gives `y1` Cost); a
-   * member without a column (the next member's `— add a column —`) has nothing to give, so the
+   * member without a column (the next member, which `+ y` binds) has nothing to give, so the
    * column moves and the family closes up.
    */
   const setBinding = useCallback(
