@@ -255,6 +255,7 @@ from .parse import (
     keeps_value,
     minus_note,
     pandas_dtypes,
+    parse_dataset,
     rounded_note,
     value_like,
 )
@@ -874,6 +875,25 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation], languag
         row_numbers=row_numbers,
         splits=[parts for parts in splits if any(parts)],
     )
+
+
+def apply_and_parse(
+    parsed: ParsedDataset, operations: list[Operation], language: str = DEFAULT_LANGUAGE
+) -> tuple[Prepared, ParsedDataset]:
+    """`apply_operations`, then its CSV parsed again as the next dataset version stores it; raises `PrepareError`,
+    and `ParseError` only for a bug, since the operations keep every parser cap.
+
+    The one path from operations to a version, shared by the root's `prepare_data` and the conversions the server
+    makes on a paste (`paste_conversions.py`), so both store the same data for the same operations.
+    """
+    prepared = apply_operations(parsed, operations, language=language)
+    # The columns `set_type text` made text stay text: the re-parse would type them by content again.
+    # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
+    again = parse_dataset(
+        prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True
+    )
+    # A date column whose day and month order is still a guess keeps its note, so a later call can switch it.
+    return prepared, with_date_notes(again, prepared)
 
 
 def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tuple[pd.DataFrame, str]:

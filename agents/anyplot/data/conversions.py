@@ -20,11 +20,13 @@ of whole numbers is a candidate too, as years, only with a year header (`tempora
 dates. The session block shows the root one line per candidate (`Candidate.line`, at most
 `MAX_CANDIDATES`), with the operations that make it:
 
-* `certain`: every cell converts and the reading guesses nothing. The root makes the
-  conversion in the summary turn without asking, as a new column beside the original
-  (`set_type` with `name`), which the service binds to the role (`bindings.carry_bindings`),
-  and says so in one sentence with the count; the user confirms the data as usual, and
-  `.undo()` takes it back.
+* `certain`: every cell converts and the reading guesses nothing. The server makes the
+  conversion itself on the summary turn of a paste, before the root runs
+  (`paste_conversions.py`), as a new column beside the original (`set_type` with `name`),
+  which the service binds to the role (`bindings.carry_bindings`); the session block then
+  lists it as made (`Candidate.made`), and the root says so in one sentence with the count.
+  The user confirms the data as usual, and `.undo()` takes it back. A `certain` line listed
+  in a later turn (after an undo, or a binding the user changed) is never made by itself.
 * `uncertain`: some cells would not read and would be missing, or the reading guesses the
   day and month order, the century of a two-digit year, the decimal mark or thousands
   separators (`prepare.Conversion.guess`). The root proposes the conversion with the counts,
@@ -176,6 +178,20 @@ class Candidate:
             line += f"; {self.moved.role} then takes '{self.moved.column}', which {self.role} holds now"
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
 
+    def made(self) -> str:
+        """The session block's line once the server made it (`paste_conversions.py`): what it read, with the count."""
+        dry = self.dry
+        kind = "text" if dry.date_format is None else "whole numbers"
+        line = (
+            f"{self.role}: column '{dry.column}' ({kind}): {dry.read} of {dry.present} cells {dry.reading}, into the "
+            f"new column '{self.name}', which {self.role} takes"
+        )
+        if dry.order == "descending":
+            line += "; its dates ran newest first, so the rows now run oldest to newest"
+        if self.moved is not None:
+            line += f"; {self.moved.role} takes '{self.moved.column}', which {self.role} held"
+        return line
+
 
 @dataclass(frozen=True)
 class RangeSplit:
@@ -211,6 +227,15 @@ class RangeSplit:
             "certain: every cell reads and nothing is guessed"
         )
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
+
+    def made(self) -> str:
+        """The session block's line once the server made it: the split, with the count and the two new columns."""
+        run, (low, high) = self.run, self.names
+        return (
+            f"{self.pair.lower} and {self.pair.upper}: column '{run.column}' (text): {run.present} of {run.present} "
+            f"cells split at '{run.separator}' into two numbers, {run.reading}, in the new columns '{low}', which "
+            f"{self.pair.lower} takes, and '{high}', which {self.pair.upper} takes"
+        )
 
 
 @dataclass(frozen=True)
@@ -250,6 +275,17 @@ class RowNumbers:
         else:
             line += f"; uncertain: the table has no labels for {self.role}, and a row number says nothing as a label"
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
+
+    def made(self) -> str:
+        """The session block's line once the server made it: the new column of row numbers and the role it took."""
+        moved = self.slot.moved
+        line = (
+            f"{moved.role if moved else self.role}: no column or conversion filled it; the column '{self.name}' "
+            f"numbers the rows 1 to {self.rows}, and {self.role} takes it"
+        )
+        if moved is not None:
+            line += f"; {moved.role} takes '{moved.column}', which {self.role} held"
+        return line
 
 
 @dataclass(frozen=True)

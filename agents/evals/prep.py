@@ -69,10 +69,13 @@ answered cases with a reply; the reply text itself never enters the report.
 
 A summary case is also checked for the conversions it owes (`score_conversions`). Before the turn, the run
 computes in code what the session block will list for the open roles (`conversions.candidates`); after it, each
-`certain` line must be among the root's operations. A root that skips one is the original failure of the live
-test of 2026-11-01, where it asked the user for a date column a conversion would have made, so the case is a miss
-whatever its fixture expected, and any skip fails the run. The summary counts `conversions_owed` and
-`conversions_made`, which is how often the root applies a `certain` conversion.
+`certain` line must be among the turn's operations. The server makes those lines itself before the root runs
+(`paste_conversions.py`), so the operations of its record (`CONVERSIONS_MADE`) come first among the turn's, and
+a fixture expects them as it expects the root's: a root that makes one again, or drops or renames its column, is
+a miss through the exact match. A turn left without one is the original failure of the live test of 2026-11-01,
+where the root asked the user for a date column a conversion would have made, so the case is a miss whatever its
+fixture expected, and any skip fails the run. The summary counts `conversions_owed` and `conversions_made`, and
+each case its `server_operations`.
 
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
@@ -528,9 +531,12 @@ class CaseResult:
     conversions_owed: int = 0
     """The `certain` conversions the session block listed when a summary turn started (`conversions.candidates`)."""
     conversions_made: int = 0
-    """Those of them whose operations the root made in the turn."""
+    """Those of them whose operations the turn made: the server makes them before the root runs
+    (`paste_conversions.py`)."""
+    server_operations: int = 0
+    """The operations the server's conversions applied in the turn (`CONVERSIONS_MADE`), counted among `found`."""
     conversion_skipped: bool = False
-    """The root skipped a `certain` conversion of a summary turn: the case is a miss (`score_conversions`)."""
+    """The turn skipped a `certain` conversion of a summary turn: the case is a miss (`score_conversions`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -692,14 +698,18 @@ class CaseRunner:
         """
         from agents.anyplot.data.bindings import check_bindings
         from agents.anyplot.services import get_services
-        from agents.anyplot.session_state import read_session
+        from agents.anyplot.session_state import read_conversions_made, read_session
 
         session = await self.runtime.session(user, sid)
         view = read_session(session.state)
         stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
         if view is not None and stored is not None:
             result.roles_open = not check_bindings(view.bindings, view.snapshot.roles(), stored.profile).complete
-        operations: list[dict[str, Any]] = []
+        # The `certain` conversions the server made before the root ran: part of the turn's data, first in order.
+        # Each case has a session of its own, so a record in it is this turn's.
+        made = read_conversions_made(session.state)
+        operations: list[dict[str, Any]] = list(made.operations) if made is not None else []
+        result.server_operations = len(operations)
         texts: list[str] = []
         for event in session.events:
             if event.author == ROOT_AUTHOR and event.content is not None:
@@ -920,6 +930,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "refusal": result.refusal,
             "instruction_talk": result.instruction_talk,
             "conversion_skipped": result.conversion_skipped,
+            "server_operations": result.server_operations,
         }
         for case, result in pairs
         if result.operations is not None and not result.match
@@ -962,7 +973,7 @@ def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
         )
     skipped = summary.get("conversions_owed", 0) - summary.get("conversions_made", 0)
     if skipped:
-        reasons.append(f"the root skipped {skipped} certain conversions of {summary['conversions_owed']}")
+        reasons.append(f"the turns skipped {skipped} certain conversions of {summary['conversions_owed']}")
     return (EXIT_FAILED, reasons) if reasons else (EXIT_OK, [])
 
 

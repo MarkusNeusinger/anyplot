@@ -25,7 +25,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -150,7 +150,7 @@ import re
 import secrets
 import sys
 import time
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Collection
 from dataclasses import asdict, dataclass, field, replace
 from typing import Annotated, Any, Literal, TextIO, get_args
 
@@ -2261,16 +2261,17 @@ class TurnFacts:
     clock: telemetry.Clock = field(default_factory=telemetry.Clock)
 
 
-async def _summarized(runtime: Runtime, user: str, sid: str, dataset_id: str | None) -> None:
-    """Clear `SUMMARY_PENDING` for the dataset the turn started on; never raises.
+async def _summarized(runtime: Runtime, user: str, sid: str, dataset_ids: Collection[str]) -> None:
+    """Clear `SUMMARY_PENDING` for the dataset the turn started on, or the version of the conversions the server
+    made on it (`paste_conversions.py`), which the flag names then; never raises.
 
-    Only while the state still names that dataset: a turn's own `prepare_data` keeps the flag off already (a new
+    Only while the state still names one of them: a turn's own `prepare_data` keeps the flag off already (a new
     version is no paste), and nothing else can store data while the run is active. A session gone meanwhile has
     nothing to clear.
     """
     try:
         session = await runtime.session(user, sid)
-        if dataset_id is not None and session.state.get(SUMMARY_PENDING) == dataset_id:
+        if session.state.get(SUMMARY_PENDING) in dataset_ids:
             await runtime.write_state(session, {SUMMARY_PENDING: None})
     except Exception as exc:  # the turn's answer stands; the next turn is the note path once more
         logger.warning("summary flag not cleared: %s", type(exc).__name__)
@@ -2467,6 +2468,9 @@ async def post_message(
     # still carries the notes, so a refused note's summary has them too.
     summary_pending = view is not None and view.summary_pending
     first_turn = body.action == "summarize_data" or (summary_pending and body.text is not None)
+    # The summary of a paste not summarized yet: the root's before-agent callback makes its `certain` conversions
+    # (`paste_conversions.py`). A summary action on data already summarized makes none, nor does any later turn.
+    ledger.summary_turn = first_turn and summary_pending
     if first_turn and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
         blocks: list[str] = []
@@ -2543,7 +2547,9 @@ async def post_message(
             if summary_pending and failure is None and ledger.refusal is None:
                 # The root answered on the paste: summarized. A refused or failed turn leaves it pending, so the
                 # page's summary action, or the next typed message, still gets the paste's notes.
-                await _summarized(runtime, user, sid, view.dataset_id if view is not None else None)
+                started_on = view.dataset_id if view is not None else None
+                summarized = {dataset_id for dataset_id in (started_on, ledger.conversions_made) if dataset_id}
+                await _summarized(runtime, user, sid, summarized)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)

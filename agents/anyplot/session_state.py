@@ -4,7 +4,8 @@ Only the service writes these keys: the `/v1` routes through
 `session_service.append_event` with a `state_delta`, the `set_bindings` tool
 after `apply_bindings` accepted the bindings, the `prepare_data` tool after
 `apply_operations` produced the next dataset version (`dataset_versions.py`), the
-scope guard, which records the detected session language once (`LANGUAGE`,
+root's before-agent callback after it made a paste's `certain` conversions
+(`paste_conversions.py`), the scope guard, which records the detected session language once (`LANGUAGE`,
 `LANGUAGE_SOURCE`), and the `set_language` tool (also `PLOT_LANGUAGE`). No model output and no client body
 ever becomes a state value unchecked, and `plot_pipeline` reads spec, library,
 dataset, bindings and language from here, never from its arguments.
@@ -74,7 +75,13 @@ failure or a refusal; the confirm route clears it too, since the user who confir
 next text is the plot's request, never a note. While it names the current dataset, a typed message is the note the
 user sent with the paste: the route gives it the pasted notes and the file's name, and the session block says the
 data was pasted just now. Data the root made, a copy of another session's data and a session from before the key
-read as summarized."""
+read as summarized. The version of the conversions the server makes on the summary turn (`CONVERSIONS_MADE`) takes
+the paste's place here: it is still the paste the root has not summarized."""
+CONVERSIONS_MADE = PREFIX + "conversions_made"
+"""The `certain` conversions for open roles the server made on the summary turn of a paste (`paste_conversions.py`),
+as `ConversionsMade`: the version they made, their session-block lines and their operations. The session block lists
+the lines while that version is the summary turn's; a later version, a new paste or an undo leaves the record stale,
+and nothing reads it then."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
 """The fingerprint of what the user confirmed (the confirm route `.create_plot()` calls first): the dataset
@@ -294,6 +301,30 @@ def _last_run(raw: Any) -> LastRun | None:
         return None
     try:
         return LastRun.model_validate(raw)
+    except ValueError:
+        return None
+
+
+class ConversionsMade(BaseModel):
+    """What the server's conversions on a paste made (`CONVERSIONS_MADE`), validated on every read."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dataset_id: str = Field(min_length=1, max_length=64)
+    """The data version the conversions made."""
+    lines: list[str] = Field(min_length=1, max_length=8)
+    """One line per conversion, for the session block (`conversions.Candidate.made`); they name the user's columns."""
+    operations: list[dict[str, Any]] = Field(min_length=1, max_length=16)
+    """The operations applied, in order, as the conversion lines listed them."""
+
+
+def read_conversions_made(state: Any) -> ConversionsMade | None:
+    """The record of the server's conversions on a paste, or None when there is none or it does not validate."""
+    raw = state.get(CONVERSIONS_MADE)
+    if not isinstance(raw, dict):
+        return None
+    try:
+        return ConversionsMade.model_validate(raw)
     except ValueError:
         return None
 

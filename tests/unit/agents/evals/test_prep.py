@@ -1,6 +1,7 @@
 """The prep eval (agents/evals/prep.py): the fixtures, the canonical operations, the score, a scripted run."""
 
 import asyncio
+import dataclasses
 import json
 import os
 from collections import Counter
@@ -759,37 +760,50 @@ class TestRun:
         # The action reached the root as the page's summary turn, never as typed text.
         assert "[action] Summarize the dataset for the user." in json.dumps(fake.calls[0]["messages"])
 
-    def test_a_root_that_skips_a_certain_conversion_is_a_miss(self, services: Services, swap_models) -> None:
-        """The original failure of the live test of 2026-11-01, whatever the case expected."""
+    def test_the_servers_conversions_count_and_a_turn_without_them_is_a_miss(
+        self, services: Services, swap_models, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The server makes a `certain` conversion before the root runs (`paste_conversions.py`): its operations are
+        the turn's, a root that makes it again is a miss, and a turn left without it is the original failure of the
+        live test of 2026-11-01, whatever the case expected."""
+        from agents.anyplot import agent
+
         text = "value\n1\n3\n5\n4\n6\n2\n"
         cases = [
             PrepCase(
                 id=f"z-00{index}",
                 dataset_text=text,
                 action="summarize_data",
-                expected_operations=expected,
+                expected_operations=[{"op": "row_number", "name": "index"}],
                 locale="en",
                 spec_id="line-basic",
             )
-            for index, expected in enumerate(([], [{"op": "row_number", "name": "index"}]), start=1)
+            for index in (1, 2)
         ]
-        made = {"call": "prepare_data", "args": {"operations": [{"op": "row_number"}]}}
+        again = {"call": "prepare_data", "args": {"operations": [{"op": "row_number"}]}}
         root_turns: list[list[dict[str, Any]]] = [
-            [{"text": "6 rows; y has no column yet."}],
-            [made, {"text": "x: row number 1 to 6, because the table has no x column."}],
+            [{"text": "6 rows; x: row number 1 to 6, because the table has no x column."}],
+            [again, {"text": "6 rows; x: row number 1 to 6, because the table has no x column."}],
         ]
         swap_models("anthropic-vertex", script_for(*root_turns))
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        assert [result.match for result in results] == [False, True]
-        assert [result.conversion_skipped for result in results] == [True, False]
-        assert [(result.conversions_owed, result.conversions_made) for result in results] == [(1, 0), (1, 1)]
-        scored = prep.score(cases, results)
+        assert [result.match for result in results] == [True, False]
+        assert [result.server_operations for result in results] == [1, 1]
+        assert [(result.conversions_owed, result.conversions_made) for result in results] == [(1, 1), (1, 1)]
+        assert not any(result.conversion_skipped for result in results)
+
+        # Without the server's conversion (a refusal or a full store), a root that makes none skips it.
+        monkeypatch.setattr(agent, "make_conversions", lambda *args, **kwargs: None)
+        swap_models("anthropic-vertex", script_for([{"text": "6 rows; y has no column yet."}]))
+        [skipped] = asyncio.run(run_cases(cases[:1], runtime=runtime(), services=services))
+        assert (skipped.match, skipped.conversion_skipped, skipped.server_operations) == (False, True, 0)
+        scored = prep.score(cases, [results[0], dataclasses.replace(skipped, id="z-002")])
         assert scored["misses"][0]["conversion_skipped"] is True
         assert (scored["summary"]["conversions_owed"], scored["summary"]["conversions_made"]) == (2, 1)
         code, reasons = verdict_of(scored["summary"], Gates(min_exact=0))
-        assert code == EXIT_FAILED and reasons == ["the root skipped 1 certain conversions of 2"]
+        assert code == EXIT_FAILED and reasons == ["the turns skipped 1 certain conversions of 2"]
         assert "certain conversions made: 1 of 2" in prep.summary_text(scored, reasons)
 
     def test_a_note_is_the_first_turn_and_a_message_case_comes_after_the_summary(

@@ -161,6 +161,13 @@ class RequestLedger:
     """The fenced notes and file name of an unsummarized paste, set by the `/messages` route for the note typed with
     it: the root's session block carries them for the whole turn (`agent.session_context`), so the scope judge, the
     language detection and the stored user turn see only what the user typed. They were judged at the paste."""
+    summary_turn: bool = False
+    """The `/messages` route's turn is the summary of a paste not summarized yet (the summary action, or the note sent
+    with the paste): the root's before-agent callback makes the paste's `certain` conversions (`paste_conversions.py`).
+    False without a route (`adk web`)."""
+    conversions_made: str | None = None
+    """The id of the data version the server's conversions made in this turn: the session block lists them for every
+    model call of the turn, and the route clears the summary flag on this version too."""
     refusal: tuple[str, str] | None = None
     error: str | None = None
     model_versions: set[str] = field(default_factory=set)

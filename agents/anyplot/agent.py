@@ -11,7 +11,9 @@
   entries with their ids, inside a `<tool_notes>` fence). The root's
   `before_model_callback` (`add_session_context`) appends it to the system
   instruction as a second part after the static policy, never to the user's turn
-  (see `add_session_context` for why). Catalogue text such as the
+  (see `add_session_context` for why). Its `before_agent_callback`
+  (`make_paste_conversions`) makes a paste's `certain` conversions on the summary turn
+  (`paste_conversions.py`), which the block then lists as made. Catalogue text such as the
   spec title started as a public issue, so it never enters that block: the root reads
   it fenced as `<spec_text>` through `get_spec_brief`. The session language may be a
   user-chosen name, so it stands there inside a `<reply_language>` fence, and the plot
@@ -29,6 +31,7 @@
   marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
 """
 
+import logging
 from typing import Any
 
 from google.adk import Agent
@@ -49,20 +52,23 @@ from .dev_fixture import DevFixturePlugin
 from .language import english_name, same_language
 from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
+from .paste_conversions import make_conversions
 from .plugins.budget import BudgetPlugin
-from .plugins.ledger import CURRENT_LEDGER
+from .plugins.ledger import CURRENT_LEDGER, ledger_for
 from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.scope_guard import ScopeGuardPlugin
 from .plugins.shipped_reply import ShippedReplyPlugin
 from .plugins.tool_safety import ToolSafetyPlugin
 from .policy import fence, root_instruction
 from .services import get_services
-from .session_state import plot_language, read_session
+from .session_state import plot_language, read_conversions_made, read_session
 from .settings import get_settings
 from .sub_agents.adapter import ADAPTERS
 from .sub_agents.reviewer import reviewer
 from .tools.session import SESSION_TOOLS, plot_pipeline
 
+
+logger = logging.getLogger(__name__)
 
 APP_NAME = "anyplot"
 ROOT_NAME = "anyplot"
@@ -109,6 +115,13 @@ CONVERSIONS_HEADING = (
 )
 """The session block's line over the conversion candidates of the roles left open (`data/conversions.py`), live test
 of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""
+MADE_HEADING = (
+    "Conversions the server made for open roles before this turn: {count}, in a data version of their own, which "
+    "the summary of this turn names as your own change, each with its count and its new column's name; the original "
+    "columns stay, and .undo() in the data panel takes these conversions back in one step (see 'Step 1: the data')"
+)
+"""The session block's line over the `certain` conversions the server made on the summary turn (`paste_conversions.py`):
+the root names them in the summary, and never makes, repeats or drops them itself."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -192,6 +205,14 @@ async def session_context(context: ReadonlyContext) -> str:
                 f"- Binding warnings: {len(check.warnings)}, roles bound to a column that does not fit them as it is"
             )
             lines.append(fence("user_data", "\n".join(check.warnings)))
+        ledger = CURRENT_LEDGER.get()
+        made = read_conversions_made(context.state)
+        made_now = ledger is not None and made is not None and ledger.conversions_made == made.dataset_id
+        if made is not None and (made_now or (view.summary_pending and made.dataset_id == view.dataset_id)):
+            # This turn's, for every model call of it (a `prepare_data` of the root's own makes the next version), or
+            # a summary turn's that failed after them; the lines name the user's columns.
+            lines.append(f"- {MADE_HEADING.format(count=len(made.lines))}")
+            lines.append(fence("user_data", "\n".join(made.lines)))
         found = (
             candidates(
                 view.bindings,
@@ -210,13 +231,14 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(f"- {CONVERSIONS_HEADING.format(count=len(found))}")
             lines.append(fence("user_data", "\n".join(candidate.line() for candidate in found)))
             telemetry.note_conversion(session_id, "asked")  # until `prepare_data` makes a column in this turn
-        if view.summary_pending:
-            # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule).
+        if view.summary_pending or (ledger is not None and ledger.summary_turn):
+            # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule). For
+            # every call of the turn: the reply after the root's own `prepare_data`, on a version that is no paste,
+            # is still the summary, with the row count after the change (the prep eval's `no_row_count` misses).
             lines.append("- Data: pasted just now, not summarized yet")
-        ledger = CURRENT_LEDGER.get()
         if ledger is not None and ledger.paste_context:
             # The note's turn: the paste's notes and file name, fenced with their preambles, for every call of the
-            # turn (a `prepare_data` that made a new version ends the line above, never these).
+            # turn.
             lines.append(ledger.paste_context)
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
@@ -281,12 +303,44 @@ async def add_session_context(callback_context: CallbackContext, llm_request: Ll
     return None
 
 
+async def make_paste_conversions(callback_context: CallbackContext) -> types.Content | None:
+    """On the summary turn of a paste, make its `certain` conversions for open roles before the root's first call.
+
+    A before-agent callback, so it runs after the scope guard (a refused note never reaches it) and after the
+    note's language detection, which names the new columns (`paste_conversions.py`). The state delta is the new
+    data version, still the paste the root summarizes, with the record the session block lists the lines from; the
+    change lines join the turn's for the `done` event. Never raises: without the conversions the turn goes on with
+    the lines listed, as the root asks about a line the server did not make.
+    """
+    ledger = ledger_for(callback_context.invocation_id)
+    if not ledger.summary_turn:
+        return None
+    view = read_session(callback_context.state)
+    if view is None or not view.summary_pending:
+        return None
+    session_id = callback_context.session.id
+    try:
+        made = make_conversions(get_services().datasets, session_id, view, view.snapshot)
+    except Exception as exc:  # a bug in the dry runs must not cost the user the summary
+        logger.warning("paste conversions failed: %s", type(exc).__name__)
+        return None
+    if made is None:
+        return None
+    for key, value in made.delta().items():
+        callback_context.state[key] = value
+    ledger.conversions_made = made.version.dataset_id
+    ledger.dataset_changes.extend(made.changes)
+    telemetry.note_conversion(session_id, made.outcome)
+    return None
+
+
 root_agent = Agent(
     name=ROOT_NAME,
     description="The anyplot assistant for 'Use with my data': adapts one catalogue plot to the user's data.",
     model=make_model("root"),
     generate_content_config=make_content_config("root"),
     static_instruction=root_instruction(),
+    before_agent_callback=make_paste_conversions,
     before_model_callback=add_session_context,
     tools=ROOT_TOOLS,
 )

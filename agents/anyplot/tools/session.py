@@ -94,15 +94,7 @@ from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
-from ..data.prepare import (
-    MAX_OPERATIONS,
-    Operation,
-    Prepared,
-    PrepareError,
-    apply_operations,
-    validation_lines,
-    with_date_notes,
-)
+from ..data.prepare import MAX_OPERATIONS, Operation, Prepared, PrepareError, apply_and_parse, validation_lines
 from ..data.query import DEFAULT_QUERY_ROWS, QueryArgs, QueryResult, run_query
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -444,18 +436,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     except ValueError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
     try:
-        prepared = apply_operations(stored.as_parsed(), parsed_operations, language=view.language)
-        # The columns `set_type text` made text stay text: the re-parse would type them by content again.
-        # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
-        parsed = parse_dataset(
-            prepared.csv,
-            text_columns=prepared.text_columns,
-            find_table=False,
-            max_bytes=MAX_COMPUTED_BYTES,
-            canonical=True,
-        )
-        # A date column whose day and month order is still a guess keeps its note, so a later call can switch it.
-        parsed = with_date_notes(parsed, prepared)
+        prepared, parsed = apply_and_parse(stored.as_parsed(), parsed_operations, language=view.language)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
