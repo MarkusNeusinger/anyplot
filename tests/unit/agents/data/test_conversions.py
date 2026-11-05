@@ -9,6 +9,7 @@ from agents.anyplot.data.bindings import carry_bindings, check_bindings, default
 from agents.anyplot.data.conversions import (
     MAX_CANDIDATES,
     Candidate,
+    DateNumbers,
     RangeSplit,
     RowNumbers,
     candidates,
@@ -32,7 +33,7 @@ OPERATIONS = TypeAdapter(list[Operation])
 
 def found(
     text: str, language: str = "en", roles: list[DataRole] | None = None, **kwargs: object
-) -> list[Candidate | RangeSplit | RowNumbers]:
+) -> list[Candidate | RangeSplit | RowNumbers | DateNumbers]:
     parsed = parse_dataset(text)
     spec_roles = roles or parse_roles(ROLLING)
     bindings = default_bindings(spec_roles, parsed.profile)
@@ -282,6 +283,107 @@ class TestRowNumbers:
         carried = carry_bindings(default_bindings(roles, parsed.profile), roles, after.profile, None, None, ["index"])
         assert [(binding.role, binding.column) for binding in carried] == [("x", "index"), ("y", "value")]
         assert check_bindings(carried, roles, after.profile).complete
+
+
+SCATTER = ["`x` (numeric) - horizontal values", "`y` (numeric) - vertical values"]
+"""The roles of `scatter-basic`, the spec of the owner's live test of 2026-11-04."""
+CUSTOMERS = (
+    "Index,Customer Id,First Name,Subscription Date\n"
+    "1,DD37Cf93aecA6Dc,Mara,2020-08-24\n"
+    "2,1Ef7b82A4CAAD10,Tobin,2021-04-23\n"
+    "3,6F94879bDAfE5a6,Ilse,\n"
+    "4,5Cef8BFA16c5e3c,Ravi,2020-06-02\n"
+)
+
+
+class TestDateNumbers:
+    def test_an_open_measure_beside_a_free_date_column_gets_an_offer(self) -> None:
+        """The owner's case: `Index` on x, nothing for y but the subscription dates, whose unit is the user's choice."""
+        [offer] = found(CUSTOMERS, roles=parse_roles(SCATTER))
+
+        assert isinstance(offer, DateNumbers) and (offer.role, offer.column, offer.dates) == (
+            "y",
+            "Subscription Date",
+            3,
+        )
+        assert not offer.certain and offer.outcome == "number"
+        assert offer.operations() == [{"op": "date_number", "column": "Subscription Date", "unit": "days"}]
+        assert offer.line() == (
+            "y: column 'Subscription Date' (dates): date_number would turn its 3 dates into numbers in a new column; "
+            "offer: the unit is the user's choice (the days since the earliest date, the year, the Unix time in seconds "
+            "or a decimal year), so state it in one sentence, never as a question or a request to choose, and make it "
+            'only when the user asks; operations with days: [{"op": "date_number", "column": "Subscription Date", '
+            '"unit": "days"}]'
+        )
+
+    def test_its_operations_fill_the_role(self) -> None:
+        parsed = parse_dataset(CUSTOMERS)
+        roles = parse_roles(SCATTER)
+        bindings = default_bindings(roles, parsed.profile)
+        [offer] = found(CUSTOMERS, roles=roles)
+
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(offer.operations()))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+        carried = carry_bindings(bindings, roles, after.profile, parsed.profile, prepared.converted)
+
+        assert [(binding.role, binding.column) for binding in carried] == [
+            ("x", "Index"),
+            ("y", "Subscription Date (days)"),
+        ]
+        assert check_bindings(carried, roles, after.profile).complete
+
+    def test_a_conversion_of_a_text_column_fills_the_role_first(self) -> None:
+        text = "Index,price,Signup\n1,$5,2024-01-01\n2,7,2024-01-02\n3,$12,2024-01-03\n"
+
+        [candidate] = found(text, roles=parse_roles(SCATTER))
+
+        assert isinstance(candidate, Candidate) and (candidate.role, candidate.dry.column) == ("y", "price")
+
+    def test_the_row_numbers_fill_the_axis_first(self) -> None:
+        """A list of values with dates beside it on a scatter: the axis takes the row numbers, as before, no offer."""
+        [candidate] = found("Signup,value\n2024-01-01,3\n2024-01-02,5\n2024-01-03,4\n", roles=parse_roles(SCATTER))
+
+        assert isinstance(candidate, RowNumbers) and candidate.role == "x"
+        assert candidate.slot.moved == Binding(role="y", column="value")
+
+    def test_a_date_column_a_role_holds_is_no_offer(self) -> None:
+        """The time series' date role holds the only date column: the open value gets no offer of it."""
+        roles = parse_roles(ROLLING)
+        parsed = parse_dataset("when,price\n2024-01-01,x\n2024-01-02,y\n")
+        bindings = default_bindings(roles, parsed.profile)
+
+        assert bindings == [Binding(role="date", column="when")]
+        assert candidates(bindings, roles, parsed.profile, parsed) == []
+
+    def test_a_role_that_takes_dates_is_no_offer(self) -> None:
+        """A free date column binds to such a role as it is; the user unbound it on purpose, so nothing is offered."""
+        roles = parse_roles(LINE)
+        parsed = parse_dataset("Signup,value\n2024-01-01,3\n2024-01-02,5\n")
+
+        offers = candidates([Binding(role="y", column="value")], roles, parsed.profile, parsed)
+
+        assert not any(isinstance(offer, DateNumbers) for offer in offers)
+
+    def test_a_date_column_without_a_date_is_no_offer(self) -> None:
+        """A column that is all missing would make an empty column: nothing to offer. The parser drops such a column
+        at the paste, so the profile here is the guard's own case."""
+        parsed = parse_dataset(CUSTOMERS)
+        roles = parse_roles(SCATTER)
+        profile = parsed.profile.model_copy(
+            update={
+                "columns": [
+                    column.model_copy(update={"missing": parsed.profile.rows})
+                    if column.name == "Subscription Date"
+                    else column
+                    for column in parsed.profile.columns
+                ]
+            }
+        )
+
+        offers = candidates(default_bindings(roles, profile), roles, profile, parsed)
+
+        assert found(CUSTOMERS, roles=roles) != []  # with its dates the column is offered
+        assert not any(isinstance(offer, DateNumbers) for offer in offers)
 
 
 class TestNewName:
