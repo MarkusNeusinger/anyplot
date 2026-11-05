@@ -67,6 +67,7 @@ from api.routers.agent import (
     DatasetBody,
     FeedbackBody,
     LanguageBody,
+    LastEventId,
     LibraryId,
     Locale,
     MessageBody,
@@ -468,7 +469,31 @@ async def post_message(
     upstream: UpstreamStream = Depends(open_public_message_stream),
 ) -> AsyncIterator[ServerSentEvent]:
     """Relay one chat turn as SSE `anyplot/1`, as the admin lane does; always ends with a `done` event."""
-    async with aclosing(agent.post_message(upstream)) as events:
+    async with aclosing(agent.relay_turn(upstream)) as events:
+        async for event in events:
+            yield event
+
+
+async def open_public_turn_stream(
+    sid: SessionId, last_event_id: LastEventId, ctx: Ctx, client: Client
+) -> AsyncIterator[UpstreamStream]:
+    """A public stream slot, as for a turn (`open_public_message_stream`), then the upstream read of the session's
+    latest turn as the admin lane opens it (`agent.open_turn_stream`). The run id travels in `Last-Event-ID`, a
+    header like the session id, never in the URL."""
+    if not PUBLIC_STREAMS.take():
+        raise AgentHTTPError(503, "capacity", ctx.request_id)
+    try:
+        async with aclosing(agent.open_turn_stream(sid, last_event_id, ctx, client)) as streams:
+            async for upstream in streams:
+                yield upstream
+    finally:
+        PUBLIC_STREAMS.release()
+
+
+@router.get("/session/turn", response_class=EventSourceResponse)
+async def get_turn(upstream: UpstreamStream = Depends(open_public_turn_stream)) -> AsyncIterator[ServerSentEvent]:
+    """The rest of the session's latest turn for a page that lost its stream, as the admin lane relays it."""
+    async with aclosing(agent.relay_turn(upstream)) as events:
         async for event in events:
             yield event
 

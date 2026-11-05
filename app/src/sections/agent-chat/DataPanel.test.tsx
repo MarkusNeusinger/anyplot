@@ -1336,7 +1336,7 @@ describe('DataPanel files and sheets', () => {
       )
     );
     expect(await screen.findByTestId('sheet-error')).toHaveTextContent(
-      '"Bericht.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000) · ref ref-1'
+      '"Bericht.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000)'
     );
     expect(screen.queryByTestId('sheet-reading')).not.toBeInTheDocument();
     expect(onParse).not.toHaveBeenCalled();

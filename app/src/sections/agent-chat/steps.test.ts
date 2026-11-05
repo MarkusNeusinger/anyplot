@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   type AgentSessionState,
+  type ChatItem,
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
 import {
   pendingReply,
   plotButtonLabel,
+  runView,
   showsTimeline,
   stepOneLine,
 } from 'src/sections/agent-chat/steps';
@@ -49,6 +51,54 @@ describe('the waits of a turn', () => {
     });
     expect(showsTimeline(stepped)).toBe(true);
     expect(pendingReply(stepped)).toBeNull();
+  });
+});
+
+describe('runView', () => {
+  const plotRun: RunState = {
+    kind: 'create_plot',
+    steps: [{ step: 'adapting', attempt: 1 }],
+    queue: null,
+    stopping: false,
+  };
+  const ask = { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' } as const;
+  const note = { id: 2, kind: 'assistant', text: 'Adapting the catalogue plot.' } as const;
+
+  it('holds what a run sends into the thread while its timeline stands below it', () => {
+    // Above the timeline it pushed the timeline and the composer down mid-run.
+    const state = { ...running(plotRun), items: [ask, note] };
+    expect(runView(state)).toEqual({ items: [ask], timeline: true });
+  });
+
+  it("lets the run's result card take the timeline's place, with the held items", () => {
+    const card = { id: 3, kind: 'plot', version: 1 } as const;
+    const state = { ...running(plotRun), items: [ask, note, card] };
+    expect(runView(state)).toEqual({ items: [ask, note, card], timeline: false });
+    // A run that failed hands over to its card the same way.
+    const failed = {
+      id: 3,
+      kind: 'plot_failed',
+      result: {
+        status: 'failed',
+        reason: 'render_failed',
+        attempts: 2,
+        artifacts: [],
+        changes: [],
+      },
+    } as unknown as Extract<ChatItem, { kind: 'plot_failed' }>;
+    expect(runView({ ...running(plotRun), items: [ask, note, failed] })).toEqual({
+      items: [ask, note, failed],
+      timeline: false,
+    });
+  });
+
+  it('holds nothing for a turn without the timeline, nor once the run is over', () => {
+    const question = running(queued('message'));
+    expect(runView({ ...question, items: [ask, note] }).items).toEqual([ask, note]);
+    expect(runView({ ...running(plotRun), run: null, items: [ask, note] })).toEqual({
+      items: [ask, note],
+      timeline: false,
+    });
   });
 });
 

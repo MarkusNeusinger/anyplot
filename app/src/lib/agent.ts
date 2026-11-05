@@ -854,6 +854,16 @@ export class AgentApiError extends Error {
   get unauthorized(): boolean {
     return this.status === 401 || (this.status === 403 && this.code === 'forbidden');
   }
+
+  /**
+   * The request id the page shows beside the error: only for a fault of the server or the
+   * connection (a 5xx, or no answer), where a report needs it to find the request. A 4xx is a
+   * refusal whose text names its cause (a column that does not fit, a paste the parser cannot
+   * read, a limit), which the visitor acts on without quoting an id.
+   */
+  get shownRef(): string | null {
+    return this.status === 0 || this.status >= 500 ? this.ref : null;
+  }
 }
 
 const FALLBACK_CODES: Record<number, string> = {
@@ -1441,6 +1451,19 @@ export const agentApi = {
     agentFetch(`${sessionPath(sid)}/messages${siteTheme ? `?theme=${siteTheme}` : ''}`, token, {
       ...post(body),
       headers: { Accept: 'text/event-stream' },
+      signal,
+    }),
+  /**
+   * The rest of the session's latest turn after its stream was cut (`GET .../turn`): the
+   * events after `lastEventId`, the last SSE id the page read (`<run_id>.<n>`), then the
+   * turn live until it ends; read with `readSseEvents` like the turn's own stream. The
+   * server runs a turn whose stream the edge lost on to its end, so the page reads its
+   * result here instead of asking for it again. `404 not_found` when another turn is the
+   * latest; `502 upstream` or `503 capacity` when it cannot be read right now.
+   */
+  resumeTurn: (token: string, sid: string, lastEventId: string, signal: AbortSignal) =>
+    agentFetch(`${sessionPath(sid)}/turn`, token, {
+      headers: { Accept: 'text/event-stream', 'Last-Event-ID': lastEventId },
       signal,
     }),
   cancel: async (token: string, sid: string) => {

@@ -27,6 +27,7 @@ WarningCode = Literal[
     "lines_above_left_out",
     "lines_below_left_out",
     "lines_inside_left_out",
+    "header_lines_joined",
     "summary_rows_left_out",
     "short_rows_positional",
     "short_rows_padded",
@@ -114,6 +115,7 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
         (r"^left out [0-9,]+ lines? above the table \(a title, notes or metadata\)$", "lines_above_left_out"),
         (r"^left out [0-9,]+ lines? below the table \(notes or a source line\)$", "lines_below_left_out"),
         (r"^left out [0-9,]+ lines? inside the table that (?:is|are) no row of it \(.*\)$", "lines_inside_left_out"),
+        (r"^the header stood in two lines; joined them into one name per column, such as '.*'$", "header_lines_joined"),
         (r"^left out [0-9,]+ summary rows? at the end of the table .*$", "summary_rows_left_out"),
         (
             r"^[0-9,]+ rows? had fewer fields than the header; their cells were placed under the header's columns by their position.*$",

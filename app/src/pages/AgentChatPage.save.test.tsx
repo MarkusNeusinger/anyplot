@@ -158,7 +158,7 @@ describe('AgentChatPage .save()', () => {
 
     const menu = screen.getByRole('dialog', { name: 'Save the session' });
     expect(await within(menu).findByRole('alert')).toHaveTextContent(
-      'the session is over 32 MB, too large for one file · ref r-big'
+      /^the session is over 32 MB, too large for one file$/
     );
     expect(menuTrigger()).toHaveAttribute('aria-expanded', 'true');
     expect(downloads).toEqual([]);
@@ -189,7 +189,7 @@ describe('AgentChatPage .save()', () => {
   it('offers no .save() when the session could not open', async () => {
     stubFetch(422);
     renderPage();
-    expect(await screen.findByText('not eligible · ref r1')).toBeInTheDocument();
+    expect(await screen.findByText('not eligible')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
   });

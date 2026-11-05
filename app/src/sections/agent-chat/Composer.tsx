@@ -9,8 +9,9 @@
  * new version from the data as the card shows it), and while the data is confirmed and the
  * library has no plot yet. Its click takes the data and the bindings as shown, confirms them
  * first when they are not (the page chains it), and starts the plot, with the box's text as its
- * request; the line above the box, its description, says what it waits for. Once the confirmed
- * data has a plot in this library, `.start_over()` is a quiet button beside the offer, if any.
+ * request; the line above the box, its description, says what it waits for. `.start_over()` is
+ * the quiet button beside it once the confirmed data has a plot in this library, and beside a
+ * switch's offer.
  * `.send()` shows only while the box holds text: Enter sends a turn too, and a disabled outline
  * beside the CTA read as "blocked until something". `.stop()` stands beside the CTA while a run
  * is in progress, a button of its own key, so no button turns into `.stop()` in place with a
@@ -56,9 +57,8 @@ import { colors, fontSize } from 'src/theme';
 
 /**
  * What `.start_over()` does, unlike `.send()` beside it (the two are easy to mistake for each other),
- * the quiet `.create_plot()` beside the offer after a switch, and `.create_plot()` on changed data
- * when the library has a plot: the catalogue code again, with the remembered decisions, which
- * only the user clears.
+ * also beside the offer after a switch, and `.create_plot()` on changed data when the library has
+ * a plot: the catalogue code again, with the remembered decisions, which only the user clears.
  */
 const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
@@ -112,8 +112,8 @@ export interface ComposerProps {
   carryText: string | null;
   /** Step 1's line above the box (`stepOneLine`); null without data and in step 2. */
   stepLine: string | null;
-  /** The filled plot button's name (`plotButtonLabel`): `.create_plot()`, or `plot the new data`. */
-  plotLabel: string;
+  /** Data the user had confirmed changed (`dataChanged`): the filled plot button reads `plot the new data`. */
+  newData: boolean;
   /** The confirmation a plot button starts with is in flight. */
   confirming: boolean;
   /** Why that confirmation was refused; it shows under the composer. */
@@ -139,7 +139,7 @@ export function Composer(props: ComposerProps) {
   const { attachment, attachmentNotice, onRemoveAttachment, dropHint } = props;
   const { canOpen, fileInputRef, onFileChosen } = props;
   const { ready, busy, running, stopping, hasData, step2, hasPlot, ctaPlot, canCreate } = props;
-  const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, stepLine, plotLabel } = props;
+  const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, stepLine, newData } = props;
   const { confirming, confirmError, pausedUntil, exampleOffer, exampleWorking } = props;
   const { onExampleData, onStop, onPlot, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
   const carry = carryText !== null;
@@ -238,8 +238,9 @@ export function Composer(props: ComposerProps) {
     </Box>
   );
 
-  // The quiet plot from the catalogue code: `.start_over()` once the library has a plot, the
-  // plain `.create_plot()` beside a switch's offer before it.
+  // The quiet plot from the catalogue code, `.start_over()`: once the library has a plot, and
+  // beside a switch's offer before it, where a second `.create_plot()` beside the filled
+  // "plot in …" read as the same click.
   const quietCreate = (
     <Box
       key="create-quiet"
@@ -248,20 +249,19 @@ export function Composer(props: ComposerProps) {
       ref={carry ? undefined : createRef}
       onClick={onCreate}
       disabled={!canCreate}
-      aria-label={hasPlot ? 'Start over' : 'Create plot'}
+      aria-label="Start over"
       title={START_OVER_HELP}
       aria-describedby={[START_OVER_HELP_ID, stepLine ? STEP_LINE_ID : DATA_SUMMARY_ID].join(' ')}
       sx={actionButtonSx}
     >
-      {hasPlot ? '.start_over()' : '.create_plot()'}
+      .start_over()
     </Box>
   );
 
   // The step's one filled action while it is a plot button: a plain button, so Enter in the box
   // sends a turn and never confirms. It stays in its place while a turn runs, waiting beside
-  // `.stop()`, so the next step is in view the whole time. After a data change its name says so
-  // in words: its name is the action, the code-style name is the plain case's.
-  const newData = plotLabel === NEW_DATA_PLOT;
+  // `.stop()`, so the next step is in view the whole time. After a change to data the user had
+  // confirmed, its name says in words what the click plots (`plotButtonLabel` names it the same).
   const filledCta = plotAll ? (
     plotAllButton
   ) : carry ? (
@@ -278,7 +278,7 @@ export function Composer(props: ComposerProps) {
       aria-describedby={ctaDescription}
       sx={ctaButtonSx}
     >
-      {working(plotLabel)}
+      {working(newData ? NEW_DATA_PLOT : '.create_plot()')}
     </Box>
   );
 

@@ -47,11 +47,12 @@
  * create action becomes "plot in seaborn with your 3 decisions" (`carry_plot`):
  * the plot in the new library from its catalogue code, with the decisions the
  * user made so far; picking a library from the menu runs nothing, so browsing
- * costs nothing. `.create_plot()` (or `.start_over()` once the library has a
- * plot) stays beside it as the quiet plot from the catalogue code, which keeps
- * the decisions too but not the switch's carry (the theme asked for before),
- * and text typed into the box goes as a normal turn, which the server also
- * gives the decisions. The offer ends once a plot in that library ships, or
+ * costs nothing. `.start_over()` stays beside it as the quiet plot from the
+ * catalogue code, which keeps the decisions too but not the switch's carry (the
+ * theme asked for before), and text typed into the box goes as a normal turn,
+ * which the server also gives the decisions. An offer with no decisions to take
+ * along shows `.create_plot()` alone, as without a switch, and its click runs the
+ * carry. The offer ends once a plot in that library ships, or
  * with a switch whose answer has none. The decisions themselves stand above the
  * composer as the remembered list (`Remembered`), each with `.forget()`, and
  * `.forget_all()` for a blank start: nothing else clears them.
@@ -174,8 +175,9 @@ import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import {
+  dataChanged,
   inStep2,
-  plotButtonLabel,
+  runView,
   showsTimeline,
   stepOneLine,
 } from 'src/sections/agent-chat/steps';
@@ -574,9 +576,13 @@ function AgentChat({
     state.carryOffer?.target.library === state.library && state.dataset && !plotAll
       ? state.carryOffer
       : null;
-  const carryText = carry
-    ? carryActionText(carry.target.library, carryDecisions(carry, state.memory))
-    : '';
+  // With no decisions to take along, the offer's button and `.create_plot()` beside it read as
+  // the same click: the composer shows `.create_plot()` alone, which still runs the carry (it
+  // brings the theme asked for in the library before). With decisions, the carry is the filled
+  // action and `.start_over()` the quiet one beside it.
+  const carryCount = carry ? carryDecisions(carry, state.memory) : 0;
+  const shownCarry = carryCount > 0 ? carry : null;
+  const carryText = shownCarry ? carryActionText(shownCarry.target.library, carryCount) : '';
   // The columns ⓘ after the title: the spec's roles as the session's open named them, else the
   // spec's `data` bullets (an older server, or no session: ineligible, an error).
   const expectedLines = columnLines(state.specRoles, reference?.data);
@@ -589,8 +595,12 @@ function AgentChat({
   // Step 1's line above the composer, the plot button's description: what it waits for (a
   // pending table read from text, a required role without a column), else what to check.
   const stepLine = stepOneLine(state, plotAll ? '.plot_all()' : undefined);
-  // The filled plot button's name, which the step line above it ends with.
-  const plotLabel = plotButtonLabel(state);
+  // After a change to data the user had confirmed, the filled plot button says so in its name.
+  const newData = dataChanged(state);
+  // While a run's timeline stands below the thread, what the run sends into the thread waits
+  // for its plot, which takes the timeline's place (`runView`).
+  const view = runView(state);
+  const threadState = view.items === state.items ? state : { ...state, items: view.items };
 
   // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
   // before them `all` is not offered yet, and one pressed from the URL waits for them.
@@ -828,8 +838,12 @@ function AgentChat({
    */
   const handleCarry = (event: React.MouseEvent) => void startPlot(event, 'carry', ctaPlot);
 
-  /** The filled `.create_plot()`: the plot, with the box's text as its request. */
-  const handlePlot = (event: React.MouseEvent) => void startPlot(event, 'create', true);
+  /**
+   * The filled `.create_plot()`: the plot, with the box's text as its request; after a switch
+   * whose offer carries no decisions, the carry itself.
+   */
+  const handlePlot = (event: React.MouseEvent) =>
+    void startPlot(event, carry && !shownCarry ? 'carry' : 'create', true);
 
   if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
@@ -1013,7 +1027,7 @@ function AgentChat({
           <PinnedHeader state={state} view={dataView} />
 
           <ChatThread
-            state={state}
+            state={threadState}
             specId={specId}
             language={language}
             onRequestTheme={(version, theme) => void session.requestTheme(version, theme)}
@@ -1084,8 +1098,9 @@ function AgentChat({
                 queue {state.run.queue.position}/{state.run.queue.waiting}
               </Box>
             )}
-            {/* A turn without pipeline steps has its in-progress line in the thread instead. */}
-            {state.run && showsTimeline(state) && <ProgressTimeline run={state.run} />}
+            {/* A turn without pipeline steps has its in-progress line in the thread instead; the
+                run's plot, once in the thread, takes the timeline's place. */}
+            {state.run && view.timeline && <ProgressTimeline run={state.run} />}
 
             {/* The decisions every next plot takes over, right above the composer that asks for
                 it and whose offer after a switch counts them; nothing while there are none. */}
@@ -1123,7 +1138,12 @@ function AgentChat({
               }
               canOpen={attach.dropReady}
               fileInputRef={attach.fileInputRef}
-              onFileChosen={attach.handleChosen}
+              onFileChosen={event => {
+                attach.handleChosen(event);
+                // The chooser hands the focus back to `.open()`, where Enter would only open it
+                // again: the box takes it, so Enter sends the file with its note.
+                messageRef.current?.focus();
+              }}
               onSubmit={handleSend}
               messageRef={messageRef}
               createRef={createRef}
@@ -1140,9 +1160,9 @@ function AgentChat({
               chatLocked={chatLocked}
               libraryCount={libraries.length}
               fanOutOpen={!!fanOut}
-              carryText={carry ? carryText : null}
+              carryText={shownCarry ? carryText : null}
               stepLine={stepLine}
-              plotLabel={plotLabel}
+              newData={newData}
               confirming={state.confirmBusy}
               confirmError={state.confirmError}
               pausedUntil={pausedUntil}

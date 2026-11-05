@@ -254,7 +254,7 @@ describe('ResultFeedback', () => {
 
     await user.click(sendButton());
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('the session expired · ref ref-se')
+      expect(screen.getByRole('alert')).toHaveTextContent(/^the session expired · reload$/)
     );
     expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
 
@@ -275,7 +275,7 @@ describe('ResultFeedback', () => {
     await user.click(sendButton());
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'the browser check did not go through; send again · ref ref-b'
+      /^the browser check did not go through; send again$/
     );
     expect(screen.queryByRole('button', { name: 'try again' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox')).toHaveValue('the axis is wrong');

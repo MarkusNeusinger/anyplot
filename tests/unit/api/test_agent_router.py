@@ -338,6 +338,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/dataset/to_long", None),
     ("POST", "/debug/agent/sessions/s1/dataset/copy", {"from_session": "s0"}),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
+    ("GET", "/debug/agent/sessions/s1/turn", None),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
     ("POST", "/debug/agent/sessions/s1/outcome", {"action": "copied_code", "version": 1}),
     ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
@@ -1292,6 +1293,115 @@ class TestMessagesStream:
         # third, due at 0.2 s, still passes until 0.75 s).
         assert 3 <= len(events) - 2 <= 8
         assert closed.is_set()  # the upstream stream was closed, which takes the turn out of the queue
+
+    def test_event_ids_pass_in_the_agents_form_only(self, client, upstream) -> None:
+        """The page names the last event it read when it reads the turn again; an id of another form never passes."""
+        upstream.handler = lambda request: httpx.Response(
+            200,
+            content=(
+                f'id: {RUN_ID}.1\nevent: ready\ndata: {{"v": 1, "run_id": "{RUN_ID}"}}\n\n'
+                'id: <script>\nevent: status\ndata: {"step": "adapting", "attempt": 1}\n\n'
+                f"id: {RUN_ID}.3\nevent: done\ndata: {{}}\n\n"
+            ).encode(),
+        )
+
+        assert _sse_ids(self._post(client).text) == [
+            (f"{RUN_ID}.1", "ready"),
+            (None, "status"),
+            (f"{RUN_ID}.3", "done"),
+        ]
+
+    def test_a_quiet_upstream_still_pings_the_browser(self, client, upstream, monkeypatch) -> None:
+        """A model call sends nothing the page sees for a minute or more: this route's own pings keep its hop busy."""
+        monkeypatch.setattr("fastapi.routing._PING_INTERVAL", 0.05)
+
+        async def quiet_step():
+            yield b'event: status\ndata: {"step": "repairing", "attempt": 2}\n\n'
+            await asyncio.sleep(0.3)
+            yield b"event: done\ndata: {}\n\n"
+
+        upstream.handler = lambda request: httpx.Response(200, content=quiet_step())
+        text = self._post(client).text
+
+        assert ": ping\n\n" in text
+        assert [event for event, _ in _sse_events(text)] == ["status", "done"]
+
+
+RUN_ID = "0123456789abcdef"
+
+
+def _sse_ids(body: str) -> list[tuple[str | None, str]]:
+    """`(id, event)` of every event of an SSE body, None for an event without an id; comments are skipped."""
+    pairs = []
+    for block in body.split("\n\n"):
+        lines = [line for line in block.splitlines() if line and not line.startswith(":")]
+        if lines:
+            fields = dict(line.split(": ", 1) for line in lines)
+            pairs.append((fields.get("id"), fields["event"]))
+    return pairs
+
+
+class TestTurnRead:
+    """`GET .../turn`: the rest of the latest turn for a page that lost the turn's stream."""
+
+    PATH = "/debug/agent/sessions/s1/turn"
+
+    def _get(self, client, last_event_id: str | None = f"{RUN_ID}.4"):
+        headers = CLIENT_HEADERS if last_event_id is None else {**CLIENT_HEADERS, "Last-Event-ID": last_event_id}
+        return client.get(self.PATH, headers=headers)
+
+    def test_forwards_the_last_event_id_and_relays_the_rest(self, client, upstream) -> None:
+        plot = {"status": "ok", "attempts": 2, "version": 1, "plan": "secret"}
+        upstream.handler = lambda request: httpx.Response(
+            200,
+            content=(
+                f"id: {RUN_ID}.5\nevent: plot\ndata: {json.dumps(plot)}\n\n: ping\n\n"
+                f"id: {RUN_ID}.6\nevent: done\ndata: {{}}\n\n"
+            ).encode(),
+            headers={"Content-Type": "text/event-stream"},
+        )
+
+        response = self._get(client)
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        assert _sse_ids(response.text) == [(f"{RUN_ID}.5", "plot"), (f"{RUN_ID}.6", "done")]
+        assert _sse_events(response.text)[0] == ("plot", {"status": "ok", "attempts": 2, "version": 1})
+        sent = upstream.requests[0]
+        assert (sent.method, str(sent.url)) == ("GET", f"{SERVICE_URL}/v1/sessions/s1/turn")
+        assert (sent.headers["Last-Event-ID"], sent.headers["Accept"]) == (f"{RUN_ID}.4", "text/event-stream")
+
+    def test_another_turn_is_a_404_status(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(404, json={"detail": "not_found"})
+
+        response = self._get(client)
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "not_found", "ref": response.headers["X-Request-Id"]}
+
+    @pytest.mark.parametrize("last_event_id", [None, "r1.1", RUN_ID, f"{RUN_ID}.1234567", f"{RUN_ID.upper()}.1"])
+    def test_an_id_of_another_form_never_leaves(self, client, upstream, last_event_id) -> None:
+        assert self._get(client, last_event_id).status_code == 422
+        assert upstream.requests == []
+
+    def test_an_unreachable_service_is_a_502_status_so_the_page_tries_again(self, client, upstream) -> None:
+        def refuse(request):
+            raise httpx.ConnectError("connection refused")
+
+        upstream.handler = refuse
+        response = self._get(client)
+
+        assert response.status_code == 502 and response.json()["detail"] == "upstream"
+
+    def test_a_read_that_is_cut_off_ends_with_error_and_done(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(
+            200, content=f'id: {RUN_ID}.5\nevent: status\ndata: {{"step": "rendering"}}\n\n'.encode()
+        )
+
+        events = _sse_events(self._get(client).text)
+
+        assert [event for event, _ in events] == ["status", "error", "done"]
+        assert events[1][1]["code"] == "upstream"
 
 
 class TestThemeToggle:

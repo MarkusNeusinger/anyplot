@@ -30,7 +30,12 @@ import {
 import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
-import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
+import {
+  ERROR_TEXT,
+  localClock,
+  PLOT_FAILED_TEXT,
+  RECONNECTING_TEXT,
+} from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
@@ -50,6 +55,7 @@ const PENDING_TEXT: Record<PendingReply, string> = {
   example_data: 'making example data',
   message: 'working on your message',
   stopping: 'stopping',
+  reconnecting: RECONNECTING_TEXT,
 };
 
 interface ChatThreadProps {

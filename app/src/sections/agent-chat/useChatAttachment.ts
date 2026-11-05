@@ -362,7 +362,7 @@ export function useChatAttachment({
           failure.code,
           failure.measured,
           failure.limit,
-          failure.ref,
+          failure.shownRef,
           file.browserKind,
           failure.damage
         )

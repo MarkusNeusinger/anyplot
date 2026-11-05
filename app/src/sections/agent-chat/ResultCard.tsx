@@ -58,6 +58,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { LIB_TO_LANG } from 'src/constants';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
@@ -85,6 +86,7 @@ import {
   labelSx,
   readableSx,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { gridRows, triesText } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
@@ -92,6 +94,17 @@ import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
 
 const TOAST_MS = 1500;
+/** `.copy()` for a while after the browser refused the clipboard; the code opens beside it. */
+const COPY_FAILED_TEXT = '.copy() failed · select the code';
+/** Phone width, MUI's `xs`: the image's actions move into the header row. */
+const PHONE_QUERY = '(max-width: 599.95px)';
+/** The image's actions in the header row: quiet icons on the card, like its text buttons. */
+const headerActionSx = {
+  // A 32 px target with room between them, for a thumb.
+  p: 0.75,
+  color: 'var(--ink-soft)',
+  '&:hover': { color: colors.primary, bgcolor: 'transparent' },
+} as const;
 /** The code download button's label per code artifact; literal, so the root prompt's control list can name them. */
 const DOWNLOAD_CODE_LABELS: Record<CodeArtifact, string> = {
   'plot.py': ".download('plot.py')",
@@ -159,6 +172,8 @@ export function ResultCard({
   onSendFeedback,
 }: ResultCardProps) {
   const { isDark } = useTheme();
+  // Read at the first render, so a phone never paints the actions over the image first.
+  const narrow = useMediaQuery(PHONE_QUERY, { noSsr: true });
   const [expanded, setExpanded] = useState(latest);
   const [shownTheme, setShownTheme] = useState<Theme>(version.theme);
   const [toast, setToast] = useState<string | null>(null);
@@ -203,11 +218,17 @@ export function ResultCard({
   const readyImage = image?.state === 'ready' ? image : null;
   const pngName = `${specId}-${library}-v${number}-${shownTheme}.png`;
 
-  const { copied, copyToClipboard } = useCopyCode({
+  const {
+    copied,
+    failed: copyFailed,
+    copyToClipboard,
+  } = useCopyCode({
     onCopy: () => {
       onTrack('copy_code', { spec: specId, library, method: 'agent', page: 'agent_chat' });
       onOutcome?.('copied_code', number);
     },
+    // The browser refused the clipboard: the code opens, so the user can select it by hand.
+    onError: () => setCodeOpen(true),
   });
 
   /** Whether showing `theme` needs a render on the server first. */
@@ -389,6 +410,79 @@ export function ResultCard({
   const pageFrame = shownPage !== undefined ? pageFrameSize(shownPage) : null;
 
   const overlayBtnSx = overlayButtonSx(isDark);
+  // The image's actions stand over its top right corner; on a phone that corner holds the plot's
+  // title, so they move into the card's header row instead, quiet icons beside `.collapse()`.
+  const actionSx = narrow ? headerActionSx : overlayBtnSx;
+  const actionSize = narrow ? 'small' : 'medium';
+  const imageActions = interactive ? (
+    <Tooltip title=".preview()" disableFocusListener>
+      <IconButton
+        onClick={handleClosePreview}
+        aria-label="Show image"
+        sx={actionSx}
+        size={actionSize}
+      >
+        <ImageOutlinedIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  ) : (
+    <>
+      {page && (
+        <Tooltip title=".interactive()" disableFocusListener>
+          <span style={{ display: 'inline-flex' }}>
+            <IconButton
+              onClick={handleOpenPreview}
+              aria-label="Show interactive"
+              disabled={busy || buildingPage}
+              sx={actionSx}
+              size={actionSize}
+            >
+              <PlayArrowIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      )}
+      <Tooltip title=".copy_png()" disableFocusListener>
+        <span style={{ display: 'inline-flex' }}>
+          <IconButton
+            onClick={handleCopyImage}
+            aria-label="Copy image"
+            disabled={!readyImage}
+            sx={actionSx}
+            size={actionSize}
+          >
+            <ImageOutlinedIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title=".download()" disableFocusListener>
+        <span style={{ display: 'inline-flex' }}>
+          <IconButton
+            onClick={handleDownloadPng}
+            aria-label="Download PNG"
+            disabled={!readyImage}
+            sx={actionSx}
+            size={actionSize}
+          >
+            <DownloadIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title=".open()" disableFocusListener>
+        <span style={{ display: 'inline-flex' }}>
+          <IconButton
+            onClick={handleOpen}
+            aria-label="Open full size"
+            disabled={!readyImage}
+            sx={actionSx}
+            size={actionSize}
+          >
+            <OpenInNewIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+    </>
+  );
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
   const attempts = triesText(result);
   const rounds = gridRows(result.rounds ?? [], [], result.status);
@@ -412,7 +506,8 @@ export function ResultCard({
         alignItems: 'baseline',
         columnGap: 1,
         rowGap: 0.25,
-        width: '100%',
+        flex: '1 1 auto',
+        minWidth: 0,
         cursor: 'pointer',
         fontFamily: typography.mono,
         fontSize: fontSize.md,
@@ -461,7 +556,19 @@ export function ResultCard({
         minWidth: 0,
       }}
     >
-      {header}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1 }}>
+        {header}
+        {narrow && expanded && (
+          <Box
+            role="group"
+            aria-label="Image actions"
+            data-testid="result-header-actions"
+            sx={{ display: 'flex', gap: 0.5, ml: 'auto', my: -0.5 }}
+          >
+            {imageActions}
+          </Box>
+        )}
+      </Box>
       {expanded && (
         <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {/* Image with the overlay actions of the plot page. */}
@@ -592,75 +699,9 @@ export function ResultCard({
               </Box>
             )}
 
-            {interactive ? (
+            {!narrow && (
               <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-                <Tooltip title=".preview()" disableFocusListener>
-                  <IconButton
-                    onClick={handleClosePreview}
-                    aria-label="Show image"
-                    sx={overlayBtnSx}
-                    size="medium"
-                  >
-                    <ImageOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            ) : (
-              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-                {page && (
-                  <Tooltip title=".interactive()" disableFocusListener>
-                    <span style={{ display: 'inline-flex' }}>
-                      <IconButton
-                        onClick={handleOpenPreview}
-                        aria-label="Show interactive"
-                        disabled={busy || buildingPage}
-                        sx={overlayBtnSx}
-                        size="medium"
-                      >
-                        <PlayArrowIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                )}
-                <Tooltip title=".copy_png()" disableFocusListener>
-                  <span style={{ display: 'inline-flex' }}>
-                    <IconButton
-                      onClick={handleCopyImage}
-                      aria-label="Copy image"
-                      disabled={!readyImage}
-                      sx={overlayBtnSx}
-                      size="medium"
-                    >
-                      <ImageOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title=".download()" disableFocusListener>
-                  <span style={{ display: 'inline-flex' }}>
-                    <IconButton
-                      onClick={handleDownloadPng}
-                      aria-label="Download PNG"
-                      disabled={!readyImage}
-                      sx={overlayBtnSx}
-                      size="medium"
-                    >
-                      <DownloadIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title=".open()" disableFocusListener>
-                  <span style={{ display: 'inline-flex' }}>
-                    <IconButton
-                      onClick={handleOpen}
-                      aria-label="Open full size"
-                      disabled={!readyImage}
-                      sx={overlayBtnSx}
-                      size="medium"
-                    >
-                      <OpenInNewIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
+                {imageActions}
               </Box>
             )}
           </Box>
@@ -838,9 +879,13 @@ export function ResultCard({
                   }
                   disabled={version.code.state !== 'ready'}
                   aria-label="Copy code"
-                  sx={actionButtonSx}
+                  sx={copyFailed ? { ...actionButtonSx, color: colors.error } : actionButtonSx}
                 >
-                  {copied ? '.copied' : '.copy()'}
+                  {copied ? '.copied' : copyFailed ? COPY_FAILED_TEXT : '.copy()'}
+                </Box>
+                {/* The button's name stays "Copy code"; a screen reader hears the refusal here. */}
+                <Box component="span" role="status" sx={visuallyHiddenSx}>
+                  {copyFailed ? COPY_FAILED_TEXT : ''}
                 </Box>
                 <Box
                   component="button"
