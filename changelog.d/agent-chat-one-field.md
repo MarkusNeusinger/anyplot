@@ -24,7 +24,8 @@
   decimal mark is a comma", a title for the first plot, a question about the data) instead of a summary first and
   the note after. A note the scope judge refused is followed by the summary, which skips the judge; when nothing
   was stored (a table read from text, a refusal), the note goes back into the box, and `.discard()` of a table read
-  from text puts that text back too.
+  from text gives back what it came from: short pasted text into the box, a file or a longer text as the
+  attachment. The scope judge reads the note alone; the paste's notes and file name reach the assistant beside it.
 - **The message box no longer cuts a long text.** Over 2,000 characters the counter turns red and nothing sends
   until it fits. Enter sends (also with Ctrl or ⌘), Shift+Enter is a new line, and an input method's composition
   keeps Enter for itself. A draft or an attachment not sent yet makes a reload ask first.
