@@ -55,6 +55,14 @@ the reply. On a role that names each row (a bar chart without labels) it is `unc
 root offers it as its one question. A row-number column the paste already has is reused, and
 nothing here runs for `/dataset/copy`, which copies confirmed data byte for byte.
 
+A date column is never a number candidate, but a required role that takes numbers only (`bindings.is_measure`),
+left open by every line above, gets an offer when a date column is free (`DateNumbers`, owner decision of
+2026-11-04: a customers table on `scatter-basic` had `y` open beside its `Subscription Date`). `date_number` would
+turn the dates into numbers, and the unit is the user's choice (the year, the days since the earliest date, the
+Unix time or a decimal year), so the line is neither `certain` nor a question: the root names the offer in one
+statement and makes it only on request. Its operations carry `days`, the plain reading of a request for "a
+number" without a unit (`root.md`), and no name, which the server gives in the session language.
+
 The new column is named after its source with the type in the session language
 (`Month (date)`, `Monat (Datum)`, `TYPE_WORDS`): the root takes the operations as given, so
 the conversion is the same in every run. Each dry run is made once per dataset version
@@ -69,11 +77,20 @@ from typing import Any, Literal
 from core.spec_roles import DataRole
 
 from ..language import DEFAULT_LANGUAGE, canonical
-from ..schemas import MAX_COLUMN_NAME_CHARS, Binding, ColumnProfile, DatasetProfile
-from .bindings import RowSlot, axis_slot, check_bindings, code_like, row_number_columns, row_slot
+from ..schemas import Binding, ColumnProfile, DatasetProfile
+from .bindings import (
+    RowSlot,
+    axis_slot,
+    check_bindings,
+    code_like,
+    is_measure,
+    resolve_role,
+    row_number_columns,
+    row_slot,
+)
 from .bounds import BoundPair, bound_pairs
 from .parse import ParsedDataset, id_like, span_like
-from .prepare import ROW_NUMBER_NAME, DryRun, RangeRun, dry_run, range_run, read_frame, year_run
+from .prepare import ROW_NUMBER_NAME, DryRun, RangeRun, dry_run, range_run, read_frame, suffixed_name, year_run
 from .temporal import year_score
 
 
@@ -235,6 +252,42 @@ class RowNumbers:
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
 
 
+@dataclass(frozen=True)
+class DateNumbers:
+    """A free date column that `date_number` would turn into numbers for an open required role that takes numbers only.
+
+    An offer, never made unasked: the unit is the user's choice, so `certain` is False, and the root names the offer
+    in one statement instead of asking (`root.md`, "Conversions for open roles").
+    """
+
+    role: str
+    column: str
+    dates: int
+    """The column's cells that hold a date."""
+
+    @property
+    def certain(self) -> bool:
+        return False
+
+    @property
+    def outcome(self) -> Outcome:
+        return "number"
+
+    def operations(self) -> list[dict[str, Any]]:
+        """The `date_number` with the plain reading of "as a number", `days`; the server names the new column."""
+        return [{"op": "date_number", "column": self.column, "unit": "days"}]
+
+    def line(self) -> str:
+        """The session block's line: the role, the column, the count, why it is an offer, and the operations."""
+        line = (
+            f"{self.role}: column '{self.column}' (dates): date_number would turn its {self.dates} dates into numbers "
+            "in a new column; offer: the unit is the user's choice (the days since the earliest date, the year, the "
+            "Unix time in seconds or a decimal year), so state it in one sentence, never as a question or a request "
+            "to choose, and make it only when the user asks"
+        )
+        return f"{line}; operations with days: {json.dumps(self.operations(), ensure_ascii=False)}"
+
+
 def stays_text(column: ColumnProfile) -> bool:
     """A column no conversion touches: ids, codes or spans of years, by its name or its frequent cells."""
     return id_like(column.name) or span_like(column.name) or code_like(column)
@@ -249,7 +302,7 @@ def candidates(
     language: str = DEFAULT_LANGUAGE,
     keep_text: Collection[str] = (),
     cache: MutableMapping[tuple[str, str], DryRun | RangeRun | None] | None = None,
-) -> list[Candidate | RangeSplit | RowNumbers]:
+) -> list[Candidate | RangeSplit | RowNumbers | DateNumbers]:
     """The conversions that would fill the required roles `bindings` leave open, at most `MAX_CANDIDATES`.
 
     First an open lower and upper bound pair takes the first free column of ranges (`RangeSplit`);
@@ -257,7 +310,9 @@ def candidates(
     run reads it as the role's type; a column serves one role. `keep_text` names the
     columns kept text on request, `cache` holds the dry runs by column and type
     (`StoredDataset.dry_runs`; `range` for the ranges); `parsed` is read into a frame only when a
-    dry run is due. With no conversion at all, the row numbers (`RowNumbers`).
+    dry run is due. With no conversion at all, the row numbers (`RowNumbers`). Last, an offer of a
+    free date column for each open role that takes numbers only and that none of these fills
+    (`DateNumbers`).
     """
     missing = set(check_bindings(bindings, roles, profile).missing_roles)
     if not missing:
@@ -335,7 +390,39 @@ def candidates(
             on_axis = slot is not None and role.name == slot.role.name
             found.append(Candidate(role.name, dry, name, moved if on_axis else None))
             break
-    return found or _row_numbers(bindings, roles, profile, used)
+    filled = found or _row_numbers(bindings, roles, profile, used)
+    return [*filled, *_date_numbers(roles, profile, missing, used, filled)][:MAX_CANDIDATES]
+
+
+def _date_numbers(
+    roles: list[DataRole],
+    profile: DatasetProfile,
+    missing: Collection[str],
+    used: Collection[str],
+    filled: list[Candidate | RangeSplit | RowNumbers],
+) -> list[Candidate | RangeSplit | RowNumbers | DateNumbers]:
+    """An offer per open required role that takes numbers only and that no line of `filled` fills, in spec order, each
+    with the next free date column that holds a date (in column order)."""
+    named: set[str] = set()
+    for line in filled:
+        if isinstance(line, RangeSplit):
+            named |= {line.pair.lower, line.pair.upper}
+            continue
+        moved = line.slot.moved if isinstance(line, RowNumbers) else line.moved
+        named |= {line.role, *([moved.role] if moved is not None else [])}
+    covered = {role.name for name in named if (role := resolve_role(name, roles)) is not None}
+    dates = [
+        column
+        for column in profile.columns
+        if column.dtype == "datetime" and column.name not in used and column.missing < profile.rows
+    ]
+    offers: list[Candidate | RangeSplit | RowNumbers | DateNumbers] = []
+    for role in roles:
+        if not dates or role.name not in missing or role.name in covered or role.computed or not is_measure(role):
+            continue
+        column = dates.pop(0)
+        offers.append(DateNumbers(role.name, column.name, profile.rows - column.missing))
+    return offers
 
 
 def _row_numbers(
@@ -356,22 +443,11 @@ def _row_numbers(
 
 def new_name(column: str, target: Target, language: str, taken: Collection[str]) -> str:
     """`<column> (<type word>)` within the column-name cap, `_2`, `_3`, ... before the bracket when it is taken."""
-    return _with_word(column, TYPE_WORDS.get(canonical(language), TYPE_WORDS[DEFAULT_LANGUAGE])[target], taken)
+    return suffixed_name(column, TYPE_WORDS.get(canonical(language), TYPE_WORDS[DEFAULT_LANGUAGE])[target], taken)
 
 
 def range_names(column: str, language: str, taken: Collection[str]) -> tuple[str, str]:
     """`<column> (min)` and `<column> (max)` in the session language (`RANGE_WORDS`), as `new_name` names them."""
     low, high = RANGE_WORDS.get(canonical(language), RANGE_WORDS[DEFAULT_LANGUAGE])
-    first = _with_word(column, low, taken)
-    return first, _with_word(column, high, {*taken, first})
-
-
-def _with_word(column: str, word: str, taken: Collection[str]) -> str:
-    suffix = f" ({word})"
-    stem = column[: MAX_COLUMN_NAME_CHARS - len(suffix)].rstrip()
-    name, number = stem + suffix, 2
-    while name in taken:
-        tail = f"_{number}"
-        name = column[: MAX_COLUMN_NAME_CHARS - len(suffix) - len(tail)].rstrip() + tail + suffix
-        number += 1
-    return name
+    first = suffixed_name(column, low, taken)
+    return first, suffixed_name(column, high, {*taken, first})

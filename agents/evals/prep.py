@@ -58,7 +58,10 @@ measured for its shape (short, to the point, a question only when it matters): i
 (`MAX_REPLY_WORDS`), its questions, and whether it closes with one. A closing
 question is a reply miss unless the turn is blocked: the case is tagged `ask_back` (a request that can
 mean two different changes), a data call of the turn failed, or the turn left a required role of the spec
-without a column (`roles_open`). A reply over `MAX_REPLY_WORDS` words is a
+without a column (`roles_open`), unless the session block offered a date column for it, which the reply
+states instead (`offered`, since 2026-11-04). A closing invitation to choose is a reply miss on the same
+terms (`closes_with_invitation`: a last sentence or clause such as "Choose …", "Pick one …", "tell me which
+…", "Wähle …"; never the instruction to press `.confirm()`). A reply over `MAX_REPLY_WORDS` words is a
 reply miss too, and so is the reply of a summary turn (the summary action, or the note sent with the paste)
 that names no row count in digits, neither the paste's nor that of the version the turn made (`names_count`):
 a summary says how many rows the data has. The reply gate is `--max-reply-misses` (10 percent) of the
@@ -156,6 +159,19 @@ replies over 100, on the "Replies" rules 57 words and 2 of 52)."""
 BLOCKED_TAGS = frozenset({"ask_back"})
 """A case with one of these tags cannot go on without the user's answer, so its reply may close with a question."""
 QUESTION = re.compile(r"[?？؟]+")
+INVITATION = re.compile(
+    r"(?:choose|pick|select|decide|tell me|let me know|say which|name (?:the|a|one)|if you(?:'d)? (?:want|like)"
+    r"|wähle|wählt|such dir|entscheide|sag mir|nenne|gib mir|wenn du (?:willst|möchtest))\b",
+    re.IGNORECASE,
+)
+"""The start of a closing sentence or clause that asks the user to choose or to ask: an invitation as much as a
+question (root.md, "Replies": never close with one, as a question or as a statement). The list is narrow on purpose:
+the instruction to check the preview and press `.confirm()` is an imperative the replies must close with, and a
+column named `Name` may start a sentence ("Name is bound to the category"). It came from the summary of the owner's
+customers table of 2026-11-04, which closed with "Choose the y column in the data panel, or name the unit you
+want." in 2 of 5 live runs."""
+_SENTENCE_END = re.compile(r"(?<=[.!?。])\s+")
+_CLAUSE_START = re.compile(r"[;—–]\s*|,\s+(?:or|oder)\s+")
 EXIT_OK, EXIT_FAILED, EXIT_SETUP, EXIT_OUTAGE = 0, 1, 2, 4
 PREPARE_TOOL = "prepare_data"
 GENERATE_TOOL = "generate_data"
@@ -446,6 +462,8 @@ def describe(line: str) -> str:
         return f"make_date {data['name']} from {parts}"
     if op == "row_number":
         return f"row_number {data['name']}"
+    if op == "date_number":
+        return f"date_number {data['column']} as {data['unit']}" + (f" into {data['name']}" if "name" in data else "")
     if op == "split":
         return f"split {data['column']} at {data['separator']!r} into {', '.join(data['names'])}"
     if op == "extract":
@@ -495,12 +513,18 @@ class CaseResult:
     reply_questions: int = 0
     closing_question: bool = False
     """The last reply text ends with a question mark (`telemetry.ends_with_question`)."""
+    closing_invitation: bool = False
+    """The last sentence of the last reply text, or its last clause, asks the user to choose (`INVITATION`)."""
     reply_miss: str | None = None
-    """`closing_question` (one the turn was not blocked for, see `measure_reply`), `long` (over `MAX_REPLY_WORDS`),
-    or `no_row_count` (a summary turn whose reply names no row count of the data, `names_count`)."""
+    """`closing_question` or `closing_invitation` (one the turn was not blocked for, see `measure_reply`), `long`
+    (over `MAX_REPLY_WORDS`), or `no_row_count` (a summary turn whose reply names no row count of the data,
+    `names_count`)."""
     roles_open: bool = False
     """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
     one or brings other data: the reply may close with a question about it."""
+    offered: bool = False
+    """The session block offered a date column for an open role (`conversions.DateNumbers`): the reply states the
+    offer, so the open role is no reason to close with a question or an invitation."""
     conversions_owed: int = 0
     """The `certain` conversions the session block listed when a summary turn started (`conversions.candidates`)."""
     conversions_made: int = 0
@@ -589,7 +613,9 @@ class CaseRunner:
                 if case.message is not None and not case.first_turn:
                     await self._mark_summarized(user, sid)
             summary_turn = case.action == "summarize_data" or case.first_turn
-            owed = await self._owed_conversions(user, sid) if summary_turn else []
+            listed = await self._listed_conversions(user, sid)
+            owed = [line.operations() for line in listed if line.certain] if summary_turn else []
+            result.offered = any(type(line).__name__ == "DateNumbers" for line in listed)
             message = {"action": case.action} if case.action is not None else {"text": case.message}
             turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
             _book(result, self.collector.take(f"{tag}-m"), self.settings)
@@ -633,8 +659,8 @@ class CaseRunner:
         session = await self.runtime.session(user, sid)
         await self.runtime.write_state(session, {SUMMARY_PENDING: None})
 
-    async def _owed_conversions(self, user: str, sid: str) -> list[list[dict[str, Any]]]:
-        """The operations of each `certain` conversion the session block lists for the turn about to start."""
+    async def _listed_conversions(self, user: str, sid: str) -> list[Any]:
+        """The conversion lines the session block lists for the turn about to start (`conversions.candidates`)."""
         from agents.anyplot.data.conversions import candidates
         from agents.anyplot.services import get_services
         from agents.anyplot.session_state import read_session
@@ -653,7 +679,7 @@ class CaseRunner:
             keep_text=stored.text_columns,
             cache=stored.dry_runs,
         )
-        return [candidate.operations() for candidate in found if candidate.certain]
+        return list(found)
 
     async def _read_calls(
         self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False
@@ -741,10 +767,12 @@ def measure_reply(
 
     `blocked` says the turn cannot go on without the user's answer (`BLOCKED_TAGS`); a data call that failed
     blocks it too, since the root then has to ask how to go on, and so does a required role the turn left
-    without a column (`roles_open`), the case `root.md` names for a question. A turn without a reply text (a
-    refusal) is measured as none. `rows`, on a summary turn (the summary action, or the note sent with the
-    paste), are the row counts its summary may name: the paste's, and the last version's when the turn made
-    one; a reply that names neither has no summary (`no_row_count`).
+    without a column (`roles_open`), the case `root.md` names for a question, unless the session block offered a
+    date column for it (`offered`), which the reply states instead. A closing invitation to choose
+    (`closes_with_invitation`) is a miss on the same terms. A turn without a reply text (a refusal) is measured as
+    none. `rows`, on a summary turn (the summary action, or the note sent with the paste), are the row counts its
+    summary may name: the paste's, and the last version's when the turn made one; a reply that names neither has
+    no summary (`no_row_count`).
     """
     from agents.anyplot.telemetry import ends_with_question
 
@@ -754,12 +782,30 @@ def measure_reply(
     result.reply_words = len(reply.split())
     result.reply_questions = len(QUESTION.findall(reply))
     result.closing_question = ends_with_question(texts[-1])
-    if result.closing_question and not (blocked or result.failed_calls or result.roles_open):
+    result.closing_invitation = closes_with_invitation(texts[-1])
+    waiting = blocked or result.failed_calls or (result.roles_open and not result.offered)
+    if result.closing_question and not waiting:
         result.reply_miss = "closing_question"
+    elif result.closing_invitation and not waiting:
+        result.reply_miss = "closing_invitation"
     elif result.reply_words > MAX_REPLY_WORDS:
         result.reply_miss = "long"
     elif rows and not any(names_count(reply, count) for count in rows):
         result.reply_miss = "no_row_count"
+
+
+def closes_with_invitation(text: str) -> bool:
+    """Whether the last sentence of `text`, or its last clause (after `;`, a dash or ", or"), starts with `INVITATION`.
+
+    "Choose the y column in the data panel, or name the unit you want." and "…; tell me which one you want." are
+    invitations; "Check the preview and confirm it with `.confirm()`." is not.
+    """
+    sentences = [sentence for sentence in _SENTENCE_END.split(text.strip()) if sentence.strip()]
+    if not sentences:
+        return False
+    last = sentences[-1]
+    starts = [last, _CLAUSE_START.split(last)[-1]]
+    return any(INVITATION.match(start.lstrip(" *_`\"'„“«(")) for start in starts)
 
 
 async def run_cases(
@@ -841,6 +887,7 @@ def _replies(answered: Sequence[CaseResult]) -> dict[str, Any]:
         if measured
         else None,
         "closing_questions": sum(1 for result in measured if result.closing_question),
+        "closing_invitations": sum(1 for result in measured if result.closing_invitation),
         "reply_misses": sum(misses.values()),
         "reply_miss_kinds": dict(sorted(misses.items())),
         "reply_miss_rate": _rate(sum(misses.values()), len(measured)),
@@ -909,8 +956,8 @@ def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
         reasons.append(f"exact match {exact} is below {gates.min_exact}")
     if (summary["reply_miss_rate"] or 0.0) > gates.max_reply_misses:
         reasons.append(
-            f"{summary['reply_misses']} of {summary['replies']} replies close with a question the turn was not "
-            f"blocked for, run over {MAX_REPLY_WORDS} words or summarize without a row count "
+            f"{summary['reply_misses']} of {summary['replies']} replies close with a question or an invitation the "
+            f"turn was not blocked for, run over {MAX_REPLY_WORDS} words or summarize without a row count "
             f"(more than {gates.max_reply_misses:.0%})"
         )
     skipped = summary.get("conversions_owed", 0) - summary.get("conversions_made", 0)
@@ -967,7 +1014,8 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
         lines.append(
             f"replies {summary['replies']}: median {summary['reply_words_median']} words (max "
             f"{summary['reply_words_max']}), {summary['questions_per_reply']} questions per reply, "
-            f"{summary['closing_questions']} close with a question, {summary['reply_misses']} reply misses"
+            f"{summary['closing_questions']} close with a question, {summary['closing_invitations']} with an "
+            f"invitation, {summary['reply_misses']} reply misses"
         )
     if summary["conversions_owed"]:
         lines.append(f"certain conversions made: {summary['conversions_made']} of {summary['conversions_owed']}")
@@ -1008,8 +1056,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         type=float,
         default=DEFAULT_MAX_REPLY_MISSES,
         help=(
-            f"replies that close with a question the turn was not blocked for, run over {MAX_REPLY_WORDS} words, "
-            "or summarize without a row count"
+            "replies that close with a question or an invitation the turn was not blocked for, run over "
+            f"{MAX_REPLY_WORDS} words, or summarize without a row count"
         ),
     )
     args = parser.parse_args(argv)

@@ -2807,6 +2807,53 @@ async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
     assert undone.status_code == 200 and undone.json()["bindings"] == [{"role": "x", "column": "Hours"}]
 
 
+async def test_a_free_date_column_is_offered_for_an_open_measure_and_made_only_on_request(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """The owner's live test of 2026-11-04: a customers table on scatter-basic, y open beside the subscription dates.
+
+    The block offers `date_number` (never certain: the unit is the user's choice); the user's request makes it in the
+    session language, the new column fills y, and undo takes it back.
+    """
+    from types import SimpleNamespace
+
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "date_number", "column": "Subscription Date", "unit": "days"}),
+        {"text": "Neue Spalte mit den Tagen seit dem 25.03.2020."},
+    ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    text = "Index,First Name,Subscription Date\n1,Mara,2020-08-24\n2,Tobin,2021-04-23\n3,Ilse,2020-03-25\n"
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+    assert pasted.json()["bindings"] == [{"role": "x", "column": "Index"}]
+    language = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
+    assert language.status_code == 200, language.text
+
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    block = await session_context(context)  # type: ignore[arg-type]
+    assert "offers of a date column that date_number could turn into numbers" in block
+    assert "y: column 'Subscription Date' (dates): date_number would turn its 3 dates into numbers" in block
+
+    turn = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Mach aus dem Datum eine ganze Zahl."}
+    )
+
+    name, done = parse_sse(turn.text)[-1]
+    assert name == "done" and done["dataset"]["version"] == 2
+    assert done["dataset"]["changes"] == [
+        "new column Subscription Date (Tage): 3 dates of Subscription Date read as whole days since 2020-03-25, the "
+        "earliest date, which is 0; Subscription Date stays as it is"
+    ]
+    assert done["bindings"] == [{"role": "x", "column": "Index"}, {"role": "y", "column": "Subscription Date (Tage)"}]
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    assert "Conversions for open roles" not in await session_context(context)  # type: ignore[arg-type]
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and undone.json()["bindings"] == [{"role": "x", "column": "Index"}]
+    assert [column["name"] for column in undone.json()["profile"]["columns"]][-1] == "Subscription Date"
+
+
 async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
     client: httpx.AsyncClient, swap_models, services: Services
 ) -> None:
