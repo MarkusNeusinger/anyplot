@@ -640,10 +640,10 @@ function AgentChat({
     const text = draft.trim();
     // Text over the cap is never cut: the counter is red and nothing goes until it fits.
     if (!text || text.length > MAX_MESSAGE_CHARS || busy || chatLocked) return;
-    setDraft('');
     // A table in the box is data, as its paste would have been: the assistant reads no data from
     // a message. It goes without a note, because the parser keeps the lines around it as notes.
     const typed = attach.attachTyped(text);
+    setDraft('');
     if (typed) {
       void sendAttachment(typed, '');
       return;

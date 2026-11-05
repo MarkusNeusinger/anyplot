@@ -1186,6 +1186,15 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', { text: `${summary} ${acted}` });
         return;
       }
+      // The scope judge answers before any agent: a request for figures to fetch ends here.
+      if (needsData) {
+        await sleep(STEP_MS);
+        send('refusal', {
+          code: 'needs_data',
+          text: 'I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the message box as a table or open its file with .open().',
+        });
+        return;
+      }
       if (body.action === 'example_data') {
         // The root's `get_spec_brief` and a sandbox run take a few seconds: the page's working line counts them.
         await sleep(STEP_MS * 6);
@@ -1244,14 +1253,6 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('refusal', {
           code: 'out_of_scope',
           text: 'I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code.',
-        });
-        return;
-      }
-      if (needsData) {
-        await sleep(STEP_MS);
-        send('refusal', {
-          code: 'needs_data',
-          text: 'I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the message box as a table or open its file with .open().',
         });
         return;
       }
@@ -1777,7 +1778,8 @@ function setTypeNumber(session) {
   if (failed)
     change += `, ${failed} cell${failed > 1 ? 's' : ''} could not be read and ${failed > 1 ? 'are' : 'is'} now missing`;
   storeVersion(session, parsed, [change]);
-  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview, then press .create_plot().`;
+  // As the root's reply after `prepare_data`: the change and its counts; the page says what to do next.
+  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}.`;
 }
 
 /**
@@ -1811,7 +1813,7 @@ function aggregateSum(session, lower) {
   let change = `summed ${header[value]} by ${header[key]}: ${grouped.length} row${grouped.length > 1 ? 's' : ''}`;
   if (other) change += `, ${other} other column${other > 1 ? 's' : ''} dropped`;
   storeVersion(session, parsed, [change]);
-  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview, then press .create_plot().`;
+  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows.`;
 }
 
 /** `rename`: the second column gets a new name. */
@@ -1823,7 +1825,7 @@ function renameSecond(session, german) {
   const renamed = header.map((h, i) => (i === 1 ? name : h));
   const parsed = parseDataset(toCsv(renamed, rows));
   storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
-  return `I renamed ${header[1]} to ${name}. Check the preview, then press .create_plot().`;
+  return `I renamed ${header[1]} to ${name}.`;
 }
 
 // ---------------------------------------------------------------- formulas (generate_data in miniature)

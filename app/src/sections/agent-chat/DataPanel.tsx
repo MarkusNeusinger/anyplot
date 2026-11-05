@@ -109,6 +109,7 @@ import { DataCard } from 'src/sections/agent-chat/DataCard';
 import { DataViewUnavailable } from 'src/sections/agent-chat/dataCardParts';
 import { describeConvertFailure } from 'src/sections/agent-chat/messages';
 import { DATA_LOCK_TEXT, DATA_SUMMARY_ID, DataCardShell } from 'src/sections/agent-chat/PinnedData';
+import { plotButtonLabel } from 'src/sections/agent-chat/steps';
 import { cardSx } from 'src/sections/agent-chat/styles';
 import {
   type ConvertedFile,
@@ -288,7 +289,7 @@ export function DataPanel({
   // Step 2 without `.show()`: the card waits behind the pinned header.
   if (!view.open) return null;
   return (
-    <DataCardShell view={view} locked={locked}>
+    <DataCardShell view={view} locked={locked} plotLabel={plotButtonLabel(state)}>
       {card}
     </DataCardShell>
   );

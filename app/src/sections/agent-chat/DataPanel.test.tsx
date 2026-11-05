@@ -422,6 +422,12 @@ describe('DataPanel steps', () => {
       expect(
         screen.getByText('# step 1 again: check the data, then .create_plot() below')
       ).toBeVisible();
+      // After a change of the data the composer's button reads `plot the new data`: the line too.
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'data' });
+      expect(
+        screen.getByText('# step 1 again: check the data, then plot the new data below')
+      ).toBeVisible();
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
       expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step-status')).toHaveTextContent(
         'step 1: check the data, then create the plot'
