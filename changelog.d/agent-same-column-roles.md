@@ -10,4 +10,4 @@
   for both roles, since a table with the same column twice breaks pandas. The
   default bindings and the automatic conversions still give each column one
   role, and inside a numbered series family (`y1`, `y2`, ...) a column stays
-  once, because the same series twice is never meant.
+  once, because the same series twice is never meant. (#12564)
