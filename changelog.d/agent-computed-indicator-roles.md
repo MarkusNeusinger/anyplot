@@ -14,4 +14,4 @@
   waterfall's prediction and a decision tree's rollback. A test audits the
   role wording of every spec, so a new role worded as a formula fails until it
   is listed or named as data with the reason. An EMA or weighted average is
-  no longer read as a simple moving average.
+  no longer read as a simple moving average. (#12588)
