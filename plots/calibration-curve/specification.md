@@ -14,7 +14,7 @@ A calibration curve (reliability diagram) visualizes how well the predicted prob
 ## Data
 
 - `y_true` (binary array) - Ground truth binary labels (0 or 1)
-- `y_prob` (numeric array) - Predicted probabilities from classifier (0 to 1)
+- `y_prob1, y_prob2, ...` (numeric array) - Predicted probabilities from classifier (0 to 1), one column per classifier, all for the same samples as the shared ground truth
 - Size: 500-10000 samples recommended for reliable binning
 - Example: Binary classification predictions from sklearn classifier with `predict_proba()` output
 

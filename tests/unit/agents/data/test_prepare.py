@@ -767,6 +767,20 @@ class TestSetTypeIntoNewColumn:
         ]
         assert dtypes(prepared)["Preis (Zahl)"] == "integer"
 
+    def test_a_column_read_in_place_is_its_own_source(self) -> None:
+        """Read from text in place, the column fills an open role as a named conversion would (`carry_bindings`)."""
+        numbers = prepare(self.TEXT, {"op": "set_type", "column": "Preis", "type": "number"})
+        dates = prepare(self.TEXT, {"op": "set_type", "column": "Datum", "type": "datetime"})
+
+        assert numbers.converted == {"Preis": "Preis"} and dtypes(numbers)["Preis"] == "integer"
+        assert dates.converted == {"Datum": "Datum"} and dtypes(dates)["Datum"] == "datetime"
+
+    def test_a_column_already_of_its_type_is_no_conversion(self) -> None:
+        unchanged = prepare("a,b\n1,2\n3,4\n", {"op": "set_type", "column": "b", "type": "number"})
+        texts = prepare(self.TEXT, {"op": "set_type", "column": "Preis", "type": "text"})
+
+        assert unchanged.converted == {} and texts.converted == {}
+
     def test_a_rename_or_drop_in_the_same_call_follows_the_new_column(self) -> None:
         convert = {"op": "set_type", "column": "Datum", "type": "datetime", "name": "neu"}
 

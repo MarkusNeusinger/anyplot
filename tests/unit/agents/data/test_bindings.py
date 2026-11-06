@@ -668,6 +668,45 @@ class TestNewDateColumn:
             ("value", "price (number)"),
         ]
 
+    def test_a_column_read_as_numbers_in_place_fills_the_open_number_role(self) -> None:
+        """The user's request to read the column of a conversion line in place fills the role the line was for."""
+        roles = parse_roles(ROLLING)
+        text = "when,price\n2024-01-01,$5\n2024-01-02,7\n"
+        before = profile(text)
+        bindings = default_bindings(roles, before)
+        operation = {"op": "set_type", "column": "price", "type": "number"}
+        prepared = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+        after = parse_dataset(prepared.csv)
+
+        assert as_pairs(carry_bindings(bindings, roles, after.profile, before, prepared.converted)) == [
+            ("date", "when"),
+            ("value", "price"),
+        ]
+
+    def test_a_column_read_in_place_never_takes_a_bound_role(self) -> None:
+        roles = parse_roles(ROLLING)
+        text = "when,price,cost\n2024-01-01,$5,3\n2024-01-02,7,4\n"
+        before = profile(text)
+        bindings = bind(("date", "when"), ("value", "cost"))
+        operation = {"op": "set_type", "column": "price", "type": "number"}
+        prepared = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+        after = parse_dataset(prepared.csv)
+
+        assert prepared.converted == {"price": "price"}
+        assert carry_bindings(bindings, roles, after.profile, before, prepared.converted) == bindings
+
+    def test_a_column_read_in_place_keeps_its_optional_roles(self) -> None:
+        """A column that is its own source has no second column beside it, so no role gives way to one."""
+        from agents.anyplot.data.bindings import _without_sources
+
+        roles = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
+        bindings = bind(("x", "a"), ("y", "p"), ("size", "p"))
+
+        assert _without_sources(bindings, roles, {"p": "p"}) == bindings
+        # A named conversion still takes its source off the optional roles.
+        named = bind(("x", "a"), ("y", "p (number)"), ("size", "p"))
+        assert as_pairs(_without_sources(named, roles, {"p (number)": "p"})) == [("x", "a"), ("y", "p (number)")]
+
     def test_a_derived_number_column_fills_no_open_role(self) -> None:
         """Only a conversion is meant for the open role; a `derive` adds a column the user asked for by its name."""
         roles = parse_roles(ROLLING)

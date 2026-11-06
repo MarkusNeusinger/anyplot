@@ -14,18 +14,19 @@ A line plot with visible markers at each data point, combining line and scatter 
 ## Data
 
 - `x` (continuous, numeric) - X-axis values
-- `y` (numeric, continuous) - Y-axis values; supports multiple series
+- `y1, y2, ...` (numeric, continuous) - Y-axis values, one column per series
+- `series` (categorical) - Optional grouping variable if data is in long format
 
 Size: 10–1000 points per series recommended
 
 Example:
 ```
-x    | y
------|-----
-0    | 10.5
-1    | 12.3
-2    | 11.8
-3    | 14.2
+x    | y1   | y2
+-----|------|-----
+0    | 10.5 | 8.2
+1    | 12.3 | 9.1
+2    | 11.8 | 10.4
+3    | 14.2 | 9.8
 ```
 
 ## Notes

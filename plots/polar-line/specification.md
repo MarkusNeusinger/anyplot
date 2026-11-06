@@ -14,7 +14,8 @@ A line plot rendered in polar coordinates, where data points are connected with 
 ## Data
 
 - `theta` (numeric) - Angular position in degrees or radians (e.g., 0-360 or 0-2π)
-- `radius` (numeric) - Magnitude or distance from center; can represent any continuous measure
+- `radius1, radius2, ...` (numeric) - Magnitude or distance from center, one column per series; can represent any continuous measure
+- `series` (categorical) - Optional grouping variable if data is in long format
 - Size: 20-500 points recommended
 - Example: Daily measurements (24 hours × multiple days) or seasonal patterns (12 months × multiple years)
 
