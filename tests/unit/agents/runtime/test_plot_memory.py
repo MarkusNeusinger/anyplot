@@ -112,6 +112,43 @@ class TestRemember:
         assert remember(once, LINE, seq=2, turn=3) == once
         assert plan(once, [LINE], seq=2, turn=3).seq == 2  # the id counter does not move either
 
+    @pytest.mark.parametrize("held", [LINE, FORMULA, STARS])
+    def test_a_multi_valued_decision_in_other_case_spacing_or_closing_mark_is_one_entry(
+        self, held: RememberItem
+    ) -> None:
+        once = entries(held)
+        reworded = held.model_copy(update={"text": "  " + held.text.upper().replace(" ", "  ") + "."})
+
+        assert remember(once, reworded, seq=2, turn=3) == once
+        assert plan(once, [reworded], seq=2, turn=3).seq == 2
+
+    def test_other_words_for_a_multi_valued_kind_still_add_beside(self) -> None:
+        """Code sets aside only case, spacing and a closing mark; a paraphrase is the root's to leave out (root.md)."""
+        reworded = RememberItem(kind="marker", text="outliers drawn as red stars")
+
+        after = remember(entries(STARS), reworded, seq=2, turn=3)
+
+        assert [entry.text for entry in after] == [STARS.text, reworded.text]
+
+    def test_a_single_valued_decision_reworded_alike_stays_and_a_new_one_replaces(self) -> None:
+        once = entries(LABEL)
+        alike = LABEL.model_copy(update={"text": "X-axis label: 'Zeit (h)'!"})
+        assert remember(once, alike, seq=2, turn=3) == once
+
+        renamed = RememberItem(
+            kind="axis_label", target="x", text="x-axis label: 'Zeit (min)'", expected_text="Zeit (min)"
+        )
+        assert [(entry.id, entry.text) for entry in remember(once, renamed, seq=2, turn=3)] == [("m2", renamed.text)]
+
+    def test_a_shown_text_in_other_capitals_is_another_decision(self) -> None:
+        """The text the plot shows is the user's verbatim: `Umsatz` and `UMSATZ` are two titles."""
+        title = RememberItem(kind="title", text="title: 'Umsatz'", expected_text="Umsatz")
+        shouted = RememberItem(kind="title", text="title: 'UMSATZ'", expected_text="UMSATZ")
+
+        after = remember(entries(title), shouted, seq=2, turn=3)
+
+        assert [(entry.id, entry.expect) for entry in after] == [("m2", "UMSATZ")]
+
     def test_the_caps_refuse_rather_than_drop_an_old_entry(self) -> None:
         full = plan([], [RememberItem(kind="other", text=f"decision {n}") for n in range(MAX_ENTRIES)], seq=1, turn=1)
         assert len(full.entries) == MAX_ENTRIES and full.refused == 0

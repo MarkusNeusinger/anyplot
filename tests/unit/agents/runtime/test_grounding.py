@@ -67,6 +67,8 @@ from agents.anyplot.schemas import (
     MAX_ATTEMPTS,
     MAX_CHANGE_CHARS,
     MAX_CHANGES,
+    MAX_COLUMN_NAME_CHARS,
+    MAX_COLUMNS,
     MAX_EXPECTED_TEXT_CHARS,
     MAX_EXPECTED_TEXTS,
     MAX_LINE_CHARS,
@@ -352,6 +354,11 @@ def largest_result(char: str) -> PlotResult:
             score=100,
             requested_not_found=[char * MAX_EXPECTED_TEXT_CHARS] * MAX_EXPECTED_TEXTS,
         ),
+        bindings=[
+            Binding(role=f"r{n:02d}" + "x" * 29, column=f"{n:02d}" + char * (MAX_COLUMN_NAME_CHARS - 2))
+            for n in range(MAX_COLUMNS)
+        ],
+        kept_request="dropped",
     )
 
 

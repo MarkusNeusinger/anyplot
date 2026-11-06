@@ -131,16 +131,28 @@ def next_seq(state: Any, entries: Sequence[MemoryEntry]) -> int:
     return max(stored, floor) if isinstance(stored, int) and not isinstance(stored, bool) else floor
 
 
+_CLOSING_PUNCTUATION = ".,;:!?…"
+
+
+def same_wording(text: str) -> str:
+    """An instruction as `remember` compares it: case folded, spacing collapsed, closing punctuation set aside."""
+    return " ".join(text.split()).rstrip(_CLOSING_PUNCTUATION + " ").casefold()
+
+
 def remember(entries: Sequence[MemoryEntry], item: RememberItem, *, seq: int, turn: int) -> list[MemoryEntry]:
     """The entries with `item` added as entry `m{seq}`; a single-valued kind replaces the entry of the same kind and
     target. Raises `MemoryRefused("memory_full")` past a cap.
 
-    The same text under the same kind and target is no new decision: the entries stay as they are, so a
-    decision handed over twice never fills the memory with copies.
+    The same decision under the same kind and target is no new one: the entries stay as they are, so a
+    decision handed over twice never fills the memory with copies. The instruction counts as the same when
+    it differs only in case, spacing or a closing punctuation mark (`same_wording`: "Red star markers." and
+    "red  star markers"), which the root's words for one wish vary in from turn to turn. The verbatim text
+    the plot shows (`expect`) must match exactly: a title written in other capitals is another title.
     """
     for entry in entries:
-        same = (entry.kind, entry.target, entry.text, entry.expect)
-        if same == (item.kind, item.target, item.text, item.expected_text):
+        if (entry.kind, entry.target, entry.expect) == (item.kind, item.target, item.expected_text) and same_wording(
+            entry.text
+        ) == same_wording(item.text):
             return list(entries)
     # A correction names the entry it corrects; one that is gone already (the user removed it) corrects nothing.
     kept = [entry for entry in entries if entry.id != item.replaces]

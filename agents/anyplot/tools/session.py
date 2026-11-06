@@ -105,7 +105,7 @@ from ..language import LANGUAGE_TARGETS, is_valid, normalise, same_language
 from ..memory import ForgetArgs, MemoryRefused, memory_delta, read_memory
 from ..memory import forget as memory_forget
 from ..opening import store_dataset
-from ..pipeline import hold_request, run_pipeline
+from ..pipeline import has_request, hold_request, in_users_words, run_pipeline
 from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
     DATA_CODE_TOOL,
@@ -125,7 +125,6 @@ from ..render.serial import RenderBusy
 from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, KeepRequestArgs, PipelineArgs, SwitchArgs
 from ..services import get_services
 from ..session_state import (
-    PENDING_BINDINGS,
     PLOT_LANGUAGE,
     SessionView,
     apply_bindings,
@@ -252,7 +251,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     except ValueError:
         return _error("invalid_bindings")
     roles = view.snapshot.roles()
-    check, delta = apply_bindings(parsed, roles, profile, tool_context.state.get(PENDING_BINDINGS))
+    check, delta = apply_bindings(parsed, roles, profile)
     if not delta:
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
@@ -315,7 +314,7 @@ async def keep_plot_request(
     expected_texts: list[str] | None = None,
     remember: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Keep a request for the first plot of this library without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot (then call plot_pipeline with base "previous" once the data is confirmed)."""
+    """Keep a request for the first plot of this library without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot (then call plot_pipeline with base "previous" once the data is confirmed), or when nothing is left to keep once the texts the user did not write are left out (nothing_to_keep)."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
@@ -330,7 +329,13 @@ async def keep_plot_request(
     if get_services().versions.latest_rendered(tool_context.session.id, target=view.target) is not None:
         # A change of an existing plot is no first-plot note: the root repeats it once the data is confirmed.
         return {"status": "ok", "request_kept": False, "reason": "plot_exists"}
-    hold_request(tool_context.state, PipelineArgs(**args.model_dump()))
+    ledger = ledger_for(tool_context.invocation_id)
+    # A text the user never wrote is no text to check the plot for: only what stands in their words is kept.
+    note = in_users_words(PipelineArgs(**args.model_dump()), ledger.user_words)
+    if not has_request(note):
+        return {"status": "ok", "request_kept": False, "reason": "nothing_to_keep"}
+    hold_request(tool_context.state, note)
+    ledger.kept_note = note  # held for the bindings and data this turn ends with (`_settle_kept_note`)
     return {"status": "ok", "request_kept": True}
 
 

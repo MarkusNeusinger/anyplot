@@ -533,6 +533,18 @@ def root_inputs(fake: Any) -> list[str]:
     ]
 
 
+WRITTEN = "y axis in 6,5 Mio., labelled Temperatur (°C), the share as 12 %"
+"""What the user typed: a text the plot is checked for must stand in the user's words (`pipeline.in_users_words`),
+and the page's `.create_plot()` brings none, so these tests ask in a typed turn holding every text their root names."""
+
+
+async def ask_plot(client: httpx.AsyncClient, sid: str) -> list[tuple[str, dict[str, Any]]]:
+    """The typed turn `WRITTEN` on the fixture's confirmed data, as `create_plot` sends the page's action."""
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": WRITTEN})
+    assert response.status_code == 200, response.text
+    return parse_sse(response.text)
+
+
 async def test_a_requested_format_the_render_misses_goes_to_the_repair(
     client: httpx.AsyncClient, swap_models, backend: FakeBackend
 ) -> None:
@@ -547,7 +559,7 @@ async def test_a_requested_format_the_render_misses_goes_to_the_repair(
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("ok", [])
@@ -580,7 +592,7 @@ async def test_a_miss_no_round_fixes_ships_as_a_residual_line(
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "needs_attention"
@@ -604,7 +616,7 @@ async def test_a_renderer_without_drawn_texts_leaves_a_note_and_no_repair(
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("needs_attention", [UNVERIFIED_LINE.format(theme="light")])
@@ -649,7 +661,7 @@ async def test_without_drawn_texts_a_text_the_review_confirms_needs_no_note(
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("ok", [])
@@ -670,7 +682,7 @@ async def test_without_drawn_texts_a_text_the_review_misses_goes_to_the_repair(
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("ok", [])
@@ -696,7 +708,7 @@ async def test_without_drawn_texts_a_miss_no_round_fixes_ships_as_the_reviewers_
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("needs_attention", [MISS_LINE])
@@ -718,7 +730,7 @@ async def test_without_drawn_texts_an_unread_review_keeps_the_note(client: httpx
     swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "needs_attention"
@@ -740,7 +752,7 @@ async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requeste
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("ok", [])  # the probe's texts claim no miss
@@ -826,7 +838,7 @@ async def test_without_drawn_texts_the_checklist_reviewer_answers_for_the_texts(
     fake = swap_models("gemini", script)
     sid = await open_session(client)
 
-    events = await create_plot(client, sid)
+    events = await ask_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], len(plot["rounds"])) == (status, rounds)
