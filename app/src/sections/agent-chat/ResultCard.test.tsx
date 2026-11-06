@@ -798,7 +798,7 @@ describe('ResultCard', () => {
     expect(onSendFeedback).toHaveBeenCalledWith(2, {
       reaction: 'thumbs_up',
       message: '',
-      includeData: true,
+      includeData: false,
     });
   });
 

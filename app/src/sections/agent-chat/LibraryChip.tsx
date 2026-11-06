@@ -1,24 +1,25 @@
 /**
  * The library menu in the chat's header row, before the language chip (since
- * 2026-11-02, in place of a pill per library, up to 16 with `all`): the chip
- * names the library the plot is made in in plain words, `seaborn ▾`, or
- * `all 15 libraries ▾` while the admin's `all` is pressed (`lib: seaborn ·
- * python` until the v4 frame of 2026-11-06); its accessible name starts with
- * the same words and keeps the language, `Library: seaborn, Python. Change`,
- * so a voice command that says what the chip shows finds it. A click opens a
- * popover with the libraries grouped by language (Python, R, Julia,
- * JavaScript), each group in the header's order, and, for the admin, `all
- * libraries` after them. A popover like the language chip's, not a menu: the
- * groups hold buttons that say whether they are pressed, and a library is a
- * link where there is no session to switch.
+ * 2026-11-02, in place of a pill per library): the chip names the library the
+ * plot is made in in plain words, `seaborn ▾`, or `all 15 libraries ▾` while
+ * the admin's fan-out is on (`lib: seaborn · python` until the v4 frame of
+ * 2026-11-06); its accessible name starts with the same words and keeps the
+ * language, `Library: seaborn, Python. Change`, so a voice command that says
+ * what the chip shows finds it. A click opens a popover with the libraries
+ * grouped by language (Python, R, Julia, JavaScript), each group in the
+ * header's order. A popover like the language chip's, not a menu: the groups
+ * hold buttons that say whether they are pressed, and a library is a link
+ * where there is no session to switch. The fan-out's toggle itself is in the
+ * admin menu (`AdminMenu`, since 2026-11-06; an `all libraries` button after
+ * the groups before), so the chip is the same for an admin and a visitor.
  *
  * The rules of the pills it replaces stay. The library in use cannot be picked
- * again; while `all` is pressed it can, which only turns `all` off. Another
- * library switches (`onPick`), and a pick also turns `all` off (the page does
- * that). Without a session (`reopen`: ineligible or failed), another library
- * is a link that opens the page anew with its own session, and the library in
- * use stays a disabled button. `all` toggles, in the URL as `&all=1` (the page
- * keeps that). A choice closes the popover, which returns the focus to the chip.
+ * again; while the fan-out is on it can, which only turns the fan-out off.
+ * Another library switches (`onPick`), and a pick also turns the fan-out off
+ * (the page does that). Without a session (`reopen`: ineligible or failed),
+ * another library is a link that opens the page anew with its own session, and
+ * the library in use stays a disabled button. A choice closes the popover,
+ * which returns the focus to the chip.
  *
  * Like the language chip, it holds its own pending flag and failure line, and is
  * marked `aria-disabled` rather than `disabled` during its own switch, so the
@@ -53,26 +54,22 @@ export interface LibraryChipProps {
   library: string;
   /** The libraries the page offers, in the header's order. */
   libraries: readonly string[];
-  /** The admin's `all` is offered (the lists are the server's, more than one library, a session). */
-  offerAll: boolean;
-  /** `all` is pressed: the composer's create action plots in every library at once. */
+  /** The admin's fan-out is on: the composer's create action plots in every library at once. */
   allPressed: boolean;
   /** No session to switch: another library is a link to this address, which opens the page anew. */
   hrefFor?: (library: string) => string;
   /** Something else is in flight, a run, or the fan-out's panel is open. */
   disabled: boolean;
   /**
-   * A library picked: the switch, or, for the library in use while `all` is
-   * pressed, `all` off. Rejects with an `AgentApiError` when the switch failed.
+   * A library picked: the switch, or, for the library in use while the fan-out
+   * is on, the fan-out off. Rejects with an `AgentApiError` when the switch failed.
    */
   onPick: (library: string) => Promise<void>;
-  /** `all` pressed or released. */
-  onAllChange: (pressed: boolean) => void;
   /** The chip's button, where the page returns the focus after the fan-out's panel. */
   buttonRef?: React.Ref<HTMLButtonElement>;
 }
 
-/** A library or `all` in the popover: pressed with an ink border, like the language chip's options. */
+/** A library in the popover: pressed with an ink border, like the language chip's options. */
 const optionSx = (pressed: boolean) => ({
   ...actionButtonSx,
   border: '1px solid',
@@ -90,12 +87,10 @@ const optionSx = (pressed: boolean) => ({
 export function LibraryChip({
   library,
   libraries,
-  offerAll,
   allPressed,
   hrefFor,
   disabled,
   onPick,
-  onAllChange,
   buttonRef,
 }: LibraryChipProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -111,7 +106,7 @@ export function LibraryChip({
       setAnchor(null);
     }
   }
-  // One announcement per change of the library or of `all`, whatever changed it; none on mount.
+  // One announcement per change of the library or of the fan-out, whatever changed it; none on mount.
   const current = allPressed ? 'all' : library;
   const [shown, setShown] = useState(current);
   const [announcement, setAnnouncement] = useState('');
@@ -151,11 +146,6 @@ export function LibraryChip({
     } finally {
       if (mounted.current) setPending(false);
     }
-  };
-
-  const toggleAll = () => {
-    close();
-    onAllChange(!allPressed);
   };
 
   const locked = disabled && !pending;
@@ -248,7 +238,7 @@ export function LibraryChip({
               >
                 {group.libraries.map(lib => {
                   const inUse = lib === library;
-                  // While `all` is pressed the library in use is not the pressed one: picking it turns `all` off.
+                  // While the fan-out is on the library in use is not the pressed one: picking it turns it off.
                   const pressed = inUse && !allPressed;
                   if (!inUse && hrefFor) {
                     return (
@@ -275,25 +265,6 @@ export function LibraryChip({
             </Box>
           );
         })}
-        {offerAll && (
-          <Box sx={{ mt: 1.5 }}>
-            <Box aria-hidden sx={{ ...labelSx, mb: 0.5 }}>
-              # admin · plot in every library at once
-            </Box>
-            <Box role="group" aria-label="Admin" sx={{ display: 'flex', gap: 0.5 }}>
-              <Box
-                component="button"
-                type="button"
-                aria-pressed={allPressed}
-                aria-label="All libraries"
-                onClick={toggleAll}
-                sx={optionSx(allPressed)}
-              >
-                all libraries
-              </Box>
-            </Box>
-          </Box>
-        )}
       </Popover>
     </Box>
   );

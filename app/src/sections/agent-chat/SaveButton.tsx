@@ -1,12 +1,11 @@
 /**
- * `.save()` in the chat header's "⋯" menu (`SessionMenu`, since 2026-11-02; in the header
- * row before), on the admin lane only since then: downloads the session as one JSON file,
+ * `.save()` in the chat's admin menu (`AdminMenu`, since 2026-11-06; in the header's "⋯" menu
+ * from 2026-11-02, in the header row before): downloads the session as one JSON file,
  * the feedback case the agents service assembles (the conversation, every version's
  * code, plan, result and images, the data profile, the bindings and the config
  * stamp), the owner's debugging bundle. `# include data.csv` adds each version's data
- * file; it is on by default for an admin, who saves their own test data. Rendered on
- * the public lane, which the page no longer does, it would start off (`lane.ts`,
- * docs/concepts/agent-network.md, "Feedback capture").
+ * file; it starts unticked, as the feedback form's does, since the admin's chat is the
+ * visitors' (docs/concepts/agent-network.md, "Feedback capture").
  *
  * The button holds its own saving flag and failure line: a save only reads the
  * session, so the session state does not track it. The page disables the
@@ -23,7 +22,6 @@ import { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 
 import { AgentApiError } from 'src/lib/agent';
-import { useAgentLane } from 'src/sections/agent-chat/lane';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { ghostButtonSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
@@ -53,10 +51,8 @@ export interface SaveButtonProps {
 }
 
 export function SaveButton({ disabled, onSave, onSaved }: SaveButtonProps) {
-  // The file goes to the user's own computer; on the public lane it still holds the data only
-  // when they tick the box, as the feedback form does.
-  const lane = useAgentLane();
-  const [includeData, setIncludeData] = useState(lane === 'admin');
+  // The file holds the data only when the box is ticked, as the feedback form's case does.
+  const [includeData, setIncludeData] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<{ code: string; ref: string | null } | null>(null);
   // Something else started (a turn, a parse, a render): the failure line is stale.

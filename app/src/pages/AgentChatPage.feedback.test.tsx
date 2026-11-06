@@ -49,7 +49,7 @@ const PLOT = {
   version: 1,
 };
 
-const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
+const PAGE = '/agent?spec=scatter-basic&library=matplotlib&language=python';
 
 let feedbackBodies: unknown[];
 let feedbackAnswer: () => Response;
@@ -118,7 +118,7 @@ function stubFetch() {
 
 /** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderPage() {
-  const router = createMemoryRouter([{ path: '/debug/agent', element: <AgentChatPage /> }], {
+  const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
     initialEntries: [PAGE],
   });
   return render(
@@ -206,9 +206,16 @@ describe('AgentChatPage quick feedback', () => {
 
     await user.click(within(form).getByRole('button', { name: 'Thumbs down' }));
     await user.type(within(form).getByLabelText('Feedback message'), 'the legend hides points');
-    expect(
-      within(form).getByRole('checkbox', { name: 'Include data.csv in the feedback on version 1' })
-    ).toBeChecked();
+    // Unticked for an admin as for a visitor, with the consent line under the form.
+    const dataBox = within(form).getByRole('checkbox', {
+      name: 'Include data.csv in the feedback on version 1',
+    });
+    expect(dataBox).not.toBeChecked();
+    expect(within(form).getByRole('link', { name: 'legal' })).toHaveAttribute(
+      'href',
+      '/legal#assistant'
+    );
+    await user.click(dataBox);
     await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
 
     const sent = await screen.findByText(/sent · v1/);

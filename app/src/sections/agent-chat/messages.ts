@@ -235,6 +235,13 @@ export const LEAVE_TEXT =
   'leave the chat? the session ends here, and its data and plots cannot be restored';
 
 /**
+ * The admin menu's "view as visitor" switched while the session holds work: the other lane
+ * opens a session of its own (`AgentChatPage`).
+ */
+export const VIEW_SWITCH_TEXT =
+  'switch the view? the session ends here, and its data and plots cannot be restored';
+
+/**
  * The how-to behind the chat's `# chat ⓘ` (the data card's `# your data ⓘ` until the message box
  * took the data; a label and a paragraph under the card before 2026-11-02, owner: far too long,
  * and interesting only once): the formats, how a table or a file comes in with a note, code or a

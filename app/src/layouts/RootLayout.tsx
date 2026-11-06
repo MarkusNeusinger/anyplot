@@ -35,7 +35,7 @@ export function RootLayout() {
   const mastheadSticks = pathname !== paths.plots;
   // The agent chat has a feedback row of its own on every result, and the chat's for a session
   // without one; on a phone the site's button covered the composer's `.send()` and the replies.
-  const siteFeedback = pathname !== paths.agent && pathname !== '/debug/agent';
+  const siteFeedback = pathname !== paths.agent;
 
   // Set synchronously during render so the first pageview from a child page's
   // useEffect (which runs before the parent's useEffect) carries the theme prop.

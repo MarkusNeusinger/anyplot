@@ -4,11 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
 
+import { analyticsMuted } from 'src/analytics/mute';
 import type { MemoryEntry } from 'src/lib/agent';
 import { AgentChatPage } from 'src/pages/AgentChatPage';
 import { LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
 import { theme } from 'src/theme';
-import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
+import { ADMIN_HINT_KEY, VIEW_AS_VISITOR_KEY } from 'src/utils/adminAuth';
 
 const flags = vi.hoisted(() => ({ agentChat: true, isDev: false }));
 
@@ -41,6 +42,11 @@ const json = (status: number, body: unknown) =>
   });
 
 let fetchMock: ReturnType<typeof vi.fn>;
+/**
+ * The admin lane's `GET /status`, the page's admin check: 200, a refusal (401, 403), `404
+ * not_enabled` (the gate let it through, the kill switch is off), or no answer at all.
+ */
+let adminStatus: 200 | 401 | 403 | 404 | 'unreachable' = 200;
 
 /** The spec's `## Data` bullets as the catalogue API serves them: two columns and two meta lines. */
 const SPEC_DATA = [
@@ -283,6 +289,9 @@ function stubFetch(
         : json(openStatus, openBody);
     }
     if (url.pathname.endsWith('/debug/agent/status')) {
+      if (adminStatus === 'unreachable') throw new TypeError('Failed to fetch');
+      if (adminStatus === 404) return json(404, { detail: 'not_enabled' });
+      if (adminStatus !== 200) return json(adminStatus, { detail: 'Invalid admin token' });
       return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
     }
     if (url.pathname.endsWith('/sessions/S1/dataset') && method === 'POST') {
@@ -341,7 +350,7 @@ function renderAt(url: string) {
   const router = createMemoryRouter(
     [
       {
-        path: '/debug/agent',
+        path: '/agent',
         element: (
           <>
             <AgentChatPage />
@@ -360,7 +369,12 @@ function renderAt(url: string) {
   );
 }
 
-const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
+const PAGE = '/agent?spec=scatter-basic&library=matplotlib&language=python';
+/**
+ * The calls to the admin lane's BFF. The flows below run for an admin (the hint, or local
+ * development), on the admin lane; a visitor's page is AgentChatPage.public.test.tsx, and the
+ * two lanes' DOM is compared in AgentChatPage.parity.test.tsx.
+ */
 const agentCalls = () =>
   fetchMock.mock.calls.filter(([input]) => String(input).includes('/debug/agent'));
 /** The path of a call, without the query (a turn carries the site theme there). */
@@ -491,7 +505,35 @@ async function closeLibraryMenu() {
   await waitFor(() => expect(screen.queryByRole('dialog', MENU)).not.toBeInTheDocument());
 }
 
-/** Pick `name` in the library menu (a library, or `All libraries`), and wait until it closed. */
+const ADMIN_MENU = { name: 'Admin' } as const;
+/** The admin menu's fan-out toggle (`all 2 libraries`), in the open menu. */
+const ALL_TOGGLE = { name: /^all \d+ libraries$/ } as const;
+
+/** Open the admin menu, the page's one admin-only element. */
+async function openAdminMenu() {
+  await waitFor(() => expect(screen.queryByRole('dialog', ADMIN_MENU)).not.toBeInTheDocument());
+  const button = await screen.findByTestId('admin-menu');
+  button.focus();
+  fireEvent.click(button);
+  return screen.findByRole('dialog', ADMIN_MENU);
+}
+
+/** Close the open admin menu with Escape, and wait until the page is back. */
+async function closeAdminMenu() {
+  fireEvent.keyDown(screen.getByRole('dialog', ADMIN_MENU), { key: 'Escape' });
+  await waitFor(() => expect(screen.queryByRole('dialog', ADMIN_MENU)).not.toBeInTheDocument());
+}
+
+/** Turn the admin menu's fan-out on or off (`all N libraries`), and wait until the menu closed. */
+async function toggleAll() {
+  const menu = await openAdminMenu();
+  const toggle = await within(menu).findByRole('button', ALL_TOGGLE);
+  await waitFor(() => expect(toggle).toBeEnabled());
+  fireEvent.click(toggle);
+  await waitFor(() => expect(screen.queryByRole('dialog', ADMIN_MENU)).not.toBeInTheDocument());
+}
+
+/** Pick the library `name` in the library menu, and wait until it closed. */
 async function pickInMenu(name: string) {
   const menu = await openLibraryMenu();
   const option = await within(menu).findByRole('button', { name });
@@ -504,6 +546,8 @@ beforeEach(() => {
   flags.agentChat = true;
   flags.isDev = false;
   localStorage.clear();
+  sessionStorage.clear();
+  adminStatus = 200;
   releaseParse = null;
   holdNextTurn = false;
   releaseTurn = null;
@@ -525,30 +569,52 @@ describe('AgentChatPage gating', () => {
     expect(agentCalls()).toHaveLength(0);
   });
 
-  it('asks for the admin sign-in without the admin hint and calls nothing', () => {
+  it('treats a browser without the admin hint as a visitor: no call to the debug API', async () => {
+    // The public door is closed in this file (the build flag of `useAgentLaneOpen` is off).
     renderAt(PAGE);
-    expect(screen.getByText(/this page is for admins/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '/debug' })).toHaveAttribute('href', '/debug');
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    expect(screen.queryByTestId('admin-menu')).not.toBeInTheDocument();
     expect(agentCalls()).toHaveLength(0);
   });
 
-  it('opens a session for an admin and records the open, then drops the source', async () => {
+  it('checks the admin first, then opens the session on the admin lane and records nothing', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(`${PAGE}&source=plot_page`);
     expect(await screen.findByLabelText('Message')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeInTheDocument();
-    expect(analytics.trackPageview).toHaveBeenCalledWith('/debug/agent');
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
-      library: 'matplotlib',
-      source: 'plot_page',
-      spec: 'scatter-basic',
-    });
+    // The admin check picks the lane, so it goes before the session's open.
+    const called = agentCalls().map(([input]) => pathOf(input));
+    expect(called[0]).toBe('/debug/agent/status');
+    expect(called.indexOf('/debug/agent/sessions')).toBeGreaterThan(0);
+    // The one admin-only element, at the header row's end.
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin ▾$/);
+    // The admin's own use is no visitor's: no pageview and no `agent_open`; the source still goes.
+    expect(analytics.trackPageview).not.toHaveBeenCalled();
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(PAGE));
     // The title in plain words is the link back, in the frame's header row (`← title` until v4).
     const back = await screen.findByRole('link', { name: 'Basic Scatter Plot' });
     expect(back).toHaveAttribute('href', expect.stringContaining('scatter-basic'));
     expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(back);
     expect(screen.getByTestId('chat-frame-tab')).toHaveTextContent(/^~\/anyplot\.ai\/agent$/);
+  });
+
+  it("mutes the site's analytics while it serves an admin, and only until it unmounts", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const view = renderAt(PAGE);
+    // The check is out, and already the admin's: nothing the page or its parts send counts.
+    expect(analyticsMuted()).toBe(true);
+    await screen.findByLabelText('Message');
+    expect(analyticsMuted()).toBe(true);
+    // The next page records its own pageview again.
+    view.unmount();
+    expect(analyticsMuted()).toBe(false);
+
+    // A visitor's browser is never muted.
+    localStorage.clear();
+    renderAt(PAGE);
+    await screen.findByText(/the assistant is closed right now/);
+    expect(analyticsMuted()).toBe(false);
   });
 
   it('names the tab after the spec title, not its id', async () => {
@@ -558,36 +624,126 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(document.title).toBe('agent · Basic Scatter Plot | anyplot.ai'));
   });
 
-  it('lets local development in without the hint', async () => {
+  it('lets local development in on the admin lane without the hint', async () => {
     flags.isDev = true;
     renderAt(PAGE);
     expect(await screen.findByLabelText('Message')).toBeInTheDocument();
-    expect(analytics.trackEvent).toHaveBeenCalledWith(
-      'agent_open',
-      expect.objectContaining({ source: 'direct' })
-    );
+    expect(agentCalls().map(([input]) => pathOf(input))).toContain('/debug/agent/sessions');
+    expect(screen.getByTestId('admin-menu')).toBeInTheDocument();
   });
 
-  it('explains the missing parameters instead of calling the BFF', () => {
+  it('explains the missing parameters instead of opening a session', async () => {
     flags.isDev = true;
-    renderAt('/debug/agent?spec=scatter-basic&library=excel');
+    renderAt('/agent?spec=scatter-basic&library=excel');
     // The plot page's entry since 2026-11-02 is `.use_my_data()`.
-    expect(screen.getByText(/open it from a plot/)).toHaveTextContent(
+    expect(await screen.findByText(/open it from a plot/)).toHaveTextContent(
       "open it from a plot's .use_my_data(), or start with scatter-basic in matplotlib."
     );
     expect(screen.getByRole('link', { name: 'scatter-basic in matplotlib' })).toHaveAttribute(
       'href',
-      '/debug/agent?spec=scatter-basic&library=matplotlib&language=python'
+      '/agent?spec=scatter-basic&library=matplotlib&language=python'
     );
-    expect(agentCalls()).toHaveLength(0);
+    // The admin check only.
+    expect(agentCalls().map(([input]) => pathOf(input))).toEqual(['/debug/agent/status']);
   });
 
-  it('clears the hint and asks for the sign-in when the BFF refuses the admin', async () => {
+  it('falls back to the visitor lane when the admin check is refused, and says the session expired', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    adminStatus = 401;
+    renderAt(PAGE);
+    // The public door is closed here, so the visitor's page is the closed door, with the admin menu.
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    expect(localStorage.getItem(ADMIN_HINT_KEY)).toBeNull();
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · expired ▾$/);
+    const menu = await openAdminMenu();
+    expect(within(menu).getByTestId('admin-expired')).toHaveTextContent(/sign in again on \/debug/);
+    expect(within(menu).getByRole('link', { name: '/debug' })).toHaveAttribute('href', '/debug');
+    expect(menu).toHaveTextContent('# the check answered unauthorized');
+    expect(agentCalls().map(([input]) => pathOf(input))).toEqual(['/debug/agent/status']);
+  });
+
+  it('falls back the same way without an answer (an expired Access session), and keeps the hint', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    adminStatus = 'unreachable';
+    renderAt(PAGE);
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · expired ▾$/);
+    // The next sign-in on `/debug` sets the hint anyway.
+    expect(localStorage.getItem(ADMIN_HINT_KEY)).toBe('1');
+    const menu = await openAdminMenu();
+    expect(menu).toHaveTextContent('# the check answered unreachable');
+  });
+
+  it('clears the hint and falls back when the admin lane refuses the session', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     stubFetch(401);
     renderAt(PAGE);
-    expect(await screen.findByText(/this page is for admins/)).toBeInTheDocument();
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem(ADMIN_HINT_KEY)).toBeNull());
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · expired ▾$/);
+  });
+
+  it('reads AGENT_ENABLED off as a visitor does, and names the switch in the admin menu only', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    // The admin gate answers before the kill switch: `not_enabled` means the admin got through.
+    adminStatus = 404;
+    stubFetch(404, { detail: 'not_enabled', ref: 'r-off' });
+    renderAt(PAGE);
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('the assistant is closed right now. please try again later.');
+    expect(alert).not.toHaveTextContent('AGENT_ENABLED');
+    const menu = await openAdminMenu();
+    expect(within(menu).getByRole('region', { name: 'diagnostics' })).toHaveTextContent(
+      'not_enabled · the agent chat is switched off on this server (AGENT_ENABLED)'
+    );
+  });
+
+  it('switches to the visitor view and back from the admin menu, remembered for the tab', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
+    const menu = await openAdminMenu();
+    fireEvent.click(within(menu).getByRole('button', { name: 'view as visitor' }));
+    // The public door is closed here: the visitor's page, with the way back.
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · as visitor ▾$/);
+    expect(sessionStorage.getItem(VIEW_AS_VISITOR_KEY)).toBe('1');
+
+    const back = await openAdminMenu();
+    const view = within(back).getByRole('button', { name: 'view as visitor' });
+    expect(view).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(view);
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin ▾$/);
+    expect(sessionStorage.getItem(VIEW_AS_VISITOR_KEY)).toBeNull();
+    // A new session on the admin lane: the first one was deleted with the switch.
+    const opens = agentCalls().filter(
+      ([input, init]) =>
+        pathOf(input) === '/debug/agent/sessions' && (init as RequestInit).method === 'POST'
+    );
+    expect(opens).toHaveLength(2);
+    expect(
+      agentCalls().some(
+        ([input, init]) =>
+          pathOf(input) === '/debug/agent/sessions/S1' && (init as RequestInit).method === 'DELETE'
+      )
+    ).toBe(true);
+  });
+
+  it('asks before the visitor view drops a session with data', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    renderAt(PAGE);
+    await parseAndSummarize();
+    const menu = await openAdminMenu();
+    fireEvent.click(within(menu).getByRole('button', { name: 'view as visitor' }));
+    expect(confirm).toHaveBeenCalledWith(
+      'switch the view? the session ends here, and its data and plots cannot be restored'
+    );
+    // Refused: the chat and its data stay.
+    expect(screen.getByText(SUMMARY)).toBeInTheDocument();
+    expect(sessionStorage.getItem(VIEW_AS_VISITOR_KEY)).toBeNull();
+    confirm.mockRestore();
   });
 
   it('offers the other libraries as links when the pair is not eligible', async () => {
@@ -606,11 +762,16 @@ describe('AgentChatPage gating', () => {
     await waitFor(() =>
       expect(within(menu).getByRole('link', { name: 'seaborn' })).toHaveAttribute(
         'href',
-        '/debug/agent?spec=scatter-basic&library=seaborn&language=python'
+        '/agent?spec=scatter-basic&library=seaborn&language=python'
       )
     );
     expect(within(menu).getByRole('button', { name: 'matplotlib' })).toBeDisabled();
-    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    await closeLibraryMenu();
+    // No session: nothing to fan out and nothing to save; the visitor's view stays.
+    const admin = await openAdminMenu();
+    expect(within(admin).queryByRole('button', ALL_TOGGLE)).not.toBeInTheDocument();
+    expect(within(admin).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    expect(within(admin).getByRole('button', { name: 'view as visitor' })).toBeInTheDocument();
   });
 
   it('walks the two steps with one click: .create_plot() confirms the data, then plots', async () => {
@@ -1250,12 +1411,19 @@ describe('AgentChatPage gating', () => {
 
   it('offers a reload when the session open got no answer', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
-    sessionStorage.setItem('anyplot.debugAuthReloaded', '1'); // this tab already reloaded once
     stubFetch();
     const answered = fetchMock as unknown as (input: string, init?: RequestInit) => Response;
-    // Every BFF call meets the Access redirect; the public catalogue still answers.
+    // The admin check answered; every BFF call after it meets the Access redirect, while the
+    // public catalogue still answers.
+    let checked = false;
     fetchMock = vi.fn(async (input: string, init: RequestInit = {}) => {
-      if (String(input).includes('/debug/agent/')) throw new TypeError('Failed to fetch');
+      if (String(input).includes('/debug/agent/')) {
+        if (!checked && String(input).endsWith('/debug/agent/status')) {
+          checked = true;
+          return answered(input, init);
+        }
+        throw new TypeError('Failed to fetch');
+      }
       return answered(input, init);
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -1265,8 +1433,8 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(
       screen.getByRole('alert')
     );
-    expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
-    sessionStorage.clear();
+    // A reload checks the admin anew: `/agent` is not behind Access and reloads by itself never.
+    expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
   });
 });
 
@@ -1375,28 +1543,14 @@ describe('AgentChatPage catalogue plot', () => {
     ]);
   });
 
-  it('records an open from the spec hub', async () => {
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt(`${PAGE}&source=spec_hub`);
-    await screen.findByLabelText('Message');
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
-      library: 'matplotlib',
-      source: 'spec_hub',
-      spec: 'scatter-basic',
-    });
-  });
-
-  it('records an open from the plot of the day, then drops the source', async () => {
+  // A visitor's open and its source are recorded: AgentChatPage.public.test.tsx.
+  it("drops an admin's source from the URL without recording the open", async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(`${PAGE}&source=plot_of_the_day`);
     await screen.findByLabelText('Message');
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
-      library: 'matplotlib',
-      source: 'plot_of_the_day',
-      spec: 'scatter-basic',
-    });
     await waitFor(() => expect(screen.getByTestId('location')).not.toHaveTextContent('source='));
     expect(screen.getByTestId('location')).toHaveTextContent(PAGE);
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
   });
 });
 
@@ -1578,14 +1732,28 @@ describe('AgentChatPage leave warning', () => {
 
   it('asks before a reload or a link drops the data, and lets its own query edits pass', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
+      new URL(input).pathname.endsWith('/sessions/S1/library')
+        ? Promise.resolve(
+            json(200, {
+              session_id: 'S1',
+              eligibility: { eligible: true, status: 'clean', reasons: [] },
+            })
+          )
+        : base(input, init)
+    );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndPlot();
     expect(unload()).toBe(true);
 
-    // The library menu's `all` writes the query on the same path: nothing to ask.
-    await pickInMenu('All libraries');
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('all=1'));
+    // A library switch writes the query on the same path: nothing to ask.
+    await pickInMenu('seaborn');
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('seaborn'));
     expect(confirm).not.toHaveBeenCalled();
 
     // The back link to the plot, declined: the chat and its session stay.
@@ -1869,31 +2037,42 @@ describe('AgentChatPage .plot_all()', () => {
     fetchMock.getMockImplementation() as (input: string, init?: RequestInit) => Promise<Response>;
   const plotAllButton = () => screen.getByRole('button', { name: 'Plot in all libraries' });
 
-  it('offers all once the lists are in, and .plot_all() confirms the table, then plots it everywhere', async () => {
+  it('offers the fan-out once the lists are in, and .plot_all() confirms the table, then plots it everywhere', async () => {
     const base = baseFetch();
-    // The status answer waits: until it is in, the libraries and the limit are fallbacks.
+    // The chat's status answer waits: until it is in, the libraries and the limit are fallbacks.
+    // The first status call is the page's admin check, which answers at once.
     let releaseStatus!: () => void;
     const status = new Promise<void>(resolve => (releaseStatus = resolve));
-    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
-      input.endsWith('/debug/agent/status')
-        ? status.then(() =>
+    let statusCalls = 0;
+    fetchMock.mockImplementation((input: string, init?: RequestInit) => {
+      if (!input.endsWith('/debug/agent/status')) return base(input, init);
+      statusCalls += 1;
+      return statusCalls === 1
+        ? base(input, init)
+        : status.then(() =>
             json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 4 })
-          )
-        : base(input, init)
-    );
+          );
+    });
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
-    let menu = await openLibraryMenu();
-    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
-    await closeLibraryMenu();
+    let admin = await openAdminMenu();
+    expect(within(admin).queryByRole('button', ALL_TOGGLE)).not.toBeInTheDocument();
+    await closeAdminMenu();
     releaseStatus();
 
-    menu = await openLibraryMenu();
-    const all = await within(menu).findByRole('button', { name: 'All libraries' });
-    expect(all).toHaveTextContent('all libraries');
-    expect(within(menu).getByRole('group', { name: 'Admin' })).toContainElement(all);
+    admin = await openAdminMenu();
+    const all = await within(admin).findByRole('button', ALL_TOGGLE);
+    expect(all).toHaveTextContent(/^all 2 libraries$/);
     expect(all).toHaveAttribute('aria-pressed', 'false');
+    await closeAdminMenu();
+    // The library menu holds the libraries only, as a visitor's.
+    let menu = await openLibraryMenu();
+    expect(
+      within(menu)
+        .getAllByRole('button')
+        .map(button => button.textContent)
+    ).toEqual(['matplotlib', 'seaborn']);
     expect(within(menu).getByRole('button', { name: 'matplotlib' })).toHaveAttribute(
       'aria-pressed',
       'true'
@@ -1901,15 +2080,14 @@ describe('AgentChatPage .plot_all()', () => {
     await closeLibraryMenu();
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
 
-    // Pressed, `all` is what the chip names, and the composer's create action plots everywhere.
-    await pickInMenu('All libraries');
+    // On, the fan-out is what the chip names, and the composer's create action plots everywhere.
+    await toggleAll();
     expect(libraryChip()).toHaveTextContent(/^all 2 libraries ▾$/);
     expect(libraryChip()).toHaveAccessibleName('Library: all 2 libraries. Change');
+    admin = await openAdminMenu();
+    expect(within(admin).getByRole('button', ALL_TOGGLE)).toHaveAttribute('aria-pressed', 'true');
+    await closeAdminMenu();
     menu = await openLibraryMenu();
-    expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
     const own = within(menu).getByRole('button', { name: 'matplotlib' });
     expect(own).toHaveAttribute('aria-pressed', 'false');
     expect(own).toBeEnabled();
@@ -1951,10 +2129,13 @@ describe('AgentChatPage .plot_all()', () => {
     // A pointer click moves no focus.
     expect(panel).not.toHaveFocus();
     // While the panel is open, nothing starts another fan-out or changes the library, whose
-    // session the panel's sessions copy their data from; `all` stays pressed.
+    // session the panel's sessions copy their data from; the fan-out stays on.
     expect(plotAllButton()).toBeDisabled();
     expect(libraryChip()).toBeDisabled();
     expect(libraryChip()).toHaveTextContent(/^all 2 libraries ▾$/);
+    admin = await openAdminMenu();
+    expect(within(admin).getByRole('button', ALL_TOGGLE)).toBeDisabled();
+    await closeAdminMenu();
 
     // `.close()` goes with the panel: the focus returns to `.plot_all()`, which opened it.
     const close = within(panel).getByRole('button', { name: 'Close all libraries' });
@@ -1980,7 +2161,7 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
-    await pickInMenu('All libraries');
+    await toggleAll();
     const plotAll = plotAllButton();
     await waitFor(() => expect(plotAll).toBeEnabled());
 
@@ -1994,7 +2175,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(plotAllButton()).toBeEnabled();
   });
 
-  it('shows no all pill when the page has one library', async () => {
+  it('offers no fan-out when the page has one library', async () => {
     const base = baseFetch();
     fetchMock.mockImplementation((input: string, init?: RequestInit) =>
       input.endsWith('/debug/agent/status')
@@ -2008,12 +2189,15 @@ describe('AgentChatPage .plot_all()', () => {
     await waitFor(() =>
       expect(within(menu).queryByRole('button', { name: 'seaborn' })).not.toBeInTheDocument()
     );
-    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
     await closeLibraryMenu();
+    const admin = await openAdminMenu();
+    expect(within(admin).queryByRole('button', ALL_TOGGLE)).not.toBeInTheDocument();
+    expect(within(admin).getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    await closeAdminMenu();
     expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
 
-  it('turns all off from any library in the menu: the own one only that, another switches', async () => {
+  it('turns the fan-out off from any library in the menu: the own one only that, another switches', async () => {
     const base = baseFetch();
     fetchMock.mockImplementation((input: string, init?: RequestInit) =>
       input.endsWith('/sessions/S1/library')
@@ -2030,16 +2214,16 @@ describe('AgentChatPage .plot_all()', () => {
     await parseAndPlot();
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
 
-    // `all` itself is a toggle: a second pick turns it off again.
-    await pickInMenu('All libraries');
+    // The admin menu's toggle: a second click turns it off again.
+    await toggleAll();
     expect(screen.getByLabelText('Message')).toBeDisabled();
-    await pickInMenu('All libraries');
+    await toggleAll();
     expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(screen.getByRole('button', { name: 'Start over' })).toHaveTextContent('.start_over()');
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).not.toHaveAccessibleDescription();
 
-    await pickInMenu('All libraries');
+    await toggleAll();
     await pickInMenu('matplotlib');
     expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     // The menu closed and gave the focus back to its chip.
@@ -2055,22 +2239,21 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
     expect(agentCalls().filter(([input]) => String(input).endsWith('/library'))).toEqual([]);
 
-    await pickInMenu('All libraries');
+    await toggleAll();
     await pickInMenu('seaborn');
     await waitFor(() =>
       expect(screen.getByTestId('location')).toHaveTextContent('library=seaborn')
     );
     expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/);
-    expect(screen.getByTestId('location')).not.toHaveTextContent('all=1');
   });
 
-  it('leaves the chat about the data usable with all pressed, before data and in step 1', async () => {
+  it('leaves the chat about the data usable with the fan-out on, before data and in step 1', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await screen.findByLabelText('Message');
 
-    // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
-    await pickInMenu('All libraries');
+    // Without data: nothing to plot yet, and the box asks for a curve as without the fan-out.
+    await toggleAll();
     expect(libraryChip()).toHaveTextContent(/^all \d+ libraries ▾$/);
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     const box = screen.getByLabelText('Message');
@@ -2154,7 +2337,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
     await turnEnded();
 
-    await pickInMenu('All libraries');
+    await toggleAll();
     // Computed data has no paste, and `.plot_all()` needs none: it is the action, with no hint.
     const plotAll = plotAllButton();
     expect(plotAll).toBeEnabled();
@@ -2186,7 +2369,7 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
-    await pickInMenu('All libraries');
+    await toggleAll();
     fireEvent.click(plotAllButton(), { detail: 1 });
     const panel = await screen.findByRole('region', { name: 'All libraries' });
 
@@ -2213,7 +2396,7 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
-    await pickInMenu('All libraries');
+    await toggleAll();
     fireEvent.click(plotAllButton(), { detail: 1 });
 
     await waitFor(() => expect(fanOutCalls('/messages')).toHaveLength(2));
@@ -2263,7 +2446,7 @@ describe('AgentChatPage URL', () => {
   it('writes the language of the library it switches to', async () => {
     threeLibraries();
     localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt('/debug/agent?spec=scatter-basic&library=matplotlib&language=javascript');
+    renderAt('/agent?spec=scatter-basic&library=matplotlib&language=javascript');
     // The header moves into the chat column once the session is open: look for the menu there.
     await screen.findByLabelText('Message');
     expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
@@ -2280,76 +2463,25 @@ describe('AgentChatPage URL', () => {
     expect(query().get('spec')).toBe('scatter-basic');
   });
 
-  it('keeps all in the URL, and presses it again from there once the lists are in', async () => {
-    let releaseStatus!: () => void;
-    threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
-    const first = renderAt(PAGE);
-    releaseStatus();
-    await screen.findByLabelText('Message');
-    expect(query().has('all')).toBe(false);
-
-    await pickInMenu('All libraries');
-    await waitFor(() => expect(query().get('all')).toBe('1'));
-    await pickInMenu('All libraries');
-    await waitFor(() => expect(query().has('all')).toBe(false));
-    await pickInMenu('All libraries');
-    await waitFor(() => expect(query().get('all')).toBe('1'));
-    const reloaded = location();
-    first.unmount();
-
-    // The reload: until the lists are in, `all` is not offered, and the URL keeps it.
-    threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
-    renderAt(reloaded);
-    await screen.findByLabelText('Message');
-    let menu = await openLibraryMenu();
-    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
-    await closeLibraryMenu();
-    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
-    expect(query().get('all')).toBe('1');
-    releaseStatus();
-    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
-    menu = await openLibraryMenu();
-    expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    expect(within(menu).getByRole('button', { name: 'matplotlib' })).toHaveAttribute(
-      'aria-pressed',
-      'false'
-    );
-    await closeLibraryMenu();
-    expect(query().get('all')).toBe('1');
-  });
-
-  it('drops all from the URL: a library picked, and a page that offers none', async () => {
+  it('keeps the fan-out out of the URL: the old &all=1 presses nothing, a toggle writes nothing', async () => {
     threeLibraries();
     localStorage.setItem(ADMIN_HINT_KEY, '1');
-    const first = renderAt(`${PAGE}&all=1`);
-    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
+    renderAt(`${PAGE}&all=1`);
+    await screen.findByLabelText('Message');
     await waitFor(() => expect(libraryChip()).toBeEnabled());
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
 
-    // Another library switches and turns `all` off: the URL names the new library, without `all`.
+    await toggleAll();
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
+    const menu = await openAdminMenu();
+    expect(within(menu).getByRole('button', ALL_TOGGLE)).toHaveAttribute('aria-pressed', 'true');
+    await closeAdminMenu();
+
+    // Another library switches and turns the fan-out off: the URL names the new library.
     await pickInMenu('seaborn');
     await waitFor(() => expect(query().get('library')).toBe('seaborn'));
-    expect(query().has('all')).toBe(false);
     expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/);
-    first.unmount();
-
-    // One library: no `all` to press, so the URL does not keep it.
-    const base = fetchMock.getMockImplementation() as (
-      input: string,
-      init?: RequestInit
-    ) => Promise<Response>;
-    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
-      input.endsWith('/debug/agent/status')
-        ? Promise.resolve(json(200, { libraries: ['matplotlib'], enabled: true }))
-        : base(input, init)
-    );
-    renderAt(`${PAGE}&all=1`);
-    await waitFor(() => expect(query().has('all')).toBe(false));
-    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
-    expect(query().get('library')).toBe('matplotlib');
+    expect(query().get('spec')).toBe('scatter-basic');
   });
 });
 

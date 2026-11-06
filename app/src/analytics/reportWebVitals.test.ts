@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { resetAnalyticsMute, setAnalyticsMuted } from 'src/analytics/mute';
 import { reportWebVitals } from 'src/analytics/reportWebVitals';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 
@@ -28,6 +29,7 @@ describe('reportWebVitals', () => {
     });
     delete window.plausible;
     setAnalyticsAmbientProps({ theme: '' });
+    resetAnalyticsMute();
   });
 
   it('does nothing in non-production environment', () => {
@@ -108,5 +110,23 @@ describe('reportWebVitals', () => {
     expect(window.plausible).toHaveBeenCalledWith('TTFB', {
       props: { theme: 'dark', value: '400', rating: 'good' },
     });
+  });
+
+  it("reports nothing for a load in which the admin's use of the chat muted analytics", async () => {
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, hostname: 'anyplot.ai' },
+      writable: true,
+      configurable: true,
+    });
+    window.plausible = vi.fn();
+    // The admin left the chat for another page of the same load: a late metric (CLS and INP
+    // report when the page is hidden) measured the chat's time too.
+    setAnalyticsMuted(true);
+    setAnalyticsMuted(false);
+
+    reportWebVitals();
+    await vi.dynamicImportSettled();
+
+    expect(window.plausible).not.toHaveBeenCalled();
   });
 });

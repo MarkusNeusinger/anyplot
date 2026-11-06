@@ -1,10 +1,11 @@
 /**
- * The public chat at `/agent`: the same page on the public lane. It opens only while
- * the API's public lane is open, talks to `/agent/*` anonymously (the tab id and the
- * session id as headers, no cookie, no admin token), says it is experimental above
- * the first input, offers no `all` and no `.save()`, and starts the feedback form's data
- * box unticked. The page's
- * flows are in AgentChatPage.test.tsx; this file stubs only what the lane changes.
+ * The chat at `/agent` on the public lane: a visitor's page, and an admin's in "view as
+ * visitor". It opens only while the API's public lane is open, talks to `/agent/*`
+ * anonymously (the tab id and the session id as headers, no cookie, no admin token), says it
+ * is experimental above the first input, and records the open. A visitor's browser never asks
+ * the debug API and shows no admin menu. The page's flows are in AgentChatPage.test.tsx (on
+ * the admin lane); this file stubs only what the lane changes, and
+ * AgentChatPage.parity.test.tsx compares the two lanes' DOM.
  */
 
 import { render, screen, waitFor, within } from '@testing-library/react';
@@ -15,10 +16,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { resetAgentLaneProbe } from 'src/hooks/useAgentLaneOpen';
-import { HIGHCHARTS_NOTE, PublicAgentChatPage } from 'src/pages/AgentChatPage';
+import { AgentChatPage, HIGHCHARTS_NOTE } from 'src/pages/AgentChatPage';
 import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
 import { theme } from 'src/theme';
-import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
+import { ADMIN_HINT_KEY, VIEW_AS_VISITOR_KEY } from 'src/utils/adminAuth';
 
 vi.mock('src/global-config', async importOriginal => {
   const actual = await importOriginal<typeof import('src/global-config')>();
@@ -67,9 +68,9 @@ function stubFetch() {
   );
 }
 
-function renderPage(library = 'matplotlib', language = 'python') {
-  const router = createMemoryRouter([{ path: '/agent', element: <PublicAgentChatPage /> }], {
-    initialEntries: [`/agent?spec=scatter-basic&library=${library}&language=${language}`],
+function renderPage(library = 'matplotlib', language = 'python', extra = '') {
+  const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
+    initialEntries: [`/agent?spec=scatter-basic&library=${library}&language=${language}${extra}`],
   });
   return render(
     <ThemeProvider theme={theme}>
@@ -77,6 +78,11 @@ function renderPage(library = 'matplotlib', language = 'python') {
     </ThemeProvider>
   );
 }
+
+/** The calls to the debug API: a visitor's browser makes none. */
+const debugCalls = () => calls.filter(call => call.url.pathname.includes('/debug/'));
+/** The chat's own calls, on the public lane. */
+const publicCalls = () => calls.filter(call => !call.url.pathname.includes('/debug/'));
 
 beforeEach(() => {
   localStorage.clear();
@@ -93,14 +99,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('PublicAgentChatPage', () => {
-  it('opens a session on the public lane, anonymously, and never on the admin one', async () => {
-    // Even a browser with the admin hint stays on the public lane at /agent.
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
+describe('AgentChatPage on the public lane', () => {
+  it("opens a visitor's session on the public lane, anonymously, and never asks the debug API", async () => {
     renderPage();
     await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
 
-    const open = calls.find(
+    const open = publicCalls().find(
       call => call.url.pathname.endsWith('/agent/sessions') && call.init.method === 'POST'
     );
     expect(open).toBeDefined();
@@ -108,8 +112,58 @@ describe('PublicAgentChatPage', () => {
     expect(headers['X-Anyplot-Anon']).toMatch(/^[A-Za-z0-9_-]{22,64}$/);
     expect(headers['X-Admin-Token']).toBeUndefined();
     expect(open!.init.credentials).toBe('omit');
-    expect(calls.some(call => call.url.pathname.includes('/debug/'))).toBe(false);
+    expect(debugCalls()).toEqual([]);
+    // No admin menu, and nothing of it, for a visitor.
+    expect(screen.queryByTestId('admin-menu')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(analytics.trackPageview).toHaveBeenCalledWith('/agent');
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
+      library: 'matplotlib',
+      source: 'direct',
+      spec: 'scatter-basic',
+    });
+  });
+
+  it.each(['spec_hub', 'plot_page', 'plot_of_the_day'])(
+    "records a visitor's open from %s, then drops the source",
+    async source => {
+      renderPage('matplotlib', 'python', `&source=${source}`);
+      await screen.findByLabelText('Message');
+      expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
+        library: 'matplotlib',
+        source,
+        spec: 'scatter-basic',
+      });
+    }
+  );
+
+  it('runs the public lane exactly for an admin in "view as visitor", and records nothing', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    sessionStorage.setItem(VIEW_AS_VISITOR_KEY, '1');
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
+
+    // The admin check only: every chat call goes to the public lane, as a visitor's does.
+    expect(debugCalls().map(call => call.url.pathname)).toEqual(['/debug/agent/status']);
+    const open = publicCalls().find(
+      call => call.url.pathname.endsWith('/agent/sessions') && call.init.method === 'POST'
+    );
+    const headers = open!.init.headers as Record<string, string>;
+    expect(headers['X-Anyplot-Anon']).toMatch(/^[A-Za-z0-9_-]{22,64}$/);
+    expect(headers['X-Admin-Token']).toBeUndefined();
+    expect(open!.init.credentials).toBe('omit');
+    // The admin menu stays, with the way back and nothing the public lane does not have.
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · as visitor ▾$/);
+    await userEvent.setup().click(screen.getByTestId('admin-menu'));
+    const menu = await screen.findByRole('dialog', { name: 'Admin' });
+    expect(
+      within(menu)
+        .getAllByRole('button')
+        .map(button => button.textContent)
+    ).toEqual(['view as visitor']);
+    // The owner's persona tests are no visitor's use.
+    expect(analytics.trackPageview).not.toHaveBeenCalled();
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
   });
 
   it('says it is an experimental AI in one line, with the details behind its button', async () => {
@@ -189,23 +243,21 @@ describe('PublicAgentChatPage', () => {
     expect(screen.getByRole('region', { name: 'Chat' })).toBe(frame);
   });
 
-  it('offers no "all", no .save() and no "⋯" menu, also to an admin', async () => {
+  it("offers a visitor the libraries only: the fan-out and .save() are the admin menu's", async () => {
     const user = userEvent.setup();
-    // The site's entries lead an admin here while the lane is open: the page a visitor gets.
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderPage();
     await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
-    expect(screen.getByTestId('experimental-notice')).toBeInTheDocument();
-    // A visitor cannot resume a saved session, and the feedback form covers "something went
-    // wrong"; the menu would hold nothing else.
-    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: '# include data.csv' })).not.toBeInTheDocument();
     expect(calls.some(call => call.url.pathname.endsWith('/bundle'))).toBe(false);
 
     await user.click(screen.getByRole('button', { name: /^Library: matplotlib/ }));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).queryByRole('button', { name: 'All libraries' })).toBeNull();
+    expect(
+      within(dialog)
+        .getAllByRole('button')
+        .map(button => button.textContent)
+    ).toEqual(['matplotlib', 'seaborn', 'highcharts']);
   });
 
   it('carries the Highcharts note while the session plots in Highcharts', async () => {
@@ -226,14 +278,15 @@ describe('PublicAgentChatPage', () => {
     );
   });
 
-  it("keeps an admin's hint when the public lane refuses a session", async () => {
+  it("keeps an admin's hint when the public lane refuses a session in the visitor view", async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
+    sessionStorage.setItem(VIEW_AS_VISITOR_KEY, '1');
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string, init: RequestInit = {}) => {
         const url = new URL(input);
         if (url.pathname.endsWith('/agent/lane')) return json(200, { open: true });
-        if (url.pathname.endsWith('/agent/sessions') && init.method === 'POST') {
+        if (url.pathname === '/agent/sessions' && init.method === 'POST') {
           return json(401, { detail: 'unauthorized', ref: 'r-u' });
         }
         return json(200, { libraries: ['matplotlib'], enabled: true });
@@ -241,8 +294,10 @@ describe('PublicAgentChatPage', () => {
     );
     renderPage();
     expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
-    // The admin token was never asked: the admin lane's sign-in still stands.
+    // The public lane's refusal says nothing about the admin: the admin lane's sign-in stands,
+    // and the admin menu keeps the way back.
     expect(localStorage.getItem(ADMIN_HINT_KEY)).toBe('1');
+    expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · as visitor ▾$/);
   });
 
   it('says why a network cannot open one more session', async () => {

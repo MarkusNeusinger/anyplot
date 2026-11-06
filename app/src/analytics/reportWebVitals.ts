@@ -1,4 +1,15 @@
+import { analyticsMutedThisLoad } from 'src/analytics/mute';
 import { getAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
+
+/**
+ * One metric as a Plausible event with the ambient props; nothing for a page load in which the
+ * admin's own use of the agent chat muted analytics (`src/analytics/mute.ts`), since a metric
+ * measures the whole load and may report after the chat is gone.
+ */
+function send(name: string, value: string, rating: string) {
+  if (analyticsMutedThisLoad()) return;
+  window.plausible?.(name, { props: { ...getAnalyticsAmbientProps(), value, rating } });
+}
 
 /**
  * Core Web Vitals tracking via web-vitals library.
@@ -12,55 +23,11 @@ export function reportWebVitals() {
 
   import('web-vitals')
     .then(({ onLCP, onCLS, onINP, onFCP, onTTFB }) => {
-      onLCP(metric => {
-        window.plausible?.('LCP', {
-          props: {
-            ...getAnalyticsAmbientProps(),
-            value: String(Math.round(metric.value / 100) * 100),
-            rating: metric.rating,
-          },
-        });
-      });
-
-      onCLS(metric => {
-        window.plausible?.('CLS', {
-          props: {
-            ...getAnalyticsAmbientProps(),
-            value: String(Math.round(metric.value * 100) / 100),
-            rating: metric.rating,
-          },
-        });
-      });
-
-      onINP(metric => {
-        window.plausible?.('INP', {
-          props: {
-            ...getAnalyticsAmbientProps(),
-            value: String(Math.round(metric.value / 50) * 50),
-            rating: metric.rating,
-          },
-        });
-      });
-
-      onFCP(metric => {
-        window.plausible?.('FCP', {
-          props: {
-            ...getAnalyticsAmbientProps(),
-            value: String(Math.round(metric.value / 100) * 100),
-            rating: metric.rating,
-          },
-        });
-      });
-
-      onTTFB(metric => {
-        window.plausible?.('TTFB', {
-          props: {
-            ...getAnalyticsAmbientProps(),
-            value: String(Math.round(metric.value / 100) * 100),
-            rating: metric.rating,
-          },
-        });
-      });
+      onLCP(metric => send('LCP', String(Math.round(metric.value / 100) * 100), metric.rating));
+      onCLS(metric => send('CLS', String(Math.round(metric.value * 100) / 100), metric.rating));
+      onINP(metric => send('INP', String(Math.round(metric.value / 50) * 50), metric.rating));
+      onFCP(metric => send('FCP', String(Math.round(metric.value / 100) * 100), metric.rating));
+      onTTFB(metric => send('TTFB', String(Math.round(metric.value / 100) * 100), metric.rating));
     })
     .catch(() => {});
 }
