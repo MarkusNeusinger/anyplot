@@ -13,7 +13,8 @@ A histogram displayed as step lines (outline only) without filled bars. The dist
 
 ## Data
 
-- `values` (numeric, continuous) — Raw continuous measurements to be binned and counted
+- `values1, values2, ...` (numeric, continuous) — Raw continuous measurements to be binned and counted, one column per distribution
+- `group` (categorical) — Optional grouping variable if data is in long format
 - Size: 50–5000 points (larger datasets reveal distribution shape better)
 - Example: Heights in cm, test scores, sensor readings
 

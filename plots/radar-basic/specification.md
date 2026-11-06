@@ -14,7 +14,8 @@ A radar chart (also known as spider or web chart) displays multivariate data on 
 ## Data
 
 - `category` (string) - axis labels representing different variables/dimensions
-- `value` (numeric) - values for each axis (0-100 scale recommended for clarity)
+- `value1, value2, ...` (numeric) - values for each axis, one column per series (0-100 scale recommended for clarity)
+- `series` (categorical) - Optional grouping variable if data is in long format
 - Size: 4-8 axes, 1-3 series for comparison
 
 ## Notes
