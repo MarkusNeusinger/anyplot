@@ -24,8 +24,8 @@
  * them already. The header stays then and reads as a warning (`! check again ·
  * ...`, the phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
- * after a data request sent from below the plot. The step line above the
- * composer names what dropped the confirmation, and only it: the thread
+ * after a data request sent from below the plot. The status line at the chat
+ * frame's foot names what dropped the confirmation, and only it: the thread
  * adds no notice that would say the same. A table read from text that waits for its decision holds the page in
  * step 1 as well, whatever a turn's sync says, and the header names that
  * decision.
@@ -108,7 +108,7 @@ import { AgentApiError, type ConvertAnswer, tableChoice } from 'src/lib/agent';
 import { DataCard } from 'src/sections/agent-chat/DataCard';
 import { DataViewUnavailable } from 'src/sections/agent-chat/dataCardParts';
 import { describeConvertFailure } from 'src/sections/agent-chat/messages';
-import { DATA_LOCK_TEXT, DATA_SUMMARY_ID, DataCardShell } from 'src/sections/agent-chat/PinnedData';
+import { DATA_LOCK_TEXT, DataCardShell } from 'src/sections/agent-chat/PinnedData';
 import { plotButtonLabel } from 'src/sections/agent-chat/steps';
 import { cardSx } from 'src/sections/agent-chat/styles';
 import {
@@ -118,7 +118,7 @@ import {
 } from 'src/sections/agent-chat/useChatAttachment';
 import type { DataCardView } from 'src/sections/agent-chat/useDataCardView';
 
-export { DATA_LOCK_TEXT, DATA_SUMMARY_ID, DataViewUnavailable };
+export { DATA_LOCK_TEXT, DataViewUnavailable };
 
 interface DataPanelProps {
   state: AgentSessionState;

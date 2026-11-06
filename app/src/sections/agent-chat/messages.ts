@@ -80,7 +80,8 @@ export const RECONNECTING_TEXT = 'connection lost · reconnecting…';
 
 /**
  * Why a `plot` event shipped no render (`failed` or `not_ready`). `data_unconfirmed` has no line:
- * the thread shows no failed plot for it, only the step line above the composer (`useAgentSession`).
+ * the thread shows no failed plot for it, only the status line at the chat frame's foot
+ * (`useAgentSession`).
  */
 export const PLOT_FAILED_TEXT: Record<string, string> = {
   validation: 'the adapted code did not pass the safety checks',
@@ -183,10 +184,10 @@ export function describeViewFailure(code: string, ref: string | null, detail?: s
 export const NEW_DATA_PLOT = 'plot the new data';
 
 /**
- * What dropped a confirmation the user had given, as the step line above the composer says it,
- * the description of the composer's action (`.create_plot()`, after a data change `plot the new
- * data`, or `.plot_all()` with `all` pressed), which points up at the card it stands below. The
- * thread carries no notice of its own for it: the step line, right above the composer, says it.
+ * What dropped a confirmation the user had given, as the status line at the chat frame's foot says
+ * it, the description of the composer's action (`.create_plot()`, after a data change `plot the
+ * new data`, or `.plot_all()` with `all` pressed), which points up at the card above it. The
+ * thread carries no notice of its own for it: the status line says it.
  */
 export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, (action: string) => string> = {
   bindings: action => `bindings changed · check them above, then ${action}`,
@@ -220,7 +221,7 @@ export function languageNotice(
       lines: [
         source === 'pasted' ? 'detected from your pasted data' : 'detected from your message',
         'a plot you have keeps its language',
-        'the lang chip in the header changes both',
+        'the language chip in the header changes both',
       ],
     },
   };
@@ -486,11 +487,11 @@ export function describeConvertWarnings(
 }
 
 /**
- * The line above the composer while an attachment waits, in place of the step's line: the plot
+ * The status line's part while an attachment waits, in place of the step's part: the plot
  * buttons wait for it, since they would plot the data before it, or none.
  */
 export const ATTACHMENT_LINE =
-  '# the attached table is read when you send it: Enter or .send(), with a note if you like';
+  'the attached table is read when you send it: Enter or .send(), with a note if you like';
 
 /**
  * `ATTACHMENT_LINE`, or, while the session holds data of `rows` rows, the line that says the
@@ -499,7 +500,7 @@ export const ATTACHMENT_LINE =
  */
 export function attachmentWaitLine(rows: number | null): string {
   if (rows === null) return ATTACHMENT_LINE;
-  return `# the attached table replaces your data (${countOf(rows, 'row')}, no .undo()) when you send it: Enter or .send(), with a note if you like`;
+  return `the attached table replaces your data (${countOf(rows, 'row')}, no .undo()) when you send it: Enter or .send(), with a note if you like`;
 }
 
 /** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */

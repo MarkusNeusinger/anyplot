@@ -12,6 +12,8 @@ import {
   runLine,
   runView,
   showsTimeline,
+  statusLine,
+  stepAnnouncement,
   stepOneLine,
 } from 'src/sections/agent-chat/steps';
 
@@ -54,9 +56,9 @@ describe('the waits of a turn', () => {
     expect(pendingReply(stepped)).toBeNull();
   });
 
-  it('names .stop() above the composer while a plot runs, and that it stops once pressed', () => {
-    expect(runLine(running(queued('create_plot')))).toBe('# plotting… .stop() to cancel');
-    expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toBe('# stopping…');
+  it('names .stop() in the status line while a plot runs, and that it stops once pressed', () => {
+    expect(runLine(running(queued('create_plot')))).toBe('plotting… .stop() to cancel');
+    expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toBe('stopping…');
     // A turn without a pipeline step keeps the step's line: its in-progress line says what runs.
     expect(runLine(running(queued('example_data')))).toBeNull();
     expect(runLine({ ...initialAgentState('matplotlib'), phase: 'ready' })).toBeNull();
@@ -140,28 +142,28 @@ describe('stepOneLine', () => {
     expect(stepOneLine(step1({ dataConfirmed: true }))).toBeNull();
   });
 
-  it('names what .create_plot() waits for, and after a loss says step 1 again', () => {
+  it('names what .create_plot() waits for, and after a loss what lost it', () => {
     expect(stepOneLine(step1())).toBe(
-      '# step 1 — check the preview and the bindings above, then .create_plot()'
+      'check the preview and the bindings above, then .create_plot()'
     );
     expect(stepOneLine(step1({ missingRoles: ['y'] }))).toBe(
-      '# step 1 — pick a column for y, then .create_plot()'
+      'pick a column for y, then .create_plot()'
     );
     expect(stepOneLine(step1({ missingRoles: ['y'], confirmLoss: 'bindings' }))).toBe(
-      '# step 1 again — pick a column for y, then .create_plot()'
+      'pick a column for y, then .create_plot()'
     );
     // After a data change the plot button reads `plot the new data`, and the line ends with it.
     expect(stepOneLine(step1({ confirmLoss: 'data' }))).toBe(
-      '# step 1 again — data changed · check it above, then plot the new data'
+      'data changed · check it above, then plot the new data'
     );
     expect(stepOneLine(step1({ missingRoles: ['y'], confirmLoss: 'data' }))).toBe(
-      '# step 1 again — pick a column for y, then plot the new data'
+      'pick a column for y, then plot the new data'
     );
     expect(stepOneLine(step1({ confirmLoss: 'bindings' }))).toBe(
-      '# step 1 again — bindings changed · check them above, then .create_plot()'
+      'bindings changed · check them above, then .create_plot()'
     );
     expect(stepOneLine(step1({ confirmLoss: 'server' }))).toBe(
-      '# step 1 again — check the data above, then .create_plot()'
+      'check the data above, then .create_plot()'
     );
   });
 
@@ -174,13 +176,97 @@ describe('stepOneLine', () => {
 
   it('leads to .plot_all() while all is pressed, where no .create_plot() shows', () => {
     expect(stepOneLine(step1(), '.plot_all()')).toBe(
-      '# step 1 — check the preview and the bindings above, then .plot_all()'
+      'check the preview and the bindings above, then .plot_all()'
     );
     expect(stepOneLine(step1({ missingRoles: ['y'] }), '.plot_all()')).toBe(
-      '# step 1 — pick a column for y, then .plot_all()'
+      'pick a column for y, then .plot_all()'
     );
     expect(stepOneLine(step1({ confirmLoss: 'data' }), '.plot_all()')).toBe(
-      '# step 1 again — data changed · check it above, then .plot_all()'
+      'data changed · check it above, then .plot_all()'
+    );
+  });
+});
+
+describe('statusLine', () => {
+  const dataset = {
+    bytes: 10,
+    parsed: {
+      preview: [],
+      profile: { rows: 2, columns: [], source_format: 'csv', decimal: '.', warnings: [] },
+      bindings: [],
+      warnings: [],
+      version: 3,
+    },
+  };
+  const ready = (overrides: Partial<AgentSessionState> = {}): AgentSessionState => ({
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+    ...overrides,
+  });
+  const options = {
+    action: '.create_plot()',
+    attachmentLine: null,
+    carryText: null,
+    chatLocked: false,
+  };
+  const plotted = {
+    1: { version: 1, library: 'matplotlib' },
+  } as unknown as AgentSessionState['versions'];
+
+  it('names step 1 and its data without data, and what to check with it', () => {
+    expect(statusLine(ready(), options)).toEqual({ step: 1, text: 'step 1 of 2 · your data' });
+    expect(statusLine(ready({ dataset }), options)).toEqual({
+      step: 1,
+      text: 'step 1 of 2 · check the preview and the bindings above, then .create_plot()',
+    });
+  });
+
+  it('says back to step 1 after a lost confirmation, with what lost it', () => {
+    expect(statusLine(ready({ dataset, confirmLoss: 'bindings' }), options).text).toBe(
+      'back to step 1 of 2 · bindings changed · check them above, then .create_plot()'
+    );
+  });
+
+  it("puts a waiting attachment first, then a plot's run, before the step's own words", () => {
+    const run = queued('create_plot');
+    const confirmed = ready({ dataset, dataConfirmed: true, run, items: running(run).items });
+    expect(statusLine(confirmed, options)).toEqual({
+      step: 2,
+      text: 'step 2 of 2 · plotting… .stop() to cancel',
+    });
+    expect(
+      statusLine(confirmed, { ...options, attachmentLine: 'the attached table is read' }).text
+    ).toBe('step 2 of 2 · the attached table is read');
+  });
+
+  it("says in step 2 what the plot button does before the library's first plot, then the data", () => {
+    const confirmed = ready({ dataset, dataConfirmed: true });
+    expect(statusLine(confirmed, options).text).toBe(
+      'step 2 of 2 · create the plot as it is, or say first what it should do differently'
+    );
+    expect(
+      statusLine(confirmed, { ...options, carryText: 'plot in seaborn with your 2 decisions' }).text
+    ).toBe(
+      'step 2 of 2 · plot in seaborn with your 2 decisions, or say first what it should do differently'
+    );
+    // While `all` holds the box, the composer's own line says why; the status line names the data.
+    expect(statusLine(confirmed, { ...options, chatLocked: true }).text).toBe(
+      'step 2 of 2 · data fits · 2 rows · 0 columns · version 3'
+    );
+    expect(statusLine({ ...confirmed, versions: plotted }, options).text).toBe(
+      'step 2 of 2 · data fits · 2 rows · 0 columns · version 3'
+    );
+  });
+
+  it('announces the step and a parse in the hidden region, nothing before data', () => {
+    expect(stepAnnouncement(ready())).toBe('');
+    expect(stepAnnouncement(ready({ parsing: true }))).toBe('parsing your data');
+    expect(stepAnnouncement(ready({ dataset }))).toBe(
+      'step 1: check the data, then create the plot'
+    );
+    expect(stepAnnouncement(ready({ dataset, dataConfirmed: true }))).toBe(
+      'step 2: the data is confirmed; create the plot below'
     );
   });
 });

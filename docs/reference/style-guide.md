@@ -689,9 +689,9 @@ In catalog tier (`max-width: 2200px`): `grid-template-columns: repeat(auto-fill,
 
 ## 7. Components
 
-### 7.1 Hero Terminal Box (scoped to the plot panel)
+### 7.1 Hero Terminal Box
 
-**Status update**: The terminal-box framing no longer wraps the full hero. The left column is now plain editorial text; only the **plot-of-the-day panel on the right** keeps the terminal treatment (with a `~/anyplot` tab label and a `$ python …` prompt header). The CSS below still applies to that panel. See §5.3 for the current hero structure.
+**Status update**: The terminal-box framing no longer wraps the full hero. The left column is now plain editorial text; on the landing page only the **plot-of-the-day panel on the right** keeps the terminal treatment (with a `~/anyplot` tab label and a `$ python …` prompt header). The CSS below still applies to that panel. See §5.3 for the current hero structure. Since 2026-11-06 the agent chat uses the same construction for its window, with its own tab label and a quieter rule (§7.9).
 
 The plot panel sits inside a single ASCII-style box drawn with CSS borders. The box framing makes the panel feel like a terminal window rendered on editorial paper.
 
@@ -966,6 +966,31 @@ Top-right of the nav, styled as an inline mono input that reads `❯ .find(_)` w
 ```
 
 Active palette state replaces the placeholder cursor with the user's typed query, still in mono. Results appear below the input as a list of `slug · library · tags` lines, each prefixed with `❯` to maintain the prompt continuity.
+
+### 7.9 Agent Chat Window
+
+The agent chat (`/agent`, and `/debug/agent` for admins) is one terminal-style window on the page, since the v4 design of 2026-11-06 (`app/src/sections/agent-chat/ChatFrame.tsx`, styles in `styles.ts`: `frameSx`, `frameRuleSx`, `headerChipSx`). Inside it the chat convention holds: the person's messages on the right in light bubbles, the assistant's on the left without a box.
+
+```
+❯ agent · use with my data
+                         // experimental AI · answers can be wrong ⓘ
+┌─ ~/anyplot.ai/agent ─────────────────────────────────────┐
+│ [▦] Basic Scatter Plot ⓘ  [seaborn ▾] [English ▾] ⓘ   ⋯ │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│   the thread                                             │
+│ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│   the message box and its buttons                        │
+│ >>> step 1 of 2 · check the preview and the bindings…    │
+└──────────────────────────────────────────────────────────┘
+```
+
+- **Frame**: §7.1's construction on the page colour (`--bg-page`), so the tab label punches through the top border. The border is `1px solid var(--rule)`, not the hero's `--ink-muted`: the window holds cards and a message box with borders of their own, and a strong outer line would compete with them. Frame and rules are decoration; every control inside keeps its own boundary. Radius 6px; padding 26px 24px 14px from `sm` up, 22px 12px 12px at phone width.
+- **Tab label**: `~/anyplot.ai/agent` in mono at 13px (`smallText`), `--ink-soft`, hidden from screen readers, since the section's name ("Chat") says what it is.
+- **Header row**, in plain words, no command line: the catalogue plot's thumbnail, the spec's title as the link back in `--ink` (no `←`), the columns ⓘ, the library and reply-language dropdowns (`seaborn ▾`, `English ▾`: the language in its own words; the language a library belongs to and how the reply language was set live in the accessible names only), the how-to ⓘ, and on the admin lane the `⋯` menu at the row's right end. The dropdowns are 40px high from `sm` up and 44px at phone width, on `--bg-elevated` with a `--rule` border. At phone width the title takes the first line and the controls wrap below it.
+- **Rules**: `1px dashed var(--rule)` under the header row, and between the thread and the composer once the thread holds anything.
+- **Status line**: the frame's foot, `>>> step N of 2 · …`, in mono at 13px and `--ink-soft`; the `>>>` is a glyph beside words, so it may take the brand green on the light page too (3.08:1). It replaces the step header and the step lines above the message box, and it is the plot button's description: after the step it names what the button waits for, the plot that runs, or the confirmed data's shape. A hidden polite region beside it announces the step when it changes.
+- **Notice**: on the public lane the experimental notice stands above the frame as one muted line, `// experimental AI · answers can be wrong ⓘ`, right-aligned from `sm` up and at the left at phone width, in `--ink-soft` at 13px. No coloured rule and no box: the words carry it, and the ⓘ keeps the details.
+- **Not inside the frame**: the admin fan-out's panel (`.plot_all()`) stands below it, since its sessions are not this chat's.
 
 ---
 

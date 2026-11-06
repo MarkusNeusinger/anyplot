@@ -116,13 +116,18 @@ describe('PublicAgentChatPage', () => {
     const user = userEvent.setup();
     renderPage();
     const notice = await screen.findByTestId('experimental-notice');
-    // In view without a click: an experimental AI (AI Act Art. 50) whose answers can be wrong.
-    expect(notice).toHaveTextContent(`# ${EXPERIMENTAL_LINE}`);
-    expect(notice).toHaveTextContent('# experimental AI · answers can be wrong');
+    // In view without a click: an experimental AI (AI Act Art. 50) whose answers can be wrong,
+    // one muted `//` line above the chat's frame since the v4 frame.
+    expect(notice).toHaveTextContent(`// ${EXPERIMENTAL_LINE}`);
+    expect(notice).toHaveTextContent(/^\/\/ experimental AI · answers can be wrong$/);
     expect(screen.queryByTestId('experimental-details')).not.toBeInTheDocument();
-    // Above the message box, where the data comes in: the notice comes first in the document.
+    // Above the message box, where the data comes in: the notice comes first in the document,
+    // before the frame, and outside it.
     const box = await screen.findByRole('textbox', { name: 'Message' });
+    const frame = screen.getByRole('region', { name: 'Chat' });
     expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(notice.compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(frame).not.toContainElement(notice);
 
     const about = within(notice).getByRole('button', { name: 'About the assistant' });
     expect(about).toHaveAttribute('aria-expanded', 'false');

@@ -1,18 +1,24 @@
 /**
- * The agent chat's two steps, data first, as the page, the step header and the
- * data card read them from the session state, and the thread's in-progress
- * line of a turn the assistant is still working on.
+ * The agent chat's two steps, data first, as the page, the status line at the chat frame's foot
+ * and the data card read them from the session state, and the thread's in-progress line of a
+ * turn the assistant is still working on.
  */
 
 import type { AgentSessionState, ChatItem } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
+import { countOf } from 'src/sections/agent-chat/countOf';
 import { CONFIRM_LOST_STEP_TEXT, NEW_DATA_PLOT } from 'src/sections/agent-chat/messages';
 
+/** The step the session is in: 1 the data, 2 the plot. */
+export type AgentStep = 1 | 2;
+
 /**
- * The pinned header's line (`✓ data fits · ...`, `PinnedData.tsx`), which step 2's plot buttons
- * in the composer name as their description.
+ * The status line at the chat frame's foot (`StatusLine`, `ChatFrame.tsx`), which the composer's
+ * plot buttons name as their description, and `.send()` while an attachment waits. It holds the
+ * id the pinned header's summary had, so a description that points at it stays valid while the
+ * composer changes around it.
  */
-export const DATA_SUMMARY_ID = 'agent-data-summary';
+export const STATUS_LINE_ID = 'agent-status-line';
 
 /**
  * Step 2: the stored data and its bindings are confirmed, and no table read
@@ -39,11 +45,22 @@ export function plotButtonLabel(state: AgentSessionState): string {
   return dataChanged(state) ? NEW_DATA_PLOT : '.create_plot()';
 }
 
+/** The server files a version under its (spec, library) pair: whether the library in use has one. */
+export function hasPlotHere(state: AgentSessionState): boolean {
+  return Object.values(state.versions).some(version => version.library === state.library);
+}
+
+/** The data's shape in one line: `2 rows · 2 columns · version 1`. */
+export function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
+  const { profile, version } = dataset.parsed;
+  return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
+}
+
 /**
- * The line above the composer in step 1, which the plot button at the composer's end names as
- * its description: the click takes the data and the bindings as the card shows them. It says
- * what the button waits for first (a table read from text to decide on, a required role without
- * a column), else what to check, and after a lost confirmation what lost it, which no thread
+ * Step 1's part of the status line, which the plot button at the composer's end names as its
+ * description: the click takes the data and the bindings as the card shows them. It says what
+ * the button waits for first (a table read from text to decide on, a required role without a
+ * column), else what to check, and after a lost confirmation what lost it, which no thread
  * notice repeats. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
  * where no `.create_plot()` shows, else the button's own name (`plotButtonLabel`). `null` without
  * data or in step 2.
@@ -53,14 +70,70 @@ export function stepOneLine(
   action = plotButtonLabel(state)
 ): string | null {
   if (!state.dataset || inStep2(state)) return null;
-  const head = state.confirmLoss ? '# step 1 again — ' : '# step 1 — ';
-  if (state.transcription) return `${head}decide on the table first: .use() or .discard()`;
+  if (state.transcription) return 'decide on the table first: .use() or .discard()';
   if (state.missingRoles.length > 0) {
-    return `${head}pick a column for ${state.missingRoles.join(', ')}, then ${action}`;
+    return `pick a column for ${state.missingRoles.join(', ')}, then ${action}`;
   }
   return state.confirmLoss
-    ? `${head}${CONFIRM_LOST_STEP_TEXT[state.confirmLoss](action)}`
-    : `${head}check the preview and the bindings above, then ${action}`;
+    ? CONFIRM_LOST_STEP_TEXT[state.confirmLoss](action)
+    : `check the preview and the bindings above, then ${action}`;
+}
+
+/** What the status line needs besides the session state: the page's own parts of it. */
+export interface StatusLineOptions {
+  /** The plot button the line leads to: `plotButtonLabel`, or `.plot_all()` while `all` is pressed. */
+  action: string;
+  /** The line of a table or a file waiting in the message box (`attachmentWaitLine`), else null. */
+  attachmentLine: string | null;
+  /** A switch's carry as its button reads (`carryActionText`); null without one shown. */
+  carryText: string | null;
+  /** `all` holds the message box in step 2: the composer's own line above the box says why. */
+  chatLocked: boolean;
+}
+
+/** The status line's step and its words, after the `>>>` the line starts with. */
+export interface StatusLineText {
+  step: AgentStep;
+  text: string;
+}
+
+/**
+ * The status line at the chat frame's foot, `step 1 of 2 · …` (`back to step 1 of 2 · …` after a
+ * lost confirmation), which took the step header's place and the step lines above the message
+ * box in the v4 frame (2026-11-06). After the step it names, in this order: the attachment that
+ * waits for Enter, the plot that runs and the `.stop()` it leaves, step 1's line, before the
+ * library's first plot in step 2 what the plot button does, else the confirmed data's shape.
+ */
+export function statusLine(state: AgentSessionState, options: StatusLineOptions): StatusLineText {
+  const step: AgentStep = inStep2(state) ? 2 : 1;
+  const head = step === 1 && state.confirmLoss ? 'back to step 1 of 2' : `step ${step} of 2`;
+  const detail =
+    options.attachmentLine ??
+    runLine(state) ??
+    stepOneLine(state, options.action) ??
+    stepTwoLine(state, options);
+  return { step, text: `${head} · ${detail}` };
+}
+
+/** Step 2's part of the status line, and `your data` while the session has none. */
+function stepTwoLine(state: AgentSessionState, options: StatusLineOptions): string {
+  if (!state.dataset || !inStep2(state)) return 'your data';
+  if (!hasPlotHere(state) && !options.chatLocked) {
+    const action = options.carryText ?? 'create the plot as it is';
+    return `${action}, or say first what it should do differently`;
+  }
+  return `data fits · ${dataShape(state.dataset)}`;
+}
+
+/**
+ * What the hidden polite region beside the status line reads out: the step, when it changes,
+ * and that a paste is being read. It stays mounted, so a screen reader hears each change, while
+ * the status line itself says more and changes more often.
+ */
+export function stepAnnouncement(state: AgentSessionState): string {
+  if (state.parsing) return 'parsing your data';
+  if (inStep2(state)) return 'step 2: the data is confirmed; create the plot below';
+  return state.dataset ? 'step 1: check the data, then create the plot' : '';
 }
 
 /**
@@ -125,14 +198,14 @@ export function showsTimeline(state: AgentSessionState): boolean {
 }
 
 /**
- * The line above the composer while a plot runs (the progress timeline stands below the thread,
- * `runView`): it takes the step's line, which would still invite the click that started the run,
+ * The status line's part while a plot runs (the progress timeline stands below the thread,
+ * `runView`): it takes the step's part, which would still invite the click that started the run,
  * and names the one action the run leaves, `.stop()`. `null` while no plot runs, and once the
  * run's card took the timeline's place.
  */
 export function runLine(state: AgentSessionState): string | null {
   if (!runView(state).timeline) return null;
-  return state.run?.stopping ? '# stopping…' : '# plotting… .stop() to cancel';
+  return state.run?.stopping ? 'stopping…' : 'plotting… .stop() to cancel';
 }
 
 /**

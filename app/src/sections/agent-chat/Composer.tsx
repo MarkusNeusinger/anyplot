@@ -1,7 +1,9 @@
 /**
- * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the line that names
- * the step's action, the service's pause note, `.example_data()` while the session has no data,
- * the message box and its buttons, and the counter near the message cap.
+ * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the line that says
+ * why the box waits while `all` holds it, the service's pause note, `.example_data()` while the
+ * session has no data, the message box and its buttons, and the counter near the message cap.
+ * What the step's action waits for is the status line's, at the chat frame's foot below
+ * (`StatusLine`, `ChatFrame.tsx`), since the v4 frame (2026-11-06).
  *
  * The step's one filled call to action sits at the composer's right end from the moment data is
  * stored: `.create_plot()` (with `all` pressed `.plot_all()`, after a switch's offer the carry,
@@ -9,7 +11,7 @@
  * new version from the data as the card shows it), and while the data is confirmed and the
  * library has no plot yet. Its click takes the data and the bindings as shown, confirms them
  * first when they are not (the page chains it), and starts the plot, with the box's text as its
- * request; the line above the box, its description, says what it waits for. `.start_over()` is
+ * request; the status line, its description, says what it waits for. `.start_over()` is
  * the quiet button beside it once the confirmed data has a plot in this library, and beside a
  * switch's offer.
  * `.send()` shows only while the box holds text: Enter sends a turn too, and a disabled outline
@@ -35,14 +37,13 @@ import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
 import { FILE_ACCEPT } from 'src/sections/agent-chat/fileText';
 import {
   ATTACHMENT_PLACEHOLDER,
-  attachmentWaitLine,
   describeDataFailure,
   ERROR_TEXT,
   NEW_DATA_PLOT,
   NO_DATA_PLACEHOLDER,
   servicePausedText,
 } from 'src/sections/agent-chat/messages';
-import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/steps';
+import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -63,9 +64,7 @@ import { colors, fontSize } from 'src/theme';
 const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
 
-/** Step 1's line above the box, the plot button's description. */
-const STEP_LINE_ID = 'agent-step-line';
-/** Step 2's line above the box before the library's first plot, or while `all` holds the box. */
+/** The line above the box while `all` holds it in step 2, which the box names as its description. */
 const CREATE_LINE_ID = 'agent-create-line';
 
 export interface ComposerProps {
@@ -97,8 +96,6 @@ export interface ComposerProps {
   stopping: boolean;
   /** The session holds data. */
   hasData: boolean;
-  /** The rows of the session's data, which an attachment replaces when sent; null without data. */
-  dataRows: number | null;
   step2: boolean;
   hasPlot: boolean;
   /** The filled CTA is a plot button: data stored, unconfirmed or without a plot in this library. */
@@ -112,10 +109,6 @@ export interface ComposerProps {
   fanOutOpen: boolean;
   /** The carry after a switch, as the button names it; null without an offer. */
   carryText: string | null;
-  /** Step 1's line above the box (`stepOneLine`); null without data and in step 2. */
-  stepLine: string | null;
-  /** While a plot runs, the line that takes the step's (`runLine`); null otherwise. */
-  runLine: string | null;
   /** Data the user had confirmed changed (`dataChanged`): the filled plot button reads `plot the new data`. */
   newData: boolean;
   /** The confirmation a plot button starts with is in flight. */
@@ -142,25 +135,16 @@ export function Composer(props: ComposerProps) {
   const { draft, onDraftChange, onPaste, onSubmit, messageRef, createRef } = props;
   const { attachment, attachmentNotice, onRemoveAttachment, dropHint } = props;
   const { canOpen, fileInputRef, onFileChosen } = props;
-  const { ready, busy, running, stopping, hasData, dataRows, step2, hasPlot, ctaPlot, canCreate } =
-    props;
-  const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, stepLine } = props;
-  const { runLine, newData } = props;
+  const { ready, busy, running, stopping, hasData, step2, hasPlot, ctaPlot, canCreate } = props;
+  const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, newData } = props;
   const { confirming, confirmError, pausedUntil, exampleOffer, exampleWorking } = props;
   const { onExampleData, onStop, onPlot, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
   const carry = carryText !== null;
-  // Step 2 before this library's first plot: the line above the box says what the CTA does.
   const firstPlot = step2 && !hasPlot;
-  const stepCreateLine = !attachment && (firstPlot || chatLocked);
-  // While a plot runs, its line stands where the step's line stood, which would still invite the
-  // click that started it; only where a line stands, so the box below never moves. The line of
-  // `all`, which the box and `.send()` name as their description, stays.
-  const busyLine =
-    runLine && !attachment && !chatLocked && (stepLine || stepCreateLine) ? runLine : null;
-  // A table or a file waits for Enter: its line takes the step's place, and the plot buttons
-  // wait, since they would plot the data before it, or none. With data, the line says it replaces it.
-  const waitLine = busyLine ?? (attachment ? attachmentWaitLine(dataRows) : stepLine);
-  const createLine = !busyLine && stepCreateLine;
+  // While `all` holds the box in step 2, the line above it says why, and the box and `.send()`
+  // name it as their description; an attachment, new data, goes all the same and has the status
+  // line's words instead.
+  const lockedLine = chatLocked && !attachment;
   // The confirmation the click starts with: the button says it works on it.
   const working = (label: string) => (confirming ? `${label} …` : label);
   // An attachment goes once it is read and the dataset route can take it; a refused one again.
@@ -168,11 +152,11 @@ export function Composer(props: ComposerProps) {
   // A message over the cap is never cut: the counter turns red and nothing sends until it fits.
   const tooLong = draft.length > MAX_MESSAGE_CHARS;
 
-  // What the filled CTA names as its description: step 1's line, else the pinned header's summary
-  // and step 2's line; on changed data with a plot, also what a new version is made from.
+  // What the filled CTA names as its description: the status line, and the line of `all` while it
+  // holds the box; on changed data with a plot, also what a new version is made from.
   const ctaDescription = [
-    waitLine ? STEP_LINE_ID : DATA_SUMMARY_ID,
-    createLine ? CREATE_LINE_ID : null,
+    STATUS_LINE_ID,
+    lockedLine ? CREATE_LINE_ID : null,
     ctaPlot && hasPlot && !carry && !plotAll ? START_OVER_HELP_ID : null,
   ]
     .filter(Boolean)
@@ -189,7 +173,7 @@ export function Composer(props: ComposerProps) {
         type="submit"
         onClick={keepKeyboardFocus}
         disabled={!ready || busy || !sendable || tooLong || (chatLocked && !attachment)}
-        aria-describedby={attachment ? STEP_LINE_ID : chatLocked ? CREATE_LINE_ID : undefined}
+        aria-describedby={attachment ? STATUS_LINE_ID : chatLocked ? CREATE_LINE_ID : undefined}
         sx={ghostButtonSx}
       >
         .send()
@@ -224,7 +208,7 @@ export function Composer(props: ComposerProps) {
       onClick={onPlotAll}
       disabled={fanOutOpen || !canCreate}
       aria-label="Plot in all libraries"
-      aria-describedby={ctaPlot ? ctaDescription : DATA_SUMMARY_ID}
+      aria-describedby={ctaPlot ? ctaDescription : STATUS_LINE_ID}
       sx={ctaPlot ? ctaButtonSx : actionButtonSx}
     >
       {working('.plot_all()')}
@@ -242,7 +226,7 @@ export function Composer(props: ComposerProps) {
       data-testid="carry-plot"
       onClick={onCarry}
       disabled={!canCreate}
-      aria-describedby={ctaPlot ? ctaDescription : DATA_SUMMARY_ID}
+      aria-describedby={ctaPlot ? ctaDescription : STATUS_LINE_ID}
       // The library's name and the count make it long: it wraps at phone width.
       sx={{ ...ctaButtonSx, whiteSpace: 'normal', textAlign: 'left', maxWidth: '100%' }}
     >
@@ -263,7 +247,7 @@ export function Composer(props: ComposerProps) {
       disabled={!canCreate}
       aria-label="Start over"
       title={START_OVER_HELP}
-      aria-describedby={[START_OVER_HELP_ID, stepLine ? STEP_LINE_ID : DATA_SUMMARY_ID].join(' ')}
+      aria-describedby={`${START_OVER_HELP_ID} ${STATUS_LINE_ID}`}
       sx={actionButtonSx}
     >
       .start_over()
@@ -296,29 +280,11 @@ export function Composer(props: ComposerProps) {
 
   return (
     <>
-      {/* Step 1: what the plot button waits for, or what to check, and while an attachment waits
-          that it goes with Enter; the button names it as its description. */}
-      {waitLine && (
-        <Box
-          id={STEP_LINE_ID}
-          data-testid="data-step"
-          sx={{ ...labelSx, color: 'var(--ink-soft)', mb: -1 }}
-        >
-          {waitLine}
-        </Box>
-      )}
       {/* While the chat waits for `all`, the line says so in the ink of the text, and the
           message box names it as its description. */}
-      {createLine && (
-        <Box
-          id={CREATE_LINE_ID}
-          sx={{ ...labelSx, color: chatLocked ? 'var(--ink)' : 'var(--ink-soft)', mb: -1 }}
-        >
-          {chatLocked
-            ? `# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraryCount} libraries at once · turn all off to chat`
-            : carry
-              ? `# step 2 — ${carryText}, or say first what it should do differently`
-              : '# step 2 — create the plot as it is, or say first what it should do differently'}
+      {lockedLine && (
+        <Box id={CREATE_LINE_ID} sx={{ ...labelSx, color: 'var(--ink)', mb: -1 }}>
+          {`# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraryCount} libraries at once · turn all off to chat`}
         </Box>
       )}
       {/* Told before the user types: every turn would get `service_paused` until then. */}
@@ -403,7 +369,7 @@ export function Composer(props: ComposerProps) {
           rows={2}
           disabled={!ready || chatLocked}
           aria-invalid={tooLong || undefined}
-          aria-describedby={chatLocked ? CREATE_LINE_ID : undefined}
+          aria-describedby={lockedLine ? CREATE_LINE_ID : undefined}
           onChange={onDraftChange}
           onPaste={onPaste}
           onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {

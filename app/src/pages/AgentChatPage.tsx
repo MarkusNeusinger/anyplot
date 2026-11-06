@@ -8,7 +8,10 @@
  * is closed (`useAgentEligibility`). The query follows the session: a library switch writes
  * `library` and its `language`.
  *
- * One column, chat first, two steps, data first. The data card is the first
+ * One column, chat first, two steps, data first, in one terminal-style frame (`ChatFrame`,
+ * since the v4 design of 2026-11-06): the tab label `~/anyplot.ai/agent` on its top border, the
+ * header row inside it, and at its foot the status line, `>>> step 1 of 2 · …`, which names the
+ * step and what the plot button waits for. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
  * the assistant computes; while the session has no data, `.example_data()` on
  * the line above the composer asks it for a made-up table to try the plot),
@@ -28,18 +31,17 @@
  * `.start_over()`: a new plot from the catalogue plot with this data, the way
  * out of code that went wrong, which keeps the remembered decisions (owner
  * decision of 2026-11-02); every shipped version gets a result card with the image,
- * the code and the downloads. A line above the column names the current step. The header
- * shows the catalogue plot being adapted as a thumbnail beside the spec's title, in the
- * library in use and the site theme (`CataloguePreview`; a click opens it large), with the
- * columns it expects behind the ⓘ after the title (the spec's roles as the session's open
- * names them, the spec's `data` bullets without them), and carries the library menu
- * (`LibraryChip`, since 2026-11-02 in place of a pill
- * per library: the libraries grouped by language, `all` for the admin) and,
- * next to it, the session language chip (`LanguageChip`): the language of the
- * replies and of the text in the plot, English until the first typed message
- * or a choice sets another. On the admin lane, the "⋯" menu (`SessionMenu`) at the
- * header's end holds `.save()` with its `# include data.csv` box (out of the header row
- * since 2026-11-02, owner: less text); the public lane has neither. The page talks only to the BFF under
+ * the code and the downloads. The header row, in plain words, shows the catalogue plot being
+ * adapted as a thumbnail beside the spec's title, the link back, in the library in use and the
+ * site theme (`CataloguePreview`; a click opens it large), with the columns it expects behind
+ * the ⓘ after the title (the spec's roles as the session's open names them, the spec's `data`
+ * bullets without them), and carries the library menu (`LibraryChip`, `seaborn ▾`, since
+ * 2026-11-02 in place of a pill per library: the libraries grouped by language, `all` for the
+ * admin), next to it the session language chip (`LanguageChip`, `English ▾`): the language of
+ * the replies and of the text in the plot, English until the first typed message or a choice
+ * sets another, and the how-to of the data behind an ⓘ. On the admin lane, the "⋯" menu
+ * (`SessionMenu`) at the row's end holds `.save()` with its `# include data.csv` box (out of the
+ * header row since 2026-11-02, owner: less text); the public lane has neither. The page talks only to the BFF under
  * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
  *
  * A library switch keeps the data, the bindings, their confirmation, the
@@ -61,9 +63,9 @@
  * from the moment data is stored: `.create_plot()`, while the data is not
  * confirmed (also when the library has a plot: the click makes a new version
  * from the changed data, with the remembered decisions) and while it is
- * confirmed and the library has no plot yet. In step 1 the line above the box,
- * its description, names what it waits for (a table read from text to decide
- * on, a required role without a column) or what to check. Enter and `.send()`
+ * confirmed and the library has no plot yet. In step 1 the status line at the
+ * frame's foot, its description, names what it waits for (a table read from text
+ * to decide on, a required role without a column) or what to check. Enter and `.send()`
  * send a turn and never confirm; `.send()` shows only while the box holds text.
  * The server's `data_unconfirmed` stays the backstop.
  *
@@ -104,8 +106,8 @@
  *    and shows the same notice.
  *    The public lane: the API's `GET /agent/lane` (`useAgentLaneOpen`); closed,
  *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
- *    admin token, shows the experimental notice above the first input (one line, the
- *    details behind its ⓘ button: `ExperimentalNotice`), offers no `all` and no
+ *    admin token, shows the experimental notice as one muted line above the chat's
+ *    frame (the details behind its ⓘ button: `ExperimentalNotice`), offers no `all` and no
  *    `.save()` (a visitor cannot resume a saved session, and the feedback form
  *    covers "something went wrong"), and leaves the feedback
  *    form's data box unticked (`sections/agent-chat/lane.ts`).
@@ -149,6 +151,7 @@ import { paths, specPath } from 'src/routes/paths';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
+import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { Composer } from 'src/sections/agent-chat/Composer';
 import { DataPanel } from 'src/sections/agent-chat/DataPanel';
@@ -160,6 +163,7 @@ import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
 import {
+  attachmentWaitLine,
   carryActionText,
   DATA_HOWTO,
   describeDataFailure,
@@ -173,23 +177,16 @@ import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
-import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import {
   dataChanged,
+  hasPlotHere,
   inStep2,
   plotButtonLabel,
-  runLine,
   runView,
   showsTimeline,
-  stepOneLine,
+  statusLine,
 } from 'src/sections/agent-chat/steps';
-import {
-  bodyTextSx,
-  CHAT_SECTION_GAP,
-  labelSx,
-  panelSx,
-  smallText,
-} from 'src/sections/agent-chat/styles';
+import { bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
 import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
@@ -557,7 +554,7 @@ function AgentChat({
     !busy;
   // The server files a version under its (spec, library) pair; the spec cannot change in a
   // session yet, so the library alone tells the pair.
-  const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
+  const hasPlot = hasPlotHere(state);
   // The composer's one filled CTA is a plot button from the moment data is stored: while the
   // data is unconfirmed (also with a plot here, whose next version takes the changed data), and
   // while it is confirmed and this library has no plot yet. Confirmed with a plot, the composer
@@ -594,11 +591,20 @@ function AgentChat({
   const exampleOffer =
     state.phase === 'ready' && !state.dataset && !state.transcription && !attachment;
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
-  // Step 1's line above the composer, the plot button's description: what it waits for (a
-  // pending table read from text, a required role without a column), else what to check.
-  // The composer's plot action, which the step line and the card's own step-1 line both name.
+  // The composer's plot action, which the status line and the card's own step-1 line both name.
   const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state);
-  const stepLine = stepOneLine(state, plotAction);
+  // The status line at the frame's foot, the plot button's description: the step, then what the
+  // button waits for (an attachment, a pending table read from text, a required role without a
+  // column, a run), what to check, or what the click does.
+  const status = statusLine(state, {
+    action: plotAction,
+    // With data, the line says the attachment replaces it.
+    attachmentLine: attachment
+      ? attachmentWaitLine(state.dataset ? state.dataset.parsed.profile.rows : null)
+      : null,
+    carryText: shownCarry ? carryText : null,
+    chatLocked,
+  });
   // After a change to data the user had confirmed, the filled plot button says so in its name.
   const newData = dataChanged(state);
   // While a run's timeline stands below the thread, what the run sends into the thread waits
@@ -858,7 +864,9 @@ function AgentChat({
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
 
   const backHref = specPath(specId, language, state.library);
-  const header = (
+  // Above the frame: the page's heading, and on the public lane the experimental notice, which
+  // stands above the first input in every state of the session.
+  const masthead = (
     <>
       <SectionHeader
         prompt="❯"
@@ -868,20 +876,34 @@ function AgentChat({
           </>
         }
       />
+      {lane === 'public' && <ExperimentalNotice />}
+    </>
+  );
+  // The frame's header row, in plain words: the catalogue plot and its title (the link back), the
+  // library and the reply language as dropdowns, the how-to of the data, the admin's "⋯". At phone
+  // width the title takes the first line and the controls wrap below it.
+  const headerRow = (
+    <Box>
       <Box
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
-          columnGap: 2,
-          rowGap: 1,
-          mt: -2,
-          mb: 3,
+          columnGap: { xs: 1, sm: 1.75 },
+          rowGap: 1.25,
         }}
       >
         {/* The catalogue plot and its title stay together when the row wraps at phone width; the
             columns it expects are behind the ⓘ, closed by default. */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            minWidth: 0,
+            flexBasis: { xs: '100%', sm: 'auto' },
+          }}
+        >
           <CataloguePreview
             title={title ?? specId}
             library={state.library}
@@ -894,13 +916,13 @@ function AgentChat({
               sx={{
                 fontFamily: typography.mono,
                 fontSize: fontSize.md,
-                color: 'var(--ink-soft)',
+                color: 'var(--ink)',
                 textDecoration: 'none',
-                '&:hover': { color: colors.primary },
+                '&:hover': { color: colors.primary, textDecoration: 'underline' },
                 overflowWrap: 'anywhere',
               }}
             >
-              ← {title ?? specId}
+              {title ?? specId}
             </Box>
             {expectedLines.length > 0 && (
               <InfoPopover
@@ -935,9 +957,20 @@ function AgentChat({
             onSet={session.setLanguage}
           />
         )}
+        {/* How the data comes in through the message box, beside the controls of the session
+            (beside the `# chat` label until the v4 frame); without a session no data comes in. */}
+        {!reopen && (
+          <InfoPopover
+            label="How the chat takes data"
+            heading="# how it works"
+            lines={DATA_HOWTO}
+            testId="data-howto"
+          />
+        )}
         {/* The "⋯" menu holds `.save()`, the admin's debugging bundle, which downloads the
             session; without one (ineligible, error) there is nothing to save. The public lane
-            has no `.save()` (a visitor cannot resume a saved session), so no menu either. */}
+            has no `.save()` (a visitor cannot resume a saved session), so no menu either. It
+            stands at the row's right end. */}
         {lane === 'admin' && !reopen && (
           <SessionMenu
             disabled={state.phase !== 'ready' || !state.sessionId || busy}
@@ -945,53 +978,54 @@ function AgentChat({
           />
         )}
       </Box>
-    </>
+      {state.phase === 'ready' && state.library === 'highcharts' && (
+        <Box role="note" data-testid="highcharts-licence" sx={{ ...labelSx, mt: 1.25 }}>
+          # {HIGHCHARTS_NOTE}
+        </Box>
+      )}
+    </Box>
   );
 
-  if (state.phase === 'opening' || state.phase === 'ineligible' || state.phase === 'error') {
-    return (
-      <Box sx={{ py: 2, maxWidth: COLUMN_MAX_WIDTH, mx: 'auto' }}>
-        <NoIndex />
-        {header}
-        {state.phase === 'opening' ? (
-          // The open can take seconds: on the public lane the bot check runs inside it first
-          // (`withHumanCheck`), and a check that asks for a click shows at the window's foot.
-          <Box
-            role="status"
-            data-testid="session-opening"
-            sx={{ ...labelSx, display: 'flex', alignItems: 'center', gap: 1.5 }}
-          >
-            opening a session
-            <LoaderSpinner size="inline" />
-          </Box>
-        ) : (
-          <Box role="alert" sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
-            <Box sx={{ ...labelSx, color: colors.error }}>
-              {state.phase === 'ineligible' ? 'not eligible' : `error · ${state.failure?.code}`}
-              {state.failure?.ref ? ` · ref ${state.failure.ref}` : ''}
-            </Box>
-            <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-              {state.phase === 'ineligible'
-                ? 'this plot cannot be adapted in this library yet; pick another library above.'
-                : state.failure?.code === 'not_enabled'
-                  ? lane === 'public'
-                    ? 'the assistant is closed right now. please try again later.'
-                    : 'the agent chat is switched off on this server (AGENT_ENABLED).'
-                  : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
-              {state.phase === 'error' && <ReloadHint code={state.failure?.code} opening />}
-            </Box>
-          </Box>
-        )}
+  // Until the session is open, or when it could not open, the frame holds the wait or the reason
+  // below its header row, where the chat will stand.
+  const ready = state.phase === 'ready';
+  const notOpen =
+    state.phase === 'opening' ? (
+      // The open can take seconds: on the public lane the bot check runs inside it first
+      // (`withHumanCheck`), and a check that asks for a click shows at the window's foot.
+      <Box
+        role="status"
+        data-testid="session-opening"
+        sx={{ ...labelSx, display: 'flex', alignItems: 'center', gap: 1.5 }}
+      >
+        opening a session
+        <LoaderSpinner size="inline" />
+      </Box>
+    ) : (
+      <Box role="alert" sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
+        <Box sx={{ ...labelSx, color: colors.error }}>
+          {state.phase === 'ineligible' ? 'not eligible' : `error · ${state.failure?.code}`}
+          {state.failure?.ref ? ` · ref ${state.failure.ref}` : ''}
+        </Box>
+        <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
+          {state.phase === 'ineligible'
+            ? 'this plot cannot be adapted in this library yet; pick another library above.'
+            : state.failure?.code === 'not_enabled'
+              ? lane === 'public'
+                ? 'the assistant is closed right now. please try again later.'
+                : 'the agent chat is switched off on this server (AGENT_ENABLED).'
+              : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
+          {state.phase === 'error' && <ReloadHint code={state.failure?.code} opening />}
+        </Box>
       </Box>
     );
-  }
 
+  // One tree in every phase: the heading, the notice, the frame and its header row stay mounted
+  // when the session opens, so nothing above the thread flashes or loses its state.
   return (
     <>
-      <>
-        <title>{`agent · ${title ?? specId} | anyplot.ai`}</title>
-        <NoIndex />
-      </>
+      {ready && <title>{`agent · ${title ?? specId} | anyplot.ai`}</title>}
+      <NoIndex />
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box
         sx={{
@@ -1001,213 +1035,203 @@ function AgentChat({
           colorScheme: isDark ? 'dark' : 'light',
         }}
       >
-        {header}
-        {lane === 'public' && <ExperimentalNotice />}
-        {state.library === 'highcharts' && (
-          <Box role="note" data-testid="highcharts-licence" sx={{ ...labelSx, mb: 2 }}>
-            # {HIGHCHARTS_NOTE}
-          </Box>
-        )}
-        <StepHeader current={step2 ? 2 : 1} />
-        {/* The whole chat takes a dropped file: it becomes the message box's attachment. */}
-        <Box
-          component="section"
-          aria-label="Chat"
-          onDragEnter={attach.handleDragEnter}
-          onDragOver={attach.handleDragOver}
-          onDragLeave={attach.handleDragLeave}
-          onDrop={attach.handleDrop}
-          sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: CHAT_SECTION_GAP }}
+        {masthead}
+        {/* The whole chat takes a dropped file once the session is open: it becomes the message
+            box's attachment. */}
+        <ChatFrame
+          header={headerRow}
+          onDragEnter={ready ? attach.handleDragEnter : undefined}
+          onDragOver={ready ? attach.handleDragOver : undefined}
+          onDragLeave={ready ? attach.handleDragLeave : undefined}
+          onDrop={ready ? attach.handleDrop : undefined}
         >
-          {/* The how-to of the data that comes in through the message box sits beside the label,
-              not in it, so it never joins the section's name. */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: -0.5 }}>
-            <Box sx={labelSx}># chat</Box>
-            <InfoPopover
-              label="How the chat takes data"
-              heading="# how it works"
-              lines={DATA_HOWTO}
-              testId="data-howto"
-            />
-          </Box>
-
-          {/* Once the data was confirmed, the header that leads to its card. A sibling of the
+          {!ready ? (
+            notOpen
+          ) : (
+            <>
+              {/* Once the data was confirmed, the header that leads to its card. A sibling of the
               thread, so it sticks over all of it; the card stands in the thread after its paste. */}
-          <PinnedHeader state={state} view={dataView} />
+              <PinnedHeader state={state} view={dataView} />
 
-          <ChatThread
-            state={threadState}
-            specId={specId}
-            language={language}
-            onRequestTheme={(version, theme) => void session.requestTheme(version, theme)}
-            onFetchArtifact={session.fetchArtifact}
-            onTrack={trackEvent}
-            onOutcome={session.reportOutcome}
-            onSendFeedback={session.sendFeedback}
-            renderData={part => (
-              <DataPanel
-                state={state}
-                view={dataView}
-                part={part}
-                onParse={(text, source, table, file) =>
-                  void session.parseData(text, false, source, table, { file })
-                }
-                onConfirmTranscription={() => {
-                  transcribedFrom.current = null;
-                  void session.confirmTranscription();
-                }}
+              <ChatThread
+                state={threadState}
+                specId={specId}
+                language={language}
+                onRequestTheme={(version, theme) => void session.requestTheme(version, theme)}
+                onFetchArtifact={session.fetchArtifact}
                 onTrack={trackEvent}
-                // The sheet picker's read holds the composer back until its parse starts.
-                onConvert={session.readSheet}
-                onDiscardTranscription={handleDiscard}
-                onBind={session.setBinding}
-                onUndo={() => void session.undoData()}
-                onToLong={() => void session.toLongData()}
-                // Not while the fan-out's panel is open: its sessions copy this session's data.
-                locked={!!fanOut}
-                plotAction={plotAction}
-                onLoadData={session.fetchDataCsv}
-                // A look at the session's data, not at a result: version 0.
-                onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
+                onOutcome={session.reportOutcome}
+                onSendFeedback={session.sendFeedback}
+                renderData={part => (
+                  <DataPanel
+                    state={state}
+                    view={dataView}
+                    part={part}
+                    onParse={(text, source, table, file) =>
+                      void session.parseData(text, false, source, table, { file })
+                    }
+                    onConfirmTranscription={() => {
+                      transcribedFrom.current = null;
+                      void session.confirmTranscription();
+                    }}
+                    onTrack={trackEvent}
+                    // The sheet picker's read holds the composer back until its parse starts.
+                    onConvert={session.readSheet}
+                    onDiscardTranscription={handleDiscard}
+                    onBind={session.setBinding}
+                    onUndo={() => void session.undoData()}
+                    onToLong={() => void session.toLongData()}
+                    // Not while the fan-out's panel is open: its sessions copy this session's data.
+                    locked={!!fanOut}
+                    plotAction={plotAction}
+                    onLoadData={session.fetchDataCsv}
+                    // A look at the session's data, not at a result: version 0.
+                    onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
+                  />
+                )}
+                followReply={followReply}
               />
-            )}
-            followReply={followReply}
-          />
 
-          <Box
-            ref={tailRef}
-            sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
-          >
-            {/* At the foot, where a long thread keeps it in view: the queue position of a turn
+              <Box
+                ref={tailRef}
+                sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
+              >
+                {/* At the foot, where a long thread keeps it in view: the queue position of a turn
                 without the progress timeline, whose first row says it for a plot run (one
                 position on screen). Out of the flow, at the right of the in-progress line above:
                 it comes with the queue and would otherwise push the composer down and back. */}
-            {state.run?.queue && !showsTimeline(state) && (
-              <Box
-                role="status"
-                data-testid="queue-counter"
-                aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
-                sx={{
-                  // Where it would stand as the foot's first item, at its right edge, then lifted
-                  // by its own height and the chat's gap above the foot, into the line's row.
-                  position: 'absolute',
-                  alignSelf: 'flex-end',
-                  mt: -2,
-                  transform: 'translateY(-100%)',
-                  fontFamily: typography.mono,
-                  fontSize: smallText,
-                  color: 'var(--ink)',
-                  bgcolor: 'var(--bg-elevated)',
-                  border: '1px solid var(--rule)',
-                  borderRadius: 1,
-                  px: 1,
-                  py: 0.25,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                queue {state.run.queue.position}/{state.run.queue.waiting}
-              </Box>
-            )}
-            {/* A turn without pipeline steps has its in-progress line in the thread instead; the
+                {state.run?.queue && !showsTimeline(state) && (
+                  <Box
+                    role="status"
+                    data-testid="queue-counter"
+                    aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
+                    sx={{
+                      // Where it would stand as the foot's first item, at its right edge, then lifted
+                      // by its own height and the chat's gap above the foot, into the line's row.
+                      position: 'absolute',
+                      alignSelf: 'flex-end',
+                      mt: -2,
+                      transform: 'translateY(-100%)',
+                      fontFamily: typography.mono,
+                      fontSize: smallText,
+                      color: 'var(--ink)',
+                      bgcolor: 'var(--bg-elevated)',
+                      border: '1px solid var(--rule)',
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.25,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    queue {state.run.queue.position}/{state.run.queue.waiting}
+                  </Box>
+                )}
+                {/* A turn without pipeline steps has its in-progress line in the thread instead; the
                 run's plot, once in the thread, takes the timeline's place. */}
-            {state.run && view.timeline && <ProgressTimeline run={state.run} />}
+                {state.run && view.timeline && <ProgressTimeline run={state.run} />}
 
-            {/* The decisions every next plot takes over, right above the composer that asks for
+                {/* The frame's second dashed rule: the thread above, the composer below; none
+                    while the thread is empty, where it would stand right under the first. */}
+                {state.items.length > 0 && <FrameRule />}
+
+                {/* The decisions every next plot takes over, right above the composer that asks for
                 it and whose offer after a switch counts them; nothing while there are none. */}
-            <Remembered
-              memory={state.memory}
-              disabled={busy || state.phase !== 'ready'}
-              onForget={session.forgetMemory}
-              onForgetAll={session.forgetAllMemory}
-              fallbackFocusRef={messageRef}
-            />
+                <Remembered
+                  memory={state.memory}
+                  disabled={busy || state.phase !== 'ready'}
+                  onForget={session.forgetMemory}
+                  onForgetAll={session.forgetAllMemory}
+                  fallbackFocusRef={messageRef}
+                />
 
-            <Composer
-              draft={draft}
-              onDraftChange={event => {
-                // A paste the browser inserted itself, when its event hid the text: routed now.
-                if (!attach.handleInput(event, draft)) setDraft(event.target.value);
-              }}
-              onPaste={event => void attach.handlePaste(event)}
-              attachment={attachment}
-              attachmentNotice={attach.notice}
-              onRemoveAttachment={handleRemoveAttachment}
-              dropHint={
-                attach.dragOver
-                  ? {
-                      ready: attach.dropReady,
-                      text: attach.dropReady
-                        ? DROP_HINT_TEXT.ready
-                        : attachment?.status === 'reading'
-                          ? DROP_HINT_TEXT.reading
-                          : fanOut && !busy
-                            ? DROP_HINT_TEXT.locked
-                            : DROP_HINT_TEXT.working,
-                    }
-                  : null
-              }
-              canOpen={attach.dropReady}
-              fileInputRef={attach.fileInputRef}
-              onFileChosen={event => {
-                attach.handleChosen(event);
-                // The chooser hands the focus back to `.open()`, where Enter would only open it
-                // again: the box takes it, so Enter sends the file with its note.
-                messageRef.current?.focus();
-              }}
-              onSubmit={handleSend}
-              messageRef={messageRef}
-              createRef={createRef}
-              ready={state.phase === 'ready'}
-              busy={busy}
-              running={running}
-              stopping={!!state.run?.stopping}
-              hasData={!!state.dataset}
-              dataRows={state.dataset ? state.dataset.parsed.profile.rows : null}
-              step2={step2}
-              hasPlot={hasPlot}
-              ctaPlot={ctaPlot}
-              canCreate={canCreate}
-              plotAll={plotAll}
-              chatLocked={chatLocked}
-              libraryCount={libraries.length}
-              fanOutOpen={!!fanOut}
-              carryText={shownCarry ? carryText : null}
-              stepLine={stepLine}
-              runLine={runLine(state)}
-              newData={newData}
-              confirming={state.confirmBusy}
-              confirmError={state.confirmError}
-              pausedUntil={pausedUntil}
-              exampleOffer={exampleOffer}
-              exampleWorking={exampleWorking}
-              onExampleData={event => {
-                keepKeyboardFocus(event);
-                void session.exampleData();
-              }}
-              onStop={event => {
-                keepKeyboardFocus(event);
-                void session.stop();
-              }}
-              onPlot={handlePlot}
-              onCreate={handleCreate}
-              onCarry={handleCarry}
-              onPlotAll={event => void handlePlotAll(event)}
-              keepKeyboardFocus={keepKeyboardFocus}
-            />
-            {/* A chat without a plot has no result card to report on: its own control. Not while a
+                <Composer
+                  draft={draft}
+                  onDraftChange={event => {
+                    // A paste the browser inserted itself, when its event hid the text: routed now.
+                    if (!attach.handleInput(event, draft)) setDraft(event.target.value);
+                  }}
+                  onPaste={event => void attach.handlePaste(event)}
+                  attachment={attachment}
+                  attachmentNotice={attach.notice}
+                  onRemoveAttachment={handleRemoveAttachment}
+                  dropHint={
+                    attach.dragOver
+                      ? {
+                          ready: attach.dropReady,
+                          text: attach.dropReady
+                            ? DROP_HINT_TEXT.ready
+                            : attachment?.status === 'reading'
+                              ? DROP_HINT_TEXT.reading
+                              : fanOut && !busy
+                                ? DROP_HINT_TEXT.locked
+                                : DROP_HINT_TEXT.working,
+                        }
+                      : null
+                  }
+                  canOpen={attach.dropReady}
+                  fileInputRef={attach.fileInputRef}
+                  onFileChosen={event => {
+                    attach.handleChosen(event);
+                    // The chooser hands the focus back to `.open()`, where Enter would only open it
+                    // again: the box takes it, so Enter sends the file with its note.
+                    messageRef.current?.focus();
+                  }}
+                  onSubmit={handleSend}
+                  messageRef={messageRef}
+                  createRef={createRef}
+                  ready={state.phase === 'ready'}
+                  busy={busy}
+                  running={running}
+                  stopping={!!state.run?.stopping}
+                  hasData={!!state.dataset}
+                  step2={step2}
+                  hasPlot={hasPlot}
+                  ctaPlot={ctaPlot}
+                  canCreate={canCreate}
+                  plotAll={plotAll}
+                  chatLocked={chatLocked}
+                  libraryCount={libraries.length}
+                  fanOutOpen={!!fanOut}
+                  carryText={shownCarry ? carryText : null}
+                  newData={newData}
+                  confirming={state.confirmBusy}
+                  confirmError={state.confirmError}
+                  pausedUntil={pausedUntil}
+                  exampleOffer={exampleOffer}
+                  exampleWorking={exampleWorking}
+                  onExampleData={event => {
+                    keepKeyboardFocus(event);
+                    void session.exampleData();
+                  }}
+                  onStop={event => {
+                    keepKeyboardFocus(event);
+                    void session.stop();
+                  }}
+                  onPlot={handlePlot}
+                  onCreate={handleCreate}
+                  onCarry={handleCarry}
+                  onPlotAll={event => void handlePlotAll(event)}
+                  keepKeyboardFocus={keepKeyboardFocus}
+                />
+                {/* A chat without a plot has no result card to report on: its own control. Not while a
                 turn runs, which may still bring the plot; a sent record stays in view. */}
-            {(state.chatFeedback ||
-              (state.items.length > 0 &&
-                !state.run &&
-                Object.keys(state.versions).length === 0)) && (
-              <ChatFeedback
-                sent={state.chatFeedback}
-                dataAvailable={!!state.dataset}
-                onSend={session.sendFeedback}
-              />
-            )}
-          </Box>
-        </Box>
+                {(state.chatFeedback ||
+                  (state.items.length > 0 &&
+                    !state.run &&
+                    Object.keys(state.versions).length === 0)) && (
+                  <ChatFeedback
+                    sent={state.chatFeedback}
+                    dataAvailable={!!state.dataset}
+                    onSend={session.sendFeedback}
+                  />
+                )}
+                {/* The frame's foot, in the tail, so a turn's start brings it into view with the box. */}
+                <StatusLine state={state} line={status} />
+              </Box>
+            </>
+          )}
+        </ChatFrame>
+        {/* The admin's fan-out stays below the frame: its sessions are not this chat's. */}
         {fanOut && (
           <FanOut
             panelRef={fanOutRef}

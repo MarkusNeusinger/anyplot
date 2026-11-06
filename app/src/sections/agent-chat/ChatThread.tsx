@@ -4,8 +4,8 @@
  * paste leaves the card it replaced as a stub of its shape), the assistant's replies, the fixed
  * refusal under a plain label (its code behind the label's ⓘ), errors with their code and
  * request id, and a result card per plot version. Earlier versions stay in the thread,
- * collapsed, each with its own image and code. A lost confirmation adds nothing here: the step
- * line above the composer names it. While a turn without pipeline steps waits for its reply, an
+ * collapsed, each with its own image and code. A lost confirmation adds nothing here: the status
+ * line at the chat frame's foot names it. While a turn without pipeline steps waits for its reply, an
  * in-progress line with the site's loader holds the assistant's slot
  * (`pendingReply` in `steps.ts`); the log's own polite live region announces
  * it once, and the reply takes its place. So does a plot run once its card is
@@ -239,7 +239,7 @@ function Item({
       );
     case 'notice':
       // A quiet line; its details, where it has any, behind the ⓘ at its end. A lost
-      // confirmation has none: the step line above the composer names it.
+      // confirmation has none: the status line at the chat frame's foot names it.
       return (
         <Box sx={{ ...labelSx, ...textSx, lineHeight: 1.6 }}>
           # {item.text}

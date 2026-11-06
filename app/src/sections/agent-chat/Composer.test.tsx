@@ -3,13 +3,11 @@ import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
-import { ATTACHMENT_LINE } from 'src/sections/agent-chat/messages';
+import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
 import { render, screen } from 'src/test-utils';
 
-const RUN_LINE = '# plotting… .stop() to cancel';
-
-/** A composer in a running plot turn: step 1's line stands above the box unless a case says otherwise. */
+/** A composer in a running plot turn, in step 1 unless a case says otherwise. */
 function renderComposer(overrides: Partial<ComposerProps> = {}) {
   const props: ComposerProps = {
     draft: '',
@@ -30,7 +28,6 @@ function renderComposer(overrides: Partial<ComposerProps> = {}) {
     running: true,
     stopping: false,
     hasData: true,
-    dataRows: null,
     step2: false,
     hasPlot: false,
     ctaPlot: true,
@@ -40,8 +37,6 @@ function renderComposer(overrides: Partial<ComposerProps> = {}) {
     libraryCount: 2,
     fanOutOpen: false,
     carryText: null,
-    stepLine: '# step 1 — check the preview and the bindings above, then .create_plot()',
-    runLine: RUN_LINE,
     newData: false,
     confirming: false,
     confirmError: null,
@@ -60,48 +55,61 @@ function renderComposer(overrides: Partial<ComposerProps> = {}) {
   return render(<Composer {...props} />);
 }
 
-describe('Composer while a plot runs', () => {
-  it("names .stop() in the step line's place, and in step 2's line's place before the first plot", () => {
+const attachment: Attachment = {
+  id: 1,
+  via: 'paste',
+  text: 'a,b\n1,2\n',
+  name: null,
+  lines: 2,
+  bytes: 8,
+  notes: [],
+  converted: null,
+  kind: 'csv',
+  encoding: null,
+  status: 'ready',
+  error: null,
+  readingLine: null,
+};
+
+describe('Composer and the status line', () => {
+  it("leaves the step's line to the status line at the frame's foot, which the plot button names", () => {
     const { unmount } = renderComposer();
-    expect(screen.getByTestId('data-step')).toHaveTextContent(RUN_LINE);
-    expect(screen.queryByText(/check the preview/)).not.toBeInTheDocument();
-    unmount();
-
-    renderComposer({ stepLine: null, step2: true });
-    expect(screen.getByTestId('data-step')).toHaveTextContent(RUN_LINE);
-    expect(screen.queryByText(/create the plot as it is/)).not.toBeInTheDocument();
-  });
-
-  it('adds no line where none stood, so the box does not move', () => {
-    renderComposer({ stepLine: null, step2: true, hasPlot: true, ctaPlot: false });
+    // The step lines stood above the box until the v4 frame: none stands there now.
     expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
-    expect(screen.queryByText(RUN_LINE)).not.toBeInTheDocument();
-  });
-
-  it('keeps the line of an attachment that waits, and the line of all that the box names', () => {
-    const attachment: Attachment = {
-      id: 1,
-      via: 'paste',
-      text: 'a,b\n1,2\n',
-      name: null,
-      lines: 2,
-      bytes: 8,
-      notes: [],
-      converted: null,
-      kind: 'csv',
-      encoding: null,
-      status: 'ready',
-      error: null,
-      readingLine: null,
-    };
-    const { unmount } = renderComposer({ attachment });
-    expect(screen.getByTestId('data-step')).toHaveTextContent(ATTACHMENT_LINE);
+    expect(screen.queryByText(/plotting…|check the preview/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute(
+      'aria-describedby',
+      STATUS_LINE_ID
+    );
     unmount();
 
-    renderComposer({ stepLine: null, step2: true, plotAll: true, chatLocked: true });
-    expect(screen.queryByText(RUN_LINE)).not.toBeInTheDocument();
+    // Once the confirmed data has a plot here, `.start_over()` names it after its own help.
+    renderComposer({ running: false, step2: true, hasPlot: true, ctaPlot: false });
+    const startOver = screen.getByRole('button', { name: 'Start over' });
+    expect(startOver.getAttribute('aria-describedby')?.split(' ')).toContain(STATUS_LINE_ID);
+  });
+
+  it('lets .send() name the status line while an attachment waits, which says it goes with Enter', () => {
+    renderComposer({ running: false, busy: false, attachment });
+    expect(screen.getByRole('button', { name: '.send()' })).toHaveAttribute(
+      'aria-describedby',
+      STATUS_LINE_ID
+    );
+  });
+
+  it('keeps the line of all above the box, which the box and the plot button name', () => {
+    renderComposer({ step2: true, plotAll: true, chatLocked: true });
     const lock = screen.getByText(/plot the table as it is in all 2 libraries at once/);
     // The box names the line as its description: it must stand.
     expect(screen.getByLabelText('Message')).toHaveAttribute('aria-describedby', lock.id);
+    expect(
+      screen.getByRole('button', { name: 'Plot in all libraries' }).getAttribute('aria-describedby')
+    ).toBe(`${STATUS_LINE_ID} ${lock.id}`);
+  });
+
+  it('drops the line of all while an attachment waits: new data goes, and the box names nothing', () => {
+    renderComposer({ step2: true, plotAll: true, chatLocked: true, attachment });
+    expect(screen.queryByText(/libraries at once/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).not.toHaveAttribute('aria-describedby');
   });
 });
