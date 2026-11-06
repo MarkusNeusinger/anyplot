@@ -1020,11 +1020,12 @@ function AgentChat({
       </Box>
     );
 
-  // One tree in every phase: the heading, the notice, the frame and its header row stay mounted
-  // when the session opens, so nothing above the thread flashes or loses its state.
+  // One tree in every phase: the tab's title, the heading, the notice, the frame and its header
+  // row stay mounted when the session opens, so nothing above the thread flashes or loses its
+  // state, and the tab names this page also while the session opens or after it failed.
   return (
     <>
-      {ready && <title>{`agent · ${title ?? specId} | anyplot.ai`}</title>}
+      <title>{`agent · ${title ?? specId} | anyplot.ai`}</title>
       <NoIndex />
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box

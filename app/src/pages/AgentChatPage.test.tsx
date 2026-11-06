@@ -595,6 +595,8 @@ describe('AgentChatPage gating', () => {
     stubFetch(422, { detail: 'not_eligible', ref: 'r1' });
     renderAt(PAGE);
     expect(await screen.findByText('not eligible')).toBeInTheDocument();
+    // The tab names the page in every phase, not only once a session is open.
+    await waitFor(() => expect(document.title).toMatch(/^agent · .+ \| anyplot\.ai$/));
     // No session exists to switch, so a pick opens the page anew with its own session.
     const menu = await openLibraryMenu();
     await waitFor(() =>
