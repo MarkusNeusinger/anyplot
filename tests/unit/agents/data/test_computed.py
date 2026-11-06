@@ -20,11 +20,13 @@ PLOTS = Path(__file__).parents[4] / "plots"
 
 DERIVED_WORDING = re.compile(
     r"\b(?:moving average|[se]ma|ewma|exponentially weighted|rolling (?:average|mean)|standard deviations"
-    r"|\d+-(?:period|day|week)|plotted \d+ periods|computed as|calculated (?:via|as|from)|derived (?:via|from))\b",
+    r"|\d+-(?:period|day|week)|plotted \d+ periods|computed as|calculated (?:via|as|from)|derived (?:via|from)"
+    r"|rollback|median ranks?|plotting positions?|age-to-age|optimal solution)\b",
     re.IGNORECASE,
 )
 """A role description worded like an indicator or a formula: a moving average or an EMA, a window (`20-period`),
-bands of standard deviations, a line shifted by some periods, a value computed, calculated or derived."""
+bands of standard deviations, a line shifted by some periods, a value computed, calculated or derived, and the
+named methods of the other listed roles (a rollback, median ranks, age-to-age factors, the optimal solution)."""
 ARITHMETIC = re.compile(r"\b(?:sum|mean|average|total|minus|plus|difference|ratio|product)\b|\s[+−/]\s", re.IGNORECASE)
 """Arithmetic in a description that names another role of the spec: `sum of bias_squared + variance + ...`,
 `Difference between MACD and signal line`, `Annual mean temperature`."""
@@ -162,6 +164,8 @@ def test_the_audit_finds_the_indicators_of_the_catalogue() -> None:
     for spec_id in ("indicator-sma", "indicator-ema", "indicator-ichimoku", "indicator-bollinger", "indicator-macd"):
         assert {(spec_id, name) for name in COMPUTED_ROLES[spec_id]} <= found, spec_id
     assert ("line-timeseries-rolling", "rolling_avg") in found
+    listed = {(spec_id, name) for spec_id, names in COMPUTED_ROLES.items() for name in names}
+    assert listed <= found  # every listed role is worded so that removing it from the list fails the audit
 
 
 def test_the_adapter_prompt_knows_the_markers_of_the_brief() -> None:
@@ -245,6 +249,7 @@ def test_the_adapter_prompt_knows_the_markers_of_the_brief() -> None:
         ("histogram", "MACD Histogram"),
         ("histogram", "Hist"),
         ("histogram", "MACDh_12_26_9"),
+        ("histogram", "MACD Oscillator"),
         ("ideal", "Ideal Burndown"),
         ("total_error", "Total Error"),
         ("temp_annual_mean", "Annual Mean Temperature"),
@@ -309,6 +314,8 @@ def test_a_name_that_holds_the_value_matches(role_name: str, column: str) -> Non
         ("chikou_span", "Close"),
         ("signal", "MACD"),
         ("signal", "Buy Signal"),
+        ("signal", "Trading Signal"),
+        ("signal", "Bullish Signal"),
         ("signal", "MACD Histogram"),
         ("histogram", "MACD Signal"),
         ("development_factor", "Development Period"),

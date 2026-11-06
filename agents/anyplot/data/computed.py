@@ -173,7 +173,7 @@ ALIASES: dict[str, tuple[str, ...]] = {
     "senkou_span_b": ("senkou b", "span b"),
     "chikou_span": ("chikou", "lagging span", "lagging line"),
     "signal": ("macd signal", "macdsignal", "macds"),
-    "histogram": ("hist", "macd hist", "macdhist", "macdh"),
+    "histogram": ("hist", "macd hist", "macdhist", "macdh", "macd oscillator", "macd osc"),
     "development_factor": ("development factors", "age to age", "ldf", "link ratio", "ata"),
     "cumulative_probability": ("median rank", "unreliability", "failure probability", "cdf"),
     "temp_annual_mean": ("annual mean temperature", "annual temperature", "jahresmitteltemperatur"),
@@ -212,7 +212,7 @@ EXCLUDES: dict[str, frozenset[str]] = {
     "sma_long": _BAND_WORDS | _NOT_SIMPLE | _SHORT | _MEDIUM,
     "ema_short": _BAND_WORDS | {"sma", "simple"} | _MEDIUM | _LONG,
     "ema_long": _BAND_WORDS | {"sma", "simple"} | _SHORT | _MEDIUM,
-    "signal": frozenset({"buy", "sell", "trade", "entry", "exit"}),
+    "signal": frozenset({"buy", "sell", "trade", "trades", "trading", "entry", "exit", "bullish", "bearish"}),
     "cumulative_probability": frozenset({"survival", "reliability"}),
     "final_value": frozenset({"base", "expected", "mean", "average"}),
 }
@@ -233,10 +233,12 @@ WINDOWS: dict[str, int] = {
     "ema_long": 26,
     "tenkan_sen": 9,
     "kijun_sen": 26,
+    "senkou_span_b": 52,
 }
 """The window the specs name for a role (`indicator-bollinger`: 20 periods; `line-training-load-pmc`: CTL over
 42 days, ATL over 7; `indicator-sma`: 20, 50 and 200; `indicator-ema`: 12 and 26, its example and every
-implementation; `indicator-ichimoku`: 9 for the conversion line, 26 for the base line). A column whose name
+implementation; `indicator-ichimoku`: 9 for the conversion line, 26 for the base line, 52 for leading span B).
+A column whose name
 carries another window (`SMA 100`) is still bound, with a warning."""
 MAX_WINDOW = 999
 
