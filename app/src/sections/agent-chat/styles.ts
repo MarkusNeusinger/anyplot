@@ -161,3 +161,18 @@ export const bodyTextSx = {
   overflowWrap: 'anywhere',
   whiteSpace: 'pre-wrap',
 } as const;
+
+/**
+ * Inline code in the chat's text, such as a button the assistant names (`.undo()`): set off the
+ * way the site's pages set off code (`McpPage`, `AboutPage`), so the backticks around it never
+ * show.
+ */
+export const inlineCodeSx = {
+  fontFamily: typography.mono,
+  fontSize: '0.9em',
+  bgcolor: 'var(--bg-elevated)',
+  px: '4px',
+  py: '1px',
+  borderRadius: '3px',
+  color: 'var(--ink)',
+} as const;

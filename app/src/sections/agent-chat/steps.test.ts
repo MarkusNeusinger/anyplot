@@ -9,6 +9,7 @@ import {
 import {
   pendingReply,
   plotButtonLabel,
+  runLine,
   runView,
   showsTimeline,
   stepOneLine,
@@ -51,6 +52,19 @@ describe('the waits of a turn', () => {
     });
     expect(showsTimeline(stepped)).toBe(true);
     expect(pendingReply(stepped)).toBeNull();
+  });
+
+  it('names .stop() above the composer while a plot runs, and that it stops once pressed', () => {
+    expect(runLine(running(queued('create_plot')))).toBe('# plotting… .stop() to cancel');
+    expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toBe('# stopping…');
+    // A turn without a pipeline step keeps the step's line: its in-progress line says what runs.
+    expect(runLine(running(queued('example_data')))).toBeNull();
+    expect(runLine({ ...initialAgentState('matplotlib'), phase: 'ready' })).toBeNull();
+    // The run's card took the timeline's place while the reply is still on its way: no plotting.
+    const shipped = running(queued('create_plot'));
+    expect(
+      runLine({ ...shipped, items: [...shipped.items, { id: 2, kind: 'plot', version: 1 }] })
+    ).toBeNull();
   });
 });
 
