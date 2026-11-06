@@ -5,8 +5,9 @@
  * typed message, or after a choice here or a request in the chat ("answer in
  * English"); a language outside the list as the server stored it. How it was set
  * (`default`, `from data`, `detected`, `chosen`) is in its accessible name only,
- * `Reply language: de, detected. Change` (on screen as `lang: de · detected` until
- * the v4 frame of 2026-11-06). The session language is the
+ * which starts with the words on screen, `Reply language: Deutsch, detected. Change`
+ * (on screen as `lang: de · detected` until the v4 frame of 2026-11-06). The session
+ * language is the
  * language of the assistant's replies and of the first plot's text; code,
  * comments and column names stay as they are. Since 2026-11-01 a plot keeps
  * its text's language after a message in another language, so the chip names
@@ -111,7 +112,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   const [announcement, setAnnouncement] = useState('');
   if (shown.language !== value.language || shown.source !== value.source) {
     setShown(value);
-    setAnnouncement(`reply language: ${value.language}`);
+    setAnnouncement(`reply language: ${languageLabel(value.language)}`);
   }
   const mounted = useRef(true);
   useEffect(() => {
@@ -170,6 +171,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   };
 
   const locked = disabled && !pending;
+  const label = languageLabel(value.language);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
       <Box
@@ -184,15 +186,17 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
-        aria-label={`Reply language: ${value.language}, ${SOURCE_LABEL[value.source]}. Change`}
-        title={`language of the replies: ${value.language} · a choice here also sets the next plot's text`}
+        // The name starts with the words on screen, so a voice command such as "click English"
+        // finds the chip (WCAG 2.5.3); the source follows, which the screen leaves out.
+        aria-label={`Reply language: ${label}, ${SOURCE_LABEL[value.source]}. Change`}
+        title={`language of the replies: ${label} · a choice here also sets the next plot's text`}
         sx={{ ...headerChipSx, maxWidth: '26ch' }}
       >
         <Box
           component="span"
           sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         >
-          {languageLabel(value.language)}
+          {label}
         </Box>
         {pending && (
           <Box component="span" sx={{ flexShrink: 0 }}>

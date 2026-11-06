@@ -22,16 +22,17 @@ describe('LanguageChip', () => {
   it('shows the language in its own words, how it was set in its name, and is disabled while the page says so', () => {
     const onSet = vi.fn(async () => undefined);
     const { rerender } = render(<LanguageChip value={EN} disabled onSet={onSet} />);
-    // `English ▾` since the v4 frame: the source leaves the screen, the name keeps it.
+    // `English ▾` since the v4 frame: the source leaves the screen, the name keeps it, and the
+    // name starts with the words on screen (WCAG 2.5.3), so "click English" finds the chip.
     expect(chip()).toHaveTextContent(/^English ▾$/);
     expect(chip()).toBeDisabled();
-    expect(chip()).toHaveAccessibleName('Reply language: en, default. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: English, default. Change');
 
     rerender(
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
     );
     expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
-    expect(chip()).toHaveAccessibleName('Reply language: de, detected. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, detected. Change');
     expect(chip()).toBeEnabled();
     expect(chip()).toHaveAttribute('aria-haspopup', 'dialog');
 
@@ -39,13 +40,18 @@ describe('LanguageChip', () => {
       <LanguageChip value={{ language: 'de', source: 'pasted' }} disabled={false} onSet={onSet} />
     );
     expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
-    expect(chip()).toHaveAccessibleName('Reply language: de, from data. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, from data. Change');
+    expect(chip()).toHaveAttribute(
+      'title',
+      "language of the replies: Deutsch · a choice here also sets the next plot's text"
+    );
 
     // Each word of an endonym starts in capitals, as the language writes its own name.
     rerender(
       <LanguageChip value={{ language: 'vi', source: 'chosen' }} disabled={false} onSet={onSet} />
     );
     expect(chip()).toHaveTextContent(/^Tiếng Việt ▾$/);
+    expect(chip()).toHaveAccessibleName('Reply language: Tiếng Việt, chosen. Change');
 
     // A language outside the list shows as the server stored it.
     rerender(
@@ -71,7 +77,7 @@ describe('LanguageChip', () => {
     rerender(
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
     );
-    expect(screen.getByRole('status')).toHaveTextContent('reply language: de');
+    expect(screen.getByRole('status')).toHaveTextContent('reply language: Deutsch');
   });
 
   it('opens the list with the current language pressed; Escape closes it and the focus returns', async () => {
@@ -205,7 +211,7 @@ describe('LanguageChip', () => {
     );
     await waitFor(() => expect(chip()).not.toHaveAttribute('aria-disabled'));
     expect(chip()).toHaveTextContent(/^Français ▾$/);
-    expect(chip()).toHaveAccessibleName('Reply language: fr, chosen. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: Français, chosen. Change');
     expect(chip()).toHaveFocus();
     expect(onSet).toHaveBeenCalledTimes(1);
   });

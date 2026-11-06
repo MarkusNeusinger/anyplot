@@ -2,9 +2,10 @@
  * The library menu in the chat's header row, before the language chip (since
  * 2026-11-02, in place of a pill per library, up to 16 with `all`): the chip
  * names the library the plot is made in in plain words, `seaborn ▾`, or
- * `all · 15 libraries ▾` while the admin's `all` is pressed (`lib: seaborn ·
- * python` until the v4 frame of 2026-11-06); its accessible name keeps the
- * language, `Library: seaborn, Python. Change`. A click opens a
+ * `all 15 libraries ▾` while the admin's `all` is pressed (`lib: seaborn ·
+ * python` until the v4 frame of 2026-11-06); its accessible name starts with
+ * the same words and keeps the language, `Library: seaborn, Python. Change`,
+ * so a voice command that says what the chip shows finds it. A click opens a
  * popover with the libraries grouped by language (Python, R, Julia,
  * JavaScript), each group in the header's order, and, for the admin, `all
  * libraries` after them. A popover like the language chip's, not a menu: the
@@ -185,7 +186,7 @@ export function LibraryChip({
           component="span"
           sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         >
-          {allPressed ? `all · ${libraries.length} libraries` : library}
+          {allPressed ? `all ${libraries.length} libraries` : library}
         </Box>
         {pending && (
           <Box component="span" sx={{ flexShrink: 0 }}>

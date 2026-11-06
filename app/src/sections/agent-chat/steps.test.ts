@@ -222,6 +222,21 @@ describe('statusLine', () => {
     });
   });
 
+  it('asks for the decision on a table read from text before any data was stored', () => {
+    const transcription = {
+      text: 'a,b\n1,2\n',
+      preview: [['1', '2']],
+      profile: dataset.parsed.profile,
+      warnings: [],
+      note: '',
+      bytes: 8,
+    };
+    expect(statusLine(ready({ transcription }), options)).toEqual({
+      step: 1,
+      text: 'step 1 of 2 · decide on the table first: .use() or .discard()',
+    });
+  });
+
   it('says back to step 1 after a lost confirmation, with what lost it', () => {
     expect(statusLine(ready({ dataset, confirmLoss: 'bindings' }), options).text).toBe(
       'back to step 1 of 2 · bindings changed · check them above, then .create_plot()'

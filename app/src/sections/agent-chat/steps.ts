@@ -115,8 +115,13 @@ export function statusLine(state: AgentSessionState, options: StatusLineOptions)
   return { step, text: `${head} · ${detail}` };
 }
 
-/** Step 2's part of the status line, and `your data` while the session has none. */
+/**
+ * Step 2's part of the status line, and step 1's while the session has no data yet: a table read
+ * from text before any data was stored waits for its decision, else `your data`.
+ */
 function stepTwoLine(state: AgentSessionState, options: StatusLineOptions): string {
+  if (!state.dataset && state.transcription)
+    return 'decide on the table first: .use() or .discard()';
   if (!state.dataset || !inStep2(state)) return 'your data';
   if (!hasPlotHere(state) && !options.chatLocked) {
     const action = options.carryText ?? 'create the plot as it is';

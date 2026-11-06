@@ -84,9 +84,26 @@ describe('Composer and the status line', () => {
     unmount();
 
     // Once the confirmed data has a plot here, `.start_over()` names it after its own help.
-    renderComposer({ running: false, step2: true, hasPlot: true, ctaPlot: false });
+    const { unmount: unmountPlotted } = renderComposer({
+      running: false,
+      step2: true,
+      hasPlot: true,
+      ctaPlot: false,
+    });
     const startOver = screen.getByRole('button', { name: 'Start over' });
     expect(startOver.getAttribute('aria-describedby')?.split(' ')).toContain(STATUS_LINE_ID);
+    unmountPlotted();
+
+    // Beside a switch's offer the status line describes the offer: `.start_over()` keeps its help.
+    renderComposer({
+      running: false,
+      step2: true,
+      carryText: 'plot in seaborn with your 2 decisions',
+    });
+    expect(screen.getByTestId('carry-plot').getAttribute('aria-describedby')).toBe(STATUS_LINE_ID);
+    expect(
+      screen.getByRole('button', { name: 'Start over' }).getAttribute('aria-describedby')
+    ).not.toContain(STATUS_LINE_ID);
   });
 
   it('lets .send() name the status line while an attachment waits, which says it goes with Enter', () => {

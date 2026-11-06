@@ -156,6 +156,39 @@ describe('PublicAgentChatPage', () => {
     expect(about).toHaveFocus();
   });
 
+  it('keeps the notice above the frame while the session opens, and the same line once it is open', async () => {
+    let open!: () => void;
+    const opened = new Promise<void>(resolve => {
+      open = resolve;
+    });
+    const answer = globalThis.fetch as unknown as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        if (new URL(input).pathname.endsWith('/agent/sessions') && init.method === 'POST') {
+          await opened;
+        }
+        return answer(input, init);
+      })
+    );
+    renderPage();
+    expect(await screen.findByTestId('session-opening')).toBeInTheDocument();
+    // Before the first input exists: the notice stands, above the frame and outside it.
+    const notice = screen.getByTestId('experimental-notice');
+    const frame = screen.getByRole('region', { name: 'Chat' });
+    expect(notice.compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(frame).not.toContainElement(notice);
+
+    open();
+    expect(await screen.findByRole('textbox', { name: 'Message' })).toBeInTheDocument();
+    // One tree in every phase: the line stays the same element, and so does the frame.
+    expect(screen.getByTestId('experimental-notice')).toBe(notice);
+    expect(screen.getByRole('region', { name: 'Chat' })).toBe(frame);
+  });
+
   it('offers no "all", no .save() and no "⋯" menu, also to an admin', async () => {
     const user = userEvent.setup();
     // The site's entries lead an admin here while the lane is open: the page a visitor gets.

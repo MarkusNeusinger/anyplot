@@ -247,7 +247,8 @@ export function Composer(props: ComposerProps) {
       disabled={!canCreate}
       aria-label="Start over"
       title={START_OVER_HELP}
-      aria-describedby={`${START_OVER_HELP_ID} ${STATUS_LINE_ID}`}
+      // Beside a switch's offer the status line describes the offer, not this button.
+      aria-describedby={carry ? START_OVER_HELP_ID : `${START_OVER_HELP_ID} ${STATUS_LINE_ID}`}
       sx={actionButtonSx}
     >
       .start_over()

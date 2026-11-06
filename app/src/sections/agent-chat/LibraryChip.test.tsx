@@ -94,7 +94,8 @@ describe('LibraryChip', () => {
     expect(chip()).toBeEnabled();
 
     rerender(<LibraryChip {...props({ offerAll: true, allPressed: true })} />);
-    expect(chip()).toHaveTextContent(/^all · 15 libraries ▾$/);
+    // The name holds the words on screen (WCAG 2.5.3, label in name).
+    expect(chip()).toHaveTextContent(/^all 15 libraries ▾$/);
     expect(chip()).toHaveAccessibleName('Library: all 15 libraries. Change');
   });
 

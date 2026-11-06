@@ -595,6 +595,10 @@ describe('AgentChatPage gating', () => {
     stubFetch(422, { detail: 'not_eligible', ref: 'r1' });
     renderAt(PAGE);
     expect(await screen.findByText('not eligible')).toBeInTheDocument();
+    // The reason stands inside the chat's frame, below its header row with the library menu.
+    const frame = screen.getByRole('region', { name: 'Chat' });
+    expect(frame).toContainElement(screen.getByRole('alert'));
+    expect(frame).toContainElement(libraryChip());
     // The tab names the page in every phase, not only once a session is open.
     await waitFor(() => expect(document.title).toMatch(/^agent · .+ \| anyplot\.ai$/));
     // No session exists to switch, so a pick opens the page anew with its own session.
@@ -1257,6 +1261,10 @@ describe('AgentChatPage gating', () => {
     vi.stubGlobal('fetch', fetchMock);
     renderAt(PAGE);
     expect(await screen.findByText('error · unreachable')).toBeInTheDocument();
+    // The error stands inside the chat's frame, below its header row.
+    expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(
+      screen.getByRole('alert')
+    );
     expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
     sessionStorage.clear();
   });
@@ -1895,7 +1903,7 @@ describe('AgentChatPage .plot_all()', () => {
 
     // Pressed, `all` is what the chip names, and the composer's create action plots everywhere.
     await pickInMenu('All libraries');
-    expect(libraryChip()).toHaveTextContent(/^all · 2 libraries ▾$/);
+    expect(libraryChip()).toHaveTextContent(/^all 2 libraries ▾$/);
     expect(libraryChip()).toHaveAccessibleName('Library: all 2 libraries. Change');
     menu = await openLibraryMenu();
     expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
@@ -1946,7 +1954,7 @@ describe('AgentChatPage .plot_all()', () => {
     // session the panel's sessions copy their data from; `all` stays pressed.
     expect(plotAllButton()).toBeDisabled();
     expect(libraryChip()).toBeDisabled();
-    expect(libraryChip()).toHaveTextContent(/^all · 2 libraries ▾$/);
+    expect(libraryChip()).toHaveTextContent(/^all 2 libraries ▾$/);
 
     // `.close()` goes with the panel: the focus returns to `.plot_all()`, which opened it.
     const close = within(panel).getByRole('button', { name: 'Close all libraries' });
@@ -2063,7 +2071,7 @@ describe('AgentChatPage .plot_all()', () => {
 
     // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
     await pickInMenu('All libraries');
-    expect(libraryChip()).toHaveTextContent(/^all · \d+ libraries ▾$/);
+    expect(libraryChip()).toHaveTextContent(/^all \d+ libraries ▾$/);
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     const box = screen.getByLabelText('Message');
     expect(box).toBeEnabled();
@@ -2087,7 +2095,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
     expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
-    expect(libraryChip()).toHaveTextContent(/^all · \d+ libraries ▾$/);
+    expect(libraryChip()).toHaveTextContent(/^all \d+ libraries ▾$/);
     expect(confirmAndTurns()).toEqual(['summarize_data', 'text: what is the mean score?']);
   });
 
@@ -2300,7 +2308,7 @@ describe('AgentChatPage URL', () => {
     expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(query().get('all')).toBe('1');
     releaseStatus();
-    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all · 3 libraries ▾$/));
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
     menu = await openLibraryMenu();
     expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
       'aria-pressed',
@@ -2318,7 +2326,7 @@ describe('AgentChatPage URL', () => {
     threeLibraries();
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const first = renderAt(`${PAGE}&all=1`);
-    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all · 3 libraries ▾$/));
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
     await waitFor(() => expect(libraryChip()).toBeEnabled());
 
     // Another library switches and turns `all` off: the URL names the new library, without `all`.

@@ -69,7 +69,7 @@ function stubFetch(opened: Promise<void> = Promise.resolve()) {
         const body = JSON.parse(String(init.body)) as { language: string };
         puts.push({ body, headers: init.headers as Record<string, string> });
         // The service's stored form: a known name as its code.
-        const stored = body.language === 'Deutsch' ? 'de' : body.language;
+        const stored = body.language.toLowerCase() === 'deutsch' ? 'de' : body.language;
         return json(200, { language: stored, source: 'chosen' });
       }
       if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
@@ -128,7 +128,7 @@ describe('AgentChatPage language chip', () => {
     renderPage();
     // English by default, whatever the browser; disabled while the session opens.
     expect(await screen.findByTestId('language-chip')).toHaveTextContent(/^English ▾$/);
-    expect(chip()).toHaveAccessibleName('Reply language: en, default. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: English, default. Change');
     expect(chip()).toBeDisabled();
 
     open();
@@ -138,7 +138,7 @@ describe('AgentChatPage language chip', () => {
     await user.click(within(list).getByRole('button', { name: /German/ }));
 
     await waitFor(() => expect(chip()).toHaveTextContent(/^Deutsch ▾$/));
-    expect(chip()).toHaveAccessibleName('Reply language: de, chosen. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, chosen. Change');
     expect(puts).toHaveLength(1);
     expect(puts[0].body).toEqual({ language: 'de' });
     expect(puts[0].headers['X-Anyplot-Client']).toBe('agent-chat/1');
@@ -163,11 +163,13 @@ describe('AgentChatPage language chip', () => {
     expect(puts).toEqual([]);
 
     await user.clear(field);
-    await user.type(field, 'Deutsch{Enter}');
-    // The server's form `de`, which the chip names by its endonym again.
-    await waitFor(() => expect(chip()).toHaveAccessibleName('Reply language: de, chosen. Change'));
+    await user.type(field, 'deutsch{Enter}');
+    // The server's form `de`, which the chip names by its endonym, never the typed `deutsch`.
+    await waitFor(() =>
+      expect(chip()).toHaveAccessibleName('Reply language: Deutsch, chosen. Change')
+    );
     expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
-    expect(puts.map(put => put.body)).toEqual([{ language: 'Deutsch' }]);
+    expect(puts.map(put => put.body)).toEqual([{ language: 'deutsch' }]);
   });
 
   it("holds the chip during a turn and follows the turn's detected language with one notice", async () => {
@@ -185,7 +187,7 @@ describe('AgentChatPage language chip', () => {
 
     expect(await screen.findByText('Die x-Achse zeigt die Lernstunden.')).toBeInTheDocument();
     await waitFor(() =>
-      expect(chip()).toHaveAccessibleName('Reply language: de, detected. Change')
+      expect(chip()).toHaveAccessibleName('Reply language: Deutsch, detected. Change')
     );
     expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
     expect(chip()).toBeEnabled();
