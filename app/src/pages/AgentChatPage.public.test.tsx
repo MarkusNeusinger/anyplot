@@ -116,13 +116,18 @@ describe('PublicAgentChatPage', () => {
     const user = userEvent.setup();
     renderPage();
     const notice = await screen.findByTestId('experimental-notice');
-    // In view without a click: an experimental AI (AI Act Art. 50) whose answers can be wrong.
-    expect(notice).toHaveTextContent(`# ${EXPERIMENTAL_LINE}`);
-    expect(notice).toHaveTextContent('# experimental AI · answers can be wrong');
+    // In view without a click: an experimental AI (AI Act Art. 50) whose answers can be wrong,
+    // one muted `//` line above the chat's frame since the v4 frame.
+    expect(notice).toHaveTextContent(`// ${EXPERIMENTAL_LINE}`);
+    expect(notice).toHaveTextContent(/^\/\/ experimental AI · answers can be wrong$/);
     expect(screen.queryByTestId('experimental-details')).not.toBeInTheDocument();
-    // Above the message box, where the data comes in: the notice comes first in the document.
+    // Above the message box, where the data comes in: the notice comes first in the document,
+    // before the frame, and outside it.
     const box = await screen.findByRole('textbox', { name: 'Message' });
+    const frame = screen.getByRole('region', { name: 'Chat' });
     expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(notice.compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(frame).not.toContainElement(notice);
 
     const about = within(notice).getByRole('button', { name: 'About the assistant' });
     expect(about).toHaveAttribute('aria-expanded', 'false');
@@ -149,6 +154,39 @@ describe('PublicAgentChatPage', () => {
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(about).toHaveFocus();
+  });
+
+  it('keeps the notice above the frame while the session opens, and the same line once it is open', async () => {
+    let open!: () => void;
+    const opened = new Promise<void>(resolve => {
+      open = resolve;
+    });
+    const answer = globalThis.fetch as unknown as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        if (new URL(input).pathname.endsWith('/agent/sessions') && init.method === 'POST') {
+          await opened;
+        }
+        return answer(input, init);
+      })
+    );
+    renderPage();
+    expect(await screen.findByTestId('session-opening')).toBeInTheDocument();
+    // Before the first input exists: the notice stands, above the frame and outside it.
+    const notice = screen.getByTestId('experimental-notice');
+    const frame = screen.getByRole('region', { name: 'Chat' });
+    expect(notice.compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(frame).not.toContainElement(notice);
+
+    open();
+    expect(await screen.findByRole('textbox', { name: 'Message' })).toBeInTheDocument();
+    // One tree in every phase: the line stays the same element, and so does the frame.
+    expect(screen.getByTestId('experimental-notice')).toBe(notice);
+    expect(screen.getByRole('region', { name: 'Chat' })).toBe(frame);
   });
 
   it('offers no "all", no .save() and no "⋯" menu, also to an admin', async () => {

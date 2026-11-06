@@ -1,8 +1,11 @@
 /**
- * The library menu in the chat header, before the language chip (since
+ * The library menu in the chat's header row, before the language chip (since
  * 2026-11-02, in place of a pill per library, up to 16 with `all`): the chip
- * names the library the plot is made in, `lib: matplotlib · python`, or
- * `lib: all · 15 libraries` while the admin's `all` is pressed. A click opens a
+ * names the library the plot is made in in plain words, `seaborn ▾`, or
+ * `all 15 libraries ▾` while the admin's `all` is pressed (`lib: seaborn ·
+ * python` until the v4 frame of 2026-11-06); its accessible name starts with
+ * the same words and keeps the language, `Library: seaborn, Python. Change`,
+ * so a voice command that says what the chip shows finds it. A click opens a
  * popover with the libraries grouped by language (Python, R, Julia,
  * JavaScript), each group in the header's order, and, for the admin, `all
  * libraries` after them. A popover like the language chip's, not a menu: the
@@ -38,6 +41,7 @@ import { describeLibraryFailure } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import {
   actionButtonSx,
+  headerChipSx,
   labelSx,
   smallText,
   visuallyHiddenSx,
@@ -176,36 +180,22 @@ export function LibraryChip({
             : `Library: ${library}, ${LANG_DISPLAY[language] ?? language}. Change`
         }
         title="the library the plot is made in · a switch keeps your data and your decisions"
-        sx={{
-          ...actionButtonSx,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          maxWidth: '32ch',
-          border: '1px solid',
-          borderColor: 'var(--ink-muted)',
-          color: 'var(--ink)',
-          bgcolor: 'var(--bg-elevated)',
-          '&:disabled': { opacity: 0.45, cursor: 'default' },
-          '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
-        }}
+        sx={{ ...headerChipSx, maxWidth: '32ch' }}
       >
-        <Box component="span" sx={{ flexShrink: 0 }}>
-          lib:&nbsp;
-        </Box>
         <Box
           component="span"
           sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         >
-          {allPressed ? 'all' : library}
-        </Box>
-        <Box component="span" sx={{ color: 'var(--ink-muted)', flexShrink: 0 }}>
-          &nbsp;· {allPressed ? `${libraries.length} libraries` : language}
+          {allPressed ? `all ${libraries.length} libraries` : library}
         </Box>
         {pending && (
           <Box component="span" sx={{ flexShrink: 0 }}>
             &nbsp;…
           </Box>
         )}
+        <Box component="span" aria-hidden sx={{ color: 'var(--ink-soft)', flexShrink: 0 }}>
+          &nbsp;▾
+        </Box>
       </Box>
       <Box role="status" sx={visuallyHiddenSx}>
         {announcement}

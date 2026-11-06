@@ -2,9 +2,9 @@
  * Shared styles of the agent chat surfaces, after docs/reference/style-guide.md:
  * method-call buttons (§7.4), the filled CTA reserved for the one primary action
  * (`.create_plot()`, which also ends step 1, the one place outside the landing hero
- * that §7.4 allows it), native form controls on the theme tokens,
- * the panel and card surfaces, and the pinned data header's offset and clearance.
- * Colours come from the CSS variables, so both themes work.
+ * that §7.4 allows it), native form controls on the theme tokens, the chat frame (§7.9) and
+ * its header row's chips, the panel and card surfaces, and the pinned data header's offset and
+ * clearance. Colours come from the CSS variables, so both themes work.
  */
 
 import { colors, fontSize, typography } from 'src/theme';
@@ -75,7 +75,46 @@ export const nativeControlSx = {
   '&:disabled': { opacity: 0.6 },
 } as const;
 
-/** A panel surface: the chat column. */
+/**
+ * The chat frame (§7.9, `ChatFrame.tsx`): a terminal window on the page, after the hero's plot
+ * panel (§7.1). One rule with a small radius on the page's own colour, so the tab label on its
+ * top border punches through it, and the room above the frame that the label needs.
+ */
+export const frameSx = {
+  position: 'relative',
+  border: '1px solid var(--rule)',
+  borderRadius: '6px',
+  mt: 1.5,
+  pt: { xs: 2.75, sm: 3.25 },
+  px: { xs: 1.5, sm: 3 },
+  pb: { xs: 1.5, sm: 1.75 },
+  minWidth: 0,
+} as const;
+
+/** The dashed rule inside the frame: under the header row, and between the thread and the composer. */
+export const frameRuleSx = { borderTop: '1px dashed var(--rule)' } as const;
+
+/**
+ * A dropdown chip of the header row (the library, the reply language): the value in plain words
+ * and `▾`, a 40 px target on a wide screen and 44 px at phone width. The words name the control,
+ * so its boundary is the quiet rule, as the frame's.
+ */
+export const headerChipSx = {
+  ...actionButtonSx,
+  fontSize: fontSize.md,
+  display: 'inline-flex',
+  alignItems: 'center',
+  color: 'var(--ink)',
+  bgcolor: 'var(--bg-elevated)',
+  border: '1px solid var(--rule)',
+  px: 1.25,
+  minHeight: { xs: 44, sm: 40 },
+  '&:hover:not(:disabled)': { color: colors.primary, borderColor: 'var(--ink-muted)' },
+  '&:disabled': { opacity: 0.45, cursor: 'default' },
+  '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
+} as const;
+
+/** A panel surface: the admin fan-out's panel below the chat frame. */
 export const panelSx = {
   position: 'relative',
   bgcolor: 'var(--bg-surface)',

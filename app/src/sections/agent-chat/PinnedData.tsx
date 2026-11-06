@@ -13,31 +13,21 @@ import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
-import { countOf } from 'src/sections/agent-chat/countOf';
-import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/steps';
+import { dataShape } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   cardSx,
   labelSx,
   PINNED_CLEARANCE,
   PINNED_TOP,
-  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import type { DataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { colors } from 'src/theme';
-
-export { DATA_SUMMARY_ID };
 
 /** The card's line while the fan-out's panel is open, which the card names as its description. */
 export const DATA_LOCK_TEXT =
   '# the data waits while all libraries plot it · .close() the panel to change it';
 const DATA_LOCK_ID = 'agent-data-lock';
-
-/** The data's shape in one line: `2 rows · 2 columns · version 1`. */
-function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
-  const { profile, version } = dataset.parsed;
-  return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
-}
 
 export interface PinnedHeaderProps {
   state: AgentSessionState;
@@ -45,9 +35,8 @@ export interface PinnedHeaderProps {
 }
 
 /**
- * The sticky header above the thread, and the live region that says the step: it stays mounted,
- * so a screen reader hears the step change, while the lines that say it on screen come and go
- * with the card.
+ * The sticky header above the thread. The live region that says the step, which it held until
+ * the v4 frame, stands by the status line at the frame's foot (`StepStatus`, `ChatFrame.tsx`).
  */
 export function PinnedHeader({ state, view }: PinnedHeaderProps) {
   const { pinned, confirmed, expanded, open, toggle } = view;
@@ -55,15 +44,6 @@ export function PinnedHeader({ state, view }: PinnedHeaderProps) {
   const hasTranscription = !!state.transcription;
   return (
     <>
-      <Box data-testid="data-step-status" aria-live="polite" sx={visuallyHiddenSx}>
-        {state.parsing
-          ? 'parsing your data'
-          : confirmed
-            ? 'step 2: the data is confirmed; create the plot below'
-            : dataset
-              ? 'step 1: check the data, then create the plot'
-              : ''}
-      </Box>
       {/* While the header sticks, the page's focus and scrolling land below it (WCAG 2.4.11). */}
       {pinned && <GlobalStyles styles={{ html: { scrollPaddingTop: PINNED_CLEARANCE } }} />}
       {pinned && dataset && (
@@ -93,7 +73,6 @@ export function PinnedHeader({ state, view }: PinnedHeaderProps) {
           }}
         >
           <Box
-            id={DATA_SUMMARY_ID}
             data-testid="data-summary"
             sx={{
               ...labelSx,

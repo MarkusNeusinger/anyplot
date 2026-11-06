@@ -19,26 +19,41 @@ const chip = () => screen.getByTestId('language-chip');
 const dialog = () => screen.getByRole('dialog', { name: 'Language of the replies and the plot' });
 
 describe('LanguageChip', () => {
-  it('shows the value and how it was set, and is disabled while the page says so', () => {
+  it('shows the language in its own words, how it was set in its name, and is disabled while the page says so', () => {
     const onSet = vi.fn(async () => undefined);
     const { rerender } = render(<LanguageChip value={EN} disabled onSet={onSet} />);
-    expect(chip()).toHaveTextContent(/^lang: en$/);
+    // `English ▾` since the v4 frame: the source leaves the screen, the name keeps it, and the
+    // name starts with the words on screen (WCAG 2.5.3), so "click English" finds the chip.
+    expect(chip()).toHaveTextContent(/^English ▾$/);
     expect(chip()).toBeDisabled();
-    expect(chip()).toHaveAccessibleName('Reply language: en, default. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: English, default. Change');
 
     rerender(
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
     );
-    expect(chip()).toHaveTextContent(/^lang: de · detected$/);
+    expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, detected. Change');
     expect(chip()).toBeEnabled();
     expect(chip()).toHaveAttribute('aria-haspopup', 'dialog');
 
     rerender(
       <LanguageChip value={{ language: 'de', source: 'pasted' }} disabled={false} onSet={onSet} />
     );
-    expect(chip()).toHaveTextContent(/^lang: de · from data$/);
-    expect(chip()).toHaveAccessibleName('Reply language: de, from data. Change');
+    expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, from data. Change');
+    expect(chip()).toHaveAttribute(
+      'title',
+      "language of the replies: Deutsch · a choice here also sets the next plot's text"
+    );
 
+    // Each word of an endonym starts in capitals, as the language writes its own name.
+    rerender(
+      <LanguageChip value={{ language: 'vi', source: 'chosen' }} disabled={false} onSet={onSet} />
+    );
+    expect(chip()).toHaveTextContent(/^Tiếng Việt ▾$/);
+    expect(chip()).toHaveAccessibleName('Reply language: Tiếng Việt, chosen. Change');
+
+    // A language outside the list shows as the server stored it.
     rerender(
       <LanguageChip
         value={{ language: 'Klingon', source: 'chosen' }}
@@ -46,7 +61,8 @@ describe('LanguageChip', () => {
         onSet={onSet}
       />
     );
-    expect(chip()).toHaveTextContent(/^lang: Klingon · chosen$/);
+    expect(chip()).toHaveTextContent(/^Klingon ▾$/);
+    expect(chip()).toHaveAccessibleName('Reply language: Klingon, chosen. Change');
     // The chip names the replies' language; a choice here sets the plot's text too (owner, 2026-11-01).
     expect(chip()).toHaveAttribute(
       'title',
@@ -61,7 +77,7 @@ describe('LanguageChip', () => {
     rerender(
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
     );
-    expect(screen.getByRole('status')).toHaveTextContent('reply language: de');
+    expect(screen.getByRole('status')).toHaveTextContent('reply language: Deutsch');
   });
 
   it('opens the list with the current language pressed; Escape closes it and the focus returns', async () => {
@@ -182,7 +198,7 @@ describe('LanguageChip', () => {
     rerender(<LanguageChip value={EN} disabled onSet={onSet} />);
 
     await waitFor(() => expect(chip()).toHaveFocus());
-    expect(chip()).toHaveTextContent(/^lang: en …$/);
+    expect(chip()).toHaveTextContent(/^English … ▾$/);
     // `aria-disabled`, not `disabled`: a disabled button would drop the keyboard focus.
     expect(chip()).toHaveAttribute('aria-disabled', 'true');
     expect(chip()).not.toBeDisabled();
@@ -194,7 +210,8 @@ describe('LanguageChip', () => {
       <LanguageChip value={{ language: 'fr', source: 'chosen' }} disabled={false} onSet={onSet} />
     );
     await waitFor(() => expect(chip()).not.toHaveAttribute('aria-disabled'));
-    expect(chip()).toHaveTextContent(/^lang: fr · chosen$/);
+    expect(chip()).toHaveTextContent(/^Français ▾$/);
+    expect(chip()).toHaveAccessibleName('Reply language: Français, chosen. Change');
     expect(chip()).toHaveFocus();
     expect(onSet).toHaveBeenCalledTimes(1);
   });

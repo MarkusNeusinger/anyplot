@@ -80,19 +80,22 @@ describe('groupByLanguage', () => {
 });
 
 describe('LibraryChip', () => {
-  it('names the library and its language, and is disabled while the page says so', () => {
+  it('names the library in plain words, its language in the name, and is disabled while the page says so', () => {
     const { rerender } = render(<LibraryChip {...props({ disabled: true })} />);
-    expect(chip()).toHaveTextContent(/^lib: matplotlib · python$/);
+    // `seaborn ▾` since the v4 frame: the language leaves the screen, the name keeps it.
+    expect(chip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(chip()).toBeDisabled();
     expect(chip()).toHaveAccessibleName('Library: matplotlib, Python. Change');
     expect(chip()).toHaveAttribute('aria-haspopup', 'dialog');
 
     rerender(<LibraryChip {...props({ library: 'ggplot2' })} />);
-    expect(chip()).toHaveTextContent(/^lib: ggplot2 · r$/);
+    expect(chip()).toHaveTextContent(/^ggplot2 ▾$/);
+    expect(chip()).toHaveAccessibleName('Library: ggplot2, R. Change');
     expect(chip()).toBeEnabled();
 
     rerender(<LibraryChip {...props({ offerAll: true, allPressed: true })} />);
-    expect(chip()).toHaveTextContent(/^lib: all · 15 libraries$/);
+    // The name holds the words on screen (WCAG 2.5.3, label in name).
+    expect(chip()).toHaveTextContent(/^all 15 libraries ▾$/);
     expect(chip()).toHaveAccessibleName('Library: all 15 libraries. Change');
   });
 
@@ -225,7 +228,7 @@ describe('LibraryChip', () => {
     rerender(<LibraryChip {...props({ onPick, disabled: true })} />);
 
     await waitFor(() => expect(chip()).toHaveFocus());
-    expect(chip()).toHaveTextContent(/^lib: matplotlib · python …$/);
+    expect(chip()).toHaveTextContent(/^matplotlib … ▾$/);
     expect(chip()).toHaveAttribute('aria-disabled', 'true');
     expect(chip()).not.toBeDisabled();
     await user.click(chip());
@@ -234,7 +237,7 @@ describe('LibraryChip', () => {
     gate.resolve();
     rerender(<LibraryChip {...props({ onPick, library: 'plotly' })} />);
     await waitFor(() => expect(chip()).not.toHaveAttribute('aria-disabled'));
-    expect(chip()).toHaveTextContent(/^lib: plotly · python$/);
+    expect(chip()).toHaveTextContent(/^plotly ▾$/);
     expect(chip()).toHaveFocus();
     expect(onPick).toHaveBeenCalledTimes(1);
   });
@@ -254,7 +257,7 @@ describe('LibraryChip', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /^could not switch: this plot cannot be adapted in that library$/
     );
-    expect(chip()).toHaveTextContent(/^lib: matplotlib · python$/);
+    expect(chip()).toHaveTextContent(/^matplotlib ▾$/);
 
     await user.click(chip());
     await user.click(within(dialog()).getByRole('button', { name: 'makie' }));

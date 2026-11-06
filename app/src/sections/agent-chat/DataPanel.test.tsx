@@ -7,6 +7,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
+import { StepStatus } from 'src/sections/agent-chat/ChatFrame';
 import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
 import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
 import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
@@ -16,7 +17,8 @@ type PanelProps = Omit<React.ComponentProps<typeof DataPanel>, 'view' | 'part'>;
 
 /**
  * The card as the page composes it: the pinned header above the thread, the stored data's card
- * at its item and the card of a table read from text at its own (`AgentChatPage`, `ChatThread`).
+ * at its item and the card of a table read from text at its own (`AgentChatPage`, `ChatThread`),
+ * and the step's live region by the status line at the frame's foot.
  */
 function Panel(props: PanelProps) {
   const view = useDataCardView(props.state);
@@ -25,6 +27,7 @@ function Panel(props: PanelProps) {
       <PinnedHeader state={props.state} view={view} />
       <DataPanel {...props} view={view} part="data" />
       <DataPanel {...props} view={view} part="transcription" />
+      <StepStatus state={props.state} />
     </>
   );
 }

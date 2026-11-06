@@ -18,7 +18,7 @@ describe('attachmentWaitLine', () => {
   it('reads the table without data, and says it replaces the data with', () => {
     expect(attachmentWaitLine(null)).toBe(ATTACHMENT_LINE);
     expect(attachmentWaitLine(22)).toBe(
-      '# the attached table replaces your data (22 rows, no .undo()) when you send it: Enter or .send(), with a note if you like'
+      'the attached table replaces your data (22 rows, no .undo()) when you send it: Enter or .send(), with a note if you like'
     );
     expect(attachmentWaitLine(1)).toContain('(1 row, no .undo())');
   });

@@ -39,7 +39,7 @@ const languageNoticeItem = (language: string, from: 'your message' | 'your paste
     lines: [
       `detected from ${from}`,
       'a plot you have keeps its language',
-      'the lang chip in the header changes both',
+      'the language chip in the header changes both',
     ],
   },
 });

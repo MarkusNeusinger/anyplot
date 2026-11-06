@@ -460,12 +460,13 @@ const lastAction = () => {
   return bubbles[bubbles.length - 1];
 };
 
-/** The step the step header marks as current. */
-const currentStep = () =>
-  within(screen.getByRole('list', { name: 'Steps' }))
-    .getAllByRole('listitem')
-    .filter(item => item.getAttribute('aria-current') === 'step')
-    .map(item => item.textContent);
+/** The step the status line at the frame's foot names (`step 1 of 2 · …`). */
+const currentStep = () => {
+  const line = screen.getByTestId('data-step');
+  const step = Number(line.getAttribute('data-step'));
+  expect(line).toHaveTextContent(new RegExp(`^>>> (back to )?step ${step} of 2 · `));
+  return step;
+};
 
 /** The header's library menu: its chip, which names the library (or `all`). */
 const libraryChip = () => screen.getByTestId('library-chip');
@@ -543,7 +544,11 @@ describe('AgentChatPage gating', () => {
       spec: 'scatter-basic',
     });
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(PAGE));
-    expect(await screen.findByText('← Basic Scatter Plot')).toBeInTheDocument();
+    // The title in plain words is the link back, in the frame's header row (`← title` until v4).
+    const back = await screen.findByRole('link', { name: 'Basic Scatter Plot' });
+    expect(back).toHaveAttribute('href', expect.stringContaining('scatter-basic'));
+    expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(back);
+    expect(screen.getByTestId('chat-frame-tab')).toHaveTextContent(/^~\/anyplot\.ai\/agent$/);
   });
 
   it('names the tab after the spec title, not its id', async () => {
@@ -590,6 +595,12 @@ describe('AgentChatPage gating', () => {
     stubFetch(422, { detail: 'not_eligible', ref: 'r1' });
     renderAt(PAGE);
     expect(await screen.findByText('not eligible')).toBeInTheDocument();
+    // The reason stands inside the chat's frame, below its header row with the library menu.
+    const frame = screen.getByRole('region', { name: 'Chat' });
+    expect(frame).toContainElement(screen.getByRole('alert'));
+    expect(frame).toContainElement(libraryChip());
+    // The tab names the page in every phase, not only once a session is open.
+    await waitFor(() => expect(document.title).toMatch(/^agent · .+ \| anyplot\.ai$/));
     // No session exists to switch, so a pick opens the page anew with its own session.
     const menu = await openLibraryMenu();
     await waitFor(() =>
@@ -606,8 +617,10 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     expect(await screen.findByLabelText('Message')).toBeInTheDocument();
-    expect(currentStep()).toEqual(['1 data']);
-    // The steps are behind the ⓘ beside `# chat`, not in a paragraph on the page (2026-11-02).
+    expect(currentStep()).toBe(1);
+    // Before data the status line names the step and the data; the how-to is behind the header
+    // row's ⓘ, not in a paragraph on the page (2026-11-02).
+    expect(screen.getByTestId('data-step')).toHaveTextContent(/^>>> step 1 of 2 · your data$/);
     expect(screen.queryByText(/check the preview and the bindings/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'How the chat takes data' })).toBeInTheDocument();
 
@@ -629,10 +642,10 @@ describe('AgentChatPage gating', () => {
     // The first binding setup after a paste dropped no confirmation: nothing to name.
     expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 — check the preview and the bindings above, then .create_plot()'
+      'step 1 of 2 · check the preview and the bindings above, then .create_plot()'
     );
     expect(create).toHaveAccessibleDescription(
-      '# step 1 — check the preview and the bindings above, then .create_plot()'
+      'step 1 of 2 · check the preview and the bindings above, then .create_plot()'
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
@@ -647,7 +660,7 @@ describe('AgentChatPage gating', () => {
       expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot'])
     );
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-    expect(currentStep()).toEqual(['·2 plot']);
+    expect(currentStep()).toBe(2);
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'data fits · 2 rows · 2 columns · version 1'
     );
@@ -660,26 +673,36 @@ describe('AgentChatPage gating', () => {
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
       size_bucket: 'lt_1kb',
     });
-    // While it plots, the line above the box names the one action left, in the step line's place.
-    expect(screen.getByTestId('data-step')).toHaveTextContent(/^# plotting… \.stop\(\) to cancel$/);
+    // While it plots, the status line names the one action left, in the step's words' place.
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · plotting… \.stop\(\) to cancel$/
+    );
     expect(screen.queryByText(/create the plot as it is/)).not.toBeInTheDocument();
     expect(lastAction()).toHaveTextContent(/^❯\.create_plot\(\)# matplotlib$/);
 
     releaseTurn?.();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     await turnEnded();
-    // The confirmed data has a plot here: the composer refines, `.start_over()` quiet beside.
+    // The confirmed data has a plot here: the composer refines, `.start_over()` quiet beside, and
+    // the status line names the data the plot was made from.
     expect(composerButtons()).toEqual(['.start_over()']);
     expect(screen.getByLabelText('Message')).toBeEnabled();
-    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · data fits · 2 rows · 2 columns · version 1$/
+    );
+    expect(screen.getByRole('button', { name: 'Start over' })).toHaveAccessibleDescription(
+      'new from the catalogue plot; keeps your remembered decisions step 2 of 2 · data fits · 2 rows · 2 columns · version 1'
+    );
 
     // The thread names the quiet button as it read, not the action it sends.
     holdNextTurn = true;
     fireEvent.click(screen.getByRole('button', { name: 'Start over' }), { detail: 1 });
     await waitFor(() => expect(lastAction()).toHaveTextContent(/^❯\.start_over\(\)# matplotlib$/));
-    // No line stood above the box: the run adds none, so the box stays where it is.
+    // The status line at the frame's foot always stands: the run's words take the data's place.
     expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
-    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · plotting… \.stop\(\) to cancel$/
+    );
     releaseTurn?.();
     await turnEnded();
   });
@@ -702,7 +725,7 @@ describe('AgentChatPage gating', () => {
     expect(composerButtons()).toEqual(['.create_plot()']);
     expect(screen.queryByRole('button', { name: 'Start over' })).not.toBeInTheDocument();
     expect(create).toHaveAccessibleDescription(
-      '# step 1 again — bindings changed · check them above, then .create_plot() new from the catalogue plot; keeps your remembered decisions'
+      'back to step 1 of 2 · bindings changed · check them above, then .create_plot() new from the catalogue plot; keeps your remembered decisions'
     );
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'check again · 2 rows · 2 columns · version 1'
@@ -710,11 +733,11 @@ describe('AgentChatPage gating', () => {
     // The root's binding change dropped the confirmation: the step line says so, and only it.
     expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — bindings changed · check them above, then .create_plot()'
+      'back to step 1 of 2 · bindings changed · check them above, then .create_plot()'
     );
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
-    expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+    expect(currentStep()).toBe(1);
     expect(lastTurn()).toEqual({ text: 'swap x and y' });
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
@@ -750,7 +773,7 @@ describe('AgentChatPage gating', () => {
     expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
     expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
-    expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+    expect(currentStep()).toBe(1);
     expect(composerButtons()).toEqual(['.create_plot()']);
     // Nothing was confirmed yet, so nothing was lost.
     expect(lossNotice()).not.toBeInTheDocument();
@@ -774,10 +797,10 @@ describe('AgentChatPage gating', () => {
     // One line says what to do, the step line above the composer; no notice repeats it above.
     expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — data changed · check it above, then plot the new data'
+      'back to step 1 of 2 · data changed · check it above, then plot the new data'
     );
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
-    expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
+    expect(currentStep()).toBe(1);
     // The undone data with a plot here: the filled CTA again, named for the data that changed.
     expect(composerButtons()).toEqual(['plot the new data']);
     expect(screen.getByRole('button', { name: 'Plot the new data' })).toBeEnabled();
@@ -860,7 +883,7 @@ describe('AgentChatPage gating', () => {
     expect(card.getByRole('cell', { name: '52' })).toBeInTheDocument();
     expect(card.getByLabelText(/^x/)).toHaveValue('hours');
     // Looking is no change: the data stays confirmed, and step 2 stays.
-    expect(currentStep()).toEqual(['·2 plot']);
+    expect(currentStep()).toBe(2);
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
 
     fireEvent.click(hide);
@@ -882,11 +905,11 @@ describe('AgentChatPage gating', () => {
     );
     expect(screen.getByRole('button', { name: 'Go to the data' })).toBeInTheDocument();
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(composerButtons()).toEqual(['.create_plot()']);
     // The loss is named once, right above the plot button, and no notice in the thread repeats it.
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — bindings changed · check them above, then .create_plot()'
+      'back to step 1 of 2 · bindings changed · check them above, then .create_plot()'
     );
     expect(lossNotice()).not.toBeInTheDocument();
 
@@ -904,7 +927,8 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
     await turnEnded();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+    expect(currentStep()).toBe(2);
+    expect(screen.getByTestId('data-step')).not.toHaveTextContent('bindings changed');
   });
 
   it('names the loss for the data the card shows after it, never for a new paste', async () => {
@@ -915,7 +939,7 @@ describe('AgentChatPage gating', () => {
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — bindings changed · check them above, then .create_plot()'
+      'back to step 1 of 2 · bindings changed · check them above, then .create_plot()'
     );
 
     // A data request after the loss: the step line names the change the preview shows.
@@ -923,7 +947,7 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('I read score as numbers.')).toBeInTheDocument();
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — data changed · check it above, then plot the new data'
+      'back to step 1 of 2 · data changed · check it above, then plot the new data'
     );
 
     // A new paste is data nobody confirmed: plain step 1.
@@ -931,7 +955,7 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 — check the preview and the bindings above, then .create_plot()'
+      'step 1 of 2 · check the preview and the bindings above, then .create_plot()'
     );
     expect(lossNotice()).not.toBeInTheDocument();
   });
@@ -948,7 +972,7 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
     expect(confirmAndTurns()).toEqual(['summarize_data', 'text: what is the mean score?']);
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
 
     // A pointer click moves no focus into the box, so a phone opens no keyboard.
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }), { detail: 1 });
@@ -984,7 +1008,7 @@ describe('AgentChatPage gating', () => {
     expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
     expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
     expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
 
     // A server error with an empty box: no plot from the catalogue code either.
@@ -994,7 +1018,7 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('ref r-c2'));
     expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'confirm']);
     expect(screen.queryByRole('article', { name: /^Plot version/ })).not.toBeInTheDocument();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
   });
 
   it('keeps a note in the thread when its turn is refused right after the confirmation', async () => {
@@ -1073,14 +1097,14 @@ describe('AgentChatPage gating', () => {
       expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
-      expect(currentStep()).toEqual(['1 data']);
+      expect(currentStep()).toBe(1);
       // Step 1 again with a plot here: the filled CTA again, in the place of the quiet
       // `.start_over()`, named for what it does now: the next version from the changed data.
       expect(composerButtons()).toEqual(['plot the new data']);
       // The step line alone says it: no notice right above it in the thread.
       expect(lossNotice()).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step')).toHaveTextContent(
-        '# step 1 again — data changed · check it above, then plot the new data'
+        'back to step 1 of 2 · data changed · check it above, then plot the new data'
       );
       // The header stays pinned in view and leads to the card's top, far above.
       expect(screen.getByTestId('data-summary')).toHaveTextContent(
@@ -1109,7 +1133,7 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     await transcribeInStep2();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
 
     // The server keeps its confirmation of the stored data, and the turn's sync says so;
     // the text still goes as a turn.
@@ -1117,7 +1141,7 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('Two columns: hours and score.')).toBeInTheDocument();
     await turnEnded();
     expect(lastTurn()).toEqual({ text: 'what columns are there?' });
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(screen.getByTestId('transcription-card')).toBeInTheDocument();
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'decide on the table first: .use() or .discard()'
@@ -1126,7 +1150,7 @@ describe('AgentChatPage gating', () => {
     const create = screen.getByRole('button', { name: 'Create plot' });
     expect(create).toBeDisabled();
     expect(create).toHaveAccessibleDescription(
-      expect.stringContaining('# step 1 — decide on the table first: .use() or .discard()')
+      expect.stringContaining('step 1 of 2 · decide on the table first: .use() or .discard()')
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
@@ -1135,7 +1159,7 @@ describe('AgentChatPage gating', () => {
 
     // Discarded, the stored data is the confirmed data again, with its plot.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
-    expect(currentStep()).toEqual(['·2 plot']);
+    expect(currentStep()).toBe(2);
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
   });
 
@@ -1144,12 +1168,12 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     await transcribeInStep2();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
 
     // The transcription stored nothing and the server kept its confirmation: discarding it
     // is back where the user was, with no turn in between.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
-    expect(currentStep()).toEqual(['·2 plot']);
+    expect(currentStep()).toBe(2);
     expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
@@ -1160,7 +1184,7 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     await transcribeInStep2();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
 
     const box = screen.getByLabelText('Message');
     box.focus();
@@ -1168,13 +1192,13 @@ describe('AgentChatPage gating', () => {
     sendFromComposer('what columns are there?');
     expect(await screen.findByText('Two columns: hours and score.')).toBeInTheDocument();
     await turnEnded();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(box).toHaveFocus();
 
     // Discarding the table brings step 2 back with no click of the user's: the next key press
     // still types into the box.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
-    expect(currentStep()).toEqual(['·2 plot']);
+    expect(currentStep()).toBe(2);
     expect(box).toHaveFocus();
     expect(screen.getByRole('button', { name: 'Start over' })).not.toHaveFocus();
   });
@@ -1221,7 +1245,7 @@ describe('AgentChatPage gating', () => {
     // A new parse is new data: step 1 again, with the plot button filled for it and named so.
     releaseParse?.();
     expect(await screen.findByRole('button', { name: 'Plot the new data' })).toBeInTheDocument();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
   });
 
   it('offers a reload when the session open got no answer', async () => {
@@ -1237,6 +1261,10 @@ describe('AgentChatPage gating', () => {
     vi.stubGlobal('fetch', fetchMock);
     renderAt(PAGE);
     expect(await screen.findByText('error · unreachable')).toBeInTheDocument();
+    // The error stands inside the chat's frame, below its header row.
+    expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(
+      screen.getByRole('alert')
+    );
     expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
     sessionStorage.clear();
   });
@@ -1409,7 +1437,7 @@ describe('AgentChatPage card in the thread', () => {
     expect(follows(screen.getByText('Here is your plot.'), second)).toBe(true);
     expect(follows(second, card)).toBe(true);
     // New data nobody confirmed: step 1, its card open.
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
   });
 
   it("opens the card at its place in the thread from the pinned header's .show(), and scrolls to it", async () => {
@@ -1763,6 +1791,10 @@ describe('AgentChatPage working states', () => {
     // A polite status, so a screen reader hears the wait the dots show.
     expect(opening).toHaveAttribute('role', 'status');
     expect(within(opening).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
+    // The wait stands inside the chat's frame, below its header row, as the chat will.
+    const frame = screen.getByRole('region', { name: 'Chat' });
+    expect(frame).toContainElement(opening);
+    expect(frame).toContainElement(screen.getByTestId('library-chip'));
 
     open();
     expect(await screen.findByLabelText('Message')).toBeInTheDocument();
@@ -1775,9 +1807,9 @@ describe('AgentChatPage step CTA', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await screen.findByLabelText('Message');
-    // No data, an empty box: nothing to send and no step to take yet.
+    // No data, an empty box: nothing to send, and the status line names only the step.
     expect(composerButtons()).toEqual([]);
-    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(/^>>> step 1 of 2 · your data$/);
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'sin(x) please' } });
     expect(composerButtons()).toEqual(['.send()']);
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: '   ' } });
@@ -1823,10 +1855,10 @@ describe('AgentChatPage step CTA', () => {
     const create = screen.getByRole('button', { name: 'Create plot' });
     expect(create).toBeDisabled();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 — pick a column for y, then .create_plot()'
+      'step 1 of 2 · pick a column for y, then .create_plot()'
     );
     expect(create).toHaveAccessibleDescription(
-      '# step 1 — pick a column for y, then .create_plot()'
+      'step 1 of 2 · pick a column for y, then .create_plot()'
     );
   });
 });
@@ -1871,7 +1903,7 @@ describe('AgentChatPage .plot_all()', () => {
 
     // Pressed, `all` is what the chip names, and the composer's create action plots everywhere.
     await pickInMenu('All libraries');
-    expect(libraryChip()).toHaveTextContent('lib: all · 2 libraries');
+    expect(libraryChip()).toHaveTextContent(/^all 2 libraries ▾$/);
     expect(libraryChip()).toHaveAccessibleName('Library: all 2 libraries. Change');
     menu = await openLibraryMenu();
     expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
@@ -1890,7 +1922,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(composerButtons()).toEqual(['.plot_all()']);
     // The line leads to the button that shows: `.plot_all()`, not the `.create_plot()` it replaces.
     expect(plotAll).toHaveAccessibleDescription(
-      '# step 1 — check the preview and the bindings above, then .plot_all()'
+      'step 1 of 2 · check the preview and the bindings above, then .plot_all()'
     );
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
@@ -1922,7 +1954,7 @@ describe('AgentChatPage .plot_all()', () => {
     // session the panel's sessions copy their data from; `all` stays pressed.
     expect(plotAllButton()).toBeDisabled();
     expect(libraryChip()).toBeDisabled();
-    expect(libraryChip()).toHaveTextContent('lib: all · 2 libraries');
+    expect(libraryChip()).toHaveTextContent(/^all 2 libraries ▾$/);
 
     // `.close()` goes with the panel: the focus returns to `.plot_all()`, which opened it.
     const close = within(panel).getByRole('button', { name: 'Close all libraries' });
@@ -1958,7 +1990,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
     expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
     expect(agentCalls().some(([input]) => String(input).endsWith('/dataset/copy'))).toBe(false);
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(plotAllButton()).toBeEnabled();
   });
 
@@ -2002,14 +2034,14 @@ describe('AgentChatPage .plot_all()', () => {
     await pickInMenu('All libraries');
     expect(screen.getByLabelText('Message')).toBeDisabled();
     await pickInMenu('All libraries');
-    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(screen.getByRole('button', { name: 'Start over' })).toHaveTextContent('.start_over()');
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).not.toHaveAccessibleDescription();
 
     await pickInMenu('All libraries');
     await pickInMenu('matplotlib');
-    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     // The menu closed and gave the focus back to its chip.
     await waitFor(() => expect(libraryChip()).toHaveFocus());
     const menu = await openLibraryMenu();
@@ -2028,7 +2060,7 @@ describe('AgentChatPage .plot_all()', () => {
     await waitFor(() =>
       expect(screen.getByTestId('location')).toHaveTextContent('library=seaborn')
     );
-    expect(libraryChip()).toHaveTextContent('lib: seaborn · python');
+    expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/);
     expect(screen.getByTestId('location')).not.toHaveTextContent('all=1');
   });
 
@@ -2039,7 +2071,7 @@ describe('AgentChatPage .plot_all()', () => {
 
     // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
     await pickInMenu('All libraries');
-    expect(libraryChip()).toHaveTextContent('lib: all');
+    expect(libraryChip()).toHaveTextContent(/^all \d+ libraries ▾$/);
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     const box = screen.getByLabelText('Message');
     expect(box).toBeEnabled();
@@ -2052,7 +2084,7 @@ describe('AgentChatPage .plot_all()', () => {
     // Step 1: `.plot_all()` is the action, and a question about the data goes: the box waits
     // only once the data is confirmed.
     await parseAndSummarize();
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(composerButtons()).toEqual(['.plot_all()']);
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
@@ -2063,7 +2095,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
     expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
-    expect(libraryChip()).toHaveTextContent('lib: all');
+    expect(libraryChip()).toHaveTextContent(/^all \d+ libraries ▾$/);
     expect(confirmAndTurns()).toEqual(['summarize_data', 'text: what is the mean score?']);
   });
 
@@ -2131,7 +2163,7 @@ describe('AgentChatPage .plot_all()', () => {
 
     const panel = await screen.findByRole('region', { name: 'All libraries' });
     // The computed data was confirmed by the same click.
-    expect(currentStep()).toEqual(['·2 plot']);
+    expect(currentStep()).toBe(2);
     await waitFor(() => expect(fanOutCalls('/messages')).toHaveLength(2));
     expect(fanOutCalls('/dataset/copy')).toEqual([
       { session: 'F-matplotlib', body: { from_session: 'S1' } },
@@ -2234,12 +2266,12 @@ describe('AgentChatPage URL', () => {
     renderAt('/debug/agent?spec=scatter-basic&library=matplotlib&language=javascript');
     // The header moves into the chat column once the session is open: look for the menu there.
     await screen.findByLabelText('Message');
-    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
 
     await pickInMenu('ggplot2');
     await waitFor(() => expect(query().get('library')).toBe('ggplot2'));
     expect(query().get('language')).toBe('r');
-    expect(libraryChip()).toHaveTextContent('lib: ggplot2 · r');
+    expect(libraryChip()).toHaveTextContent(/^ggplot2 ▾$/);
     expect(libraryChip()).toHaveAccessibleName('Library: ggplot2, R. Change');
 
     await pickInMenu('seaborn');
@@ -2273,10 +2305,10 @@ describe('AgentChatPage URL', () => {
     let menu = await openLibraryMenu();
     expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
     await closeLibraryMenu();
-    expect(libraryChip()).toHaveTextContent('lib: matplotlib');
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(query().get('all')).toBe('1');
     releaseStatus();
-    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: all · 3 libraries'));
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
     menu = await openLibraryMenu();
     expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
       'aria-pressed',
@@ -2294,14 +2326,14 @@ describe('AgentChatPage URL', () => {
     threeLibraries();
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const first = renderAt(`${PAGE}&all=1`);
-    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: all · 3 libraries'));
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^all 3 libraries ▾$/));
     await waitFor(() => expect(libraryChip()).toBeEnabled());
 
     // Another library switches and turns `all` off: the URL names the new library, without `all`.
     await pickInMenu('seaborn');
     await waitFor(() => expect(query().get('library')).toBe('seaborn'));
     expect(query().has('all')).toBe(false);
-    expect(libraryChip()).toHaveTextContent('lib: seaborn · python');
+    expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/);
     first.unmount();
 
     // One library: no `all` to press, so the URL does not keep it.
@@ -2316,7 +2348,7 @@ describe('AgentChatPage URL', () => {
     );
     renderAt(`${PAGE}&all=1`);
     await waitFor(() => expect(query().has('all')).toBe(false));
-    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(query().get('library')).toBe('matplotlib');
   });
 });
@@ -2485,9 +2517,12 @@ describe('AgentChatPage library switch and plot memory', () => {
     // `.create_plot()` there read as the same click.
     expect(carry).toHaveAttribute('type', 'button');
     expect(composerButtons()).toEqual(['.start_over()', 'plot in seaborn with your 2 decisions']);
-    expect(
-      screen.getByText(/^# step 2 — plot in seaborn with your 2 decisions, or say/)
-    ).toBeVisible();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · plot in seaborn with your 2 decisions, or say/
+    );
+    expect(carry).toHaveAccessibleDescription(
+      'step 2 of 2 · plot in seaborn with your 2 decisions, or say first what it should do differently'
+    );
     const fresh = screen.getByRole('button', { name: 'Start over' });
     expect(fresh).toHaveTextContent('.start_over()');
     expect(fresh).toHaveAccessibleDescription(
@@ -2518,7 +2553,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     // A binding changed in the new library drops the confirmation the switch kept.
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
-    await waitFor(() => expect(currentStep()).toEqual(['1 data']));
+    await waitFor(() => expect(currentStep()).toBe(1));
     const carry = screen.getByTestId('carry-plot');
     await waitFor(() => expect(carry).toBeEnabled());
     const before = confirmAndTurns().length;
@@ -2600,10 +2635,12 @@ describe('AgentChatPage library switch and plot memory', () => {
     });
     await plotInMatplotlib();
     await pickInMenu('seaborn');
-    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: seaborn'));
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/));
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
     expect(composerButtons()).toEqual(['.create_plot()']);
-    expect(screen.getByText(/^# step 2 — create the plot as it is, or say first/)).toBeVisible();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · create the plot as it is, or say first/
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
@@ -2650,7 +2687,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     renderAt(PAGE);
     await parseAndSummarize();
     await pickInMenu('seaborn');
-    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: seaborn'));
+    await waitFor(() => expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/));
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
     expect(screen.queryByRole('region', { name: /remembered/ })).not.toBeInTheDocument();
@@ -2691,7 +2728,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /^could not switch: this plot cannot be adapted in that library$/
     );
-    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    expect(libraryChip()).toHaveTextContent(/^matplotlib ▾$/);
     expect(screen.getByTestId('location')).toHaveTextContent('library=matplotlib');
     // Said where the user picked, not again in the thread.
     expect(
@@ -2745,7 +2782,7 @@ describe('AgentChatPage attachment', () => {
     expect(composerButtons()).toEqual(['×', '.send()']);
     expect(message()).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# the attached table is read when you send it: Enter or .send(), with a note if you like'
+      'step 1 of 2 · the attached table is read when you send it: Enter or .send(), with a note if you like'
     );
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
       as: 'data',
@@ -3058,7 +3095,7 @@ describe('AgentChatPage attachment', () => {
     expect(create).toBeDisabled();
     // The session holds data: the line says that the table replaces it, for good.
     expect(create).toHaveAccessibleDescription(
-      '# the attached table replaces your data (2 rows, no .undo()) when you send it: Enter or .send(), with a note if you like'
+      'step 1 of 2 · the attached table replaces your data (2 rows, no .undo()) when you send it: Enter or .send(), with a note if you like'
     );
   });
 
@@ -3333,7 +3370,7 @@ describe('AgentChatPage attachment', () => {
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     // New data nobody confirmed: step 1, its card open, the table read from text gone.
-    expect(currentStep()).toEqual(['1 data']);
+    expect(currentStep()).toBe(1);
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
     expect(JSON.parse(String((datasetPosts().slice(-1)[0][1] as RequestInit).body))).toMatchObject({
@@ -3409,9 +3446,18 @@ describe('AgentChatPage attachment', () => {
     expect(turnBodies()).toHaveLength(1);
   });
 
-  it('keeps the how-to of the data behind the ⓘ beside # chat', async () => {
+  it("keeps the how-to of the data behind the ⓘ in the frame's header row, after the chips", async () => {
     await openChat();
-    fireEvent.click(screen.getByRole('button', { name: 'How the chat takes data' }));
+    // The `# chat` label it stood beside is gone: the ⓘ follows the language chip, before the
+    // thread, inside the frame.
+    const howto = screen.getByRole('button', { name: 'How the chat takes data' });
+    const follows = (first: Element, second: Element) =>
+      !!(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.queryByText('# chat')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(howto);
+    expect(follows(screen.getByTestId('language-chip'), howto)).toBe(true);
+    expect(follows(howto, screen.getByRole('log', { name: 'Conversation' }))).toBe(true);
+    fireEvent.click(howto);
     const dialog = await screen.findByRole('dialog', { name: 'How the chat takes data' });
     expect(within(dialog).getByTestId('data-howto').children).toHaveLength(7);
     expect(dialog).toHaveTextContent(

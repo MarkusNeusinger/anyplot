@@ -1,6 +1,10 @@
 /**
- * The public lane's notice above the first input, one line since 2026-11-02 (owner: less
- * text, the details behind a button rather than removed). The line keeps in view, without a
+ * The public lane's notice, one muted line above the chat's frame since the v4 frame of
+ * 2026-11-06, right-aligned from `sm` up and at the left at phone width:
+ * `// experimental AI · answers can be wrong ⓘ` (a `#` line with a green rule inside the chat
+ * until then; one line since 2026-11-02, owner: less text, the details behind a button rather
+ * than removed). It stands above the first input whatever the session's state. The line keeps
+ * in view, without a
  * click, that this is an experimental AI (the EU AI Act's Art. 50 duty to say that a person
  * talks to an AI) and that its answers can be wrong. The ⓘ button at its end (`InfoPopover`)
  * opens the rest: where the chat and the data live and for how long, that nothing is saved
@@ -16,7 +20,7 @@ import { paths } from 'src/routes/paths';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
 import { labelSx } from 'src/sections/agent-chat/styles';
-import { colors, proseLinkStyle } from 'src/theme';
+import { proseLinkStyle } from 'src/theme';
 
 export function ExperimentalNotice() {
   // The last word and the button keep together, so the ⓘ never wraps onto a line of its own.
@@ -29,14 +33,15 @@ export function ExperimentalNotice() {
       data-testid="experimental-notice"
       sx={{
         ...labelSx,
-        color: 'var(--ink)',
-        borderLeft: `3px solid ${colors.primary}`,
-        pl: 1.5,
-        mb: 2,
+        // Muted in words, not in contrast: the soft ink reads 4.5:1 and more in both themes.
+        color: 'var(--ink-soft)',
+        textAlign: { xs: 'left', sm: 'right' },
         lineHeight: 1.6,
+        mb: 0.5,
       }}
     >
-      # {words.join(' ')}{' '}
+      {'// '}
+      {words.join(' ')}{' '}
       <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
         {last}
         <InfoPopover

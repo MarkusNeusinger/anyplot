@@ -1,9 +1,13 @@
 /**
- * The session language chip in the chat header, next to the library menu:
- * `lang: en` until something sets it, `lang: de · from data` after a paste
- * whose notes or column names are German, `lang: de · detected` after the
- * session's first typed message, `lang: de · chosen` after a choice here or a
- * request in the chat ("answer in English"). The session language is the
+ * The session language chip in the chat's header row, next to the library menu:
+ * the language in its own words, `English ▾` until something sets it, `Deutsch ▾`
+ * after a paste whose notes or column names are German, after the session's first
+ * typed message, or after a choice here or a request in the chat ("answer in
+ * English"); a language outside the list as the server stored it. How it was set
+ * (`default`, `from data`, `detected`, `chosen`) is in its accessible name only,
+ * which starts with the words on screen, `Reply language: Deutsch, detected. Change`
+ * (on screen as `lang: de · detected` until the v4 frame of 2026-11-06). The session
+ * language is the
  * language of the assistant's replies and of the first plot's text; code,
  * comments and column names stay as they are. Since 2026-11-01 a plot keeps
  * its text's language after a message in another language, so the chip names
@@ -43,6 +47,7 @@ import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import {
   actionButtonSx,
   ghostButtonSx,
+  headerChipSx,
   labelSx,
   nativeControlSx,
   smallText,
@@ -72,6 +77,20 @@ export interface LanguageChipProps {
 
 const sameCode = (value: string, code: string) => value.toLowerCase() === code;
 
+/**
+ * How the chip names a language: its endonym from the list, each word capitalised as the
+ * language writes its own name (`Deutsch`, `Tiếng Việt`, `中文`), else the value as the server
+ * stored it, which may be any language a visitor typed.
+ */
+function languageLabel(language: string): string {
+  const known = COMMON_LANGUAGES.find(option => sameCode(language, option.code));
+  if (!known) return language;
+  return known.endonym
+    .split(' ')
+    .map(word => word.charAt(0).toLocaleUpperCase(known.code) + word.slice(1))
+    .join(' ');
+}
+
 export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [draft, setDraft] = useState('');
@@ -93,7 +112,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   const [announcement, setAnnouncement] = useState('');
   if (shown.language !== value.language || shown.source !== value.source) {
     setShown(value);
-    setAnnouncement(`reply language: ${value.language}`);
+    setAnnouncement(`reply language: ${languageLabel(value.language)}`);
   }
   const mounted = useRef(true);
   useEffect(() => {
@@ -152,7 +171,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   };
 
   const locked = disabled && !pending;
-  const chosen = value.source === 'chosen';
+  const label = languageLabel(value.language);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
       <Box
@@ -167,40 +186,26 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
-        aria-label={`Reply language: ${value.language}, ${SOURCE_LABEL[value.source]}. Change`}
-        title={`language of the replies: ${value.language} · a choice here also sets the next plot's text`}
-        sx={{
-          ...actionButtonSx,
-          display: 'inline-flex',
-          alignItems: 'baseline',
-          maxWidth: '26ch',
-          border: '1px solid',
-          borderColor: chosen ? 'var(--ink-muted)' : 'var(--rule)',
-          color: value.source === 'default' ? 'var(--ink-soft)' : 'var(--ink)',
-          bgcolor: chosen ? 'var(--bg-elevated)' : 'transparent',
-          '&:disabled': { opacity: 0.45, cursor: 'default' },
-          '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
-        }}
+        // The name starts with the words on screen, so a voice command such as "click English"
+        // finds the chip (WCAG 2.5.3); the source follows, which the screen leaves out.
+        aria-label={`Reply language: ${label}, ${SOURCE_LABEL[value.source]}. Change`}
+        title={`language of the replies: ${label} · a choice here also sets the next plot's text`}
+        sx={{ ...headerChipSx, maxWidth: '26ch' }}
       >
-        <Box component="span" sx={{ flexShrink: 0 }}>
-          lang:&nbsp;
-        </Box>
         <Box
           component="span"
           sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         >
-          {value.language}
+          {label}
         </Box>
-        {value.source !== 'default' && (
-          <Box component="span" sx={{ color: 'var(--ink-muted)', flexShrink: 0 }}>
-            &nbsp;· {SOURCE_LABEL[value.source]}
-          </Box>
-        )}
         {pending && (
           <Box component="span" sx={{ flexShrink: 0 }}>
             &nbsp;…
           </Box>
         )}
+        <Box component="span" aria-hidden sx={{ color: 'var(--ink-soft)', flexShrink: 0 }}>
+          &nbsp;▾
+        </Box>
       </Box>
       <Box role="status" sx={visuallyHiddenSx}>
         {announcement}
