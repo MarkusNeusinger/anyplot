@@ -85,8 +85,10 @@ reply when it fits the cap and is whole (not cut at the output cap, not surely i
 another language than the session's, ShippedReply's check run on it); otherwise the
 shorter of the two is stored and sent cut at the cap, as the sanitiser cuts it. At
 most one such ask per turn (`RequestLedger.reply_shortened`), booked like any call
-(`budget.book_response`). The stored event holds what the user reads, so a long reply
-never re-enters the judge's or the root's context whole. Each step writes a
+(`budget.book_response`). The stored event holds the reply at the length the user reads
+it (a shorter answer as the root wrote it, like any reply the translator sanitises on
+its way out; a cut one as the sanitiser cut it), so a long reply never re-enters the
+judge's or the root's context whole. Each step writes a
 content-free `output_guard` attribution line: `reply_too_long` (the reply's length),
 then `shortened` (the new length) or `reply_cut` (the length cut, and the `reason` the
 shorter answer was not used: `asked`, `no_request`, `budget`, `error`, `cut_off`,

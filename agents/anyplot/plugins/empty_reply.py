@@ -18,14 +18,19 @@ translator sends no such error. This plugin checks it in code:
 * When the second ask brings no text and no tool call either, raises, or cannot be made (no kept request, no budget
   left), the turn fails with `no_reply` (`ledger.fail`): the route ends it with `error{code:"no_reply"}`, which the
   page shows as the turn, and a paste the turn was to summarize stays unsummarized (`agents/main.py`), so the next
-  turn summarizes it. Verdict `no_reply`, with the `reason` (`empty`, `error`, `no_request`, `budget`).
+  turn summarizes it. Verdict `no_reply`, with the `reason` (`empty`, `error`, `no_request`, `budget`, and
+  `check_failed` when the check itself failed on a response that is still empty).
+* The retry line is a `user` turn of its own after the request's last one, which may be the user's message or the
+  tool results: the Claude Messages API combines consecutive user turns into one (Claude is the production root). The
+  Gemini arm has not been tried live with this shape; a call it refuses is the `error` reason, so the turn ends as
+  `no_reply`, never silent.
 * A turn that already shipped a plot (`ledger.shipped_in_turn`) or asked for a library switch
   (`ledger.switch_request`) carries its answer already: the plot on the page, or the switch the page carries out.
   Its empty closing reply is asked for again all the same, and stays empty without an error (verdict `empty_kept`),
   so the plot or the switch is never followed by a failure.
 
 The attribution lines (`empty_reply`) are content-free. The plugin never raises; a failure of the check itself keeps
-the response as it was.
+the response as it was and, when that response is still empty, fails the turn as `no_reply` all the same.
 """
 
 import logging
@@ -69,6 +74,7 @@ def take_place(response: LlmResponse, answer: LlmResponse) -> None:
     response.error_message = answer.error_message
     response.usage_metadata = answer.usage_metadata
     response.model_version = answer.model_version
+    response.turn_complete = answer.turn_complete
 
 
 class EmptyReplyPlugin(BasePlugin):
@@ -86,8 +92,24 @@ class EmptyReplyPlugin(BasePlugin):
             await self._check(callback_context, llm_response)
         except Exception as exc:
             logger.warning("empty reply check failed: %s", type(exc).__name__)
+            self._fail_closed(callback_context, llm_response)
         # Edited in place, never returned: a returned response would end the plugin chain before ShippedReply.
         return None
+
+    @staticmethod
+    def _fail_closed(callback_context: CallbackContext, llm_response: LlmResponse) -> None:
+        """After a failure of the check itself, a response that is still empty ends the turn as `no_reply` all the same:
+        otherwise the turn would send `done` alone, the lost turn this plugin exists for."""
+        try:
+            ledger = ledger_for(callback_context.invocation_id)
+            if ledger.halted or not is_empty(llm_response):
+                return
+            if ledger.shipped_in_turn or ledger.switch_request is not None:
+                return
+            attribution("empty_reply", ledger, verdict=NO_REPLY, reason="check_failed")
+            ledger.fail(NO_REPLY)
+        except Exception as exc:
+            logger.warning("empty reply fallback failed: %s", type(exc).__name__)
 
     async def _check(self, callback_context: CallbackContext, llm_response: LlmResponse) -> None:
         ledger = ledger_for(callback_context.invocation_id)

@@ -147,6 +147,20 @@ class TestEmptyReply:
         assert [(line["verdict"], line["reason"]) for line in lines(caplog)] == [(NO_REPLY, reason)]
         assert "only 2024" not in caplog.text
 
+    async def test_a_failing_check_still_ends_an_empty_turn_as_no_reply(
+        self, ledger: RequestLedger, services: Services, caplog: pytest.LogCaptureFixture, monkeypatch
+    ) -> None:
+        async def broken(*args: Any) -> str | None:
+            raise RuntimeError("bug")
+
+        monkeypatch.setattr(EmptyReplyPlugin, "_ask_again", staticmethod(broken))
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            await check(EMPTY[0].model_copy(deep=True))
+
+        assert ledger.error == NO_REPLY
+        assert [(line["verdict"], line["reason"]) for line in lines(caplog)] == [(NO_REPLY, "check_failed")]
+
     async def test_one_ask_per_turn(
         self, ledger: RequestLedger, services: Services, caplog: pytest.LogCaptureFixture, monkeypatch
     ) -> None:

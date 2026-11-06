@@ -1084,13 +1084,15 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert events[0] == ("error", {"code": "internal", "ref": events[0][1]["ref"]})
 
-    def test_the_users_run_limit_passes_through(self, client, upstream) -> None:
-        """The per-user cap on sandbox runs across sessions has its own code, which the page words."""
+    @pytest.mark.parametrize("code", ["run_limit", "no_reply"])
+    def test_the_codes_the_page_words_pass_through(self, client, upstream, code: str) -> None:
+        """The per-user cap on sandbox runs across sessions and a turn the assistant wrote no reply for have their
+        own codes, which the page words."""
         upstream.handler = lambda request: httpx.Response(
-            200, content=b'event: error\ndata: {"code": "run_limit"}\n\nevent: done\ndata: {}\n\n'
+            200, content=f'event: error\ndata: {{"code": "{code}"}}\n\nevent: done\ndata: {{}}\n\n'.encode()
         )
         events = _sse_events(self._post(client).text)
-        assert events[0] == ("error", {"code": "run_limit", "ref": events[0][1]["ref"]})
+        assert events[0] == ("error", {"code": code, "ref": events[0][1]["ref"]})
 
     def test_plot_keeps_its_version(self, client, upstream) -> None:
         """The stored version's number reaches the browser, so it never counts plot events."""

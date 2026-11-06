@@ -31,7 +31,8 @@ ScopeGuard plugin before ADK stores the root's reply: a reply over the cap arriv
 already shortened by the root or cut at the cap, never as a refusal. A final reply
 without text sends no `message`; the EmptyReply plugin asks the root once more for one
 and, when it stays empty, fails the turn with `no_reply`, which the route sends as the
-`error` event.
+`error` event. A reply the sanitiser empties fails the turn the same way here, unless
+the turn sent a plot or asked for a library switch.
 """
 
 import json
@@ -42,6 +43,7 @@ from google.adk.events.event import Event
 
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
+from agents.anyplot.plugins.empty_reply import NO_REPLY
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.schemas import RoundOutcome
 from agents.anyplot.telemetry import ends_with_question
@@ -175,7 +177,12 @@ class Translator:
         if clean:
             # The usage telemetry's `asked_question`: a bool computed here, the reply itself is never kept.
             self.ledger.reply_question = ends_with_question(clean)
-        return [sse("message", {"text": clean})] if clean else []
+            return [sse("message", {"text": clean})]
+        if not self.plot_sent and self.ledger.switch_request is None:
+            # A reply the sanitiser emptied (only a link, an HTML block, another spec's token) leaves the user as little
+            # as an empty one: the route ends the turn with `no_reply`, as EmptyReply does, and a paste stays pending.
+            self.ledger.fail(NO_REPLY)
+        return []
 
     def error(self, code: str) -> list[str]:
         if self.closing_sent:
