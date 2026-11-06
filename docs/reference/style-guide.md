@@ -431,6 +431,8 @@ Computed on 2026-11-04 with the WCAG 2.1 contrast formula, the one the [WebAIM C
 
 ### 4.4 UI Color Application
 
+There is one brand green, `#009E73`, in both themes. `#007A59` (`colors.primaryDark`, and `--code-comment` on the cream page) is a helper shade only: for green text that must reach 4.5:1 on cream, and for hover accents. It is never a second brand colour, and never the light theme's green.
+
 `#009E73` (brand green) appears in the UI **only** in these contexts:
 
 1. Logo dot (always)
@@ -441,6 +443,7 @@ Computed on 2026-11-04 with the WCAG 2.1 contrast formula, the one the [WebAIM C
 6. Code block syntax highlighting (comments — italic, signals editorial commentary inside code)
 7. Palette strip and any deliberate palette display
 8. Small status indicators (pulsing dot in plot-card header)
+9. Terminal prompt glyphs: `$` and `>>>` in the plot-of-the-day terminal, and `>>>` in the agent chat window's status line (§7.9). They always stand beside words, which carry the meaning.
 
 It does **not** appear in:
 
@@ -448,7 +451,7 @@ It does **not** appear in:
 - Borders of regular cards (use `--rule` = `rgba(26,26,23,0.15)`)
 - Body text emphasis (use serif italic instead)
 - Icon colors outside of logos (use gray tones)
-- Static (non-cursor, non-status) decorative dots or glyphs
+- Static decorative dots or glyphs (except the terminal prompt glyphs of item 9)
 - **Default colour on in-prose links** (see below)
 
 **In-prose link treatment.** Links inside body text default to `--ink-soft` with a 1px `--rule` underline (via `text-decoration`). On hover the colour flips to `--imprint-green` and the underline thickens to `currentColor`. Do **not** set `color: colors.primary` as the default on inline links — brand green stays a signal colour that only appears on interaction. The reusable sx object is exported from `app/src/theme/tokens.ts` (re-exported via `src/theme`) as `proseLinkStyle`; import it everywhere a contextual link lives in prose (About, Legal, MCP, Palette, Stats).
@@ -988,7 +991,7 @@ The agent chat (`/agent`, and `/debug/agent` for admins) is one terminal-style w
 - **Tab label**: `~/anyplot.ai/agent` in mono at 13px (`smallText`), `--ink-soft`, hidden from screen readers, since the section's name ("Chat") says what it is.
 - **Header row**, in plain words, no command line: the catalogue plot's thumbnail, the spec's title as the link back in `--ink` (no `←`), the columns ⓘ, the library and reply-language dropdowns (`seaborn ▾`, `English ▾`: the language in its own words; the language a library belongs to and how the reply language was set live in the accessible names only, which start with the words on screen, so a voice command finds them: WCAG 2.5.3), the how-to ⓘ, and on the admin lane the `⋯` menu at the row's right end. The dropdowns are 40px high from `sm` up and 44px at phone width, on `--bg-elevated` with a `--rule` border. At phone width the title takes the first line and the controls wrap below it.
 - **Rules**: `1px dashed var(--rule)` under the header row, and between the thread and the composer once the thread holds anything.
-- **Status line**: the frame's foot, `>>> step N of 2 · …`, in mono at 13px and `--ink-soft`; the `>>>` takes the brand green on the dark page and the darker green `#007A59` on the light page (4.82:1 rather than the brand green's 3.08:1), as the mock does. It replaces the step header and the step lines above the message box, and it is the plot button's description: after the step it names what the button waits for, the plot that runs, or the confirmed data's shape. A hidden polite region beside it announces the step when it changes.
+- **Status line**: the frame's foot, `>>> step N of 2 · …`, in mono at 13px and `--ink-soft`; the `>>>` is a terminal prompt glyph in the one brand green `#009E73` in both themes (§4.4, item 9), as in the plot-of-the-day terminal, and hidden from screen readers. It replaces the step header and the step lines above the message box, and it is the plot button's description: after the step it names what the button waits for, the plot that runs, or the confirmed data's shape. A hidden polite region beside it announces the step when it changes.
 - **Notice**: on the public lane the experimental notice stands above the frame as one muted line, `// experimental AI · answers can be wrong ⓘ`, right-aligned from `sm` up and at the left at phone width, in `--ink-soft` at 13px. No coloured rule and no box: the words carry it, and the ⓘ keeps the details.
 - **Not inside the frame**: the admin fan-out's panel (`.plot_all()`) stands below it, since its sessions are not this chat's.
 

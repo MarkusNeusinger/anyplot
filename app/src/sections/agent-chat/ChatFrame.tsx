@@ -19,7 +19,6 @@
 import Box from '@mui/material/Box';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
-import { useTheme } from 'src/hooks/useLayoutContext';
 import {
   STATUS_LINE_ID,
   type StatusLineText,
@@ -103,12 +102,11 @@ export interface StatusLineProps {
 
 /**
  * The frame's foot: `>>> step 2 of 2 · …`, the plot buttons' description, with the step's live
- * region beside it. The `>>>` is a glyph beside words, in the brand green on the dark page and
- * the darker green on the light one (4.8:1 rather than 3.1:1), as the mock has it; the words keep
- * the soft ink, legible in both themes.
+ * region beside it. The `>>>` is a terminal prompt glyph beside words, in the one brand green in
+ * both themes, as the plot of the day's terminal has it (style guide §4.4); the words keep the
+ * soft ink, legible in both themes.
  */
 export function StatusLine({ state, line }: StatusLineProps) {
-  const { isDark } = useTheme();
   return (
     <>
       <Box
@@ -117,11 +115,7 @@ export function StatusLine({ state, line }: StatusLineProps) {
         data-step={line.step}
         sx={{ ...labelSx, color: 'var(--ink-soft)', lineHeight: 1.6, overflowWrap: 'anywhere' }}
       >
-        <Box
-          component="span"
-          aria-hidden
-          sx={{ color: isDark ? colors.primary : colors.primaryDark }}
-        >
+        <Box component="span" aria-hidden sx={{ color: colors.primary }}>
           {'>>> '}
         </Box>
         {line.text}
