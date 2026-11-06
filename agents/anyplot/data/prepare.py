@@ -55,7 +55,9 @@ The operations:
   those cells; an en dash is none (`10–20`). With `name`, a conversion to number or datetime
   writes a new column of that name, appended last, and keeps the source column as it
   is: the conversion an open required role asks for (`conversions.py`), which the
-  service then binds to that role (`Prepared.converted`). To text: every cell becomes its canonical
+  service then binds to that role (`Prepared.converted`). Without `name`, a column read
+  from another type is recorded there too, as its own source, so the user's request to
+  read it fills the open role the same way. To text: every cell becomes its canonical
   text and the column is kept text through the re-parse (`Prepared.text_columns`,
   `parse_dataset(text_columns=...)`), so a column of years or ids stays a category in
   every later version. A column that already is a number or a datetime column is left
@@ -425,9 +427,9 @@ class Prepared:
     """`column '<name>': <order note>` per date column whose day and month order is still a guess: the caller adds
     them to the re-parsed version's warnings (`with_date_notes`), so a later call can still switch the order."""
     converted: dict[str, str] = field(default_factory=dict)
-    """The new columns a `set_type` with `name`, a text operation or a `date_number` made, each with its source column:
-    the caller binds each to the open required role that takes it (`bindings.carry_bindings`), as the conversion for
-    that role was made."""
+    """The new columns a `set_type` with `name`, a text operation or a `date_number` made, each with its source column,
+    and the columns a `set_type` without `name` read from another type, each as its own source: the caller binds each
+    to the open required role that takes it (`bindings.carry_bindings`), as the conversion for that role was made."""
     row_numbers: list[str] = field(default_factory=list)
     """The columns a `row_number` made or reused: the caller binds one to the axis or label role that stayed open
     (`bindings.carry_bindings`), as the fallback for that role was made."""
@@ -469,7 +471,7 @@ class _Carried:
     date_order: dict[str, str] = field(default_factory=dict)
     text_columns: set[str] = field(default_factory=set)
     with_time: dict[str, bool] = field(default_factory=dict)
-    converted: dict[str, str] = field(default_factory=dict)  # the new columns of a `set_type` with `name`, and sources
+    converted: dict[str, str] = field(default_factory=dict)  # columns a conversion made or re-typed, and their sources
     row_numbers: set[str] = field(default_factory=set)  # the columns of a `row_number`
     splits: list[list[str]] = field(default_factory=list)  # the new columns of each `split`, in the parts' order
     language: str = DEFAULT_LANGUAGE
@@ -1052,6 +1054,10 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     carried.text_columns.discard(target)
     if op.name is not None:
         carried.converted[op.name] = op.column
+    elif kind != op.type:
+        # Read in place from another type, the column fills an open required role that takes it, as a named
+        # conversion's new column does (`carry_bindings`): a user who asks for it means the role that waits for it.
+        carried.converted[op.column] = op.column
     read = present - conversion.failed
     if op.name is None:
         change = f"{op.column}: {_count(read, 'cell')} {conversion.reading}"

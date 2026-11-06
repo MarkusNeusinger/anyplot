@@ -541,9 +541,10 @@ def carry_bindings(
     column the change made (`make_date`, or `set_type` to a date; a datetime column that
     `previous`, the version before, did not have) fills an open required role that takes
     dates (owner decision of 2026-10-15: the code binds it, not the model); a number
-    column a `set_type` with a new name made (`converted`, `Prepared.converted`, its keys)
-    fills an open required role that takes numbers, the conversion that role asked for
-    (`conversions.py`, live test of 2026-11-01); and a column `row_numbers` names takes
+    column a `set_type` with a new name made, or one it read as numbers in place
+    (`converted`, `Prepared.converted`, its keys), fills an open required role that takes
+    numbers, the conversion that role asked for (`conversions.py`, live test of
+    2026-11-01), and never a role a binding holds; and a column `row_numbers` names takes
     the role `row_slot` finds. A date column or a row number the axis takes moves a number
     column off the axis to the open measure (`axis_slot`). When a binding
     went (its column dropped, renamed or re-typed), the roles without a binding are bound
@@ -633,9 +634,12 @@ def _carry_score(old: str, new: str) -> float:
 
 
 def _without_sources(bindings: list[Binding], roles: list[DataRole], sources: Mapping[str, str]) -> list[Binding]:
-    """`bindings` without the optional roles on the source of a converted column that a role took."""
+    """`bindings` without the optional roles on the source of a converted column that a role took.
+
+    A column read in place is its own source: no second column stands beside it, so its other roles stay.
+    """
     bound = {binding.column for binding in bindings}
-    gone = {source for column, source in sources.items() if column in bound}
+    gone = {source for column, source in sources.items() if column in bound and source != column}
 
     def optional(binding: Binding) -> bool:
         role = resolve_role(binding.role, roles)
