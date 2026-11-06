@@ -50,6 +50,29 @@ export const ERROR_TEXT: Record<string, string> = {
 };
 
 /**
+ * The plain label over a refusal in the thread, by the stream's refusal code (`refusals.yaml`).
+ * The code itself is the service's word for the log: the visitor reads this label and the fixed
+ * text under it, and finds the code behind the label's ⓘ.
+ */
+export const REFUSAL_LABEL: Record<string, string> = {
+  out_of_scope: 'outside this chat',
+  needs_data: "can't fetch data",
+  other_library: 'another library',
+  unsupported_content: 'text only',
+  budget: 'usage limit reached',
+  service_paused: 'chat paused',
+  rate_limited: 'too many messages',
+  daily_limit: "today's limit reached",
+  session_closed: 'chat closed',
+  locked_out: 'paused until tomorrow',
+};
+
+/** A refusal's label; a code the page does not know yet still reads as a refusal, never as a code. */
+export function refusalLabel(code: string): string {
+  return REFUSAL_LABEL[code] ?? 'not answered';
+}
+
+/**
  * The run's quiet line while the page reads the rest of a turn whose stream was cut: the
  * server runs the turn on, so its result is still to come and nothing reads as an error yet.
  */
@@ -57,7 +80,7 @@ export const RECONNECTING_TEXT = 'connection lost · reconnecting…';
 
 /**
  * Why a `plot` event shipped no render (`failed` or `not_ready`). `data_unconfirmed` has no line:
- * the thread shows no failed plot for it, only the step line and its notice (`useAgentSession`).
+ * the thread shows no failed plot for it, only the step line above the composer (`useAgentSession`).
  */
 export const PLOT_FAILED_TEXT: Record<string, string> = {
   validation: 'the adapted code did not pass the safety checks',
@@ -160,19 +183,10 @@ export function describeViewFailure(code: string, ref: string | null, detail?: s
 export const NEW_DATA_PLOT = 'plot the new data';
 
 /**
- * What dropped a confirmation the user had given, as the thread's warning notice says it where
- * it happened: the next click of the plot button confirms the data as shown again.
- */
-export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
-  bindings: 'bindings changed · check them, then .create_plot()',
-  data: `data changed · check it, then ${NEW_DATA_PLOT}`,
-  server: 'check the data again, then .create_plot()',
-};
-
-/**
- * The same as the step line above the composer says it, the description of the composer's
- * action (`.create_plot()`, after a data change `plot the new data`, or `.plot_all()` with `all`
- * pressed), which points up at the card it stands below.
+ * What dropped a confirmation the user had given, as the step line above the composer says it,
+ * the description of the composer's action (`.create_plot()`, after a data change `plot the new
+ * data`, or `.plot_all()` with `all` pressed), which points up at the card it stands below. The
+ * thread carries no notice of its own for it: the step line, right above the composer, says it.
  */
 export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, (action: string) => string> = {
   bindings: action => `bindings changed · check them above, then ${action}`,

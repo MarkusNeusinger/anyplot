@@ -7,10 +7,10 @@ import {
   type RunState,
 } from 'src/hooks/useAgentSession';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { localClock } from 'src/sections/agent-chat/messages';
+import { localClock, REFUSAL_LABEL } from 'src/sections/agent-chat/messages';
 import { awaitsReply, pendingReply } from 'src/sections/agent-chat/steps';
 import { CHAT_TEXT_MAX } from 'src/sections/agent-chat/styles';
-import { render, screen, within } from 'src/test-utils';
+import { render, screen, userEvent, within } from 'src/test-utils';
 
 const notReady = (reason: string): AgentSessionState => ({
   ...initialAgentState('matplotlib'),
@@ -56,7 +56,7 @@ describe('ChatThread', () => {
       items: [
         { id: 1, kind: 'user', text: 'make the markers bigger' },
         { id: 2, kind: 'assistant', text: 'Done: the markers are larger now.' },
-        { id: 3, kind: 'notice', text: 'bindings changed', tone: 'warning' },
+        { id: 3, kind: 'notice', text: 'stopped' },
       ],
     });
     // A reply and a notice are no wider than about 80 characters (2026-11-02: the column grows
@@ -65,7 +65,7 @@ describe('ChatThread', () => {
     expect(CHAT_TEXT_MAX).toBe('80ch');
     for (const element of [
       screen.getByText('Done: the markers are larger now.'),
-      screen.getByTestId('confirm-lost'),
+      screen.getByText('# stopped'),
     ]) {
       expect(getComputedStyle(element).maxWidth).toMatch(/^\d+(\.\d+)?(px|ch)$/);
     }
@@ -101,10 +101,47 @@ describe('ChatThread', () => {
       ],
     });
     const [paused, own] = screen.getAllByTestId('refusal');
-    expect(paused).toHaveTextContent(
-      `refusal · service_paused · until ${localClock(until)}${text}`
-    );
-    expect(own).toHaveTextContent(/^refusal · budgetThe usage limit/);
+    expect(paused).toHaveTextContent(`chat paused · until ${localClock(until)}${text}`);
+    expect(own).toHaveTextContent(/^usage limit reachedThe usage limit/);
+  });
+
+  it('labels a refusal in plain words and keeps its code behind the ⓘ', async () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        { id: 1, kind: 'user', text: 'plot the unemployment rate of France' },
+        { id: 2, kind: 'refusal', code: 'needs_data', text: 'I cannot fetch data.' },
+        { id: 3, kind: 'refusal', code: 'something_new', text: 'No.' },
+      ],
+    });
+    const [data, unknown] = screen.getAllByTestId('refusal');
+    expect(data).toHaveTextContent(/^can't fetch dataI cannot fetch data\.$/);
+    expect(unknown).toHaveTextContent(/^not answeredNo\.$/);
+    // No code in the line itself: it reads behind the ⓘ.
+    expect(screen.queryByText(/needs_data/)).not.toBeInTheDocument();
+    await userEvent.click(within(data).getByRole('button', { name: 'About this answer' }));
+    expect(await screen.findByTestId('refusal-details')).toHaveTextContent('reason: needs_data');
+  });
+
+  it('labels every refusal code of the service in plain words', () => {
+    // Every refusal code of `refusals.yaml` (its `close_warning` is a suffix, never a code).
+    for (const code of [
+      'out_of_scope',
+      'needs_data',
+      'other_library',
+      'unsupported_content',
+      'budget',
+      'service_paused',
+      'rate_limited',
+      'daily_limit',
+      'session_closed',
+      'locked_out',
+    ]) {
+      expect(REFUSAL_LABEL[code], code).toBeTruthy();
+      expect(REFUSAL_LABEL[code]).not.toMatch(/_/);
+    }
   });
 
   it("shows the page's own turns as the buttons pressed, and the summary, which has none, not at all", () => {
@@ -170,25 +207,13 @@ describe('ChatThread', () => {
     ]);
   });
 
-  it('shows a lost confirmation as a warning notice, and a stop as a plain one', () => {
+  it('shows a stop as a quiet notice', () => {
     renderThread({
       ...initialAgentState('matplotlib'),
       phase: 'ready',
       sessionId: 'S1',
-      items: [
-        {
-          id: 1,
-          kind: 'notice',
-          tone: 'warning',
-          text: 'bindings changed · check them, then .create_plot()',
-        },
-        { id: 2, kind: 'notice', text: 'stopped' },
-      ],
+      items: [{ id: 1, kind: 'notice', text: 'stopped' }],
     });
-    expect(screen.getByTestId('confirm-lost')).toHaveTextContent(
-      '# bindings changed · check them, then .create_plot()'
-    );
-    expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
     expect(screen.getByText('# stopped')).toBeInTheDocument();
   });
 
@@ -431,8 +456,8 @@ describe('ChatThread data items', () => {
         { id: 4, kind: 'assistant', text: '1,203 rows and 4 columns.' },
         { id: 5, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
         { id: 6, kind: 'data' },
-        // A paste in step 2 drops the confirmation: its notice stands between card and summary.
-        { id: 7, kind: 'notice', tone: 'warning', text: 'the data changed' },
+        // A notice between card and summary (the reply language a paste set, say) is no turn.
+        { id: 7, kind: 'notice', text: 'reply language: en' },
         { id: 8, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
         { id: 9, kind: 'assistant', text: '7 rows and 3 columns.' },
       ])
@@ -445,7 +470,7 @@ describe('ChatThread data items', () => {
       '1,203 rows and 4 columns.',
       '❯▤ sales.csv · 8 lines · 120 B',
       'data card',
-      '# the data changed',
+      '# reply language: en',
       '7 rows and 3 columns.',
     ]);
   });

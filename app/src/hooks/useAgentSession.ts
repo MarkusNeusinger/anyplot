@@ -52,18 +52,17 @@
  * flag, so the next `.create_plot()` confirms again. It adds no thread item:
  * it is the step line's news, not a failed plot, and it arrives before the
  * turn's `done`, so it drops the flag only once the turn is over. A data change
- * the same turn made then names the loss itself, in the one notice.
+ * the same turn made then names the loss itself, in the step line.
  *
- * A confirmation the user had given and then lost is named where it is lost:
- * the reducer watches the flag go from set to cleared, whatever action did it,
- * keeps the reason (`confirmLoss`: a binding change, new data, or the server's
- * word) for the data card's step line, and appends a warning notice to the
- * thread. The parse's own default bindings land while the flag is already
- * clear, so a first setup after a paste says nothing. The reason follows the
- * data the card shows: a later paste clears it, a later data change or undo
- * makes it a change of the data. The reducer numbers the thread items itself
- * (`nextItemId`), so it can append that notice in the one place every loss
- * passes through.
+ * A confirmation the user had given and then lost is named right above the
+ * composer: the reducer watches the flag go from set to cleared, whatever
+ * action did it, and keeps the reason (`confirmLoss`: a binding change, new
+ * data, or the server's word) for the step lines, with no notice in the
+ * thread, which would say the same once more. The parse's own default
+ * bindings land while the flag is already clear, so a first setup after a
+ * paste names nothing. The reason follows the data the card shows: a later
+ * paste clears it, a later data change or undo makes it a change of the data.
+ * The reducer numbers the thread items itself (`nextItemId`).
  *
  * Step 1 talks about the data. Every parse that stores a dataset (a table, or
  * a transcription's `.use()`) is followed at once by the turn
@@ -247,12 +246,7 @@ import {
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
-import {
-  CONFIRM_LOST_TEXT,
-  languageNotice,
-  nextUtcMidnight,
-  type NoticeInfo,
-} from 'src/sections/agent-chat/messages';
+import { languageNotice, nextUtcMidnight, type NoticeInfo } from 'src/sections/agent-chat/messages';
 import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
@@ -351,11 +345,8 @@ export type ChatItem =
    * data card, `.discard()` into a notice.
    */
   | { id: number; kind: 'transcription' }
-  /**
-   * A line from the page itself; `warning` marks a lost confirmation, and `info` holds the
-   * details behind the line's ⓘ, which keep the line short.
-   */
-  | { id: number; kind: 'notice'; text: string; tone?: 'warning'; info?: NoticeInfo };
+  /** A quiet line from the page itself; `info` holds the details behind its ⓘ, which keep it short. */
+  | { id: number; kind: 'notice'; text: string; info?: NoticeInfo };
 
 /** Distributes `Omit` over the union, so each member keeps its own fields. */
 type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
@@ -1095,21 +1086,19 @@ function lossOf(state: AgentSessionState, action: Action): ConfirmLoss {
 
 /**
  * Every action, plus one rule on top: when a confirmation the user had given
- * drops, whatever action dropped it, the reducer keeps the reason and appends
- * a warning notice to the thread, where the loss happened. A confirmation
- * clears the reason. A first binding setup after a paste lands while the flag
- * is already clear, so it says nothing. While the flag stays clear the reason
- * follows the data (`reduce`): a new paste clears it, a data change or an undo
- * makes it `data`, with no second notice.
+ * drops, whatever action dropped it, the reducer keeps the reason for the step
+ * lines (`stepOneLine`, the card's own line), which say what dropped it and
+ * end with the plot button's name. It appends no notice to the thread: every
+ * state a loss leaves is step 1 with data, where the step line stands right
+ * above the composer and says the same. A confirmation clears the reason. A
+ * first binding setup after a paste lands while the flag is already clear, so
+ * it names nothing. While the flag stays clear the reason follows the data
+ * (`reduce`): a new paste clears it, a data change or an undo makes it `data`.
  */
 export function agentReducer(state: AgentSessionState, action: Action): AgentSessionState {
   const next = reduce(state, action);
   if (state.dataConfirmed && !next.dataConfirmed) {
-    const reason = lossOf(state, action);
-    return appendItem(
-      { ...next, confirmLoss: reason },
-      { kind: 'notice', tone: 'warning', text: CONFIRM_LOST_TEXT[reason] }
-    );
+    return { ...next, confirmLoss: lossOf(state, action) };
   }
   if (!state.dataConfirmed && next.dataConfirmed) return { ...next, confirmLoss: null };
   return next;
@@ -2193,7 +2182,7 @@ export function useAgentSession({
         // The server holds no confirmation: the next `.create_plot()` confirms again instead of
         // starting a run the server refuses. The turn's `done` sync normally says so as well, and
         // a data change of this turn comes only with it, so the flag drops at the turn's end, where
-        // that change names the loss. No thread item: the step line and its notice say what to do.
+        // that change names the loss. No thread item: the step line says what to do.
         unconfirmedRef.current = true;
         return;
       }

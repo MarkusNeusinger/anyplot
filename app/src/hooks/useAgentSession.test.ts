@@ -9,6 +9,7 @@ import {
   carryDecisions,
   type ChatItem,
   compactFamilies,
+  type ConfirmLoss,
   familyOf,
   initialAgentState,
   missingRolesOf,
@@ -899,13 +900,9 @@ describe('useAgentSession: confirming the data (step 1)', () => {
     await act(() => result.current.parseData('a,b\n1,2\n'));
     await act(() => result.current.confirmData());
     await act(() => result.current.createPlot());
-    // No failed plot in the thread: the one notice says what to do, and the step line too.
+    // No failed plot and no notice in the thread: the step line names the loss (`server`).
     expect(result.current.state.items.some(item => item.kind === 'plot_failed')).toBe(false);
-    expect(lastItem(result.current.state.items)).toMatchObject({
-      kind: 'notice',
-      tone: 'warning',
-      text: 'check the data again, then .create_plot()',
-    });
+    expect(result.current.state.items.some(item => item.kind === 'notice')).toBe(false);
     expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'server' });
   });
 
@@ -938,12 +935,10 @@ describe('useAgentSession: confirming the data (step 1)', () => {
       ]);
     await act(() => result.current.sendMessage('daily mean instead of hourly'));
 
+    // The user's turn and the reply, nothing else: the step line above the composer names the
+    // change (`confirmLoss`), with no notice right above it that says the same.
     const added = result.current.state.items.slice(before);
-    expect(added.map(item => item.kind)).toEqual(['user', 'assistant', 'notice']);
-    expect(added[2]).toMatchObject({
-      tone: 'warning',
-      text: 'data changed · check it, then plot the new data',
-    });
+    expect(added.map(item => item.kind)).toEqual(['user', 'assistant']);
     expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
   });
 });
@@ -3308,7 +3303,7 @@ describe('agentReducer', () => {
     expect(state.nextItemId).toBe(3);
   });
 
-  it('names a lost confirmation once, with its reason, and only one the user had given', () => {
+  it('keeps the reason of a lost confirmation the user had given, and adds no notice', () => {
     const profile = { ...DATASET.profile, columns: [] };
     const parsed = { ...DATASET, profile } as DatasetParsed;
     // A paste and its first binding setup: nothing was confirmed, nothing is lost.
@@ -3331,7 +3326,8 @@ describe('agentReducer', () => {
     const confirmed = agentReducer(state, { type: 'confirm_done' });
     expect(confirmed).toMatchObject({ dataConfirmed: true, confirmLoss: null });
 
-    // A binding change after the confirmation: the reason, and one warning notice.
+    // A binding change after the confirmation: the reason for the step lines, the thread as it
+    // was, since the step line above the composer says it.
     const bindingsDone = {
       type: 'bindings_done' as const,
       bindings: { x: 'Exam Score', y: 'Study Hours' },
@@ -3340,64 +3336,42 @@ describe('agentReducer', () => {
     };
     let lost = agentReducer(confirmed, bindingsDone);
     expect(lost).toMatchObject({ dataConfirmed: false, confirmLoss: 'bindings' });
-    expect(lost.items).toEqual([
-      { id: 1, kind: 'data' },
-      {
-        id: 2,
-        kind: 'notice',
-        tone: 'warning',
-        text: 'bindings changed · check them, then .create_plot()',
-      },
-    ]);
-    // Back and forth: the confirmation is gone already, so no second notice.
+    expect(lost.items).toEqual([{ id: 1, kind: 'data' }]);
+    // Back and forth: the confirmation is gone already, and the reason stays.
     lost = agentReducer(lost, { ...bindingsDone, bindings: { x: 'Study Hours', y: 'Exam Score' } });
-    expect(lost.items).toHaveLength(2);
     expect(lost.confirmLoss).toBe('bindings');
-    // Confirmed again, the reason is gone; the notice stays in the thread.
+    // Confirmed again, the reason is gone.
     const again = agentReducer(lost, { type: 'confirm_done' });
     expect(again).toMatchObject({ dataConfirmed: true, confirmLoss: null });
-    expect(again.items).toHaveLength(2);
 
-    const reasonOf = (next: AgentSessionState) => ({
-      reason: next.confirmLoss,
-      notice: lastItem(next.items),
-    });
-    const notice = (text: string) => ({ kind: 'notice', tone: 'warning', text });
-    const changed = notice('data changed · check it, then plot the new data');
-    for (const next of [
-      agentReducer(confirmed, { type: 'parse_done', parsed, bytes: 10 }),
-      agentReducer(confirmed, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
-      agentReducer(confirmed, { type: 'undo_done', parsed }),
-    ]) {
-      expect(reasonOf(next)).toMatchObject({ reason: 'data', notice: changed });
-    }
-    const server = notice('check the data again, then .create_plot()');
-    expect(reasonOf(agentReducer(confirmed, { type: 'confirm_lost' }))).toMatchObject({
-      reason: 'server',
-      notice: server,
-    });
-    // A turn's sync: a binding change of the root's, or the server's word alone.
-    expect(
-      reasonOf(
-        agentReducer(confirmed, {
+    // Every reason: new data, the server's word, a turn's sync of the root's binding change.
+    const cases: [Parameters<typeof agentReducer>[1], ConfirmLoss][] = [
+      [{ type: 'parse_done', parsed, bytes: 10 }, 'data'],
+      [{ type: 'data_prepared', dataset: PREPARED as DatasetChanged }, 'data'],
+      [{ type: 'undo_done', parsed }, 'data'],
+      [{ type: 'confirm_lost' }, 'server'],
+      [
+        {
           type: 'server_sync',
           bindings: { x: 'Study Hours', y: 'Exam Score' },
           dataConfirmed: false,
-        })
-      )
-    ).toMatchObject({ reason: 'server', notice: server });
-    expect(
-      reasonOf(
-        agentReducer(confirmed, {
+        },
+        'server',
+      ],
+      [
+        {
           type: 'server_sync',
           bindings: { x: 'Exam Score', y: 'Study Hours' },
           dataConfirmed: false,
-        })
-      )
-    ).toMatchObject({
-      reason: 'bindings',
-      notice: notice('bindings changed · check them, then .create_plot()'),
-    });
+        },
+        'bindings',
+      ],
+    ];
+    for (const [action, reason] of cases) {
+      const next = agentReducer(confirmed, action);
+      expect(next.confirmLoss, action.type).toBe(reason);
+      expect(next.items.filter(item => item.kind === 'notice')).toEqual([]);
+    }
 
     // A table read from text keeps the confirmation until the user decides: no notice.
     const transcription: TranscriptionState = {
@@ -3436,10 +3410,9 @@ describe('agentReducer', () => {
       missingRoles: [],
     });
     expect(lost.confirmLoss).toBe('bindings');
-    expect(lost.items).toHaveLength(2);
+    expect(lost.items).toEqual([{ id: 1, kind: 'data' }]);
 
-    // A new paste is data nobody confirmed: its card names no loss, and the thread
-    // keeps the one notice it has.
+    // A new paste is data nobody confirmed: its card names no loss.
     const pasted = agentReducer(lost, { type: 'parse_done', parsed, bytes: 12 });
     expect(pasted).toMatchObject({ dataConfirmed: false, confirmLoss: null });
     expect(pasted.items).toEqual(lost.items);
@@ -3452,7 +3425,7 @@ describe('agentReducer', () => {
     });
     expect(setUp).toMatchObject({ confirmLoss: null, items: lost.items });
 
-    // A data change or an undo after the loss: the step line names the data, still one notice.
+    // A data change or an undo after the loss: the step line names the data, the thread as it was.
     for (const next of [
       agentReducer(lost, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
       agentReducer(lost, { type: 'undo_done', parsed }),
