@@ -79,26 +79,18 @@ describe('PlotOfTheDayTerminal', () => {
     expect(fireEvent.click(link)).toBe(false);
   });
 
-  it('opens the admin chat with a full page load while the public lane is closed', () => {
+  it('opens the same chat page through the router while only the admin lane answers', () => {
+    // The public door is closed and the admin's eligibility answered: one chat page all the
+    // same, which picks the admin lane itself (`AgentChatPage`).
     agentEligibility.lane = 'admin';
     render(<PlotOfTheDayTerminal potd={potd} />);
 
     const link = screen.getByRole('link', { name: 'Use with my data' });
     expect(link).toHaveAttribute(
       'href',
-      '/debug/agent?spec=scatter-basic&library=matplotlib&language=python&source=plot_of_the_day'
+      '/agent?spec=scatter-basic&library=matplotlib&language=python&source=plot_of_the_day'
     );
-    // A plain anchor: nothing before `window` cancels the click, so the browser loads the page
-    // in full. The listener records that, then cancels it, because jsdom cannot navigate.
-    let cancelled: boolean | null = null;
-    const observe = (event: MouseEvent) => {
-      cancelled = event.defaultPrevented;
-      event.preventDefault();
-    };
-    window.addEventListener('click', observe);
-    fireEvent.click(link);
-    window.removeEventListener('click', observe);
-    expect(cancelled).toBe(false);
+    expect(fireEvent.click(link)).toBe(false);
   });
 
   it('renders nothing without potd data', () => {

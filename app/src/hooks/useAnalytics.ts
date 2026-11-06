@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 
+import { analyticsMuted } from 'src/analytics/mute';
+
 interface EventProps {
   [key: string]: string | undefined;
 }
@@ -92,7 +94,7 @@ export function useAnalytics() {
 
   const sendPageview = useCallback(
     (urlOverride?: string) => {
-      if (!isProduction) return;
+      if (!isProduction || analyticsMuted()) return;
 
       let url: string;
       if (urlOverride) {
@@ -118,7 +120,7 @@ export function useAnalytics() {
 
   const trackEvent = useCallback(
     (name: string, props?: EventProps) => {
-      if (!isProduction) return;
+      if (!isProduction || analyticsMuted()) return;
       const cleanProps = props
         ? Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
         : {};

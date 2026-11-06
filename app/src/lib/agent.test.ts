@@ -944,14 +944,16 @@ describe('agentFetch', () => {
     });
   });
 
-  it('clears the Access reload guard once an answer arrives', async () => {
+  it('leaves the Access reload guard to the /debug page on the admin lane too', async () => {
+    // The chat at `/agent` is not behind Access and never reloads for it; the guard is the
+    // `/debug` page's alone, which sets and clears it.
     sessionStorage.setItem(ACCESS_RELOAD_KEY, '1');
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response('{}', { status: 200 }))
     );
     await agentFetch('/status', '');
-    expect(sessionStorage.getItem(ACCESS_RELOAD_KEY)).toBeNull();
+    expect(sessionStorage.getItem(ACCESS_RELOAD_KEY)).toBe('1');
   });
 
   it('posts .undo() to the undo route with the CSRF header and no body', async () => {

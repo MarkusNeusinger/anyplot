@@ -15,7 +15,7 @@ import { useAppData } from 'src/hooks';
 import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { agentChatPath, paths, publicAgentChatPath, specPath } from 'src/routes/paths';
+import { agentChatPath, paths, specPath } from 'src/routes/paths';
 import { LibraryPills, UseMyDataAction } from 'src/sections/spec-detail/LibraryPills';
 import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -315,11 +315,10 @@ export function SpecPage() {
   // (all of them, or one language's under `?language=`): matplotlib where it is
   // among them, else the first, because the eligibility route takes one library and
   // the chat's library menu switches anyway: one request per view, never one per
-  // card. While the public lane is open everyone gets the public chat, an admin
-  // too, through the router (`useAgentEligibility`); only while it is closed does an
-  // admin get the admin chat, through a full navigation so Cloudflare Access can
-  // intercept the /debug path. The chat page records `agent_open{source: plot_page}`
-  // or `{source: spec_hub}`.
+  // card. The entry leads everyone to the one chat page `/agent`, through the router; the
+  // lane only picks the API the eligibility is asked of (`useAgentEligibility`), and the
+  // chat picks its own. The chat page records `agent_open{source: plot_page}` or
+  // `{source: spec_hub}`.
   const agentImpl = useMemo(() => {
     // The previous spec's data while the next one loads: no probe for its library.
     if (!specData || specData.id !== specId) return null;
@@ -334,12 +333,8 @@ export function SpecPage() {
   const handleUseWithMyData = useCallback(() => {
     if (!specId || !agentImpl) return;
     const source = mode === 'detail' ? 'plot_page' : 'spec_hub';
-    if (agentLane === 'public') {
-      navigate(publicAgentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
-      return;
-    }
-    window.location.assign(agentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
-  }, [specId, agentImpl, agentLane, mode, navigate]);
+    navigate(agentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
+  }, [specId, agentImpl, mode, navigate]);
 
   const buildReportUrl = useCallback(() => {
     const params = new URLSearchParams({

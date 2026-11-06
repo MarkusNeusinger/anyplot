@@ -7,11 +7,13 @@
  *   node app/scripts/agent-bff-mock.mjs            # http://localhost:8010, loopback only
  *   cd app && VITE_ENABLE_AGENT_CHAT=true \
  *     VITE_API_URL=http://localhost:8010 VITE_DEBUG_API_URL=http://localhost:8010 yarn dev
- *   open http://localhost:3000/scatter-basic/python/matplotlib   (the .adapt() button)
- *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python
- *   open http://localhost:3000/debug/agent?spec=line-multi&library=matplotlib&language=python
+ *   open http://localhost:3000/scatter-basic/python/matplotlib   (the .use_my_data() entry)
  *   open http://localhost:3000/agent?spec=scatter-basic&library=matplotlib&language=python
- *     (the public lane, `/agent/*`; MOCK_PUBLIC_LANE=closed keeps its door shut;
+ *   open http://localhost:3000/agent?spec=line-multi&library=matplotlib&language=python
+ *     (one page since 2026-11-06: local development counts as the admin hint, so the page
+ *     checks `/debug/agent/status` here and runs the admin lane, `/debug/agent/*`; the admin
+ *     menu's "view as visitor", or a build without development mode and without the hint, runs
+ *     the public lane, `/agent/*`; MOCK_PUBLIC_LANE=closed keeps its door shut;
  *     MOCK_TURNSTILE=require|refuse|down plays the bot check, with the page built with
  *     VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA, Cloudflare's always-passing test key)
  *
@@ -171,7 +173,7 @@
  * of the checkout's.
  *
  *   AGENT_LIBRARIES=matplotlib,seaborn,chartjs node app/scripts/agent-bff-mock.mjs
- *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=chartjs&language=javascript
+ *   open http://localhost:3000/agent?spec=scatter-basic&library=chartjs&language=javascript
  *
  * Environment: PORT (8010), MOCK_STEP_MS (700, per pipeline step),
  * MOCK_QUEUE_MS (2500, per queue position), MOCK_QUEUE (2, the starting

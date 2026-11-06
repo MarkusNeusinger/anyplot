@@ -10,15 +10,15 @@ import {
 } from 'src/routes/paths';
 
 describe('agentChatPath', () => {
-  it('builds the admin chat URL for one catalogue pair', () => {
+  it('builds the one chat URL for a catalogue pair, for visitors and admins', () => {
     expect(agentChatPath('scatter-basic', 'matplotlib', 'python')).toBe(
-      '/debug/agent?spec=scatter-basic&library=matplotlib&language=python'
+      '/agent?spec=scatter-basic&library=matplotlib&language=python'
     );
   });
 
   it('adds the source for agent_open and is exposed as paths.agentChat', () => {
     expect(paths.agentChat('bar-grouped', 'seaborn', 'python', 'plot_page')).toBe(
-      '/debug/agent?spec=bar-grouped&library=seaborn&language=python&source=plot_page'
+      '/agent?spec=bar-grouped&library=seaborn&language=python&source=plot_page'
     );
   });
 });

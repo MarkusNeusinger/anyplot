@@ -1,12 +1,13 @@
 /**
- * "Use with my data": the agent chat, for admins at `/debug/agent?spec=&library=&language=`
- * (plus `&all=1` while the library menu's `all` is pressed) and for everyone at
- * `/agent?spec=&library=&language=` while the public lane is open (`PublicAgentChatPage`,
- * experimental). The site's `.use_my_data()` entries open `/agent` for an admin too while the
- * public lane is open, so the owner tests what a visitor gets; `/debug/agent` is the admin's
- * page for its tools, typed or bookmarked, and the entries' target only while the public lane
- * is closed (`useAgentEligibility`). The query follows the session: a library switch writes
- * `library` and its `language`.
+ * "Use with my data": the agent chat at `/agent?spec=&library=&language=`, one page for everyone
+ * (owner, 2026-11-06): the admin's chat looks and behaves exactly like a visitor's and runs the
+ * same code, so the owner never misses what a visitor meets. The page detects an admin at runtime
+ * (`useAgentAdmin`: the admin hint from `/debug` plus a successful admin call) and then talks to
+ * the admin API (`/debug/agent/*`), else to the public API with its bot check. The only other
+ * differences are the limits, which the server enforces per tier, and the fan-out to every
+ * library; every admin extra sits behind one element, the admin menu (`AdminMenu`). The old
+ * address `/debug/agent` only redirects here (`AgentChatRedirect`). The query follows the
+ * session: a library switch writes `library` and its `language`.
  *
  * One column, chat first, two steps, data first, in one terminal-style frame (`ChatFrame`,
  * since the v4 design of 2026-11-06): the tab label `~/anyplot.ai/agent` on its top border, the
@@ -36,13 +37,13 @@
  * site theme (`CataloguePreview`; a click opens it large), with the columns it expects behind
  * the ⓘ after the title (the spec's roles as the session's open names them, the spec's `data`
  * bullets without them), and carries the library menu (`LibraryChip`, `seaborn ▾`, since
- * 2026-11-02 in place of a pill per library: the libraries grouped by language, `all` for the
- * admin), next to it the session language chip (`LanguageChip`, `English ▾`): the language of
- * the replies and of the text in the plot, English until the first typed message or a choice
- * sets another, and the how-to of the data behind an ⓘ. On the admin lane, the "⋯" menu
- * (`SessionMenu`) at the row's end holds `.save()` with its `# include data.csv` box (out of the
- * header row since 2026-11-02, owner: less text); the public lane has neither. The page talks only to the BFF under
- * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
+ * 2026-11-02 in place of a pill per library: the libraries grouped by language), next to it the
+ * session language chip (`LanguageChip`, `English ▾`): the language of the replies and of the
+ * text in the plot, English until the first typed message or a choice sets another, and the
+ * how-to of the data behind an ⓘ. For an admin, the admin menu stands at the row's end (since
+ * 2026-11-06, where the "⋯" menu with `.save()` stood): the fan-out toggle, `.save()` with its
+ * `# include data.csv` box, "view as visitor" and the admin's diagnostics. The page talks only to
+ * the BFF (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
  *
  * A library switch keeps the data, the bindings, their confirmation, the
  * language and the plot memory. When its answer offers it, the composer's
@@ -74,8 +75,9 @@
  * it shows only what the line does not (a `create_plot` run, a queue position,
  * pipeline steps), and the data card says why its controls wait.
  *
- * The library menu's `all`, after the libraries, is the admin's test run.
- * While it is pressed, the composer's create action is `.plot_all()`: the
+ * The admin menu's `all 15 libraries` is the admin's test run, the fan-out (in the library
+ * menu as `all` until 2026-11-06). While it is on, the library chip reads `all 15 libraries ▾`
+ * and the composer's create action is `.plot_all()`: the
  * data with its bindings, confirmed first as `.create_plot()` does, plotted in
  * every library of the header at once (`FanOut`), a session per library into which the server copies
  * this session's confirmed version, whatever its origin (pasted, opened,
@@ -83,11 +85,11 @@
  * running, each through the normal run queue. This session stays the data
  * session; in step 2 the message box waits (typed text would not go along) and
  * a line above it says so, while in step 1 the chat about the data goes on as
- * without `all`. Any library picked in the menu turns `all` off again (the
- * library in use only that); while the panel is open, neither the menu nor the
- * data card change anything, so every library copies the same confirmed data.
- * `all` is in the URL as `&all=1`, so a reload presses it again once the
- * libraries are known.
+ * without the fan-out. Any library picked in the library menu turns it off again
+ * (the library in use only that); while the panel is open, neither the menu nor
+ * the data card change anything, so every library copies the same confirmed
+ * data. The toggle is not in the URL (`&all=1` until 2026-11-06): a reload opens
+ * a new session anyway, and the toggle is one click.
  *
  * The session itself is not in the URL and nothing restores it: while it holds
  * data, a plot or work in flight, a reload, a closed tab or a link off the page
@@ -100,17 +102,21 @@
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
  *    route renders the 404 page and this chunk is not even built.
- * 2. The admin lane: the admin hint (`src/utils/adminAuth.ts`), or local
- *    development; without it the page asks for a sign-in on `/debug` first. The
- *    BFF's admin gate is the real check; a 401 or 403 from it clears the hint
- *    and shows the same notice.
- *    The public lane: the API's `GET /agent/lane` (`useAgentLaneOpen`); closed,
- *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
- *    admin token, shows the experimental notice as one muted line above the chat's
- *    frame (the details behind its ⓘ button: `ExperimentalNotice`), offers no `all` and no
- *    `.save()` (a visitor cannot resume a saved session, and the feedback form
- *    covers "something went wrong"), and leaves the feedback
- *    form's data box unticked (`sections/agent-chat/lane.ts`).
+ * 2. The lane. A browser without the admin hint (`src/utils/adminAuth.ts`) or local
+ *    development is a visitor's: it sends no request to the debug API, and runs on the
+ *    public lane while the API's `GET /agent/lane` is open (`useAgentLaneOpen`); closed,
+ *    the page says so. A browser with the hint asks the admin lane's `GET /status` first
+ *    (`useAgentAdmin`), and the page waits for the answer, which picks the lane: the admin
+ *    lane, also while the public door is closed; or, after a refusal or no answer (an
+ *    expired Cloudflare Access session), the public lane, while the admin menu says the
+ *    admin session expired and links to `/debug`. A refusal later in the session does the
+ *    same. "View as visitor" in the admin menu runs the public lane for this tab, exactly
+ *    as a visitor's. The BFF's admin gate is the real check; the page only picks the API.
+ *    On both lanes the experimental notice stands above the frame (`ExperimentalNotice`),
+ *    the feedback form's data box starts unticked with the consent line under it, and an
+ *    error reads the same; the admin's diagnostics are in the admin menu.
+ * 3. Analytics: while the page serves an admin (either lane), it sends no pageview and no
+ *    event (`src/analytics/mute.ts`), so the admin's own use never counts as a visitor's.
  *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
@@ -121,10 +127,12 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
+import { setAnalyticsMuted } from 'src/analytics/mute';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
+import { useAgentAdmin } from 'src/hooks/useAgentAdmin';
 import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
 import {
   type BindingMap,
@@ -140,6 +148,7 @@ import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
 import {
   agentApi,
   type AgentLane,
+  type AgentStatus,
   browserLocale,
   DEFAULT_AGENT_LIBRARIES,
   MAX_MESSAGE_CHARS,
@@ -148,6 +157,7 @@ import {
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
+import { AdminMenu, type AdminMode } from 'src/sections/agent-chat/AdminMenu';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
@@ -159,7 +169,6 @@ import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
-import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
 import {
@@ -170,12 +179,12 @@ import {
   DROP_HINT_TEXT,
   ERROR_TEXT,
   LEAVE_TEXT,
+  VIEW_SWITCH_TEXT,
 } from 'src/sections/agent-chat/messages';
 import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
-import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import {
   dataChanged,
@@ -191,7 +200,7 @@ import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useC
 import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
-import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
+import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/adminAuth';
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
@@ -228,24 +237,16 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
-function AdminRequired() {
-  return (
-    <Notice title="admin sign-in">
-      this page is for admins. sign in on{' '}
-      <Box component={RouterLink} to={paths.debug} sx={proseLinkStyle}>
-        /debug
-      </Box>{' '}
-      first, then come back.
-    </Notice>
-  );
-}
-
 /** The chat's Highcharts note, shown while the session plots in Highcharts (the legal page says the same). */
 export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
 
-/** The public lane's page while the lane is closed (`GET /agent/lane` answered no). */
-function LaneClosed() {
+/**
+ * The page while the public lane is closed (`GET /agent/lane` answered no) and the page does not
+ * run on the admin lane. An admin's browser keeps the admin menu below the text: "view as visitor"
+ * to switch back, or the line about an expired admin session.
+ */
+function LaneClosed({ adminMenu = null }: { adminMenu?: React.ReactNode }) {
   return (
     <Notice title="use with my data · experimental">
       the assistant is closed right now. please try again later; the{' '}
@@ -253,27 +254,56 @@ function LaneClosed() {
         catalogue
       </Box>{' '}
       stays open.
+      {/* Its row is the admin menu's too (`admin-menu…`), so the parity test leaves it out. */}
+      {adminMenu && (
+        <Box data-testid="admin-menu-row" sx={{ display: 'flex', mt: 2 }}>
+          {adminMenu}
+        </Box>
+      )}
     </Notice>
   );
 }
 
-/**
- * The public chat at `/agent`: the same page on the public lane (`PUBLIC_LANE`), open to
- * everyone while the API's public lane is (`useAgentLaneOpen`), labelled experimental, with
- * the admin-only parts left out (the fan-out's `all`, `.save()` and its "⋯" menu) and the
- * feedback form's data box unticked.
- */
-export function PublicAgentChatPage() {
-  return <AgentChatPage lane="public" />;
+/** What the page hands the chat for the admin menu, in an admin's browser only. */
+interface AdminView {
+  mode: AdminMode;
+  /** The code the failed admin check answered with. */
+  failure: string | null;
+  onViewAsVisitor: (on: boolean) => void;
 }
 
-export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
+export function AgentChatPage() {
   const [params, setParams] = useSearchParams();
   const { trackPageview, trackEvent } = useAnalytics();
   const laneOpen = useAgentLaneOpen();
-  const allowed =
-    CONFIG.features.agentChat &&
-    (lane === 'public' ? laneOpen === true : CONFIG.isDev || readAdminHint());
+  const adminCheck = useAgentAdmin();
+  const { admin } = adminCheck;
+  // "View as visitor", the admin menu's switch, for this tab: the public lane exactly.
+  const [asVisitor, setAsVisitor] = useState(readViewAsVisitor);
+  const adminLane = admin === 'admin' && !asVisitor;
+  const lane: AgentLane = adminLane ? 'admin' : 'public';
+  // The page waits for the answer that picks the lane: the admin check while it may lead to the
+  // admin lane, else the public lane's door.
+  const deciding = !adminLane && ((admin === 'checking' && !asVisitor) || laneOpen === null);
+  const allowed = CONFIG.features.agentChat && !deciding && (adminLane || laneOpen === true);
+  // An admin's browser, on either lane: the admin's own use counts as no visitor's.
+  const muted = admin !== 'none';
+  // The admin menu, in an admin's browser only; none while the check that may lead to the admin
+  // lane is out, since the page waits for it then.
+  const adminMode: AdminMode | null =
+    admin === 'expired'
+      ? 'expired'
+      : admin === 'none'
+        ? null
+        : asVisitor
+          ? 'visitor'
+          : admin === 'admin'
+            ? 'admin'
+            : null;
+  const onViewAsVisitor = useCallback((on: boolean) => {
+    setViewAsVisitor(on);
+    setAsVisitor(on);
+  }, []);
 
   const spec = params.get('spec') ?? '';
   const library = params.get('library') ?? '';
@@ -282,10 +312,16 @@ export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
   const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
-  const allInUrl = params.get('all') === '1';
+
+  // Declared before the open's effect below, so the switch is on before the page records anything.
+  useEffect(() => {
+    if (!muted) return;
+    setAnalyticsMuted(true);
+    return () => setAnalyticsMuted(false);
+  }, [muted]);
 
   // Every edit of the query starts from the latest one, also an edit made after an await (a
-  // library switch), so one edit never brings back what another removed (`all`).
+  // library switch), so one edit never brings back what another removed (`source`).
   const paramsRef = useRef(params);
   paramsRef.current = params;
   const editParams = useCallback(
@@ -306,43 +342,57 @@ export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
       }),
     [editParams]
   );
-  const onAllChange = useCallback(
-    (pressed: boolean) =>
-      editParams(query => (pressed ? query.set('all', '1') : query.delete('all'))),
-    [editParams]
-  );
 
   // `source` only says where the visitor came from; it is read once for
-  // `agent_open` and dropped, so a reload counts as a direct open.
+  // `agent_open` and dropped, so a reload counts as a direct open. An admin's
+  // open is no visitor's: the page records nothing for it (`muted`).
   const openTracked = useRef(false);
   useEffect(() => {
     if (!allowed || !valid || openTracked.current) return;
     openTracked.current = true;
-    trackPageview(lane === 'public' ? paths.agent : '/debug/agent');
     const source = params.get('source');
-    trackEvent('agent_open', {
-      library,
-      source: source && OPEN_SOURCES.has(source) ? source : 'direct',
-      spec,
-    });
+    if (!muted) {
+      trackPageview(paths.agent);
+      trackEvent('agent_open', {
+        library,
+        source: source && OPEN_SOURCES.has(source) ? source : 'direct',
+        spec,
+      });
+    }
     if (source) {
       const next = new URLSearchParams(params);
       next.delete('source');
       setParams(next, { replace: true });
     }
-  }, [allowed, valid, params, setParams, library, spec, trackEvent, trackPageview, lane]);
+  }, [allowed, valid, params, setParams, library, spec, trackEvent, trackPageview, muted]);
 
   if (!CONFIG.features.agentChat) return <NotFoundPage />;
-  if (lane === 'public' && laneOpen === null) return <NoIndex />;
-  if (!allowed) return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
-  const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
+  if (deciding) return <NoIndex />;
+  const adminView: AdminView | null = adminMode
+    ? { mode: adminMode, failure: adminCheck.failure, onViewAsVisitor }
+    : null;
+  if (!allowed) {
+    return (
+      <LaneClosed
+        adminMenu={
+          adminView && (
+            <AdminMenu
+              mode={adminView.mode}
+              failure={adminView.failure}
+              onViewAsVisitor={onViewAsVisitor}
+            />
+          )
+        }
+      />
+    );
+  }
   if (!valid) {
     return (
       <Notice title="use with my data">
         open it from a plot&apos;s <code>.use_my_data()</code>, or start with{' '}
         <Box
           component={RouterLink}
-          to={chatPath('scatter-basic', 'matplotlib', 'python')}
+          to={paths.agentChat('scatter-basic', 'matplotlib', 'python')}
           sx={proseLinkStyle}
         >
           scatter-basic in matplotlib
@@ -351,21 +401,20 @@ export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
       </Notice>
     );
   }
-  const token = lane === 'public' ? PUBLIC_LANE : readAdminToken();
+  const token = adminLane ? readAdminToken() : PUBLIC_LANE;
   return (
-    <AgentLaneContext.Provider value={lane}>
-      <AgentChat
-        key={`${spec}|${token}`}
-        specId={spec}
-        library={library}
-        language={language}
-        token={token}
-        lane={lane}
-        allInUrl={lane === 'admin' && allInUrl}
-        onLibraryChange={onLibraryChange}
-        onAllChange={onAllChange}
-      />
-    </AgentLaneContext.Provider>
+    <AgentChat
+      key={`${spec}|${token}`}
+      specId={spec}
+      library={library}
+      language={language}
+      token={token}
+      lane={lane}
+      admin={adminView}
+      onAdminRefused={adminCheck.refused}
+      takeAdminStatus={adminCheck.takeStatus}
+      onLibraryChange={onLibraryChange}
+    />
   );
 }
 
@@ -375,13 +424,15 @@ interface AgentChatProps {
   language: string;
   /** The admin token, or `PUBLIC_LANE` on the public lane. */
   token: string;
-  /** The lane the page runs on: the public one offers no `all` and says it is experimental. */
+  /** The API the page calls: it changes nothing the page shows outside the admin menu. */
   lane: AgentLane;
-  /** `&all=1` at the mount: the menu's `all` starts pressed, once the libraries are known. */
-  allInUrl: boolean;
+  /** The admin menu's state, in an admin's browser; null for a visitor. */
+  admin: AdminView | null;
+  /** The admin lane refused a call (401 or 403): the page falls back to the public lane. */
+  onAdminRefused: () => void;
+  /** The admin check's status answer, once (`useAgentAdmin`): the admin lane asks no second time. */
+  takeAdminStatus: () => AgentStatus | null;
   onLibraryChange: (library: string) => void;
-  /** The menu's `all` as it is now, for the URL. */
-  onAllChange: (pressed: boolean) => void;
 }
 
 function AgentChat({
@@ -390,9 +441,10 @@ function AgentChat({
   language,
   token,
   lane,
-  allInUrl,
+  admin,
+  onAdminRefused,
+  takeAdminStatus,
   onLibraryChange,
-  onAllChange,
 }: AgentChatProps) {
   const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
@@ -421,10 +473,10 @@ function AgentChat({
     bindings: BindingMap;
     libraries: string[];
   } | null>(null);
-  // The library menu's `all`, in the URL as `&all=1` (`onAllChange`). Pressed from the URL, it
-  // takes effect only once `offerAll` holds (`plotAll`), when the libraries are the server's.
-  const [allPressed, setAllPressed] = useState(allInUrl);
-  // The library menu's chip, which holds `all` since 2026-11-02.
+  // The admin menu's fan-out toggle (`all 15 libraries`); it takes effect only while `offerAll`
+  // holds (`plotAll`), when the libraries are the server's.
+  const [allPressed, setAllPressed] = useState(false);
+  // The library menu's chip, where the focus returns after the fan-out's panel.
   const libraryRef = useRef<HTMLButtonElement>(null);
   const fanOutRef = useRef<HTMLElement>(null);
   // Set by a key press on `.plot_all()`: the panel it opens takes the focus, once.
@@ -467,8 +519,10 @@ function AgentChat({
       })
       .catch(() => undefined)
       .finally(settle);
-    agentApi
-      .status(token)
+    // The admin lane's first chat takes the answer of the admin check, which asked the same
+    // route a moment ago; every other chat asks.
+    const checked = lane === 'admin' ? takeAdminStatus() : null;
+    (checked ? Promise.resolve(checked) : agentApi.status(token))
       .then(status => {
         if (Array.isArray(status.libraries) && status.libraries.length) {
           enabled = status.libraries;
@@ -488,7 +542,7 @@ function AgentChat({
       .catch(() => undefined)
       .finally(settle);
     return () => controller.abort();
-  }, [specId, token]);
+  }, [specId, token, lane, takeAdminStatus]);
 
   // The pause ends with the service's new day: the note goes at that moment, without a reload.
   useEffect(() => {
@@ -500,11 +554,11 @@ function AgentChat({
     return () => window.clearTimeout(timer);
   }, [pausedUntil]);
 
-  // A refused admin token ends the admin hint; a refusal on the public lane says nothing about
-  // it, and an admin uses the public lane too while it is open.
+  // A refused admin call ends the admin hint, and the page falls back to the public lane with a
+  // new session (`useAgentAdmin`); a refusal on the public lane says nothing about the admin.
   useEffect(() => {
-    if (lane === 'admin' && state.phase === 'unauthorized') setAdminHint(false);
-  }, [lane, state.phase]);
+    if (lane === 'admin' && state.phase === 'unauthorized') onAdminRefused();
+  }, [lane, state.phase, onAdminRefused]);
 
   // The progress and the replies arrive at the foot of the thread, below the
   // data card: bring the foot into view when a turn starts.
@@ -560,9 +614,10 @@ function AgentChat({
   // while it is confirmed and this library has no plot yet. Confirmed with a plot, the composer
   // refines with `.send()` and keeps a quiet `.start_over()`.
   const ctaPlot = !!state.dataset && !(step2 && hasPlot);
-  // `all` in the menu only once the libraries and the limit are the server's: a snapshot of the
-  // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
-  // `.plot_all()` is the admin's test run: never on the public lane, whose BFF has no copy route.
+  // The fan-out's toggle in the admin menu only once the libraries and the limit are the
+  // server's: a snapshot of the fallbacks would leave libraries out or start more runs than the
+  // server takes (`run_limit`). `.plot_all()` is the admin's test run: never on the public lane,
+  // whose BFF has no copy route, so "view as visitor" has none either.
   const offerAll = lane === 'admin' && listsSettled && libraries.length > 1 && !reopen;
   const plotAll = allPressed && offerAll;
   // The chat waits only where `.plot_all()` is the action, in step 2: the fan-out takes no
@@ -611,12 +666,6 @@ function AgentChat({
   // for its plot, which takes the timeline's place (`runView`).
   const view = runView(state);
   const threadState = view.items === state.items ? state : { ...state, items: view.items };
-
-  // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
-  // before them `all` is not offered yet, and one pressed from the URL waits for them.
-  useEffect(() => {
-    if (listsSettled) onAllChange(plotAll);
-  }, [listsSettled, plotAll, onAllChange]);
 
   // A key press on `.plot_all()` continues in the panel it opened: the button waits while
   // the panel is open, and the panel is where the plots come in.
@@ -775,7 +824,7 @@ function AgentChat({
   };
 
   /**
-   * A library picked in the menu. While `all` is pressed, any pick turns it
+   * A library picked in the menu. While the fan-out is on, any pick turns it
    * off: the library in use only that; another library switches as it would
    * without it. The URL follows a switch the server took; a refused one
    * rejects, and the menu shows why under its chip.
@@ -815,7 +864,7 @@ function AgentChat({
   }, [state.library, running, busy, canCreate, step2, session]);
 
   /**
-   * `.plot_all()`, the action while `all` is pressed: the data with its bindings, in every
+   * `.plot_all()`, the action while the fan-out is on: the data with its bindings, in every
    * library of the header at once; the server copies this session's confirmed version into each
    * library's session, so data that is not confirmed yet is confirmed first, as for
    * `.create_plot()`, and a refusal opens no panel. The upload and the bindings go along only
@@ -860,12 +909,63 @@ function AgentChat({
   const handlePlot = (event: React.MouseEvent) =>
     void startPlot(event, carry && !shownCarry ? 'carry' : 'create', true, plotButtonLabel(state));
 
-  if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
-  const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
+  /**
+   * "View as visitor" in the admin menu: the other lane opens a session of its own, so one that
+   * holds work asks first, as leaving the page does.
+   */
+  const handleViewAsVisitor = (on: boolean) => {
+    if (sessionHoldsWork(state) && !window.confirm(VIEW_SWITCH_TEXT)) return;
+    admin?.onViewAsVisitor(on);
+  };
+
+  // The admin menu, the one admin-only element, at the header row's right end. Its fan-out toggle
+  // and `.save()` exist on the admin lane only (the public BFF has neither route), the diagnostics
+  // say what a visitor reads as "closed".
+  const adminMenu = admin && (
+    <AdminMenu
+      mode={admin.mode}
+      failure={admin.failure}
+      onViewAsVisitor={handleViewAsVisitor}
+      fanOut={
+        offerAll
+          ? {
+              libraries: libraries.length,
+              pressed: plotAll,
+              // As the library chip: not during a run or while the fan-out's panel is open.
+              disabled: busy || !!fanOut || state.phase !== 'ready',
+              onChange: setAllPressed,
+            }
+          : null
+      }
+      save={
+        lane === 'admin' && !reopen
+          ? {
+              disabled: state.phase !== 'ready' || !state.sessionId || busy,
+              onSave: session.saveSession,
+            }
+          : null
+      }
+      diagnostics={
+        state.phase === 'error' && state.failure?.code === 'not_enabled'
+          ? [
+              lane === 'admin'
+                ? 'not_enabled · the agent chat is switched off on this server (AGENT_ENABLED)'
+                : 'not_enabled · the public lane is closed on this server (AGENT_PUBLIC_ENABLED, or AGENT_ENABLED)',
+            ]
+          : []
+      }
+    />
+  );
+
+  // A refusal on the admin lane falls back to the public lane (the effect above); in between,
+  // nothing. On the public lane it reads as the closed door.
+  if (state.phase === 'unauthorized') {
+    return lane === 'public' ? <LaneClosed adminMenu={adminMenu} /> : <NoIndex />;
+  }
 
   const backHref = specPath(specId, language, state.library);
-  // Above the frame: the page's heading, and on the public lane the experimental notice, which
-  // stands above the first input in every state of the session.
+  // Above the frame: the page's heading and the experimental notice, which stands above the first
+  // input in every state of the session, on both lanes.
   const masthead = (
     <>
       <SectionHeader
@@ -876,12 +976,12 @@ function AgentChat({
           </>
         }
       />
-      {lane === 'public' && <ExperimentalNotice />}
+      <ExperimentalNotice />
     </>
   );
   // The frame's header row, in plain words: the catalogue plot and its title (the link back), the
-  // library and the reply language as dropdowns, the how-to of the data, the admin's "⋯". At phone
-  // width the title takes the first line and the controls wrap below it.
+  // library and the reply language as dropdowns, the how-to of the data, and in an admin's browser
+  // the admin menu. At phone width the title takes the first line and the controls wrap below it.
   const headerRow = (
     <Box>
       <Box
@@ -937,16 +1037,16 @@ function AgentChat({
         <LibraryChip
           library={state.library}
           libraries={libraries}
-          offerAll={offerAll}
           allPressed={plotAll}
           // No session to switch: another library opens the page anew, with its own
-          // session (a full navigation, like the plot page's `.use_my_data()`).
-          hrefFor={reopen ? lib => chatPath(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined}
+          // session (a full navigation).
+          hrefFor={
+            reopen ? lib => paths.agentChat(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined
+          }
           // Not during a run (the server refuses a switch then) or while the fan-out's panel
           // is open: its sessions run on this one's data.
           disabled={!reopen && (busy || !!fanOut || state.phase !== 'ready')}
           onPick={handlePick}
-          onAllChange={setAllPressed}
           buttonRef={libraryRef}
         />
         {/* The session language of the replies and the plot text; without a session there is none. */}
@@ -967,16 +1067,7 @@ function AgentChat({
             testId="data-howto"
           />
         )}
-        {/* The "⋯" menu holds `.save()`, the admin's debugging bundle, which downloads the
-            session; without one (ineligible, error) there is nothing to save. The public lane
-            has no `.save()` (a visitor cannot resume a saved session), so no menu either. It
-            stands at the row's right end. */}
-        {lane === 'admin' && !reopen && (
-          <SessionMenu
-            disabled={state.phase !== 'ready' || !state.sessionId || busy}
-            onSave={session.saveSession}
-          />
-        )}
+        {adminMenu}
       </Box>
       {state.phase === 'ready' && state.library === 'highcharts' && (
         <Box role="note" data-testid="highcharts-licence" sx={{ ...labelSx, mt: 1.25 }}>
@@ -1011,9 +1102,8 @@ function AgentChat({
           {state.phase === 'ineligible'
             ? 'this plot cannot be adapted in this library yet; pick another library above.'
             : state.failure?.code === 'not_enabled'
-              ? lane === 'public'
-                ? 'the assistant is closed right now. please try again later.'
-                : 'the agent chat is switched off on this server (AGENT_ENABLED).'
+              ? // The same words on both lanes; the admin menu names the switch.
+                'the assistant is closed right now. please try again later.'
               : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
           {state.phase === 'error' && <ReloadHint code={state.failure?.code} opening />}
         </Box>

@@ -155,7 +155,7 @@ anyplot/
 ├── app/                               # React frontend
 │   ├── src/
 │   │   ├── components/
-│   │   ├── pages/                     # AgentChatPage.tsx: the agent chat (/agent, admins /debug/agent)
+│   │   ├── pages/                     # AgentChatPage.tsx: the agent chat (/agent, visitors and admins)
 │   │   ├── sections/                  # agent-chat/: data panel, thread, result card; debug/: agent case triage on /debug
 │   │   └── lib/                       # api.ts; agent.ts and sse.ts for the agent chat BFF and its case routes
 │   ├── scripts/
@@ -583,7 +583,7 @@ plt.savefig('plot.png', dpi=300)
 
 **Purpose**: React frontend (Vite + TypeScript + MUI)
 
-The agent chat ("Use with my data", public at `/agent` and for admins at `/debug/agent`) lives in `src/pages/AgentChatPage.tsx`, `src/sections/agent-chat/`, `src/hooks/useAgentSession.ts`, `src/lib/agent.ts` and `src/lib/sse.ts`; it is built only with `VITE_ENABLE_AGENT_CHAT=true`. `scripts/agent-bff-mock.mjs` is a local mock of its backend for driving the page in a browser (see `agents/README.md`). The triage of the chat's quick-feedback cases is the "agent cases" section of `src/pages/DebugPage.tsx`, built from `src/sections/debug/` in every build; while the API's agent kill switch is off, it shows one line instead of the list.
+The agent chat ("Use with my data", one page at `/agent` for visitors and admins since 2026-11-06; `/debug/agent` only redirects there) lives in `src/pages/AgentChatPage.tsx`, `src/sections/agent-chat/`, `src/hooks/useAgentSession.ts`, `src/lib/agent.ts` and `src/lib/sse.ts`; it is built only with `VITE_ENABLE_AGENT_CHAT=true`. `scripts/agent-bff-mock.mjs` is a local mock of its backend for driving the page in a browser (see `agents/README.md`). The triage of the chat's quick-feedback cases is the "agent cases" section of `src/pages/DebugPage.tsx`, built from `src/sections/debug/` in every build; while the API's agent kill switch is off, it shows one line instead of the list.
 
 ---
 

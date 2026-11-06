@@ -7,7 +7,7 @@ import { useAnalytics } from 'src/hooks';
 import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
-import { agentChatPath, publicAgentChatPath, specPath } from 'src/routes/paths';
+import { agentChatPath, specPath } from 'src/routes/paths';
 import { USE_MY_DATA_LABEL } from 'src/sections/spec-detail/LibraryPills';
 import { colors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
@@ -89,20 +89,14 @@ export function PlotOfTheDayTerminal({
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
   const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}${ext}`;
-  // The public chat is an ordinary route; the admin chat needs a full page load so
-  // Cloudflare Access can intercept the /debug path. The chat records `agent_open`.
-  const agentLink =
-    agentLane === 'public'
-      ? {
-          component: RouterLink,
-          to: publicAgentChatPath(potd.spec_id, potd.library_id, potd.language, AGENT_SOURCE),
-        }
-      : agentLane === 'admin'
-        ? {
-            component: 'a' as const,
-            href: agentChatPath(potd.spec_id, potd.library_id, potd.language, AGENT_SOURCE),
-          }
-        : null;
+  // One chat page for visitors and admins, an ordinary route: the lane only picked the API the
+  // eligibility was asked of, and the chat picks its own (`AgentChatPage`). It records `agent_open`.
+  const agentLink = agentLane
+    ? {
+        component: RouterLink,
+        to: agentChatPath(potd.spec_id, potd.library_id, potd.language, AGENT_SOURCE),
+      }
+    : null;
 
   return (
     <Box

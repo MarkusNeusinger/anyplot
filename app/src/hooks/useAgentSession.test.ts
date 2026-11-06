@@ -370,21 +370,17 @@ describe('useAgentSession: opening and closing', () => {
     expect(second.result.current.state.failure).toEqual({ code: 'not_eligible', ref: null });
   });
 
-  it('reloads once for Cloudflare Access when the open gets no answer', async () => {
+  it('says so when the open gets no answer, and never reloads for Cloudflare Access', async () => {
+    // The chat at `/agent` is not behind Access: a reload signs nobody in there.
     vi.stubGlobal(
       'fetch',
       vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
     );
     reloadOnceForAccess.mockReturnValue(true);
-    const reloading = renderHook(() => useAgentSession(options));
-    await waitFor(() => expect(reloadOnceForAccess).toHaveBeenCalledTimes(1));
-    expect(reloading.result.current.state.phase).toBe('opening');
-
-    // The reload already happened in this tab: say so instead of looping.
-    reloadOnceForAccess.mockReturnValue(false);
-    const after = renderHook(() => useAgentSession(options));
-    await waitFor(() => expect(after.result.current.state.phase).toBe('error'));
-    expect(after.result.current.state.failure).toEqual({ code: 'unreachable', ref: null });
+    const { result } = renderHook(() => useAgentSession(options));
+    await waitFor(() => expect(result.current.state.phase).toBe('error'));
+    expect(result.current.state.failure).toEqual({ code: 'unreachable', ref: null });
+    expect(reloadOnceForAccess).not.toHaveBeenCalled();
   });
 });
 

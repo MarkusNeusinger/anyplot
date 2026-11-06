@@ -3,10 +3,10 @@
  * with `version` 0 on the chat itself, below the composer, for a session that
  * made no plot (docs/concepts/agent-network.md, "Feedback capture"): one of the site's four
  * reactions, an optional text of at most 500 characters, and
- * `# include data.csv`, ticked by default for an admin, who sends their own
- * test data, and unticked on the public lane, where a consent line under the
- * form says what sending stores (`lane.ts`). `.send()` has the BFF store the
- * version's case in the private case bucket.
+ * `# include data.csv`, unticked until the user ticks it, with a consent line
+ * under the form that says what sending stores (`lane.ts`), for an admin as
+ * for a visitor (owner, 2026-11-06: the admin's chat is the visitors').
+ * `.send()` has the BFF store the version's case in the private case bucket.
  *
  * - Compact since 2026-11-02 (owner: less text): at first only the label and
  *   the reactions show; a click on one unfolds the message box, the data box,
@@ -39,7 +39,7 @@ import Tooltip from '@mui/material/Tooltip';
 import type { FeedbackInput, FeedbackRecord } from 'src/hooks/useAgentSession';
 import { AgentApiError, type FeedbackReaction, MAX_FEEDBACK_CHARS } from 'src/lib/agent';
 import { paths } from 'src/routes/paths';
-import { FEEDBACK_CONSENT, useAgentLane } from 'src/sections/agent-chat/lane';
+import { FEEDBACK_CONSENT } from 'src/sections/agent-chat/lane';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { REACTION_TEXT, REACTIONS } from 'src/sections/agent-chat/reactions';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -106,10 +106,8 @@ export function ResultFeedback({
   const [editing, setEditing] = useState(!sent);
   const [reaction, setReaction] = useState<FeedbackReaction | null>(sent?.reaction ?? null);
   const [message, setMessage] = useState(sent?.message ?? '');
-  // Ticked by default for an admin, who sends their own test data; unticked on the public lane,
-  // where adding the file is the user's explicit choice (`FEEDBACK_CONSENT` says what is stored).
-  const lane = useAgentLane();
-  const [includeData, setIncludeData] = useState(sent?.includeData ?? lane === 'admin');
+  // Unticked: adding the file is the user's explicit choice (`FEEDBACK_CONSENT` says what is stored).
+  const [includeData, setIncludeData] = useState(sent?.includeData ?? false);
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<{ code: string; ref: string | null } | null>(null);
   // What the status region announces; set when a case is stored, cleared by `.edit()`.
@@ -412,20 +410,18 @@ export function ResultFeedback({
               </Box>
             </Box>
           </Box>
-          {lane === 'public' && (
-            <Box sx={{ ...labelSx, fontSize: smallText, lineHeight: 1.5 }}>
-              # {FEEDBACK_CONSENT} {/* A new tab: leaving the page would end the session. */}
-              <Box
-                component="a"
-                href={`${paths.legal}#assistant`}
-                target="_blank"
-                rel="noopener"
-                sx={{ color: 'inherit' }}
-              >
-                legal
-              </Box>
+          <Box sx={{ ...labelSx, fontSize: smallText, lineHeight: 1.5 }}>
+            # {FEEDBACK_CONSENT} {/* A new tab: leaving the page would end the session. */}
+            <Box
+              component="a"
+              href={`${paths.legal}#assistant`}
+              target="_blank"
+              rel="noopener"
+              sx={{ color: 'inherit' }}
+            >
+              legal
             </Box>
-          )}
+          </Box>
         </>
       )}
       {failureLine}

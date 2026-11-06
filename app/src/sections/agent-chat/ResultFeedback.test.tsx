@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { FeedbackInput, FeedbackRecord } from 'src/hooks/useAgentSession';
 import { AgentApiError } from 'src/lib/agent';
-import { AgentLaneContext, FEEDBACK_CONSENT } from 'src/sections/agent-chat/lane';
+import { FEEDBACK_CONSENT } from 'src/sections/agent-chat/lane';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
@@ -48,7 +48,7 @@ describe('ResultFeedback', () => {
     // The picked reaction keeps the focus; the form unfolds after it.
     expect(screen.getByRole('button', { name: 'Bug' })).toHaveFocus();
     expect(screen.getByRole('textbox', { name: 'Feedback message' })).toBeInTheDocument();
-    expect(dataBox(3)).toBeChecked();
+    expect(dataBox(3)).not.toBeChecked();
     expect(sendButton()).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Bug' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(screen.getByRole('button', { name: 'Thumbs down' }));
@@ -59,7 +59,7 @@ describe('ResultFeedback', () => {
     expect(onSend).toHaveBeenCalledWith(3, {
       reaction: 'thumbs_down',
       message: 'too dark',
-      includeData: true,
+      includeData: false,
     });
   });
 
@@ -91,20 +91,20 @@ describe('ResultFeedback', () => {
     expect(screen.getByText('500/500')).toBeInTheDocument();
   });
 
-  it('sends the data by default and without it once the box is unticked', async () => {
+  it('sends the data only once the box is ticked', async () => {
     const user = userEvent.setup();
     const onSend = vi.fn<Send>(async () => undefined);
     render(<ResultFeedback version={2} sent={null} onSend={onSend} />);
     await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
     const box = dataBox(2);
-    expect(box).toBeChecked();
+    expect(box).not.toBeChecked();
 
     await user.click(box);
     await user.click(sendButton());
     expect(onSend).toHaveBeenLastCalledWith(2, {
       reaction: 'thumbs_up',
       message: '',
-      includeData: false,
+      includeData: true,
     });
   });
 
@@ -166,6 +166,7 @@ describe('ResultFeedback', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
 
     await user.click(screen.getByRole('button', { name: 'Thumbs down' }));
+    await user.click(dataBox(3));
     sendButton().focus();
     await user.keyboard('{Enter}');
     await waitFor(() =>
@@ -284,18 +285,15 @@ describe('ResultFeedback', () => {
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(2));
   });
 
-  describe('on the public lane', () => {
-    const renderPublic = (onSend: Send) =>
-      render(
-        <AgentLaneContext.Provider value="public">
-          <ResultFeedback version={2} sent={null} onSend={onSend} />
-        </AgentLaneContext.Provider>
-      );
+  // The same for an admin and a visitor since 2026-11-06: nothing in the form knows the lane.
+  describe('the consent', () => {
+    const renderForm = (onSend: Send) =>
+      render(<ResultFeedback version={2} sent={null} onSend={onSend} />);
 
     it('starts unticked and says what sending stores, before anything is sent', async () => {
       const user = userEvent.setup();
       const onSend = vi.fn<Send>(async () => undefined);
-      renderPublic(onSend);
+      renderForm(onSend);
 
       // The consent line unfolds with the form, so it is in view before `.send()` is.
       expect(screen.queryByText(new RegExp(FEEDBACK_CONSENT.slice(0, 40)))).toBeNull();
@@ -313,20 +311,12 @@ describe('ResultFeedback', () => {
     it('sends the data file only when the user ticks the box', async () => {
       const user = userEvent.setup();
       const onSend = vi.fn<Send>(async () => undefined);
-      renderPublic(onSend);
+      renderForm(onSend);
 
       await user.click(screen.getByRole('button', { name: 'Bug' }));
       await user.click(dataBox(2));
       await user.click(sendButton());
       expect(onSend).toHaveBeenCalledWith(2, expect.objectContaining({ includeData: true }));
-    });
-
-    it('keeps the admin default and shows no consent line without the public lane', async () => {
-      const user = userEvent.setup();
-      render(<ResultFeedback version={2} sent={null} onSend={vi.fn<Send>()} />);
-      await user.click(screen.getByRole('button', { name: 'Idea' }));
-      expect(dataBox(2)).toBeChecked();
-      expect(screen.queryByRole('link', { name: 'legal' })).not.toBeInTheDocument();
     });
   });
 });

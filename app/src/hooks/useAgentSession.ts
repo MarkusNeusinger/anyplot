@@ -1,5 +1,5 @@
 /**
- * State machine of one "Use with my data" chat session (`/debug/agent`).
+ * State machine of one "Use with my data" chat session (`/agent`), on either lane.
  *
  * Owns everything the chat page shows and every call it makes to the BFF
  * (`src/lib/agent.ts`): opening the session, the pasted dataset and its
@@ -217,7 +217,6 @@ import {
   type Eligibility,
   type FeedbackReaction,
   isTranscribed,
-  laneOf,
   type LanguageSource,
   type LongSuggestion,
   MAX_DATASET_BYTES,
@@ -248,7 +247,6 @@ import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
 import { languageNotice, nextUtcMidnight, type NoticeInfo } from 'src/sections/agent-chat/messages';
 import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
-import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
 export const STOP_GRACE_MS = 30_000;
@@ -1649,14 +1647,10 @@ export function useAgentSession({
           safeDispatch({ type: 'unauthorized' });
         } else if (failure.code === 'not_eligible') {
           safeDispatch({ type: 'open_failed', phase: 'ineligible', failure });
-        } else if (
-          failure.code === 'unreachable' &&
-          laneOf(token) === 'admin' &&
-          reloadOnceForAccess()
-        ) {
-          // An expired Access session: the reload lets Access sign the admin in. The public
-          // lane has no Access in front of it, so there a reload would change nothing.
         } else {
+          // No reload for an expired Access session: the chat at `/agent` is not behind Access,
+          // whose sign-in only a page under `/debug` gets; the page checked the admin before
+          // it opened this session (`useAgentAdmin`), and the error offers a reload.
           safeDispatch({ type: 'open_failed', phase: 'error', failure });
         }
       });
