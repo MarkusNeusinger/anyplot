@@ -2535,8 +2535,8 @@ async def post_message(
     # The summary of a paste not summarized yet: the root's before-agent callback makes its `certain` conversions
     # (`paste_conversions.py`). A summary action on data already summarized makes none, nor does any later turn.
     ledger.summary_turn = first_turn and summary_pending
-    # The note came with the data, so the scope judge's `needs_data` and `out_of_scope` cannot apply to it, only
-    # `attack` (`ScopeGuardPlugin._judge`).
+    # The note came with the data, so while that table is stored (`paste_table` below) the scope judge's `needs_data`
+    # and, within the user's day of `AGENT_PASTE_NOTE_RESCUES`, `out_of_scope` go on (`ScopeGuardPlugin._judge`).
     ledger.paste_note = summary_pending and body.text is not None
     # What the user wrote, which a text the plot is checked for must stand in (`pipeline.in_users_words`): the typed
     # message, and the notes pasted with the data, on any turn ("the title from my notes" may come later). A line the

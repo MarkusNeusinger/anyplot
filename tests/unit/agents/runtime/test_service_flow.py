@@ -4465,6 +4465,46 @@ async def test_a_note_turn_without_a_reply_ends_with_no_reply_and_leaves_the_pas
     assert read_session(await _session_state(client, sid)).summary_pending is False
 
 
+async def test_a_second_ask_that_calls_a_tool_runs_it_and_the_reply_follows(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """An empty first reply is asked for again with the tools: an answer that reads the data runs that tool in ADK's
+    flow, and the root's reply after it is the turn's message."""
+    script = default_script()
+    script["root"] = [{"text": ""}, {"call": "get_dataset_profile"}, {"text": "24 rows: hours and scores."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "what is in my data?"})
+
+    events = parse_sse(turn.text)
+    assert [name for name, _ in events] == ["ready", "message", "done"]
+    assert events[1][1] == {"text": "24 rows: hours and scores."}
+    assert len(fake.calls) == 3 and fake.calls[1].get("tools")
+    assert '"tool_result"' in json.dumps(fake.calls[2]["messages"][-1]["content"], default=str)
+
+
+async def test_an_empty_reply_after_a_data_change_is_no_error_and_no_tool_runs_twice(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """After `prepare_data` stored its change, the second ask goes without tools (a second call would apply the change
+    twice), and an empty answer ends the turn without `no_reply`: the change reaches the page with `done`, and sending
+    the message again would apply it a second time."""
+    script = default_script()
+    script["root"] = [RENAME_HOURS, {"text": ""}, {"text": ""}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "call it Hours"})
+
+    events = parse_sse(turn.text)
+    assert [name for name, _ in events] == ["ready", "done"]
+    assert "Hours" in [column["name"] for column in events[-1][1]["dataset"]["profile"]["columns"]]
+    assert len(fake.calls) == 3 and not fake.calls[2].get("tools")
+
+
 async def test_an_empty_closing_reply_after_a_shipped_plot_is_no_error(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:

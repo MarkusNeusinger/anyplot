@@ -17,6 +17,7 @@
   such a note alone and refused a question about the pasted table as general
   advice. It now gets the plot's title and the table's column names (never a
   cell) with the note, and an off-topic or data-fetch verdict on a paste's note
-  goes on to the assistant, which reads the note beside the table. An attack is
-  refused as before, and a request for another library still gets its pointer
-  to the catalogue.
+  goes on to the assistant, which reads the note beside the table; off-topic
+  ones at most five times per user and day (`AGENT_PASTE_NOTE_RESCUES`). An
+  attack is refused as before, and a request for another library still gets
+  its pointer to the catalogue.

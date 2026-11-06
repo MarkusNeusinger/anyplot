@@ -24,6 +24,7 @@ from agents.anyplot.plugins.ledger import (
     CURRENT_LEDGER,
     JUDGE_WEIGHTS,
     RequestLedger,
+    UsageBook,
     budget_allows,
     budget_tokens,
     judge_budget_tokens,
@@ -47,6 +48,7 @@ from agents.anyplot.plugins.scope_guard import (
     judge_context,
     judge_input,
     paste_table_line,
+    scope_refusals,
     session_turns,
     withheld_text,
 )
@@ -55,7 +57,7 @@ from agents.anyplot.policy import DATA_PREAMBLE, fence, refusal
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile, PlotResult
 from agents.anyplot.services import KeptRefusal, RefusalStore, Services, set_services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, SPEC_ID
-from agents.anyplot.settings import get_settings
+from agents.anyplot.settings import AgentSettings, get_settings
 from agents.evals import pricing
 
 from .fakes import ScriptedRoot, gemini_response
@@ -115,6 +117,20 @@ class TestLedger:
 
     def test_adhoc_ledgers_per_invocation(self) -> None:
         assert ledger_for("a") is ledger_for("a") and ledger_for("a") is not ledger_for("b")
+
+    def test_note_rescues_count_per_user_and_per_network(self) -> None:
+        """A tab id costs nothing to mint: the anonymous users of one network share twice the per-user cap."""
+        settings = AgentSettings(paste_note_rescues=1)
+        book = UsageBook()
+        for user in ("pub_a", "pub_b", "pub_c"):
+            book.bind_network(user, "net_1")
+
+        assert book.note_rescue_ok("pub_a", settings)
+        book.add_note_rescue("pub_a")
+        assert not book.note_rescue_ok("pub_a", settings)  # the user's one
+        book.add_note_rescue("pub_b")
+        assert not book.note_rescue_ok("pub_c", settings)  # the network's two
+        assert book.note_rescue_ok("adm_1", settings)  # bound to no network: the user's own count only
 
 
 class TestScopeGuard:
@@ -238,6 +254,61 @@ class TestScopeGuard:
 
         assert replaced.parts[0].text == withheld_text("other_library")
         assert ledger.refusal == ("other_library", policy.refusal("other_library", "en"))
+
+    @pytest.mark.parametrize("verdict", ["needs_data", "out_of_scope"])
+    async def test_no_rescue_without_a_stored_table(
+        self, ledger: RequestLedger, services: Services, judge, verdict: str
+    ) -> None:
+        """A paste the store no longer holds left nothing for the note to be about: the verdict stands."""
+        ledger.paste_note = True  # the route found no stored table, so `paste_table` stays None
+        judge.script = [JudgeVerdict(verdict=verdict, lang="en")]
+
+        replaced = await ScopeGuardPlugin().on_user_message_callback(
+            invocation_context=FakeContext(), user_message=text_message("unemployment rate per country")
+        )
+
+        assert replaced is not None and replaced.parts[0].text == withheld_text(REFUSAL_CODES[verdict])
+        assert "<pasted_table>" not in judge.calls[0][0]
+
+    async def test_rescued_off_topic_notes_are_capped_per_day_and_never_counted(
+        self,
+        ledger: RequestLedger,
+        services: Services,
+        judge,
+        caplog: pytest.LogCaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A rescued `out_of_scope` note counts toward no refusal, so the day caps how many go on; past the cap the
+        verdict stands and counts as any refusal. `needs_data` notes stay uncapped, as before."""
+        monkeypatch.setenv("AGENT_PASTE_NOTE_RESCUES", "2")
+        get_settings.cache_clear()
+        plugin = ScopeGuardPlugin()
+        stored: list[Any] = []
+
+        async def note(verdict: str, text: str) -> types.Content | None:
+            ledger.refusal = None
+            ledger.paste_note = True
+            ledger.paste_table = paste_table_line("Basic Bar Chart", ["month", "amount"])
+            judge.script = [JudgeVerdict(verdict=verdict, lang="en")]
+            replaced = await plugin.on_user_message_callback(
+                invocation_context=FakeContext(session=FakeSession(events=list(stored))),
+                user_message=text_message(text),
+            )
+            stored.append(turn_event("user", replaced.parts[0].text if replaced is not None else text))
+            return replaced
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            first = await note("out_of_scope", "what do I spend most on?")
+            second = await note("out_of_scope", "is this a lot?")
+            third = await note("out_of_scope", "write an essay about money")
+            data = await note("needs_data", "rent index per city")
+
+        assert first is None and second is None and data is None
+        assert third is not None and third.parts[0].text == withheld_text("out_of_scope")
+        assert ledger.refusal is None  # the last note, `needs_data`, went on
+        assert scope_refusals(stored) == 1  # only the note past the cap counts toward closing the session
+        assert "paste_note_rescues_spent" in [line["verdict"] for line in scope_lines(caplog)]
+        assert services.usage.note_rescue_ok("adm_1", get_settings()) is False
 
     async def test_a_typed_message_gets_no_table_and_no_rescue(
         self, ledger: RequestLedger, services: Services, judge

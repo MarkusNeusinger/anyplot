@@ -32,7 +32,8 @@ already shortened by the root or cut at the cap, never as a refusal. A final rep
 without text sends no `message`; the EmptyReply plugin asks the root once more for one
 and, when it stays empty, fails the turn with `no_reply`, which the route sends as the
 `error` event. A reply the sanitiser empties fails the turn the same way here, unless
-the turn sent a plot or asked for a library switch.
+the turn sent a plot, asked for a library switch or stored a change
+(`empty_reply.carries_answer`).
 """
 
 import json
@@ -43,7 +44,7 @@ from google.adk.events.event import Event
 
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
-from agents.anyplot.plugins.empty_reply import NO_REPLY
+from agents.anyplot.plugins.empty_reply import NO_REPLY, carries_answer
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.schemas import RoundOutcome
 from agents.anyplot.telemetry import ends_with_question
@@ -178,9 +179,10 @@ class Translator:
             # The usage telemetry's `asked_question`: a bool computed here, the reply itself is never kept.
             self.ledger.reply_question = ends_with_question(clean)
             return [sse("message", {"text": clean})]
-        if not self.plot_sent and self.ledger.switch_request is None:
+        if not self.plot_sent and not carries_answer(self.ledger):
             # A reply the sanitiser emptied (only a link, an HTML block, another spec's token) leaves the user as little
             # as an empty one: the route ends the turn with `no_reply`, as EmptyReply does, and a paste stays pending.
+            # A plot, a switch or a stored change is the turn's answer, which sending it again would repeat.
             self.ledger.fail(NO_REPLY)
         return []
 

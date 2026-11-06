@@ -2,6 +2,7 @@
 
 import json
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -111,6 +112,52 @@ class TestEmptyReply:
         assert ledger.empty_reasked and ledger.error is None and ledger.llm_calls == 1 and ledger.tokens == 120
         assert [line["verdict"] for line in lines(caplog)] == ["reasked"]
 
+    async def test_after_a_tool_the_second_ask_has_no_tools(
+        self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A second call of a tool that stores something would apply its change twice; none has a per-turn cap."""
+        model = ScriptedRoot([gemini_response({"text": "Renamed: Hours."})])
+        monkeypatch.setattr(reply_language, "root_model", lambda: model)
+        ledger.root_request = root_request()
+        ledger.tools = ["prepare_data"]
+
+        await check(EMPTY[2].model_copy(deep=True))
+
+        (asked,) = model.requests
+        assert asked.config.tools is None and asked.tools_dict == {}
+        assert ledger.root_request.config.tools  # the kept request itself keeps them
+
+    @pytest.mark.parametrize(
+        ("tool", "result", "agent", "stored"),
+        [
+            ("prepare_data", {"status": "ok", "rows": 3}, "anyplot", True),
+            ("generate_data", {"status": "ok"}, "anyplot", True),
+            ("run_data_code", {"status": "ok"}, "anyplot", True),
+            ("set_bindings", {"status": "ok"}, "anyplot", True),
+            ("set_language", {"status": "ok", "changed": False}, "anyplot", True),
+            ("keep_plot_request", {"status": "ok", "request_kept": True}, "anyplot", True),
+            ("forget", {"status": "ok", "entries": 0}, "anyplot", True),
+            ("keep_plot_request", {"status": "ok", "request_kept": False}, "anyplot", False),
+            ("prepare_data", {"status": "error", "code": "invalid_operations"}, "anyplot", False),
+            ("get_dataset_profile", {"status": "ok", "rows": 3}, "anyplot", False),
+            ("query_data", {"status": "ok"}, "anyplot", False),
+            ("prepare_data", {"status": "ok"}, "adapter_matplotlib", False),
+        ],
+    )
+    async def test_a_tool_that_stored_a_change_is_noted(
+        self, ledger: RequestLedger, tool: str, result: dict[str, Any], agent: str, stored: bool
+    ) -> None:
+        context = SimpleNamespace(agent_name=agent, invocation_id="inv-1")
+
+        returned = await EmptyReplyPlugin().after_tool_callback(
+            tool=SimpleNamespace(name=tool),  # type: ignore[arg-type]
+            tool_args={},
+            tool_context=context,  # type: ignore[arg-type]
+            result=result,
+        )
+
+        assert returned is None and ledger.state_changed is stored
+
     async def test_an_answer_that_calls_a_tool_goes_on_in_the_flow(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -193,7 +240,7 @@ class TestEmptyReply:
             await check(EMPTY[0].model_copy(deep=True))
         assert ledger.error == NO_REPLY and lines(caplog)[-1]["reason"] == "budget" and model.requests == []
 
-    @pytest.mark.parametrize("carried", ["shipped", "switch"])
+    @pytest.mark.parametrize("carried", ["shipped", "switch", "stored"])
     async def test_a_turn_that_carries_its_answer_keeps_an_empty_closing_reply(
         self,
         ledger: RequestLedger,
@@ -202,14 +249,17 @@ class TestEmptyReply:
         monkeypatch: pytest.MonkeyPatch,
         carried: str,
     ) -> None:
-        """A shipped plot is on the page, a switch the page carries out: no error after either."""
+        """A shipped plot is on the page, a switch the page carries out, a stored change reaches it with `done`: no
+        error after any, so the user is never told to send a message whose change already happened."""
         model = ScriptedRoot([gemini_response({"text": ""})])
         monkeypatch.setattr(reply_language, "root_model", lambda: model)
         ledger.root_request = root_request()
         if carried == "shipped":
             ledger.shipped_in_turn = True
-        else:
+        elif carried == "switch":
             ledger.switch_request = {"library": "plotly", "plot": True}
+        else:
+            ledger.state_changed = True
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             await check(EMPTY[2].model_copy(deep=True))

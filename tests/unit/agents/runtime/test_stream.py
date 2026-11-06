@@ -406,9 +406,12 @@ class TestReplies:
         after_plot = Translator(RequestLedger(request_id="r"), "run", spec_id="scatter-basic")
         after_plot.translate(Event(author="plot_pipeline", output={"status": "ok", "attempts": 1, "artifacts": []}))
 
-        for translator in (empty, after_plot):
+        after_change = Translator(RequestLedger(request_id="r", state_changed=True), "run", spec_id="scatter-basic")
+
+        for translator in (empty, after_plot, after_change):
             assert translator.translate(text_event("anyplot", "https://example.org [[spec:bar-basic]]")) == []
-        assert empty.ledger.error == "no_reply" and after_plot.ledger.error is None
+        assert empty.ledger.error == "no_reply"
+        assert after_plot.ledger.error is None and after_change.ledger.error is None  # the plot, the stored change
 
     def test_a_short_reply_without_the_plot_stays(self, translator: Translator) -> None:
         reply = "Hello! Happy to help."

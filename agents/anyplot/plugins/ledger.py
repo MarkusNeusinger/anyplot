@@ -15,7 +15,8 @@ runs (`AGENT_DAILY_DATA_RUNS`, counted before each run) it counts the
 `attack` verdicts of the scope and dataset judges per user, once per distinct message
 or dataset: from `AGENT_ATTACK_STRIKES` of them on, `daily_ok` is false for that user
 for the rest of the day, so a turn gets the budget refusal and a dataset
-`429 rate_limited`. It also counts each user's chat turns, per UTC day
+`429 rate_limited`. It counts the paste notes whose `out_of_scope` verdict went on as
+`in_scope` per user and network (`AGENT_PASTE_NOTE_RESCUES`). It also counts each user's chat turns, per UTC day
 (`AGENT_USER_MESSAGES_PER_DAY`) and in a sliding minute (`AGENT_USER_MESSAGES_PER_MINUTE`),
 which the `/messages` route checks before the scope judge (`message_limit`). Only a new
 UTC day, a redeploy or a scale-to-zero resets them.
@@ -167,8 +168,9 @@ class RequestLedger:
     False without a route (`adk web`)."""
     paste_note: bool = False
     """The turn's typed text is the note sent with a paste not summarized yet: words about the data that came with it,
-    so the scope guard refuses it only as an `attack` (or with the fixed `other_library` pointer), never as a request
-    for data to fetch or as off-topic (`ScopeGuardPlugin._judge`)."""
+    so while that table is stored (`paste_table`) the scope guard refuses it only as an `attack` (or with the fixed
+    `other_library` pointer), never as a request for data to fetch, nor as off-topic within the user's day of
+    `AGENT_PASTE_NOTE_RESCUES` (`ScopeGuardPlugin._judge`)."""
     paste_table: str | None = None
     """The table the note came with as the scope judge reads it, set by the `/messages` route with `paste_note`: the
     spec's title and the table's column names on one bounded line, never a cell (`scope_guard.paste_table_line`)."""
@@ -194,6 +196,10 @@ class RequestLedger:
     empty_reasked: bool = False
     """The empty-reply plugin asked the root again for a final reply without text: at most once per turn
     (`plugins/empty_reply.py`)."""
+    state_changed: bool = False
+    """A root tool of this invocation stored a change in the session (data, bindings, a language, a kept plot request,
+    the plot memory), as its own `ok` result says (`empty_reply.stored_change`): the turn's `done` carries it, so an
+    empty reply after it is no lost turn (`empty_reply.carries_answer`)."""
     reply_shortened: bool = False
     """The output guard asked the root for a shorter reply in this invocation: at most once per turn
     (`ScopeGuardPlugin._guard_reply`)."""
@@ -348,6 +354,10 @@ class _Day:
     """The per-IP day counts: what every anonymous user bound to a network booked while bound to it."""
     network_windows: dict[tuple["WindowKind", str], int] = field(default_factory=dict)
     """The per-IP day counts of the windowed kinds (pastes, conversions, chat turns, beacons), by kind and network."""
+    user_note_rescues: dict[str, int] = field(default_factory=dict)
+    network_note_rescues: dict[str, int] = field(default_factory=dict)
+    """The paste notes whose `out_of_scope` verdict went on as `in_scope` today, per user and per network
+    (`AGENT_PASTE_NOTE_RESCUES`, `UsageBook.note_rescue_ok`)."""
 
 
 MESSAGE_WINDOW_S = 60.0
@@ -513,6 +523,27 @@ class UsageBook:
             and self.global_tokens() + reserve < settings.global_daily_token_budget
             and self.user_strikes(user_id) < settings.attack_strikes
         )
+
+    def note_rescue_ok(self, user_id: str, settings: AgentSettings) -> bool:
+        """Whether a note typed with a paste may still go on past an `out_of_scope` verdict today: fewer than
+        `AGENT_PASTE_NOTE_RESCUES` for the user and, for an anonymous user, fewer than `IP_WINDOW_FACTOR` times as many
+        for their network, since a tab id costs nothing to mint. Every tier: the cap bounds a channel to the root that
+        no refusal counts, a safety rule like the strikes rather than a usage cap."""
+        day = self._current()
+        if day.user_note_rescues.get(user_id, 0) >= settings.paste_note_rescues:
+            return False
+        network = self._network(user_id)
+        return (
+            network is None or day.network_note_rescues.get(network, 0) < IP_WINDOW_FACTOR * settings.paste_note_rescues
+        )
+
+    def add_note_rescue(self, user_id: str) -> None:
+        """Count one rescued paste note against the user's day and, for an anonymous user, their network's."""
+        day = self._current()
+        day.user_note_rescues[user_id] = day.user_note_rescues.get(user_id, 0) + 1
+        network = self._network(user_id)
+        if network is not None:
+            day.network_note_rescues[network] = day.network_note_rescues.get(network, 0) + 1
 
     def locked_out(self, user_id: str, settings: AgentSettings) -> bool:
         """Whether the user's `attack` strikes reached `AGENT_ATTACK_STRIKES` today: the `locked_out` refusal, which

@@ -27,13 +27,17 @@
 * the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is judged
   as notes that came with a table: a `<pasted_table>` block before the message names the
   spec's title and the table's column names on one bounded line, never a cell
-  (`paste_table_line`, which the route writes to `RequestLedger.paste_table`). Such a note
-  is never `needs_data` or `out_of_scope`: it came with the data it is about, and the
-  judge read a statistic's name in it ("unemployment rate per country") as a request to
-  fetch figures and a question about the table's entries as general advice (persona
-  tests of 2026-11-06). Either verdict goes on as `in_scope`, with a
-  `paste_note_in_scope` attribution line after the judge's; `attack` refuses the note as
-  any message, and `other_library` gets its fixed pointer to the catalogue;
+  (`paste_table_line`, which the route writes to `RequestLedger.paste_table` when the
+  table is still stored). Such a note is never `needs_data` or `out_of_scope` while that
+  table is there: it came with the data it is about, and the judge read a statistic's
+  name in it ("unemployment rate per country") as a request to fetch figures and a
+  question about the table's entries as general advice (persona tests of 2026-11-06).
+  Either verdict goes on as `in_scope`, with a `paste_note_in_scope` attribution line
+  after the judge's. A rescued `out_of_scope` counts toward no refusal, so at most
+  `AGENT_PASTE_NOTE_RESCUES` go on per user and day (`UsageBook.note_rescue_ok`, twice
+  as many per network); past that the verdict stands (`paste_note_rescues_spent`) and
+  the note is refused and counted as any message. `attack` refuses the note as any
+  message, and `other_library` gets its fixed pointer to the catalogue;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the `locked_out` refusal for the rest of the day (a
@@ -144,9 +148,10 @@ the judge also answers `en` for a message without a clear language, such as `sin
 HALT_AUTHOR = "model"
 """ADK's author of the event a `before_run_callback` halt emits: the fixed refusal or the outage text."""
 PASTE_NOTE_PASSES = frozenset({"needs_data", "out_of_scope"})
-"""The verdicts a note sent with a paste goes on with as `in_scope` (owner decision of 2026-11-06): it came with the
-table it is about, so nothing is to be fetched and a question about the table is no general advice. `attack` refuses
-it as any message, and `other_library` gets its fixed pointer to the catalogue."""
+"""The verdicts a note sent with a stored paste goes on with as `in_scope` (owner decision of 2026-11-06), `out_of_scope`
+within the day's `AGENT_PASTE_NOTE_RESCUES`: it came with the table it is about, so nothing is to be fetched and a
+question about the table is no general advice. `attack` refuses it as any message, and `other_library` gets its fixed
+pointer to the catalogue."""
 MAX_TABLE_COLUMNS = 20
 MAX_TABLE_NAME_CHARS = 40
 MAX_TABLE_TITLE_CHARS = 120
@@ -327,8 +332,11 @@ def judge_input(message_text: str, context: str, earlier: Sequence[str] = (), ta
 
 
 def _replaced(event: Event, text: str) -> Event:
-    """The root's final reply event with `text` in place of its reply, as the output guard stores and sends it."""
-    return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=text)]))
+    """The root's final reply event with `text` in place of its reply, as the output guard stores and sends it.
+
+    A copy of the event, so its id, invocation, actions and usage stay with it whatever ADK's runner merges back.
+    """
+    return event.model_copy(update={"content": types.Content(role="model", parts=[types.Part(text=text)])})
 
 
 class ScopeGuardPlugin(BasePlugin):
@@ -395,11 +403,17 @@ class ScopeGuardPlugin(BasePlugin):
             judge_output=verdict.output_tokens,
             **({"strikes": strikes} if strikes is not None else {}),
         )
-        if verdict.verdict in PASTE_NOTE_PASSES and ledger.paste_note:
+        if verdict.verdict in PASTE_NOTE_PASSES and ledger.paste_note and ledger.paste_table:
             # The note came with the data it is about: the root reads it beside the table. A statistic's name in it
             # reads as a request for figures, a question about the table as general advice; an attack stays refused.
-            attribution("scope_guard", ledger, verdict="paste_note_in_scope")
-            verdict = verdict.model_copy(update={"verdict": "in_scope"})
+            # A rescued `out_of_scope` counts toward no refusal, so the user's day caps how many go on.
+            if verdict.verdict == "out_of_scope" and not services.usage.note_rescue_ok(user, settings):
+                attribution("scope_guard", ledger, verdict="paste_note_rescues_spent")
+            else:
+                if verdict.verdict == "out_of_scope":
+                    services.usage.add_note_rescue(user)
+                attribution("scope_guard", ledger, verdict="paste_note_in_scope")
+                verdict = verdict.model_copy(update={"verdict": "in_scope"})
         if verdict.verdict != "in_scope":
             if settings.keep_refusals:
                 services.refusals.add(
