@@ -157,13 +157,21 @@ describe('runStatus', () => {
         null
       ).text
     ).toBe('error · run_limit');
+    // A refusal keeps its code in the status, with the thread's plain label as the detail under it.
     expect(
       runStatus(
         ready({ items: [{ id: 1, kind: 'refusal', code: 'out_of_scope', text: 'no' }] }),
         'done',
         null
-      ).text
-    ).toBe('refused · out_of_scope');
+      )
+    ).toEqual({ text: 'refused · out_of_scope', tone: 'error', detail: 'outside this chat' });
+    expect(
+      runStatus(
+        ready({ items: [{ id: 1, kind: 'refusal', code: 'something_new', text: 'no' }] }),
+        'done',
+        null
+      ).detail
+    ).toBe('not answered');
     expect(
       runStatus(ready({ items: [{ id: 1, kind: 'notice', text: 'stopped' }] }), 'done', null).text
     ).toBe('stopped');

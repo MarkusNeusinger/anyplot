@@ -5,7 +5,7 @@
  */
 
 import type { AgentSessionState, Failure } from 'src/hooks/useAgentSession';
-import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, PLOT_FAILED_TEXT, refusalLabel } from 'src/sections/agent-chat/messages';
 
 /**
  * The public cap (`AGENT_USER_MAX_RUNS`), for a server whose `/status` does not name the caller's own: an
@@ -193,7 +193,10 @@ export function runStatus(
     if (item.kind === 'error') {
       return { text: `error · ${item.code}`, tone: 'error', detail: ERROR_TEXT[item.code] };
     }
-    if (item.kind === 'refusal') return { text: `refused · ${item.code}`, tone: 'error' };
+    // The panel's own pattern, the code in the status and plain words under it: the thread's label.
+    if (item.kind === 'refusal') {
+      return { text: `refused · ${item.code}`, tone: 'error', detail: refusalLabel(item.code) };
+    }
     if (item.kind === 'notice' && item.text === 'stopped')
       return { text: 'stopped', tone: 'muted' };
   }
