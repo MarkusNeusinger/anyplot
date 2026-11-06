@@ -6,4 +6,4 @@
   "# check the data again, then .create_plot()") right above the composer's step line, which said the same; the
   step line is now the one line (the data card's own header stays). A refusal is labelled in plain words
   ("can't fetch data", "outside this chat", "chat paused", ...) instead of "refusal · needs_data", with the code
-  behind the label's ⓘ.
+  behind the label's ⓘ. (#12586)
