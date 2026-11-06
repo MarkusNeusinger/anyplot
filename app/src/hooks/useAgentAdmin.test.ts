@@ -59,6 +59,9 @@ describe('useAgentAdmin', () => {
     rerender();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.current.failure).toBeNull();
+    // The answer goes to the first admin chat once; a later one asks afresh.
+    expect(result.current.takeStatus()).toEqual({ libraries: ['matplotlib'], enabled: true });
+    expect(result.current.takeStatus()).toBeNull();
   });
 
   it.each([

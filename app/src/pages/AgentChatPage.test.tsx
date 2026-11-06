@@ -586,6 +586,8 @@ describe('AgentChatPage gating', () => {
     const called = agentCalls().map(([input]) => pathOf(input));
     expect(called[0]).toBe('/debug/agent/status');
     expect(called.indexOf('/debug/agent/sessions')).toBeGreaterThan(0);
+    // Once: the chat takes the check's answer for its libraries, its run cap and the pause.
+    expect(called.filter(path => path === '/debug/agent/status')).toHaveLength(1);
     // The one admin-only element, at the header row's end.
     expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin ▾$/);
     // The admin's own use is no visitor's: no pageview and no `agent_open`; the source still goes.
@@ -2039,19 +2041,16 @@ describe('AgentChatPage .plot_all()', () => {
 
   it('offers the fan-out once the lists are in, and .plot_all() confirms the table, then plots it everywhere', async () => {
     const base = baseFetch();
-    // The chat's status answer waits: until it is in, the libraries and the limit are fallbacks.
-    // The first status call is the page's admin check, which answers at once.
-    let releaseStatus!: () => void;
-    const status = new Promise<void>(resolve => (releaseStatus = resolve));
-    let statusCalls = 0;
-    fetchMock.mockImplementation((input: string, init?: RequestInit) => {
-      if (!input.endsWith('/debug/agent/status')) return base(input, init);
-      statusCalls += 1;
-      return statusCalls === 1
-        ? base(input, init)
-        : status.then(() =>
-            json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 4 })
-          );
+    // The catalogue's answer waits: until both lists are in, the libraries are fallbacks. The
+    // status comes once, with the admin check, whose answer the chat takes over.
+    let releaseSpec!: () => void;
+    const spec = new Promise<void>(resolve => (releaseSpec = resolve));
+    fetchMock.mockImplementation(async (input: string, init?: RequestInit) => {
+      if (input.endsWith('/debug/agent/status')) {
+        return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 4 });
+      }
+      if (input.endsWith('/specs/scatter-basic')) await spec;
+      return base(input, init);
     });
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
@@ -2059,7 +2058,7 @@ describe('AgentChatPage .plot_all()', () => {
     let admin = await openAdminMenu();
     expect(within(admin).queryByRole('button', ALL_TOGGLE)).not.toBeInTheDocument();
     await closeAdminMenu();
-    releaseStatus();
+    releaseSpec();
 
     admin = await openAdminMenu();
     const all = await within(admin).findByRole('button', ALL_TOGGLE);

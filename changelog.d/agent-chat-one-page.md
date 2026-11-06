@@ -6,7 +6,8 @@
   its bot check. The admin's chat looks and behaves exactly like a visitor's,
   so the owner sees every problem a visitor meets; the server still enforces
   each tier's limits. `/debug/agent` only redirects to `/agent`, keeping the
-  pair in the link, and the admin signs in on `/debug`.
+  pair in the link, so an old bookmark still opens the admin's chat, and the
+  admin signs in on `/debug`.
 - **Every admin extra sits behind one admin menu.** `admin ▾` at the header
   row's end, where the `⋯` menu stood, holds the fan-out toggle
   `all 15 libraries` (in place of the library menu's `all` and the URL's

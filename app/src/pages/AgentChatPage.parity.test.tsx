@@ -7,8 +7,8 @@
  * explicit allowlist:
  *
  * - the admin menu, the one admin-only element: everything marked `data-testid="admin-menu…"`,
- *   its button (`admin-menu`), its popover (`admin-menu-panel`) and, on the closed door's page,
- *   its row (`admin-menu-row`);
+ *   which the test checks is exactly its button (`admin-menu`), its popover (`admin-menu-panel`)
+ *   and, on the closed door's page, its row (`admin-menu-row`), each once (`ADMIN_ONLY_IDS`);
  * - the fan-out, but only while it is on: no state here turns it on, and the test checks so.
  *
  * Any other lane difference fails here. React's ids are numbered by first appearance, since the
@@ -92,10 +92,14 @@ const PLOT = {
 };
 
 /** How the session's open answers, the same on both lanes. */
-type Open = 'ok' | 'hold' | 'error' | 'ineligible';
+type Open = 'ok' | 'hold' | 'error' | 'ineligible' | 'not_enabled';
 let open: Open;
 /** The public lane's door (`GET /agent/lane`). */
 let door: boolean;
+/** The service spent its day budget: `/status` says `paused` until the next day. */
+let paused: boolean;
+/** The message whose turn finds the session gone (`404 session_expired`). */
+const EXPIRING = 'are you still there?';
 
 /**
  * One BFF for both lanes. A session route of the admin lane (`/debug/agent/sessions/S1/<rest>`)
@@ -119,12 +123,19 @@ function stubFetch() {
         });
       }
       if (path === '/debug/agent/status' || path === '/agent/status') {
-        return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 2 });
+        return json(200, {
+          libraries: ['matplotlib', 'seaborn'],
+          enabled: true,
+          user_max_runs: 2,
+          ...(paused ? { paused: true, resets_at: '2999-01-01T00:00:00Z' } : {}),
+        });
       }
       if ((path === '/debug/agent/sessions' || path === '/agent/sessions') && method === 'POST') {
         if (open === 'hold') return new Promise<Response>(() => undefined);
         if (open === 'error') return json(500, { detail: 'internal', ref: 'r-500' });
         if (open === 'ineligible') return json(422, { detail: 'not_eligible', ref: 'r-ne' });
+        // The kill switch: the admin menu holds a line of its own about it, the page none.
+        if (open === 'not_enabled') return json(404, { detail: 'not_enabled', ref: 'r-off' });
         return json(200, {
           session_id: 'S1',
           eligibility: { eligible: true, status: 'clean', reasons: [] },
@@ -144,7 +155,8 @@ function stubFetch() {
       }
       if (sub === '/dataset/confirm') return json(200, { confirmed: true, rows: 2, columns: 2 });
       if (sub === '/messages') {
-        const body = JSON.parse(String(init.body)) as { action?: string };
+        const body = JSON.parse(String(init.body)) as { action?: string; text?: string };
+        if (body.text === EXPIRING) return json(404, { detail: 'session_expired', ref: 'r-gone' });
         return body.action === 'summarize_data'
           ? sse([
               ['message', { text: SUMMARY }],
@@ -208,6 +220,8 @@ interface State {
   reach: () => Promise<void>;
   /** The public door; open unless said. */
   door?: boolean;
+  /** The service's day budget is spent. */
+  paused?: boolean;
   /** The admins compared with the visitor; both unless said. */
   compare?: readonly Exclude<Who, 'visitor'>[];
 }
@@ -249,6 +263,33 @@ const STATES: Record<string, State> = {
       await screen.findByText('not eligible');
     },
   },
+  // The kill switch: the same words for both; the admin's diagnostics line is the menu's.
+  'switched off (not_enabled)': {
+    open: 'not_enabled',
+    reach: async () => {
+      await screen.findByText(/^error · not_enabled/);
+    },
+  },
+  // The day budget spent: the pause note above the composer, from the lane's own `/status`.
+  paused: {
+    open: 'ok',
+    paused: true,
+    reach: async () => {
+      await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
+      await screen.findByText(/paused/);
+    },
+  },
+  // A turn that finds the session gone: the error in the thread, with its reload.
+  'session expired': {
+    open: 'ok',
+    reach: async () => {
+      const box = await screen.findByLabelText('Message');
+      await waitFor(() => expect(box).toBeEnabled());
+      fireEvent.change(box, { target: { value: EXPIRING } });
+      fireEvent.keyDown(box, { key: 'Enter' });
+      await screen.findByRole('button', { name: 'reload' });
+    },
+  },
   // A popover of the page, in its portal as the admin menu's is.
   'with the library menu open': {
     open: 'ok',
@@ -272,11 +313,20 @@ const STATES: Record<string, State> = {
 
 /** What may differ for an admin: the admin menu, everything marked `admin-menu…`. */
 const ADMIN_ONLY = '[data-testid^="admin-menu"]';
+/**
+ * The admin menu's elements, by name: the prefix above leaves out exactly these, each once, so
+ * a new element that the prefix would exempt has to be added here on purpose.
+ */
+const ADMIN_ONLY_IDS = ['admin-menu', 'admin-menu-panel', 'admin-menu-row'] as const;
+/** The test ids the last snapshot left out. */
+let leftOut: string[] = [];
 
 /** The page's DOM without the admin-only elements, React's ids numbered by first appearance. */
 function snapshot(): string {
   const body = document.body.cloneNode(true) as HTMLElement;
-  for (const element of body.querySelectorAll(ADMIN_ONLY)) element.remove();
+  const exempt = [...body.querySelectorAll(ADMIN_ONLY)];
+  leftOut = exempt.map(element => element.getAttribute('data-testid') ?? '');
+  for (const element of exempt) element.remove();
   const ids = new Map<string, string>();
   return body.innerHTML.replace(/_r_[0-9a-v]+_/g, id => {
     if (!ids.has(id)) ids.set(id, `_id${ids.size}_`);
@@ -305,10 +355,20 @@ async function pageFor(who: Who, state: string): Promise<string> {
   if (who === 'as visitor') sessionStorage.setItem(VIEW_AS_VISITOR_KEY, '1');
   open = STATES[state].open;
   door = STATES[state].door ?? true;
+  paused = STATES[state].paused ?? false;
   stubFetch();
   renderPage();
   await STATES[state].reach();
   const dom = await settled();
+  // Exactly the admin menu's elements were left out, each once: its button and popover, and
+  // its row on the closed door's page; a visitor's page has none.
+  const expected =
+    who === 'visitor' ? [] : door ? ['admin-menu', 'admin-menu-panel'] : [...ADMIN_ONLY_IDS];
+  expect(
+    leftOut.every(id => (ADMIN_ONLY_IDS as readonly string[]).includes(id)),
+    leftOut.join()
+  ).toBe(true);
+  expect([...leftOut].sort(), `${who} left out`).toEqual([...expected].sort());
   // The lane is the one asked for, and so is the admin menu.
   const calls = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
     ([input]) => new URL(String(input)).pathname

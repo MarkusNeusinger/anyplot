@@ -21,12 +21,16 @@
  * `refused()` is for a refusal later on (a 401 on any admin call of the session): the hint goes
  * and the answer becomes `expired`. The server's admin gate decides every call either way; the
  * answer only picks which API the page calls, and grants nothing.
+ *
+ * The check's answer is the admin lane's status, which the chat needs too (its libraries, the
+ * run cap, the day's pause): `takeStatus()` hands it over once, so the first admin chat of the
+ * page asks no second time, and a later one (after "view as visitor" and back) asks afresh.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CONFIG } from 'src/global-config';
-import { agentApi, AgentApiError } from 'src/lib/agent';
+import { agentApi, AgentApiError, type AgentStatus } from 'src/lib/agent';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
 
 export type AgentAdmin = 'none' | 'checking' | 'admin' | 'expired';
@@ -37,6 +41,8 @@ export interface AgentAdminCheck {
   failure: string | null;
   /** An admin call refused later: the hint goes, and the answer becomes `expired`. */
   refused: () => void;
+  /** The check's status answer, once; null after that, or when the check had none. */
+  takeStatus: () => AgentStatus | null;
 }
 
 export function useAgentAdmin(): AgentAdminCheck {
@@ -49,13 +55,16 @@ export function useAgentAdmin(): AgentAdminCheck {
     admin: claim.claimed ? 'checking' : 'none',
     failure: null,
   }));
+  const checked = useRef<AgentStatus | null>(null);
 
   useEffect(() => {
     if (!claim.claimed) return;
     let active = true;
     agentApi.status(readAdminToken()).then(
-      () => {
-        if (active) setAnswer({ admin: 'admin', failure: null });
+      answered => {
+        if (!active) return;
+        checked.current = answered;
+        setAnswer({ admin: 'admin', failure: null });
       },
       (err: unknown) => {
         if (!active) return;
@@ -86,8 +95,15 @@ export function useAgentAdmin(): AgentAdminCheck {
 
   const refused = useCallback(() => {
     setAdminHint(false);
+    checked.current = null;
     setAnswer({ admin: 'expired', failure: 'unauthorized' });
   }, []);
 
-  return { ...answer, refused };
+  const takeStatus = useCallback(() => {
+    const answered = checked.current;
+    checked.current = null;
+    return answered;
+  }, []);
+
+  return { ...answer, refused, takeStatus };
 }

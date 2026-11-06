@@ -148,6 +148,7 @@ import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
 import {
   agentApi,
   type AgentLane,
+  type AgentStatus,
   browserLocale,
   DEFAULT_AGENT_LIBRARIES,
   MAX_MESSAGE_CHARS,
@@ -411,6 +412,7 @@ export function AgentChatPage() {
       lane={lane}
       admin={adminView}
       onAdminRefused={adminCheck.refused}
+      takeAdminStatus={adminCheck.takeStatus}
       onLibraryChange={onLibraryChange}
     />
   );
@@ -428,6 +430,8 @@ interface AgentChatProps {
   admin: AdminView | null;
   /** The admin lane refused a call (401 or 403): the page falls back to the public lane. */
   onAdminRefused: () => void;
+  /** The admin check's status answer, once (`useAgentAdmin`): the admin lane asks no second time. */
+  takeAdminStatus: () => AgentStatus | null;
   onLibraryChange: (library: string) => void;
 }
 
@@ -439,6 +443,7 @@ function AgentChat({
   lane,
   admin,
   onAdminRefused,
+  takeAdminStatus,
   onLibraryChange,
 }: AgentChatProps) {
   const { trackEvent } = useAnalytics();
@@ -514,8 +519,10 @@ function AgentChat({
       })
       .catch(() => undefined)
       .finally(settle);
-    agentApi
-      .status(token)
+    // The admin lane's first chat takes the answer of the admin check, which asked the same
+    // route a moment ago; every other chat asks.
+    const checked = lane === 'admin' ? takeAdminStatus() : null;
+    (checked ? Promise.resolve(checked) : agentApi.status(token))
       .then(status => {
         if (Array.isArray(status.libraries) && status.libraries.length) {
           enabled = status.libraries;
@@ -535,7 +542,7 @@ function AgentChat({
       .catch(() => undefined)
       .finally(settle);
     return () => controller.abort();
-  }, [specId, token]);
+  }, [specId, token, lane, takeAdminStatus]);
 
   // The pause ends with the service's new day: the note goes at that moment, without a reload.
   useEffect(() => {
