@@ -229,11 +229,22 @@ describe('FanOut', () => {
     // A finished plot frees its place: the third library starts.
     turns.get('S-matplotlib')!.finish();
     await waitFor(() => expect(plotTurns()).toHaveLength(3));
-    await waitFor(() =>
-      expect(within(card('matplotlib')).getByTestId('fanout-status')).toHaveTextContent('v1 · ok')
+    // The card's status follows the session's version, a few hops behind the freed place (the
+    // stream's plot and done, the version, its image). Under a loaded runner (CI with coverage)
+    // those hops took longer than waitFor's default second, so they get three.
+    await waitFor(
+      () =>
+        expect(within(card('matplotlib')).getByTestId('fanout-status')).toHaveTextContent(
+          'v1 · ok'
+        ),
+      { timeout: 3000 }
     );
     expect(
-      await within(card('matplotlib')).findByRole('img', { name: /matplotlib plot, version 1/ })
+      await within(card('matplotlib')).findByRole(
+        'img',
+        { name: /matplotlib plot, version 1/ },
+        { timeout: 3000 }
+      )
     ).toHaveAttribute('src', 'blob:mock');
     expect(within(card('altair')).getByTestId('fanout-status')).toHaveTextContent('adapting…');
   });
