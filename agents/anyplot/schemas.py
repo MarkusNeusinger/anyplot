@@ -802,6 +802,11 @@ class PlotResult(_ServerContract):
     `memory_full` is `true` on a shipped result whose `remember` entries the plot memory had no room for
     (`memory.MAX_ENTRIES`, `memory.MAX_TOTAL_CHARS`): the plot carries the change, the memory does not keep it,
     and the root says so. Root-only too.
+
+    `bindings` are the roles and columns a run that started drew with, and `kept_request` what became of the kept
+    first-plot note (`pipeline.pending_fate`: `used`, or `dropped` because the user rebound a column it was written
+    for; None without one). The root describes the plot by them, never by what an earlier turn said: the user may
+    have rebound a column in the data panel since. Root-only too; the root reads the bindings fenced as user data.
     """
 
     status: PlotStatus
@@ -815,6 +820,8 @@ class PlotResult(_ServerContract):
     shows: PlotShows | None = None
     request_kept: bool | None = None
     memory_full: bool | None = None
+    bindings: list[Binding] | None = Field(default=None, max_length=MAX_COLUMNS)
+    kept_request: Literal["used", "dropped"] | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:

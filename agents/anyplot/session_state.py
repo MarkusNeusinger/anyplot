@@ -93,20 +93,24 @@ PENDING_REQUEST = PREFIX + "pending_request"
 """The `change_request` of a first plot that stopped `not_ready` (`data_unconfirmed` or `incomplete_bindings`) or
 got no queue slot: the user's note for the plot (a title, a label), joined to the next first-plot run's own request
 (`pipeline.run_pipeline`), so a binding change the root made that asked for a confirmation again never loses it (live
-test of 2026-10-15). It stays until a run ships a plot. Any later binding write or new data version (a paste,
-`prepare_data`, `generate_data`, `run_data_code`, `.to_long()`, undo) drops it: it was written for the data and
-bindings before (owner decision of 2026-10-15). A library switch keeps it, since the data and bindings stay (owner
-decision of 2026-11-02). The pipeline reads it defensively: a value that is no text is ignored, and text is cut to
-`MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
+test of 2026-10-15). It stays until a run ships a plot. A note written for other data or other bindings never applies
+(owner decision of 2026-10-15): a new data version (a paste, `prepare_data`, `generate_data`, `run_data_code`,
+`.to_long()`, undo) drops it at once, and the run that would take it drops it when a binding it was kept for no longer
+stands (`pipeline.pending_fate`, `PENDING_BINDINGS`). The bindings are judged at the run, not at each write, so a
+column the user unbinds and binds again on the way keeps the note, and the root's own `set_bindings` or
+`prepare_data` in the turn that kept it never voids it (main's `_settle_kept_note`). A library switch keeps it, since
+the data and bindings stay (owner decision of 2026-11-02). The pipeline reads it defensively: a value that is no text
+is ignored, and text is cut to `MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
 PENDING_EXPECTED_TEXTS = PREFIX + "pending_expected_texts"
 """The `expected_texts` that came with `PENDING_REQUEST` (the title or number format the user asked to see), kept
 and dropped with it, so a bare `.create_plot()` checks the render for the same texts; a run that brings a request or
 texts of its own checks only its own (`pipeline.chosen_texts`). Read through the `PipelineArgs` validator
 (`pipeline.kept_texts`)."""
 PENDING_BINDINGS = PREFIX + "pending_bindings"
-"""The bindings as they were when the note was kept (`pipeline.hold_request`): a binding write that keeps every one
-of them and only fills roles open then (the step `incomplete_bindings` waits for) keeps the note (`apply_bindings`,
-review of 2026-10-15)."""
+"""The bindings the note was written for (`pipeline.hold_request`; the turn that kept it ends with them,
+`_settle_kept_note` in `agents/main.py`): the run takes the note only while the bindings in force keep every one of
+them, roles open then being free to fill (the step `incomplete_bindings` waits for); otherwise the user rebound a
+column the note was written for, and the run drops it (`pipeline.pending_fate`)."""
 PENDING_REMEMBER = PREFIX + "pending_remember"
 """The plot memory decisions that came with `PENDING_REQUEST` (`KeepRequestArgs.remember`), kept and dropped with it;
 the first-plot run that takes the note stores them in the memory once it ships (`pipeline.take_pending_request`)."""
@@ -116,8 +120,9 @@ PENDING_CLEARED: dict[str, Any] = {
     PENDING_BINDINGS: None,
     PENDING_REMEMBER: None,
 }
-"""The state delta that drops a kept first-plot note and its texts: every binding write and new data version
-carries it (a library switch no longer does, 2026-11-02)."""
+"""The state delta that drops a kept first-plot note and its texts: every new data version carries it (a binding
+write no longer does: the run judges the bindings, `pipeline.pending_fate`; a library switch no longer does either,
+2026-11-02)."""
 LAST_RUN = PREFIX + "last_run"
 """How the latest plot run ended (`schemas.LastRun`, content-free), written by every run that yields a result
 (`pipeline.record_last_run`): the feedback bundle's `session.last_run`."""
@@ -372,7 +377,7 @@ def read_session(state: Any) -> SessionView | None:
 
 
 def apply_bindings(
-    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, pending_bindings: object = None
+    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile
 ) -> tuple[BindingCheck, dict[str, Any]]:
     """`bindings.apply`: validate bindings against the spec roles and the profile.
 
@@ -380,18 +385,14 @@ def apply_bindings(
     bindings (incomplete bindings are stored too; the pipeline answers `not_ready`).
     An empty delta means nothing may be written.
 
-    A kept plot note (`PENDING_REQUEST`, its texts) was written for the bindings of the moment
-    it was kept (`pending_bindings`, the state's `PENDING_BINDINGS`), so a binding write drops
-    it, unless it keeps every one of those bindings and only fills roles that were open then
-    (`fills_open_roles`): that is the step a note held on `incomplete_bindings` waits for.
+    A kept plot note (`PENDING_REQUEST`) is left to the run that would take it, which judges the
+    bindings in force then against the ones it was kept for (`pipeline.pending_fate`): a write
+    on the way, such as a column unbound and bound again, decides nothing.
     """
     check = check_bindings(bindings, roles, profile)
     if check.errors:
         return check, {}
-    delta: dict[str, Any] = {BINDINGS: [binding.model_dump() for binding in bindings]}
-    if not fills_open_roles(pending_bindings, bindings):
-        delta.update(PENDING_CLEARED)
-    return check, delta
+    return check, {BINDINGS: [binding.model_dump() for binding in bindings]}
 
 
 def fills_open_roles(held: object, bindings: list[Binding]) -> bool:

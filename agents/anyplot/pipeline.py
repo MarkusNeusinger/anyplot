@@ -125,6 +125,7 @@ import io
 import json
 import logging
 import math
+import re
 import secrets
 import time
 from collections import Counter
@@ -213,6 +214,7 @@ from .session_state import (
     PENDING_REMEMBER,
     PENDING_REQUEST,
     SessionView,
+    fills_open_roles,
     plot_language,
     read_session,
 )
@@ -731,7 +733,7 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
         state[PENDING_EXPECTED_TEXTS] = chosen_texts(state.get(PENDING_EXPECTED_TEXTS), args) or None
         remembered = merged_remember(state.get(PENDING_REMEMBER), args.remember)
         state[PENDING_REMEMBER] = [item.model_dump(mode="json") for item in remembered] or None
-        # The bindings the note was written for: a later binding change that only fills roles open then keeps it.
+        # The bindings the note was written for: the run takes it while they stand, open roles filled or not.
         bindings = state.get(BINDINGS)
         state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
 
@@ -781,6 +783,54 @@ def chosen_texts(pending: object, args: PipelineArgs) -> list[str]:
     return kept_texts(pending)
 
 
+_QUOTE_MARKS = re.compile(r"[\"'`´‘’‚‛“”„‟«»‹›]")
+_DASHES = re.compile(r"[‐‑‒–—―−]")
+_SLASH = re.compile(r"\s*/\s*")
+_CLOSING_MARKS = ".,;:!?…"
+
+
+def spoken_form(text: str) -> str:
+    """`text` as it is compared with the user's words: quote marks gone, every dash a hyphen, no space around a slash,
+    whitespace collapsed, case folded."""
+    plain = _SLASH.sub("/", _DASHES.sub("-", _QUOTE_MARKS.sub(" ", text)))
+    return " ".join(plain.split()).casefold()
+
+
+def in_users_words(args: PipelineArgs, words: str | None) -> PipelineArgs:
+    """`args` without the expected texts the user never wrote: each must stand in `words`, the user's own text of
+    the turn (the typed message and the notes pasted with the data, `RequestLedger.user_words`), once case, spaces,
+    quote marks and the kind of dash are set aside (`spoken_form`), as a whole: no letter or digit right before or
+    after it, so `in` never stands in `linear`. A closing mark the root added (`6,5 Mio.` for the user's `6,5 Mio`)
+    is no other text. A memory decision keeps its instruction and loses only such a text. None (a caller without a
+    page turn, such as the evals' own runs) checks nothing.
+
+    The texts are checked verbatim in the render (`grounding.py`), so a text the root made up is checked as if the
+    user had asked for it: the note "distribution of the prices" became the title "Distribution of prices", which
+    the replies then called missing.
+    """
+    if words is None:
+        return args
+    said = spoken_form(words)
+
+    def written(text: str) -> bool:
+        wanted = spoken_form(text)
+        for form in dict.fromkeys((wanted, wanted.rstrip(_CLOSING_MARKS))):
+            if form and re.search(rf"(?<![^\W_]){re.escape(form)}(?![^\W_])", said):
+                return True
+        return False
+
+    texts = [text for text in args.expected_texts if written(text)]
+    remember = [
+        item
+        if item.expected_text is None or written(item.expected_text)
+        else item.model_copy(update={"expected_text": None})
+        for item in args.remember
+    ]
+    if texts == list(args.expected_texts) and remember == list(args.remember):
+        return args
+    return args.model_copy(update={"expected_texts": texts, "remember": remember})
+
+
 MIN_KEPT_NOTE_CHARS = 40
 """The least of a kept request worth keeping, cut, in front of a new one that leaves too little room."""
 
@@ -806,6 +856,38 @@ def merged_request(pending: object, own: str) -> str:
     if room < MIN_KEPT_NOTE_CHARS:
         return own
     return f"{pending[:room].rstrip()}…\n{own}"
+
+
+KeptRequestFate = Literal["used", "dropped"]
+
+
+def pending_fate(state: Any, args: PipelineArgs) -> KeptRequestFate | None:
+    """What a first-plot run does with the kept note: `used`, `dropped`, or None when there is none to take.
+
+    A note was written for the bindings of its moment (`PENDING_BINDINGS`). It is `used` while the bindings in
+    force keep every one of them, roles open then being free to fill (`fills_open_roles`), and `dropped` when the
+    user rebound a column it was written for: "the distribution of the prices" kept, then values bound to Stock
+    by hand, is no request about Stock (owner decision of 2026-10-15, judged here at the run since a write on the
+    way decides nothing). A note stored without its bindings is used. A change of an existing version takes none.
+    """
+    if args.base == "previous" or not any(state.get(key) is not None for key in PENDING_KEYS):
+        return None
+    held = state.get(PENDING_BINDINGS)
+    if held is None:
+        return "used"
+    current = state.get(BINDINGS)
+    try:
+        bindings = [Binding.model_validate(item) for item in current] if isinstance(current, list) else []
+    except ValidationError:
+        bindings = []
+    return "used" if fills_open_roles(held, bindings) else "dropped"
+
+
+def drop_pending_request(state: Any) -> None:
+    """Remove the kept note and everything kept with it."""
+    for key in PENDING_KEYS:
+        if state.get(key) is not None:
+            state[key] = None
 
 
 def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
@@ -868,13 +950,14 @@ def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> Non
             state[PENDING_EXPECTED_TEXTS] = kept_texts(stored) or None
         return
     if shipped:
-        for key in PENDING_KEYS:
-            if state.get(key) is not None:
-                state[key] = None
+        drop_pending_request(state)
     elif has_request(args):
         state[PENDING_REQUEST] = args.change_request or None
         state[PENDING_EXPECTED_TEXTS] = list(args.expected_texts) or None
         state[PENDING_REMEMBER] = [item.model_dump(mode="json") for item in args.remember] or None
+        # It now holds for the bindings the run drew with (`pending_fate`).
+        bindings = state.get(BINDINGS)
+        state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
 
 
 def carried_texts(state: Any, carry: Carry | None) -> list[str]:
@@ -1608,10 +1691,19 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
         # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
         node_input = node_input.model_copy(update={"base": "catalogue"})
+    if ledger.kind == "action":
+        # The page's buttons bring no request: the kept note and the plot memory carry the user's words. A request,
+        # texts or decisions the root passes on that turn come from its memory of earlier turns, which may hold a
+        # request the user has since overtaken by rebinding a column, as the root re-sent "the prices" after values
+        # had been bound to Stock by hand.
+        node_input = node_input.model_copy(update={"change_request": "", "expected_texts": [], "remember": []})
+    node_input = in_users_words(node_input, ledger.user_words)
     view, dataset, not_ready = load_inputs(ctx, services)
     language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:
         kept = keep_pending_request(ctx.state, node_input, not_ready)
+        if kept:
+            ledger.kept_note = node_input  # held for the bindings and data this turn ends with
         # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
         index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
         telemetry.write(
@@ -1638,7 +1730,11 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         hold_request(ctx.state, node_input)
         ledger.pipeline_active = False
         return
-    # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
+    # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one. A note
+    # whose bindings the user changed since is dropped here, and the result says so (`kept_request`).
+    kept_request = pending_fate(ctx.state, node_input)
+    if kept_request == "dropped":
+        drop_pending_request(ctx.state)
     node_input = take_pending_request(ctx.state, node_input)
     previous = (
         services.versions.latest_rendered(ctx.session.id, target=view.target) if node_input.base == "previous" else None
@@ -1707,6 +1803,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger.shipped_in_turn = ledger.shipped_in_turn or ledger.plot_shipped
     if ledger.plot_shipped and run.memory_plan is not None and run.memory_plan.refused:
         result = result.model_copy(update={"memory_full": True})  # the plot carries the change, the memory cannot
+    # The bindings the run drew with, and what became of a kept note: the root's reply rests on them, not on what an
+    # earlier turn said, since the user may have rebound a column in the data panel in between.
+    result = result.model_copy(update={"bindings": list(view.bindings), "kept_request": kept_request})
     settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
     settle_memory(ctx.state, run, ledger.plot_shipped)
     record_last_run(ctx.state, result, turn=ledger.turn)
