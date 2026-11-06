@@ -12,6 +12,7 @@ from typing import Any
 
 from core.spec_roles import DataRole
 
+from .data.computed import companions
 from .policy import fence
 from .schemas import MAX_TOP_VALUES, Binding, DatasetProfile
 from .session_state import SessionView
@@ -44,9 +45,10 @@ def describe_role(role: DataRole, bound: bool = False, companions: Sequence[str]
     Owner decision of 2026-10-15, "both allowed" (`data/computed.py`): bound, the plot uses the
     column; open, the plot code computes the value from the bound data. A computed role keeps
     the spec's description, which names its formula and window (`typically 20-period`), and an
-    open one computed beside bound `companions` (other computed roles of the spec with a column)
-    is computed from them, so the parts agree: the bands around the bound middle band, a
-    balance from the bound loads (review of 2026-10-15).
+    open one beside bound `companions` (the bound computed roles `computed.COMPANIONS` relates
+    it to) is computed from them, so the parts agree: the bands around the bound middle band, a
+    balance from the bound loads. A role the spec does not relate gets none: a bound `SMA 20`
+    says nothing about the 50-period average.
     """
     kinds = "/".join(role.kinds) if role.kinds else "any"
     name = f"{role.name}1, {role.name}2, ..." if role.variadic else role.name
@@ -78,8 +80,11 @@ def spec_brief(view: SessionView) -> str:
     if snapshot.description:
         lines.append("Description: " + snapshot.description[:MAX_DESCRIPTION_CHARS])
     if roles:
-        companions = [role.name for role in roles if role.computed and role.name in bound]
-        described = [describe_role(role, role.name in bound, companions) for role in roles]
+        bound_computed = [role.name for role in roles if role.computed and role.name in bound]
+        described = [
+            describe_role(role, role.name in bound, companions(snapshot.spec_id, role.name, bound_computed))
+            for role in roles
+        ]
         lines.append("Data roles: " + "; ".join(described))
     for note in snapshot.notes:
         lines.append("Note: " + note[:MAX_NOTE_CHARS])
