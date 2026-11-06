@@ -69,7 +69,6 @@ function renderAt(initialPath: string) {
             <Route path="/legal" element={<div>legal-page</div>} />
             <Route path="/about" element={<div>about-page</div>} />
             <Route path="/agent" element={<div>agent-page</div>} />
-            <Route path="/debug/agent" element={<div>admin-agent-page</div>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -116,17 +115,12 @@ describe('RootLayout', () => {
 
   it("shows the site's feedback button everywhere but in the agent chat", () => {
     // The chat has feedback rows of its own; on a phone the button covered `.send()`.
+    // One chat page for visitors and admins since 2026-11-06; `/debug/agent` only redirects there.
     const { unmount } = renderAt('/');
     expect(document.querySelector('[data-testid="feedback-widget"]')).not.toBeNull();
     unmount();
-    for (const [path, text] of [
-      ['/agent', 'agent-page'],
-      ['/debug/agent', 'admin-agent-page'],
-    ]) {
-      const view = renderAt(path);
-      expect(view.getByText(text)).toBeInTheDocument();
-      expect(document.querySelector('[data-testid="feedback-widget"]')).toBeNull();
-      view.unmount();
-    }
+    const view = renderAt('/agent');
+    expect(view.getByText('agent-page')).toBeInTheDocument();
+    expect(document.querySelector('[data-testid="feedback-widget"]')).toBeNull();
   });
 });

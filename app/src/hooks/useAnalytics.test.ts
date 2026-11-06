@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setAnalyticsMuted } from 'src/analytics/mute';
 import { setAnalyticsAmbientProps, useAnalytics } from 'src/hooks/useAnalytics';
 
 describe('useAnalytics', () => {
@@ -336,6 +337,35 @@ describe('useAnalytics', () => {
       });
 
       expect(window.plausible).toHaveBeenCalledWith('search_no_results', undefined);
+    });
+  });
+
+  // The agent chat mutes analytics while it serves an admin: no visitor numbers from the owner.
+  describe('muted', () => {
+    afterEach(() => setAnalyticsMuted(false));
+
+    it('sends no event and no pageview while muted, and both again after', () => {
+      setHostname('anyplot.ai');
+      const { result } = renderHook(() => useAnalytics());
+      setAnalyticsMuted(true);
+
+      act(() => {
+        result.current.trackEvent('agent_data_parsed', { format: 'csv' });
+        result.current.trackPageview('/agent');
+        vi.advanceTimersByTime(200);
+      });
+      expect(window.plausible).not.toHaveBeenCalled();
+
+      setAnalyticsMuted(false);
+      act(() => {
+        result.current.trackEvent('nav_click');
+        result.current.trackPageview('/plots');
+        vi.advanceTimersByTime(200);
+      });
+      expect(window.plausible).toHaveBeenCalledWith('nav_click', undefined);
+      expect(window.plausible).toHaveBeenCalledWith('pageview', {
+        url: 'https://anyplot.ai/plots',
+      });
     });
   });
 });

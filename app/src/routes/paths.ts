@@ -12,10 +12,9 @@ export function specPath(specId: string, language?: string, library?: string): s
 }
 
 /**
- * The admin-only agent chat for one catalogue pair:
- * `/debug/agent?spec=&library=&language=` (plus `source` for `agent_open`).
- * Navigate to it with a full page load, never the router, so Cloudflare
- * Access can intercept the `/debug*` path.
+ * The agent chat for one catalogue pair, one page for visitors and admins:
+ * `/agent?spec=&library=&language=` (plus `source` for `agent_open`). An
+ * ordinary route; the page picks the lane itself (`AgentChatPage`).
  */
 export function agentChatPath(
   spec: string,
@@ -25,22 +24,14 @@ export function agentChatPath(
 ): string {
   const params = new URLSearchParams({ spec, library, language });
   if (source) params.set('source', source);
-  return `/debug/agent?${params.toString()}`;
+  return `/agent?${params.toString()}`;
 }
 
 /**
- * The public agent chat for one catalogue pair, the same query as the admin's:
- * `/agent?spec=&library=&language=` (plus `source` for `agent_open`). An
- * ordinary route; it opens while the public lane is (`GET /agent/lane`).
+ * The query parameters the chat page reads, which the redirect from the old
+ * admin address `/debug/agent` keeps (`AgentChatRedirect`).
  */
-export function publicAgentChatPath(
-  spec: string,
-  library: string,
-  language: string,
-  source?: string
-): string {
-  return agentChatPath(spec, library, language, source).replace(/^\/debug\/agent/, '/agent');
-}
+export const AGENT_CHAT_PARAMS = ['spec', 'library', 'language', 'source'] as const;
 
 /**
  * Reserved top-level paths that must never be assigned as spec ids.
@@ -97,7 +88,6 @@ export const paths = {
   about: '/about',
   agent: '/agent',
   agentChat: agentChatPath,
-  publicAgentChat: publicAgentChatPath,
   debug: '/debug',
   legal: '/legal',
   libraries: '/libraries',

@@ -1,6 +1,7 @@
 /**
  * Whether the spec pages may show the "use with my data" entry for one
- * implementation, and which chat it leads to.
+ * implementation, and which lane's API says so. The entry itself always leads to
+ * the one chat page `/agent`, which picks its own lane (`AgentChatPage`).
  *
  * The conditions, checked in this order so a public visitor never sends a
  * request to the debug API:
@@ -8,17 +9,16 @@
  * 1. the build has the agent chat (`VITE_ENABLE_AGENT_CHAT`, a literal at
  *    build time: off, everything below is dead code);
  * 2. the public lane's door (`GET /agent/lane`, `useAgentLaneOpen`): while it is
- *    open, everyone opens the public chat (`/agent`), an admin too, so the admin
- *    tests the chat exactly as a visitor sees and uses it; nothing is asked
- *    before the door answers, so no view probes one lane and then the other;
+ *    open, the public lane's eligibility decides for everyone, an admin too;
+ *    nothing is asked before the door answers, so no view probes one lane and
+ *    then the other;
  * 3. only while the door is closed (the kill switch): local development, or the
- *    admin hint `DebugPage` sets after a successful `/debug/status`, opens the
- *    admin lane (`/debug/agent`), which stays reachable directly for the admin's
- *    tools either way (`all`, `.save()`);
+ *    admin hint `DebugPage` sets after a successful `/debug/status`, asks the
+ *    admin lane, whose chat stays open for the admin then;
  * 4. that lane's eligibility answer for the pair (`GET .../eligibility`).
  *
  * A 401 or 403 on the admin lane clears the hint, so a lapsed admin session
- * stops the probes. Returns the lane to open, or `null` for no entry.
+ * stops the probes. Returns the lane that answered, or `null` for no entry.
  */
 
 import { useEffect, useState } from 'react';
@@ -29,8 +29,8 @@ import { agentApi, AgentApiError, type AgentLane, PUBLIC_LANE } from 'src/lib/ag
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
 
 /**
- * May this browser use the admin chat (the build has the chat, and local development or the
- * admin hint)? The entry points lead there only while the public lane is closed (gate 3).
+ * May this browser ask the admin lane (the build has the chat, and local development or the
+ * admin hint)? The entry points ask it only while the public lane is closed (gate 3).
  */
 export function agentChatAvailable(): boolean {
   return AGENT_CHAT_ENABLED && CONFIG.features.agentChat && (CONFIG.isDev || readAdminHint());

@@ -39,7 +39,7 @@ const sse = (events: [string, unknown][]) =>
     { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
   );
 
-const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
+const PAGE = '/agent?spec=scatter-basic&library=matplotlib&language=python';
 
 interface Put {
   body: unknown;
@@ -93,7 +93,7 @@ function stubFetch(opened: Promise<void> = Promise.resolve()) {
 
 /** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderPage() {
-  const router = createMemoryRouter([{ path: '/debug/agent', element: <AgentChatPage /> }], {
+  const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
     initialEntries: [PAGE],
   });
   return render(

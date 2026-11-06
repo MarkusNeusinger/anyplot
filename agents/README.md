@@ -1,6 +1,6 @@
 # Agent network
 
-This directory holds the anyplot agent network: the service that lets a visitor paste their own data on a plot page and get that plot adapted, rendered and reviewed ("Use with my data"). The chat has been public since 2026-11-02 as an experimental page at `/agent`, for all 15 catalogue libraries; admins use `/debug/agent`. It is built with [Google ADK](https://adk.dev) 2.13. The design, including every contract and guardrail, is in [Agent network design](../docs/concepts/agent-network.md).
+This directory holds the anyplot agent network: the service that lets a visitor paste their own data on a plot page and get that plot adapted, rendered and reviewed ("Use with my data"). The chat has been public since 2026-11-02 as an experimental page at `/agent`, for all 15 catalogue libraries; since 2026-11-06 admins use the same page, which then calls the admin lane. It is built with [Google ADK](https://adk.dev) 2.13. The design, including every contract and guardrail, is in [Agent network design](../docs/concepts/agent-network.md).
 
 ## What is built
 
@@ -234,7 +234,7 @@ At the defaults a sandbox run starts at most every 10 seconds, so a second "Crea
 
 ### Drive the chat page
 
-The chat page is the app's `/debug/agent?spec=&library=&language=` for admins; the public page `/agent?spec=&library=&language=` is the same page on the public lane. Build or serve the app with `VITE_ENABLE_AGENT_CHAT=true`; local development shows the admin page without an admin sign-in, and the plot page then shows the `.use_my_data()` action beside the library carousel for eligible pairs.
+The chat page is the app's `/agent?spec=&library=&language=`, one page for visitors and admins since 2026-11-06 (`/debug/agent` only redirects there): it runs on the admin lane for a browser with the admin hint whose admin check passes, and on the public lane otherwise. Build or serve the app with `VITE_ENABLE_AGENT_CHAT=true`; local development counts as the hint, so the page checks the admin lane without a sign-in, and the plot page then shows the `.use_my_data()` action beside the library carousel for eligible pairs. The admin menu's "view as visitor" runs the public lane in the same tab.
 
 - **Against this service:** the API's agent routes need all three of `AGENT_ENABLED`, `AGENT_SERVICE_URL` and `AGENT_USER_ID_KEY`, or every route answers `404 not_enabled`; and the admin gate has no development bypass, so you sign in with an admin token:
 
@@ -264,7 +264,7 @@ The chat page is the app's `/debug/agent?spec=&library=&language=` for admins; t
        VITE_DEBUG_API_URL=http://localhost:8010 yarn dev
      ```
 
-  3. Open `http://localhost:3000/scatter-basic/python/matplotlib` and select the `.use_my_data()` action beside the library carousel, or open `http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python` directly. Paste `agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv` as your data.
+  3. Open `http://localhost:3000/scatter-basic/python/matplotlib` and select the `.use_my_data()` action beside the library carousel, or open `http://localhost:3000/agent?spec=scatter-basic&library=matplotlib&language=python` directly. Paste `agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv` as your data.
 
   The header of `app/scripts/agent-bff-mock.mjs` lists the scripted replies (a refusal, a capacity error, a question, a refinement with a repair round) and the timing variables.
 

@@ -8,6 +8,7 @@ import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 import { AppDataProvider } from 'src/layouts/Layout';
 import { RootLayout } from 'src/layouts/RootLayout';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
+import { AgentChatRedirect } from 'src/routes/AgentChatRedirect';
 import { specPath } from 'src/routes/paths';
 
 const LazyFallback = () => (
@@ -93,28 +94,24 @@ const router = createBrowserRouter([
             path: 'debug',
             lazy: () => import('src/pages/DebugPage').then(m => ({ Component: m.DebugPage })),
           },
-          // The admin-only agent chat. The variable is read inline, not through
-          // CONFIG: Vite inlines it, and only a literal in this module lets the
-          // bundler drop the dynamic import before it emits the chunk (through
-          // an imported constant the route folds, but the chunk is still
-          // built). Without VITE_ENABLE_AGENT_CHAT the path still answers with
-          // the 404 page instead of falling through to `:specId/:language`.
+          // The agent chat's old admin address, kept for links and bookmarks: it
+          // redirects to `/agent`, the one chat page since 2026-11-06. The
+          // variable is read inline, not through CONFIG: Vite inlines it, and
+          // only a literal in this module lets the bundler drop the dynamic
+          // import below before it emits the chunk (through an imported constant
+          // the route folds, but the chunk is still built). Without
+          // VITE_ENABLE_AGENT_CHAT both paths still answer with the 404 page
+          // instead of falling through to `:specId/:language`.
           import.meta.env.VITE_ENABLE_AGENT_CHAT === 'true'
-            ? {
-                path: 'debug/agent',
-                lazy: () =>
-                  import('src/pages/AgentChatPage').then(m => ({ Component: m.AgentChatPage })),
-              }
+            ? { path: 'debug/agent', element: <AgentChatRedirect /> }
             : { path: 'debug/agent', element: <NotFoundPage /> },
-          // The public agent chat, the same page on the public lane: it opens while
-          // the API's public lane is open (`GET /agent/lane`) and says so otherwise.
+          // The agent chat, one page for visitors and admins: it detects the admin
+          // and picks the lane itself, and says so while the public lane is closed.
           import.meta.env.VITE_ENABLE_AGENT_CHAT === 'true'
             ? {
                 path: 'agent',
                 lazy: () =>
-                  import('src/pages/AgentChatPage').then(m => ({
-                    Component: m.PublicAgentChatPage,
-                  })),
+                  import('src/pages/AgentChatPage').then(m => ({ Component: m.AgentChatPage })),
               }
             : { path: 'agent', element: <NotFoundPage /> },
           { path: ':specId', lazy: lazySpec },

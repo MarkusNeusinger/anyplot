@@ -15,9 +15,10 @@ describe('ReloadHint', () => {
     expect(reloadWithoutWarning).toHaveBeenCalledWith();
   });
 
-  it('names the sign-in after no answer, and renders nothing for other codes', () => {
+  it('offers a plain reload after no answer, and renders nothing for other codes', () => {
+    // `/agent` is not behind Access: a reload signs nobody in, it checks the admin anew.
     const { container, rerender } = render(<ReloadHint code="unreachable" />);
-    expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
     rerender(<ReloadHint code="capacity" />);
     expect(container).toBeEmptyDOMElement();
   });

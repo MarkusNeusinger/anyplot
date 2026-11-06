@@ -28,10 +28,11 @@ describe('ChatFeedback', () => {
     await user.type(screen.getByRole('textbox', { name: 'Feedback message' }), 'no feature column');
     await user.click(screen.getByRole('button', { name: 'Send feedback' }));
 
+    // The data box starts unticked, for an admin as for a visitor.
     expect(onSend).toHaveBeenCalledWith(0, {
       reaction: 'idea',
       message: 'no feature column',
-      includeData: true,
+      includeData: false,
     });
   });
 

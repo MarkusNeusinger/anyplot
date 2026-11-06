@@ -451,18 +451,21 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ## Agent chat
 
-> **Status (2026-11-04):** the admin routes under `/debug/agent` are live, and
+> **Status (2026-11-06):** the admin routes under `/debug/agent` are live, and
 > the public lane under `/agent` has been open since 2026-11-02, as an
 > experimental page: the deploy-api trigger sets `_AGENT_PUBLIC_ENABLED=true`.
 > Set back to `false`, the lane answers `404` again while the admin routes stay
-> open (see [Public lane](#public-lane)).
+> open (see [Public lane](#public-lane)). Since 2026-11-06 one chat page,
+> `/agent` in the app, calls both: the admin lane for a browser it detects as an
+> admin's (the admin hint plus a successful `GET /debug/agent/status`), the
+> public lane for everyone else; the routes themselves are unchanged.
 >
 > **Status (2026-10-12):** the routes are switched on in production since
 > 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and
 > `AGENT_SERVICE_URL`, the `AGENT_USER_ID_KEY` secret is bound, and the
 > anyplot-agents service they call runs in Cloud Run. They stay behind the admin
-> gate. The chat page that calls these routes, `/debug/agent` in the app, is
-> built only with `VITE_ENABLE_AGENT_CHAT=true`, which the deploy-app trigger
+> gate. The chat page that calls these routes, `/debug/agent` in the app
+> (`/agent` since 2026-11-06), is built only with `VITE_ENABLE_AGENT_CHAT=true`, which the deploy-app trigger
 > sets since the same day. The feedback triage routes under
 > `/debug/agent/cases` and the `agent_feedback` table behind them are built
 > since 2026-10-12 (see [Feedback triage](#feedback-triage)), and so is the

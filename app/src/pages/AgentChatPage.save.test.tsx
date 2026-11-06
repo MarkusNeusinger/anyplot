@@ -1,6 +1,6 @@
 /**
- * The chat page's `.save()` in the header's "⋯" menu: shown with a session, hidden
- * without one, and wired to the bundle download. The flows of the page are in
+ * The chat page's `.save()` in the admin menu: offered with a session, left out without
+ * one, and wired to the bundle download. The flows of the page are in
  * AgentChatPage.test.tsx; this file stubs only the calls the header needs.
  */
 
@@ -32,7 +32,7 @@ const json = (status: number, body: unknown) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
+const PAGE = '/agent?spec=scatter-basic&library=matplotlib&language=python';
 
 let bundleSearch: string[];
 /** The bundle route's answer; the default is a small bundle. */
@@ -71,7 +71,7 @@ function stubFetch(openStatus = 200, opened: Promise<void> = Promise.resolve()) 
 
 /** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderPage() {
-  const router = createMemoryRouter([{ path: '/debug/agent', element: <AgentChatPage /> }], {
+  const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
     initialEntries: [PAGE],
   });
   return render(
@@ -102,24 +102,26 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const menuButton = () => screen.getByRole('button', { name: 'More actions' });
-/** The same button while the menu is open, when the popover hides the page from the a11y tree. */
-const menuTrigger = () => screen.getByTestId('session-menu');
+/** The admin menu's button; a test id, since the open popover hides the page from the a11y tree. */
+const menuButton = () => screen.getByTestId('admin-menu');
+const MENU = { name: 'Admin' } as const;
 
 describe('AgentChatPage .save()', () => {
-  it('saves the open session from the "⋯" menu, with and without the data file', async () => {
+  it('saves the open session from the admin menu, without and with the data file', async () => {
     const user = userEvent.setup();
     stubFetch();
     renderPage();
+    await screen.findByLabelText('Message');
     // Out of the header row: nothing of `.save()` shows until the menu opens.
-    await waitFor(() => expect(menuButton()).toBeEnabled());
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: '# include data.csv' })).not.toBeInTheDocument();
 
     await user.click(menuButton());
-    expect(menuTrigger()).toHaveAttribute('aria-expanded', 'true');
-    const menu = screen.getByRole('dialog', { name: 'Save the session' });
+    expect(menuButton()).toHaveAttribute('aria-expanded', 'true');
+    const menu = screen.getByRole('dialog', MENU);
     expect(menu).toHaveTextContent('# save the session as a json file');
+    // Unticked, as the feedback form's box (owner, 2026-11-06: the admin's chat is the visitors').
+    expect(within(menu).getByRole('checkbox', { name: '# include data.csv' })).not.toBeChecked();
     await user.click(within(menu).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(downloads).toEqual(['anyplot-session-S1.json']));
     // The download started: the menu closes and gives the focus back to its button.
@@ -131,19 +133,19 @@ describe('AgentChatPage .save()', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() =>
-      expect(bundleSearch).toEqual(['?include_data=true', '?include_data=false'])
+      expect(bundleSearch).toEqual(['?include_data=false', '?include_data=true'])
     );
     await waitFor(() =>
       expect(downloads).toEqual(['anyplot-session-S1.json', 'anyplot-session-S1.json'])
     );
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_session_saved', {
-      include_data: 'no',
+      include_data: 'yes',
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
     // The box keeps the choice from one save to the next.
     await user.click(menuButton());
-    expect(screen.getByRole('checkbox', { name: '# include data.csv' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: '# include data.csv' })).toBeChecked();
   });
 
   it('keeps the menu open with the failure line when a save fails', async () => {
@@ -151,20 +153,20 @@ describe('AgentChatPage .save()', () => {
     stubFetch();
     bundleAnswer = () => json(413, { detail: 'too_large', ref: 'r-big' });
     renderPage();
-    await waitFor(() => expect(menuButton()).toBeEnabled());
+    await screen.findByLabelText('Message');
 
     await user.click(menuButton());
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    const menu = screen.getByRole('dialog', { name: 'Save the session' });
+    const menu = screen.getByRole('dialog', MENU);
     expect(await within(menu).findByRole('alert')).toHaveTextContent(
       /^the session is over 32 MB, too large for one file$/
     );
-    expect(menuTrigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(menuButton()).toHaveAttribute('aria-expanded', 'true');
     expect(downloads).toEqual([]);
   });
 
-  it('holds the menu back while the session opens, so the box shows what a save sends', async () => {
+  it('holds .save() back while the session opens, so the box shows what a save sends', async () => {
     const user = userEvent.setup();
     let open!: () => void;
     stubFetch(
@@ -174,23 +176,31 @@ describe('AgentChatPage .save()', () => {
       })
     );
     renderPage();
-    // The page renders the header anew once the session is open; a choice made
-    // while it opens would be lost there.
-    expect(await screen.findByRole('button', { name: 'More actions' })).toBeDisabled();
+    // The menu itself never waits; its `.save()` and the data box do until the session is open,
+    // since the page renders the header anew then and a choice made before would be lost.
+    expect(await screen.findByTestId('session-opening')).toBeInTheDocument();
+    await user.click(menuButton());
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: '# include data.csv' })).toBeDisabled();
+    await user.keyboard('{Escape}');
 
     open();
-    await waitFor(() => expect(menuButton()).toBeEnabled());
+    await screen.findByLabelText('Message');
     await user.click(menuButton());
     const box = screen.getByRole('checkbox', { name: '# include data.csv' });
     expect(box).toBeEnabled();
-    expect(box).toBeChecked();
+    expect(box).not.toBeChecked();
   });
 
   it('offers no .save() when the session could not open', async () => {
+    const user = userEvent.setup();
     stubFetch(422);
     renderPage();
     expect(await screen.findByText('not eligible')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    await user.click(menuButton());
+    expect(
+      within(screen.getByRole('dialog', MENU)).queryByRole('button', { name: 'Save' })
+    ).toBeNull();
   });
 });

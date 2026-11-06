@@ -41,11 +41,9 @@ function props(overrides: Partial<LibraryChipProps> = {}): LibraryChipProps {
   return {
     library: 'matplotlib',
     libraries: ALL_FIFTEEN,
-    offerAll: false,
     allPressed: false,
     disabled: false,
     onPick: vi.fn(async () => undefined),
-    onAllChange: vi.fn(),
     ...overrides,
   };
 }
@@ -93,18 +91,18 @@ describe('LibraryChip', () => {
     expect(chip()).toHaveAccessibleName('Library: ggplot2, R. Change');
     expect(chip()).toBeEnabled();
 
-    rerender(<LibraryChip {...props({ offerAll: true, allPressed: true })} />);
+    rerender(<LibraryChip {...props({ allPressed: true })} />);
     // The name holds the words on screen (WCAG 2.5.3, label in name).
     expect(chip()).toHaveTextContent(/^all 15 libraries ▾$/);
     expect(chip()).toHaveAccessibleName('Library: all 15 libraries. Change');
   });
 
-  it('announces each change of the library or of all once, and nothing on mount', () => {
+  it('announces each change of the library or of the fan-out once, and nothing on mount', () => {
     const { rerender } = render(<LibraryChip {...props()} />);
     expect(screen.getByRole('status')).toHaveTextContent('');
     rerender(<LibraryChip {...props({ library: 'plotly' })} />);
     expect(screen.getByRole('status')).toHaveTextContent('library: plotly');
-    rerender(<LibraryChip {...props({ library: 'plotly', offerAll: true, allPressed: true })} />);
+    rerender(<LibraryChip {...props({ library: 'plotly', allPressed: true })} />);
     expect(screen.getByRole('status')).toHaveTextContent('library: all libraries');
   });
 
@@ -135,8 +133,8 @@ describe('LibraryChip', () => {
       'aria-pressed',
       'false'
     );
-    // Without the admin's offer there is no `all`.
-    expect(within(dialog()).queryByRole('button', { name: 'All libraries' })).toBeNull();
+    // The libraries only: the fan-out's toggle is in the admin menu since 2026-11-06.
+    expect(within(dialog()).getAllByRole('button')).toHaveLength(15);
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -156,43 +154,18 @@ describe('LibraryChip', () => {
     await waitFor(() => expect(chip()).toHaveFocus());
   });
 
-  it('offers all to the admin as a toggle, after the libraries', async () => {
+  it('lets the library in use be picked while the fan-out is on, which the page reads as off', async () => {
     const user = userEvent.setup();
-    const onAllChange = vi.fn();
     const onPick = vi.fn(async () => undefined);
-    const { rerender } = render(
-      <LibraryChip {...props({ offerAll: true, onAllChange, onPick })} />
-    );
+    render(<LibraryChip {...props({ allPressed: true, onPick })} />);
 
     await user.click(chip());
-    const admin = within(dialog()).getByRole('group', { name: 'Admin' });
-    const all = within(admin).getByRole('button', { name: 'All libraries' });
-    expect(all).toHaveTextContent('all libraries');
-    expect(all).toHaveAttribute('aria-pressed', 'false');
-    // After every language group.
-    const groups = within(dialog()).getAllByRole('group');
-    expect(groups[groups.length - 1]).toBe(admin);
-    await user.click(all);
-    expect(onAllChange).toHaveBeenCalledWith(true);
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-
-    // Pressed: the library in use can be picked, which the page reads as `all` off.
-    rerender(<LibraryChip {...props({ offerAll: true, allPressed: true, onAllChange, onPick })} />);
-    await user.click(chip());
-    expect(within(dialog()).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
     const own = within(dialog()).getByRole('button', { name: 'matplotlib' });
     expect(own).toHaveAttribute('aria-pressed', 'false');
     expect(own).toBeEnabled();
     await user.click(own);
     expect(onPick).toHaveBeenCalledWith('matplotlib');
-
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    await user.click(chip());
-    await user.click(within(dialog()).getByRole('button', { name: 'All libraries' }));
-    expect(onAllChange).toHaveBeenLastCalledWith(false);
   });
 
   it('makes the other libraries links where there is no session to switch', async () => {
@@ -202,7 +175,7 @@ describe('LibraryChip', () => {
       <LibraryChip
         {...props({
           libraries: ['matplotlib', 'seaborn', 'ggplot2'],
-          hrefFor: lib => `/debug/agent?spec=scatter-basic&library=${lib}`,
+          hrefFor: lib => `/agent?spec=scatter-basic&library=${lib}`,
           onPick,
         })}
       />
@@ -210,7 +183,7 @@ describe('LibraryChip', () => {
     await user.click(chip());
     expect(within(dialog()).getByRole('link', { name: 'ggplot2' })).toHaveAttribute(
       'href',
-      '/debug/agent?spec=scatter-basic&library=ggplot2'
+      '/agent?spec=scatter-basic&library=ggplot2'
     );
     expect(within(dialog()).getByRole('link', { name: 'seaborn' })).toBeInTheDocument();
     expect(within(dialog()).getByRole('button', { name: 'matplotlib' })).toBeDisabled();

@@ -1,6 +1,7 @@
 /**
- * The public lane's notice, one muted line above the chat's frame since the v4 frame of
- * 2026-11-06, right-aligned from `sm` up and at the left at phone width:
+ * The chat's notice, on both lanes since 2026-11-06 (the admin's chat is the visitors'), one
+ * muted line above the chat's frame since the v4 frame of 2026-11-06, right-aligned from `sm`
+ * up and at the left at phone width:
  * `// experimental AI · answers can be wrong ⓘ` (a `#` line with a green rule inside the chat
  * until then; one line since 2026-11-02, owner: less text, the details behind a button rather
  * than removed). It stands above the first input whatever the session's state. The line keeps
@@ -11,7 +12,7 @@
  * without feedback, which AI it is, where it runs and that it does not train on them, what not
  * to paste, the daily limits, and the legal page's section on the assistant. The link opens a
  * new tab: leaving the page would end the session. The texts live in `lane.ts`, with the
- * public lane's consent line.
+ * feedback form's consent line.
  */
 
 import Box from '@mui/material/Box';

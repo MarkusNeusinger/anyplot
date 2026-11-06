@@ -22,7 +22,6 @@ import {
   turnstileHeaders,
   turnstileSiteKey,
 } from 'src/lib/turnstile';
-import { clearAccessReloadGuard } from 'src/utils/adminAuth';
 
 export const AGENT_CLIENT_HEADERS = { 'X-Anyplot-Client': 'agent-chat/1' } as const;
 /** The BFF's limit on pasted data: 1 MB of UTF-8. */
@@ -1117,9 +1116,9 @@ function publicFetch(path: string, init: RequestInit): Promise<Response> {
  * admin lane in production that is usually an expired Cloudflare Access
  * session: the API answers with a cross-origin redirect to the Access login,
  * which `fetch` cannot follow and reports as a `TypeError`, exactly like a
- * dropped connection. The page offers a reload, which lets Access sign the
- * admin in again (`reloadOnceForAccess`). Any answer clears that reload's
- * one-shot guard.
+ * dropped connection. The chat page is not behind Access, so it cannot sign
+ * the admin in again itself: its admin check falls back to the public lane
+ * and links to `/debug` (`useAgentAdmin`).
  */
 export async function agentFetch(path: string, token: string, init: RequestInit = {}) {
   const lane = laneOf(token);
@@ -1139,7 +1138,6 @@ export async function agentFetch(path: string, token: string, init: RequestInit 
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
     throw new AgentApiError(0, 'unreachable');
   }
-  if (lane === 'admin') clearAccessReloadGuard();
   if (!response.ok) throw await toAgentApiError(response);
   return response;
 }

@@ -1,7 +1,10 @@
 /**
- * A reload link after an error a reload fixes: `unreachable` (in production
- * usually an expired Cloudflare Access session, which only a top-level page
- * load can renew) and `session_expired` (the server forgot the session).
+ * A reload link after an error a reload fixes: `unreachable` (a dropped
+ * connection, or in production an expired Cloudflare Access session, whose
+ * reload checks the admin anew and falls back to the public lane with a link
+ * to `/debug`, since `/agent` is not behind Access: `reload`, not `reload to
+ * sign in again` since 2026-11-06) and `session_expired` (the server forgot the
+ * session).
  * With `opening`, the page could not open a session at all, so a reload loses
  * nothing: the public lane's bot check (`bot_check_failed`,
  * `bot_check_unavailable`) gets `try again`, which runs a fresh check. Renders
@@ -28,7 +31,7 @@ export function ReloadHint({
   if (!code) return null;
   const retry = opening && RETRY_CODES.has(code);
   if (!retry && !RELOAD_CODES.has(code)) return null;
-  const label = retry ? 'try again' : code === 'unreachable' ? 'reload to sign in again' : 'reload';
+  const label = retry ? 'try again' : 'reload';
   return (
     <>
       {' · '}

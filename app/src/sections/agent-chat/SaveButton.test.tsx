@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { AgentApiError } from 'src/lib/agent';
-import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
 import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
@@ -16,12 +15,12 @@ function deferred() {
 }
 
 describe('SaveButton', () => {
-  it('is disabled with its data box while the page says so, and the box starts ticked', () => {
+  it('is disabled with its data box while the page says so, and the box starts unticked', () => {
     const onSave = vi.fn(async () => undefined);
     const { rerender } = render(<SaveButton disabled onSave={onSave} />);
     const box = screen.getByRole('checkbox', { name: '# include data.csv' });
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
-    expect(box).toBeChecked();
+    expect(box).not.toBeChecked();
     expect(box).toBeDisabled();
 
     rerender(<SaveButton disabled={false} onSave={onSave} />);
@@ -29,17 +28,17 @@ describe('SaveButton', () => {
     expect(box).toBeEnabled();
   });
 
-  it('saves with the data by default and without it once unticked', async () => {
+  it('saves without the data by default and with it once ticked', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn(async () => undefined);
     render(<SaveButton disabled={false} onSave={onSave} />);
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(onSave).toHaveBeenLastCalledWith(true);
+    expect(onSave).toHaveBeenLastCalledWith(false);
 
     await user.click(screen.getByRole('checkbox', { name: '# include data.csv' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(onSave).toHaveBeenLastCalledWith(false);
+    expect(onSave).toHaveBeenLastCalledWith(true);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -156,18 +155,5 @@ describe('SaveButton', () => {
         'the server did not answer; check your connection'
       )
     );
-  });
-
-  it('starts with the data box unticked on the public lane', async () => {
-    const user = userEvent.setup();
-    const onSave = vi.fn(async () => undefined);
-    render(
-      <AgentLaneContext.Provider value="public">
-        <SaveButton disabled={false} onSave={onSave} />
-      </AgentLaneContext.Provider>
-    );
-    expect(screen.getByRole('checkbox', { name: '# include data.csv' })).not.toBeChecked();
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(onSave).toHaveBeenCalledWith(false);
   });
 });
