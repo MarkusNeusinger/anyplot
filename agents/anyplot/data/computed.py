@@ -67,6 +67,20 @@ contributions, and a decision tree's rollback. Not here: a value that needs a mo
 without prices, control limits without the subgroup size), or a stated value such as a target.
 """
 
+_BOLLINGER = frozenset({"sma", "upper_band", "lower_band"})
+_LOADS = frozenset({"ctl", "atl", "tsb"})
+COMPANIONS: dict[str, dict[str, frozenset[str]]] = {
+    "indicator-bollinger": {name: _BOLLINGER - {name} for name in _BOLLINGER},
+    "line-training-load-pmc": {name: _LOADS - {name} for name in _LOADS},
+    "indicator-ichimoku": {"senkou_span_a": frozenset({"tenkan_sen", "kijun_sen"})},
+    "indicator-macd": {"signal": frozenset({"histogram"}), "histogram": frozenset({"signal"})},
+    "tree-decision": {"pruned": frozenset({"emv"})},
+}
+"""Per spec and computed role, the other computed roles its formula relates it to: an open one is built on those
+of them that are bound, so the parts agree (the bands around a bound middle band, a balance from the bound loads,
+leading span A from the bound conversion and base lines, the histogram from a bound signal line). A role the spec
+does not relate stays independent: the three SMAs of `indicator-sma` each come from `close`."""
+
 _MOVING_AVERAGE = (
     "sma",
     "ma",
@@ -251,6 +265,12 @@ def mark_computed(roles: Iterable[DataRole], spec_id: str) -> list[DataRole]:
     """The roles with `computed` set for the ones `COMPUTED_ROLES` lists for `spec_id`; a bullet's own mark stays."""
     listed = COMPUTED_ROLES.get(spec_id, frozenset())
     return [replace(role, computed=True) if role.name in listed else role for role in roles]
+
+
+def companions(spec_id: str, role_name: str, bound: Iterable[str]) -> list[str]:
+    """The roles of `bound`, in its order, that `COMPANIONS` relates `role_name` to in `spec_id`."""
+    related = COMPANIONS.get(spec_id, {}).get(role_name, frozenset())
+    return [name for name in bound if name in related]
 
 
 def name_match(role: DataRole, column_name: str) -> bool:

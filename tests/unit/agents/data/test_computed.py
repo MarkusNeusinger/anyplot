@@ -8,7 +8,7 @@ import pytest
 
 from agents.anyplot.briefs import describe_role, spec_brief
 from agents.anyplot.data.bindings import check_bindings, default_bindings
-from agents.anyplot.data.computed import ALIASES, COMPUTED_ROLES, name_match, window_line
+from agents.anyplot.data.computed import ALIASES, COMPANIONS, COMPUTED_ROLES, name_match, window_line
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.schemas import Binding
@@ -653,4 +653,42 @@ class TestBrief:
             "senkou_span_a (numeric, not bound: compute it in the plot code from the bound data; build it on the "
             "bound tenkan_sen, kijun_sen where the spec relates them, not independently; the spec: Leading Span A"
         ) in brief
-        assert "chikou_span (numeric, not bound: compute it in the plot code from the bound data;" in brief
+        assert "chikou_span (numeric, not bound: compute it in the plot code from the bound data; the spec: " in brief
+
+    def test_independent_averages_are_not_built_on_each_other(self) -> None:
+        """A bound `SMA 20` says nothing about the 50- and 200-period averages: each is computed from `close`."""
+        snapshot = snapshot_from_repo("indicator-sma", "matplotlib")
+        bindings = default_bindings(snapshot.roles(), parse_dataset(stock("SMA 20")).profile)
+        brief = spec_brief(SessionView("indicator-sma", "matplotlib", "en", snapshot, "code", [], None, bindings))
+
+        assert "sma_short (numeric, bound: use its column as it is" in brief
+        assert "build it on the bound" not in brief
+
+    def test_a_bound_signal_line_builds_the_histogram(self) -> None:
+        snapshot = snapshot_from_repo("indicator-macd", "matplotlib")
+        data = parse_dataset("date,MACD,Signal\n2024-03-04,0.41,0.35\n2024-03-05,0.52,0.38\n").profile
+        brief = spec_brief(
+            SessionView(
+                "indicator-macd",
+                "matplotlib",
+                "en",
+                snapshot,
+                "code",
+                [],
+                None,
+                default_bindings(snapshot.roles(), data),
+            )
+        )
+
+        assert (
+            "histogram (numeric, not bound: compute it in the plot code from the bound data; build it on the bound signal"
+            in (brief)
+        )
+
+
+@pytest.mark.parametrize("spec_id", sorted(COMPANIONS))
+def test_companions_relate_computed_roles_of_their_spec(spec_id: str) -> None:
+    listed = COMPUTED_ROLES[spec_id]
+
+    for role_name, related in COMPANIONS[spec_id].items():
+        assert role_name in listed and related <= listed - {role_name}, (spec_id, role_name)
