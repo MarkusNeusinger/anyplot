@@ -25,8 +25,8 @@
  * ...`, the phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
  * after a data request sent from below the plot. The step line above the
- * composer names what dropped the confirmation, as the thread's notice
- * does. A table read from text that waits for its decision holds the page in
+ * composer names what dropped the confirmation, and only it: the thread
+ * adds no notice that would say the same. A table read from text that waits for its decision holds the page in
  * step 1 as well, whatever a turn's sync says, and the header names that
  * decision.
  *

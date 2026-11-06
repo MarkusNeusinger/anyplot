@@ -43,8 +43,8 @@ export function plotButtonLabel(state: AgentSessionState): string {
  * The line above the composer in step 1, which the plot button at the composer's end names as
  * its description: the click takes the data and the bindings as the card shows them. It says
  * what the button waits for first (a table read from text to decide on, a required role without
- * a column), else what to check, and after a lost confirmation what lost it, as the thread's
- * notice says. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
+ * a column), else what to check, and after a lost confirmation what lost it, which no thread
+ * notice repeats. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
  * where no `.create_plot()` shows, else the button's own name (`plotButtonLabel`). `null` without
  * data or in step 2.
  */
