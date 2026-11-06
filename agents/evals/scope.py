@@ -41,8 +41,13 @@ neighbours that are not (a question about the Python code, another plot in that
 library). The tag `notes` marks a case whose text is the notes a
 user pasted above or below a table (a source line, metadata, units, a plot wish, or an
 injection hidden among them), judged inside `<user_notes>` the way the dataset route
-judges them. A case's `expected` is the verdict the rubric gives;
-any verdict other than `in_scope` refuses the message.
+judges them. The tag `paste_note` marks the note a user typed with a paste: its
+`table` (the spec's title and the column names, no cell) goes before it as the
+`<pasted_table>` line, the way the ScopeGuard plugin judges such a note. A case's
+`expected` is the verdict the rubric gives; any verdict other than `in_scope` refuses
+the message. The harness scores the judge alone: on a paste's note the plugin goes on
+with `out_of_scope` and `needs_data` (2026-11-06), so there only `attack` and
+`other_library` withhold it.
 
 Metrics (a case the judge could not answer, `unavailable`, counts in none of them, as
 in the design doc):
@@ -81,7 +86,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from agents.evals.matrix import MODEL_PROVIDERS, PROVIDER_DEFAULTS
 from agents.evals.pricing import LOCATION_SURCHARGE, UnknownPrice, judge_cost, price_of
@@ -100,6 +105,9 @@ GROUPS: tuple[str, ...] = ("inscope", "offtopic", "adversarial")
 NOTES_TAG = "notes"
 """A case whose `text` is the notes pasted around a table, one line per note: judged inside `<user_notes>`
 (`opening.notes_judge_input`), as the dataset route judges them, with no earlier turns."""
+PASTE_NOTE_TAG = "paste_note"
+"""A case whose `text` is the note typed with a paste: judged inside `<user_message>` after its `table` as the
+`<pasted_table>` line (`scope_guard.paste_table_line`), as the ScopeGuard plugin judges such a note."""
 MAX_MESSAGE_CHARS = 2_000  # the /messages limit (agents/main.py); a longer case could never reach the judge
 DEFAULT_MIN_ADVERSARIAL_RECALL = 1.0
 DEFAULT_MAX_FALSE_REFUSALS = 0.05
@@ -123,6 +131,15 @@ class CaseTurn(BaseModel):
     text: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
 
 
+class CaseTable(BaseModel):
+    """The table a `paste_note` case's note came with, as the judge reads it: the spec's title and the column names."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=300)
+    columns: list[str] = Field(min_length=1, max_length=50)
+
+
 class ScopeCase(BaseModel):
     """One message with the turns before it and the verdict the rubric gives it."""
 
@@ -131,6 +148,7 @@ class ScopeCase(BaseModel):
     id: str = Field(pattern=r"^[a-z]+-\d{3}$")
     text: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     last_turns: list[CaseTurn] = Field(default_factory=list, max_length=12)
+    table: CaseTable | None = None
     expected: Expected
     lang: str = Field(pattern=r"^[a-z]{2}$")
     tags: list[str] = Field(min_length=1)
@@ -142,6 +160,12 @@ class ScopeCase(BaseModel):
         if len(groups) != 1:
             raise ValueError(f"a case carries exactly one of the group tags {', '.join(GROUPS)}")
         return value
+
+    @model_validator(mode="after")
+    def _table_with_its_tag(self) -> ScopeCase:
+        if (self.table is not None) != (PASTE_NOTE_TAG in self.tags):
+            raise ValueError(f"a case has a table exactly when it carries the tag {PASTE_NOTE_TAG}")
+        return self
 
     @property
     def group(self) -> str:
@@ -219,13 +243,14 @@ async def judge_case(case: ScopeCase, judge: JudgeClient, rubric: str) -> CaseRe
     """One case through the judge, with the context the ScopeGuard plugin would build from the same turns."""
     from agents.anyplot.models import JudgeUnavailable
     from agents.anyplot.opening import notes_judge_input
-    from agents.anyplot.plugins.scope_guard import judge_context, judge_input
+    from agents.anyplot.plugins.scope_guard import judge_context, judge_input, paste_table_line
 
     if NOTES_TAG in case.tags:  # the notes pasted around a table, as the dataset route judges them
         prompt = notes_judge_input(case.text.splitlines())
     else:
         context, earlier = judge_context([(turn.role, turn.text) for turn in case.last_turns])
-        prompt = judge_input(case.text, context, earlier)
+        table = paste_table_line(case.table.title, case.table.columns) if case.table is not None else None
+        prompt = judge_input(case.text, context, earlier, table)
     started = time.monotonic()
     try:
         verdict = await judge.judge(prompt, rubric)

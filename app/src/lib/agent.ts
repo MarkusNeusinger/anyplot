@@ -1593,6 +1593,8 @@ export const STREAM_ERROR_CODES = [
   'run_limit',
   'deadline',
   'guard_unavailable',
+  // The assistant wrote no reply, also when the service asked it once more.
+  'no_reply',
   'upstream',
   'internal',
 ] as const;

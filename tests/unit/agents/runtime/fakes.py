@@ -8,6 +8,7 @@ the Claude arm exercises the structured output (`output_config.format`) end to e
 
 import json
 from collections.abc import AsyncGenerator
+from dataclasses import dataclass, field
 from typing import Any
 
 from anthropic.types import Message
@@ -89,6 +90,24 @@ class ScriptedLlm(BaseLlm):
         if "raise" in item:  # the call fails, as a quota (429) or an outage would
             raise item["raise"]
         yield gemini_response(item)
+
+
+@dataclass
+class ScriptedRoot:
+    """The root model of a direct re-ask (`reply_language.root_model`): each call takes the next scripted answer,
+    a `gemini_response` or an exception to raise, and every request is recorded."""
+
+    answers: list[LlmResponse | Exception]
+    requests: list[LlmRequest] = field(default_factory=list)
+
+    async def generate_content_async(
+        self, llm_request: LlmRequest, stream: bool = False
+    ) -> AsyncGenerator[LlmResponse, None]:
+        self.requests.append(llm_request)
+        answer = self.answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        yield answer
 
 
 def gemini_response(item: dict[str, Any]) -> LlmResponse:

@@ -167,7 +167,11 @@ class RequestLedger:
     False without a route (`adk web`)."""
     paste_note: bool = False
     """The turn's typed text is the note sent with a paste not summarized yet: words about the data that came with it,
-    so the scope guard never refuses it as a request for data to fetch (`ScopeGuardPlugin._judge`)."""
+    so the scope guard refuses it only as an `attack` (or with the fixed `other_library` pointer), never as a request
+    for data to fetch or as off-topic (`ScopeGuardPlugin._judge`)."""
+    paste_table: str | None = None
+    """The table the note came with as the scope judge reads it, set by the `/messages` route with `paste_note`: the
+    spec's title and the table's column names on one bounded line, never a cell (`scope_guard.paste_table_line`)."""
     conversions_made: str | None = None
     """The id of the data version the server's conversions made in this turn: the session block lists them for every
     model call of the turn, and the route clears the summary flag on this version too."""
@@ -187,6 +191,12 @@ class RequestLedger:
     asked again once with the same context (`plugins/reply_language.py`)."""
     reply_reasked: bool = False
     """The reply-language plugin asked the root again in this invocation: at most once per turn."""
+    empty_reasked: bool = False
+    """The empty-reply plugin asked the root again for a final reply without text: at most once per turn
+    (`plugins/empty_reply.py`)."""
+    reply_shortened: bool = False
+    """The output guard asked the root for a shorter reply in this invocation: at most once per turn
+    (`ScopeGuardPlugin._guard_reply`)."""
     run_slot: Callable[[], Awaitable[bool]] | None = None
     """Set by the `/messages` route (`TurnSlot.take`): waits for the run queue's slot and the turn's start in the
     rate window, while the stream sends `status{step:"queued"}`, and holds both until the turn ends. True once the

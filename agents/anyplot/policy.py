@@ -86,6 +86,7 @@ FENCE_TAGS = (
     "plot_language",
     "reply_language",
     "user_notes",
+    "pasted_table",
 )
 _FENCE_TAG = re.compile(r"[<＜﹤]\s*(?:([/／])\s*)?([\w＿]+)")
 """A tag opening, closing or near-miss: `<`, `< /`, `</ ` and their fullwidth forms, then a name.
