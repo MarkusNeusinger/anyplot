@@ -99,7 +99,7 @@ counts as a boundary because OR-filtered gallery views record
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/map` | Network map of specs clustered by visual similarity |
 | `/debug` | Pipeline status dashboard (spec coverage, feedback, agent cases, ping); the agent cases section sends no event of its own |
-| `/agent` | The "Use with my data" agent chat (experimental, public since 2026-11-02), one page for visitors and admins since 2026-11-06; recorded without its query string, only in builds with `VITE_ENABLE_AGENT_CHAT=true`, only while the public lane is open, and only for a visitor: an admin's use records nothing (see [Agent chat](#agent-chat)). `/debug/agent` only redirects here since 2026-11-06 and records nothing; until then it was the admin's chat page and recorded `/debug/agent` |
+| `/agent` | The "Use with my data" agent chat (experimental, public since 2026-11-02), one page for visitors and admins since 2026-11-06; recorded without its query string, only in builds with `VITE_ENABLE_AGENT_CHAT=true`, and only for a visitor, so only while the public lane is open: an admin's use records nothing (see [Agent chat](#agent-chat)). `/debug/agent` only redirects here since 2026-11-06 and records nothing; until then it was the admin's chat page and recorded `/debug/agent` |
 | `/{spec_id}` | Cross-language spec hub (all implementations across all languages) |
 | `/{spec_id}/{language}` | Language overview (all libraries for that language) |
 | `/{spec_id}/{language}/{library}` | Implementation detail (preview ↔ interactive toggle) |
@@ -146,7 +146,10 @@ stops every `useAnalytics` call while the page is mounted, the site's own
 events on that page included, and unmutes them when it unmounts, before the
 next page records its pageview. The Web Vitals measure the whole page load and
 report late (CLS and INP when the page is hidden), so they stay muted for the
-rest of a load in which the chat served an admin. Until 2026-11-06 the admin
+rest of a load in which the chat served an admin. TTFB and FCP can report
+before the chat has mounted, so a load that starts on `/agent` with the admin
+hint, or on `/debug/agent`, reports none of them either, decided when the
+metrics register (`app/src/analytics/reportWebVitals.ts`). Until 2026-11-06 the admin
 chat recorded the pageview `/debug/agent` and the same events as a visitor's.
 So every event below is a visitor's, and `agent_session_saved`, whose `.save()`
 only an admin has, no longer fires in production.

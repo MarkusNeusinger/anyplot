@@ -91,6 +91,9 @@ describe('useAgentAdmin', () => {
     answer = async () => json(404, { detail: 'not_enabled' });
     const { result } = renderHook(() => useAgentAdmin());
     await waitFor(() => expect(result.current.admin).toBe('admin'));
+    // The chat takes a service without libraries rather than asking the switched-off one again.
+    expect(result.current.takeStatus()).toEqual({ libraries: [], enabled: false });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('checks local development without the hint, and falls back silently there', async () => {

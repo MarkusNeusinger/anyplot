@@ -698,6 +698,10 @@ describe('AgentChatPage gating', () => {
     expect(within(menu).getByRole('region', { name: 'diagnostics' })).toHaveTextContent(
       'not_enabled · the agent chat is switched off on this server (AGENT_ENABLED)'
     );
+    // The check's answer stands for the chat's own: the switched-off status is asked once.
+    expect(agentCalls().filter(([input]) => pathOf(input) === '/debug/agent/status')).toHaveLength(
+      1
+    );
   });
 
   it('switches to the visitor view and back from the admin menu, remembered for the tab', async () => {

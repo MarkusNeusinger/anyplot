@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resetAnalyticsMute, setAnalyticsMuted } from 'src/analytics/mute';
 import { reportWebVitals } from 'src/analytics/reportWebVitals';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
+import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
 
 // Single hoisted mock (vi.mock dedupes by module path — last call wins, so
 // keeping one shared mock avoids cross-test interference).
@@ -128,5 +129,26 @@ describe('reportWebVitals', () => {
     await vi.dynamicImportSettled();
 
     expect(window.plausible).not.toHaveBeenCalled();
+  });
+
+  // The chat mutes only once it has mounted; TTFB and FCP can report before that.
+  it.each([
+    ['/agent with the admin hint', '/agent', true, false],
+    ['the old admin address', '/debug/agent', false, false],
+    ["a visitor's /agent", '/agent', false, true],
+  ])('decides a load that starts on %s when the metrics register', async (_, path, hint, sent) => {
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, hostname: 'anyplot.ai', pathname: path },
+      writable: true,
+      configurable: true,
+    });
+    window.plausible = vi.fn();
+    if (hint) localStorage.setItem(ADMIN_HINT_KEY, '1');
+
+    reportWebVitals();
+    await vi.dynamicImportSettled();
+
+    expect((window.plausible as ReturnType<typeof vi.fn>).mock.calls.length > 0).toBe(sent);
+    localStorage.clear();
   });
 });

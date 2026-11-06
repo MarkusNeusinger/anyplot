@@ -24,7 +24,9 @@
  *
  * The check's answer is the admin lane's status, which the chat needs too (its libraries, the
  * run cap, the day's pause): `takeStatus()` hands it over once, so the first admin chat of the
- * page asks no second time, and a later one (after "view as visitor" and back) asks afresh.
+ * page asks no second time, and a later one (after "view as visitor" and back) asks afresh. For
+ * `not_enabled` it hands over `{libraries: [], enabled: false}`, so the chat does not ask the
+ * switched-off service again either.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -70,6 +72,9 @@ export function useAgentAdmin(): AgentAdminCheck {
         if (!active) return;
         const status = err instanceof AgentApiError ? err.status : 0;
         if (err instanceof AgentApiError && err.code === 'not_enabled') {
+          // The chat's own `/status` would meet the same switch: it takes this answer instead,
+          // a service without libraries, which changes nothing it shows, as a failed call would.
+          checked.current = { libraries: [], enabled: false };
           setAnswer({ admin: 'admin', failure: null });
           return;
         }
