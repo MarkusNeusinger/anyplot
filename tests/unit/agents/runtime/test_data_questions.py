@@ -18,7 +18,7 @@ import httpx
 import pytest
 from pydantic import TypeAdapter
 
-from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.parse import CONSTANT_NOTE_SUFFIX, parse_dataset
 from agents.anyplot.data.prepare import Operation
 from agents.anyplot.data.query import MAX_QUERY_COLUMNS, MAX_QUERY_ROWS, run_query
 from agents.anyplot.dev_fixture import snapshot_from_repo
@@ -909,6 +909,30 @@ class TestNotesAndTheirTurn:
 
         assert tool_responses(fake, "keep_plot_request")[-1] == {"status": "ok", "request_kept": True}
         assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] == ["Umsatz QX7 nach Region"]
+
+    async def test_the_value_of_a_constant_column_is_no_text_the_user_wrote(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        keep = {
+            "call": "keep_plot_request",
+            "args": {"change_request": "Subtitle with the region", "expected_texts": ["Zentralkanton QX9"]},
+        }
+        swap_models("gemini", {"root": [{"text": "Your data."}, keep, {"text": "Kept."}]})
+        sid = await open_session(client, with_data=False)
+        rows = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text().splitlines()
+        data = "\n".join([f"{rows[0]},Region", *(f"{row},Zentralkanton QX9" for row in rows[1:])]) + "\n"
+        assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})).is_success
+        stored = get_services().datasets.get((await _session_state(client, sid))[DATASET_ID], sid)
+        # The parser moved the column to the notes: a cell of the table there, not the user's words.
+        assert stored is not None and stored.context_lines == [f"Region: Zentralkanton QX9{CONSTANT_NOTE_SUFFIX}"]
+
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "hallo"})
+        await client.post(
+            f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "add the region as a subtitle"}
+        )
+
+        state = await _session_state(client, sid)
+        assert (state[PENDING_REQUEST], state.get(PENDING_EXPECTED_TEXTS)) == ("Subtitle with the region", None)
 
     async def test_a_text_the_user_did_not_write_is_not_kept(self, client: httpx.AsyncClient, swap_models) -> None:
         keep = {

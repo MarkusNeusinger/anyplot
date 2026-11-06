@@ -172,6 +172,7 @@ from agents.anyplot import telemetry
 from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste, request_for_chat
 from agents.anyplot.data.parse import (
+    CONSTANT_NOTE_SUFFIX,
     MAX_COMPUTED_BYTES,
     MAX_INPUT_BYTES,
     MAX_TABLES,
@@ -2537,11 +2538,13 @@ async def post_message(
     # The note came with the data, so the scope judge's `needs_data` cannot apply to it (`ScopeGuardPlugin._judge`).
     ledger.paste_note = summary_pending and body.text is not None
     # What the user wrote, which a text the plot is checked for must stand in (`pipeline.in_users_words`): the typed
-    # message, and the notes pasted with the data, on any turn ("the title from my notes" may come later).
+    # message, and the notes pasted with the data, on any turn ("the title from my notes" may come later). A line the
+    # parser made from a column with one value (`CONSTANT_NOTE_SUFFIX`) is a cell of the table, not the user's words;
+    # a pasted note that happens to end the same way only goes unchecked in the render.
     words = [body.text] if body.text else []
     stored = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
     if stored is not None:
-        words += stored.context_lines
+        words += [line for line in stored.context_lines if not line.endswith(CONSTANT_NOTE_SUFFIX)]
     if first_turn and stored is not None:
         blocks: list[str] = []
         if stored.context_lines:
