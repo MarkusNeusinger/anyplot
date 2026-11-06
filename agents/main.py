@@ -2539,17 +2539,16 @@ async def post_message(
     # What the user wrote, which a text the plot is checked for must stand in (`pipeline.in_users_words`): the typed
     # message, and the notes pasted with the data, on any turn ("the title from my notes" may come later).
     words = [body.text] if body.text else []
-    notes_of = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
-    if notes_of is not None:
-        words += notes_of.context_lines
-    if first_turn and view is not None and view.dataset_id:
-        stored = services.datasets.get(view.dataset_id, sid)
+    stored = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+    if stored is not None:
+        words += stored.context_lines
+    if first_turn and stored is not None:
         blocks: list[str] = []
-        if stored is not None and stored.context_lines:
+        if stored.context_lines:
             # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
             # first turn on every paste, so it can act on a request in them at once.
             blocks.append(user_notes_block(stored.context_lines))
-        if stored is not None and stored.file_name:
+        if stored.file_name:
             # A dropped file's name, screened at the paste (`_screen_file_name`): fenced as data, never a note.
             blocks.append(file_name_block(stored.file_name))
         if blocks and body.action:
