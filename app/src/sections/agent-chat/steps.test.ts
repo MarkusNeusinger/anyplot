@@ -89,6 +89,15 @@ describe('runView', () => {
     expect(runView(state)).toEqual({ items: [ask], timeline: true });
   });
 
+  it('never holds a data version back: the live card would unmount', () => {
+    // A version under a running timeline (none arrives there today) keeps the card in the
+    // thread, and the stub it left; only the talk waits.
+    const stub = { id: 4, kind: 'data_stub', rows: 2, columns: 2, card: 5 } as const;
+    const live = { id: 5, kind: 'data' } as const;
+    const state = { ...running(plotRun), items: [ask, note, stub, live] };
+    expect(runView(state)).toEqual({ items: [ask, stub, live], timeline: true });
+  });
+
   it("lets the run's result card take the timeline's place, with the held items", () => {
     const card = { id: 3, kind: 'plot', version: 1 } as const;
     const state = { ...running(plotRun), items: [ask, note, card] };

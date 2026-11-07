@@ -965,6 +965,34 @@ describe('DataPanel version', () => {
       box.remove();
     }
   });
+
+  it('never pulls the focus back into the card after a press on the page outside it', async () => {
+    const view = render(
+      <Thread
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        version={snapshot(1, 'paste', 'pasted')}
+        last={false}
+        onUndo={vi.fn()}
+      />
+    );
+    const change = within(screen.getByTestId('data-card')).getByRole('button', {
+      name: 'Change the bindings',
+    });
+    await userEvent.click(change);
+    expect(change).toHaveFocus();
+    // A click on the page's background: the body takes the focus, with no element to name.
+    fireEvent.pointerDown(document.body);
+    change.blur();
+    view.rerender(
+      <Thread
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        version={snapshot(2, 'turn', 'changed')}
+        last
+        onUndo={vi.fn()}
+      />
+    );
+    expect(document.body).toHaveFocus();
+  });
 });
 
 describe('DataPanel working states', () => {

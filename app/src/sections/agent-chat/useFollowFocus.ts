@@ -5,26 +5,37 @@
  * drops the focus of an element whose node moves (it lands on the page's body). A control can also
  * go with the version it made (`.to_long()` leaves with the offer it applied).
  *
- * So the card keeps the element inside it that held the focus last (`onFocus`), until the focus
- * leaves for another element (`onBlur` with a `relatedTarget` outside the card). A blur without
- * one is a drop, not a choice: the move, a control that turned disabled while its step ran, or a
- * click on the page's background. When a new version shows and the focus is nowhere (the body),
- * it goes back to that element if it is still in the card and enabled, else to the card's label
- * on its border (`labelRef`, `CardFrame.tsx`). A version of the card's own controls
- * (`.undo()`, `.to_long()`, the pickers) puts the focus there even when the click gave none (a
- * button in Safari): the user acted on the card and its new place is where to look. The focus
- * scrolls the element into view, under the masthead (the page's `scroll-padding-top`).
+ * So the card keeps the element inside it that held the focus last (`onFocus`), until the user
+ * moves on: the focus leaves for another element (`onBlur` with a `relatedTarget` outside the
+ * card), or a pointer presses anywhere outside the card, the page's background included, where
+ * the body takes the focus with no element to name. A blur without either is a drop, not a
+ * choice: the move, or a control that turned disabled while its step ran. When a new version
+ * shows and the focus is nowhere (the body), it goes back to that element if it is still in the
+ * card and enabled, else to the card's label on its border (`labelRef`, `CardFrame.tsx`). A
+ * version of the card's own controls (`.undo()`, `.to_long()`, the pickers, `.use()` of a table
+ * read from text, whose card turns into this one) puts the focus there even when the click gave
+ * none (a button in Safari): the user acted on the card and its new place is where to look. The
+ * focus scrolls the element into view, under the masthead (the page's `scroll-padding-top`).
  *
  * The focus stays where it is in every other case: in the message box while a turn the user sent
  * makes the version, or anywhere else the user moved it.
  */
 
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import type { DataSnapshot, DataVersionChange } from 'src/hooks/useAgentSession';
 
-/** The versions the card's own controls make: `.undo()`, `.to_long()`, the table and sheet pickers. */
-const OWN_CONTROLS: ReadonlySet<DataVersionChange> = new Set(['undo', 'to_long', 'table', 'sheet']);
+/**
+ * The versions a card's own controls make: `.undo()`, `.to_long()`, the table and sheet pickers,
+ * and `.use()` on the card of a table read from text.
+ */
+const OWN_CONTROLS: ReadonlySet<DataVersionChange> = new Set([
+  'undo',
+  'to_long',
+  'table',
+  'sheet',
+  'transcription',
+]);
 
 export interface FollowFocus {
   /** The card's root, which holds the focus it follows. */
@@ -35,7 +46,7 @@ export interface FollowFocus {
   onBlur: (event: React.FocusEvent<HTMLElement>) => void;
 }
 
-/** A control that takes no focus now: a disabled button or select, or one marked inert. */
+/** A control the focus should not land on now: a disabled button or select, or `aria-disabled`. */
 function inert(element: HTMLElement): boolean {
   return (
     ('disabled' in element && (element as HTMLButtonElement).disabled) ||
@@ -65,6 +76,18 @@ export function useFollowFocus(version: DataSnapshot | undefined): FollowFocus {
     const target = last && card.contains(last) && !inert(last) ? last : labelRef.current;
     target?.focus();
   }, [n, own]);
+
+  // A press anywhere outside the card is the user moving on, also where it gives no element the
+  // focus (the page's background), so a later move never pulls the focus back into the card.
+  useEffect(() => {
+    const press = (event: PointerEvent) => {
+      if (!(event.target instanceof Node) || !cardRef.current?.contains(event.target)) {
+        held.current = null;
+      }
+    };
+    document.addEventListener('pointerdown', press, true);
+    return () => document.removeEventListener('pointerdown', press, true);
+  }, []);
 
   const onFocus = useCallback((event: React.FocusEvent<HTMLElement>) => {
     held.current = event.target;

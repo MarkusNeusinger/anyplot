@@ -626,6 +626,42 @@ describe('ChatThread data items', () => {
     expect(within(screen.getAllByRole('heading')[0]).getByText('#')).toHaveAttribute('aria-hidden');
   });
 
+  it('keeps a reply its element when the card moves below it, so the log reads it once', () => {
+    const thread = (items: ChatItem[]) => (
+      <ChatThread
+        state={ready(items)}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={renderData}
+      />
+    );
+    const before: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'assistant', text: '4 rows.' },
+      { id: 4, kind: 'user', text: 'only 2026' },
+      { id: 5, kind: 'assistant', text: 'Kept 2026.' },
+    ];
+    const { rerender } = render(thread(before));
+    const summary = screen.getByText('4 rows.');
+    expect(screen.getByTestId('first-reply')).toContainElement(summary);
+    // The turn's version moves the card below its reply: the summary is no first reply now, and
+    // stays the same node.
+    rerender(
+      thread([
+        before[0],
+        { id: 6, kind: 'data_stub', rows: 4, columns: 2, card: 2 },
+        ...before.slice(2),
+        { id: 2, kind: 'data' },
+      ])
+    );
+    expect(screen.getByText('4 rows.')).toBe(summary);
+    expect(screen.queryByTestId('first-reply')).not.toBeInTheDocument();
+  });
+
   it('keeps the live card mounted with its own state when a version moves it into a new chapter', async () => {
     function Card() {
       const [open, setOpen] = useState(false);

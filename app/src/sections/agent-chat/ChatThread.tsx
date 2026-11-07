@@ -394,12 +394,20 @@ export function ChatThread(props: ChatThreadProps) {
             summaries={summaries}
           />
         );
-        return item.id === replyId ? (
-          <Box key={item.id} ref={replyRef} data-testid="first-reply" sx={{ minWidth: 0 }}>
+        // Every reply stands in the same wrapper, the first reply after the live card with the
+        // ref that brings it into view: a reply that stops being the first one (the card moved
+        // below it) keeps its element, so the polite log never reads it out a second time.
+        if (!REPLY_KINDS.has(item.kind)) return node;
+        const first = item.id === replyId;
+        return (
+          <Box
+            key={item.id}
+            ref={first ? replyRef : undefined}
+            data-testid={first ? 'first-reply' : undefined}
+            sx={{ minWidth: 0 }}
+          >
             {node}
           </Box>
-        ) : (
-          node
         );
       })}
       {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
