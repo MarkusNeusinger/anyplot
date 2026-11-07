@@ -190,7 +190,10 @@ def test_the_prompt_names_no_confirm_button() -> None:
 
     assert re.findall(r"\bconfirm\(\)", text) == []
     assert re.findall(r"\bconfirm\(\)", AGENT.read_text(encoding="utf-8")) == []
-    assert "the plot button at the end of the message box's row (`.create_plot()`)" in text
+    # By the box at every width: beside it from the page's `sm` up, under it on a phone.
+    assert "the plot button by the message box (`.create_plot()`)" in text
+    assert "plot button by the message box" in AGENT.read_text(encoding="utf-8")
+    assert "beside the message box" not in text + AGENT.read_text(encoding="utf-8")
 
 
 def test_the_prompt_never_has_a_reply_send_the_user_to_the_plot_button() -> None:
