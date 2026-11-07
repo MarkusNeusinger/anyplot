@@ -48,7 +48,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   carry run. Another spec (`plot_type_switch_unavailable`, until the plot-type switch), the
   current library (`same_library`) and a library the service does not serve
   (`library_unavailable`) are refused.
-* `prepare_data(operations)`: at most five operations of the fixed set
+* `prepare_data(operations, from_version)`: at most five operations of the fixed set
   (`data/prepare.py`), applied by the server to the session's current dataset and
   stored as its next version (`dataset_versions.py`): the previous version stays for
   the user's undo, the bindings are carried over, and the confirmation drops by
@@ -63,12 +63,17 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   operation with its `family`: the call changes nothing and answers `unsupported_operation`
   with the `family` and a fixed sentence in the session language (`refusals.yaml`,
   `unsupported_<family>`), which the root sends instead of pointing the user to their file,
-  and the turn's `chat_turn` line counts the gap (`capability_gap`).
-* `query_data(operations, columns, limit)`: a question about the data answered from a copy
+  and the turn's `chat_turn` line counts the gap (`capability_gap`). With `from_version` (`original` or a
+  version number the session block lists, since 2026-11-07) the operations start from that earlier version
+  instead, none of them taking it as it was, and the result is stored on top all the same: the history is
+  never rewritten, the change lines say where it started (`dataset_versions.rebuilt_changes`), and a number
+  that is gone answers `other_paste` or `version_not_kept` (`dataset_versions.resolve_version`).
+* `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
   the total row count and the change lines. Nothing is stored: the dataset, its version, the
   bindings and the confirmation stay as they are, so a question never mutates the user's data.
+  `from_version` reads an earlier version as `prepare_data` does; a plot button's turn may still call it.
 * `generate_data(variables, series)`: a table computed by the server from formulas
   (`data/generate.py`): one or two variables, each a range of evenly spaced points,
   and one to ten series, each an expression over them. The table is parsed like a
@@ -88,11 +93,12 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 import json
 import math
 import secrets
+from dataclasses import replace
 from typing import Any
 
 from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
 from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
@@ -102,6 +108,7 @@ from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset,
 from ..data.prepare import (
     MAX_OPERATIONS,
     Operation,
+    PrepareArgs,
     Prepared,
     PrepareError,
     Unsupported,
@@ -113,7 +120,14 @@ from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
 from ..dataset_context import code_source, generated_source
 from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
-from ..dataset_versions import push_version
+from ..dataset_versions import (
+    VersionRefusal,
+    VersionRefused,
+    kept_versions,
+    push_version,
+    rebuilt_changes,
+    resolve_version,
+)
 from ..language import LANGUAGE_TARGETS, is_valid, normalise, refusal_lang, same_language
 from ..memory import ForgetArgs, MemoryRefused, memory_delta, read_memory
 from ..memory import forget as memory_forget
@@ -135,7 +149,16 @@ from ..render.gates import error_summary
 from ..render.harness import DATA_EXIT
 from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
-from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, KeepRequestArgs, PipelineArgs, SwitchArgs
+from ..schemas import (
+    CURRENT_VERSION,
+    MAX_COLUMNS,
+    MAX_ROWS,
+    Binding,
+    DatasetProfile,
+    KeepRequestArgs,
+    PipelineArgs,
+    SwitchArgs,
+)
 from ..services import get_services
 from ..session_state import (
     PLOT_LANGUAGE,
@@ -150,7 +173,6 @@ from ..settings import get_settings
 
 
 PLOT_PIPELINE = "plot_pipeline"
-OPERATIONS = TypeAdapter(list[Operation])
 PROFILE_RESULT_BYTES = result_limit("get_dataset_profile") - MAX_NOTES_RESULT_BYTES - MAX_FILE_NAME_RESULT_BYTES
 """What `get_dataset_profile`'s profile is trimmed to: its cap less the room kept for the pasted notes and a
 dropped file's name."""
@@ -430,8 +452,32 @@ def capability_gap(operations: list[Operation], view: SessionView, tool_context:
     return {"status": "error", "code": "unsupported_operation", "family": gap.family, "message": message}
 
 
-async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
+VERSION_MESSAGES: dict[VersionRefusal, str] = {
+    "other_paste": (
+        "no version of the current data has that number: it was a version of data the user pasted over, which is "
+        "gone; the session block lists the versions of the current data"
+    ),
+    "version_not_kept": (
+        "that version of the current data is gone (undone, or older than the history keeps); the session block lists "
+        "the versions you can start from"
+    ),
+}
+"""The fixed message of a `from_version` refusal (`dataset_versions.VersionRefusal`): server text, never the user's."""
+
+
+def _version_refusal(code: VersionRefusal) -> dict[str, Any]:
+    return {"status": "error", "code": code, "message": VERSION_MESSAGES[code]}
+
+
+async def prepare_data(
+    operations: list[dict[str, Any]], tool_context: ToolContext, from_version: str = CURRENT_VERSION
+) -> dict[str, Any]:
     """Change the user's dataset with one to five operations, applied in order by the server; the result becomes the next version of the data, which the user then checks and confirms.
+
+    from_version: the version the operations start from: "current" (the default), "original" (version 1, the table as
+    the user pasted or opened it) or a version number the session block lists, such as "2"; the result is stored as
+    the next version on top all the same, and the change lines say where it started. From an earlier version,
+    operations may be empty: that version as it was becomes the next one.
 
     Each operation is an object with "op" and its fields, column names exactly as the profile lists them:
     rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold,
@@ -482,49 +528,66 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     if stored is None:
         return _not_ready("no_dataset")
     try:
-        if not isinstance(operations, list) or not 1 <= len(operations) <= MAX_OPERATIONS:
+        if not isinstance(operations, list) or len(operations) > MAX_OPERATIONS:
             raise ValueError(f"operations is a list of 1 to {MAX_OPERATIONS} operations")
-        parsed_operations = OPERATIONS.validate_python(operations)
+        args = PrepareArgs.model_validate({"operations": operations, "from_version": from_version})
     except ValidationError as exc:
-        lines = validation_lines(exc, prefix="operations")
-        return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
+        return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(validation_lines(exc))}
     except ValueError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
-    if (gap := capability_gap(parsed_operations, view, tool_context)) is not None:
+    if (gap := capability_gap(args.operations, view, tool_context)) is not None:
         return gap
     try:
-        prepared, parsed = apply_and_parse(stored.as_parsed(), parsed_operations, language=view.language)
+        start = resolve_version(kept_versions(services.datasets, session_id, view), view, args.from_version)
+    except VersionRefused as exc:
+        return _version_refusal(exc.code)
+    if start.current and not args.operations:  # `from_version` named the current version by its number
+        lines = ["from_version names the current version, and there is no operation: nothing would change"]
+        return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
+    prepared: Prepared | None = None
+    try:
+        if args.operations:
+            prepared, parsed = apply_and_parse(start.stored.as_parsed(), args.operations, language=view.language)
+        else:
+            parsed = start.stored.as_parsed()  # the earlier version as it was, as the next one
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
     except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
+    changes = rebuilt_changes(start, prepared.changes if prepared is not None else [])
     try:
+        # From an earlier version too, the result goes on top: the history is never rewritten, and `.undo()` steps
+        # back to the version the turn began with.
         version = push_version(
             services.datasets,
             session_id,
             view,
             parsed,
             view.snapshot,
-            converted=prepared.converted,
-            row_numbers=prepared.row_numbers,
-            splits=prepared.splits,
+            converted=prepared.converted if prepared is not None else None,
+            row_numbers=prepared.row_numbers if prepared is not None else (),
+            splits=prepared.splits if prepared is not None else (),
+            changes=changes,
+            made_from=None if start.current else start.stored,
         )
     except StoreFull:
         return _error("capacity")
     # The new dataset id leaves the confirmation's fingerprint behind: the user confirms the new version.
     for key, value in version.delta.items():
         tool_context.state[key] = value
-    if outcome := _conversion_outcome(prepared, parsed.profile, version.bindings):
+    if prepared is not None and (outcome := _conversion_outcome(prepared, parsed.profile, version.bindings)):
         telemetry.note_conversion(session_id, outcome)
-    ledger.dataset_changes.extend(prepared.changes)
-    ledger.prep_ops.extend(operation.op for operation in parsed_operations)  # the names only, for the telemetry
+    ledger.dataset_changes.extend(changes)
+    ledger.prep_ops.extend(operation.op for operation in args.operations)  # the names only, for the telemetry
+    if not start.current:
+        ledger.rebuilt_from.append(start.number)
     base = {
         "status": "ok",
         "rows": parsed.profile.rows,
         "columns": len(parsed.profile.columns),
         "version": version.version,
-        "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(prepared.changes, ensure_ascii=False)),
+        "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(changes, ensure_ascii=False)),
     }
     if version.bindings != view.bindings:
         # The server moved them (`carry_bindings`): the reply names these, not the ones the turn started from (live
@@ -538,6 +601,7 @@ async def query_data(
     tool_context: ToolContext,
     columns: list[str] | None = None,
     limit: int = DEFAULT_QUERY_ROWS,
+    from_version: str = CURRENT_VERSION,
 ) -> dict[str, Any]:
     """Answer a question about the user's data without changing it: the operations are applied to a copy and the first rows of the result come back as a small table; nothing is stored, and the data, its version and its confirmation stay as they are.
 
@@ -545,9 +609,10 @@ async def query_data(
     drop_rows on the others, such as test ne on the year asked about; a top N is a sort with limit; a share, a percent
     change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
     per group an aggregate). columns: the columns to return, at most 8
-    (default: the first 8). limit: the rows to return, 1 to 25 (default 10). Returns the table (columns and rows),
-    the number of rows of the whole result, whether it was cut, and the change lines, or an error with a code and a
-    message.
+    (default: the first 8). limit: the rows to return, 1 to 25 (default 10). from_version: the version to read,
+    "current" (the default), "original" (version 1, the table as the user pasted or opened it) or a version number the
+    session block lists. Returns the table (columns and rows), the number of rows of the whole result, whether it was
+    cut, and the change lines, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -556,17 +621,25 @@ async def query_data(
     if stored is None:
         return _not_ready("no_dataset")
     try:
-        args = QueryArgs.model_validate({"operations": operations, "columns": columns, "limit": limit})
+        args = QueryArgs.model_validate(
+            {"operations": operations, "columns": columns, "limit": limit, "from_version": from_version}
+        )
     except ValidationError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(validation_lines(exc))}
     if (gap := capability_gap(args.operations, view, tool_context)) is not None:
         return gap
     try:
-        answer = run_query(stored.as_parsed(), args.operations, args.columns, args.limit, language=view.language)
+        start = resolve_version(
+            kept_versions(get_services().datasets, tool_context.session.id, view), view, args.from_version
+        )
+    except VersionRefused as exc:
+        return _version_refusal(exc.code)
+    try:
+        answer = run_query(start.stored.as_parsed(), args.operations, args.columns, args.limit, language=view.language)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
-    return query_result(answer)
+    return query_result(replace(answer, changes=rebuilt_changes(start, answer.changes)))
 
 
 def query_result(answer: QueryResult) -> dict[str, Any]:
@@ -619,14 +692,16 @@ async def generate_data(
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
     except ParseError:  # the generator keeps the parser's caps (size, rows, columns), so a refusal here is a bug
         return _error("internal")
+    changes = [*generated.changes, *generated.warnings]
     try:
-        delta, number = _store_generated(tool_context.session.id, view, parsed, source=generated_source(spec))
+        delta, number = _store_generated(
+            tool_context.session.id, view, parsed, source=generated_source(spec), changes=changes
+        )
     except StoreFull:
         return _error("capacity")
     # A new dataset id leaves the confirmation's fingerprint behind: the user confirms the generated data.
     for key, value in delta.items():
         tool_context.state[key] = value
-    changes = [*generated.changes, *generated.warnings]
     ledger.dataset_changes.extend(changes)
     base = {
         "status": "ok",
@@ -639,19 +714,28 @@ async def generate_data(
 
 
 def _store_generated(
-    session_id: str, view: SessionView, parsed: ParsedDataset, *, code: str | None = None, source: str
+    session_id: str,
+    view: SessionView,
+    parsed: ParsedDataset,
+    *,
+    code: str | None = None,
+    source: str,
+    changes: list[str],
 ) -> tuple[dict[str, Any], int]:
     """Store a generated table: the next version of the session's data, or version 1 when it has none; raises `StoreFull`.
 
     A session whose dataset left the store (a restart keeps neither) counts as one
     without data, so the stale ids are dropped with the history, as a paste drops them.
     `code` is the Python that computed the table (`run_data_code`), kept with the version;
-    `source` says where it comes from (`dataset_context`), for the adapter and the reviewer.
+    `source` says where it comes from (`dataset_context`), for the adapter and the reviewer;
+    `changes` are its change lines, which the session block lists for a version after the first.
     """
     store = get_services().datasets
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
     if current is not None:
-        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True, code=code, source=source)
+        version = push_version(
+            store, session_id, view, parsed, view.snapshot, rebind=True, code=code, source=source, changes=changes
+        )
         return version.delta, version.version
     ingested = store_dataset(
         store,
@@ -659,7 +743,7 @@ def _store_generated(
         parsed,
         view.snapshot,
         previous_id=view.dataset_id,
-        history=view.dataset_history,
+        history=view.earlier_datasets,
         code=code,
         source=source,
     )
@@ -785,17 +869,22 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error("data_refused")
     except GuardUnavailable:
         return _error("guard_unavailable")
+    example = language == "example"
+    change = EXAMPLE_DATA_CHANGE if example else DATA_CODE_CHANGE
+    changes = [f"{change}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
     try:
         delta, number = _store_generated(
-            tool_context.session.id, view, parsed, code=prepared, source=code_source(prepared, language)
+            tool_context.session.id,
+            view,
+            parsed,
+            code=prepared,
+            source=code_source(prepared, language),
+            changes=changes,
         )
     except StoreFull:
         return _error("capacity")
     for key, value in delta.items():
         tool_context.state[key] = value
-    example = language == "example"
-    change = EXAMPLE_DATA_CHANGE if example else DATA_CODE_CHANGE
-    changes = [f"{change}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
     ledger.example_data = ledger.example_data or example
     ledger.dataset_changes.extend(changes)
     base = {

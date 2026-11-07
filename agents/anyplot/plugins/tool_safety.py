@@ -4,7 +4,8 @@
   `plot_pipeline` workflow; none for the adapters and the reviewer); Pydantic
   validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
-  operations of the `Operation` union, `query_data` up to five of them with its
+  operations of the `Operation` union and the version they start from (`prepare.PrepareArgs`),
+  `query_data` up to five of them with its
   `query.QueryArgs` bounds, `generate_data` the `generate.Generate`
   spec and `set_language` one value that matches `language.LANGUAGE_PATTERN`, as the
   language route does, with an `applies_to` of `language.LANGUAGE_TARGETS`,
@@ -61,7 +62,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..briefs import bindings_text
 from ..data.generate import Generate
-from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
+from ..data.prepare import PrepareArgs, validation_lines
 from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
@@ -175,11 +176,6 @@ class _LanguageArgs(BaseModel):
     applies_to: LanguageTarget = "both"
 
 
-class _PrepareArgs(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operations: list[Operation] = Field(min_length=1, max_length=MAX_OPERATIONS)
-
-
 DataCodeSource = Literal["python", "javascript", "r", "math", "other", "example"]
 """What the user gave `run_data_code`'s Python from: code or a formula in a language, or `example` for example data the
 user asked for without giving any (`tools/session.py` `SOURCE_LANGUAGES`, pinned equal by a test)."""
@@ -202,7 +198,7 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "keep_plot_request": KeepRequestArgs,
     "forget": ForgetArgs,
     "switch_plot": SwitchArgs,
-    PREPARE_TOOL: _PrepareArgs,
+    PREPARE_TOOL: PrepareArgs,
     QUERY_TOOL: QueryArgs,
     GENERATE_TOOL: Generate,
     DATA_CODE_TOOL: _DataCodeArgs,

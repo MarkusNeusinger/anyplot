@@ -64,6 +64,15 @@ A new paste empties it."""
 DATASET_VERSION = PREFIX + "dataset_version"
 """The number of the current dataset version: 1 for a paste, one more for every
 `prepare_data`, one less for every undo. Above 1 there is a version to undo."""
+DATASET_ORIGINAL = PREFIX + "dataset_original"
+"""The id of version 1 of the session's current data: the paste, the opened file, the copy or the table computed in a
+session without data. The store keeps it also after the history cap pushed it out of `DATASET_HISTORY`, so
+`prepare_data` and `query_data` can always start from it (`from_version` `original`); undo never reaches it there. A
+new paste replaces it and deletes the old one (owner decision of 2026-11-06)."""
+DATASET_TOP = PREFIX + "dataset_top"
+"""The highest version number the current data reached: an undo lowers `DATASET_VERSION` but not this, so a number
+up to it is a version of this data that is gone (`version_not_kept`), and one above it a version of earlier data
+(`other_paste`). A new paste sets it to 1."""
 DATASET_COPIED_FROM = PREFIX + "dataset_copied_from"
 """The number of the data version this session's data was copied from (`POST .../dataset/copy`, the admin fan-out's
 copy of the page session's confirmed version), absent for data of the session's own. The copy is the session's
@@ -175,6 +184,11 @@ class SessionView:
     """The ids of the dataset versions before the current one, oldest first (`DATASET_HISTORY`)."""
     dataset_version: int = 1
     """The current dataset version's number (`DATASET_VERSION`); 1 without a dataset or for a paste."""
+    dataset_original: str | None = None
+    """The id of version 1 of the current data (`DATASET_ORIGINAL`); None without data or for state from before the
+    key, where `dataset_versions.kept_versions` finds it in the history while it is still there."""
+    dataset_top: int = 1
+    """The highest version number the current data reached (`DATASET_TOP`), at least `dataset_version`."""
     language: str = DEFAULT_LANGUAGE
     """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
     language_source: LanguageSource = "default"
@@ -192,6 +206,15 @@ class SessionView:
     def data_confirmed(self) -> bool:
         """Whether the user confirmed the current dataset with its current bindings (step 1 of two)."""
         return bool(self.dataset_id) and self.confirmed == confirmation_fingerprint(self.dataset_id, self.bindings)
+
+    @property
+    def earlier_datasets(self) -> list[str]:
+        """The ids the session keeps besides the current version: the original kept past the history, then the
+        history; what a new paste deletes (`opening.store_dataset`)."""
+        original = self.dataset_original
+        if original and original != self.dataset_id and original not in self.dataset_history:
+            return [original, *self.dataset_history]
+        return list(self.dataset_history)
 
     @property
     def target(self) -> tuple[str, str]:
@@ -355,6 +378,8 @@ def read_session(state: Any) -> SessionView | None:
     )
     raw_readiness = state.get(READINESS)
     status = raw_readiness.get("status") if isinstance(raw_readiness, dict) else None
+    dataset_version = max(1, int(state.get(DATASET_VERSION) or 1))
+    raw_original = state.get(DATASET_ORIGINAL)
     return SessionView(
         spec_id=str(spec_id),
         library=str(library),
@@ -367,7 +392,9 @@ def read_session(state: Any) -> SessionView | None:
         last_run=_last_run(state.get(LAST_RUN)),
         confirmed=state.get(CONFIRMED),
         dataset_history=[str(item) for item in state.get(DATASET_HISTORY) or []],
-        dataset_version=max(1, int(state.get(DATASET_VERSION) or 1)),
+        dataset_version=dataset_version,
+        dataset_original=raw_original if isinstance(raw_original, str) and raw_original else None,
+        dataset_top=max(dataset_version, int(state.get(DATASET_TOP) or 1)),
         language=language,
         language_source=language_source,
         plot_language_choice=plot_language_choice,

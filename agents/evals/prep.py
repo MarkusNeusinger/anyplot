@@ -80,6 +80,13 @@ where the root asked the user for a date column a conversion would have made, so
 fixture expected, and any skip fails the run. The summary counts `conversions_owed` and `conversions_made`, and
 each case its `server_operations`.
 
+A case may change the data before its message (`before_operations`, since 2026-11-07): the server stores each list
+of operations as the next data version, as the root's earlier turns would have, so the session block lists them and
+the message can ask for what only an earlier version still has ("the first 20 after all" after a top 10). Its
+`expected_from_version` (`original` or a number) is then scored too (`score_from_version`): some `prepare_data` or
+`query_data` call of the turn names it and no `prepare_data` call names another, or the case is a miss. The report
+lists every call's `from_version` under `from_versions`, scored or not.
+
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
 rate, and more than `--max-unavailable` (10 percent) of them exit 4. A dataset the
@@ -180,8 +187,11 @@ _SENTENCE_END = re.compile(r"(?<=[.!?。])\s+")
 _CLAUSE_START = re.compile(r"[;—–]\s*|,\s+(?:or|oder)\s+")
 EXIT_OK, EXIT_FAILED, EXIT_SETUP, EXIT_OUTAGE = 0, 1, 2, 4
 PREPARE_TOOL = "prepare_data"
+QUERY_TOOL = "query_data"
 GENERATE_TOOL = "generate_data"
 DATA_CODE_TOOL = "run_data_code"
+MAX_BEFORE_VERSIONS = 5
+"""Earlier changes a case may make before its message: the versions the undo history keeps."""
 DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The root's tools that store a dataset version; every call of them in a turn must succeed."""
 GAP_CODE = "unsupported_operation"
@@ -253,6 +263,14 @@ class PrepCase(BaseModel):
     """The message is the note the user typed with the paste: the first turn on the data, which summarizes it and
     acts on the note in one reply (`SUMMARY_PENDING`). Without it, the harness marks the data summarized before the
     message, as after the page's summary turn, so a message case means what it meant before the note path."""
+    before_operations: list[list[dict[str, Any]]] = Field(default_factory=list, max_length=MAX_BEFORE_VERSIONS)
+    """Earlier changes of the data, one `prepare_data` call's operations each, which the server applies before the
+    message as the root's earlier turns would have, each as a version of its own (`_make_versions`): the session block
+    lists them, and the message can ask for what only an earlier version still has (since 2026-11-07)."""
+    expected_from_version: Literal["current", "original"] | Annotated[int, Field(ge=1)] | None = None
+    """The version the turn should start from (`from_version`, `original` being 1): some `prepare_data` or
+    `query_data` call names it and no `prepare_data` call names another (`score_from_version`). None leaves the
+    versions unscored; the report lists them all the same."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -262,6 +280,8 @@ class PrepCase(BaseModel):
             raise ValueError("a summary action needs a dataset")
         if self.first_turn and (self.message is None or self.dataset_text is None):
             raise ValueError("a first turn is a message sent with a dataset")
+        if self.before_operations and (self.message is None or self.first_turn or self.dataset_text is None):
+            raise ValueError("earlier changes come before a message on summarized data")
         return self
 
 
@@ -624,6 +644,12 @@ class CaseResult:
     """The operations the server's conversions applied in the turn (`CONVERSIONS_MADE`), counted among `found`."""
     conversion_skipped: bool = False
     """The turn skipped a `certain` conversion of a summary turn: the case is a miss (`score_conversions`)."""
+    from_versions: list[str] = field(default_factory=list)
+    """The `from_version` of every `prepare_data` and `query_data` call of the turn, in order (`current` when left
+    out)."""
+    version_miss: bool = False
+    """The case expects a `from_version` and the turn did not start from it: the case is a miss
+    (`score_from_version`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -705,6 +731,8 @@ class CaseRunner:
                 pasted_rows = int(stored.json()["profile"]["rows"])
                 if case.message is not None and not case.first_turn:
                     await self._mark_summarized(user, sid)
+                if case.before_operations:
+                    await self._make_versions(user, sid, case.before_operations)
             summary_turn = case.action == "summarize_data" or case.first_turn
             listed = await self._listed_conversions(user, sid)
             owed = [line.operations() for line in listed if line.certain] if summary_turn else []
@@ -727,6 +755,8 @@ class CaseRunner:
                     rows.add(int(data["dataset"]["profile"]["rows"]))  # the version this turn made
             texts = await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
             score_conversions(result, owed, decimal)
+            # A message case on summarized data gets no server conversion: the turn starts after the earlier changes.
+            score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -751,6 +781,37 @@ class CaseRunner:
 
         session = await self.runtime.session(user, sid)
         await self.runtime.write_state(session, {SUMMARY_PENDING: None})
+
+    async def _make_versions(self, user: str, sid: str, before: Sequence[Sequence[dict[str, Any]]]) -> None:
+        """The case's earlier changes, each stored as the next data version as `prepare_data` stores one, with its
+        change lines for the session block; no model call. `check_cases` applied them once already, so a refusal
+        here is a bug and raises."""
+        from agents.anyplot.data.prepare import PrepareArgs, apply_and_parse
+        from agents.anyplot.dataset_versions import push_version
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+
+        store = get_services().datasets
+        for operations in before:
+            session = await self.runtime.session(user, sid)
+            view = read_session(session.state)
+            stored = store.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+            if view is None or stored is None:
+                raise RuntimeError("the case's session has no data to change")
+            args = PrepareArgs.model_validate({"operations": list(operations)})
+            prepared, parsed = apply_and_parse(stored.as_parsed(), args.operations, language=view.language)
+            version = push_version(
+                store,
+                sid,
+                view,
+                parsed,
+                view.snapshot,
+                converted=prepared.converted,
+                row_numbers=prepared.row_numbers,
+                splits=prepared.splits,
+                changes=prepared.changes,
+            )
+            await self.runtime.write_state(session, version.delta)
 
     async def _listed_conversions(self, user: str, sid: str) -> list[Any]:
         """The conversion lines the session block lists for the turn about to start (`conversions.candidates`)."""
@@ -805,6 +866,9 @@ class CaseRunner:
                 texts.extend(text for text in replies if text.strip())
             for call in event.get_function_calls():
                 result.tool_calls.append(str(call.name))
+                if call.name in (PREPARE_TOOL, QUERY_TOOL):
+                    args = call.args if isinstance(call.args, dict) else {}
+                    result.from_versions.append(f"{call.name}:{args.get('from_version', 'current')}")
                 if call.name == PREPARE_TOOL and isinstance(call.args, dict):
                     items = call.args.get("operations")
                     if isinstance(items, list):
@@ -838,6 +902,31 @@ class CaseRunner:
             result.match = same_operations(result.found, result.expected) and not result.failed_calls
         result.match = result.match and not result.instruction_talk
         return texts
+
+
+def version_key(value: object, current: int) -> str:
+    """A `from_version` as one comparable text: `original` is version 1, `current` the number the turn started on,
+    `"2"` is 2."""
+    text = str(value).strip()
+    return "1" if text == "original" else str(current) if text == "current" else text
+
+
+def score_from_version(result: CaseResult, expected: str | int | None, current: int = 1) -> None:
+    """Whether the turn started from the version the case expects: some `prepare_data` or `query_data` call names it,
+    and no `prepare_data` call names another (a question read from elsewhere first changes nothing). A miss otherwise.
+
+    `result.from_versions` holds `<tool>:<from_version>`; `current` is the version the turn started on (one more per
+    earlier change), so `current` and its number are the same version. A case without an expectation is not scored.
+    """
+    if expected is None:
+        return
+    calls = [item.split(":", 1) for item in result.from_versions]
+    want = version_key(expected, current)
+    named = any(version_key(version, current) == want for _, version in calls)
+    stray = any(tool == PREPARE_TOOL and version_key(version, current) != want for tool, version in calls)
+    result.version_miss = not named or stray
+    if result.version_miss:
+        result.match = False
 
 
 def score_conversions(result: CaseResult, owed: Sequence[Sequence[dict[str, Any]]], decimal: str) -> None:
@@ -1005,6 +1094,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         **_replies([result for _, result in pairs if result.operations is not None]),
         "conversions_owed": sum(result.conversions_owed for _, result in pairs),
         "conversions_made": sum(result.conversions_made for _, result in pairs),
+        "version_misses": sum(1 for _, result in pairs if result.version_miss),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -1021,6 +1111,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "instruction_talk": result.instruction_talk,
             "conversion_skipped": result.conversion_skipped,
             "server_operations": result.server_operations,
+            "from_versions": result.from_versions,
+            "version_miss": result.version_miss,
         }
         for case, result in pairs
         if result.operations is not None and not result.match
@@ -1083,6 +1175,8 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 f"no operation (refusal {result.refusal})" if result.refusal else "no operation"
             )
             outcome = "match" if result.match else "miss (instruction talk)" if result.instruction_talk else "miss"
+            if result.version_miss:
+                outcome += f", from {', '.join(result.from_versions) or 'no call'}"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))
@@ -1227,12 +1321,26 @@ def stamp(settings: AgentSettings, cases: Sequence[PrepCase]) -> dict[str, Any]:
 
 
 def check_cases(cases: Sequence[PrepCase]) -> None:
-    """Every expected operation list passes the `Operation` and `Generate` models; raises `SetupError` otherwise."""
+    """Every expected operation list passes the `Operation` and `Generate` models, and a case's earlier changes apply to
+    its dataset one after the other; raises `SetupError` otherwise."""
+    from agents.anyplot.data.parse import parse_dataset
+    from agents.anyplot.data.prepare import PrepareArgs, PrepareError, apply_and_parse
+
     for case in cases:
         try:
             canonical_operations(case.expected_operations, ".")
         except ValidationError as exc:
             raise SetupError(f"case {case.id}: expected_operations do not validate: {exc}") from exc
+        if not case.before_operations or case.dataset_text is None:
+            continue
+        parsed = parse_dataset(case.dataset_text)
+        for place, operations in enumerate(case.before_operations):
+            try:
+                args = PrepareArgs.model_validate({"operations": operations})
+                # In the case's language, as the session names a column the operations leave unnamed (`date_number`).
+                _, parsed = apply_and_parse(parsed, args.operations, language=case.locale)
+            except (ValidationError, PrepareError) as exc:
+                raise SetupError(f"case {case.id}: before_operations[{place}] does not apply: {exc}") from exc
 
 
 def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, services: Services | None = None) -> int:

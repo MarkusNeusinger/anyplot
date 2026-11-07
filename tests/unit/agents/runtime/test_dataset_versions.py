@@ -135,8 +135,9 @@ def test_the_history_keeps_five_versions_and_deletes_the_oldest() -> None:
 
     assert state[DATASET_VERSION] == 8
     assert state[DATASET_HISTORY] == ids[2:7] and len(state[DATASET_HISTORY]) == MAX_DATASET_HISTORY
-    assert [store.get(dataset_id, SID) is not None for dataset_id in ids] == [False, False] + [True] * 6
-    assert len(store) == 6
+    # The paste stays past the history for `from_version` (`DATASET_ORIGINAL`); version 2 left the store.
+    assert [store.get(dataset_id, SID) is not None for dataset_id in ids] == [True, False] + [True] * 6
+    assert len(store) == 7
 
 
 def test_undo_restores_the_newest_entry_and_drops_the_current_one() -> None:

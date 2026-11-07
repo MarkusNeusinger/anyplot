@@ -285,6 +285,8 @@ from agents.anyplot.session_state import (
     DATASET_COPIED_FROM,
     DATASET_HISTORY,
     DATASET_ID,
+    DATASET_ORIGINAL,
+    DATASET_TOP,
     DATASET_VERSION,
     PENDING_BINDINGS,
     PENDING_CLEARED,
@@ -1590,7 +1592,7 @@ async def _ingest_paste(
             parsed,
             view.snapshot,
             previous_id=view.dataset_id,
-            history=view.dataset_history,
+            history=view.earlier_datasets,  # the undo history and the original kept past it
             notes_screened=True,  # `_screen_notes` above kept only the notes that passed
             file_name=file_name,
             # Data that replaces data keeps what its columns meant: the plot keeps its axes (`carry_by_name`).
@@ -2053,7 +2055,9 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
         raise AgentsError(422, "no_suggestion") from None
     try:
         # The new columns go to the roles they were made for, whatever their names (`LongSuggestion.bindings`).
-        version = push_version(services.datasets, sid, view, parsed, view.snapshot, pinned=suggestion.bindings())
+        version = push_version(
+            services.datasets, sid, view, parsed, view.snapshot, pinned=suggestion.bindings(), changes=prepared.changes
+        )
     except StoreFull:
         raise AgentsError(503, "capacity") from None
     await runtime.write_state(session, version.delta)
@@ -2165,6 +2169,8 @@ async def copy_dataset(
             BINDINGS: [binding.model_dump() for binding in bindings],
             DATASET_HISTORY: [],
             DATASET_VERSION: 1,
+            DATASET_ORIGINAL: copied.dataset_id,  # the copy is the original of the versions made from it here
+            DATASET_TOP: 1,
             DATASET_COPIED_FROM: origin.dataset_version,
             CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
             **language_delta(origin.language, origin.language_source),

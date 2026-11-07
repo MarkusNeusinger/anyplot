@@ -4,6 +4,8 @@
   constant `static_instruction` (`policy.root_instruction`), never templated; the
   session block `session_context` adds only server-validated values (spec id,
   library, the session language and its source, dataset and binding status, the
+  versions of the data that `prepare_data` and `query_data` can start from (their change
+  lines fenced, since they name the user's columns), the
   conversions that would fill a required role left open (`data/conversions.py`, their
   lines fenced, since they name the user's columns), whether
   the user pasted notes with the data (a fixed line, never the notes), plot
@@ -50,6 +52,7 @@ from google.genai import types
 from . import telemetry
 from .data.bindings import check_bindings
 from .data.conversions import candidates
+from .dataset_versions import kept_versions, version_lines
 from .dev_fixture import DevFixturePlugin
 from .language import english_name, same_language
 from .memory import MemoryEntry, read_memory
@@ -125,6 +128,15 @@ MADE_HEADING = (
 )
 """The session block's line over the `certain` conversions the server made on the summary turn (`paste_conversions.py`):
 the root names them in the summary, and never makes, repeats or drops them itself."""
+VERSIONS_HEADING = (
+    "Data versions you can start from: {count}, oldest first, each with the change that made it and its shape; "
+    'prepare_data and query_data take one as from_version ("original" or its number), and a change from one is '
+    "stored as the next version (see 'Step 1: the data')"
+)
+"""The session block's line over the versions of the current data the store keeps (`dataset_versions.version_lines`),
+listed once there is more than one. Persona tests of 2026-11-06: after a top 10 or a weekly sum the root told users to
+press `.undo()` or paste again, because it could not see that the rows it needed still existed (owner decision of
+2026-11-06: the chat reads and rebuilds from the original or an earlier version and says so)."""
 PASTED_LINE = (
     "- Data: pasted just now, not summarized yet; the table came in as an attachment of the message box and is "
     "stored, so get_dataset_profile reads it, and a typed message of this turn is the note sent with it, never data "
@@ -199,6 +211,11 @@ async def session_context(context: ReadonlyContext) -> str:
     else:
         profile = dataset.profile
         lines.append(f"- Dataset: {profile.rows} rows, {len(profile.columns)} columns")
+        kept = kept_versions(services.datasets, session_id, view)
+        if len(kept) > 1:
+            # The change lines name the user's columns, so they stand inside a fence.
+            lines.append(f"- {VERSIONS_HEADING.format(count=len(kept))}")
+            lines.append(fence("tool_notes", "\n".join(version_lines(kept))))
         if dataset.context_lines:
             # A fixed line, never the notes: they are the user's text and reach the root only fenced.
             lines.append(f"- Notes pasted with the data: {NOTES_LINE}")
@@ -230,7 +247,7 @@ async def session_context(context: ReadonlyContext) -> str:
         # recomputed on the new version, the row-number line came back on the next call worded as certain, and the
         # root added a `row_number` nobody asked for to a chain of drop, aggregate and sort (prep eval, 2026-11-07).
         # The made lines above stay, since the summary names them; the next turn lists the candidates again.
-        changed_now = ledger is not None and bool(ledger.prep_ops)
+        changed_now = ledger is not None and bool(ledger.prep_ops or ledger.rebuilt_from)
         found = (
             candidates(
                 view.bindings,
