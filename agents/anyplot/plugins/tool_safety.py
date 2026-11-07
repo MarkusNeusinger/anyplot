@@ -405,7 +405,10 @@ class ToolSafetyPlugin(BasePlugin):
 
     @staticmethod
     def check(name: str, arguments: dict[str, Any], agent: str) -> ErrorCode | None:
-        """The refusal code for a call, or None: allowlist, arguments, no URL or path (also used by Budget)."""
+        """The refusal code for a call, or None: allowlist, arguments, no URL or path (also used by Budget).
+
+        The bounds of the turn (a plot button's `PLOT_ACTION_TOOLS`, the per-turn pipeline and data-run counts) are
+        `before_tool_callback`'s: a call this passes can still be refused there."""
         if name not in ALLOWED_TOOLS.get(agent, frozenset()):
             return "tool_not_allowed"
         try:
