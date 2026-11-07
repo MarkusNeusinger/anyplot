@@ -224,6 +224,37 @@ class TestPlugin:
         assert reply_text(reply) == READY
         assert lines == [{"verdict": "dropped", "sentences": 1}, {"verdict": "dropped", "sentences": 1}]
 
+    @pytest.mark.parametrize(
+        ("text", "kept", "verdict"),
+        [
+            # A one-sentence answer to "how do I plot?" is all the reply there is: it stays whole.
+            (
+                "Press `.create_plot()` beside the message box to draw it.",
+                "Press `.create_plot()` beside the message box to draw it.",
+                {"verdict": "kept", "sentences": 1},
+            ),
+            # A mixed reply loses the button's sentence alone.
+            (
+                "I kept the title for the first plot. Press `.create_plot()` once y has a column. Then it draws.",
+                "I kept the title for the first plot. Then it draws.",
+                {"verdict": "dropped", "sentences": 1},
+            ),
+            # A German reply the same: the button's name is the same in every language.
+            (
+                "Ich habe die Spalte umbenannt: 48 Zeilen. Drück danach `.update_plot()`, um den Plot zu ändern.",
+                "Ich habe die Spalte umbenannt: 48 Zeilen.",
+                {"verdict": "dropped", "sentences": 1},
+            ),
+        ],
+    )
+    async def test_the_plot_button_check_keeps_a_lone_answer_and_drops_the_ask_in_any_language(
+        self, text: str, kept: str, verdict: dict[str, Any], ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+
+        assert reply_text(await check(response(types.Part(text=text)))) == kept
+        assert lines == [verdict]
+
     async def test_a_reply_that_only_names_the_plot_button_stays_whole(
         self, ledger: RequestLedger, lines: list[dict[str, Any]]
     ) -> None:
