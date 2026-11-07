@@ -17,5 +17,6 @@
   their names (`.download()`, `.copy_png()`, `.open()`) on the line right under
   the image. The data card's dropdowns and the start item's columns ⓘ name a
   role's kinds in the chips' words (`numbers or dates`, not `numeric /
-  datetime`), and the assistant's list of the page's controls says where each
+  datetime`), the status line asks to check the data, not the preview, at
+  every width, and the assistant's list of the page's controls says where each
   download sits. (#12601)

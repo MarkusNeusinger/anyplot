@@ -821,7 +821,7 @@ describe('AgentChatPage gating', () => {
     // Before data the status line names the step and the data; the how-to is behind the start
     // item's ⓘ, not in a paragraph on the page (2026-11-02).
     expect(screen.getByTestId('data-step')).toHaveTextContent(/^>>> step 1 of 2 · your data$/);
-    expect(screen.queryByText(/check the preview and the bindings/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/check the data and the bindings/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'How the chat takes data' })).toBeInTheDocument();
 
     await parseAndSummarize();
@@ -844,10 +844,10 @@ describe('AgentChatPage gating', () => {
     // The first binding setup after a paste dropped no confirmation: nothing to name.
     expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      'step 1 of 2 · check the preview and the bindings above, then .create_plot()'
+      'step 1 of 2 · check the data and the bindings above, then .create_plot()'
     );
     expect(create).toHaveAccessibleDescription(
-      'step 1 of 2 · check the preview and the bindings above, then .create_plot()'
+      'step 1 of 2 · check the data and the bindings above, then .create_plot()'
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
@@ -1172,7 +1172,7 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      /^>>> step 1 of 2 · check the preview and the bindings above, then plot the new data$/
+      /^>>> step 1 of 2 · check the data and the bindings above, then plot the new data$/
     );
     expect(lossNotice()).not.toBeInTheDocument();
   });
@@ -2301,7 +2301,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.plot_all()']);
     // The line leads to the button that shows: `.plot_all()`, not the `.create_plot()` it replaces.
     expect(plotAll).toHaveAccessibleDescription(
-      'step 1 of 2 · check the preview and the bindings above, then .plot_all()'
+      'step 1 of 2 · check the data and the bindings above, then .plot_all()'
     );
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();

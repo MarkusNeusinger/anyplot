@@ -987,7 +987,7 @@ The agent chat (`/agent`) is one terminal-style window on the page, since the v4
 │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
 │ # no data at hand? .example_data() · .open() a file      │
 │ ❯ [message box                     ] [.create_plot() →]  │
-│ >>> step 1 of 2 · check the preview…  .stop() .feedback()│
+│ >>> step 1 of 2 · check the data and… .stop() .feedback()│
 └──────────────────────────────────────────────────────────┘
 ```
 

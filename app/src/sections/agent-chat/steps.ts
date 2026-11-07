@@ -84,7 +84,8 @@ export function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): s
  * Step 1's part of the status line, which the plot button at the composer's end names as its
  * description: the click takes the data and the bindings as the card shows them. It says what
  * the button waits for first (a table read from text to decide on, a required role without a
- * column), else what to check, and after a lost confirmation what lost it, which no thread
+ * column), else what to check, the data and the bindings (one wording at every width: a phone's
+ * card shows no preview table), and after a lost confirmation what lost it, which no thread
  * notice repeats. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
  * where no `.create_plot()` shows, else the button's own name (`plotButtonLabel`). `null` without
  * data or in step 2.
@@ -100,7 +101,7 @@ export function stepOneLine(
   }
   return state.confirmLoss
     ? CONFIRM_LOST_STEP_TEXT[state.confirmLoss](action)
-    : `check the preview and the bindings above, then ${action}`;
+    : `check the data and the bindings above, then ${action}`;
 }
 
 /** What the status line needs besides the session state: the page's own parts of it. */
