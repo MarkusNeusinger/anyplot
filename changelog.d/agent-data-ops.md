@@ -3,8 +3,9 @@
 - **Derived columns in the data step.** `prepare_data` takes four new
   operations: `compute` adds a number column from an expression over number
   columns (a product, a power, a log, a unit conversion), checked by the
-  whitelist `generate_data` already runs and computed exactly for whole
-  numbers; `diff` adds the change from the row one or n places before;
+  whitelist `generate_data` already runs, computed exactly for whole
+  numbers and in exact decimals for plain arithmetic (`19.99 * 3` is
+  59.97); `diff` adds the change from the row one or n places before;
   `rolling` adds a mean or a sum over the last n rows; and `blank` empties
   missing-value codes such as `-0.99` in place while the rows stay. The
   first rows of each group, a missing input, a division by zero and a value

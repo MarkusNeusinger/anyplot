@@ -24,7 +24,8 @@
   judge's call, by intent. These `prepare_data` (and `query_data`) arguments are exempt from the link rule
   by key (`DATA_ARGUMENT_KEYS`): a condition's `value` and its "any of" `values`, a rename's or a new column's
   `name` and a `split`'s `names`, a `classify` rule's `label` and its `otherwise`, and the
-  literals of the text operations (`separator`, `prefix`, `suffix`, `old`, `new`). They are
+  literals of the text operations (`separator`, `prefix`, `suffix`, `old`, `new`), and a `compute` `expression`, whose
+  whitelist admits no string (a division `a /b/ c` would read as a path). They are
   data, not an instruction to follow: a value or a literal is compared with the cells of a
   column, a name becomes a column header and a label or a replacement becomes a cell, none
   is resolved, fetched or run, and each may legitimately hold what the user's own table
@@ -121,8 +122,12 @@ RESULT_LIMITS: dict[str, int] = {
 TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
 """The literals of the text operations (`split`, `strip`, `replace`): compared with the cells or written into them."""
 DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
-    PREPARE_TOOL: frozenset({"value", "values", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
-    QUERY_TOOL: frozenset({"value", "values", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
+    # A `compute` expression too: `a /b/ c` reads as a path to the rule, and the expression's whitelist
+    # (`generate.parse_expression`) admits no string, so no link or path can reach a cell through it.
+    PREPARE_TOOL: frozenset(
+        {"value", "values", "name", "names", "label", "otherwise", "expression", *TEXT_LITERAL_KEYS}
+    ),
+    QUERY_TOOL: frozenset({"value", "values", "name", "names", "label", "otherwise", "expression", *TEXT_LITERAL_KEYS}),
     # Code holds `x / 2` and `a // b`, which the path rule reads as paths; the DATA validator bans URL literals,
     # file names reach no reader (`open`, `read_*` and the I/O modules are banned) and the sandbox has no egress.
     DATA_CODE_TOOL: frozenset({"code"}),
@@ -229,7 +234,9 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "switch_plot": frozenset({"status", "code", "switch_requested"}),
     # `bindings` when a conversion moved them, fenced as in `get_dataset_profile`; `family` with `unsupported_operation`.
     PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings", "family"},
-    QUERY_TOOL: frozenset({"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes"}),
+    QUERY_TOOL: frozenset(
+        {"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes", "family"}
+    ),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     DATA_CODE_TOOL: _DATA_VERSION_KEYS,
     # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a

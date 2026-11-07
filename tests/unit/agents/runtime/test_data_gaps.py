@@ -87,6 +87,27 @@ async def test_a_gap_beside_a_change_changes_nothing_either(client: httpx.AsyncC
     assert "dataset" not in parse_sse(response.text)[-1][1]
 
 
+async def test_a_gap_named_in_a_question_answers_the_same_sentence(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`query_data` answers `unsupported` as `prepare_data` does, never with the English message of the operations."""
+    caplog.set_level(logging.INFO)
+    fake = swap_models("gemini", {"root": [{"call": "query_data", "args": {"operations": [FILL]}}, {"text": "."}]})
+    sid = await open_session(client)
+    assert (await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "fr"})).is_success
+
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "remplis les trous"})
+
+    assert tool_responses(fake, "query_data")[0] == {
+        "status": "error",
+        "code": "unsupported_operation",
+        "family": "fill_values",
+        "message": refusal("unsupported_fill_values", "fr"),
+    }
+    (turn,) = chat_turns(caplog)
+    assert turn["capability_gap"] == ["fill_values"]
+
+
 async def test_a_computed_column_is_the_next_version_with_its_expression(
     client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
 ) -> None:

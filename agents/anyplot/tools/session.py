@@ -414,6 +414,22 @@ def _conversion_outcome(
     return "date" if any(dtypes.get(name) == "datetime" for name in made) else "number"
 
 
+def capability_gap(operations: list[Operation], view: SessionView, tool_context: ToolContext) -> dict[str, Any] | None:
+    """The answer to an `unsupported` operation among `operations`, None without one.
+
+    A change no operation can make: the service's own sentence in the session language (`refusals.yaml`,
+    `unsupported_<family>`), never a word of the request, and the gap counted by its family alone
+    (`capability_gap`). Nothing runs and nothing changes. `prepare_data` and `query_data` answer it alike, so a gap
+    named in a question reads the same as one named for a change.
+    """
+    gap = next((operation for operation in operations if isinstance(operation, Unsupported)), None)
+    if gap is None:
+        return None
+    ledger_for(tool_context.invocation_id).capability_gaps.append(gap.family)
+    message = refusal(f"unsupported_{gap.family}", refusal_lang(view.language))
+    return {"status": "error", "code": "unsupported_operation", "family": gap.family, "message": message}
+
+
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
     """Change the user's dataset with one to five operations, applied in order by the server; the result becomes the next version of the data, which the user then checks and confirms.
 
@@ -472,13 +488,8 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
     except ValueError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
-    gap = next((operation for operation in parsed_operations if isinstance(operation, Unsupported)), None)
-    if gap is not None:
-        # A change no operation can make: the service's own sentence in the session language, never a word of the
-        # request, and the gap counted by its family alone (`capability_gap`). Nothing changes.
-        ledger.capability_gaps.append(gap.family)
-        message = refusal(f"unsupported_{gap.family}", refusal_lang(view.language))
-        return {"status": "error", "code": "unsupported_operation", "family": gap.family, "message": message}
+    if (gap := capability_gap(parsed_operations, view, tool_context)) is not None:
+        return gap
     try:
         prepared, parsed = apply_and_parse(stored.as_parsed(), parsed_operations, language=view.language)
     except PrepareError as exc:
@@ -546,6 +557,8 @@ async def query_data(
         args = QueryArgs.model_validate({"operations": operations, "columns": columns, "limit": limit})
     except ValidationError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(validation_lines(exc))}
+    if (gap := capability_gap(args.operations, view, tool_context)) is not None:
+        return gap
     try:
         answer = run_query(stored.as_parsed(), args.operations, args.columns, args.limit, language=view.language)
     except PrepareError as exc:

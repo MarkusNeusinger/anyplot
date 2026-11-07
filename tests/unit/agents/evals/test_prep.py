@@ -456,7 +456,16 @@ class TestCanonical:
         assert not prep.same_operations(
             lines("a / b", a="Quantity", b="Price"), lines("a / b", a="Price", b="Quantity")
         )
-        # An expression the server refuses keeps its line: it matches nothing but itself.
+        # A shifted log is defined on the first probe set, so two spellings match by value (review of 2026-11-07:
+        # on small probe values both were empty everywhere and matched only by their spelling).
+        shifted = lines("log(p - 100)", name="log_excess", p="Price")
+        assert prep.same_operations(lines("log(price-100)", name="log_excess", price="Price"), shifted)
+        assert not prep.same_operations(lines("log(p - 99)", name="log_excess", p="Price"), shifted)
+        assert prep.comparison_key(shifted[0]) != shifted[0]
+        # Undefined on the large values, an expression takes the small ones; refused on both, it keeps its line.
+        reversed_log = lines("log(100 - p)", name="r", p="Price")
+        assert prep.comparison_key(reversed_log[0]) != reversed_log[0]
+        assert prep.same_operations(lines("log(-(p - 100))", name="r", p="Price"), reversed_log)
         (refused,) = lines("q > 1", q="Quantity")
         assert prep.comparison_key(refused) == refused
         assert describe(revenue[0]) == "compute C = q * p (p=Price, q=Quantity)"

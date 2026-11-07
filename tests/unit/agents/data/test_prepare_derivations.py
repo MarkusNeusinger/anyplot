@@ -7,6 +7,7 @@ derived. Every dataset here is invented.
 """
 
 import math
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -127,9 +128,40 @@ class TestCompute:
         assert dtypes(prepared)["r"] == "number"
 
     def test_whole_inputs_past_2_53_read_as_floats_are_counted(self) -> None:
-        prepared = prepare("a\n9007199254740993\n2\n", compute("b", "a / 1", a="a"))
+        """A function takes float64, which reads the input rounded; a plain division is exact until its one rounding."""
+        through_a_function = prepare("a\n9007199254740993\n2\n", compute("b", "abs(a) / 1", a="a"))
+        divided = prepare("a\n9007199254740993\n2\n", compute("b", "a / 1", a="a"))
 
-        assert "1 whole number past 2^53 in the inputs is read as decimal numbers" in prepared.changes[0]
+        assert "1 whole number past 2^53 in the inputs is read as decimal numbers" in through_a_function.changes[0]
+        assert "1 whole number past 2^53 is stored as decimal numbers" in divided.changes[0]
+
+    @pytest.mark.parametrize(
+        ("text", "expression", "computed"),
+        [
+            ("p,q\n19.99,3\n0.1,0.2\n", "p * q", ["59.97", "0.02"]),
+            ("p,q\n0.1,0.2\n1.1,2.2\n", "p + q", ["0.3", "3.3"]),
+            # The exact quotient 2.2 / 10.1 rounded once: float64 steps give ...785, one digit off.
+            ("p,q\n12.3,10.1\n0.3,0.1\n", "(p - q) / q", [repr(float(Decimal("2.2") / Decimal("10.1"))), "2"]),
+            ("p,q\n1e308,10\n5,2\n", "p * q / q", ["1e+308", "5"]),  # no step overflows in decimals
+        ],
+    )
+    def test_plain_arithmetic_is_exact_decimals_with_one_rounding(
+        self, text: str, expression: str, computed: list[str]
+    ) -> None:
+        """`19.99 * 3` is 59.97, never the float noise 59.96999999999999 (review of 2026-11-07)."""
+        prepared = prepare(text, compute("r", expression, p="p", q="q"))
+
+        assert cells(prepared, 2) == computed
+
+    def test_a_difference_writes_what_diff_writes(self) -> None:
+        text = "t,a,b\n1,12.3,10.1\n2,7.7,5.5\n"
+        computed = prepare(text, compute("d", "a - b", a="a", b="b"))
+        stepped = prepare(
+            "t,a\n1,10.1\n2,12.3\n3,5.5\n4,7.7\n", {"op": "diff", "name": "d", "column": "a", "order": "t"}
+        )
+
+        assert cells(computed, 3) == ["2.2", "2.2"]
+        assert cells(stepped, 2)[1] == "2.2" and cells(stepped, 2)[3] == "2.2"
 
     def test_a_unit_conversion(self) -> None:
         prepared = prepare("Stadt,F\nBern,41\nLugano,52\n", compute("C", "(f - 32) * 5 / 9", f="F"))
@@ -568,6 +600,24 @@ class TestAggregateSeveral:
         ]
         assert prepared.changes == ["took the last value (by time) of Bezug and Einspeisung by Datum (month): 3 rows"]
 
+    def test_two_date_keys_order_by_the_first_then_the_second_and_keep_ties_in_row_order(self) -> None:
+        """Two stable passes: the first key decides, the second breaks its ties, and equal moments keep their rows."""
+        text = (
+            "Start,Ende,v\n"
+            "2024-01-10,2024-02-05,1\n"
+            "2024-01-10,2024-02-01,2\n"
+            "2024-01-05,2024-02-20,3\n"
+            "2024-01-10,2024-02-05,4\n"
+            "2024-03-01,2024-03-02,5\n"
+        )
+        operation = {"op": "aggregate", "by": ["Start", "Ende"], "column": "v", "period": "month"}
+
+        last = prepare(text, {**operation, "how": "last"})
+        first = prepare(text, {**operation, "how": "first"})
+
+        assert rows(last) == ["Start,Ende,v", "2024-01,2024-02,4", "2024-03,2024-03,5"]
+        assert rows(first) == ["Start,Ende,v", "2024-01,2024-02,3", "2024-03,2024-03,5"]
+
     def test_the_first_value_in_row_order_without_a_date_key(self) -> None:
         prepared = prepare(
             "g,v,w\na,3,x\nb,1,y\na,2,z\n", {"op": "aggregate", "by": ["g"], "columns": ["v", "w"], "how": "first"}
@@ -601,6 +651,7 @@ class TestAggregateSeveral:
             {"op": "aggregate", "by": ["g"], "column": "v", "columns": ["v", "w"], "how": "sum"},
             {"op": "aggregate", "by": ["g"], "columns": [f"c{i}" for i in range(11)], "how": "sum"},
             {"op": "aggregate", "by": ["g"], "column": "v", "how": "median"},
+            {"op": "aggregate", "by": ["g"], "columns": ["v", "v"], "how": "sum"},
         ],
     )
     def test_malformed_aggregate_fails_validation(self, operation: dict[str, Any]) -> None:

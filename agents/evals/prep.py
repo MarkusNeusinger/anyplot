@@ -200,6 +200,10 @@ CONDITION_OPERATIONS = frozenset({"drop_rows", "blank"})
 """The operations whose `where` is one list of conditions that must all hold."""
 COMPUTE_PROBE_ROWS = 8
 """The rows of invented values two `compute` expressions are compared on (`comparison_key`)."""
+COMPUTE_PROBES: tuple[tuple[float, float, float], ...] = ((150.5, 7.913, 21.7), (1.5, 0.913, 2.17))
+"""The probe sets of `compute_key`, each `(start, step per row, step per column)`: large values first, so a shifted log
+or root (`log(p - 100)`, `sqrt(t - 50)`) is defined on every row, then small ones for an expression the first set
+leaves without any value (`log(100 - p)`)."""
 ROOT_AUTHOR = "anyplot"
 INSTRUCTION_TALK = re.compile(
     # ADK's own markers (`flows/llm_flows/context/_fencing.py`), named or quoted.
@@ -416,8 +420,9 @@ def compute_key(data: dict[str, Any], line: str) -> str:
     """A `compute` operation as the values it computes on `COMPUTE_PROBE_ROWS` rows of invented decimals, at ten
     significant digits, with its new column's name: the short names the model chose for the inputs and how it wrote
     the expression (`q*p` or `p * q`, `(f - 32) * 5 / 9` or `5/9*(f-32)`) carry no meaning. Each input column gets
-    values of its own, all above 0 and none whole, so a swapped pair of columns differs and the float path runs. An
-    operation the server refuses keeps its line, so it matches nothing but itself.
+    values of its own, all above 0 and none whole, so a swapped pair of columns differs and no whole-number path
+    runs. The first probe set (`COMPUTE_PROBES`) that gives the expression a value decides; an operation the server
+    refuses on every set keeps its line, so it matches nothing but itself.
     """
     import csv
     import io
@@ -430,21 +435,25 @@ def compute_key(data: dict[str, Any], line: str) -> str:
     inputs = data.get("inputs")
     if not isinstance(inputs, dict) or not inputs:
         return line
-    columns = sorted({str(column) for column in inputs.values()})
-    buffer = io.StringIO()
-    writer = csv.writer(buffer, lineterminator="\n")
-    writer.writerow(columns)
-    for row in range(COMPUTE_PROBE_ROWS):
-        writer.writerow([f"{1.5 + 0.913 * row + 2.17 * index:.4f}" for index in range(len(columns))])
     try:
         operation = TypeAdapter(Operation).validate_python(data)
-        prepared = apply_operations(parse_dataset(buffer.getvalue()), [operation])
-    except ValidationError, ParseError, PrepareError:
+    except ValidationError:
         return line
-    values = list(csv.reader(io.StringIO(prepared.csv)))
-    computed = [row[-1] for row in values[1:]]
-    shown = [f"{float(cell):.10g}" if cell else "" for cell in computed]
-    return json.dumps({"op": "compute", "name": data.get("name"), "values": shown})
+    columns = sorted({str(column) for column in inputs.values()})
+    for start, row_step, column_step in COMPUTE_PROBES:
+        buffer = io.StringIO()
+        writer = csv.writer(buffer, lineterminator="\n")
+        writer.writerow(columns)
+        for row in range(COMPUTE_PROBE_ROWS):
+            writer.writerow([f"{start + row_step * row + column_step * index:.4f}" for index in range(len(columns))])
+        try:
+            prepared = apply_operations(parse_dataset(buffer.getvalue()), [operation])
+        except ParseError, PrepareError:
+            continue  # no row has a value on this set (`log(100 - p)` on large values): the next one decides
+        computed = [row[-1] for row in list(csv.reader(io.StringIO(prepared.csv)))[1:]]
+        shown = [f"{float(cell):.10g}" if cell else "" for cell in computed]
+        return json.dumps({"op": "compute", "name": data.get("name"), "values": shown})
+    return line
 
 
 def same_operations(found: Sequence[str], expected: Sequence[str]) -> bool:

@@ -212,8 +212,10 @@ The operations:
     into the new column while the source stays), `sign` (the direction of a change) and
     `min max` (an elementwise cap). No comparison, condition or other call parses. Where
     every input is a whole-number column and every step keeps whole numbers whole, the
-    rows are computed in Python integers, exactly; otherwise in float64, as `derive`
-    computes, never rounded to fewer digits (`generate`'s `SIGNIFICANT_DIGITS` is a
+    rows are computed in Python integers, exactly; plain arithmetic (`+ - * /` over the
+    inputs and number literals) in exact decimals with one rounding to a float at the end,
+    as `diff` and `rolling` compute, so `19.99 * 3` is 59.97; anything else in float64, as
+    `derive` computes, never rounded to fewer digits (`generate`'s `SIGNIFICANT_DIGITS` is a
     formula's, not the user's data). A cell is empty where an input is missing, a step
     divides by zero, or a step leaves a function's domain or the number range, and the
     change line quotes the checked expression and counts the empty cells by reason.
@@ -768,6 +770,8 @@ class Aggregate(_Strict):
     def _one_or_several(self) -> Self:
         if (self.column is None) == (self.columns is None):
             raise ValueError("aggregate takes column (one value column) or columns (several), not both and not neither")
+        if self.columns is not None and len(set(self.columns)) != len(self.columns):
+            raise ValueError("aggregate columns names each value column once")
         if self.columns is not None and len(self.columns) == 1:
             self.column, self.columns = self.columns[0], None  # one column in a list is the one value column
         return self
@@ -1655,7 +1659,10 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     work = frame[[*keys, *values]].copy()
     if op.how in ("first", "last") and date_keys:
         # A bucket's first and last value are its earliest and latest moment's; rows of one moment keep their order.
-        work = work.sort_values(date_keys, kind="stable", na_position="last")
+        # One stable sort per key, the last key first: pandas documents `kind` only for a single column, so two date
+        # keys sort as two guaranteed-stable passes, the first key deciding and the second breaking its ties.
+        for name in reversed(date_keys):
+            work = work.sort_values(name, kind="stable", na_position="last")
     if op.period in DATE_PERIODS:
         for name in date_keys:
             work[name] = _period_starts(work[name], op.period)
@@ -2215,8 +2222,11 @@ def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.Da
     The expression is checked by `generate_data`'s whitelist before a cell is read. Where
     every input is a whole-number column and every step keeps whole numbers whole
     (`_whole_tree`), each row is computed in Python integers, exactly, and a result past the
-    int64 range is stored as a float and counted, as `derive` does. Otherwise the rows are
-    computed in float64, as `derive` computes, never rounded to fewer digits. A cell stays
+    int64 range is stored as a float and counted, as `derive` does. Plain arithmetic (`+ - *
+    /` over the inputs and number literals, `_decimal_tree`) is computed in exact decimals
+    with one rounding to a float at the end, as `diff` and `rolling` compute, so `19.99 * 3`
+    is 59.97 and `a - b` writes what `diff` writes. Anything else (a power, a function, a
+    constant) is computed in float64, as `derive` computes, never rounded to fewer digits. A cell stays
     empty, and is counted by its reason, when an input is missing, when a step divides by
     zero, or when a step leaves a function's domain or the number range (`log` of 0, `sqrt`
     of a negative number, `exp(1000)`), also when a later step would make the value finite
@@ -2244,6 +2254,14 @@ def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.Da
     if whole:
         values, divided, outside, rounded = _compute_whole(frame, op, tree, missing)
         notice = whole_rounded(rounded) if rounded else ""
+    elif _decimal_tree(tree, op.inputs):
+        values, divided, outside, rounded = _compute_decimal(frame, op, tree, missing)
+        notice = (
+            f"{_count(rounded, 'whole number')} past 2^53 {_be(rounded)} stored as decimal numbers "
+            "(15 to 17 significant digits; a digit past them is rounded)"
+            if rounded
+            else ""
+        )
     else:
         values, divided, outside = _compute_floats(frame, op, tree, missing)
         cast = sum(_past_exact(frame[column]) for column in columns if is_integer_dtype(frame[column].dtype))
@@ -2349,6 +2367,97 @@ def _compute_whole(
             results.append(None)
     values, rounded = _whole_numbers(results, frame.index)
     return values, divided, outside, rounded
+
+
+_DECIMAL_OPERATORS = (ast.Add, ast.Sub, ast.Mult, ast.Div)
+
+
+def _decimal_tree(node: ast.expr, inputs: Collection[str]) -> bool:
+    """Whether a checked tree is plain arithmetic: number literals, the `inputs`, a sign and `+ - * /`.
+
+    Such a tree is computed in exact decimals (`_compute_decimal`), as `diff`, `rolling` and an `aggregate` sum add
+    their cells, so `19.99 * 3` is 59.97 and never 59.96999999999999. A power, `//`, `%`, a constant and the functions
+    take float64.
+    """
+    match node:
+        case ast.Constant(value=int() | float() as number):
+            return math.isfinite(number)
+        case ast.Name(id=name):
+            return name in inputs
+        case ast.UnaryOp(operand=operand):
+            return _decimal_tree(operand, inputs)
+        case ast.BinOp(left=left, op=operator, right=right):
+            return (
+                isinstance(operator, _DECIMAL_OPERATORS)
+                and _decimal_tree(left, inputs)
+                and _decimal_tree(right, inputs)
+            )
+    return False
+
+
+def _decimal_value(node: ast.expr, row: dict[str, ExactDecimal]) -> ExactDecimal:
+    """One row's value of a plain arithmetic tree (`_decimal_tree`) in exact decimals; raises `_DividedByZero`."""
+    match node:
+        case ast.Constant(value=int() | float() as number):
+            # A literal as written: `0.1` is the decimal 0.1, its float's shortest form.
+            return ExactDecimal(number) if isinstance(number, int) else ExactDecimal(repr(number))
+        case ast.Name(id=name):
+            return row[name]
+        case ast.UnaryOp(op=operator, operand=operand):
+            inner = _decimal_value(operand, row)
+            return -inner if isinstance(operator, ast.USub) else inner
+        case ast.BinOp(left=left, op=operator, right=right):
+            a, b = _decimal_value(left, row), _decimal_value(right, row)
+            if isinstance(operator, ast.Add):
+                return a + b
+            if isinstance(operator, ast.Sub):
+                return a - b
+            if isinstance(operator, ast.Mult):
+                return a * b
+            if b == 0:
+                raise _DividedByZero
+            return a / b
+    raise ValueError("not a plain arithmetic tree")  # unreachable: `_decimal_tree` admits no other node
+
+
+def _compute_decimal(
+    frame: pd.DataFrame, op: Compute, tree: ast.expr, missing: np.ndarray
+) -> tuple[pd.Series, int, int, int]:
+    """The rows in exact decimals at `_DECIMAL_DIGITS` digits, each cell read as `_ordered_input` reads it (a whole
+    number exactly, a decimal as its cell writes it), with one rounding to a float at the end: the values, the cells
+    divided by zero, the results beyond the float range, which stay empty, and the whole results past 2**53 that the
+    float holds only rounded (`9007199254740993` becomes ...992), which the change line counts."""
+    cells: dict[str, list[ExactDecimal | None]] = {}
+    for name, column in op.inputs.items():
+        whole = is_integer_dtype(frame[column].dtype)
+        cells[name] = [
+            None if pd.isna(value) else ExactDecimal(int(value)) if whole else ExactDecimal(repr(float(value)))
+            for value in frame[column]
+        ]
+    results: list[float] = []
+    divided = outside = rounded = 0
+    with localcontext() as context:
+        context.prec = _DECIMAL_DIGITS
+        for position, gap in enumerate(missing):
+            row = {name: values[position] for name, values in cells.items()}
+            present = {name: value for name, value in row.items() if value is not None}
+            if gap or len(present) < len(row):
+                results.append(math.nan)
+                continue
+            try:
+                exact = _decimal_value(tree, present)
+            except _DividedByZero:
+                divided += 1
+                results.append(math.nan)
+                continue
+            number = float(exact)
+            if not math.isfinite(number):
+                outside += 1
+                number = math.nan
+            elif abs(exact) > _FLOAT_EXACT and exact == exact.to_integral_value() and int(number) != exact:
+                rounded += 1
+            results.append(number)
+    return pd.Series(results, index=frame.index, dtype="float64"), divided, outside, rounded
 
 
 def _compute_floats(

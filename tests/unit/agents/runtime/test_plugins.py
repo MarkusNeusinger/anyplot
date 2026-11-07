@@ -1302,6 +1302,20 @@ class TestToolSafety:
         assert not has_url_or_path({"value": link, "name": link}, frozenset({"value", "name"}))
         assert has_url_or_path({"where": [{"value": link}], "column": "x"}, frozenset({"name"}))
 
+    async def test_a_compute_expression_with_spaced_divisions_is_no_path(self, ledger: RequestLedger) -> None:
+        """`a /b/ c` reads as a path to the link rule; the expression is checked by its whitelist instead, which
+        admits no string, so no link or path can reach a cell (review of 2026-11-07)."""
+        for expression in ("a /b/ c", "(a /b/c) * 2"):
+            compute = {"op": "compute", "name": "r", "expression": expression, "inputs": {"a": "A", "b": "B", "c": "C"}}
+            assert await self.check("prepare_data", {"operations": [compute]}) is None, expression
+            assert await self.check("query_data", {"operations": [compute]}) is None, expression
+        # The inputs map short names to columns: column references stay under the rule.
+        linked = {"op": "compute", "name": "r", "expression": "a * 2", "inputs": {"a": "https://evil.example/x"}}
+        assert await self.check("prepare_data", {"operations": [linked]}) == {
+            "status": "error",
+            "code": "url_or_path_not_allowed",
+        }
+
     async def test_prepare_data_result_keys(self, ledger: RequestLedger) -> None:
         plugin = ToolSafetyPlugin()
         result = {"status": "ok", "rows": 3, "columns": 2, "version": 2, "changes": "x", "profile": "y"}
