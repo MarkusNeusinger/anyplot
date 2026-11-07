@@ -3,225 +3,251 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 86/100 | Created: 2026-06-17
 //# anyplot-orientation: square
-
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// G(jω) = 1/(jω(1+jω)(1+0.5jω)); denominator = -1.5ω² + jω(1-0.5ω²)
-// Re(G) = -1.5ω²/|d|²,  Im(G) = -ω(1-0.5ω²)/|d|²
-const nyquistXY = (omega) => {
-  const dre = -1.5 * omega * omega;
-  const dim = omega * (1 - 0.5 * omega * omega);
-  const m2 = dre * dre + dim * dim;
-  return [dre / m2, -dim / m2];
-};
+// Constants
+const CRITICAL = { re: -1, im: 0 }; // the Nyquist critical point
+const UNIT_CIRCLE_POINTS = 241;
+const PAD_SHARE = 0.06; // padding around the drawn extent, share of the span
+const ARROW_SHARES = [0.18, 0.42, 0.66]; // arrow positions as shares of the curve's arc length
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 40;
+const AXIS_BAND = 64; // y-axis width and x-axis height, px
+const MARGIN = { top: 16, right: 40, bottom: 40, left: 16 }; // left + band + right = top + band + bottom keeps the drawing area square
 
-// Nyquist curve: 600 log-spaced points ω ∈ [0.4, 25] rad/s
-const nyquistData = Array.from({ length: 600 }, (_, k) => {
-  const omega = 0.4 * Math.pow(62.5, k / 599);
-  const [x, y] = nyquistXY(omega);
-  return { x, y, id: k };
+// Columns: set these to your data's column names
+const FREQUENCY = "Angular frequency (rad/s)"; // role: frequency
+const REAL = "Real"; // role: real
+const IMAGINARY = "Imaginary"; // role: imaginary
+
+// Data: replace this block with your own records, one object per row
+// Open-loop G(s) = 1 / (s (1 + s)(1 + 0.5 s)) at 600 log-spaced frequencies from 0.4 to 25 rad/s
+const data = Array.from({ length: 600 }, (_, k) => {
+  const omega = 0.4 * Math.pow(25 / 0.4, k / 599);
+  const denRe = -1.5 * omega * omega;
+  const denIm = omega * (1 - 0.5 * omega * omega);
+  const denSq = denRe * denRe + denIm * denIm;
+  return { [FREQUENCY]: omega, [REAL]: denRe / denSq, [IMAGINARY]: -denIm / denSq };
 });
 
-// Unit circle reference
-const circleData = Array.from({ length: 601 }, (_, k) => {
-  const theta = (2 * Math.PI * k) / 600;
-  return { x: Math.cos(theta), y: Math.sin(theta), id: 1000 + k };
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[FREQUENCY] - b[FREQUENCY]);
+const re = rows.map((d) => d[REAL]);
+const im = rows.map((d) => d[IMAGINARY]);
+const unitMatch = FREQUENCY.match(/\(([^)]+)\)/);
+const unit = unitMatch ? unitMatch[1] : "";
+
+const circleAngles = Array.from({ length: UNIT_CIRCLE_POINTS }, (_, k) => (2 * Math.PI * k) / (UNIT_CIRCLE_POINTS - 1));
+
+// Gain crossover: the row nearest |G| = 1 where the magnitude first crosses 1;
+// phase crossover: the row nearest Im = 0 where the curve first crosses the negative real axis
+let gainCrossover = -1;
+let phaseCrossover = -1;
+for (let i = 0; i < rows.length - 1; i++) {
+  const m0 = Math.hypot(re[i], im[i]) - 1;
+  const m1 = Math.hypot(re[i + 1], im[i + 1]) - 1;
+  if (gainCrossover < 0 && m0 * m1 <= 0) gainCrossover = Math.abs(m0) <= Math.abs(m1) ? i : i + 1;
+  if (phaseCrossover < 0 && im[i] * im[i + 1] <= 0 && re[i] < 0) {
+    phaseCrossover = Math.abs(im[i]) <= Math.abs(im[i + 1]) ? i : i + 1;
+  }
+}
+const crossovers = [
+  gainCrossover >= 0 ? { kind: "gain crossover", i: gainCrossover, dx: 26, dy: -12 } : null,
+  phaseCrossover >= 0 ? { kind: "phase crossover", i: phaseCrossover, dx: 14, dy: 28 } : null,
+].filter(Boolean);
+const phaseMargin = gainCrossover >= 0 ? 180 + (Math.atan2(im[gainCrossover], re[gainCrossover]) * 180) / Math.PI : null;
+const gainMarginDb = phaseCrossover >= 0 ? -20 * Math.log10(Math.abs(re[phaseCrossover])) : null;
+
+// Arrow positions along the arc length of the curve, in data units
+const arcLength = [0];
+for (let i = 1; i < rows.length; i++) arcLength.push(arcLength[i - 1] + Math.hypot(re[i] - re[i - 1], im[i] - im[i - 1]));
+const arrowRows = ARROW_SHARES.map((share) => {
+  const target = share * arcLength[arcLength.length - 1];
+  const i = arcLength.findIndex((s) => s >= target);
+  return Math.min(Math.max(i, 1), rows.length - 2);
 });
 
-// Key frequency markers: gain crossover, phase crossover, high-freq
-const KEY_FREQS = [
-  { omega: 0.75, label: "ω=0.75 rad/s" },
-  { omega: Math.SQRT2, label: "ω=√2 rad/s" },
-  { omega: 5, label: "ω=5 rad/s" },
-];
-const keyFreqData = KEY_FREQS.map(({ omega }, i) => {
-  const [x, y] = nyquistXY(omega);
-  return { x, y, id: 2000 + i };
-});
+// Square window: the curve, the unit circle and the critical point, padded, with one span on both axes
+const reAll = [...re, -1, 1, CRITICAL.re];
+const imAll = [...im, -1, 1, CRITICAL.im];
+const reMin = Math.min(...reAll);
+const reMax = Math.max(...reAll);
+const imMin = Math.min(...imAll);
+const imMax = Math.max(...imAll);
+const span = Math.max(reMax - reMin, imMax - imMin) * (1 + 2 * PAD_SHARE);
+const reMid = (reMin + reMax) / 2;
+const imMid = (imMin + imMax) / 2;
 
-// Indices along Nyquist curve where direction arrows are drawn
-const ARROW_INDICES = [50, 160, 290];
+const TITLE = "nyquist-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = [
+  `${rows.length} frequencies from ${rows[0][FREQUENCY].toFixed(2)} to ${rows[rows.length - 1][FREQUENCY].toFixed(1)} ${unit}`,
+  phaseMargin !== null ? `phase margin ${phaseMargin.toFixed(1)}°` : null,
+  gainMarginDb !== null ? `gain margin ${gainMarginDb.toFixed(1)} dB` : null,
+]
+  .filter(Boolean)
+  .join(" · ");
+
+function CurveAnnotations() {
+  const xScale = useXScale("re");
+  const yScale = useYScale("im");
+  return (
+    <g>
+      {arrowRows.map((i) => {
+        const angle = (Math.atan2(yScale(im[i + 1]) - yScale(im[i - 1]), xScale(re[i + 1]) - xScale(re[i - 1])) * 180) / Math.PI;
+        return (
+          <path
+            key={i}
+            d="M 11 0 L -8 -8 L -8 8 Z"
+            transform={`translate(${xScale(re[i])},${yScale(im[i])}) rotate(${angle})`}
+            fill={t.palette[0]}
+          />
+        );
+      })}
+      {crossovers.map((c) => (
+        <text
+          key={c.kind}
+          x={xScale(re[c.i]) + c.dx}
+          y={yScale(im[c.i]) + c.dy}
+          fontSize={15}
+          fill={t.ink}
+        >
+          {c.kind} · ω = {rows[c.i][FREQUENCY].toFixed(2)} {unit}
+        </text>
+      ))}
+    </g>
+  );
+}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const margin = { left: 80, right: 35, top: 35, bottom: 80 };
-  const titleH = 52;
-  const chartSize = Math.min(width - 8, height - titleH - 14);
-
-  // Data-to-SVG-pixel coordinate transform for the plot area
-  const plotW = chartSize - margin.left - margin.right;
-  const plotH = chartSize - margin.top - margin.bottom;
-  const [xMin, xMax, yMin, yMax] = [-2.0, 1.5, -2.0, 1.5];
-  const toPixX = (xv) => margin.left + ((xv - xMin) / (xMax - xMin)) * plotW;
-  const toPixY = (yv) => margin.top + ((yMax - yv) / (yMax - yMin)) * plotH;
-
-  // Direction arrows: tangent computed in pixel space
-  const arrows = ARROW_INDICES.map((idx) => {
-    const p0 = nyquistData[idx];
-    const p1 = nyquistData[idx + 10];
-    const px0 = toPixX(p0.x), py0 = toPixY(p0.y);
-    const px1 = toPixX(p1.x), py1 = toPixY(p1.y);
-    const dpx = px1 - px0, dpy = py1 - py0;
-    const len = Math.sqrt(dpx * dpx + dpy * dpy);
-    const nx = dpx / len, ny = dpy / len;
-    const cx = (px0 + px1) / 2, cy = (py0 + py1) / 2;
-    const AL = 26;
-    return {
-      x1: cx - (nx * AL) / 2,
-      y1: cy - (ny * AL) / 2,
-      x2: cx + (nx * AL) / 2,
-      y2: cy + (ny * AL) / 2,
-    };
-  });
-
-  // Text label anchor offsets relative to each key frequency marker
-  const labelOffsets = [
-    { dx: 10, dy: -10 }, // ω=0.75: lower-left quadrant → label right+up
-    { dx: 10, dy: -12 }, // ω=√2: on real axis → label right+up
-    { dx: 8, dy: -10 },  // ω=5: near origin → label right+up
-  ];
+  const side = Math.min(width, height - TITLE_H - SUBTITLE_H - LEGEND_H);
 
   return (
-    <div
-      style={{
-        width,
-        height,
-        backgroundColor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "14px 4px 4px",
-        boxSizing: "border-box",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "22px",
-          fontWeight: 500,
-          color: t.ink,
-          marginBottom: "10px",
-          textAlign: "center",
-          letterSpacing: "0.01em",
-        }}
+    <div style={{ width, height, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
+      <ChartsDataProvider
+        width={side}
+        height={side}
+        margin={MARGIN}
+        skipAnimation
+        series={[
+          {
+            type: "line",
+            id: "response",
+            label: "Open-loop response G(jω)",
+            data: im,
+            xAxisId: "re",
+            yAxisId: "im",
+            color: t.palette[0],
+            curve: "linear",
+            showMark: false,
+          },
+          {
+            type: "line",
+            id: "circle",
+            label: "Unit circle",
+            data: circleAngles.map((a) => Math.sin(a)),
+            xAxisId: "circle",
+            yAxisId: "im",
+            color: t.inkSoft,
+            curve: "linear",
+            showMark: false,
+          },
+          {
+            type: "scatter",
+            id: "crossovers",
+            label: "Crossover frequencies",
+            data: crossovers.map((c) => ({ x: re[c.i], y: im[c.i], id: c.kind })),
+            xAxisId: "re",
+            yAxisId: "im",
+            color: t.palette[1],
+            markerSize: 7,
+          },
+          {
+            type: "scatter",
+            id: "critical",
+            label: `Critical point (${CRITICAL.re}, ${CRITICAL.im})`,
+            data: [{ x: CRITICAL.re, y: CRITICAL.im, id: "critical" }],
+            xAxisId: "re",
+            yAxisId: "im",
+            color: t.palette[4],
+            markerSize: 9,
+          },
+        ]}
+        xAxis={[
+          {
+            id: "re",
+            data: re,
+            scaleType: "linear",
+            min: reMid - span / 2,
+            max: reMid + span / 2,
+            label: REAL,
+            height: AXIS_BAND,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+          {
+            id: "circle",
+            data: circleAngles.map((a) => Math.cos(a)),
+            scaleType: "linear",
+            min: reMid - span / 2,
+            max: reMid + span / 2,
+            position: "none",
+          },
+        ]}
+        yAxis={[
+          {
+            id: "im",
+            scaleType: "linear",
+            min: imMid - span / 2,
+            max: imMid + span / 2,
+            label: IMAGINARY,
+            width: AXIS_BAND,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
       >
-        nyquist-basic · javascript · muix · anyplot.ai
-      </div>
-      <div style={{ position: "relative", width: chartSize, height: chartSize }}>
-        <ScatterChart
-          width={chartSize}
-          height={chartSize}
-          skipAnimation
-          series={[
-            {
-              data: nyquistData,
-              label: "G(jω) — Open-loop Response",
-              color: t.palette[0],
-              markerSize: 3,
-            },
-            {
-              data: circleData,
-              label: "Unit Circle",
-              color: t.inkSoft,
-              markerSize: 2,
-            },
-            {
-              data: keyFreqData,
-              label: "Key Frequencies (ω_gc, ω_pc, ω=5)",
-              color: t.palette[1],
-              markerSize: 7,
-            },
-            {
-              data: [{ x: -1, y: 0, id: 9999 }],
-              label: "Critical Point (−1, 0)",
-              color: "#AE3030",
-              markerSize: 10,
-            },
-          ]}
-          xAxis={[{ label: "Real", min: xMin, max: xMax, showGrid: true }]}
-          yAxis={[{ label: "Imaginary", min: yMin, max: yMax, showGrid: true }]}
-          margin={margin}
-          sx={{
-            "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-            "& .MuiChartsAxis-label": { fontSize: "16px" },
-            "& .MuiChartsLegend-label": { fontSize: "14px" },
-            "& .MuiChartsGrid-line": {
-              stroke: t.inkSoft,
-              strokeOpacity: 0.2,
-            },
-          }}
-        >
-          {/* Vertical reference line through the critical point x=-1 */}
-          <ChartsReferenceLine
-            x={-1}
-            lineStyle={{
-              stroke: "#AE3030",
-              strokeDasharray: "5 3",
-              strokeOpacity: 0.45,
-              strokeWidth: 1,
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 15, color: t.inkSoft, height: LEGEND_H, alignItems: "center" }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiLineChart-line[data-series='response']": { strokeWidth: 3 },
+              "& .MuiLineChart-line[data-series='circle']": { strokeWidth: 1.5, strokeDasharray: "7 6" },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
             }}
-          />
-        </ScatterChart>
-        {/* SVG overlay: direction-of-increasing-ω arrows + frequency labels */}
-        <svg
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: chartSize,
-            height: chartSize,
-            pointerEvents: "none",
-            overflow: "visible",
-          }}
-        >
-          <defs>
-            <marker
-              id="arr"
-              markerWidth="7"
-              markerHeight="7"
-              refX="5"
-              refY="3.5"
-              orient="auto"
-            >
-              <path d="M0,0 L7,3.5 L0,7 Z" fill={t.palette[0]} />
-            </marker>
-          </defs>
-          {arrows.map((a, i) => (
-            <line
-              key={i}
-              x1={a.x1}
-              y1={a.y1}
-              x2={a.x2}
-              y2={a.y2}
-              stroke={t.palette[0]}
-              strokeWidth={2.5}
-              markerEnd="url(#arr)"
-            />
-          ))}
-          {KEY_FREQS.map(({ omega, label }, i) => {
-            const [xv, yv] = nyquistXY(omega);
-            const px = toPixX(xv);
-            const py = toPixY(yv);
-            const { dx, dy } = labelOffsets[i];
-            return (
-              <text
-                key={i}
-                x={px + dx}
-                y={py + dy}
-                fill={t.ink}
-                fontSize="13"
-                fontFamily="sans-serif"
-                fontWeight="500"
-              >
-                {label}
-              </text>
-            );
-          })}
-        </svg>
-      </div>
+          >
+            <ChartsGrid vertical horizontal />
+            <ChartsReferenceLine x={0} axisId="re" lineStyle={{ stroke: t.inkSoft, strokeOpacity: 0.6 }} />
+            <ChartsReferenceLine y={0} axisId="im" lineStyle={{ stroke: t.inkSoft, strokeOpacity: 0.6 }} />
+            <LinePlot skipAnimation />
+            <CurveAnnotations />
+            <ScatterPlot />
+            <ChartsXAxis axisId="re" />
+            <ChartsYAxis axisId="im" />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
