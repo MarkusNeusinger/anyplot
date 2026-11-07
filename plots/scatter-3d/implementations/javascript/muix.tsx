@@ -2,305 +2,301 @@
 // scatter-3d: 3D Scatter Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-10
-//# anyplot-orientation: landscape
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
 
-// --- Deterministic PRNG (LCG + Box-Muller, no seeded RNG in the browser) ----
-function createLcg(seed) {
-  let state = seed;
-  return function nextUniform() {
+// Constants
+const GROUND_ANGLE = (15 * Math.PI) / 180; // screen angle of the x and z axes below the horizontal
+const HEIGHT_SHARE = 0.8; // drawn length of the y axis relative to the x and z axes
+const TICK_TARGET = 5; // about this many ticks per axis
+const NICE_STEPS = [1, 2, 2.5, 5, 10]; // tick steps per power of ten
+const MARKER_SIZES = [5.5, 8.5, 12]; // px per depth tertile, far to near
+const DEPTH_NAMES = ["Far", "Mid", "Near"];
+const MARKER_ALPHA_HEX = "D9"; // ~85 % opacity so interior points show through
+const LABEL_OUT = 0.06; // tick labels sit this far outside the box, in box units
+const TITLE_OUT = 0.17; // axis titles sit this far outside the box, in box units
+const PAD_SHARE = 0.03; // padding around the projected box as a share of its span
+
+// Columns: set these to your data's column names
+const X = "x (nm)"; // role: x
+const Y = "y (nm)"; // role: y
+const Z = "z (nm)"; // role: z
+const ENERGY = "Potential energy (eV)"; // role: color
+
+// Data: replace this block with your own records, one object per row
+// Simulated molecular-dynamics snapshot: three nanocluster fragments in a 100 nm cell;
+// each atom's potential energy rises with its distance from its fragment's core.
+const data = (() => {
+  let state = 7;
+  const uniform = () => {
     state = (state * 16807) % 2147483647;
     return (state - 1) / 2147483646;
   };
-}
-const nextUniform = createLcg(7);
-function nextGaussian() {
-  const u1 = Math.max(nextUniform(), 1e-9);
-  const u2 = nextUniform();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+  const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(uniform(), 1e-9))) * Math.cos(2 * Math.PI * uniform());
+  const fragments = [
+    { center: [22, 74, 30], sigma: 7, count: 55 },
+    { center: [78, 32, 68], sigma: 8, count: 55 },
+    { center: [42, 20, 84], sigma: 6, count: 45 },
+  ];
+  const rows = [];
+  fragments.forEach(({ center, sigma, count }) => {
+    for (let i = 0; i < count; i += 1) {
+      const position = center.map((c) => Math.min(99, Math.max(1, c + gaussian() * sigma)));
+      const distance = Math.hypot(...position.map((p, k) => p - center[k]));
+      const energy = -6.4 + 0.062 * distance + gaussian() * 0.22;
+      rows.push({
+        [X]: Number(position[0].toFixed(2)),
+        [Y]: Number(position[1].toFixed(2)),
+        [Z]: Number(position[2].toFixed(2)),
+        [ENERGY]: Number(energy.toFixed(3)),
+      });
+    }
+  });
+  return rows;
+})();
 
-// --- Data: simulated nanocluster fragments from a molecular-dynamics run ----
-// Three atom groups (fragments) placed in a 100x100x100 nm cell; each atom's
-// local potential energy (eV) rises with distance from its fragment's core —
-// the classic "stable core, strained periphery" pattern used to demo a
-// genuine 4th-variable color encoding on top of real x/y/z spatial position.
-const AXIS_MIN = 0;
-const AXIS_MAX = 100;
-const FRAGMENTS = [
-  { center: [22, 74, 30], sigma: 7, count: 55 },
-  { center: [78, 32, 68], sigma: 8, count: 55 },
-  { center: [42, 20, 84], sigma: 6, count: 45 },
+// Plot: reads only data and the constants above
+// Each axis spans the data extent rounded out to nice ticks; box coordinates run 0 to 1
+const [xAxisInfo, yAxisInfo, zAxisInfo] = [X, Y, Z].map((column) => {
+  const values = data.map((d) => d[column]);
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const raw = (hi - lo) / TICK_TARGET;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const step = (NICE_STEPS.find((s) => s * magnitude >= raw) ?? 10) * magnitude;
+  const start = Math.floor(lo / step) * step;
+  const end = Math.ceil(hi / step) * step;
+  const ticks = Array.from({ length: Math.round((end - start) / step) + 1 }, (_, k) => Number((start + k * step).toFixed(6)));
+  return { column, start, span: end - start, ticks };
+});
+const xTicks = xAxisInfo.ticks.map((v) => ({ v, at: (v - xAxisInfo.start) / xAxisInfo.span }));
+const yTicks = yAxisInfo.ticks.map((v) => ({ v, at: (v - yAxisInfo.start) / yAxisInfo.span }));
+const zTicks = zAxisInfo.ticks.map((v) => ({ v, at: (v - zAxisInfo.start) / zAxisInfo.span }));
+
+// Fixed oblique view: box point (u, v, w) maps to chart units by this matrix; (1, 0, 1) is the nearest corner
+const PROJ = [
+  [Math.cos(GROUND_ANGLE), 0, -Math.cos(GROUND_ANGLE)],
+  [-Math.sin(GROUND_ANGLE), HEIGHT_SHARE, -Math.sin(GROUND_ANGLE)],
 ];
 
-const atoms = [];
-FRAGMENTS.forEach((fragment, fragmentIndex) => {
-  for (let i = 0; i < fragment.count; i += 1) {
-    const x = fragment.center[0] + nextGaussian() * fragment.sigma;
-    const y = fragment.center[1] + nextGaussian() * fragment.sigma;
-    const z = fragment.center[2] + nextGaussian() * fragment.sigma;
-    const distanceFromCore = Math.sqrt(
-      (x - fragment.center[0]) ** 2 +
-        (y - fragment.center[1]) ** 2 +
-        (z - fragment.center[2]) ** 2
-    );
-    const energy = -6.4 + 0.062 * distanceFromCore + nextGaussian() * 0.22; // eV
-    atoms.push({
-      id: `atom-${fragmentIndex}-${i}`,
-      x: Math.min(Math.max(x, AXIS_MIN + 1), AXIS_MAX - 1),
-      y: Math.min(Math.max(y, AXIS_MIN + 1), AXIS_MAX - 1),
-      z: Math.min(Math.max(z, AXIS_MIN + 1), AXIS_MAX - 1),
-      energy,
-    });
-  }
-});
+// Back panes (floor and the two far walls) with grid lines at the ticks
+const panes = [
+  [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
+  [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+  [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]],
+].map((corners) => corners.map(([u, v, w]) => PROJ.map(([a, b, c]) => a * u + b * v + c * w)));
+const gridLines = [
+  ...xTicks.map(({ at }) => [[at, 0, 0], [at, 0, 1]]),
+  ...zTicks.map(({ at }) => [[0, 0, at], [1, 0, at]]),
+  ...xTicks.map(({ at }) => [[at, 0, 0], [at, 1, 0]]),
+  ...yTicks.map(({ at }) => [[0, at, 0], [1, at, 0]]),
+  ...zTicks.map(({ at }) => [[0, 0, at], [0, 1, at]]),
+  ...yTicks.map(({ at }) => [[0, at, 0], [0, at, 1]]),
+].map((ends) => ends.map(([u, v, w]) => PROJ.map(([a, b, c]) => a * u + b * v + c * w)));
+const axisEdges = [
+  [[0, 0, 1], [1, 0, 1]],
+  [[1, 0, 0], [1, 0, 1]],
+  [[0, 0, 1], [0, 1, 1]],
+].map((ends) => ends.map(([u, v, w]) => PROJ.map(([a, b, c]) => a * u + b * v + c * w)));
 
-// --- Isometric projection: (x, y, z) -> 2D (px, py) data-space coordinates -
-// x/z form the ground plane (down-right / down-left), y is height (straight
-// up). Fed as ordinary numeric x/y into a linear-scale scatter, so the chart
-// does the pixel conversion; the sign choices below make the axes read as a
-// conventional isometric cube once the y-axis' usual "up = larger" inversion
-// is applied.
-const ISO_ANGLE = Math.PI / 6; // 30 degrees
-function project(x, y, z) {
-  return {
-    px: (x - z) * Math.cos(ISO_ANGLE),
-    py: y - (x + z) * Math.sin(ISO_ANGLE),
-  };
-}
+// Tick labels just outside the three outer edges, axis titles further out and turned along them
+const tickLabels = [
+  ...xTicks.map(({ v, at }) => ({ text: `${v}`, box: [at, -LABEL_OUT, 1 + LABEL_OUT], anchor: "end" })),
+  ...zTicks.map(({ v, at }) => ({ text: `${v}`, box: [1 + LABEL_OUT, -LABEL_OUT, at], anchor: "start" })),
+  ...yTicks.map(({ v, at }) => ({ text: `${v}`, box: [-LABEL_OUT / 2, at, 1 + LABEL_OUT / 2], anchor: "end" })),
+].map((label) => ({ ...label, at: PROJ.map(([a, b, c]) => a * label.box[0] + b * label.box[1] + c * label.box[2]) }));
+const groundDeg = (GROUND_ANGLE * 180) / Math.PI;
+const axisTitles = [
+  { text: X, box: [0.5, -TITLE_OUT, 1], rotate: groundDeg },
+  { text: Z, box: [1, -TITLE_OUT, 0.5], rotate: -groundDeg },
+  { text: Y, box: [-TITLE_OUT / 2, 0.5, 1 + TITLE_OUT / 2], rotate: -90 },
+].map((title) => ({ ...title, at: PROJ.map(([a, b, c]) => a * title.box[0] + b * title.box[1] + c * title.box[2]) }));
 
-atoms.forEach((atom) => {
-  const projected = project(atom.x, atom.y, atom.z);
-  atom.px = projected.px;
-  atom.py = projected.py;
-});
-
-// --- Depth cue: points nearer the (x=0, z=0) front edge render larger -------
-const groundDepths = atoms.map((atom) => atom.x + atom.z).sort((a, b) => a - b);
-const tierBoundary1 = groundDepths[Math.floor(groundDepths.length / 3)];
-const tierBoundary2 = groundDepths[Math.floor((2 * groundDepths.length) / 3)];
-function depthTier(atom) {
-  const depth = atom.x + atom.z;
-  if (depth <= tierBoundary1) return "near";
-  if (depth <= tierBoundary2) return "mid";
-  return "far";
-}
-const MARKER_SIZE_BY_TIER = { near: 12, mid: 8.5, far: 5.5 };
-
-// --- Domain bounds: project the cell's 8 corners so every axis line and all
-// data stay comfortably inside the computed x/y scale, then pad for labels --
-const cellCorners = [];
-[AXIS_MIN, AXIS_MAX].forEach((cx) =>
-  [AXIS_MIN, AXIS_MAX].forEach((cy) =>
-    [AXIS_MIN, AXIS_MAX].forEach((cz) => cellCorners.push(project(cx, cy, cz)))
-  )
-);
-const PAD = 16;
-const pxMin = Math.min(...cellCorners.map((c) => c.px)) - PAD;
-const pxMax = Math.max(...cellCorners.map((c) => c.px)) + PAD;
-const pyMin = Math.min(...cellCorners.map((c) => c.py)) - PAD;
-const pyMax = Math.max(...cellCorners.map((c) => c.py)) + PAD * 1.6;
-
-// --- Color axis: continuous Imprint sequential scale over the energy field -
-// The scatter series has no direct opacity prop, so a slight fill-opacity is
-// baked into the colorMap stops themselves to reduce occlusion where the
-// dense upper fragment cluster overlaps.
-const withAlpha = (hex, alpha) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const MARKER_ALPHA = 0.85;
-
-const energyValues = atoms.map((atom) => atom.energy);
-const energyMin = Math.min(...energyValues);
-const energyMax = Math.max(...energyValues);
-
-const zAxis = [
-  {
-    id: "energyColor",
-    colorMap: {
-      type: "continuous",
-      min: energyMin,
-      max: energyMax,
-      color: [withAlpha(t.seq[0], MARKER_ALPHA), withAlpha(t.seq[1], MARKER_ALPHA)],
-    },
-  },
-];
-
-// --- One scatter series per depth tier (all sharing the same color axis) so
-// per-point markerSize can vary while color stays driven by energy alone ----
-const series = ["near", "mid", "far"].map((tier) => ({
-  type: "scatter",
-  id: `atoms-${tier}`,
-  zAxisId: "energyColor",
-  markerSize: MARKER_SIZE_BY_TIER[tier],
-  data: atoms
-    .filter((atom) => depthTier(atom) === tier)
-    .map((atom) => ({
-      x: atom.px,
-      y: atom.py,
-      z: atom.energy,
-      id: atom.id,
-      realX: atom.x,
-      realY: atom.y,
-      realZ: atom.z,
-      energy: atom.energy,
-    })),
-  valueFormatter: (value) =>
-    `x=${value.realX.toFixed(1)} nm, y=${value.realY.toFixed(1)} nm, z=${value.realZ.toFixed(1)} nm · E=${value.energy.toFixed(2)} eV`,
+// Points far to near, so nearer markers paint over farther ones; marker size marks the depth tertile
+const points = data
+  .map((d, i) => {
+    const u = (d[X] - xAxisInfo.start) / xAxisInfo.span;
+    const v = (d[Y] - yAxisInfo.start) / yAxisInfo.span;
+    const w = (d[Z] - zAxisInfo.start) / zAxisInfo.span;
+    const [px, py] = PROJ.map(([a, b, c]) => a * u + b * v + c * w);
+    return { id: i, x: px, y: py, z: d[ENERGY], depth: u + w, vx: d[X], vy: d[Y], vz: d[Z] };
+  })
+  .sort((a, b) => a.depth - b.depth);
+const series = MARKER_SIZES.map((markerSize, tier) => ({
+  type: "scatter" as const,
+  id: `depth-${tier}`,
+  label: DEPTH_NAMES[tier],
+  markerSize,
+  zAxisId: "energy",
+  data: points.filter((_, i) => Math.floor((i * MARKER_SIZES.length) / points.length) === tier),
+  valueFormatter: (p: any) => `${X} ${p.vx}, ${Y} ${p.vy}, ${Z} ${p.vz}; ${ENERGY} ${p.z}`,
 }));
 
-// --- Wireframe cell + axis labels + depth mini-legend, drawn in data space
-// via the chart's own scale hooks (same pattern as biplot-pca's LoadingArrows)
-const originPoint = project(AXIS_MIN, AXIS_MIN, AXIS_MIN);
-const xEndPoint = project(AXIS_MAX, AXIS_MIN, AXIS_MIN);
-const yEndPoint = project(AXIS_MIN, AXIS_MAX, AXIS_MIN);
-const zEndPoint = project(AXIS_MIN, AXIS_MIN, AXIS_MAX);
-const farFloorCorner = project(AXIS_MAX, AXIS_MIN, AXIS_MAX);
+const energies = data.map((d) => d[ENERGY]);
+const energyMin = Math.min(...energies);
+const energyMax = Math.max(...energies);
 
-function Iso3DFrame() {
+// Chart units per px are equal on both screen axes, so the box keeps its shape
+const TITLE = "scatter-3d · javascript · muix · anyplot.ai";
+const SUBTITLE = `n = ${data.length} · fixed oblique view, larger markers are nearer`;
+const HEADER_HEIGHT = 84;
+const SIDE_WIDTH = 230;
+const MARGIN = { top: 16, right: 24, bottom: 24, left: 24 };
+const chartWidth = window.ANYPLOT_SIZE.width - SIDE_WIDTH;
+const chartHeight = window.ANYPLOT_SIZE.height - HEADER_HEIGHT;
+const drawRatio = (chartWidth - MARGIN.left - MARGIN.right) / (chartHeight - MARGIN.top - MARGIN.bottom);
+const extentX = [...panes.flat(), ...tickLabels.map((l) => l.at), ...axisTitles.map((l) => l.at)].map((p) => p[0]);
+const extentY = [...panes.flat(), ...tickLabels.map((l) => l.at), ...axisTitles.map((l) => l.at)].map((p) => p[1]);
+const centerX = (Math.min(...extentX) + Math.max(...extentX)) / 2;
+const centerY = (Math.min(...extentY) + Math.max(...extentY)) / 2;
+const halfY =
+  (Math.max(Math.max(...extentY) - Math.min(...extentY), (Math.max(...extentX) - Math.min(...extentX)) / drawRatio) *
+    (1 + 2 * PAD_SHARE)) /
+  2;
+const halfX = halfY * drawRatio;
+
+function BoxPanes() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const toPixels = (p) => ({ x: xScale(p.px), y: yScale(p.py) });
-
-  const origin = toPixels(originPoint);
-  const xEnd = toPixels(xEndPoint);
-  const yEnd = toPixels(yEndPoint);
-  const zEnd = toPixels(zEndPoint);
-  const farFloor = toPixels(farFloorCorner);
-
-  const axisLine = (from, to) => (
-    <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
-      stroke={t.inkSoft}
-      strokeWidth={2}
-    />
-  );
-  const floorEdge = (from, to) => (
-    <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
-      stroke={t.grid}
-      strokeWidth={1.5}
-      strokeDasharray="6 5"
-    />
-  );
-  const axisLabel = (point, text, dx, dy) => (
-    <text
-      x={point.x + dx}
-      y={point.y + dy}
-      fill={t.ink}
-      fontSize={15}
-      fontWeight={600}
-      fontFamily="system-ui, sans-serif"
-      textAnchor="middle"
-    >
-      {text}
-    </text>
-  );
-
-  const depthLegendX = 70;
-  const depthLegendY = 96;
-  const depthLegendItems = [
-    { tier: "Near", r: MARKER_SIZE_BY_TIER.near },
-    { tier: "Mid", r: MARKER_SIZE_BY_TIER.mid },
-    { tier: "Far", r: MARKER_SIZE_BY_TIER.far },
-  ];
-
   return (
     <g>
-      {floorEdge(xEnd, farFloor)}
-      {floorEdge(zEnd, farFloor)}
-      {axisLine(origin, xEnd)}
-      {axisLine(origin, yEnd)}
-      {axisLine(origin, zEnd)}
-      {axisLabel(origin, "0", -14, 18)}
-      {axisLabel(xEnd, `X · ${AXIS_MAX} nm`, 24, 8)}
-      {axisLabel(yEnd, `Height (Y) · ${AXIS_MAX} nm`, 0, -14)}
-      {axisLabel(zEnd, `Z · ${AXIS_MAX} nm`, -30, 8)}
-
-      <text
-        x={depthLegendX}
-        y={depthLegendY - 22}
-        fill={t.inkSoft}
-        fontSize={16}
-        fontFamily="system-ui, sans-serif"
-      >
-        Marker size = depth
-      </text>
-      {depthLegendItems.map((item, i) => (
-        <g key={item.tier} transform={`translate(${depthLegendX + i * 90}, ${depthLegendY})`}>
-          <circle cx={0} cy={0} r={item.r} fill={t.inkSoft} opacity={0.55} />
-          <text
-            x={18}
-            y={5}
-            fill={t.inkSoft}
-            fontSize={15}
-            fontFamily="system-ui, sans-serif"
-          >
-            {item.tier}
-          </text>
-        </g>
+      {panes.map((corners, i) => (
+        <polygon
+          key={`pane-${i}`}
+          points={corners.map(([px, py]) => `${xScale(px)},${yScale(py)}`).join(" ")}
+          fill={t.elevatedBg}
+          stroke={t.grid}
+          strokeWidth={1}
+        />
+      ))}
+      {gridLines.map(([a, b], i) => (
+        <line key={`grid-${i}`} x1={xScale(a[0])} y1={yScale(a[1])} x2={xScale(b[0])} y2={yScale(b[1])} stroke={t.grid} strokeWidth={1} />
+      ))}
+      {axisEdges.map(([a, b], i) => (
+        <line key={`edge-${i}`} x1={xScale(a[0])} y1={yScale(a[1])} x2={xScale(b[0])} y2={yScale(b[1])} stroke={t.inkSoft} strokeWidth={1.5} />
       ))}
     </g>
   );
 }
 
-const chartTitle = "scatter-3d · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) ------------
-export default function Chart() {
+function BoxLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
   return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={series}
-      zAxis={zAxis}
-      xAxis={[{ id: "iso-x", scaleType: "linear", min: pxMin, max: pxMax }]}
-      yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMin, max: pyMax }]}
-      margin={{ top: 70, right: 60, bottom: 90, left: 60 }}
-      disableVoronoi
-      skipAnimation
-    >
-      <text
-        x={size.width / 2}
-        y={38}
-        textAnchor="middle"
-        fontSize={26}
-        fontWeight={600}
-        fill={t.ink}
-        fontFamily="system-ui, sans-serif"
+    <g>
+      {tickLabels.map((label, i) => (
+        <text
+          key={`tick-${i}`}
+          x={xScale(label.at[0])}
+          y={yScale(label.at[1])}
+          textAnchor={label.anchor}
+          dominantBaseline="central"
+          fontSize={14}
+          fill={t.inkSoft}
+        >
+          {label.text}
+        </text>
+      ))}
+      {axisTitles.map((title) => (
+        <text
+          key={`title-${title.text}`}
+          transform={`translate(${xScale(title.at[0])}, ${yScale(title.at[1])}) rotate(${title.rotate})`}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={16}
+          fontWeight={500}
+          fill={t.ink}
+        >
+          {title.text}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  return (
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+        }}
       >
-        {chartTitle}
-      </text>
-      <Iso3DFrame />
-      <ScatterPlot />
-      <ContinuousColorLegend
-        axisDirection="z"
-        axisId="energyColor"
-        position={{ horizontal: "middle", vertical: "bottom" }}
-        length="26%"
-        thickness={10}
-        minLabel={() => `${energyMin.toFixed(1)} eV · core`}
-        maxLabel={() => `${energyMax.toFixed(1)} eV · edge`}
-        labelStyle={{ fontSize: 15, fill: t.inkSoft }}
-      />
-      <ChartsTooltip trigger="item" />
-    </ChartContainer>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
+        width={chartWidth}
+        height={chartHeight}
+        margin={MARGIN}
+        series={series}
+        xAxis={[{ id: "screen-x", scaleType: "linear", min: centerX - halfX, max: centerX + halfX }]}
+        yAxis={[{ id: "screen-y", scaleType: "linear", min: centerY - halfY, max: centerY + halfY }]}
+        zAxis={[
+          {
+            id: "energy",
+            colorMap: {
+              type: "continuous",
+              min: energyMin,
+              max: energyMax,
+              color: [`${t.seq[0]}${MARKER_ALPHA_HEX}`, `${t.seq[1]}${MARKER_ALPHA_HEX}`],
+            },
+          },
+        ]}
+        skipAnimation
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <ChartsSurface>
+            <BoxPanes />
+            <ScatterPlot />
+            <BoxLabels />
+          </ChartsSurface>
+          <div style={{ width: SIDE_WIDTH, display: "flex", flexDirection: "column", gap: 14, paddingRight: 32 }}>
+            <div style={{ fontSize: 16, fontWeight: 500, color: t.ink }}>{ENERGY}</div>
+            <ContinuousColorLegend
+              axisDirection="z"
+              axisId="energy"
+              direction="vertical"
+              labelPosition="end"
+              thickness={16}
+              minLabel={({ value }) => Number(value).toFixed(2)}
+              maxLabel={({ value }) => Number(value).toFixed(2)}
+              sx={{ height: 260, fontSize: 14, color: t.inkSoft }}
+            />
+            <div style={{ fontSize: 16, fontWeight: 500, color: t.ink, marginTop: 24 }}>Marker size</div>
+            {DEPTH_NAMES.map((name, tier) => (
+              <div key={name} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: t.inkSoft }}>
+                <span style={{ width: 26, display: "flex", justifyContent: "center" }}>
+                  <span
+                    style={{
+                      width: MARKER_SIZES[tier] * 2,
+                      height: MARKER_SIZES[tier] * 2,
+                      borderRadius: "50%",
+                      background: t.inkSoft,
+                      opacity: 0.6,
+                    }}
+                  />
+                </span>
+                {name}
+              </div>
+            ))}
+          </div>
+        </div>
+        <ChartsTooltip trigger="item" />
+      </ChartsDataProvider>
+    </div>
   );
 }
