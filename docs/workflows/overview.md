@@ -556,6 +556,16 @@ night:
   `attempt_window_days` input, else the repository variable
   `REGEN_ATTEMPT_WINDOW_DAYS`, else 30 days. After the window, the pair queues
   behind every pair touched before it.
+- A keep on a regression is the exception: a `regen:kept` PR whose gate record
+  (`<!-- regen-gate-record:v1 … -->` in the workflow's verdict comment) has
+  the code `regression`. The regeneration beat the live implementation except
+  for that regression, so the keep only holds the pair for the window. After
+  the window, the pair returns at its age from before the keep, usually its
+  metadata `updated`, instead of behind the whole catalogue. Every other keep
+  code ages the pair like any other attempt. If the next regeneration is kept
+  on a regression again, the pair returns again; a merge, a failed generation,
+  or a keep for another reason ages it as usual. When the gate records can't be
+  listed, every keep ages its pair.
 - An infrastructure failure, whose comment carries
   `<!-- impl-fail-cause:infra -->`, and a generation Claude stopped, whose
   comment carries `<!-- impl-paused-claude:… -->`, are not attempts: the pair
@@ -578,7 +588,8 @@ is refused at its first request, which costs nothing, and pauses again.
 
 The picker fails closed. When the implementation PR listing fails, the run
 stops with an error, because that listing records the kept, closed, open, and
-paused PRs. The kept-regeneration and issue listings degrade with a warning.
+paused PRs. The kept-regeneration, gate-record, and issue listings degrade
+with a warning.
 The picker reads the failed-generation comments only for the specs at the
 front of the queue, at most 100 issues per run, and a spec whose comments
 can't be read sits out the night. Spec mode keeps its own rule: a spec's age is

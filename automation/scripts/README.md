@@ -267,9 +267,13 @@ generation's `impl-fail` comment; infrastructure failures and generations
 Claude stopped don't count). It skips pairs touched within
 `--attempt-window-days` (default 30), pairs with an open implementation PR,
 and every pair of a spec whose issue saw activity within `--min-age-hours`.
-PyYAML plus `gh`. It fails closed: a failed implementation PR listing exits 1,
-a spec whose comments can't be read sits out the night, and the kept and issue
-listings degrade with a warning. The library list comes from the caller.
+A keep on a regression (gate code `regression`, read from the kept PR's gate
+record) holds its pair for the window without aging it, so the pair returns at
+its age from before the keep. PyYAML, `gh`, and `regen_gate.py` for the
+gate-record grammar. It fails closed: a failed implementation PR listing exits
+1, a spec whose comments can't be read sits out the night, and the kept,
+gate-record, and issue listings degrade with a warning. The library list comes
+from the caller.
 
 ```bash
 python3 automation/scripts/regen_pick_pairs.py --count 5 --min-age-hours 20 \

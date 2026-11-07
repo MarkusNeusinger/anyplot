@@ -18,10 +18,13 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || (github.
 # included, or a failed generation's `impl-fail` comment on the spec issue).
 # A pair touched within the attempt window (`attempt_window_days`, else the
 # REGEN_ATTEMPT_WINDOW_DAYS variable, else 30 days) is not picked, and after
-# it queues behind every pair touched before it. Infrastructure failures and
-# generations Claude stopped are not attempts: the pair comes back on a later
-# night. Spec mode has no window; a spec's age is the newer of its metadata
-# and ANY activity on its issue, infrastructure failures included.
+# it queues behind every pair touched before it. A keep on a regression (gate
+# code `regression` in the kept PR's gate record) is the exception: it holds
+# the pair for the window, then the pair returns at its age from before the
+# keep. Infrastructure failures and generations Claude stopped are not
+# attempts: the pair comes back on a later night. Spec mode has no window; a
+# spec's age is the newer of its metadata and ANY activity on its issue,
+# infrastructure failures included.
 #
 # When Claude stops a session (a spend or usage limit — the API's spend limit
 # or credit balance, the subscription's usage limit — or, with api/oidc,

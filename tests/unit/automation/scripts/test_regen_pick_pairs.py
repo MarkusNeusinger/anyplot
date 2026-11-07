@@ -8,6 +8,8 @@ queue, and postpones a spec whose issue just saw activity. The no-loop rule
 is pinned here: a pair the gate kept, or whose generation failed, does not
 come back the next night, an infrastructure failure or a generation Claude
 stopped is no attempt, and a pick that cannot see its records fails closed.
+A keep on a regression holds its pair out for the window and then lets it
+return at its age from before the keep, instead of behind the whole catalogue.
 ``main`` runs against a fake ``gh`` the way the workflow calls it.
 """
 
@@ -23,6 +25,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from automation.scripts import regen_gate
 from automation.scripts import regen_pick_pairs as rp
 
 
@@ -56,8 +59,26 @@ def write_spec(root: Path, spec: str, metadata: dict[str, dict | str | None], is
 
 def records(**kw) -> rp.Records:
     return rp.Records(
-        attempts=kw.get("attempts", {}), open_pairs=kw.get("open_pairs", set()), issue_activity=kw.get("issues", {})
+        attempts=kw.get("attempts", {}),
+        open_pairs=kw.get("open_pairs", set()),
+        issue_activity=kw.get("issues", {}),
+        held=kw.get("held", {}),
     )
+
+
+def gate_comment(
+    number: int, spec: str, lib: str, code: str = "regression", login: str = "github-actions", days: float = 1
+) -> dict:
+    """impl-review's verdict comment as ``gh pr list --json comments`` returns it."""
+    record = {"v": 1, "pr": number, "spec": spec, "lib": lib, "verdict": "keep", "code": code}
+    body = f"## Regeneration kept\n\n{regen_gate.render_record_marker(record)}\n"
+    return {"author": {"login": login}, "createdAt": ts(days), "body": body}
+
+
+def kept_pr(number: int, spec: str, lib: str, *comments: dict, days: float = 1) -> dict:
+    """A kept regeneration as the gate-record listing returns it."""
+    head = f"implementation/{spec}/{lib}"
+    return {"number": number, "headRefName": head, "state": "CLOSED", "closedAt": ts(days), "comments": list(comments)}
 
 
 def run_pick(cands, recs=None, issues=None, count=5, window=WINDOW, failures=None, max_reads=100):
@@ -199,7 +220,125 @@ class TestFailedGenerations:
         assert "::warning::Read the failed generations of 1 specs" in capsys.readouterr().out
 
 
+class TestRegressionKeeps:
+    """A keep on a regression holds the pair for the window, then it returns at its age."""
+
+    HOLD = "regression keep #31"
+
+    def test_inside_the_window_the_pair_is_held(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): (at(10), self.HOLD)})
+        picks, eligible = run_pick(cands, recs)
+        assert picked(picks) == ["b/plotly"] and eligible == 1
+
+    def test_after_the_window_it_returns_at_its_age(self):
+        # The same keep as a plain attempt queues behind b/plotly
+        # (test_after_the_window_an_attempt_queues_behind_older_pairs).
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): (at(45), self.HOLD)})
+        picks, _ = run_pick(cands, recs)
+        assert picked(picks) == ["a/altair", "b/plotly"]
+        assert picks[0].touched == at(200)
+        assert picks[0].basis == f"metadata, back after {self.HOLD} of {at(45):%Y-%m-%d}"
+        assert picks[1].basis == "metadata"
+
+    def test_the_age_is_the_one_from_before_the_keep(self):
+        # An older plain keep still ages the pair; only the keep on a regression doesn't.
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(120))]
+        recs = records(attempts={("a", "altair"): (at(100), "kept PR")}, held={("a", "altair"): (at(40), self.HOLD)})
+        picks, _ = run_pick(cands, recs)
+        assert picked(picks) == ["b/plotly", "a/altair"]
+        assert picks[1].touched == at(100) and picks[1].basis.startswith("kept PR, back after")
+
+    def test_a_newer_merge_ends_the_hold(self):
+        # Merged after the keep: the metadata is the age and the window counts from it.
+        cands = [rp.Candidate("a", "altair", at(40)), rp.Candidate("a", "plotly", at(12))]
+        recs = records(held={("a", "altair"): (at(50), self.HOLD), ("a", "plotly"): (at(50), self.HOLD)})
+        picks, _ = run_pick(cands, recs)
+        assert picked(picks) == ["a/altair"] and picks[0].basis == "metadata"
+
+    def test_a_later_failed_generation_ages_the_pair(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): (at(50), self.HOLD)})
+        picks, _ = run_pick(cands, recs, failures=lambda spec: {"altair": at(35)} if spec == "a" else {})
+        assert picked(picks) == ["b/plotly", "a/altair"]
+        assert picks[1].touched == at(35) and picks[1].basis == "failed generation"
+
+    def test_a_failure_older_than_the_keep_moves_the_age_only(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(120))]
+        recs = records(held={("a", "altair"): (at(40), self.HOLD)})
+        picks, _ = run_pick(cands, recs, failures=lambda spec: {"altair": at(100)} if spec == "a" else {})
+        assert picked(picks) == ["b/plotly", "a/altair"]
+        assert picks[1].touched == at(100) and picks[1].basis.startswith("failed generation, back after")
+
+    def test_a_failure_inside_the_window_drops_the_pair(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): (at(50), self.HOLD)})
+        picks, eligible = run_pick(cands, recs, failures=lambda spec: {"altair": at(3)} if spec == "a" else {})
+        assert picked(picks) == ["b/plotly"] and eligible == 1
+
+
+class TestReturningKeeps:
+    def test_a_workflow_record_with_a_return_code_counts(self):
+        pulls = [
+            kept_pr(31, "a", "altair", gate_comment(31, "a", "altair")),
+            kept_pr(32, "a", "plotly", gate_comment(32, "a", "plotly", login="github-actions[bot]")),  # REST shape
+            kept_pr(33, "b", "altair", gate_comment(33, "b", "altair", code="no_visible_improvement")),
+            kept_pr(34, "b", "plotly"),  # no record at all
+        ]
+        assert rp.returning_keeps(pulls) == {31, 32}
+
+    def test_a_record_must_be_the_workflows_and_name_its_pr_and_pair(self):
+        pulls = [
+            kept_pr(41, "a", "altair", gate_comment(41, "a", "altair", login="someone")),  # a pasted marker
+            kept_pr(42, "a", "plotly", gate_comment(12515, "a", "plotly")),  # copied from another PR
+            kept_pr(43, "b", "altair", gate_comment(43, "b", "plotly")),  # another pair
+            {
+                "number": 44,
+                "headRefName": "review-writeback/b/plotly/44",
+                "comments": [gate_comment(44, "b", "plotly")],
+            },
+            {"headRefName": "implementation/c/altair", "comments": [gate_comment(45, "c", "altair")]},  # no number
+        ]
+        assert rp.returning_keeps(pulls) == set()
+
+    def test_the_first_workflow_record_wins(self):
+        first = gate_comment(51, "a", "altair", code="below_tolerance", days=3)
+        later = gate_comment(51, "a", "altair", days=1)
+        assert rp.returning_keeps([kept_pr(51, "a", "altair", later, first)]) == set()
+
+    def test_an_invalid_record_is_no_record(self):
+        record = {"v": 1, "pr": 61, "spec": "a", "lib": "altair", "verdict": "keep", "code": "made_up"}
+        forged = {"author": {"login": "github-actions"}, "createdAt": ts(2)}
+        forged["body"] = f"<!-- regen-gate-record:v1 {json.dumps(record, separators=(',', ':'))} -->"
+        assert rp.returning_keeps([kept_pr(61, "a", "altair", forged)]) == set()
+        # ...so a valid record after it is the first one.
+        assert rp.returning_keeps([kept_pr(61, "a", "altair", forged, gate_comment(61, "a", "altair"))]) == {61}
+
+    def test_the_return_codes_are_gate_codes(self):
+        assert rp.RETURN_CODES <= set(regen_gate.REASON_CODES) - {"merge", "adapt_identity"}
+
+
 class TestFoldPulls:
+    def test_a_keep_on_a_regression_holds_instead_of_aging(self):
+        recs = records()
+        rp.fold_pulls(
+            [
+                pr("implementation/a/altair", "CLOSED", 31, ("regen:kept",), closedAt=ts(5)),
+                pr("implementation/a/plotly", "CLOSED", 32, ("regen:kept",), closedAt=ts(6)),
+                pr("implementation/b/altair", "MERGED", 33, (), closedAt=ts(7)),  # a merge never holds
+                pr("implementation/b/plotly", "CLOSED", 34, (), closedAt=ts(8)),  # closed, not kept
+            ],
+            recs,
+            returning={31, 33, 34},
+        )
+        assert recs.held == {("a", "altair"): (at(5), "regression keep #31")}
+        assert recs.attempts == {
+            ("a", "plotly"): (at(6), "kept PR"),
+            ("b", "altair"): (at(7), "merged PR"),
+            ("b", "plotly"): (at(8), "closed PR"),
+        }
+
     def test_open_blocks_closed_and_merged_count(self):
         recs = records()
         rp.fold_pulls(
@@ -262,6 +401,7 @@ FAKE_GH = """#!/bin/sh
 echo "$*" >> "$GH_LOG"
 case "$*" in
   *"head:implementation/"*) f=prs.json ;;
+  *"state,comments"*"regen:kept"*) f=gates.json ;;
   *"regen:kept"*) f=kept.json ;;
   "issue list"*) f=issues.json ;;
   "api --paginate repos/o/r/issues/"*) n=${3#repos/o/r/issues/}; f=comments-${n%%/*}.jsonl ;;
@@ -352,6 +492,35 @@ class TestMain:
         log = (tmp_path / "gh.log").read_text()
         assert "repos/o/r/issues/12/comments?per_page=100" in log and "run list" not in log
 
+    def test_a_keep_on_a_regression_returns_at_its_age(self, tmp_path):
+        without, with_records = tmp_path / "without", tmp_path / "with"
+        self._plots(without)
+        self._plots(with_records)
+        kept = [
+            {
+                "number": 31,
+                "headRefName": "implementation/a-spec/altair",
+                "state": "CLOSED",
+                "closedAt": ts(40, self.now),
+                "labels": [{"name": "regen:kept"}],
+            }
+        ]
+        gates = [kept_pr(31, "a-spec", "altair", gate_comment(31, "a-spec", "altair"))]
+        data = {"prs.json": json.dumps(kept), "kept.json": json.dumps(kept), "issues.json": "[]"}
+        data |= {"comments-11.jsonl": "", "comments-12.jsonl": ""}
+        # Without its gate record (the listing fails) the keep ages the pair: it queues last.
+        result, outputs, _ = run_main(without, data, 4)
+        assert "::warning::Could not list kept regenerations' gate records" in result.stdout
+        assert json.loads(outputs["pairs_json"])[-1] == {"spec": "a-spec", "library": "altair"}
+        # With it, a-spec/altair is back at its metadata age, the oldest of all.
+        result, outputs, summary = run_main(with_records, data | {"gates.json": json.dumps(gates)}, 4)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert json.loads(outputs["pairs_json"])[0] == {"spec": "a-spec", "library": "altair"}
+        assert (
+            f"| 1 | `a-spec` | `altair` | {ts(190, self.now)} | metadata, back after regression keep #31 of" in summary
+        )
+        assert "keeps on a regression for 1 pair(s)" in result.stdout
+
     def test_the_window_comes_from_the_argument(self, tmp_path):
         self._plots(tmp_path)
         kept = [{"headRefName": "implementation/a-spec/altair", "state": "CLOSED", "closedAt": ts(40, self.now)}]
@@ -415,7 +584,7 @@ class TestMain:
         self._plots(tmp_path)
         result, outputs, _ = run_main(tmp_path, {"prs.json": "[]", "comments-12.jsonl": ""}, 1)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert result.stdout.count("::warning::Could not list") == 2
+        assert result.stdout.count("::warning::Could not list") == 3  # kept, gate records, issues
         # a-spec's comments cannot be read: it is left out, b-spec/altair is next.
         assert "::warning::Could not read the comments of issue #11" in result.stdout
         assert json.loads(outputs["pairs_json"]) == [{"spec": "b-spec", "library": "altair"}]
@@ -446,8 +615,9 @@ class TestMain:
 class FakeRunner:
     """Stands in for ``subprocess.run``: answers each ``gh`` call the picker makes from ``data``.
 
-    The keys are ``prs``, ``kept``, ``issues`` and ``comments-<issue>``; a value
-    that is an exception is raised, and a missing key fails like an API error.
+    The keys are ``prs``, ``kept``, ``gates``, ``issues`` and ``comments-<issue>``;
+    a value that is an exception is raised, and a missing key fails like an API
+    error.
     """
 
     def __init__(self, data: dict[str, str | BaseException]):
@@ -459,6 +629,8 @@ class FakeRunner:
         joined = " ".join(args)
         if "head:implementation/" in joined:
             return "prs"
+        if "regen:kept" in joined and "comments" in args[args.index("--json") + 1].split(","):
+            return "gates"
         if "regen:kept" in joined:
             return "kept"
         if args[1:3] == ["issue", "list"]:
@@ -576,22 +748,38 @@ class TestReadRecords:
                         pr("implementation/a/plotly", "OPEN", 7, ("ai-review-paused",), updatedAt=ts(1)),
                     ]
                 ),
-                "kept": json.dumps([pr("implementation/b/altair", "CLOSED", 8, ("regen:kept",), closedAt=ts(200))]),
+                "kept": json.dumps(
+                    [
+                        pr("implementation/b/altair", "CLOSED", 8, ("regen:kept",), closedAt=ts(200)),
+                        pr("implementation/b/plotly", "CLOSED", 9, ("regen:kept",), closedAt=ts(20)),
+                    ]
+                ),
+                "gates": json.dumps(
+                    [
+                        kept_pr(8, "b", "altair", gate_comment(8, "b", "altair", code="no_defect_improvement")),
+                        kept_pr(9, "b", "plotly", gate_comment(9, "b", "plotly")),
+                    ]
+                ),
                 "issues": json.dumps([{"number": 11, "updatedAt": ts(2)}]),
             }
         )
         recs = rp.read_records("o/r")
         assert set(recs.attempts) == {("a", "altair"), ("b", "altair")}
         assert recs.attempts[("b", "altair")][1] == "kept PR"
+        assert recs.held == {("b", "plotly"): (at(20), "regression keep #9")}
         assert recs.open_pairs == {("a", "plotly")} and [r.pr for r in recs.paused] == [7]
         assert set(recs.issue_activity) == {11}
         assert (
-            "Attempt records for 2 pair(s), 1 open PR(s) (1 paused), activity for 1 issue(s)" in capsys.readouterr().out
+            "Attempt records for 2 pair(s), 1 open PR(s) (1 paused), keeps on a regression for 1 pair(s), "
+            "activity for 1 issue(s)" in capsys.readouterr().out
         )
-        prs_call, kept_call, issues_call = fake.calls
+        prs_call, kept_call, gates_call, issues_call = fake.calls
         assert prs_call[prs_call.index("--json") + 1] == "number,headRefName,state,updatedAt,closedAt,labels"
         assert prs_call[prs_call.index("--state") + 1] == "all" and "--repo" in prs_call and "o/r" in prs_call
         assert kept_call[kept_call.index("--state") + 1] == "closed"
+        assert gates_call[gates_call.index("--json") + 1] == "number,headRefName,state,comments"
+        assert gates_call[gates_call.index("--state") + 1] == "closed"
+        assert gates_call[gates_call.index("--label") + 1] == "regen:kept" and "o/r" in gates_call
         assert issues_call[issues_call.index("--json") + 1] == "number,updatedAt"
 
     @pytest.mark.parametrize("prs", [None, '{"message": "rate limited"}'])
@@ -605,8 +793,17 @@ class TestReadRecords:
         runner({"prs": json.dumps([pr("implementation/a/altair", "CLOSED", closedAt=ts(5))])})
         recs = rp.read_records("o/r")
         assert recs.attempts == {("a", "altair"): (at(5), "closed PR")} and recs.issue_activity == {}
+        assert recs.held == {}
         out = capsys.readouterr().out
-        assert "Could not list kept regenerations" in out and "Could not list issues" in out
+        assert "Could not list kept regenerations (" in out and "Could not list issues" in out
+        assert "Could not list kept regenerations' gate records" in out
+
+    def test_without_gate_records_a_keep_ages_its_pair(self, runner):
+        """A lost gate-record listing loses only the returns, never the kept attempt."""
+        kept = json.dumps([pr("implementation/b/plotly", "CLOSED", 9, ("regen:kept",), closedAt=ts(20))])
+        runner({"prs": "[]", "kept": kept, "issues": "[]"})
+        recs = rp.read_records("o/r")
+        assert recs.attempts == {("b", "plotly"): (at(20), "kept PR")} and recs.held == {}
 
 
 class TestIssueFailures:
@@ -646,8 +843,8 @@ class TestSummaryTable:
             "|--------|----|------|---------|",
             "| repair | #22 | `b` | `altair` |",
             "",
-            "| # | Spec | Library | Last touched | From |",
-            "|---|------|---------|--------------|------|",
+            "| # | Spec | Library | Age from | From |",
+            "|---|------|---------|----------|------|",
             "| 1 | `a` | `plotly` | never | none |",
             f"| 2 | `a` | `altair` | {ts(40)} | kept PR |",
         ]
