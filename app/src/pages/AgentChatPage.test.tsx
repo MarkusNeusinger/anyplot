@@ -607,7 +607,7 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(`${PAGE}&source=plot_page`);
     expect(await screen.findByLabelText('Message')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open a data file' })).toBeInTheDocument();
     // The admin check picks the lane, so it goes before the session's open.
     const called = agentCalls().map(([input]) => pathOf(input));
     expect(called[0]).toBe('/debug/agent/status');
@@ -2548,7 +2548,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(card).toHaveAccessibleDescription(line);
     expect(within(card).getByLabelText(/^x/)).toBeDisabled();
     // A new file waits too: the panel's sessions copy this data.
-    expect(screen.getByRole('button', { name: 'Attach a data file' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Open a data file' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -2557,7 +2557,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
     const reopened = screen.getByRole('region', { name: 'Your data' });
     expect(reopened).not.toHaveAccessibleDescription();
-    expect(screen.getByRole('button', { name: 'Attach a data file' })).not.toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Open a data file' })).not.toHaveAttribute(
       'aria-disabled'
     );
     expect(within(reopened).getByLabelText(/^x/)).toBeEnabled();
@@ -3230,7 +3230,7 @@ describe('AgentChatPage attachment', () => {
   it('takes a file from .open() as a chip with its name, and × drops it', async () => {
     await openChat();
     const input = screen.getByTestId('chat-file-input');
-    screen.getByRole('button', { name: 'Attach a data file' }).focus();
+    screen.getByRole('button', { name: 'Open a data file' }).focus();
     fireEvent.change(input, {
       target: { files: [new File([TABLE], 'scores.csv', { type: 'text/csv' })] },
     });
@@ -3313,7 +3313,7 @@ describe('AgentChatPage attachment', () => {
     holdNextTurn = true;
     fireEvent.click(screen.getByRole('button', { name: 'Make example data' }));
     await waitFor(() => expect(releaseTurn).not.toBeNull());
-    expect(screen.getByRole('button', { name: 'Attach a data file' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Open a data file' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
@@ -3572,7 +3572,7 @@ describe('AgentChatPage attachment', () => {
 
     dropOnChat(workbook());
     await screen.findByText('reading "Bericht.xlsx" on the server');
-    expect(screen.getByRole('button', { name: 'Attach a data file' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Open a data file' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );

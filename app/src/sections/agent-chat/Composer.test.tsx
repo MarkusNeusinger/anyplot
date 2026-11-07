@@ -56,7 +56,9 @@ const attachment: Attachment = {
 };
 
 const exampleButton = () => screen.getByRole('button', { name: 'Make example data' });
-const openButton = () => screen.getByRole('button', { name: 'Attach a data file' });
+// The accessible names hold the visible words ("open", "example data") without the punctuation a
+// screen reader would spell out (WCAG 2.5.3, style guide §7.4.1).
+const openButton = () => screen.getByRole('button', { name: 'Open a data file' });
 
 describe('Composer row', () => {
   it('holds the box and the plot button in the row, and the two ways to data in the line above', () => {

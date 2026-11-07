@@ -274,7 +274,7 @@ export function Composer(props: ComposerProps) {
               if (canOpen) fileInputRef.current?.click();
             }}
             aria-disabled={!canOpen || undefined}
-            aria-label="Attach a data file"
+            aria-label="Open a data file"
             sx={dataLinkSx(false)}
           >
             .open()
@@ -302,7 +302,7 @@ export function Composer(props: ComposerProps) {
               if (canOpen) fileInputRef.current?.click();
             }}
             aria-disabled={!canOpen || undefined}
-            aria-label="Attach a data file"
+            aria-label="Open a data file"
             sx={dataLinkSx(true)}
           >
             .open()

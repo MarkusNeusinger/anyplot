@@ -94,8 +94,8 @@
  * code carries the Python that ran (`code`). Only text the chat takes
  * (`MAX_MESSAGE_CHARS`) can move there: longer code fails with a line that
  * asks to shorten it.
- * `exampleData` (`.example_data()`, the composer's filled button while the
- * session has no data) asks for the same in one click as the action
+ * `exampleData` (`.example_data()`, in the line above the message box,
+ * highlighted while the session has no data) asks for the same in one click as the action
  * `example_data`, never as typed words: the session's first typed message sets
  * the session language, and an action leaves it to the visitor's own words.
  *
