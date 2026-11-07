@@ -3981,8 +3981,9 @@ MONTHLY_NAMES = [
 
 # An export shaped like a statistics office's spreadsheet download (persona test of 2026-11-06), with invented
 # countries and values: a title and key-value metadata padded to the table's width, a header of years, a flag column
-# after each year, `:` for a value that is not available, and dots between thousands. The parse joined two metadata
-# lines into the header, read the years as a row, and left every column text.
+# after each year, `:` for a value that is not available, dots between thousands, and the legend below, after a
+# blank line, padded like every other line. The parse joined two metadata lines into the header, read the years as a
+# row, read the legend as rows, and left every column text.
 STATISTICS_EXPORT = (
     "Population on 1 January (invented test data),,,,,,,,\n"
     ",,,,,,,,\n"
@@ -3995,6 +3996,13 @@ STATISTICS_EXPORT = (
     "Betaland,845.210,,:,,850.774,e,852.001,\n"
     "Gammaland,12.003.441,b,12.010.982,,:,,12.044.310,p\n"
     "Deltaland,77.120,,77.305,,77.512,,77.689,e\n"
+    ",,,,,,,,\n"
+    "Special value,,,,,,,,\n"
+    ":,not available,,,,,,,\n"
+    "Available flags:,,,,,,,,\n"
+    "b,break in time series,,,,,,,\n"
+    "e,estimated,,,,,,,\n"
+    "p,provisional,,,,,,,\n"
 )
 
 
@@ -4152,13 +4160,40 @@ class TestPeriodHeaderBelowMetadata:
             "2022 flag",
         ]
         assert parsed.profile.rows == 4
-        assert parsed.context_lines == [
+        assert parsed.context_lines[:4] == [
             "Population on 1 January (invented test data)",
             "Time frequency, Annual",
             "Demographic indicator, Population on 1 January - total",
             "Unit of measure, Number",
         ]
         assert not warned(parsed, "two lines")
+
+    def test_its_legend_below_a_blank_line_is_notes_not_rows(self) -> None:
+        parsed = parse_dataset(STATISTICS_EXPORT)
+
+        assert parsed.context_lines[4:] == [
+            "Special value",
+            ":, not available",
+            "Available flags:",
+            "b, break in time series",
+            "e, estimated",
+            "p, provisional",
+        ]
+        assert warned(parsed, "left out 6 lines below the table (notes or a source line)")
+        assert parsed.csv.splitlines()[-1].startswith("Deltaland,")
+
+    @pytest.mark.parametrize(
+        ("text", "rows"),
+        [
+            ("Land,2020,2021\nA,1,2\nB,3,4\nC,5,6\nD,,\nE,,\n", 5),  # directly under the data: rows, as before
+            ("Land,2020,2021\nA,1,2\nB,3,4\nC,5,6\n\nD,,\nE,,\n", 3),  # after a blank line: notes
+        ],
+    )
+    def test_rows_without_values_extend_the_table_only_up_to_a_blank_line(self, text: str, rows: int) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == rows
+        assert parsed.column_dtypes == {"Land": "text", "2020": "integer", "2021": "integer"}
 
     def test_its_thousands_dots_and_colons_read_as_numbers_and_missing_cells(self) -> None:
         parsed = parse_dataset(STATISTICS_EXPORT)

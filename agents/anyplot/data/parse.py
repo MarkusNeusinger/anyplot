@@ -998,12 +998,17 @@ def _read_delimited(
         warnings.append("single spaces read as the column separator; check that no value was split in two")
     if declared is not None:
         declared.update(marks)
+    after_blank = {records[index][0] for index in breaks}  # by line number, which survives `_one_table`'s cut
     if find_table:
         records, spans = _one_table(records, spans, breaks, table, warnings, tables, missing, lead)
     elif table > 1:
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     block = (
-        table_block([record for _, record in records], extra_missing=missing)
+        table_block(
+            [record for _, record in records],
+            extra_missing=missing,
+            breaks={index for index, (line_num, _) in enumerate(records) if line_num in after_blank},
+        )
         if find_table
         else TableBlock(0, len(records))
     )
@@ -1680,7 +1685,9 @@ class TableBlock:
     reads the first row as the header (as before) or finds the names elsewhere (`_comment_header`)."""
 
 
-def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[str] = frozenset()) -> TableBlock:
+def table_block(
+    records: Sequence[Sequence[str]], *, extra_missing: frozenset[str] = frozenset(), breaks: Collection[int] = ()
+) -> TableBlock:
     """The table among pasted records that may carry other lines (owner rule of 2026-10-14).
 
     Real pastes are rarely a bare table: an export starts with metadata (Open-Meteo writes
@@ -1708,7 +1715,12 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
       two of the rows' values at least but lost their empty last cells (`Dec 2022`, two empty cells,
       `$2099` under five columns, the last row of a copied web table, `short_row`); anything after that is
       left out, such as a source line or a sentence, also one that its commas split into
-      the table's width.
+      the table's width. A record whose value cells are missing extends the rows only up to
+      a blank line (`breaks`, the indices of the records that follow one): a spreadsheet
+      export pads every line to the table's width, so the legend a statistics office writes
+      below its table (`:,not available`, `p,provisional`) read as rows of its first column
+      and turned a year column into text (persona test of 2026-11-06); it is left out as
+      notes below the table now. Directly under the last data row such a record stays a row.
     * A line between the data rows that fills one cell, text under a value column, is no row: a
       button copied with a web table (`Show 36 earlier months`), a note. It is left out (`skipped`, owner's live test of 2026-11-02: it stayed a
       row of empty cells, which also kept the month column text), with a warning that names its
@@ -1784,7 +1796,9 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
         rows = rows[1:]
         first = rows[0]
     end = last + 1
-    while end < len(records) and (sparse_row(records[end]) or wide_data_row(records[end]) or short_row(records[end])):
+    while end < len(records) and (
+        (sparse_row(records[end]) and end not in breaks) or wide_data_row(records[end]) or short_row(records[end])
+    ):
         end += 1
     below = len(records) - end
     summary = 0
