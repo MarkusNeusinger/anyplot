@@ -12,8 +12,15 @@
  * One column, chat first, two steps, data first, in one terminal-style frame (`ChatFrame`,
  * since the v4 design of 2026-11-06): the tab label `~/anyplot.ai/agent` on its top border, the
  * header row inside it, and at its foot the status line, `>>> step 1 of 2 · …`, which names the
- * step and what the plot button waits for. The data card is the first
- * turn of the thread: paste data (or ask in the chat for a curve, whose table
+ * step and what the plot button waits for. The thread opens with the start item (`StartItem`,
+ * since 2026-11-07): "You came from **<the spec's title>**. It needs", the spec's roles as chips
+ * in plain words (`x · numbers`, `y · numbers, one or more`), the catalogue plot being adapted
+ * as a thumbnail in the library in use and the site theme (`CataloguePreview`; a click opens it
+ * large), the columns it expects behind an ⓘ after the chips (the spec's roles as the session's
+ * open names them, the spec's `data` bullets without them), a pointer to the box below and the
+ * how-to of the data behind an ⓘ; it repeats none of the composer's controls, stays first and
+ * scrolls up with the talk. The data card is the first
+ * turn after it: paste data (or ask in the chat for a curve, whose table
  * the assistant computes; while the session has no data, `.example_data()` in
  * the highlighted line above the message box asks it for a made-up table to try the plot),
  * read the assistant's summary of it in the next
@@ -33,15 +40,13 @@
  * catalogue plot with this data, the way out of code that went wrong, which
  * keeps the remembered decisions (owner decision of 2026-11-02); every shipped
  * version gets a result card with the image,
- * the code and the downloads. The header row, in plain words, shows the catalogue plot being
- * adapted as a thumbnail beside the spec's title, the link back, in the library in use and the
- * site theme (`CataloguePreview`; a click opens it large), with the columns it expects behind
- * the ⓘ after the title (the spec's roles as the session's open names them, the spec's `data`
- * bullets without them), and carries the library menu (`LibraryChip`, `seaborn ▾`, since
+ * the code and the downloads. The header row, in plain words, shows the spec's title, the link
+ * back, and carries the library menu (`LibraryChip`, `seaborn ▾`, since
  * 2026-11-02 in place of a pill per library: the libraries grouped by language), next to it the
  * session language chip (`LanguageChip`, `English ▾`): the language of the replies and of the
- * text in the plot, English until the first typed message or a choice sets another, and the
- * how-to of the data behind an ⓘ. For an admin, the admin menu stands at the row's end (since
+ * text in the plot, English until the first typed message or a choice sets another (the
+ * thumbnail and both ⓘ stood in the row until the start item took them). For an admin, the
+ * admin menu stands at the row's end (since
  * 2026-11-06, where the "⋯" menu with `.save()` stood): the fan-out toggle, `.save()` with its
  * `# include data.csv` box, "view as visitor" and the admin's diagnostics. The page talks only to
  * the BFF (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
@@ -166,7 +171,6 @@ import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
 import { AdminMenu, type AdminMode } from 'src/sections/agent-chat/AdminMenu';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
-import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
@@ -175,12 +179,10 @@ import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
-import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
 import {
   attachmentWaitLine,
-  DATA_HOWTO,
   describeDataFailure,
   DROP_HINT_TEXT,
   ERROR_TEXT,
@@ -191,7 +193,8 @@ import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
-import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
+import { previewsByLibrary } from 'src/sections/agent-chat/specReference';
+import { StartItem } from 'src/sections/agent-chat/StartItem';
 import {
   hasPlotHere,
   inStep2,
@@ -204,7 +207,6 @@ import {
 import { bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
 import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
-import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/adminAuth';
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
@@ -462,7 +464,7 @@ function AgentChat({
   const { state } = session;
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
-  // The catalogue plot beside the title: its preview per library, and the spec's `data` bullets,
+  // The catalogue plot of the start item: its preview per library, and the spec's `data` bullets,
   // the columns ⓘ's fallback while the session's open names no roles.
   const [reference, setReference] = useState<{
     previews: Record<string, ThemedPreviewSource>;
@@ -649,9 +651,6 @@ function AgentChat({
       ? state.carryOffer
       : null;
   const carryCount = carry ? carryDecisions(carry, state.memory) : 0;
-  // The columns ⓘ after the title: the spec's roles as the session's open named them, else the
-  // spec's `data` bullets (an older server, or no session: ineligible, an error).
-  const expectedLines = columnLines(state.specRoles, reference?.data);
   // `.example_data()` in the data line above the box: the other way to data besides a paste,
   // inert once there is data, which it would replace. A table read from text that waits for its
   // decision is data at hand, and so is a table or a file waiting in the box: it waits then, as
@@ -1009,9 +1008,10 @@ function AgentChat({
       <ExperimentalNotice />
     </>
   );
-  // The frame's header row, in plain words: the catalogue plot and its title (the link back), the
-  // library and the reply language as dropdowns, the how-to of the data, and in an admin's browser
-  // the admin menu. At phone width the title takes the first line and the controls wrap below it.
+  // The frame's header row, in plain words: the spec's title (the link back), the library and the
+  // reply language as dropdowns, and in an admin's browser the admin menu. The catalogue plot,
+  // the columns it expects and the how-to of the data are the start item's, the thread's first
+  // item. At phone width the title takes the first line and the controls wrap below it.
   const headerRow = (
     <Box>
       <Box
@@ -1023,45 +1023,21 @@ function AgentChat({
           rowGap: 1.25,
         }}
       >
-        {/* The catalogue plot and its title stay together when the row wraps at phone width; the
-            columns it expects are behind the ⓘ, closed by default. */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            minWidth: 0,
-            flexBasis: { xs: '100%', sm: 'auto' },
-          }}
-        >
-          <CataloguePreview
-            title={title ?? specId}
-            library={state.library}
-            preview={reference?.previews[state.library] ?? null}
-          />
-          <Box sx={{ minWidth: 0 }}>
-            <Box
-              component={RouterLink}
-              to={backHref}
-              sx={{
-                fontFamily: typography.mono,
-                fontSize: fontSize.md,
-                color: 'var(--ink)',
-                textDecoration: 'none',
-                '&:hover': { color: colors.primary, textDecoration: 'underline' },
-                overflowWrap: 'anywhere',
-              }}
-            >
-              {title ?? specId}
-            </Box>
-            {expectedLines.length > 0 && (
-              <InfoPopover
-                label="Columns the plot expects"
-                heading="# the plot expects"
-                testId="expected-columns"
-                lines={expectedLines.map(line => parseInlineCode(line))}
-              />
-            )}
+        {/* A line of its own at phone width; the link is only as wide as the title. */}
+        <Box sx={{ minWidth: 0, flexBasis: { xs: '100%', sm: 'auto' } }}>
+          <Box
+            component={RouterLink}
+            to={backHref}
+            sx={{
+              fontFamily: typography.mono,
+              fontSize: fontSize.md,
+              color: 'var(--ink)',
+              textDecoration: 'none',
+              '&:hover': { color: colors.primary, textDecoration: 'underline' },
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {title ?? specId}
           </Box>
         </Box>
         <LibraryChip
@@ -1085,16 +1061,6 @@ function AgentChat({
             value={state.plotLanguage}
             disabled={state.phase !== 'ready' || !state.sessionId || busy}
             onSet={session.setLanguage}
-          />
-        )}
-        {/* How the data comes in through the message box, beside the controls of the session
-            (beside the `# chat` label until the v4 frame); without a session no data comes in. */}
-        {!reopen && (
-          <InfoPopover
-            label="How the chat takes data"
-            heading="# how it works"
-            lines={DATA_HOWTO}
-            testId="data-howto"
           />
         )}
         {adminMenu}
@@ -1183,6 +1149,15 @@ function AgentChat({
                 onTrack={trackEvent}
                 onOutcome={session.reportOutcome}
                 onSendFeedback={session.sendFeedback}
+                start={
+                  <StartItem
+                    title={title ?? specId}
+                    library={state.library}
+                    preview={reference?.previews[state.library] ?? null}
+                    roles={state.specRoles}
+                    bullets={reference?.data}
+                  />
+                }
                 renderData={part => (
                   <DataPanel
                     state={state}
@@ -1251,9 +1226,9 @@ function AgentChat({
                 run's plot, once in the thread, takes the timeline's place. */}
                 {state.run && view.timeline && <ProgressTimeline run={state.run} />}
 
-                {/* The frame's second dashed rule: the thread above, the composer below; none
-                    while the thread is empty, where it would stand right under the first. */}
-                {state.items.length > 0 && <FrameRule />}
+                {/* The frame's second dashed rule: the thread above, the composer below. The thread
+                    is never empty, since the start item stands first in it. */}
+                <FrameRule />
 
                 {/* The decisions every next plot takes over, right above the composer that asks for
                 it and whose offer after a switch counts them; nothing while there are none. */}

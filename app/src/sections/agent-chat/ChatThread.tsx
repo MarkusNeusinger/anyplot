@@ -1,6 +1,8 @@
 /**
- * The chat thread: the user's turns and the page's own (`.example_data()`, `.create_plot()`,
- * `.carry_plot()`), the attachments the user sent and the data card after each (a later
+ * The chat thread: first the start item (`StartItem`, what the chat adapts and what it needs),
+ * which stays first and scrolls up with the talk, then the user's turns and the page's own
+ * (`.example_data()`, `.create_plot()`, `.carry_plot()`), the attachments the user sent and the
+ * data card after each (a later
  * paste leaves the card it replaced as a stub of its shape), the assistant's replies, the fixed
  * refusal under a plain label (its code behind the label's ⓘ), errors with their code and
  * request id, and a result card per plot version. Earlier versions stay in the thread,
@@ -110,6 +112,8 @@ interface ChatThreadProps {
   renderData?: (part: 'data' | 'transcription') => React.ReactNode;
   /** Whether the first reply after a card may come into view: the user's focus is in the composer. */
   followReply?: () => boolean;
+  /** The thread's first item, before every turn: the start item (`StartItem`). */
+  start?: ReactNode;
 }
 
 /** The kinds of item that answer a turn: the first of them after a card is its reply. */
@@ -331,6 +335,7 @@ export function ChatThread(props: ChatThreadProps) {
       aria-label="Conversation"
       sx={{ display: 'flex', flexDirection: 'column', gap: THREAD_GAP, minWidth: 0 }}
     >
+      {props.start}
       {items.map(item => {
         // The page's summary turn has no button: its card says what was sent, and the summary
         // follows.

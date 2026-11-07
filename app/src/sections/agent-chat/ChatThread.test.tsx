@@ -432,7 +432,8 @@ describe('ChatThread data items', () => {
 
   function renderItems(
     state: AgentSessionState,
-    followReply: () => boolean = () => false
+    followReply: () => boolean = () => false,
+    start?: React.ReactNode
   ): ReturnType<typeof render> {
     return render(
       <ChatThread
@@ -444,9 +445,42 @@ describe('ChatThread data items', () => {
         onTrack={vi.fn()}
         renderData={renderData}
         followReply={followReply}
+        start={start}
       />
     );
   }
+
+  it('puts the start item first, before the first turn, and keeps it there as the talk goes on', () => {
+    const start = <div data-testid="start">You came from Basic Scatter Plot.</div>;
+    const { rerender } = renderItems(ready([]), undefined, start);
+    const log = screen.getByRole('log');
+    // Before any turn the thread holds the start item alone.
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      'You came from Basic Scatter Plot.',
+    ]);
+    rerender(
+      <ChatThread
+        state={ready([
+          { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
+          { id: 2, kind: 'data' },
+          { id: 3, kind: 'assistant', text: '2 rows and 2 columns.' },
+        ])}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={renderData}
+        start={start}
+      />
+    );
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      'You came from Basic Scatter Plot.',
+      '❯▤ table · 3 lines · 46 B',
+      'data card',
+      '2 rows and 2 columns.',
+    ]);
+  });
 
   it('shows the paste, its card and a stub in thread order, without the summary action after the card', () => {
     renderItems(
