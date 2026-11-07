@@ -7,7 +7,12 @@ import {
   initialAgentState,
 } from 'src/hooks/useAgentSession';
 import type { DatasetChanged, DatasetParsed, PlotResult } from 'src/lib/agent';
-import { threadModel } from 'src/sections/agent-chat/threadModel';
+import {
+  cutRequest,
+  PLOT_SUMMARY_MAX,
+  plotSummaries,
+  threadModel,
+} from 'src/sections/agent-chat/threadModel';
 
 const PARSED = {
   preview: [['1', '2']],
@@ -293,5 +298,64 @@ describe('threadModel', () => {
     expect(threadModel([])).toEqual({ rows: [], chapters: [] });
     const copied: ChatItem[] = [{ id: 1, kind: 'data' }];
     expect(headings(copied)).toEqual(['# data', 'data']);
+  });
+});
+
+describe('plotSummaries', () => {
+  const libraries: Record<number, string> = { 1: 'matplotlib', 2: 'matplotlib', 3: 'seaborn' };
+  const libraryOf = (version: number) => libraries[version];
+  const create = (id: number, label = '.create_plot() →'): ChatItem => ({
+    id,
+    kind: 'action',
+    action: 'create_plot',
+    library: 'matplotlib',
+    label,
+  });
+
+  it('names a plot by the request before it, the first plot of a library, or .start_over()', () => {
+    const items: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      create(3),
+      { id: 4, kind: 'plot', version: 1 },
+      { id: 5, kind: 'assistant', text: 'Here it is.' },
+      { id: 6, kind: 'user', text: 'title in German', outcome: 'plot' },
+      { id: 7, kind: 'plot', version: 2 },
+      { id: 8, kind: 'switch', from: 'matplotlib', library: 'seaborn', decisions: null },
+      create(9, '.start_over()'),
+      { id: 10, kind: 'plot', version: 3 },
+    ];
+    expect([...plotSummaries(items, libraryOf)]).toEqual([
+      [1, 'first plot'],
+      [2, 'title in German'],
+      [3, '.start_over()'],
+    ]);
+  });
+
+  it('names nothing for a later plot of a library that no request asked for', () => {
+    const items: ChatItem[] = [
+      create(1),
+      { id: 2, kind: 'plot', version: 1 },
+      create(3, 'plot the new data'),
+      { id: 4, kind: 'plot', version: 2 },
+      // A carry the chat started has no button and no request; its library's first plot.
+      { id: 5, kind: 'action', action: 'carry_plot', library: 'seaborn' },
+      { id: 6, kind: 'plot', version: 3 },
+    ];
+    expect([...plotSummaries(items, libraryOf)]).toEqual([
+      [1, 'first plot'],
+      [2, null],
+      [3, 'first plot'],
+    ]);
+  });
+
+  it('cuts a request to one line of 40 characters, the ellipsis included', () => {
+    expect(cutRequest('  log scale\non   y  ')).toBe('log scale on y');
+    const long = 'make the title bigger and move the legend outside the plot';
+    expect(cutRequest(long)).toBe('make the title bigger and move the lege…');
+    expect([...cutRequest(long)]).toHaveLength(PLOT_SUMMARY_MAX);
+    expect(cutRequest('x'.repeat(PLOT_SUMMARY_MAX))).toBe('x'.repeat(PLOT_SUMMARY_MAX));
+    // Cut on a space: the space before the ellipsis goes.
+    expect(cutRequest(`${'a'.repeat(38)} bc`)).toBe(`${'a'.repeat(38)}…`);
   });
 });

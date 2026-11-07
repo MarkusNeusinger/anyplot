@@ -5,8 +5,10 @@
  * data card after each (a later
  * paste leaves the card it replaced as a stub of its shape), the assistant's replies, the fixed
  * refusal under a plain label (its code behind the label's ⓘ), errors with their code and
- * request id, and a result card per plot version. Earlier versions stay in the thread,
- * collapsed, each with its own image and code. A lost confirmation adds nothing here: the status
+ * request id, and a result card per plot version, its label on its border naming what it
+ * answered (`plotSummaries` in `threadModel.ts`). Earlier versions stay in the thread, folded to
+ * that label (`▸ plot v1 · matplotlib · first plot`), each with its own image and code a click
+ * away. A lost confirmation adds nothing here: the status
  * line at the chat frame's foot names it. While a turn without pipeline steps waits for its reply, an
  * in-progress line with the site's loader holds the assistant's slot
  * (`pendingReply` in `steps.ts`); the log's own polite live region announces
@@ -21,7 +23,7 @@
  * (`followReply`): a tall card would leave it below the fold.
  */
 
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -54,6 +56,7 @@ import {
   readableSx as textSx,
   THREAD_GAP,
 } from 'src/sections/agent-chat/styles';
+import { plotSummaries } from 'src/sections/agent-chat/threadModel';
 import { colors, fontSize, typography } from 'src/theme';
 
 /** A passage of a reply in backticks, on one line: code, a column or a button the reply names. */
@@ -140,12 +143,15 @@ function Item({
   props,
   latestVersion,
   waiting,
+  summaries,
 }: {
   item: ChatItem;
   props: ChatThreadProps;
   latestVersion: number;
   /** This `transcription` item is the table read from text that waits for its decision. */
   waiting: boolean;
+  /** What each plot version answered, for its card's label (`plotSummaries`). */
+  summaries: ReadonlyMap<number, string | null>;
 }) {
   switch (item.kind) {
     case 'paste':
@@ -278,6 +284,7 @@ function Item({
           specId={props.specId}
           language={props.language}
           latest={version.number === latestVersion}
+          summary={summaries.get(version.number) ?? null}
           busy={sessionBusy(props.state)}
           onRequestTheme={props.onRequestTheme}
           onFetchArtifact={props.onFetchArtifact}
@@ -309,6 +316,10 @@ export function ChatThread(props: ChatThreadProps) {
   const { items, versions } = props.state;
   const numbers = Object.keys(versions).map(Number);
   const latestVersion = numbers.length ? Math.max(...numbers) : 0;
+  const summaries = useMemo(
+    () => plotSummaries(items, version => versions[version]?.library),
+    [items, versions]
+  );
   const pending = pendingReply(props.state);
   // Below a run's card no timeline follows: the line stands where the reply will, which takes
   // its place without a jump.
@@ -347,6 +358,7 @@ export function ChatThread(props: ChatThreadProps) {
             props={props}
             latestVersion={latestVersion}
             waiting={item.id === waitingId}
+            summaries={summaries}
           />
         );
         return item.id === replyId ? (

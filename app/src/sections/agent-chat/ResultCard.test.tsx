@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlotVersion } from 'src/hooks/useAgentSession';
 import { RELAY_READY_TIMEOUT_MS } from 'src/sections/agent-chat/InteractivePreview';
 import { ResultCard, type ResultCardProps } from 'src/sections/agent-chat/ResultCard';
-import { act, fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
+import { act, fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 // The lazy-loaded highlighter, reduced to the code and the grammar it was asked for.
 vi.mock('src/components/CodeHighlighter', () => ({
@@ -76,13 +76,13 @@ afterEach(() => {
 });
 
 describe('ResultCard', () => {
-  it("puts the image's actions over it, and on a phone into the header row instead", () => {
-    // On a phone the image's top right corner holds the plot's title.
+  it("puts the image's actions over it, and on a phone by their names on the line under it", () => {
+    // On a phone the image's top right corner holds the plot's title, and no hover shows a name.
     const actionsIn = () => {
       const open = screen.getByRole('button', { name: 'Open full size' });
       return {
         image: screen.getByTestId('result-image-box').contains(open),
-        header: !!screen.queryByTestId('result-header-actions')?.contains(open),
+        line: !!screen.queryByTestId('result-image-actions')?.contains(open),
       };
     };
     const { unmount } = render(
@@ -97,7 +97,7 @@ describe('ResultCard', () => {
         onTrack={vi.fn()}
       />
     );
-    expect(actionsIn()).toEqual({ image: true, header: false });
+    expect(actionsIn()).toEqual({ image: true, line: false });
     unmount();
 
     vi.stubGlobal(
@@ -114,11 +114,28 @@ describe('ResultCard', () => {
       }))
     );
     renderCard();
-    expect(actionsIn()).toEqual({ image: false, header: true });
+    expect(actionsIn()).toEqual({ image: false, line: true });
     expect(screen.getAllByRole('button', { name: 'Download PNG' })).toHaveLength(1);
-    // A collapsed card has no image, so its actions go with it.
-    fireEvent.click(screen.getByRole('button', { name: /^Version 2/ }));
-    expect(screen.queryByTestId('result-header-actions')).not.toBeInTheDocument();
+    const line = screen.getByRole('group', { name: 'Image actions' });
+    // The PNG's download first, right under the image, every action by its name.
+    expect(
+      within(line)
+        .getAllByRole('button')
+        .map(button => button.textContent)
+    ).toEqual(['.download()', '.copy_png()', '.open()']);
+    // Each name holds the words on screen, so a voice command that says them finds the button.
+    for (const button of within(line).getAllByRole('button')) {
+      for (const word of (button.textContent ?? '').replace(/[.()]/g, '').split('_')) {
+        expect(button).toHaveAccessibleName(new RegExp(`\\b${word}\\b`, 'i'));
+      }
+    }
+    expect(
+      screen.getByTestId('result-image-box').compareDocumentPosition(line) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    // A folded card has no image, so its actions go with it.
+    fireEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
+    expect(screen.queryByTestId('result-image-actions')).not.toBeInTheDocument();
   });
 
   it('shows the rendered image, the residual notes and the run in one status line', async () => {
@@ -209,9 +226,9 @@ describe('ResultCard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Show code' }));
     await userEvent.click(screen.getByRole('button', { name: /^Run details/ }));
 
-    await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
     expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
 
     expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
     expect(screen.getByText('Marker size raised')).toBeInTheDocument();
@@ -618,9 +635,9 @@ describe('ResultCard', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
       expect(screen.getByText('building the interactive light plot…')).toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
       finish(page('light'));
-      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
       await waitFor(() =>
         expect(screen.getByRole('button', { name: 'Show interactive' })).toBeEnabled()
       );
@@ -655,7 +672,7 @@ describe('ResultCard', () => {
       rerender(<ResultCard {...props} latest={false} />);
       expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
       expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
       expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
     });
@@ -777,11 +794,41 @@ describe('ResultCard', () => {
     expect(screen.queryByRole('form')).not.toBeInTheDocument();
   });
 
-  it('collapses an earlier version and opens it again on request', async () => {
-    renderCard({ latest: false });
+  it('folds an earlier version to its label in one line, and opens it again on request', async () => {
+    renderCard({ latest: false, summary: 'title in German' });
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /Version 2/ }));
+    // One button, the label in the thread's flow with `▸`, named with its words in their order,
+    // so a voice command that says them finds it.
+    const line = screen.getByRole('button', {
+      name: 'Plot v2, matplotlib, title in German',
+    });
+    expect(line).toHaveTextContent(/^▸plot v2 · matplotlib · title in German$/);
+    expect(line).toHaveAttribute('aria-expanded', 'false');
+    expect(line).not.toHaveAttribute('aria-controls');
+
+    await userEvent.click(line);
     expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+    // The same button, now the label on the open card's border: the focus stays on it.
+    expect(line).toBeInTheDocument();
+    expect(line).toHaveFocus();
+    expect(line).toHaveTextContent(/^plot v2 · matplotlib · title in German$/);
+    expect(line).toHaveAttribute('aria-expanded', 'true');
+    expect(document.getElementById(line.getAttribute('aria-controls') ?? '')).toContainElement(
+      screen.getByTestId('result-image-box')
+    );
+
+    await userEvent.click(line);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(line).toHaveFocus();
+  });
+
+  it('names the version, its library and no request when it answered none', () => {
+    renderCard();
+    expect(screen.getByTestId('result-label')).toHaveTextContent(/^plot v2 · matplotlib$/);
+    expect(screen.getByRole('article', { name: 'Plot version 2' })).toBeInTheDocument();
+    // The version's status stands in the theme row, beside the run's line.
+    expect(screen.getByTestId('result-status')).toHaveTextContent('needs attention');
+    expect(screen.queryByText(/\.expand\(\)|\.collapse\(\)/)).not.toBeInTheDocument();
   });
 
   it('has no feedback control without onSendFeedback', () => {
@@ -810,7 +857,7 @@ describe('ResultCard', () => {
         feedback: { reaction: 'bug', message: null, includeData: false, caseId: 'c1' },
       }),
     });
-    await userEvent.click(screen.getByRole('button', { name: /Version 2/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
     expect(screen.getByTestId('result-feedback-sent')).toHaveTextContent('sent · v2 · bug');
   });
 });

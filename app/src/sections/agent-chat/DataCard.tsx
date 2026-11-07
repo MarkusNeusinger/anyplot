@@ -1,22 +1,35 @@
 /**
  * Content of the agent chat's data card (`DataPanel.tsx`): for the stored data (`part: 'data'`)
  * its preview and full-view dialog, the table and sheet pickers, and the role bindings; for a
- * table read from text (`part: 'transcription'`) the decision card with `.use()` and `.discard()`. The data comes in through the composer's message box (`Composer.tsx`): a
- * pasted table or a file waits there as an attachment until Enter. `.create_plot()`, which takes
- * the data as shown, sits at the composer's end too.
+ * table read from text (`part: 'transcription'`) the decision card with `.use()` and `.discard()`.
+ * The data comes in through the composer's message box (`Composer.tsx`): a pasted table or a
+ * file waits there as an attachment until Enter. `.create_plot()`, which takes the data as shown,
+ * sits at the composer's end too.
+ *
+ * The bindings stand in one line under the preview (`BindingsLine`), with `.change()`, which
+ * opens the dropdowns (`BindingsBlock`) and turns into `.hide()`. The dropdowns open by
+ * themselves when a required role has no column or the server refused the bindings, and stay
+ * open after the user fixed it, so the focus never loses its control; `.hide()` closes them.
+ * While they are closed, a warning on a bound column (negative values, a wide table's number
+ * column) stands under the line.
+ *
+ * At phone width the card shows no preview table: `.view_all()` opens every row, and it stands
+ * with `.change()` on the card's action line under the bindings line.
  */
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { longSuggestion, type tableChoice } from 'src/lib/agent';
-import { bindingRows } from 'src/sections/agent-chat/bindings';
+import { bindingHint, bindingRows, boundRoles } from 'src/sections/agent-chat/bindings';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   BindingsBlock,
+  BindingsLine,
   ChangeBlock,
   CodeBlock,
   DataViewUnavailable,
@@ -31,10 +44,16 @@ import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
 import {
   actionButtonSx,
   bodyTextSx,
+  cardActionSx,
   labelSx,
   nativeControlSx,
+  PHONE_QUERY,
+  smallText,
 } from 'src/sections/agent-chat/styles';
 import { colors } from 'src/theme';
+
+/** The dropdowns' block, which `.change()` controls; the thread has one live data card. */
+const BINDINGS_EDITOR_ID = 'agent-bindings-editor';
 
 /** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
 const FILE_NAME_WITHHELD = '(name withheld)';
@@ -91,11 +110,68 @@ export function DataCard(props: DataCardProps) {
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
+  // Read at the first render, so a phone never paints the preview table first.
+  const narrow = useMediaQuery(PHONE_QUERY, { noSsr: true });
+
+  // The dropdowns behind `.change()`: open by themselves when a required role has no column or
+  // the server refused the bindings, and open after that until the user closes them, so a fix
+  // never takes the control from under the focus. Adjusted while rendering, React's pattern for
+  // state that follows a prop.
+  const attention = !!dataset && (state.missingRoles.length > 0 || !!state.bindingsError);
+  const [editing, setEditing] = useState(attention);
+  const [attentionSeen, setAttentionSeen] = useState(attention);
+  if (attention !== attentionSeen) {
+    setAttentionSeen(attention);
+    if (attention) setEditing(true);
+  }
+  // A bound column's warning: in the dropdowns' rows while they are open, under the line else.
+  const hints = editing
+    ? []
+    : rows.flatMap(row => {
+        const bound: string[] = row.role.variadic
+          ? row.members.map(([, column]) => column)
+          : state.bindings[row.name]
+            ? [state.bindings[row.name]]
+            : [];
+        return bound.flatMap(column => {
+          const hint = bindingHint(row.role, column, columns, suggestion);
+          return hint ? [`${column}: ${hint}`] : [];
+        });
+      });
+
+  const bindingsToggle = (
+    <Box
+      component="button"
+      type="button"
+      onClick={() => setEditing(open => !open)}
+      aria-expanded={editing}
+      aria-controls={editing ? BINDINGS_EDITOR_ID : undefined}
+      aria-label={editing ? 'Hide the bindings' : 'Change the bindings'}
+      sx={narrow ? cardActionSx : actionButtonSx}
+    >
+      {editing ? '.hide()' : '.change()'}
+    </Box>
+  );
+  const viewAll = onLoadData && dataset && (
+    <Box
+      component="button"
+      type="button"
+      ref={viewButtonRef}
+      onClick={() => setViewOpen(true)}
+      // The grid's chunk starts loading as the pointer or the focus reaches the button.
+      onPointerEnter={preloadDataView}
+      onFocus={preloadDataView}
+      aria-haspopup="dialog"
+      aria-label={`View all ${countOf(dataset.parsed.profile.rows, 'row')}`}
+      // Flush right beside the preview's label, also on its own line; first on the phone's line.
+      sx={narrow ? cardActionSx : { ...actionButtonSx, ml: 'auto', mr: -1.25 }}
+    >
+      .view_all()
+    </Box>
+  );
 
   return (
     <>
-      <Box sx={{ ...labelSx, mb: 0.75 }}># your data</Box>
-
       {transcription && (
         <TranscriptionCard
           transcription={transcription}
@@ -106,7 +182,7 @@ export function DataCard(props: DataCardProps) {
       )}
 
       {dataset && (
-        <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {state.dataChange && (
             <ChangeBlock
               change={state.dataChange}
@@ -127,9 +203,9 @@ export function DataCard(props: DataCardProps) {
             />
           )}
 
-          <Box sx={{ ...labelSx, color: 'var(--ink-soft)' }}>
-            {dataset.parsed.profile.rows.toLocaleString('en-US')} rows · {columns.length} columns ·{' '}
-            {dataset.parsed.profile.source_format}
+          {/* The shape is the card's label: the line says how the data came. */}
+          <Box data-testid="data-source" sx={{ ...labelSx, color: 'var(--ink-soft)' }}>
+            read as {dataset.parsed.profile.source_format}
             {/* The file's name as the server kept it: the assistant reads it as data, never as a note. */}
             {dataset.parsed.file_name && (
               <Box component="span" data-testid="data-file-name" sx={{ overflowWrap: 'anywhere' }}>
@@ -229,73 +305,91 @@ export function DataCard(props: DataCardProps) {
 
           <CodeBlock code={dataset.parsed.code} />
 
-          <Box sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                columnGap: 1,
-                mb: 0.5,
-              }}
-            >
-              <Box sx={labelSx}># preview — first {dataset.parsed.preview.length} rows</Box>
-              {onLoadData && (
-                <Box
-                  component="button"
-                  type="button"
-                  ref={viewButtonRef}
-                  onClick={() => setViewOpen(true)}
-                  // The grid's chunk starts loading as the pointer or the focus reaches the button.
-                  onPointerEnter={preloadDataView}
-                  onFocus={preloadDataView}
-                  aria-haspopup="dialog"
-                  aria-label={`View all ${countOf(dataset.parsed.profile.rows, 'row')}`}
-                  // Flush right, also on its own line at phone width.
-                  sx={{ ...actionButtonSx, ml: 'auto', mr: -1.25 }}
-                >
-                  .view_all()
-                </Box>
-              )}
-            </Box>
-            <PreviewTable columns={columns} rows={dataset.parsed.preview} />
-            {viewOpen && onLoadData && (
-              <Suspense
-                fallback={
-                  <Box role="status" sx={{ ...labelSx, mt: 0.5 }}>
-                    # loading the table view <Ellipsis />
-                  </Box>
-                }
+          {/* The preview from `sm` up; a phone has no room for a table, `.view_all()` opens it. */}
+          {!narrow && (
+            <Box sx={{ minWidth: 0 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  columnGap: 1,
+                  mb: 0.5,
+                }}
               >
-                <DataView
-                  profile={dataset.parsed.profile}
-                  version={dataset.parsed.version ?? 1}
-                  load={onLoadData}
-                  onShown={onDataViewShown}
-                  onClose={() => {
-                    setViewOpen(false);
-                    viewButtonRef.current?.focus({ preventScroll: true });
-                  }}
-                />
-              </Suspense>
+                <Box sx={labelSx}># preview — first {dataset.parsed.preview.length} rows</Box>
+                {viewAll}
+              </Box>
+              <PreviewTable columns={columns} rows={dataset.parsed.preview} />
+            </Box>
+          )}
+
+          <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <BindingsLine
+              roles={boundRoles(rows, state.bindings)}
+              hasRoles={rows.length > 0}
+              checking={state.bindingsBusy}
+              toggle={narrow ? undefined : bindingsToggle}
+            />
+            {hints.map(hint => (
+              <Box
+                key={hint}
+                data-testid="sign-hint"
+                sx={{ ...labelSx, fontSize: smallText, color: colors.warning }}
+              >
+                {hint}
+              </Box>
+            ))}
+            {/* The phone's action line: what the desktop has beside the preview and the line. */}
+            {narrow && (
+              <Box
+                data-testid="data-actions"
+                sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1, rowGap: 0.5, ml: -1.25 }}
+              >
+                {viewAll}
+                {bindingsToggle}
+              </Box>
+            )}
+            {editing && (
+              <BindingsBlock
+                id={BINDINGS_EDITOR_ID}
+                rows={rows}
+                columns={columns}
+                bindings={state.bindings}
+                missingRoles={state.missingRoles}
+                bindingsBusy={state.bindingsBusy}
+                bindingsError={state.bindingsError}
+                parsing={state.parsing}
+                ready={ready}
+                working={working}
+                busy={busy}
+                suggestion={suggestion}
+                onBind={onBind}
+              />
             )}
           </Box>
 
-          <BindingsBlock
-            rows={rows}
-            columns={columns}
-            bindings={state.bindings}
-            missingRoles={state.missingRoles}
-            bindingsBusy={state.bindingsBusy}
-            bindingsError={state.bindingsError}
-            parsing={state.parsing}
-            ready={ready}
-            working={working}
-            busy={busy}
-            suggestion={suggestion}
-            onBind={onBind}
-          />
+          {viewOpen && onLoadData && (
+            <Suspense
+              fallback={
+                <Box role="status" sx={labelSx}>
+                  # loading the table view <Ellipsis />
+                </Box>
+              }
+            >
+              <DataView
+                profile={dataset.parsed.profile}
+                version={dataset.parsed.version ?? 1}
+                load={onLoadData}
+                onShown={onDataViewShown}
+                onClose={() => {
+                  setViewOpen(false);
+                  viewButtonRef.current?.focus({ preventScroll: true });
+                }}
+              />
+            </Suspense>
+          )}
 
           {/* No foot: `.create_plot()`, which takes the data as shown, and the line that says
               what it waits for sit at the composer's end. */}

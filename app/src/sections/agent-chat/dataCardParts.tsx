@@ -2,7 +2,9 @@
  * Presentational building blocks of the agent chat's data card, imported by
  * `DataCard.tsx`: the 20-row preview table, the lazy full-table view fallback,
  * the parser warnings, notes and code blocks, the free-text transcription card,
- * the assistant change/undo block, the wide-table offer, and the role bindings.
+ * the assistant change/undo block, the wide-table offer, and the role bindings:
+ * their one line (`BindingsLine`) and the dropdowns `.change()` opens
+ * (`BindingsBlock`).
  * `DataPanel.tsx` imports only the full-view fallback, which it re-exports for
  * its tests.
  */
@@ -16,13 +18,15 @@ import MenuItem from '@mui/material/MenuItem';
 import type { DataChange, Failure, TranscriptionState } from 'src/hooks/useAgentSession';
 import type { ColumnProfile, LongSuggestion } from 'src/lib/agent';
 import {
+  axisWord,
+  bindingHint,
   type BindingRow,
+  type BoundRole,
   columnLabel,
+  dtypeWord,
   emptyChoice,
   fits,
   kindsHint,
-  siblingHint,
-  signHint,
 } from 'src/sections/agent-chat/bindings';
 import { CellText } from 'src/sections/agent-chat/CellText';
 import { countOf } from 'src/sections/agent-chat/countOf';
@@ -35,6 +39,7 @@ import {
   labelSx,
   nativeControlSx,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, typography } from 'src/theme';
 
@@ -55,7 +60,10 @@ export function DataViewUnavailable({ onClose }: Pick<DataViewProps, 'onClose'>)
   );
 }
 
-/** The first rows of a table under its column names and types. */
+/**
+ * The first rows of a table under its column names and types, one line each: `month · date`, in
+ * the card's words for a type (`dtypeWord`), the name in ink and the type quieter.
+ */
 export function PreviewTable({ columns, rows }: { columns: ColumnProfile[]; rows: string[][] }) {
   return (
     <Box
@@ -86,7 +94,7 @@ export function PreviewTable({ columns, rows }: { columns: ColumnProfile[]; rows
             position: 'sticky',
             top: 0,
             bgcolor: 'var(--bg-elevated)',
-            fontWeight: 600,
+            fontWeight: 500,
           },
         }}
       >
@@ -95,11 +103,8 @@ export function PreviewTable({ columns, rows }: { columns: ColumnProfile[]; rows
             {columns.map(column => (
               <th key={column.name} scope="col">
                 {column.name}
-                <Box
-                  component="span"
-                  sx={{ display: 'block', color: 'var(--ink-muted)', fontWeight: 400 }}
-                >
-                  {column.dtype}
+                <Box component="span" sx={{ color: 'var(--ink-muted)', fontWeight: 400 }}>
+                  {` · ${dtypeWord(column.dtype)}`}
                 </Box>
               </th>
             ))}
@@ -271,7 +276,6 @@ export function TranscriptionCard({
       aria-labelledby="agent-transcription-title"
       data-testid="transcription-card"
       sx={{
-        mt: 2.5,
         display: 'flex',
         flexDirection: 'column',
         gap: 1.5,
@@ -471,6 +475,8 @@ export function LongHint({ suggestion, canApply, busy, error, onApply }: LongHin
 }
 
 interface BindingsBlockProps {
+  /** The block's id, which the bindings line's `.change()` controls. */
+  id: string;
   rows: BindingRow[];
   columns: ColumnProfile[];
   bindings: Record<string, string>;
@@ -684,6 +690,69 @@ function FamilyChips({
   );
 }
 
+interface BindingsLineProps {
+  roles: BoundRole[];
+  /** Whether the spec names roles at all; without, the line says so, as the dropdowns would. */
+  hasRoles: boolean;
+  /** The binding set is on its way to the server. */
+  checking: boolean;
+  /** At the line's end: `.change()` from `sm` up; at phone width it stands on the action line. */
+  toggle?: React.ReactNode;
+}
+
+/**
+ * The bindings in one line under the preview: `x (across): month · y (up): revenue · color:
+ * region`, each column in ink, a family's columns side by side, a required role without a column
+ * as `—`. Only `x` and `y` say which way they run (`axisWord`). An optional role left open says
+ * nothing. The dropdowns stand behind `.change()` (`BindingsBlock`).
+ */
+export function BindingsLine({ roles, hasRoles, checking, toggle }: BindingsLineProps) {
+  const empty = !hasRoles
+    ? checking
+      ? 'checking roles…'
+      : 'this plot names no data roles'
+    : 'no column bound yet';
+  return (
+    <Box
+      sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 0.5, minWidth: 0 }}
+    >
+      <Box
+        data-testid="bindings-line"
+        sx={{
+          fontFamily: typography.mono,
+          fontSize: fontSize.md,
+          lineHeight: 1.6,
+          color: 'var(--ink-soft)',
+          overflowWrap: 'anywhere',
+          minWidth: 0,
+        }}
+      >
+        {roles.length === 0 && empty}
+        {roles.map((role, index) => (
+          <Box component="span" key={role.name}>
+            {index > 0 && ' · '}
+            {role.name}
+            {axisWord(role.name)}:{' '}
+            {role.missing ? (
+              <>
+                <span aria-hidden>—</span>
+                <Box component="span" sx={visuallyHiddenSx}>
+                  no column yet
+                </Box>
+              </>
+            ) : (
+              <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>
+                {role.columns.join(', ')}
+              </Box>
+            )}
+          </Box>
+        ))}
+      </Box>
+      {toggle}
+    </Box>
+  );
+}
+
 /** The bindings' heading, and the two it swaps to while the server works. */
 const HEADING = {
   idle: '# bindings — which column plays which role',
@@ -691,8 +760,12 @@ const HEADING = {
   parsing: '# bindings — wait while the data is parsed',
 } as const;
 
-/** Every spec role's column dropdown, its accepted kinds, and its sign/wide-table hints. */
+/**
+ * Every spec role's column dropdown, its accepted kinds, and its sign/wide-table hints: what
+ * `.change()` on the bindings line opens (`BindingsLine`).
+ */
 export function BindingsBlock({
+  id,
   rows,
   columns,
   bindings,
@@ -708,7 +781,7 @@ export function BindingsBlock({
 }: BindingsBlockProps) {
   const heading = working ? (parsing ? HEADING.parsing : HEADING.working) : HEADING.idle;
   return (
-    <Box>
+    <Box id={id} data-testid="bindings-editor">
       {/* While the server works, the heading itself says why the dropdowns do not answer: the
           server runs one thing per session. A line of its own under the heading read as the
           heading twice and moved the dropdowns as it came and went. The other headings stand
@@ -746,13 +819,8 @@ export function BindingsBlock({
           const id = `agent-role-${row.name}`;
           const family = row.role.variadic;
           const bound = bindings[row.name];
-          // A wide table's number column in a role that wants labels comes first: the plot would be meaningless.
           const hintOf = (column: string | undefined) =>
-            siblingHint(row.role, column, suggestion) ??
-            signHint(
-              row.role,
-              columns.find(profile => profile.name === column)
-            );
+            bindingHint(row.role, column, columns, suggestion);
           const sign = family ? null : hintOf(bound);
           return (
             <Box key={row.name} sx={{ display: 'contents' }}>

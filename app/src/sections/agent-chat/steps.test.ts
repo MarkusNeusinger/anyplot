@@ -145,9 +145,9 @@ describe('stepOneLine', () => {
   });
 
   it('names what .create_plot() waits for, and after a loss what lost it', () => {
-    expect(stepOneLine(step1())).toBe(
-      'check the preview and the bindings above, then .create_plot()'
-    );
+    // The data, not the preview: a phone's card shows no preview table, and the line is the same
+    // at every width.
+    expect(stepOneLine(step1())).toBe('check the data and the bindings above, then .create_plot()');
     expect(stepOneLine(step1({ missingRoles: ['y'] }))).toBe(
       'pick a column for y, then .create_plot()'
     );
@@ -198,7 +198,7 @@ describe('stepOneLine', () => {
 
   it('leads to .plot_all() while all is pressed, where no .create_plot() shows', () => {
     expect(stepOneLine(step1(), '.plot_all()')).toBe(
-      'check the preview and the bindings above, then .plot_all()'
+      'check the data and the bindings above, then .plot_all()'
     );
     expect(stepOneLine(step1({ missingRoles: ['y'] }), '.plot_all()')).toBe(
       'pick a column for y, then .plot_all()'
@@ -240,7 +240,7 @@ describe('statusLine', () => {
     expect(statusLine(ready(), options)).toEqual({ step: 1, text: 'step 1 of 2 · your data' });
     expect(statusLine(ready({ dataset }), options)).toEqual({
       step: 1,
-      text: 'step 1 of 2 · check the preview and the bindings above, then .create_plot()',
+      text: 'step 1 of 2 · check the data and the bindings above, then .create_plot()',
     });
   });
 
