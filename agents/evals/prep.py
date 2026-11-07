@@ -28,32 +28,47 @@ file, a script with another purpose) passes when no data tool call of the turn s
 version, whether the scope judge refused it, the validator did, or the root called
 nothing.
 
-Scoring is exact operation match, order-insensitive, and every `prepare_data` and
-`generate_data` call of the turn must have succeeded: the operations are applied in
-order, so a list the data refuses (a column named before its rename, a type its cells
-cannot take) is a miss however it reads, and so is a formula the server cannot compute
-(`failed_calls`). An `unsupported_operation` answer is no failure: the root named a change no
-operation can make (`{"op": "unsupported", "family": ...}`), which a case expects as it expects
-any operation, since 2026-11-07. A `compute` operation matches by the values it computes on
-invented rows, whatever short names and form the expression has (`compute_key`). The operations of every `prepare_data` call of the turn are taken
-together (one call with two operations and two calls with one each are the same) and
-each is normalised through the `Operation`
-models (`canonical_operations`): a default the model left out and one it wrote are
-the same, a `set_type` `decimal` equal to the dataset's own counts as left out, and
-the column list of `drop_columns` and `pivot_longer` and the conditions of
-`drop_rows` are sets. A `generate_data` call is one item `{"op": "generate_data",
-"variables": [...], "series": [...]}`, normalised through the `generate.Generate` model
-the same way for the report (defaults left out, the whitespace of every expression and
-endpoint removed, the series a set; the variables keep their order, which decides the
-grid's), and two calls match when they compute the same table (`comparison_key`): the
-same names, points and values, so `-3.0` is `-3`, `tau` is `2*pi` and `x*x` is
-`x**2`. A case with
-`expected_operations: []` passes when the root made no data call: a scope refusal and
-a plain reply both pass, and the report lists every tool call and the refusal, so a
-false refusal stays visible. A reply of the root that talks about its own instructions
-(ADK's instruction markers, a system instruction, the session block; `INSTRUCTION_TALK`)
-is a miss whatever the data calls did, and the summary counts such cases under
-`instruction_talk`. The gate is `--min-exact` (80 percent) of the answered cases.
+A case passes by the table its turn leaves, since 2026-11-08 (`score_turn`): the session's current data version
+after the turn, as the tools stored it, must equal the table the case's `expected_operations` make from the same
+start through the same server code (`expected_result`: `apply_and_parse` for the `prepare_data` operations, five to
+a call in their order, and `generate` with the tool's own parse for a `generate_data` item). The start is the
+version the turn began on, or the one `expected_from_version` names, read from the session's store before the turn,
+so the earlier versions (`before_operations`), the screened notes and the session language are the tools' own. Two
+tables are equal when their columns in order, each column's dtype, their row count and every cell are
+(`table_difference`): a text, date or boolean cell exactly, a number cell (`integer`, `number`) within
+`TABLE_REL_TOL` relative or `TABLE_ABS_TOL` absolute, since `data.csv` writes a float in full and two sums of the
+same values in another order differ in the last digit. Rows are compared in their order, which a line connects, a
+bar chart keeps and a sort is about; a case with `row_order: "any"`, a request that leaves the order open, compares
+both tables after a canonical sort of their rows. So a `drop_columns` of a notes column before an `aggregate` that
+keeps only its keys and its values, and the `aggregate` alone, are the same answer (guard 2a of #12599, where
+`de-hard-kette-gesamtzeile` read such a run as a miss). A named gap (`unsupported`) changes no table, so the gaps the
+turn named must be the expected ones as well. Every `prepare_data`, `generate_data` and `run_data_code` call of the
+turn must have succeeded all the same: a list the data refuses (a column named before its rename, a type its cells
+cannot take) is a miss however the turn ends, and so is a formula the server cannot compute (`failed_calls`). An
+`unsupported_operation` answer is no failure: the root named a change no operation can make (`{"op": "unsupported",
+"family": ...}`), which a case expects as it expects any operation, since 2026-11-07.
+
+The exact operation match is kept as a diagnostic beside the table (`ops_exact`, counted in the summary), and it
+decides four kinds of case instead (`PrepCase.scored_by_table`): one with `expected_operations: []`, which passes when
+the root made no data call (a scope refusal and a plain reply both pass, and the report lists every tool call and the
+refusal, so a false refusal stays visible); one that expects a `run_data_code` call, whose code and values vary from
+run to run, so it compares the size of the stored table; a `refuse` case (below); and one with `strict_operations:
+true`, for a case where the operation itself is the point. `check_cases` refuses a case scored by its table whose
+expected operations leave its table as it is, since the table cannot tell them from no call: such a case is strict.
+The match is order-insensitive. A `compute` operation matches by the values it computes on invented rows, whatever
+short names and form the expression has (`compute_key`). The operations of every `prepare_data` call of the turn
+are taken together (one call with two operations and two calls with one each are the same) and each is normalised
+through the `Operation` models (`canonical_operations`): a default the model left out and one it wrote are the same,
+a `set_type` `decimal` equal to the dataset's own counts as left out, and the column list of `drop_columns` and
+`pivot_longer` and the conditions of `drop_rows` are sets. A `generate_data` call is one item `{"op":
+"generate_data", "variables": [...], "series": [...]}`, normalised through the `generate.Generate` model the same way
+for the report (defaults left out, the whitespace of every expression and endpoint removed, the series a set; the
+variables keep their order, which decides the grid's), and two calls match when they compute the same table
+(`comparison_key`): the same names, points and values, so `-3.0` is `-3`, `tau` is `2*pi` and `x*x` is `x**2`. A
+reply of the root that talks about its own instructions (ADK's instruction markers, a system instruction, the session
+block; `INSTRUCTION_TALK`) is a miss whatever the data calls did, and the summary counts such cases under
+`instruction_talk`. The gate is `--min-exact` (80 percent) matched cases of the answered ones; the flag and the
+summary's `exact` keep their names from the time a match was the exact one.
 
 A case may send the step-1 summary action instead of a message (`action: "summarize_data"`, as the page
 does after a paste): it expects no data call, and only its reply is scored. Every root reply is also
@@ -73,9 +88,11 @@ answered cases with a reply; the reply text itself never enters the report.
 A summary case is also checked for the conversions it owes (`score_conversions`). Before the turn, the run
 computes in code what the session block will list for the open roles (`conversions.candidates`); after it, each
 `certain` line must be among the turn's operations. The server makes those lines itself before the root runs
-(`paste_conversions.py`), so the operations of its record (`CONVERSIONS_MADE`) come first among the turn's, and
-a fixture expects them as it expects the root's: a root that makes one again, or drops or renames its column, is
-a miss through the exact match. A turn left without one is the original failure of the live test of 2026-11-01,
+(`paste_conversions.py`), so the operations of its record (`CONVERSIONS_MADE`) come first among the turn's, its
+version is part of the table the turn leaves, and a fixture expects them as it expects the root's, first in its list:
+a root that drops or renames its column leaves another table (one that makes it again leaves the same table when the
+operation keeps what is there, as `row_number` does). A turn left without one is the
+original failure of the live test of 2026-11-01,
 where the root asked the user for a date column a conversion would have made, so the case is a miss whatever its
 fixture expected, and any skip fails the run. The summary counts `conversions_owed` and `conversions_made`, and
 each case its `server_operations`.
@@ -83,7 +100,8 @@ each case its `server_operations`.
 A case may change the data before its message (`before_operations`, since 2026-11-07): the server stores each list
 of operations as the next data version, as the root's earlier turns would have, so the session block lists them and
 the message can ask for what only an earlier version still has ("the first 20 after all" after a top 10). Its
-`expected_from_version` (`original` or a number) is then scored too (`score_from_version`): some `prepare_data` or
+`expected_from_version` (`original` or a number) is the version its expected table starts from, and it is scored
+too (`score_from_version`): some `prepare_data` or
 `query_data` call of the turn names it and no `prepare_data` call names another, or the case is a miss. The report
 lists every call's `from_version` under `from_versions`, scored or not.
 
@@ -103,8 +121,9 @@ is the list price of every call the attribution log booked (`pricing.call_cost`,
 `pricing.judge_cost`).
 
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
-case's canonical expected and found operations, its tool calls, refusal, cost and
-latency; never a dataset or a message, which stay in the fixtures) and prints a table.
+case's canonical expected and found operations, `ops_exact`, what its table missed in
+words that name columns at most (`table_miss`), its tool calls, refusal, cost and
+latency; never a dataset, a cell or a message, which stay in the fixtures) and prints a table.
 The exit code is 0 when the gate holds, 1 when it does not, 2 for a setup error (a
 fixture that does not load or whose expected operations fail the `Operation` or
 `Generate` models, an unpriced model) and 4 for an outage.
@@ -118,6 +137,7 @@ import hashlib
 import itertools
 import json
 import logging
+import math
 import os
 import re
 import statistics
@@ -146,7 +166,10 @@ from agents.evals.scope import Pacer
 
 
 if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime imports wait for `configure`
+    from agents.anyplot.data.parse import ParsedDataset
+    from agents.anyplot.data.store import StoredDataset
     from agents.anyplot.render.contract import RenderBackend
+    from agents.anyplot.schemas import FromVersion
     from agents.anyplot.services import Services
     from agents.anyplot.settings import AgentSettings
     from agents.main import Runtime
@@ -155,7 +178,9 @@ if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime 
 EVALS_DIR = Path(__file__).resolve().parent
 DEFAULT_CASES = EVALS_DIR / "fixtures" / "prep"
 DEFAULT_OUT = EVALS_DIR / "reports"
-REPORT_SCHEMA = 1
+REPORT_SCHEMA = 2
+"""2 since 2026-11-08: a match is the table the turn left (`score_turn`), and each result has `ops_exact` and
+`table_miss`."""
 MAX_MESSAGE_CHARS = 2_000  # the /messages limit (agents/main.py)
 MAX_DATASET_CHARS = 200 * 1024
 CALLS_PER_CASE = 5
@@ -196,6 +221,8 @@ DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The root's tools that store a dataset version; every call of them in a turn must succeed."""
 GAP_CODE = "unsupported_operation"
 """`prepare_data`'s answer to the `unsupported` operation: the root named a change no operation can make."""
+GAP_OP = "unsupported"
+"""The operation that names such a gap: it changes no table, so a case compares the gaps apart (`gap_difference`)."""
 SET_OPERATIONS: dict[str, str] = {
     "drop_columns": "columns",
     "pivot_longer": "columns",
@@ -214,6 +241,17 @@ COMPUTE_PROBES: tuple[tuple[float, float, float], ...] = ((150.5, 7.913, 21.7), 
 """The probe sets of `compute_key`, each `(start, step per row, step per column)`: large values first, so a shifted log
 or root (`log(p - 100)`, `sqrt(t - 50)`) is defined on every row, then small ones for an expression the first set
 leaves without any value (`log(100 - p)`)."""
+TABLE_REL_TOL = 1e-9
+"""How far apart, relative to the larger, two number cells may be and still be one value (`table_difference`):
+`data.csv` writes a float in full (`repr`), so a sum taken in another order or a `compute` written in another form
+differs in its last digits, while a real difference in the data is far larger."""
+TABLE_ABS_TOL = 1e-12
+"""The same for two number cells near zero, where a relative tolerance holds nothing: `sin(pi)` is about 1.2e-16."""
+NUMBER_DTYPES = frozenset({"integer", "number"})
+"""The column dtypes whose cells compare as numbers, within the tolerances; every other cell compares as its text."""
+SORT_DIGITS = 9
+"""The significant digits a number cell is sorted by under `row_order: "any"`, so two cells within the tolerances
+take the same place among the rows."""
 ROOT_AUTHOR = "anyplot"
 INSTRUCTION_TALK = re.compile(
     # ADK's own markers (`flows/llm_flows/context/_fencing.py`), named or quoted.
@@ -269,8 +307,16 @@ class PrepCase(BaseModel):
     lists them, and the message can ask for what only an earlier version still has (since 2026-11-07)."""
     expected_from_version: Literal["current", "original"] | Annotated[int, Field(ge=1)] | None = None
     """The version the turn should start from (`from_version`, `original` being 1): some `prepare_data` or
-    `query_data` call names it and no `prepare_data` call names another (`score_from_version`). None leaves the
-    versions unscored; the report lists them all the same."""
+    `query_data` call names it and no `prepare_data` call names another (`score_from_version`), and the expected table
+    starts from it. None leaves the versions unscored, and the expected table starts from the current version; the
+    report lists the versions all the same."""
+    strict_operations: bool = False
+    """Score the case by its operations (`same_operations`) instead of the table they make (`scored_by_table`): for a
+    case whose operation itself is the point, such as one the table cannot show (since 2026-11-08)."""
+    row_order: Literal["same", "any"] = "same"
+    """`any` for a request that leaves the order of the rows open: the found and the expected table are compared after
+    a canonical sort of their rows. `same`, the default, compares the rows in their order, which a line connects and a
+    sort is about. Only for a case scored by its table."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -282,7 +328,22 @@ class PrepCase(BaseModel):
             raise ValueError("a first turn is a message sent with a dataset")
         if self.before_operations and (self.message is None or self.first_turn or self.dataset_text is None):
             raise ValueError("earlier changes come before a message on summarized data")
+        if self.row_order == "any" and not self.scored_by_table:
+            raise ValueError("row_order is for a case scored by its table")
         return self
+
+    @property
+    def scored_by_table(self) -> bool:
+        """Whether the case passes by the table its turn leaves (`score_turn`), not by its operations.
+
+        Every case does except four kinds, which keep the exact operation match: one that expects no data call
+        (`expected_operations: []`), one that expects a `run_data_code` call (its code and values vary from run to
+        run, so its stored table counts by its size), a `refuse` case (nothing may be stored) and a case with
+        `strict_operations`.
+        """
+        if self.refuse or self.strict_operations or not self.expected_operations:
+            return False
+        return all(item.get("op") != DATA_CODE_TOOL for item in self.expected_operations)
 
 
 Size = Annotated[int, Field(ge=1)]
@@ -511,6 +572,151 @@ def _json_object(line: str) -> dict[str, Any] | None:
     return data if isinstance(data, dict) else None
 
 
+@dataclass(frozen=True)
+class ResultTable:
+    """A data version as the eval compares it: its columns in order, each one's dtype, and its rows of cell texts
+    (None for an empty cell), read from its canonical `data.csv`."""
+
+    columns: tuple[str, ...]
+    dtypes: tuple[str, ...]
+    rows: tuple[tuple[str | None, ...], ...]
+
+
+def result_table(data: ParsedDataset | StoredDataset) -> ResultTable:
+    """The table of a parsed or stored data version (`ResultTable`)."""
+    import csv
+    import io
+
+    records = list(csv.reader(io.StringIO(data.csv)))
+    header = tuple(records[0]) if records else ()
+    width = len(header)
+    rows = tuple(
+        tuple(cell or None for cell in [*record, *[""] * (width - len(record))][:width]) for record in records[1:]
+    )
+    return ResultTable(header, tuple(str(data.column_dtypes.get(name, "text")) for name in header), rows)
+
+
+def table_difference(found: ResultTable | None, expected: ResultTable | None, *, any_order: bool = False) -> str | None:
+    """None when `found` is the `expected` table, else what differs, in words that name columns at most, never a cell.
+
+    The columns must be the same in the same order, each with the same dtype, and the rows as many; then every cell is
+    compared, a number cell within `TABLE_REL_TOL` or `TABLE_ABS_TOL`, any other cell by its text. The rows are
+    compared in their order, or with `any_order` after a canonical sort of both tables' rows (`_row_key`). None for
+    either table is no data at all: a case without a dataset whose turn stored nothing.
+    """
+    if found is None or expected is None:
+        if found is None and expected is None:
+            return None
+        return "no data" if found is None else "data where the case expects none"
+    if found.columns != expected.columns:
+        return f"columns {list(found.columns)}, expected {list(expected.columns)}"
+    for name, dtype, wanted in zip(found.columns, found.dtypes, expected.dtypes, strict=True):
+        if dtype != wanted:
+            return f"column {name!r} is {dtype}, expected {wanted}"
+    if len(found.rows) != len(expected.rows):
+        return f"{len(found.rows)} rows, expected {len(expected.rows)}"
+    numeric = [dtype in NUMBER_DTYPES for dtype in expected.dtypes]
+    found_rows, expected_rows = list(found.rows), list(expected.rows)
+    if any_order:
+        found_rows.sort(key=lambda row: _row_key(row, numeric))
+        expected_rows.sort(key=lambda row: _row_key(row, numeric))
+    differing: Counter[str] = Counter()
+    for have_row, want_row in zip(found_rows, expected_rows, strict=True):
+        for name, number, have, want in zip(expected.columns, numeric, have_row, want_row, strict=True):
+            if not _same_cell(have, want, number=number):
+                differing[name] += 1
+    if not differing:
+        return None
+    counts = (f"{name!r} in {count} {'row' if count == 1 else 'rows'}" for name, count in differing.items())
+    return "values differ: " + ", ".join(counts)
+
+
+def _number(cell: str) -> float | None:
+    try:
+        return float(cell)
+    except ValueError:
+        return None
+
+
+def _same_cell(have: str | None, want: str | None, *, number: bool) -> bool:
+    if have is None or want is None:
+        return have is None and want is None
+    if number and (left := _number(have)) is not None and (right := _number(want)) is not None:
+        return math.isclose(left, right, rel_tol=TABLE_REL_TOL, abs_tol=TABLE_ABS_TOL)
+    return have == want
+
+
+def _row_key(row: Sequence[str | None], numeric: Sequence[bool]) -> tuple[tuple[int, str, float], ...]:
+    """A row's place in the canonical sort of `row_order: "any"`: empty cells first, a number cell by its value at
+    `SORT_DIGITS` significant digits, any other cell by its text."""
+    key = []
+    for cell, number in zip(row, numeric, strict=True):
+        value = _number(cell) if number and cell is not None else None
+        if cell is None:
+            key.append((0, "", 0.0))
+        elif value is not None:
+            key.append((1, "", float(f"{value:.{SORT_DIGITS}g}")))
+        else:
+            key.append((1, cell, 0.0))
+    return tuple(key)
+
+
+def expected_result(
+    start: ParsedDataset | None, operations: Sequence[dict[str, Any]], language: str
+) -> ParsedDataset | None:
+    """The table `operations` make from `start` (None for no data), through the server code the tools run.
+
+    The `prepare_data` operations are applied in their order, up to `MAX_OPERATIONS` to a call, as `prepare_data`
+    applies them (`apply_and_parse`, in the session `language`, which names a `date_number` column that names
+    none); a `generate_data` item computes its table and parses it as `generate_data` stores it, and the operations
+    after it change that table. A named gap (`unsupported`) changes nothing, so it is left out. A `run_data_code` item
+    has no table here: such a case is scored by its operations (`PrepCase.scored_by_table`). Raises `PrepareError`,
+    `GenerateError`, `ParseError` or `ValidationError` for a list the data or the models refuse.
+    """
+    from pydantic import TypeAdapter
+
+    from agents.anyplot.data.generate import Generate, generate
+    from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, parse_dataset
+    from agents.anyplot.data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_and_parse
+
+    table = start
+    pending: list[dict[str, Any]] = []
+
+    def apply_pending() -> None:
+        nonlocal table
+        for place in range(0, len(pending), MAX_OPERATIONS):
+            if table is None:
+                raise PrepareError("invalid_operation", "there is no data to change")
+            chunk = TypeAdapter(list[Operation]).validate_python(pending[place : place + MAX_OPERATIONS])
+            _, table = apply_and_parse(table, chunk, language=language)
+        pending.clear()
+
+    for item in operations:
+        op = item.get("op")
+        if op == GENERATE_TOOL:
+            apply_pending()
+            spec = Generate.model_validate({key: value for key, value in item.items() if key != "op"})
+            # As `generate_data` parses the table it stores (`tools/session.py`).
+            table = parse_dataset(generate(spec).csv, find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True)
+        elif op != GAP_OP:
+            pending.append(item)
+    apply_pending()
+    return table
+
+
+def gap_difference(found: Sequence[str], expected: Sequence[str]) -> str | None:
+    """None when the turn named the gaps (`unsupported`) the case expects, else both lists of gaps, by family."""
+
+    def gaps(lines: Sequence[str]) -> list[str]:
+        named = [_json_object(line) for line in lines]
+        return sorted(describe(json.dumps(data)) for data in named if data is not None and data.get("op") == GAP_OP)
+
+    have, want = gaps(found), gaps(expected)
+    if have == want:
+        return None
+    return f"named gaps {', '.join(have) or 'none'}, expected {', '.join(want) or 'none'}"
+
+
 def describe(line: str) -> str:
     """A canonical line as a short phrase for the table: `set_type Anteil number`, `aggregate Betrag sum by Datum/month`."""
     data = json.loads(line)
@@ -609,6 +815,13 @@ class CaseResult:
     expected: list[str]
     found: list[str] = field(default_factory=list)
     match: bool | None = None
+    ops_exact: bool | None = None
+    """The found operations are the expected ones (`same_operations`): what decided a case before 2026-11-08, now a
+    diagnostic beside the table, and the score of a case that `PrepCase.scored_by_table` leaves to its operations."""
+    table_miss: str | None = None
+    """What the table the turn left misses against the expected one (`table_difference`), or the gaps it named
+    (`gap_difference`); None for a match on the table or a case scored by its operations. It names columns at most,
+    never a cell."""
     tool_calls: list[str] = field(default_factory=list)
     failed_calls: int = 0
     """`prepare_data`, `generate_data` and `run_data_code` calls of the turn the service refused or that failed: the
@@ -734,6 +947,7 @@ class CaseRunner:
                 if case.before_operations:
                     await self._make_versions(user, sid, case.before_operations)
             summary_turn = case.action == "summarize_data" or case.first_turn
+            start = await self._start_version(user, sid, case.expected_from_version) if case.scored_by_table else None
             listed = await self._listed_conversions(user, sid)
             owed = [line.operations() for line in listed if line.certain] if summary_turn else []
             result.offered = any(type(line).__name__ == "DateNumbers" for line in listed)
@@ -753,7 +967,10 @@ class CaseRunner:
                     result.refusal = str(data.get("code"))
                 if name == "done" and isinstance(data.get("dataset"), dict):
                     rows.add(int(data["dataset"]["profile"]["rows"]))  # the version this turn made
-            texts = await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
+            texts = await self._read_calls(result, user, sid, decimal)
+            found, language = await self._current_table(user, sid)
+            expected, unscorable = self._expected_table(case, start, language)
+            score_turn(result, case, found, expected, unscorable=unscorable)
             score_conversions(result, owed, decimal)
             # A message case on summarized data gets no server conversion: the turn starts after the earlier changes.
             score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
@@ -813,6 +1030,56 @@ class CaseRunner:
             )
             await self.runtime.write_state(session, version.delta)
 
+    async def _start_version(self, user: str, sid: str, from_version: FromVersion | None) -> ParsedDataset | None:
+        """The version the case's expected operations start from, as the store holds it before the turn: the one
+        `from_version` names, or the current one; None for a session without data (a formula case)."""
+        from agents.anyplot.dataset_versions import kept_versions, resolve_version
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+
+        session = await self.runtime.session(user, sid)
+        view = read_session(session.state)
+        if view is None or not view.dataset_id:
+            return None
+        kept = kept_versions(get_services().datasets, sid, view)
+        return resolve_version(kept, view, "current" if from_version is None else from_version).stored.as_parsed()
+
+    @staticmethod
+    def _expected_table(
+        case: PrepCase, start: ParsedDataset | None, language: str
+    ) -> tuple[ResultTable | None, str | None]:
+        """The table the case's expected operations make from `start`, or why there is none to score against.
+
+        `check_cases` applied them to the case's own data before the run, so a refusal here means the stored start
+        differs from that parse: the case is a miss that says so, and the run goes on with the other cases.
+        """
+        from agents.anyplot.data.generate import GenerateError
+        from agents.anyplot.data.parse import ParseError
+        from agents.anyplot.data.prepare import PrepareError
+
+        if not case.scored_by_table:
+            return None, None
+        try:
+            made = expected_result(start, case.expected_operations, language)
+        except (PrepareError, GenerateError, ParseError, ValidationError) as exc:
+            cause = getattr(exc, "code", None) or type(exc).__name__  # a fixed code, never a message with a cell
+            return None, f"the expected operations do not apply to the stored data: {cause}"
+        return (result_table(made) if made is not None else None), None
+
+    async def _current_table(self, user: str, sid: str) -> tuple[ResultTable | None, str]:
+        """The table of the session's current data version after the turn, as the tools stored it, and the session
+        language they applied the operations in; no table for a session without data."""
+        from agents.anyplot.language import DEFAULT_LANGUAGE
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+
+        session = await self.runtime.session(user, sid)
+        view = read_session(session.state)
+        if view is None:
+            return None, DEFAULT_LANGUAGE
+        stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
+        return (result_table(stored) if stored is not None else None), view.language
+
     async def _listed_conversions(self, user: str, sid: str) -> list[Any]:
         """The conversion lines the session block lists for the turn about to start (`conversions.candidates`)."""
         from agents.anyplot.data.conversions import candidates
@@ -835,14 +1102,13 @@ class CaseRunner:
         )
         return list(found)
 
-    async def _read_calls(
-        self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False
-    ) -> list[str]:
+    async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str) -> list[str]:
         """The tool calls of the turn from the session's events; the data calls' operations, canonical.
 
         A `run_data_code` call is read from its answer, not its arguments: the code varies
         from run to run, so it counts as the size of the table it stored. Returns the root's reply
-        texts of the turn, in order, for `measure_reply`; they never enter the result.
+        texts of the turn, in order, for `measure_reply`; they never enter the result. The match is
+        `score_turn`'s.
         """
         from agents.anyplot.data.bindings import check_bindings
         from agents.anyplot.services import get_services
@@ -896,12 +1162,39 @@ class CaseRunner:
             result.found = canonical_operations(operations, decimal)
         except ValidationError:  # ToolSafety refused the call; the root got `invalid_arguments`
             result.found = [json.dumps(item, sort_keys=True, ensure_ascii=False) for item in operations]
-        if refuse:
-            result.match = result.stored_calls == 0
-        else:
-            result.match = same_operations(result.found, result.expected) and not result.failed_calls
-        result.match = result.match and not result.instruction_talk
         return texts
+
+
+def score_turn(
+    result: CaseResult,
+    case: PrepCase,
+    found: ResultTable | None,
+    expected: ResultTable | None,
+    *,
+    unscorable: str | None = None,
+) -> None:
+    """Whether the turn's data is the case's: the table it left (`found`) against the one the expected operations make
+    (`expected`), or the operations for a case `PrepCase.scored_by_table` leaves to them.
+
+    A case scored by its table matches when the tables are the same (`table_difference`, its `row_order`), the turn
+    named the expected gaps (`gap_difference`) and no data call failed; `unscorable` says why there is no expected
+    table, a miss. Any other case matches on its operations (`same_operations`) and no failed call, a `refuse` case
+    when no call stored a version. `ops_exact` is set for every case, and a reply about the root's own instructions
+    is a miss whatever the data.
+    """
+    result.ops_exact = same_operations(result.found, result.expected)
+    if case.refuse:
+        result.match = result.stored_calls == 0
+    elif case.scored_by_table:
+        result.table_miss = (
+            unscorable
+            or gap_difference(result.found, result.expected)
+            or table_difference(found, expected, any_order=case.row_order == "any")
+        )
+        result.match = result.table_miss is None and not result.failed_calls
+    else:
+        result.match = result.ops_exact and not result.failed_calls
+    result.match = result.match and not result.instruction_talk
 
 
 def version_key(value: object, current: int) -> str:
@@ -1060,6 +1353,8 @@ def _block(results: Sequence[CaseResult]) -> dict[str, Any]:
         "unavailable": len(results) - len(answered),
         "matched": sum(1 for result in answered if result.match),
         "exact": _rate(sum(1 for result in answered if result.match), len(answered)),
+        # The diagnostic: the answered cases whose operations were the expected ones, matched or not.
+        "ops_exact": sum(1 for result in answered if result.ops_exact),
     }
 
 
@@ -1107,6 +1402,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "id": case.id,
             "expected": result.expected,
             "found": result.found,
+            "ops_exact": result.ops_exact,
+            "table_miss": result.table_miss,
             "refusal": result.refusal,
             "instruction_talk": result.instruction_talk,
             "conversion_skipped": result.conversion_skipped,
@@ -1146,7 +1443,7 @@ def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
     reasons = []
     exact = summary["exact"]
     if exact is None or exact < gates.min_exact:
-        reasons.append(f"exact match {exact} is below {gates.min_exact}")
+        reasons.append(f"the match rate {exact} is below {gates.min_exact}")
     if (summary["reply_miss_rate"] or 0.0) > gates.max_reply_misses:
         reasons.append(
             f"{summary['reply_misses']} of {summary['replies']} replies close with a question or an invitation the "
@@ -1175,6 +1472,10 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 f"no operation (refusal {result.refusal})" if result.refusal else "no operation"
             )
             outcome = "match" if result.match else "miss (instruction talk)" if result.instruction_talk else "miss"
+            if result.match and result.ops_exact is False:
+                outcome += " (other operations, same table)"
+            if result.table_miss:
+                outcome += f": {result.table_miss}"
             if result.version_miss:
                 outcome += f", from {', '.join(result.from_versions) or 'no call'}"
             if result.reply_miss:
@@ -1196,7 +1497,8 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
     exact = "n/a" if summary["exact"] is None else f"{summary['exact']:.1%}"
     lines = [
         f"cases {summary['cases']}, unavailable {summary['unavailable']}, matched {summary['matched']}, "
-        f"exact {exact}, llm calls {summary['llm_calls']}, cost ${summary['cost_usd']:.4f}",
+        f"exact {exact}, the expected operations exactly {summary['ops_exact']}, llm calls {summary['llm_calls']}, "
+        f"cost ${summary['cost_usd']:.4f}",
         "per tag: "
         + ", ".join(
             f"{tag} {block['matched']}/{block['cases'] - block['unavailable']}"
@@ -1321,9 +1623,12 @@ def stamp(settings: AgentSettings, cases: Sequence[PrepCase]) -> dict[str, Any]:
 
 
 def check_cases(cases: Sequence[PrepCase]) -> None:
-    """Every expected operation list passes the `Operation` and `Generate` models, and a case's earlier changes apply to
-    its dataset one after the other; raises `SetupError` otherwise."""
-    from agents.anyplot.data.parse import parse_dataset
+    """Every expected operation list passes the `Operation` and `Generate` models, a case's earlier changes apply to
+    its dataset one after the other, and a case scored by its table gets one: its expected operations apply to the
+    version they start from (`expected_result`) and change its table, since a table they leave as it is cannot tell
+    them from no data call (such a case is `strict_operations`). Raises `SetupError` otherwise."""
+    from agents.anyplot.data.generate import GenerateError
+    from agents.anyplot.data.parse import ParseError, parse_dataset
     from agents.anyplot.data.prepare import PrepareArgs, PrepareError, apply_and_parse
 
     for case in cases:
@@ -1331,16 +1636,47 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
             canonical_operations(case.expected_operations, ".")
         except ValidationError as exc:
             raise SetupError(f"case {case.id}: expected_operations do not validate: {exc}") from exc
-        if not case.before_operations or case.dataset_text is None:
-            continue
-        parsed = parse_dataset(case.dataset_text)
+        try:
+            versions = [parse_dataset(case.dataset_text)] if case.dataset_text is not None else []
+        except ParseError as exc:
+            raise SetupError(f"case {case.id}: dataset_text does not parse: {exc}") from exc
         for place, operations in enumerate(case.before_operations):
             try:
                 args = PrepareArgs.model_validate({"operations": operations})
                 # In the case's language, as the session names a column the operations leave unnamed (`date_number`).
-                _, parsed = apply_and_parse(parsed, args.operations, language=case.locale)
+                _, parsed = apply_and_parse(versions[-1], args.operations, language=case.locale)
             except (ValidationError, PrepareError) as exc:
                 raise SetupError(f"case {case.id}: before_operations[{place}] does not apply: {exc}") from exc
+            versions.append(parsed)
+        if not case.scored_by_table:
+            continue
+        start = _offline_start(case, versions)
+        try:
+            made = expected_result(start, case.expected_operations, case.locale)
+        except (ValidationError, PrepareError, GenerateError, ParseError) as exc:
+            raise SetupError(f"case {case.id}: expected_operations do not apply to its data: {exc}") from exc
+        changes = any(item.get("op") != GAP_OP for item in case.expected_operations)
+        unchanged = made is not None and start is not None and result_table(made) == result_table(start)
+        if changes and unchanged:
+            raise SetupError(
+                f"case {case.id}: expected_operations leave its table as it is, so the table cannot tell them from no "
+                "data call; set strict_operations"
+            )
+
+
+def _offline_start(case: PrepCase, versions: Sequence[ParsedDataset]) -> ParsedDataset | None:
+    """The version among a case's `versions` (the paste, then one per earlier change) that its expected operations
+    start from: the one `expected_from_version` names, or the last; raises `SetupError` for a number it does not
+    have."""
+    wanted = case.expected_from_version
+    if not versions:
+        return None
+    if wanted is None or wanted == "current":
+        return versions[-1]
+    number = 1 if wanted == "original" else int(wanted)
+    if not 1 <= number <= len(versions):
+        raise SetupError(f"case {case.id}: expected_from_version {wanted} names no version of its data")
+    return versions[number - 1]
 
 
 def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, services: Services | None = None) -> int:

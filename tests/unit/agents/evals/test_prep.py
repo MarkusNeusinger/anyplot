@@ -2,6 +2,7 @@
 
 import asyncio
 import dataclasses
+import itertools
 import json
 import os
 from collections import Counter
@@ -13,7 +14,7 @@ from pydantic import ValidationError
 
 from agents.anyplot.data.generate import Generate, generate
 from agents.anyplot.data.parse import parse_dataset
-from agents.anyplot.data.prepare import apply_operations
+from agents.anyplot.data.prepare import PrepareError, apply_operations
 from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.opening import instruction_like
 from agents.anyplot.run_queue import RunQueue
@@ -76,6 +77,11 @@ GHOST = {"op": "rename", "column": "Ghost", "name": "Spirit"}  # no such column:
 SINE = {"name": "y", "expression": "sin(x)"}
 SINE_CALL = {"variables": [{"start": "-pi", "stop": "pi"}], "series": [SINE]}
 CODE_CALL = {"op": "run_data_code", "rows": 4, "columns": 2}
+# Invented sales with a notes column and a total row at the end, which the parser leaves out of the table.
+SALES = "Region,Month,Sales,Note\nNorth,Jan,12,\nNorth,Feb,13,fair\nSouth,Jan,9,\nSouth,Feb,11,\nEast,Jan,7,new\nEast,Feb,8,\nTotal,,60,\n"
+SALES_SUM = {"op": "aggregate", "by": ["Region"], "column": "Sales", "how": "sum"}
+SALES_SORT = {"op": "sort", "column": "Sales", "descending": True}
+SALES_CHAIN = [{"op": "drop_columns", "columns": ["Note"]}, SALES_SUM, SALES_SORT]
 
 
 def case(case_id: str, message: str, expected: list[dict[str, Any]], locale: str = "en", **extra: Any) -> PrepCase:
@@ -251,6 +257,35 @@ class TestFixtures:
         bad = case("bad-001", "do it", [{"op": "explode"}])
         with pytest.raises(SetupError, match="do not validate"):
             check_cases([bad])
+
+    def test_a_case_scored_by_its_table_needs_a_table_its_operations_change(self) -> None:
+        """A table the expected operations leave as it is cannot tell them from no data call: such a case is strict."""
+        nothing = [{"op": "drop_rows", "where": [{"column": "Study Hours", "test": "gt", "value": 100}]}]
+
+        with pytest.raises(SetupError, match="no-001: expected_operations leave its table as it is"):
+            check_cases([case("no-001", "drop the rows over 100 hours", nothing)])
+        check_cases([case("no-002", "drop the rows over 100 hours", nothing, strict_operations=True)])
+        with pytest.raises(SetupError, match="no-003: expected_operations do not apply to its data"):
+            check_cases([case("no-003", "rename the ghost", [GHOST])])
+        check_cases([case("no-004", "rename the ghost", [GHOST], strict_operations=True)])  # scored by its operations
+        # A named gap alone changes no table by design: the gaps are compared apart (`gap_difference`).
+        check_cases([case("no-005", "fill the gaps", [{"op": "unsupported", "family": "fill_values"}])])
+        top = [{"op": "sort", "column": "Exam Score", "descending": True}, {"op": "keep_rows", "n": 2}]
+        with pytest.raises(SetupError, match="no-006: expected_from_version 3 names no version of its data"):
+            check_cases([case("no-006", "back", top, before_operations=[top], expected_from_version=3)])
+        check_cases([case("no-007", "back", [RENAME], before_operations=[top], expected_from_version=2)])
+
+    def test_which_cases_are_scored_by_their_table(self) -> None:
+        """Every case but one that expects no data call, a `run_data_code` call, a `refuse` case and a strict one."""
+        assert case("s-001", "rename it", [RENAME]).scored_by_table
+        assert not case("s-002", "which column?", []).scored_by_table
+        assert not case("s-003", "run my code", [CODE_CALL]).scored_by_table
+        assert not case("s-004", "read my file", [], refuse=True).scored_by_table
+        assert not case("s-005", "rename it", [RENAME], strict_operations=True).scored_by_table
+        cases = load_cases(DEFAULT_CASES)
+        by_table = [item for item in cases if item.scored_by_table]
+        assert len(by_table) > len(cases) / 2
+        assert all(item.expected_operations and not item.refuse for item in by_table)
 
 
 def _operations(items: list[dict[str, Any]]) -> Any:
@@ -515,6 +550,134 @@ class TestCanonical:
         ]
 
 
+def table_of(operations: list[dict[str, Any]], text: str = SALES) -> prep.ResultTable:
+    made = prep.expected_result(parse_dataset(text), operations, "en")
+    assert made is not None
+    return prep.result_table(made)
+
+
+def cells(columns: tuple[str, ...], dtypes: tuple[str, ...], *rows: tuple[str | None, ...]) -> prep.ResultTable:
+    return prep.ResultTable(columns, dtypes, rows)
+
+
+class TestTable:
+    def test_two_sequences_that_make_the_same_table_both_match(self) -> None:
+        """Guard 2a of #12599: an `aggregate` keeps only its keys and its values, so the notes column it would drop
+        anyway and a total row the parser left out already change nothing, and every sequence is the same answer."""
+        sequences = [
+            SALES_CHAIN,
+            [SALES_SUM, SALES_SORT],  # the notes column without its drop
+            [{"op": "drop_rows", "where": [{"column": "Region", "test": "eq", "value": "Total"}]}, *SALES_CHAIN],
+        ]
+        tables = [table_of(operations) for operations in sequences]
+
+        assert all(prep.table_difference(table, tables[0]) is None for table in tables)
+        assert tables[0].columns == ("Region", "Sales") and [row[0] for row in tables[0].rows] == [
+            "North",
+            "South",
+            "East",
+        ]
+        lines = [canonical_operations(operations, ".") for operations in sequences]
+        assert not prep.same_operations(lines[1], lines[0]) and not prep.same_operations(lines[2], lines[0])
+
+    @pytest.mark.parametrize(
+        ("operations", "miss"),
+        [
+            ([SALES_SUM, {"op": "sort", "column": "Sales"}], "values differ: 'Region' in 2 rows, 'Sales' in 2 rows"),
+            ([{**SALES_SUM, "how": "mean"}, SALES_SORT], "column 'Sales' is number, expected integer"),
+            ([SALES_SORT], "columns ['Region', 'Month', 'Sales', 'Note'], expected ['Region', 'Sales']"),
+            (
+                [{"op": "drop_rows", "where": [{"column": "Region", "test": "eq", "value": "East"}]}, *SALES_CHAIN],
+                "2 rows, expected 3",
+            ),
+            (
+                [*SALES_CHAIN, {"op": "set_type", "column": "Sales", "type": "text"}],
+                "column 'Sales' is text, expected integer",
+            ),
+        ],
+    )
+    def test_another_table_is_a_miss_that_names_columns_never_cells(
+        self, operations: list[dict[str, Any]], miss: str
+    ) -> None:
+        assert prep.table_difference(table_of(operations), table_of(SALES_CHAIN)) == miss
+
+    def test_number_cells_compare_within_the_tolerance(self) -> None:
+        """`data.csv` writes a float in full, so a sum in another order differs in its last digit; a real difference
+        does not hide in the tolerance, and a text cell compares as its text."""
+        columns, dtypes = ("k", "v", "t"), ("text", "number", "text")
+        want = cells(columns, dtypes, ("a", "519.1666666666666", "0.1"), ("b", "0", None))
+
+        def found(value: str, zero: str = "0", text: str = "0.1") -> prep.ResultTable:
+            return cells(columns, dtypes, ("a", value, text), ("b", zero, None))
+
+        assert prep.table_difference(found("519.1666666666667"), want) is None
+        assert prep.table_difference(found("519.1666666666666", zero="1.2246467991473532e-16"), want) is None
+        assert prep.table_difference(found("519.17"), want) == "values differ: 'v' in 1 row"
+        assert prep.table_difference(found("519.1666666666666", zero="1e-6"), want) == "values differ: 'v' in 1 row"
+        assert prep.table_difference(found("519.1666666666666", text="0.10"), want) == "values differ: 't' in 1 row"
+        # An empty cell is no number: it equals only another empty cell, never a 0.
+        assert prep.table_difference(cells(columns, dtypes, ("a", "1", "0.1"), ("b", None, None)), want) == (
+            "values differ: 'v' in 2 rows"
+        )
+        assert prep.result_table(parse_dataset("k,v\na,1.5\nb,\nc,2\n")).rows == (("a", "1.5"), ("b", None), ("c", "2"))
+
+    def test_rows_compare_in_order_unless_the_case_leaves_it_open(self) -> None:
+        want = table_of(SALES_CHAIN)
+        shuffled = prep.ResultTable(want.columns, want.dtypes, want.rows[::-1])
+        close = prep.ResultTable(
+            want.columns, ("text", "number"), tuple((row[0], f"{row[1]}.0000000000001") for row in want.rows)
+        )
+
+        assert prep.table_difference(shuffled, want) == "values differ: 'Region' in 2 rows, 'Sales' in 2 rows"
+        assert prep.table_difference(shuffled, want, any_order=True) is None
+        # The sort is by the values within the tolerance, so a cell's last digits never move its row.
+        assert (
+            prep.table_difference(
+                prep.ResultTable(close.columns, close.dtypes, close.rows[::-1]),
+                prep.ResultTable(want.columns, ("text", "number"), want.rows),
+                any_order=True,
+            )
+            is None
+        )
+        assert prep.table_difference(None, None) is None
+        assert prep.table_difference(None, want) == "no data"
+        assert prep.table_difference(want, None) == "data where the case expects none"
+        assert case("o-001", "any order", SALES_CHAIN, row_order="any").scored_by_table
+        with pytest.raises(ValidationError, match="row_order is for a case scored by its table"):
+            case("o-002", "any order", SALES_CHAIN, row_order="any", strict_operations=True)
+
+    def test_a_named_gap_is_compared_apart_from_the_table(self) -> None:
+        gap = canonical_operations([{"op": "unsupported", "family": "fill_values"}], ".")
+        other = canonical_operations([{"op": "unsupported", "family": "edit_cells"}], ".")
+
+        assert prep.gap_difference(gap, gap) is None
+        assert prep.gap_difference([], gap) == "named gaps none, expected unsupported fill_values"
+        assert prep.gap_difference(other, gap) == "named gaps unsupported edit_cells, expected unsupported fill_values"
+        assert prep.gap_difference(canonical_operations([RENAME], "."), []) is None  # no gap on either side
+        # A gap changes nothing, so the expected table leaves it out.
+        assert prep.expected_result(parse_dataset(HOURS), [{"op": "unsupported", "family": "fill_values"}], "en") == (
+            parse_dataset(HOURS)
+        )
+
+    def test_the_expected_table_takes_a_formula_and_the_operations_after_it(self) -> None:
+        """A formula replaces the data as `generate_data` stores it; more than five operations take two calls."""
+        formula = {"op": "generate_data", **SINE_CALL}
+        renamed = {"op": "rename", "column": "y", "name": "sine"}
+        made = prep.expected_result(parse_dataset(HOURS), [formula, renamed], "en")
+
+        assert made is not None and prep.result_table(made).columns == ("x", "sine") and made.profile.rows == 200
+        assert prep.expected_result(None, [formula], "en") is not None
+        names = ["a", "b", "c", "d", "e", "f"]
+        chain = [
+            {"op": "rename", "column": old, "name": new} for old, new in itertools.pairwise(["Study Hours", *names])
+        ]
+        assert prep.result_table(prep.expected_result(parse_dataset(HOURS), chain, "en")).columns == ("f", "Exam Score")
+        with pytest.raises(PrepareError):
+            prep.expected_result(None, [RENAME], "en")
+        with pytest.raises(PrepareError):
+            prep.expected_result(parse_dataset(HOURS), [GHOST], "en")
+
+
 class TestScore:
     CASES = [
         case("a-001", "rename it", [RENAME]),
@@ -757,6 +920,8 @@ class TestRun:
 
         assert [result.match for result in results] == [True, True, False, True, False]
         assert results[4].found == results[4].expected and results[4].failed_calls == 1
+        # `check_cases` would refuse that case; run without it, the case says why it has no table to compare.
+        assert results[4].table_miss == "the expected operations do not apply to the stored data: unknown_column"
         assert results[0].found == canonical_operations([RENAME], ".") and results[0].llm_calls == 2
         assert results[0].tool_calls == ["prepare_data"] and results[0].cost_usd > 0
         assert results[1].refusal == "out_of_scope" and results[1].tool_calls == [] and results[1].llm_calls == 0
@@ -766,6 +931,105 @@ class TestRun:
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
+
+    def test_a_case_passes_by_the_table_its_turn_leaves(self, services: Services, swap_models) -> None:
+        """Other operations that leave the same table match, with `ops_exact` false; another table misses and says
+        what differs; a strict case keeps the exact operation match."""
+
+        def sales(case_id: str, **extra: Any) -> PrepCase:
+            return PrepCase(
+                id=case_id,
+                dataset_text=SALES,
+                message="leave out the notes, sum the sales per region, the strongest first",
+                expected_operations=SALES_CHAIN,
+                locale="en",
+                **extra,
+            )
+
+        def prepare(*operations: dict[str, Any]) -> dict[str, Any]:
+            return {"call": "prepare_data", "args": {"operations": list(operations)}}
+
+        reply = {"text": "Summed the sales per region: 3 rows."}
+        no_total = {"op": "drop_rows", "where": [{"column": "Region", "test": "eq", "value": "Total"}]}
+        cases = [sales(f"t-00{index}") for index in range(1, 5)] + [
+            sales("t-005", strict_operations=True),
+            sales("t-006", strict_operations=True),
+        ]
+        root_turns = [
+            [prepare(*SALES_CHAIN), reply],
+            [prepare(SALES_SUM, SALES_SORT), reply],  # the notes column without its drop
+            [prepare(no_total), prepare(SALES_SUM), prepare(SALES_SORT), reply],  # three calls, one dropping nothing
+            [prepare(SALES_SUM, {"op": "sort", "column": "Sales"}), reply],  # the weakest first
+            [prepare(SALES_SUM, SALES_SORT), reply],
+            [prepare(*SALES_CHAIN), reply],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, True, True, False, False, True]
+        assert [result.ops_exact for result in results] == [True, False, False, False, False, True]
+        assert [result.table_miss for result in results] == [
+            None,
+            None,
+            None,
+            "values differ: 'Region' in 2 rows, 'Sales' in 2 rows",
+            None,  # strict: scored by its operations
+            None,
+        ]
+        scored = score(cases, results)
+        assert scored["summary"]["matched"] == 4 and scored["summary"]["ops_exact"] == 2
+        assert [(miss["id"], miss["ops_exact"], miss["table_miss"]) for miss in scored["misses"]] == [
+            ("t-004", False, "values differ: 'Region' in 2 rows, 'Sales' in 2 rows"),
+            ("t-005", False, None),
+        ]
+        printed = prep.table(cases, results)
+        assert "match (other operations, same table)" in printed and "miss: values differ" in printed
+        assert "the expected operations exactly 2" in prep.summary_text(scored, [])
+
+    def test_every_case_scored_by_its_table_passes_with_its_own_operations(
+        self, services: Services, swap_models
+    ) -> None:
+        """A root that makes exactly a fixture's operations leaves its expected table: the fixture's order, the server's
+        own conversions (first among the turn's) and the store's version of the paste agree with `expected_result`.
+
+        A turn without a call shows which of the operations the server makes itself; the root makes the others.
+        """
+        cases = [item for item in load_cases(DEFAULT_CASES) if item.scored_by_table]
+        swap_models("anthropic-vertex", script_for(*([{"text": "4 rows."}] for _ in cases)))
+        silent = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+        root_turns = []
+        for item, quiet in zip(cases, silent, strict=True):
+            decimal = parse_dataset(item.dataset_text).profile.decimal if item.dataset_text else "."
+            assert len(quiet.found) == quiet.server_operations, item.id  # a silent turn has the server's alone
+            made = Counter(quiet.found)
+            calls: list[dict[str, Any]] = []
+            pending: list[dict[str, Any]] = []
+            for operation in [*item.expected_operations, None]:
+                if operation is not None and operation["op"] != "generate_data":
+                    (line,) = canonical_operations([operation], decimal)
+                    if made[line]:
+                        made[line] -= 1  # the server made it before the root ran
+                    else:
+                        pending.append(operation)
+                    continue
+                for place in range(0, len(pending), 5):
+                    args: dict[str, Any] = {"operations": pending[place : place + 5]}
+                    if item.expected_from_version is not None and not calls:
+                        args["from_version"] = str(item.expected_from_version)
+                    calls.append({"call": "prepare_data", "args": args})
+                pending = []
+                if operation is not None:
+                    formula = {key: value for key, value in operation.items() if key != "op"}
+                    calls.append({"call": "generate_data", "args": formula})
+            root_turns.append([*calls, {"text": "Done: 4 rows."}])
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        failed = [(result.id, result.table_miss, result.failed_calls) for result in results if not result.match]
+        assert failed == []
+        assert all(result.ops_exact for result in results)
 
     def test_earlier_changes_come_first_and_the_version_a_turn_starts_from_is_scored(
         self, services: Services, swap_models
@@ -779,8 +1043,12 @@ class TestRun:
             case("v-002", "the first 3 after all", top3, **earlier),
             case("v-003", "which hours had the lowest score?", [], **earlier),
             case("v-004", "which hours had the lowest score?", [], **earlier),
+            case("v-005", "the first 3 after all", top3, **earlier),
         ]
         rebuild = {"operations": top3, "from_version": "original"}
+        # The three best of the original by another way: the one score under 60 dropped, the rest sorted.
+        under_60 = {"op": "drop_rows", "where": [{"column": "Exam Score", "test": "lt", "value": 60}]}
+        other_way = {"operations": [under_60, top3[0]], "from_version": "original"}
         root_turns = [
             [{"call": "prepare_data", "args": rebuild}, {"text": "From your original table: kept the first 3."}],
             # The right operations on the top 2: "kept all 2 rows", from the wrong version.
@@ -790,16 +1058,20 @@ class TestRun:
                 {"text": "2 hours: 55 points, in your original table."},
             ],
             [{"call": "query_data", "args": {"operations": []}}, {"text": "I cannot see that any more."}],
+            [{"call": "prepare_data", "args": other_way}, {"text": "From your original table: the best 3."}],
         ]
         fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
         judge: FakeJudge = services.judge  # type: ignore[assignment]
         in_scope = JudgeVerdict(verdict="in_scope", lang="en", input_tokens=500, output_tokens=20)
-        judge.script.extend([in_scope] * 4)
+        judge.script.extend([in_scope] * 5)
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        assert [result.match for result in results] == [True, False, True, False]
-        assert [result.version_miss for result in results] == [False, True, False, True]
+        assert [result.match for result in results] == [True, False, True, False, True]
+        assert [result.version_miss for result in results] == [False, True, False, True, False]
+        # The expected table starts from the original, so the top 3 of the top 2 is two rows short as well.
+        assert [result.table_miss for result in results] == [None, "2 rows, expected 3", None, None, None]
+        assert [result.ops_exact for result in results] == [True, True, True, True, False]
         assert results[0].from_versions == ["prepare_data:original"]
         assert results[2].from_versions == ["query_data:1"]
         assert results[3].from_versions == ["query_data:current"]
@@ -960,9 +1232,10 @@ class TestRun:
     def test_the_servers_conversions_count_and_a_turn_without_them_is_a_miss(
         self, services: Services, swap_models, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """The server makes a `certain` conversion before the root runs (`paste_conversions.py`): its operations are
-        the turn's, a root that makes it again is a miss, and a turn left without it is the original failure of the
-        live test of 2026-11-01, whatever the case expected."""
+        """The server makes a `certain` conversion before the root runs (`paste_conversions.py`): its version is part
+        of the turn's table, a root that makes it again leaves the same table (row numbers that already number the
+        rows stay as they are) and one that drops its column does not, and a turn left without it is the original
+        failure of the live test of 2026-11-01, whatever the case expected."""
         from agents.anyplot import agent
 
         text = "value\n1\n3\n5\n4\n6\n2\n"
@@ -975,20 +1248,21 @@ class TestRun:
                 locale="en",
                 spec_id="line-basic",
             )
-            for index in (1, 2)
+            for index in (1, 2, 3)
         ]
         again = {"call": "prepare_data", "args": {"operations": [{"op": "row_number"}]}}
-        root_turns: list[list[dict[str, Any]]] = [
-            [{"text": "6 rows; x: row number 1 to 6, because the table has no x column."}],
-            [again, {"text": "6 rows; x: row number 1 to 6, because the table has no x column."}],
-        ]
+        dropped = {"call": "prepare_data", "args": {"operations": [{"op": "drop_columns", "columns": ["index"]}]}}
+        summary = {"text": "6 rows; x: row number 1 to 6, because the table has no x column."}
+        root_turns: list[list[dict[str, Any]]] = [[summary], [again, summary], [dropped, summary]]
         swap_models("anthropic-vertex", script_for(*root_turns))
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        assert [result.match for result in results] == [True, False]
-        assert [result.server_operations for result in results] == [1, 1]
-        assert [(result.conversions_owed, result.conversions_made) for result in results] == [(1, 1), (1, 1)]
+        assert [result.match for result in results] == [True, True, False]
+        assert [result.ops_exact for result in results] == [True, False, False]
+        assert results[2].table_miss == "columns ['value'], expected ['index', 'value']"
+        assert [result.server_operations for result in results] == [1, 1, 1]
+        assert [(result.conversions_owed, result.conversions_made) for result in results] == [(1, 1)] * 3
         assert not any(result.conversion_skipped for result in results)
 
         # Without the server's conversion (a refusal or a full store), a root that makes none skips it.

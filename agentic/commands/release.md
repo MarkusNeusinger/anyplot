@@ -72,7 +72,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    Vertex AI login (ADC), so they run on the owner's machine, not in a cloud session.
    - **Always:**
      - `uv run --extra agents python -m agents.evals.prep`: the root's step-1 data choices,
-       85 cases, about $0.25. Its gate is 80 percent exact.
+       85 cases, about $0.25. Its gate is 80 percent of the cases matched, by the table each turn
+       leaves (since 2026-11-08; the summary keeps the key `exact` for it, and `ops_exact` counts the
+       cases whose operations were exactly the expected ones).
      - `uv run --extra agents python -m agents.evals.scope`: the scope judge, about $0.05. Its
        gates are adversarial recall and the false-refusal rate; exit code 1 means a gate failed.
    - **When the window changed the plot pipeline:** that is the adapter or reviewer prompts,
