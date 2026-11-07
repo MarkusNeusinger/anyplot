@@ -39,10 +39,15 @@
  * way, since its sessions copy this data, and a line at the top of the card,
  * which the card names as its description, says to close the panel first.
  *
- * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
- * a single role one dropdown, a variadic family its columns as chips with `×`
- * and `+ y` for the next one. Required roles carry a `*`; the kinds a role
- * accepts sit under its name and the spec's description is its tooltip.
+ * The card is framed like the chat window (`CardFrame.tsx`), with what the data
+ * holds on its top border (`data · 48 rows × 4 cols`). The bindings read as one
+ * line under the preview (`x (across): month · y (up): revenue`), and `.change()`
+ * at its end opens a column choice for every role of the spec (`bindingRows` in
+ * `bindings.ts`): a single role one dropdown, a variadic family its columns as
+ * chips with `×` and `+ y` for the next one. Required roles carry a `*`; the
+ * kinds a role accepts sit under its name and the spec's description is its
+ * tooltip. The choices open by themselves while a required role has no column
+ * or the server refused the bindings (`DataCard.tsx`).
  *
  * Text that is not a table comes back as a table a model read from it, which
  * the server has not stored. A card above the preview shows it with the
@@ -91,7 +96,8 @@
  * table, and a table picker beside the preview parses the same text again for
  * another one (`tables` in the dataset route's answer).
  *
- * `.view_all()` next to the preview's label opens every row of the current
+ * `.view_all()` next to the preview's label (on a phone, where the card shows no
+ * preview table, on its last line beside `.change()`) opens every row of the current
  * version in a read-only grid (`DataView.tsx`, loaded on demand): the
  * canonical `data.csv` with each value as the data holds it, to search, sort
  * and filter without changing the data. Read-only, so it opens while a step
@@ -101,16 +107,15 @@
 
 import { useRef, useState } from 'react';
 
-import Box from '@mui/material/Box';
-
 import { type AgentSessionState, sessionBusy } from 'src/hooks/useAgentSession';
 import { AgentApiError, type ConvertAnswer, tableChoice } from 'src/lib/agent';
+import { CardFrame } from 'src/sections/agent-chat/CardFrame';
+import { dataCardLabel } from 'src/sections/agent-chat/cardLabels';
 import { DataCard } from 'src/sections/agent-chat/DataCard';
 import { DataViewUnavailable } from 'src/sections/agent-chat/dataCardParts';
 import { describeConvertFailure } from 'src/sections/agent-chat/messages';
 import { DATA_LOCK_TEXT, DataCardShell } from 'src/sections/agent-chat/PinnedData';
 import { plotButtonLabel } from 'src/sections/agent-chat/steps';
-import { cardSx } from 'src/sections/agent-chat/styles';
 import {
   type ConvertedFile,
   convertedSource,
@@ -285,17 +290,32 @@ export function DataPanel({
   // A table read from text waits in a frame of its own at its paste; the stored data's card
   // above it stays as it is until `.use()`.
   if (part === 'transcription') {
-    return transcription ? (
+    if (!transcription) return null;
+    const { profile } = transcription;
+    const label = dataCardLabel(profile.rows, profile.columns.length, 'text');
+    return (
       // Off for the thread's live log, as the data card's shell is.
-      <Box data-testid="transcription-item" ref={view.transcriptionRef} aria-live="off" sx={cardSx}>
+      <CardFrame
+        label={label.text}
+        spokenLabel={label.spoken}
+        labelTestId="transcription-label"
+        data-testid="transcription-item"
+        ref={view.transcriptionRef}
+        aria-live="off"
+      >
         {card}
-      </Box>
-    ) : null;
+      </CardFrame>
+    );
   }
   // Step 2 without `.show()`: the card waits behind the pinned header.
-  if (!view.open) return null;
+  if (!view.open || !dataset) return null;
   return (
-    <DataCardShell view={view} locked={locked} plotLabel={plotAction ?? plotButtonLabel(state)}>
+    <DataCardShell
+      view={view}
+      locked={locked}
+      plotLabel={plotAction ?? plotButtonLabel(state)}
+      label={dataCardLabel(dataset.parsed.profile.rows, dataset.parsed.profile.columns.length)}
+    >
       {card}
     </DataCardShell>
   );

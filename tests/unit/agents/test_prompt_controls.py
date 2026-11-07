@@ -131,7 +131,8 @@ def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> N
     buttons = data_card_buttons()
     bullet = controls_of("The data panel")
 
-    assert {".view_all()", ".use()", ".discard()", ".undo()"} <= buttons  # the reading still finds them
+    # The reading still finds them, `.change()` on the bindings line among them.
+    assert {".view_all()", ".use()", ".discard()", ".undo()", ".change()"} <= buttons
     assert not {".parse()", ".open()", ".replace()", ".keep()"} & buttons
     assert sorted(buttons - bullet) == []
     assert sorted(bullet - buttons) == []
@@ -160,6 +161,26 @@ def test_the_status_line_bullet_names_exactly_the_buttons_at_its_end() -> None:
 
     assert buttons == {".stop()", ".start_over()", ".feedback()"}
     assert sorted(bullet ^ buttons) == []
+
+
+def test_the_result_card_bullet_says_where_each_download_sits() -> None:
+    """Persona tests found the root telling users that `.download()` for the PNG sits "below the image",
+    while it is an icon over the image's top right corner (a word on the line under the image only on a
+    phone), and the code's downloads stand in the code's line further down. The bullet names each place,
+    and the card's code still has the PNG's download over the image and the phone's line of words."""
+    section = controls_section()
+    start = section.index("\n- Each result card:")
+    bullet = section[start : section.find("\n", start + 1)]
+    card = (AGENT_CHAT / "ResultCard.tsx").read_text(encoding="utf-8")
+
+    assert "Over the image's top right corner" in bullet
+    assert "on a phone, by their names in the line right under the image" in bullet
+    assert "in the code's line: `.show_code()`" in bullet
+    assert "`.download('data.csv')`" in bullet.split("in the code's line:")[1]
+    assert "below the image" not in bullet
+    assert ".expand()" not in bullet and ".collapse()" not in bullet
+    assert 'title=".download()"' in card  # the icon over the image, its name on hover
+    assert re.search(r">\s*\.download\(\)\s*<", card)  # the word on the phone's line
 
 
 def test_the_prompt_names_no_confirm_button() -> None:

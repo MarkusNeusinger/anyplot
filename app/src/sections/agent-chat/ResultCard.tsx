@@ -5,16 +5,27 @@
  * request or a question goes through the thread's one composer below it,
  * which the assistant reads either way (since 2026-10-12).
  *
+ * - The card's frame carries its label on the border (`CardFrame.tsx`, v4
+ *   design): `plot v2 · matplotlib · title in German`, the version, its library
+ *   and what it answered. The label is the card's toggle: a click folds the
+ *   card to that one line (`▸ plot v2 · …`), and a newer version folds the one
+ *   before it. The version's status (`ok`, `needs attention`) stands in the
+ *   theme row, before the run's line.
  * - Folded by default since 2026-11-02 (owner: less text, the details behind
  *   a toggle rather than removed): the image, its toolbar and the theme switch
  *   show; the run's rounds and its "what changed" list sit behind one status
  *   line (`second try · 5 changes ⓘ`), and the code behind `.show_code()`,
  *   while `.copy()` and the downloads stay in view. Each card keeps its own
- *   choice while the session lives, also across a collapse of the whole card;
+ *   choice while the session lives, also across a fold of the whole card;
  *   a new version's card starts folded. The residual notes stay in view: they
  *   are what still needs the user's eye. They read in plain words, one line
  *   per issue (`residualNotes.ts`); the review's lines in full, with their
  *   rubric ids and measurements, sit behind the notes' ⓘ.
+ * - The image's actions (`.copy_png()`, `.download()` for the PNG, `.open()`,
+ *   and `.interactive()` or `.preview()`) are icons over its top right corner
+ *   from `sm` up, their names on hover; at phone width, where that corner holds
+ *   the plot's title, they stand by their names on the card's action line right
+ *   under the image. The code's downloads stand in the code's line further down.
  *
  * - The image is the blob URL of the theme the run rendered. The light and
  *   dark switch shows the other theme, rendering it first through the theme
@@ -77,6 +88,8 @@ import {
   pageFrameSize,
   type Theme,
 } from 'src/lib/agent';
+import { CardFrame } from 'src/sections/agent-chat/CardFrame';
+import { plotCardLabel } from 'src/sections/agent-chat/cardLabels';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
@@ -87,7 +100,9 @@ import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import {
   actionButtonSx,
   bodyTextSx,
+  cardActionSx,
   labelSx,
+  PHONE_QUERY,
   readableSx,
   smallText,
   visuallyHiddenSx,
@@ -100,15 +115,6 @@ const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
 const TOAST_MS = 1500;
 /** `.copy()` for a while after the browser refused the clipboard; the code opens beside it. */
 const COPY_FAILED_TEXT = '.copy() failed · select the code';
-/** Phone width, MUI's `xs`: the image's actions move into the header row. */
-const PHONE_QUERY = '(max-width: 599.95px)';
-/** The image's actions in the header row: quiet icons on the card, like its text buttons. */
-const headerActionSx = {
-  // A 32 px target with room between them, for a thumb.
-  p: 0.75,
-  color: 'var(--ink-soft)',
-  '&:hover': { color: colors.primary, bgcolor: 'transparent' },
-} as const;
 /** The code download button's label per code artifact; literal, so the root prompt's control list can name them. */
 const DOWNLOAD_CODE_LABELS: Record<CodeArtifact, string> = {
   'plot.py': ".download('plot.py')",
@@ -142,6 +148,11 @@ export interface ResultCardProps {
   /** Whether this is the newest version: only it starts expanded. */
   latest: boolean;
   /**
+   * What the version answered, for its label: the request before it, cut to 40 characters, or
+   * `first plot` or `.start_over()` (`plotSummaries` in `threadModel.ts`); none without either.
+   */
+  summary?: string | null;
+  /**
    * A turn, a theme render, a parse or a binding change is in flight: a theme
    * that still has to render waits for it, since the server runs one at a
    * time. A theme the version already has stays one click away.
@@ -168,6 +179,7 @@ export function ResultCard({
   specId,
   language,
   latest,
+  summary: request = null,
   busy,
   onRequestTheme,
   onFetchArtifact,
@@ -201,6 +213,7 @@ export function ResultCard({
   const [codeOpen, setCodeOpen] = useState(false);
   const detailsId = useId();
   const codeId = useId();
+  const bodyId = useId();
 
   useEffect(
     () => () => {
@@ -414,18 +427,12 @@ export function ResultCard({
   const pageFrame = shownPage !== undefined ? pageFrameSize(shownPage) : null;
 
   const overlayBtnSx = overlayButtonSx(isDark);
-  // The image's actions stand over its top right corner; on a phone that corner holds the plot's
-  // title, so they move into the card's header row instead, quiet icons beside `.collapse()`.
-  const actionSx = narrow ? headerActionSx : overlayBtnSx;
-  const actionSize = narrow ? 'small' : 'medium';
+  // The image's actions stand over its top right corner as the plot page's icons, their names on
+  // hover. On a phone that corner holds the plot's title and a hover never comes, so they stand
+  // on the card's action line under the image instead, by their names (`.download()`).
   const imageActions = interactive ? (
     <Tooltip title=".preview()" disableFocusListener>
-      <IconButton
-        onClick={handleClosePreview}
-        aria-label="Show image"
-        sx={actionSx}
-        size={actionSize}
-      >
+      <IconButton onClick={handleClosePreview} aria-label="Show image" sx={overlayBtnSx}>
         <ImageOutlinedIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -438,8 +445,7 @@ export function ResultCard({
               onClick={handleOpenPreview}
               aria-label="Show interactive"
               disabled={busy || buildingPage}
-              sx={actionSx}
-              size={actionSize}
+              sx={overlayBtnSx}
             >
               <PlayArrowIcon fontSize="small" />
             </IconButton>
@@ -452,8 +458,7 @@ export function ResultCard({
             onClick={handleCopyImage}
             aria-label="Copy image"
             disabled={!readyImage}
-            sx={actionSx}
-            size={actionSize}
+            sx={overlayBtnSx}
           >
             <ImageOutlinedIcon fontSize="small" />
           </IconButton>
@@ -465,8 +470,7 @@ export function ResultCard({
             onClick={handleDownloadPng}
             aria-label="Download PNG"
             disabled={!readyImage}
-            sx={actionSx}
-            size={actionSize}
+            sx={overlayBtnSx}
           >
             <DownloadIcon fontSize="small" />
           </IconButton>
@@ -478,13 +482,69 @@ export function ResultCard({
             onClick={handleOpen}
             aria-label="Open full size"
             disabled={!readyImage}
-            sx={actionSx}
-            size={actionSize}
+            sx={overlayBtnSx}
           >
             <OpenInNewIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
+    </>
+  );
+  // The same actions on the phone's action line, the PNG's download first.
+  const phoneImageActions = interactive ? (
+    <Box
+      component="button"
+      type="button"
+      onClick={handleClosePreview}
+      aria-label="Show image"
+      sx={cardActionSx}
+    >
+      .preview()
+    </Box>
+  ) : (
+    <>
+      <Box
+        component="button"
+        type="button"
+        onClick={handleDownloadPng}
+        aria-label="Download PNG"
+        disabled={!readyImage}
+        sx={cardActionSx}
+      >
+        .download()
+      </Box>
+      <Box
+        component="button"
+        type="button"
+        onClick={handleCopyImage}
+        aria-label="Copy image"
+        disabled={!readyImage}
+        sx={cardActionSx}
+      >
+        .copy_png()
+      </Box>
+      <Box
+        component="button"
+        type="button"
+        onClick={handleOpen}
+        aria-label="Open full size"
+        disabled={!readyImage}
+        sx={cardActionSx}
+      >
+        .open()
+      </Box>
+      {page && (
+        <Box
+          component="button"
+          type="button"
+          onClick={handleOpenPreview}
+          aria-label="Show interactive"
+          disabled={busy || buildingPage}
+          sx={cardActionSx}
+        >
+          .interactive()
+        </Box>
+      )}
     </>
   );
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
@@ -495,86 +555,23 @@ export function ResultCard({
     ? `${attempts} · ${plural(result.changes.length, 'change')}`
     : attempts;
   const hasDetails = rounds.length > 0 || result.changes.length > 0;
-  const header = (
-    <Box
-      component="button"
-      type="button"
-      onClick={() => (expanded ? collapse() : setExpanded(true))}
-      aria-expanded={expanded}
-      aria-label={`Version ${number}, ${STATUS_LABEL[result.status] ?? result.status}`}
-      sx={{
-        all: 'unset',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'baseline',
-        columnGap: 1,
-        rowGap: 0.25,
-        flex: '1 1 auto',
-        minWidth: 0,
-        cursor: 'pointer',
-        fontFamily: typography.mono,
-        fontSize: fontSize.md,
-        color: 'var(--ink-soft)',
-        '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
-      }}
-    >
-      <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>
-        v{number}
-      </Box>
-      <span>{library}</span>
-      <Box
-        component="span"
-        sx={{
-          color: 'var(--ink)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.5,
-          '&::before': {
-            content: '""',
-            width: 7,
-            height: 7,
-            borderRadius: '50%',
-            bgcolor: result.status === 'ok' ? colors.primary : colors.warning,
-          },
-        }}
-        data-testid="result-status"
-      >
-        {STATUS_LABEL[result.status] ?? result.status}
-      </Box>
-      <Box component="span" sx={{ ml: 'auto', color: 'var(--ink-muted)' }}>
-        {expanded ? '.collapse()' : '.expand()'}
-      </Box>
-    </Box>
-  );
+  const label = plotCardLabel(number, library, request);
 
   return (
-    <Box
+    <CardFrame
       component="article"
       aria-label={`Plot version ${number}`}
-      sx={{
-        border: '1px solid var(--rule)',
-        borderRadius: 2,
-        bgcolor: 'var(--bg-page)',
-        p: { xs: 1.25, sm: 2 },
-        minWidth: 0,
+      label={label.text}
+      spokenLabel={label.spoken}
+      labelTestId="result-label"
+      toggle={{
+        expanded,
+        onToggle: () => (expanded ? collapse() : setExpanded(true)),
+        bodyId,
       }}
     >
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1 }}>
-        {header}
-        {narrow && expanded && (
-          <Box
-            role="group"
-            aria-label="Image actions"
-            data-testid="result-header-actions"
-            sx={{ display: 'flex', gap: 0.5, ml: 'auto', my: -0.5 }}
-          >
-            {imageActions}
-          </Box>
-        )}
-      </Box>
       {expanded && (
-        <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {/* Image with the overlay actions of the plot page. */}
           <Box
             sx={{
@@ -710,7 +707,19 @@ export function ResultCard({
             )}
           </Box>
 
-          {/* The theme switch and, at the row's end, the run's status line. */}
+          {narrow && (
+            <Box
+              role="group"
+              aria-label="Image actions"
+              data-testid="result-image-actions"
+              // The words line up with the card's text, the buttons' padding outside it.
+              sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1, ml: -1.25, mt: -1 }}
+            >
+              {phoneImageActions}
+            </Box>
+          )}
+
+          {/* The theme switch and, at the row's end, the version's status and the run's line. */}
           <Box
             sx={{
               display: 'flex',
@@ -766,42 +775,74 @@ export function ResultCard({
                   </Box>
                 )}
             </Box>
-            {/* The run in one line: its tries and the count of its changes. The ⓘ toggle opens
-              the rounds and the "what changed" list; a run with neither has a plain line. */}
-            {hasDetails ? (
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                columnGap: 1.5,
+                ml: 'auto',
+                minWidth: 0,
+              }}
+            >
+              {/* The version's status, which the card's header row had before its label moved
+                  onto the border: a dot in the status colour beside the word. */}
               <Box
-                component="button"
-                type="button"
-                data-testid="result-summary"
-                onClick={() => setDetailsOpen(open => !open)}
-                aria-expanded={detailsOpen}
-                aria-controls={detailsOpen ? detailsId : undefined}
-                // The visible line, with what it opens in front for a screen reader.
-                aria-label={`Run details: ${summary}`}
+                component="span"
+                data-testid="result-status"
                 sx={{
-                  ...actionButtonSx,
+                  ...labelSx,
+                  color: 'var(--ink-soft)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 0.5,
-                  ml: 'auto',
-                  mr: -0.75,
-                  px: 0.75,
-                  whiteSpace: 'normal',
-                  textAlign: 'left',
+                  '&::before': {
+                    content: '""',
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    bgcolor: result.status === 'ok' ? colors.primary : colors.warning,
+                  },
                 }}
               >
-                {summary}
-                {detailsOpen ? (
-                  <InfoIcon aria-hidden sx={{ fontSize: 16 }} />
-                ) : (
-                  <InfoOutlinedIcon aria-hidden sx={{ fontSize: 16 }} />
-                )}
+                {STATUS_LABEL[result.status] ?? result.status}
               </Box>
-            ) : (
-              <Box component="span" data-testid="result-summary" sx={{ ...labelSx, ml: 'auto' }}>
-                {summary}
-              </Box>
-            )}
+              {/* The run in one line: its tries and the count of its changes. The ⓘ toggle opens
+                  the rounds and the "what changed" list; a run with neither has a plain line. */}
+              {hasDetails ? (
+                <Box
+                  component="button"
+                  type="button"
+                  data-testid="result-summary"
+                  onClick={() => setDetailsOpen(open => !open)}
+                  aria-expanded={detailsOpen}
+                  aria-controls={detailsOpen ? detailsId : undefined}
+                  // The visible line, with what it opens in front for a screen reader.
+                  aria-label={`Run details: ${summary}`}
+                  sx={{
+                    ...actionButtonSx,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    mr: -0.75,
+                    px: 0.75,
+                    whiteSpace: 'normal',
+                    textAlign: 'left',
+                  }}
+                >
+                  {summary}
+                  {detailsOpen ? (
+                    <InfoIcon aria-hidden sx={{ fontSize: 16 }} />
+                  ) : (
+                    <InfoOutlinedIcon aria-hidden sx={{ fontSize: 16 }} />
+                  )}
+                </Box>
+              ) : (
+                <Box component="span" data-testid="result-summary" sx={labelSx}>
+                  {summary}
+                </Box>
+              )}
+            </Box>
           </Box>
 
           {detailsOpen && hasDetails && (
@@ -985,6 +1026,6 @@ export function ResultCard({
           </Box>
         </Box>
       )}
-    </Box>
+    </CardFrame>
   );
 }

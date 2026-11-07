@@ -1,8 +1,8 @@
 /**
  * The agent chat's thread as chapters: a pure view over the session's items
  * (`useAgentSession`), for the chapter lines, the folded versions and the counts the
- * chat shows. No component reads it yet; the thread renders the items as before
- * (`shownItems` in `steps.ts`).
+ * chat shows. The thread reads only the plot cards' labels from it yet (`plotSummaries`)
+ * and renders the items as before (`shownItems` in `steps.ts`).
  *
  * The items fall into turns: a turn starts at the user's typed message, a page action
  * (`.create_plot()`, the summary of new data) or a paste, and holds what followed it
@@ -105,6 +105,53 @@ function turnsOf(items: readonly ChatItem[]): ChatItem[][] {
     else current.push(item);
   }
   return turns;
+}
+
+/** The longest request a plot card's label quotes, in characters, the ellipsis included. */
+export const PLOT_SUMMARY_MAX = 40;
+
+/** The label `.start_over()` gives its turn (`AgentChatPage`), which the plot it made names. */
+const START_OVER_LABEL = '.start_over()';
+
+/** A request as a label quotes it: one line, at most `PLOT_SUMMARY_MAX` characters. */
+export function cutRequest(text: string): string {
+  const line = text.replace(/\s+/g, ' ').trim();
+  const chars = [...line];
+  if (chars.length <= PLOT_SUMMARY_MAX) return line;
+  return `${chars
+    .slice(0, PLOT_SUMMARY_MAX - 1)
+    .join('')
+    .trimEnd()}…`;
+}
+
+/**
+ * What each plot version answered, for its card's label (`plot v2 · matplotlib · title in
+ * German`), by version: the typed request of the turn that made it, cut to 40 characters;
+ * `.start_over()` for a plot that button made; `first plot` for the first plot of its library
+ * that no request asked for; else `null`, and the label names the version and the library only.
+ * `libraryOf` gives a version's library.
+ */
+export function plotSummaries(
+  items: readonly ChatItem[],
+  libraryOf: (version: number) => string | undefined
+): Map<number, string | null> {
+  const summaries = new Map<number, string | null>();
+  const plotted = new Set<string>();
+  for (const turn of turnsOf(items)) {
+    const opener = turn[0];
+    for (const item of turn) {
+      if (item.kind !== 'plot') continue;
+      const library = libraryOf(item.version);
+      let summary: string | null = null;
+      if (opener.kind === 'user') summary = cutRequest(opener.text);
+      else if (opener.kind === 'action' && opener.label === START_OVER_LABEL) {
+        summary = START_OVER_LABEL;
+      } else if (library !== undefined && !plotted.has(library)) summary = 'first plot';
+      if (library !== undefined) plotted.add(library);
+      summaries.set(item.version, summary);
+    }
+  }
+  return summaries;
 }
 
 /** The latest plot version among the items; 0 without one. */

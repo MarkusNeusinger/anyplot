@@ -4,6 +4,7 @@ import {
   type AgentSessionState,
   type ChatItem,
   initialAgentState,
+  type PlotVersion,
   type RunState,
 } from 'src/hooks/useAgentSession';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
@@ -594,5 +595,62 @@ describe('ChatThread data items', () => {
     } finally {
       delete (Element.prototype as Partial<Element>).scrollIntoView;
     }
+  });
+});
+
+describe('ChatThread plot cards', () => {
+  const version = (number: number): PlotVersion => ({
+    number,
+    library: 'matplotlib',
+    theme: 'light',
+    result: {
+      status: 'ok',
+      reason: null,
+      attempts: 1,
+      artifacts: ['plot-light.png', 'plot.py', 'data.csv'],
+      changes: [],
+      residual_defects: [],
+      version: number,
+    },
+    images: {
+      light: { state: 'ready', url: `blob:v${number}`, blob: new Blob(['png']), status: 'ok' },
+    },
+    code: { state: 'ready', text: 'print(1)\n' },
+  });
+
+  it('labels each plot with what it answered, and folds every version but the latest', () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      versions: { 1: version(1), 2: version(2) },
+      items: [
+        {
+          id: 1,
+          kind: 'action',
+          action: 'create_plot',
+          library: 'matplotlib',
+          label: '.create_plot() →',
+        },
+        { id: 2, kind: 'plot', version: 1 },
+        {
+          id: 3,
+          kind: 'user',
+          text: 'put the title in German and make the markers twice as large',
+        },
+        { id: 4, kind: 'plot', version: 2 },
+      ],
+    });
+    const older = screen.getByRole('button', { name: 'Plot version 1, matplotlib, first plot' });
+    expect(older).toHaveTextContent(/^▸plot v1 · matplotlib · first plot$/);
+    expect(older).toHaveAttribute('aria-expanded', 'false');
+    // The latest is open under its label, the request cut to 40 characters.
+    const latest = screen.getByRole('button', {
+      name: 'Plot version 2, matplotlib, put the title in German and make the ma…',
+    });
+    expect(latest).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getAllByRole('img').map(image => image.getAttribute('alt'))).toEqual([
+      'Adapted plot, version 2, light theme',
+    ]);
   });
 });

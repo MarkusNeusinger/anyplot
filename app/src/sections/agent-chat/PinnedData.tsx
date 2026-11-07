@@ -1,7 +1,8 @@
 /**
  * The data card's two halves, which stand apart since the card moved into the thread: the
  * sticky header above the thread (`PinnedHeader`), and the card's shell at its place in the
- * thread after the paste it came from (`DataCardShell`). The page joins them through
+ * thread after the paste it came from (`DataCardShell`), a card frame with what the data holds
+ * on its border (`CardFrame.tsx`, `data · 48 rows × 4 cols`). The page joins them through
  * `useDataCardView`.
  *
  * Once the data has been confirmed at least once, the header stays at the top of the thread
@@ -13,10 +14,11 @@ import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import { CardFrame } from 'src/sections/agent-chat/CardFrame';
+import type { CardLabel } from 'src/sections/agent-chat/cardLabels';
 import { dataShape } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
-  cardSx,
   labelSx,
   PINNED_CLEARANCE,
   PINNED_TOP,
@@ -126,14 +128,19 @@ export interface DataCardShellProps {
   locked: boolean;
   /** The composer's plot button as it reads now (`plotButtonLabel`), which step 1's line names. */
   plotLabel: string;
+  /** The label on the card's border, what the data holds (`dataCardLabel`). */
+  label: CardLabel;
   children: React.ReactNode;
 }
 
 /** The card's frame at its place in the thread: the section the header's button controls. */
-export function DataCardShell({ view, locked, plotLabel, children }: DataCardShellProps) {
+export function DataCardShell({ view, locked, plotLabel, label, children }: DataCardShellProps) {
   return (
-    <Box
+    <CardFrame
       component="section"
+      label={label.text}
+      spokenLabel={label.spoken}
+      labelTestId="data-card-label"
       aria-label="Your data"
       aria-describedby={locked ? DATA_LOCK_ID : undefined}
       // The thread is a polite live log: a dropdown or a preview changing in the card is no news
@@ -142,7 +149,6 @@ export function DataCardShell({ view, locked, plotLabel, children }: DataCardShe
       id="agent-data-card"
       data-testid="data-card"
       ref={view.cardRef}
-      sx={cardSx}
     >
       {/* Why every control below waits: the fan-out's sessions copy this data. */}
       {locked && (
@@ -164,6 +170,6 @@ export function DataCardShell({ view, locked, plotLabel, children }: DataCardShe
         </Box>
       )}
       {children}
-    </Box>
+    </CardFrame>
   );
 }

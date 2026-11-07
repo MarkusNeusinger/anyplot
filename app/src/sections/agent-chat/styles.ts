@@ -183,12 +183,36 @@ export const panelSx = {
   minWidth: 0,
 } as const;
 
-/** A card inside the thread, on the result card's surface: the data card. */
+/** A card inside the thread, on the result card's surface: the admin fan-out's rows. */
 export const cardSx = {
   border: '1px solid var(--rule)',
   borderRadius: 2,
   bgcolor: 'var(--bg-page)',
   p: { xs: 1.25, sm: 2 },
+  minWidth: 0,
+} as const;
+
+/** Phone width, MUI's `xs`: the cards put their actions on a line of their own (`CardFrame.tsx`). */
+export const PHONE_QUERY = '(max-width: 599.95px)';
+
+/** A `.verb()` on a card's action line at phone width: a 44 px target for a thumb. */
+export const cardActionSx = { ...actionButtonSx, minHeight: 44 } as const;
+
+/**
+ * A card of the thread in the v4 design (§7.9, `CardFrame.tsx`): the chat frame's construction
+ * at a card's size, a 1 px rule with a 6 px radius on the page's own colour, so the label on its
+ * top border punches through it. The room above it keeps the label, which stands half above the
+ * border, clear of the item before the card.
+ */
+export const cardFrameSx = {
+  position: 'relative',
+  border: '1px solid var(--rule)',
+  borderRadius: '6px',
+  bgcolor: 'var(--bg-page)',
+  mt: 1,
+  pt: { xs: 2, sm: 2.25 },
+  px: { xs: 1.25, sm: 1.5 },
+  pb: { xs: 1.25, sm: 1.5 },
   minWidth: 0,
 } as const;
 

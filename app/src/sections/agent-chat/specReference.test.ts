@@ -20,22 +20,23 @@ const role = (name: string, overrides: Partial<RoleSpec> = {}): RoleSpec => ({
 });
 
 describe('roleLine', () => {
-  it('names the kinds and the description of a plain required role', () => {
+  it('names the kinds in the chips’ words and the description of a plain required role', () => {
+    // The chips say `x · numbers or dates`; the ⓘ behind them says the same, never `numeric`.
     expect(roleLine(role('x', { kinds: ['numeric', 'datetime'] }))).toBe(
-      '`x` (numeric / datetime) · x values'
+      '`x` (numbers or dates) · x values'
     );
   });
 
   it('says when a role takes one column per series, is optional or is computed', () => {
     expect(roleLine(role('y', { variadic: true }))).toBe(
-      '`y` (numeric, one column each) · y values'
+      '`y` (numbers, one column each) · y values'
     );
     expect(roleLine(role('series', { kinds: ['categorical'], required: false }))).toBe(
-      '`series` (categorical, optional) · series values'
+      '`series` (categories, optional) · series values'
     );
     // The server reports a computed role as not required: it says how, never "optional" as well.
     expect(roleLine(role('sma', { required: false, computed: true }))).toBe(
-      '`sma` (numeric, computed by the plot if left open) · sma values'
+      '`sma` (numbers, computed by the plot if left open) · sma values'
     );
   });
 
@@ -86,8 +87,8 @@ describe('columnLines', () => {
 
   it("prefers the server's roles", () => {
     expect(columnLines([role('x'), role('y')], bullets)).toEqual([
-      '`x` (numeric) · x values',
-      '`y` (numeric) · y values',
+      '`x` (numbers) · x values',
+      '`y` (numbers) · y values',
     ]);
   });
 

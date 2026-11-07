@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   type AgentSessionState,
@@ -55,6 +55,27 @@ const scrolledTo = (scroll: ReturnType<typeof vi.fn>, element: Element) =>
 
 /** The bindings' heading while nothing runs. */
 const IDLE_HEADING = /^# bindings — which column plays which role$/;
+
+/** `.change()` on the bindings line: the dropdowns open. */
+const openBindings = () =>
+  fireEvent.click(screen.getByRole('button', { name: 'Change the bindings' }));
+
+/** `matchMedia` at phone width, which the card reads at its first render. */
+function stubPhone() {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: query === '(max-width: 599.95px)',
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      onchange: null,
+      dispatchEvent: vi.fn(),
+    }))
+  );
+}
 
 /** Whether the page's styles hold the pinned header's scroll padding (40 + 64 px). */
 const scrollPaddingRule = () =>
@@ -142,6 +163,178 @@ describe('bindingRows', () => {
   });
 });
 
+describe('DataPanel card', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const panel = (state: AgentSessionState) => (
+    <Panel
+      state={state}
+      onParse={vi.fn()}
+      onConfirmTranscription={vi.fn()}
+      onDiscardTranscription={vi.fn()}
+      onBind={vi.fn()}
+      onUndo={vi.fn()}
+      onLoadData={vi.fn(async () => '')}
+    />
+  );
+
+  it('carries what the data holds on its border, in words for a screen reader', () => {
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    const label = screen.getByTestId('data-card-label');
+    expect(label).toHaveTextContent(/^data · 1 row × 5 colsdata, 1 row by 5 columns$/);
+    expect(within(label).getByText('data · 1 row × 5 cols')).toHaveAttribute('aria-hidden');
+    expect(screen.queryByText('# your data')).not.toBeInTheDocument();
+    // How the data came stays inside: the shape is the label's.
+    expect(screen.getByTestId('data-source')).toHaveTextContent(/^read as csv$/);
+  });
+
+  it('heads each preview column with its name and its type in the words of the card', () => {
+    const base = stateWith({ x: 'month' });
+    const columns = [
+      { name: 'month', dtype: 'datetime' as const, missing: 0, unique: 1 },
+      { name: 'units', dtype: 'integer' as const, missing: 0, unique: 1 },
+      { name: 'share', dtype: 'number' as const, missing: 0, unique: 1 },
+      { name: 'region', dtype: 'text' as const, missing: 0, unique: 1 },
+      { name: 'open', dtype: 'boolean' as const, missing: 0, unique: 1 },
+    ];
+    const state = {
+      ...base,
+      dataset: base.dataset && {
+        ...base.dataset,
+        parsed: {
+          ...base.dataset.parsed,
+          profile: { ...base.dataset.parsed.profile, columns },
+        },
+      },
+    };
+    render(panel(state));
+    expect(screen.getAllByRole('columnheader').map(cell => cell.textContent)).toEqual([
+      'month · date',
+      'units · number',
+      'share · number',
+      'region · text',
+      'open · boolean',
+    ]);
+  });
+
+  it('says the bindings in one line, x across and y up, and opens the dropdowns on .change()', () => {
+    render(panel(stateWith({ x: 'month', y1: 'shoes', y2: 'hats' })));
+    // An optional role left open says nothing; a family's columns stand side by side.
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(
+      /^x \(across\): month · y \(up\): shoes, hats$/
+    );
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+    const toggle = screen.getByRole('button', { name: 'Change the bindings' });
+    expect(toggle).toHaveTextContent(/^\.change\(\)$/);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAccessibleName('Hide the bindings');
+    expect(toggle).toHaveTextContent(/^\.hide\(\)$/);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveAttribute('aria-controls', screen.getByTestId('bindings-editor').id);
+    expect(screen.getByLabelText(/^x/)).toHaveValue('month');
+
+    fireEvent.click(toggle);
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+    expect(toggle).toHaveAccessibleName('Change the bindings');
+  });
+
+  it('names no direction for other roles, and marks a required role without a column', () => {
+    const roles = [role('category', { kinds: ['categorical'] }), role('value')];
+    render(panel(stateWith({ category: 'region' }, { roles, missingRoles: ['value'] })));
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(
+      /^category: region · value: —no column yet$/
+    );
+  });
+
+  it('says when the plot names no roles, and when no optional role has a column yet', () => {
+    const { rerender } = render(panel(stateWith({}, { roles: [] })));
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(
+      /^this plot names no data roles$/
+    );
+    rerender(panel(stateWith({}, { roles: [role('series', { required: false })] })));
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(/^no column bound yet$/);
+  });
+
+  it('opens the dropdowns by themselves for a missing role, and keeps them open after the fix', () => {
+    const complete = stateWith({ x: 'month', y1: 'shoes' });
+    const { rerender } = render(panel(complete));
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+
+    // A required role lost its column: the dropdowns come, the toggle says they are open.
+    rerender(panel(stateWith({ x: 'month' }, { missingRoles: ['y'] })));
+    expect(screen.getByTestId('bindings-editor')).toBeInTheDocument();
+    expect(screen.getByText('* required: pick a column for y')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide the bindings' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+
+    // Fixed: the dropdown the user just used stays where it is, until `.hide()`.
+    rerender(panel(complete));
+    expect(screen.getByTestId('bindings-editor')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide the bindings' }));
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+  });
+
+  it('opens the dropdowns by themselves when the server refused the bindings', () => {
+    const refused = stateWith(
+      { x: 'region' },
+      { bindingsError: { code: 'invalid', ref: 'r-b', errors: ['x is text'] } }
+    );
+    render(panel(refused));
+    expect(screen.getByTestId('bindings-editor')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('the server refused these bindings');
+  });
+
+  it('shows a bound column’s warning under the line while the dropdowns are closed', () => {
+    const radius = role('radius', { non_negative: true });
+    const columns = [{ name: 'y', dtype: 'number' as const, missing: 0, unique: 3, min: -2 }];
+    const base = stateWith({ radius: 'y' }, { roles: [radius] });
+    const state = {
+      ...base,
+      dataset: base.dataset && {
+        ...base.dataset,
+        parsed: { ...base.dataset.parsed, profile: { ...base.dataset.parsed.profile, columns } },
+      },
+    };
+    render(panel(state));
+    expect(screen.getAllByTestId('sign-hint').map(line => line.textContent)).toEqual([
+      'y: has negative values (down to -2); radius needs values of 0 or more',
+    ]);
+    // Open, the warning stands under its dropdown instead, once.
+    openBindings();
+    expect(screen.getAllByTestId('sign-hint').map(line => line.textContent)).toEqual([
+      'has negative values (down to -2); radius needs values of 0 or more',
+    ]);
+  });
+
+  it('shows no preview on a phone, and .view_all() beside .change() on the action line', () => {
+    stubPhone();
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^# preview/)).not.toBeInTheDocument();
+    const actions = within(screen.getByTestId('data-actions'));
+    expect(actions.getAllByRole('button').map(button => button.textContent)).toEqual([
+      '.view_all()',
+      '.change()',
+    ]);
+    expect(actions.getByRole('button', { name: 'View all 1 row' })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
+  });
+
+  it('shows the preview with .view_all() beside it from sm up, and .change() at the line’s end', () => {
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByTestId('data-actions')).not.toBeInTheDocument();
+    const line = screen.getByTestId('bindings-line').parentElement as HTMLElement;
+    expect(within(line).getByRole('button', { name: 'Change the bindings' })).toBeInTheDocument();
+  });
+});
+
 describe('DataPanel bindings', () => {
   it('marks required roles, names the kinds and binds the next family member', async () => {
     const onBind = vi.fn();
@@ -155,8 +348,10 @@ describe('DataPanel bindings', () => {
         onUndo={vi.fn()}
       />
     );
-    expect(screen.getByText('numeric / datetime')).toBeInTheDocument();
-    expect(screen.getByText('numeric · one column each')).toBeInTheDocument();
+    openBindings();
+    // The kinds in the start item's words, as the chips say them.
+    expect(screen.getByText('numbers or dates')).toBeInTheDocument();
+    expect(screen.getByText('numbers · one column each')).toBeInTheDocument();
     expect(screen.getByLabelText(/^series/)).toHaveValue('');
     // The spec's own description is the role's tooltip; required roles carry a `*`.
     expect(screen.getByTitle('Multiple continuous series to compare')).toHaveTextContent(/^y \*/);
@@ -182,6 +377,7 @@ describe('DataPanel bindings', () => {
         onUndo={vi.fn()}
       />
     );
+    openBindings();
     expect(screen.queryByLabelText('y1')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
     expect(onBind).toHaveBeenCalledWith('y1', null);
@@ -197,7 +393,7 @@ describe('DataPanel bindings', () => {
     expect(items.map(item => item.textContent)).toEqual([
       'month (number)',
       'scarves (number)',
-      'region (text) · not numeric',
+      'region (text) · y takes numbers',
     ]);
     expect(items[2]).toHaveAttribute('aria-disabled', 'true');
     await userEvent.keyboard('{Escape}');
@@ -214,6 +410,7 @@ describe('DataPanel bindings', () => {
     };
     const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
     const { rerender } = render(<Panel state={before} {...props} />);
+    openBindings();
     await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
     // The change is on its way: the controls wait, then the next chip takes the removed one's place.
     rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
@@ -233,6 +430,7 @@ describe('DataPanel bindings', () => {
     };
     const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
     const { rerender } = render(<Panel state={before} {...props} />);
+    openBindings();
     await userEvent.click(screen.getByRole('button', { name: 'Remove hats from y' }));
     rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
     rerender(
@@ -253,6 +451,7 @@ describe('DataPanel bindings', () => {
     const four = { x: 'month', y1: 'shoes', y2: 'hats', y3: 'month', y4: 'region' };
     const before = stateWith(four, { missingRoles: [] });
     const { rerender } = render(<Panel state={before} {...props} />);
+    openBindings();
     await userEvent.click(screen.getByRole('button', { name: '+ y: add a column' }));
     await userEvent.click(screen.getByRole('menuitem', { name: 'scarves (number)' }));
     rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
@@ -273,6 +472,7 @@ describe('DataPanel bindings', () => {
     };
     const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
     const { rerender } = render(<Panel state={before} {...props} />);
+    openBindings();
     await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
     rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
     const series = screen.getByLabelText(/^series/);
@@ -312,6 +512,7 @@ describe('DataPanel bindings', () => {
         onUndo={vi.fn()}
       />
     );
+    openBindings();
     expect(screen.getAllByTestId('sign-hint').map(line => line.textContent)).toEqual([
       'loss: has negative values (down to -4); y needs values of 0 or more',
     ]);
@@ -369,6 +570,7 @@ describe('DataPanel bindings', () => {
       />
     );
     const hint = 'has negative values (down to -0.9996); radius needs values of 0 or more';
+    openBindings();
     expect(screen.getByTestId('sign-hint')).toHaveTextContent(hint);
     expect(screen.getByLabelText(/^radius/)).toHaveAccessibleDescription(hint);
   });
@@ -386,6 +588,9 @@ describe('DataPanel bindings', () => {
         onUndo={vi.fn()}
       />
     );
+    // A role the plot computes says nothing on the line while it is left open.
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(/^close: shoes$/);
+    openBindings();
     const sma = screen.getByLabelText(/^sma/) as HTMLSelectElement;
     expect(sma.value).toBe('');
     expect(sma.options[0]).toHaveTextContent('— computed by the plot —');
@@ -406,13 +611,18 @@ describe('DataPanel bindings', () => {
         onUndo={vi.fn()}
       />
     );
+    openBindings();
     const option = (select: RegExp, column: string) =>
       [...(screen.getByLabelText(select) as HTMLSelectElement).options].find(
         item => item.value === column
       );
 
-    expect(option(/^x/, 'region')).toHaveTextContent('region (text) · not numeric or datetime');
-    expect(option(/^series/, 'shoes')).toHaveTextContent('shoes (number) · not categorical');
+    // The reason in the chips' words: what the role takes.
+    expect(option(/^x/, 'region')).toHaveTextContent('region (text) · x takes numbers or dates');
+    expect(option(/^x/, 'region')).toBeDisabled();
+    expect(option(/^series/, 'shoes')).toHaveTextContent(
+      'shoes (number) · series takes categories'
+    );
     expect(option(/^series/, 'region')).toBeEnabled();
   });
 
@@ -454,6 +664,8 @@ describe('DataPanel bindings', () => {
       />
     );
     const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
+    // Opening the dropdowns is only a look, so `.change()` works while the session is busy.
+    openBindings();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
 
     // Step 2: opening the card is only a look, so it works, but nothing in it starts.
@@ -461,6 +673,7 @@ describe('DataPanel bindings', () => {
       panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true, dataConfirmed: true }))
     );
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    openBindings();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
 
@@ -507,6 +720,7 @@ describe('DataPanel bindings', () => {
       dataset: { ...stored, parsed: { ...stored.parsed, version: 2 } },
     };
     const { rerender } = render(panel(versioned, true));
+    openBindings();
     const card = screen.getByRole('region', { name: 'Your data' });
     const line = '# the data waits while all libraries plot it · .close() the panel to change it';
     expect(screen.getByTestId('data-lock')).toHaveTextContent(line);
@@ -573,6 +787,7 @@ describe('DataPanel steps', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     const card = within(screen.getByRole('region', { name: 'Your data' }));
     expect(card.getByText(/a change here takes the data back to step 1/)).toBeInTheDocument();
+    openBindings();
     expect(card.getByLabelText(/^x/)).toBeEnabled();
     expect(card.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
 
@@ -762,6 +977,7 @@ describe('DataPanel working states', () => {
   it('says why the bindings wait in their heading, exactly while something runs', () => {
     const idle = stateWith({ x: 'month', y1: 'shoes' });
     const { rerender } = renderPanel(idle);
+    openBindings();
     const heading = () => screen.getByTestId('bindings-heading');
     expect(heading()).toHaveTextContent(IDLE_HEADING);
     expect(screen.queryByTestId('parse-hint')).not.toBeInTheDocument();
@@ -785,6 +1001,7 @@ describe('DataPanel working states', () => {
 
   it('keeps every heading of the bindings in one place, the unseen ones hidden from a screen reader', () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
+    openBindings();
     const heading = screen.getByTestId('bindings-heading');
     // The three texts stack in one grid cell, so a swap never changes the heading's line count.
     const stack = [...(heading.parentElement?.children ?? [])];
@@ -800,6 +1017,7 @@ describe('DataPanel working states', () => {
 
   it('says that the data is parsed on the bindings and to a screen reader, with no loader of its own', () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { parsing: true }));
+    openBindings();
 
     // The attachment's chip in the composer holds the parse's one loader; the card only says it.
     expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
@@ -812,6 +1030,7 @@ describe('DataPanel working states', () => {
   it('names the same bindings lock in step 2', async () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true, themeBusy: true }));
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    openBindings();
     expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
       /^# bindings — wait while the assistant works$/
     );
@@ -1185,11 +1404,15 @@ describe('DataPanel transcription', () => {
     expect(card.getByText('read "und" as a separator, not as an animal')).toBeInTheDocument();
     expect(card.getByText('column count has only 3 values')).toBeInTheDocument();
     expect(card.getAllByRole('columnheader').map(th => th.textContent)).toEqual([
-      'animaltext',
-      'countinteger',
+      'animal · text',
+      'count · number',
     ]);
     expect(card.getAllByRole('row')).toHaveLength(4);
     expect(card.getByRole('cell', { name: 'Katze' })).toBeInTheDocument();
+    // Its frame's label says what waits there.
+    expect(screen.getByTestId('transcription-label')).toHaveTextContent(
+      /^read from text · 3 rows × 2 colstable read from text, 3 rows by 2 columns$/
+    );
     // Nothing is stored yet: no bindings and no `.create_plot()`.
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
   });

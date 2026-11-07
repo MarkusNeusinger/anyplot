@@ -500,6 +500,13 @@ const lastAction = () => {
   return bubbles[bubbles.length - 1];
 };
 
+/** `.change()` on the data card's bindings line: the dropdowns open. */
+const openBindings = () =>
+  fireEvent.click(screen.getByRole('button', { name: 'Change the bindings' }));
+
+/** The data card's bindings line (`x (across): hours · y (up): score`). */
+const bindingsLine = () => screen.getByTestId('bindings-line');
+
 /** The step the status line at the frame's foot names (`step 1 of 2 · …`). */
 const currentStep = () => {
   const line = screen.getByTestId('data-step');
@@ -916,7 +923,7 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    expect(screen.getByLabelText(/^x/)).toHaveValue('hours');
+    expect(bindingsLine()).toHaveTextContent(/^x \(across\): hours · y \(up\): score$/);
 
     // Text after the plot goes as a turn, whatever it asks for.
     sendFromComposer('swap x and y');
@@ -939,6 +946,8 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       'back to step 1 of 2 · bindings changed · check them above, then .update_plot()'
     );
+    expect(bindingsLine()).toHaveTextContent(/^x \(across\): score · y \(up\): hours$/);
+    openBindings();
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
     expect(currentStep()).toBe(1);
@@ -1056,7 +1065,7 @@ describe('AgentChatPage gating', () => {
     expect(within(change).getByText('# changed · version 1')).toBeInTheDocument();
     expect(within(change).getByText(GENERATED.changes[0])).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/^x/)).toHaveValue('x');
+    expect(bindingsLine()).toHaveTextContent(/^x \(across\): x · /);
     expect(screen.getByRole('cell', { name: '-1.2246468e-16' })).toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
@@ -1085,7 +1094,7 @@ describe('AgentChatPage gating', () => {
     const card = within(screen.getByTestId('data-card'));
     expect(card.getByText(/a change here takes the data back to step 1/)).toBeInTheDocument();
     expect(card.getByRole('cell', { name: '52' })).toBeInTheDocument();
-    expect(card.getByLabelText(/^x/)).toHaveValue('hours');
+    expect(card.getByTestId('bindings-line')).toHaveTextContent(/^x \(across\): hours · /);
     // Looking is no change: the data stays confirmed, and step 2 stays.
     expect(currentStep()).toBe(2);
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
@@ -1100,6 +1109,7 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    openBindings();
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
 
     const update = screen.getByRole('button', { name: 'Update plot' });
@@ -1142,6 +1152,7 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    openBindings();
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
     expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -1618,10 +1629,11 @@ describe('AgentChatPage start item', () => {
       'y · numbers, one or more',
       'series · categories, optional',
     ]);
+    // The ⓘ says the kinds in the chips' words.
     expect(await expectedColumnsShown()).toEqual([
-      'x (numeric / datetime) · x values',
-      'y (numeric, one column each) · y values',
-      'series (categorical, optional) · one colour per group',
+      'x (numbers or dates) · x values',
+      'y (numbers, one column each) · y values',
+      'series (categories, optional) · one colour per group',
     ]);
   });
 
@@ -1792,7 +1804,7 @@ describe('AgentChatPage .example_data()', () => {
     expect(screen.getByRole('button', { name: 'Make example data' })).toBe(example);
     expect(example).toHaveFocus();
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() →']);
-    expect(screen.getByLabelText(/^x/)).toHaveValue('x');
+    expect(bindingsLine()).toHaveTextContent(/^x \(across\): x · /);
     expect(screen.queryByText(/reply language/)).not.toBeInTheDocument();
   });
 
@@ -1935,6 +1947,7 @@ describe('AgentChatPage working states', () => {
     expect(pending).toHaveTextContent(/^summarizing your data$/);
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(lastInThread()).toBe(pending);
+    openBindings();
     expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
       /^# bindings — wait while the assistant works$/
     );
@@ -2593,6 +2606,7 @@ describe('AgentChatPage .plot_all()', () => {
     const line = '# the data waits while all libraries plot it · .close() the panel to change it';
     expect(within(card).getByTestId('data-lock')).toHaveTextContent(line);
     expect(card).toHaveAccessibleDescription(line);
+    openBindings();
     expect(within(card).getByLabelText(/^x/)).toBeDisabled();
     // A new file waits too: the panel's sessions copy this data.
     expect(screen.getByRole('button', { name: 'Open a data file' })).toHaveAttribute(
@@ -2907,6 +2921,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     );
     // A binding changed in the new library drops the confirmation the switch kept.
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    openBindings();
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
     await waitFor(() => expect(currentStep()).toBe(1));
     const carry = screen.getByRole('button', { name: 'Create plot' });

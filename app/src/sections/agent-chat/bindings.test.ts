@@ -2,9 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { ColumnProfile, RoleSpec } from 'src/lib/agent';
 import {
+  axisWord,
+  bindingRows,
+  boundRoles,
   columnLabel,
+  dtypeWord,
   emptyChoice,
   fits,
+  kindsHint,
   siblingHint,
   signHint,
 } from 'src/sections/agent-chat/bindings';
@@ -83,28 +88,92 @@ describe('fits and columnLabel', () => {
   const industry = { ...column(null, 'text'), name: 'Industry' };
   const price = { ...column(1, 'integer'), name: 'Price' };
 
-  it('marks a column the role cannot take with the reason', () => {
+  it('marks a column the role cannot take with the reason, in the chips’ words', () => {
     expect(fits(values, 'text')).toBe(false);
-    expect(columnLabel(values, industry)).toBe('Industry (text) · not numeric');
+    expect(columnLabel(values, industry)).toBe('Industry (text) · values takes numbers');
     expect(columnLabel({ ...values, kinds: ['numeric', 'datetime'] }, industry)).toBe(
-      'Industry (text) · not numeric or datetime'
+      'Industry (text) · values takes numbers or dates'
     );
   });
 
-  it('lists a fitting column as before', () => {
+  it('lists a fitting column with its type as the preview names it', () => {
     expect(fits(values, 'integer')).toBe(true);
-    expect(columnLabel(values, price)).toBe('Price (integer)');
+    // Whole numbers are numbers on the card; the server's dtype stays the one `fits` checks.
+    expect(columnLabel(values, price)).toBe('Price (number)');
     // A category takes whole numbers and dates as labels, as the server does.
     const category = { ...values, name: 'category', kinds: ['categorical'] };
     expect(fits(category, 'integer')).toBe(true);
     expect(fits(category, 'datetime')).toBe(true);
+    expect(columnLabel(category, { ...price, dtype: 'datetime' })).toBe('Price (date)');
     expect(columnLabel(category, { ...price, dtype: 'number' })).toBe(
-      'Price (number) · not categorical'
+      'Price (number) · category takes categories'
     );
   });
 
   it('leaves a role without kinds, or with a kind it does not know, to the server', () => {
     expect(fits({ ...values, kinds: [] }, 'text')).toBe(true);
     expect(fits({ ...values, kinds: ['geometry'] }, 'text')).toBe(true);
+  });
+});
+
+describe('the words of the card', () => {
+  it('says a whole number is a number and a datetime a date, and keeps the rest', () => {
+    expect((['integer', 'number', 'datetime', 'text', 'boolean'] as const).map(dtypeWord)).toEqual([
+      'number',
+      'number',
+      'date',
+      'text',
+      'boolean',
+    ]);
+  });
+
+  it('names the way only for x and y', () => {
+    expect(['x', 'y', 'color', 'y1', 'size'].map(axisWord)).toEqual([
+      ' (across)',
+      ' (up)',
+      '',
+      '',
+      '',
+    ]);
+  });
+
+  it("says what a role takes in the chips' words", () => {
+    expect(kindsHint({ ...radius, kinds: ['numeric', 'datetime'] })).toBe('numbers or dates');
+    expect(kindsHint({ ...radius, variadic: true })).toBe('numbers · one column each');
+    expect(kindsHint({ ...radius, kinds: [] })).toBe('any column');
+  });
+});
+
+describe('boundRoles', () => {
+  const role = (name: string, overrides: Partial<RoleSpec> = {}): RoleSpec => ({
+    name,
+    kinds: ['numeric'],
+    required: true,
+    variadic: false,
+    description: '',
+    ...overrides,
+  });
+  const roles = [
+    role('x'),
+    role('y', { variadic: true }),
+    role('series', { kinds: ['categorical'], required: false }),
+    role('sma', { required: false, computed: true }),
+  ];
+
+  it("lists the bound roles in the spec's order, a family's columns together", () => {
+    const bindings = { x: 'month', y1: 'shoes', y2: 'hats', series: 'region' };
+    expect(boundRoles(bindingRows(roles, bindings, 5), bindings)).toEqual([
+      { name: 'x', columns: ['month'], missing: false },
+      { name: 'y', columns: ['shoes', 'hats'], missing: false },
+      { name: 'series', columns: ['region'], missing: false },
+    ]);
+  });
+
+  it('marks a required role without a column and leaves an open optional one out', () => {
+    const bindings = { y1: 'shoes' };
+    expect(boundRoles(bindingRows(roles, bindings, 5), bindings)).toEqual([
+      { name: 'x', columns: [], missing: true },
+      { name: 'y', columns: ['shoes'], missing: false },
+    ]);
   });
 });

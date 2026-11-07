@@ -58,14 +58,15 @@ export function expectedColumns(data: readonly string[] | null | undefined): str
 }
 
 /**
- * One role as a line of the ⓘ, in the spec bullets' shape: `` `y` (numeric, one column each) ·
- * the spec's words ``. The kinds as the data card names them, then whether the role takes one
- * column per series, is optional, or is computed by the plot when left open (the server reports
- * such a role as not required, so it says that instead of "optional").
+ * One role as a line of the ⓘ, in the spec bullets' shape: `` `y` (numbers, one column each) ·
+ * the spec's words ``. The kinds in the chips' words, as the data card names them too, then
+ * whether the role takes one column per series, is optional, or is computed by the plot when
+ * left open (the server reports such a role as not required, so it says that instead of
+ * "optional").
  */
 export function roleLine(role: RoleSpec): string {
   const notes = [
-    role.kinds.length ? role.kinds.join(' / ') : 'any column',
+    kindWords(role.kinds),
     ...(role.variadic ? ['one column each'] : []),
     ...(role.computed ? ['computed by the plot if left open'] : role.required ? [] : ['optional']),
   ];

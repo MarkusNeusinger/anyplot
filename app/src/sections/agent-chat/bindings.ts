@@ -1,5 +1,5 @@
 /**
- * The rows of the data panel's binding controls.
+ * The rows of the data panel's binding controls, and the words the card says them in.
  *
  * Every role of the spec gets one row: a single role a dropdown under its name, a
  * variadic family such as `y` its bound members (`y1`, `y2`, ...) as chips, each with
@@ -7,10 +7,14 @@
  * member grew one row per series, chips wrap in one. The members stay contiguous
  * (`compactFamilies` in `src/hooks/useAgentSession.ts`), so the next member is always the
  * first free number.
+ *
+ * The card names a column's type and a role's kinds in the start item's words
+ * (`specReference.ts`): `number`, `date`; `numbers or dates`.
  */
 
 import { type BindingMap, familyMembers, nthMember } from 'src/hooks/useAgentSession';
 import type { ColumnDtype, ColumnProfile, LongSuggestion, RoleSpec } from 'src/lib/agent';
+import { kindWords } from 'src/sections/agent-chat/specReference';
 
 /** The BFF's limit on one binding set. */
 const MAX_BINDINGS = 50;
@@ -37,13 +41,33 @@ export function fits(role: RoleSpec, dtype: ColumnDtype): boolean {
 }
 
 /**
+ * A column's type as the card shows it: whole numbers and decimals are both `number`, a datetime
+ * is a `date`; text and yes/no (`boolean`) keep their names. The server's dtype stays the one the
+ * page checks against (`fits`).
+ */
+export function dtypeWord(dtype: ColumnDtype): string {
+  if (dtype === 'integer') return 'number';
+  if (dtype === 'datetime') return 'date';
+  return dtype;
+}
+
+/**
  * A dropdown option's label: the column and its type, and for a column the role cannot take,
- * why the option is greyed out (`Industry (text) · not numeric`). Picking it would only bring
- * the server's refusal, so the page never sends it.
+ * why the option is greyed out (`Industry (text) · x takes numbers`). Picking it would only
+ * bring the server's refusal, so the page never sends it.
  */
 export function columnLabel(role: RoleSpec, column: ColumnProfile): string {
-  const label = `${column.name} (${column.dtype})`;
-  return fits(role, column.dtype) ? label : `${label} · not ${role.kinds.join(' or ')}`;
+  const label = `${column.name} (${dtypeWord(column.dtype)})`;
+  return fits(role, column.dtype)
+    ? label
+    : `${label} · ${role.name} takes ${kindWords(role.kinds)}`;
+}
+
+/** Which way a role runs on the plot, after its name in the bindings line; only `x` and `y`. */
+export function axisWord(role: string): string {
+  if (role === 'x') return ' (across)';
+  if (role === 'y') return ' (up)';
+  return '';
 }
 
 export interface BindingRow {
@@ -115,8 +139,51 @@ export function siblingHint(
   return `one of ${count} number columns that hold one measure side by side; ${role.name} wants labels: .to_long() first`;
 }
 
-/** What a role accepts, under its name: `numeric / datetime`, `any column`. */
+/** What a role accepts, under its name: `numbers or dates`, `any column`. */
 export function kindsHint(role: RoleSpec): string {
-  const kinds = role.kinds.length ? role.kinds.join(' / ') : 'any column';
+  const kinds = kindWords(role.kinds);
   return role.variadic ? `${kinds} · one column each` : kinds;
+}
+
+/**
+ * The warning on a bound column, the sibling one first (a wide table's number column in a role
+ * that wants labels makes the plot meaningless), else the sign one; `null` without either.
+ */
+export function bindingHint(
+  role: RoleSpec,
+  column: string | undefined,
+  columns: readonly ColumnProfile[],
+  suggestion: LongSuggestion | null
+): string | null {
+  return (
+    siblingHint(role, column, suggestion) ??
+    signHint(
+      role,
+      columns.find(profile => profile.name === column)
+    )
+  );
+}
+
+/** One role of the bindings line: its name, and its columns (several for a family) or none yet. */
+export interface BoundRole {
+  name: string;
+  columns: string[];
+  /** A required role without a column: the line marks it, and the step waits for it. */
+  missing: boolean;
+}
+
+/**
+ * The bindings line's roles, in the spec's order: every role with a column, and a required one
+ * without (`missing`); an optional role left open, or one the plot computes, says nothing.
+ */
+export function boundRoles(rows: readonly BindingRow[], bindings: BindingMap): BoundRole[] {
+  return rows.flatMap(row => {
+    const columns = row.role.variadic
+      ? row.members.map(([, column]) => column)
+      : bindings[row.name]
+        ? [bindings[row.name]]
+        : [];
+    if (columns.length === 0 && !row.role.required) return [];
+    return [{ name: row.name, columns, missing: columns.length === 0 }];
+  });
 }

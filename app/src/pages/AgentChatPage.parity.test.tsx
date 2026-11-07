@@ -118,6 +118,10 @@ let door: boolean;
 let paused: boolean;
 /** The message whose turn finds the session gone (`404 session_expired`). */
 const EXPIRING = 'are you still there?';
+/** The parse binds `x` only: `y` misses a column, and the card's dropdowns open by themselves. */
+let missingY: boolean;
+/** The plots the session made so far: each plot turn ships the next version. */
+let plots: number;
 
 /**
  * One BFF for both lanes. A session route of the admin lane (`/debug/agent/sessions/S1/<rest>`)
@@ -170,28 +174,33 @@ function stubFetch() {
       if (!rest) return json(404, { detail: 'not_found' });
       const sub = rest[1] ?? rest[2] ?? '';
       if (method === 'DELETE' && sub === '') return new Response(null, { status: 204 });
-      if (sub === '/dataset' && method === 'POST') return json(200, DATASET);
+      if (sub === '/dataset' && method === 'POST') {
+        return json(
+          200,
+          missingY ? { ...DATASET, bindings: [{ role: 'x', column: 'hours' }] } : DATASET
+        );
+      }
       if (sub === '/bindings' && method === 'PUT') {
-        return json(200, {
-          bindings: JSON.parse(String(init.body)),
-          complete: true,
-          missing_roles: [],
-        });
+        const bindings = JSON.parse(String(init.body)) as { role: string }[];
+        const missing = ['x', 'y'].filter(role => !bindings.some(bound => bound.role === role));
+        return json(200, { bindings, complete: missing.length === 0, missing_roles: missing });
       }
       if (sub === '/dataset/confirm') return json(200, { confirmed: true, rows: 2, columns: 2 });
       if (sub === '/messages') {
         const body = JSON.parse(String(init.body)) as { action?: string; text?: string };
         if (body.text === EXPIRING) return json(404, { detail: 'session_expired', ref: 'r-gone' });
-        return body.action === 'summarize_data'
-          ? sse([
-              ['message', { text: SUMMARY }],
-              ['done', { llm_calls: 1 }],
-            ])
-          : sse([
-              ['plot', PLOT],
-              ['message', { text: 'Here is your plot.' }],
-              ['done', { llm_calls: 2, data_confirmed: true }],
-            ]);
+        if (body.action === 'summarize_data') {
+          return sse([
+            ['message', { text: SUMMARY }],
+            ['done', { llm_calls: 1 }],
+          ]);
+        }
+        plots += 1;
+        return sse([
+          ['plot', { ...PLOT, version: plots }],
+          ['message', { text: plots === 1 ? 'Here is your plot.' : `Plot ${plots}.` }],
+          ['done', { llm_calls: 2, data_confirmed: true }],
+        ]);
       }
       if (sub === '/outcome') return new Response(null, { status: 204 });
       // The plot's files are not served: its card shows them as failed, alike on both lanes.
@@ -245,6 +254,8 @@ interface State {
   reach: () => Promise<void>;
   /** The open names the spec's roles; not unless said. */
   roles?: boolean;
+  /** The parse leaves `y` without a column; not unless said. */
+  missingY?: boolean;
   /** The public door; open unless said. */
   door?: boolean;
   /** The service's day budget is spent. */
@@ -302,7 +313,39 @@ const STATES: Record<string, State> = {
   'with data': { open: 'ok', reach: pasteTable },
   // The start item stays first, above the paste, its chips and its thumbnail.
   'with data after the spec roles': { open: 'ok', roles: true, reach: pasteTable },
+  // The card's dropdowns, opened with `.change()` on its bindings line.
+  'with the bindings open': {
+    open: 'ok',
+    reach: async () => {
+      await pasteTable();
+      fireEvent.click(screen.getByRole('button', { name: 'Change the bindings' }));
+      await screen.findByTestId('bindings-editor');
+    },
+  },
+  // A required role without a column: the dropdowns open by themselves.
+  'with a missing role': {
+    open: 'ok',
+    missingY: true,
+    reach: async () => {
+      await pasteTable();
+      await screen.findByText('* required: pick a column for y');
+    },
+  },
   'with a plot': { open: 'ok', reach: plotOnce },
+  // A second version: the first folds to its label, `▸ plot v1 · matplotlib · first plot`.
+  'with two plots, the older folded': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+      const update = screen.getByRole('button', { name: 'Update plot' });
+      await waitFor(() => expect(update).not.toHaveAttribute('aria-disabled'));
+      fireEvent.click(update);
+      expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+      await turnEnded();
+      await screen.findByRole('button', { name: 'Plot version 1, matplotlib, first plot' });
+    },
+  },
   // The feedback form unfolded: its data box and the consent line under it.
   'with the feedback form open': {
     open: 'ok',
@@ -452,6 +495,8 @@ async function pageFor(who: Who, state: string): Promise<string> {
   roles = STATES[state].roles ?? false;
   door = STATES[state].door ?? true;
   paused = STATES[state].paused ?? false;
+  missingY = STATES[state].missingY ?? false;
+  plots = 0;
   stubFetch();
   renderPage();
   await STATES[state].reach();

@@ -419,7 +419,17 @@ function thread(state: AgentSessionState, raw = false) {
   );
 }
 
-const html = (state: AgentSessionState) => render(thread(state)).container.innerHTML;
+/**
+ * The thread's HTML, React's ids numbered by first appearance: a client render counts them over
+ * every render of the file, and an open plot card's label names its content by one.
+ */
+function html(state: AgentSessionState): string {
+  const ids = new Map<string, string>();
+  return render(thread(state)).container.innerHTML.replace(/_r_[0-9a-z]+_/g, id => {
+    if (!ids.has(id)) ids.set(id, `_id${ids.size}_`);
+    return ids.get(id) ?? id;
+  });
+}
 const cards = (container: HTMLElement) =>
   [...container.querySelectorAll('[data-testid^="card-"]')].map(card => card.textContent);
 
