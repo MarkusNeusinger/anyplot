@@ -2063,6 +2063,20 @@ describe('AgentChatPage step CTA', () => {
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() →']);
   });
 
+  it('holds the plot button back while the box holds text over the cap: nothing confirms or goes', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndSummarize();
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    await untilActive(create);
+    const long = 'a'.repeat(2001);
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: long } });
+    expect(create).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(create);
+    expect(confirmAndTurns()).toEqual(['summarize_data']);
+    expect(screen.getByLabelText('Message')).toHaveValue(long);
+  });
+
   it('lets .update_plot() send the box text once the library has a plot, inert while the box is empty', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);

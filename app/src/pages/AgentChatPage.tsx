@@ -663,11 +663,12 @@ function AgentChat({
   // changed since, and with a switch's offer, it plots with an empty box too.
   const plotNeedsText = plotKind === 'update' && step2 && !carry;
   const plotText = draft.trim();
+  // Text over the cap is never cut and never goes, also not as a plot's request.
   const plotActive =
     canCreate &&
     (plotKind === 'all'
       ? !fanOut
-      : !plotNeedsText || (plotText !== '' && plotText.length <= MAX_MESSAGE_CHARS));
+      : plotText.length <= MAX_MESSAGE_CHARS && (!plotNeedsText || plotText !== ''));
   // The click starts from the catalogue plot although the library has one: data or bindings
   // changed since, so the plot is made anew, with the remembered decisions.
   const plotFresh = hasPlot && !step2 && plotKind !== 'all';
@@ -826,6 +827,8 @@ function AgentChat({
   const startPlot = async (kind: 'create' | 'carry', withText: boolean, label: string) => {
     if (!canCreate) return;
     const text = withText ? draft.trim() : '';
+    // The turn would refuse it after the box let go of it: nothing confirms, nothing is lost.
+    if (text.length > MAX_MESSAGE_CHARS) return;
     if (!state.dataConfirmed && !(await session.confirmData())) return;
     if (text) {
       // Only the text that went: an edit made while the confirmation ran stays in the box. The
