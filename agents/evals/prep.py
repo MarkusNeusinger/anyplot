@@ -562,6 +562,8 @@ def describe(line: str) -> str:
         return f"blank {', '.join(data['columns'])} where {_conditions(data['where'])}"
     if op == "unsupported":
         return f"unsupported {data['family']}"
+    if op == "keep_rows":
+        return f"keep_rows {data['n']}"
     if op == "sort":
         return f"sort {data['column']} {'desc' if data.get('descending') else 'asc'}"
     if op == "pivot_longer":

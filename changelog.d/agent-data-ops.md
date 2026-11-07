@@ -14,8 +14,11 @@
   personas got no plot because a column could not be derived. (#12597)
 - **The last value per month, over several columns.** `aggregate` takes
   `columns`, two to ten value columns with one reduction, and the reductions
-  `first` and `last`, by time when a key is a date column, so the last meter
+  `first` and `last`, by time within each period of a date key, so the last meter
   reading of each month is one operation. (#12597)
+- **The top N rows.** `keep_rows` keeps the first n rows in their current
+  order, so "the top 10 by revenue" is a sort and a `keep_rows`; the change
+  line counts the rows kept and dropped. (#12597)
 - **Several values into one category.** A condition takes `values`, an "any
   of" list for `eq` and `contains`, so `classify` puts `Miete` and `Strom`
   into one label, and its change line names how many rows fell to the
@@ -28,7 +31,8 @@
 
 ### Changed
 
-- **The prep eval covers the new operations.** Ten cases on invented data,
-  one per persona need, and the Fahrenheit case now expects a `compute`. A
+- **The prep eval covers the new operations.** Eleven cases on invented data,
+  one per persona need and one for the top N, and the Fahrenheit case now
+  expects a `compute`. A
   `compute` matches by the values it computes, whatever short names and form
   the expression has. The first run matched 91 of 96 cases for $0.27. (#12597)

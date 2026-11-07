@@ -65,6 +65,7 @@ OPERATIONS = (
     "diff",
     "rolling",
     "blank",
+    "keep_rows",
     "unsupported",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
@@ -101,7 +102,8 @@ class TestFixtures:
         # 2026-11-07, ten cases for the operations of the persona tests of 2026-11-06 (`compute` four times, `diff`,
         # `rolling`, `blank`, the last value of several columns per month, several values into one class, and a
         # request to fill in values, which the root names as a gap); the hard unit conversion became a `compute`.
-        assert len(cases) == 96
+        # And the owner's top N of that day: revenue computed, sorted and its top 3 kept (`keep_rows`).
+        assert len(cases) == 97
         assert [item.id for item in cases if "misrouted" in item.tags] == ["en-table-as-message"]
         notes = [item for item in cases if item.first_turn]
         assert len(notes) == 7 and {item.locale for item in notes} == {"de", "en"}

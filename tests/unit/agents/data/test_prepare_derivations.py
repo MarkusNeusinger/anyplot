@@ -112,6 +112,15 @@ class TestCompute:
         assert "1 cell is empty (1 outside a function's domain or the number range)" in prepared.changes[0]
         assert "1 whole number past 2^53 is stored as decimal numbers" in prepared.changes[0]
 
+    def test_the_largest_whole_number_a_float_holds_is_kept(self) -> None:
+        """Copilot on #12597: 2**1023 has 1,024 bits and is a finite float; only a value past the float range is empty."""
+        prepared = prepare("a\n2\n3\n", compute("b", "a ** 1023", a="a"))
+        beyond = prepare("a\n2\n1\n", compute("b", "a ** 1024", a="a"))
+
+        assert cells(prepared, 1) == [repr(float(2**1023)), ""]
+        assert cells(beyond, 1) == ["", "1"]
+        assert "1 outside a function's domain or the number range" in beyond.changes[0]
+
     @pytest.mark.parametrize(
         ("expression", "computed"),
         [
@@ -133,7 +142,7 @@ class TestCompute:
         divided = prepare("a\n9007199254740993\n2\n", compute("b", "a / 1", a="a"))
 
         assert "1 whole number past 2^53 in the inputs is read as decimal numbers" in through_a_function.changes[0]
-        assert "1 whole number past 2^53 is stored as decimal numbers" in divided.changes[0]
+        assert "1 value past 2^53 is stored as decimal numbers" in divided.changes[0]
 
     @pytest.mark.parametrize(
         ("text", "expression", "computed"),
@@ -390,6 +399,13 @@ class TestRolling:
         assert cells(prepared, 2) == ["", "9007199254740994"]
         assert dtypes(prepared)["s"] == "integer"
 
+    def test_a_mean_past_2_53_that_a_float_rounds_is_counted(self) -> None:
+        """Gemini on #12597: the exact mean of two large ids, 9007199254740993.5, is stored as ...994, never silently."""
+        prepared = prepare("t,v\n1,9007199254740993\n2,9007199254740994\n", rolling("m", "v", "mean", 2, "t"))
+
+        assert cells(prepared, 2) == ["", repr(float(9007199254740994))]
+        assert "1 value past 2^53 is stored as decimal numbers" in prepared.changes[0]
+
     def test_a_window_with_a_missing_value_is_empty_and_counted(self) -> None:
         prepared = prepare("t,v\n1,1\n2,\n3,3\n4,4\n5,5\n", rolling("m", "v", "mean", 2, "t"))
 
@@ -567,6 +583,22 @@ class TestClassifyFallback:
             "6 rows without a label, the largest by Kategorie: 'Lebensmittel' 2, 'Spenden' 2, 'Strom' 1"
         )
 
+    def test_a_number_column_tested_as_often_never_hides_the_text_groups(self) -> None:
+        """Gemini on #12597: one rule on Betrag and one on Kategorie; the groups are still named by Kategorie."""
+        prepared = prepare(
+            STATEMENT,
+            classify(
+                "k",
+                ([{"column": "Betrag", "test": "lt", "value": -500}], "big"),
+                ([any_of("Kategorie", "eq", "Lebensmittel")], "food"),
+                otherwise="Rest",
+            ),
+        )
+
+        assert prepared.changes[0].endswith(
+            "'Rest' for the other 4 rows, the largest by Kategorie: 'Spenden' 2, 'Strom' 1, 'Bank' 1"
+        )
+
     def test_a_threshold_on_numbers_names_no_groups(self) -> None:
         prepared = prepare(
             STATEMENT, classify("k", ([{"column": "Betrag", "test": "lt", "value": -50}], "big"), otherwise="small")
@@ -626,6 +658,16 @@ class TestAggregateSeveral:
         assert rows(prepared) == ["g,v,w", "a,3,x", "b,1,y"]
         assert prepared.changes == ["took the first value (in row order) of v and w by g: 2 rows"]
 
+    def test_a_date_key_without_a_period_takes_the_row_order(self) -> None:
+        """Every row of a group has the same moment then, so the line says the rows' order decided (Gemini, #12597)."""
+        prepared = prepare(
+            "Tag,v\n2024-01-02,5\n2024-01-01,1\n2024-01-02,7\n",
+            {"op": "aggregate", "by": ["Tag"], "column": "v", "how": "last"},
+        )
+
+        assert rows(prepared) == ["Tag,v", "2024-01-01,1", "2024-01-02,7"]
+        assert prepared.changes == ["took the last value (in row order) of v by Tag: 2 rows"]
+
     def test_a_sum_of_several_whole_columns_stays_exact(self) -> None:
         prepared = prepare(
             "g,a,b\nx,9007199254740993,1\nx,1,2.5\ny,4,1\n",
@@ -657,6 +699,42 @@ class TestAggregateSeveral:
     def test_malformed_aggregate_fails_validation(self, operation: dict[str, Any]) -> None:
         with pytest.raises(ValidationError):
             OPERATIONS.validate_python([operation])
+
+
+class TestKeepRows:
+    def test_the_top_n_after_a_sort(self) -> None:
+        """The owner's top N of 2026-11-07: revenue computed, sorted and its top 2 kept, counted."""
+        text = "Product,Quantity,Price\nTea,12,3.5\nCake,4,12\nJam,30,2.25\nHoney,7,8.4\n"
+        prepared = prepare(
+            text,
+            compute("Revenue", "q * p", q="Quantity", p="Price"),
+            {"op": "sort", "column": "Revenue", "descending": True},
+            {"op": "keep_rows", "n": 2},
+        )
+
+        assert rows(prepared) == ["Product,Quantity,Price,Revenue", "Jam,30,2.25,67.5", "Honey,7,8.4,58.8"]
+        assert prepared.changes[2] == "kept the first 2 of 4 rows, 2 dropped"
+
+    def test_a_table_no_longer_than_n_keeps_every_row(self) -> None:
+        prepared = prepare("k,v\na,1\nb,2\nc,3\n", {"op": "keep_rows", "n": 10})
+
+        assert len(rows(prepared)) == 4
+        assert prepared.changes == ["kept all 3 rows; there were no more than 10"]
+
+    def test_the_pasted_cells_are_no_longer_the_rows(self) -> None:
+        """A decimal comma read again from the paste needs the rows as pasted, which `keep_rows` changed."""
+        operations = [{"op": "keep_rows", "n": 1}, {"op": "set_type", "column": "v", "type": "number", "decimal": ","}]
+        parsed = parse_dataset("k;v\na;1.234\nb;7.000\n")
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parsed, OPERATIONS.validate_python(operations))
+
+        assert caught.value.code == "type_mismatch"
+
+    @pytest.mark.parametrize("n", [0, -1, 20_001, "ten"])
+    def test_a_count_out_of_range_fails_validation(self, n: object) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{"op": "keep_rows", "n": n}])
 
 
 class TestUnsupported:

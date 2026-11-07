@@ -438,7 +438,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     each {column, test, value}, or with values: a list of which any one may match, for test eq or contains);
     set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column or columns: several
     value columns, how sum|mean|count|min|max|first|last, period hour|day|week|month|quarter|year; first and last
-    take a group's first and last value, by time when a key is a date); sort (column, descending); pivot_longer
+    take a group's first and last value, by time within a period of a date key); sort (column, descending); pivot_longer
     (columns, names_to, values_to); pivot_wider
     (names_from, values_from, index); classify (name, rules: each where conditions and a label, otherwise: the optional
     label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds); derive
@@ -462,7 +462,9 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     {"q": "Quantity", "p": "Price"} for q * p); diff (name, column, order, within, lag; adds the change of column from
     the row lag places before, default 1, in the order of a number or date column order); rolling (name, column, how
     mean|sum, window, order, within; adds the mean or sum over window rows, each row and the ones before it); blank
-    (columns, where; empties the cells of columns in the rows where the conditions hold, the rows stay); unsupported
+    (columns, where; empties the cells of columns in the rows where the conditions hold, the rows stay); keep_rows (n;
+    keeps the first n rows in their current order: the top 10 by revenue is a sort descending, then keep_rows 10);
+    unsupported
     (family fill_values|edit_cells|add_rows|combine_tables|text_pattern|time_window|other; alone, for a change no
     operation can make: it changes nothing and answers unsupported_operation with a fixed message to send). Steps
     chain in one call: a later operation may name a column an earlier one made. Returns the change lines and the new

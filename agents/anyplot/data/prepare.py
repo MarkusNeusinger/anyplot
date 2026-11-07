@@ -73,7 +73,7 @@ The operations:
   each of 2 to 10 (`columns`, one `how` for all, never `count`), with `sum`, `mean`,
   `count`, `min`, `max`, `first` or `last` (since 2026-11-07: the last meter reading of
   each month). `first` and `last` take a group's first and last value that is there, in
-  the order of the rows, or of the datetime keys' moments when there are some, so the
+  the order of the rows, or, with a `period`, of the datetime keys' moments, so the
   last reading of a month is its latest one. A `period` turns every datetime key into `YYYY-MM`,
   `YYYY-Qn` or `YYYY` text before grouping, or, since live test round 5 of 2026-10-15
   ("Tagesmittel pro Sensor" on readings every 13 minutes), into the first moment of its
@@ -233,6 +233,9 @@ The operations:
     as in `drop_rows` (missing codes such as `-0.99`); the rows stay, each column counts
     its emptied cells, and a column that would lose every value is refused. It empties
     and never fills: `prepare_data` still never invents or fills in a value.
+  * `keep_rows`: the first `n` rows in their current order, the rest dropped and counted
+    ("kept the first 10 of 487 rows, 477 dropped"); after a `sort`, the top N (owner decision
+    of 2026-11-07). A table of `n` rows or fewer keeps every row, and the line says so.
   * `unsupported`: names a change no operation can make by a closed `family` (fill in
     values, edit single cells, add rows, combine tables, a text pattern, a window over
     time, other). It changes nothing: `apply_operations` refuses it as
@@ -280,6 +283,7 @@ import io
 import keyword
 import math
 import re
+import sys
 import unicodedata
 import warnings
 from collections import Counter
@@ -476,7 +480,11 @@ _WHOLE_OPERATORS = (ast.Add, ast.Sub, ast.Mult, ast.FloorDiv, ast.Mod)
 _WHOLE_FUNCTIONS = frozenset(("abs", "sign", "min", "max"))
 """The steps of a `compute` that keep whole numbers whole, besides a power with a whole exponent of 0 or more."""
 _WHOLE_BITS = 1023
-"""A whole result of more bits is beyond what a float64 holds at all: the cell is empty, counted (`_whole_value`)."""
+"""A power whose result has more bits than this, by its base's bits times its exponent, is past the float64 range
+before it is computed: refused at once, so a huge one never takes the time it would (`_whole_value`)."""
+_FLOAT_MAX_WHOLE = int(sys.float_info.max)
+"""The largest whole number a float64 holds (just under 2**1024): a whole result beyond it is empty and counted;
+2**1023 and every other whole number up to it is kept, written as the float holds it (`_whole_value`)."""
 _DECIMAL_DIGITS = 100
 """The digits a `rolling` window adds its decimal cells with: exact for cells within some 80 orders of magnitude."""
 _TEST_SIGNS: dict[str, str] = {"eq": "=", "ne": "≠", "gt": ">", "lt": "<"}
@@ -756,7 +764,7 @@ class Aggregate(_Strict):
     """Group by one or two key columns and reduce the value `column`, or each of 2 to 10 `columns`, with `how`.
 
     One `how` for every value column; `count` takes one. `first` and `last` take a group's first and last value
-    that is there, in the order of the rows, or of the moments of the datetime keys when there are some.
+    that is there, in the order of the rows, or, with a `period`, of the moments of the datetime keys.
     """
 
     op: Literal["aggregate"]
@@ -969,6 +977,13 @@ class Blank(_Strict):
     where: list[Condition] = Field(min_length=1, max_length=MAX_CONDITIONS)
 
 
+class KeepRows(_Strict):
+    """The first `n` rows in their current order; the rest are dropped. After a `sort`, the top N."""
+
+    op: Literal["keep_rows"]
+    n: int = Field(ge=1, le=MAX_ROWS)
+
+
 class Unsupported(_Strict):
     """A data change no operation can make, named by its `family`: refused as `unsupported_operation`, nothing changes.
 
@@ -1002,11 +1017,12 @@ Operation = Annotated[
     | Diff
     | Rolling
     | Blank
+    | KeepRows
     | Unsupported,
     Field(discriminator="op"),
 ]
 
-_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider)
+_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows)
 """The operations after which a row of the frame is no longer the pasted row of the same place."""
 
 
@@ -1140,6 +1156,8 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _rolling(frame, operation, carried)
         case Blank():
             return _blank(frame, operation, carried)
+        case KeepRows():
+            return _keep_rows(frame, operation)
         case Unsupported():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[operation.family]}")
 
@@ -1657,8 +1675,9 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         raise PrepareError("invalid_operation", f"a key column is already named '{value_names[0]}'")
 
     work = frame[[*keys, *values]].copy()
-    if op.how in ("first", "last") and date_keys:
+    if op.how in ("first", "last") and date_keys and op.period:
         # A bucket's first and last value are its earliest and latest moment's; rows of one moment keep their order.
+        # Without a period every row of a group has the same moment, so the rows' own order decides.
         # One stable sort per key, the last key first: pandas documents `kind` only for a single column, so two date
         # keys sort as two guaranteed-stable passes, the first key deciding and the second breaking its ties.
         for name in reversed(date_keys):
@@ -1699,7 +1718,7 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     by = " and ".join(keys) + (f" ({period})" if period else "")
     verb = _VERBS[op.how]
     if op.how in ("first", "last"):
-        verb = verb.replace(" value", " value (by time)" if date_keys else " value (in row order)")
+        verb = verb.replace(" value", " value (by time)" if date_keys and op.period else " value (in row order)")
     change = f"{verb} {_listed(values)} by {by}: {_count(len(result), 'row')}"
     other = frame.shape[1] - len(keys) - len(values)
     if other:
@@ -1757,6 +1776,18 @@ def _sort(frame: pd.DataFrame, op: Sort) -> tuple[pd.DataFrame, str]:
             "type_mismatch", f"column '{op.column}' mixes kinds of values and cannot be sorted"
         ) from None
     return ordered.reset_index(drop=True), f"sorted by {op.column}, {order}"
+
+
+def _keep_rows(frame: pd.DataFrame, op: KeepRows) -> tuple[pd.DataFrame, str]:
+    """The first `n` rows in their current order, the others dropped and counted: after a `sort`, the top N.
+
+    A table of `n` rows or fewer keeps every row, and the line says so: nothing is dropped and nothing is refused.
+    """
+    total = len(frame)
+    if op.n >= total:
+        return frame, f"kept all {_count(total, 'row')}; there were no more than {op.n}"
+    kept = frame.iloc[: op.n].reset_index(drop=True)
+    return kept, f"kept the first {op.n} of {_count(total, 'row')}, {total - op.n} dropped"
 
 
 def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -1895,12 +1926,18 @@ def _classify(frame: pd.DataFrame, op: Classify, carried: _Carried) -> tuple[pd.
 
 def _fallback_groups(frame: pd.DataFrame, op: Classify, rows: pd.Series) -> str:
     """The largest groups of the rows no rule named, by the text column the rules test most often (the first of
-    them on a tie): `, the largest by Kategorie: 'Spenden' 3, 'Bank' 2, 'Post' 1`; "" when that column holds no text
-    or those rows no value of it (a threshold on numbers says what fell through by itself)."""
-    named = Counter(condition.column for rule in op.rules for condition in rule.where)
-    column = named.most_common(1)[0][0]
-    if _kind(frame[column]) != "text":
+    them on a tie): `, the largest by Kategorie: 'Spenden' 3, 'Bank' 2, 'Post' 1`; "" when the rules test no text
+    column or those rows hold no value of it (a threshold on numbers says what fell through by itself). A number
+    column the rules test as often never hides the text column's groups."""
+    named = Counter(
+        condition.column
+        for rule in op.rules
+        for condition in rule.where
+        if condition.column in frame.columns and _kind(frame[condition.column]) == "text"
+    )
+    if not named:
         return ""
+    column = named.most_common(1)[0][0]
     groups = Counter(value for value in frame.loc[rows, column] if isinstance(value, str))
     if not groups:
         return ""
@@ -2213,7 +2250,7 @@ class _DividedByZero(Exception):
 
 
 class _OutOfRange(Exception):
-    """A whole-number step went past `_WHOLE_BITS`: the row's cell stays empty."""
+    """A whole-number step went past what a float64 holds (`_FLOAT_MAX_WHOLE`): the row's cell stays empty."""
 
 
 def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -2256,12 +2293,7 @@ def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.Da
         notice = whole_rounded(rounded) if rounded else ""
     elif _decimal_tree(tree, op.inputs):
         values, divided, outside, rounded = _compute_decimal(frame, op, tree, missing)
-        notice = (
-            f"{_count(rounded, 'whole number')} past 2^53 {_be(rounded)} stored as decimal numbers "
-            "(15 to 17 significant digits; a digit past them is rounded)"
-            if rounded
-            else ""
-        )
+        notice = stored_rounded(rounded) if rounded else ""
     else:
         values, divided, outside = _compute_floats(frame, op, tree, missing)
         cast = sum(_past_exact(frame[column]) for column in columns if is_integer_dtype(frame[column].dtype))
@@ -2340,8 +2372,8 @@ def _whole_value(node: ast.expr, row: dict[str, int]) -> int:
                 result = min(numbers) if name == "min" else max(numbers)
         case _:
             raise _OutOfRange  # unreachable for a whole tree
-    if abs(result).bit_length() > _WHOLE_BITS:
-        raise _OutOfRange
+    if abs(result) > _FLOAT_MAX_WHOLE:
+        raise _OutOfRange  # past any float64: 2**1023 stays, 2**1024 does not
     return result
 
 
@@ -2425,8 +2457,8 @@ def _compute_decimal(
 ) -> tuple[pd.Series, int, int, int]:
     """The rows in exact decimals at `_DECIMAL_DIGITS` digits, each cell read as `_ordered_input` reads it (a whole
     number exactly, a decimal as its cell writes it), with one rounding to a float at the end: the values, the cells
-    divided by zero, the results beyond the float range, which stay empty, and the whole results past 2**53 that the
-    float holds only rounded (`9007199254740993` becomes ...992), which the change line counts."""
+    divided by zero, the results beyond the float range, which stay empty, and the results past 2**53 that the float
+    holds only rounded (`9007199254740993` becomes ...992; `_past_float`), which the change line counts."""
     cells: dict[str, list[ExactDecimal | None]] = {}
     for name, column in op.inputs.items():
         whole = is_integer_dtype(frame[column].dtype)
@@ -2454,7 +2486,7 @@ def _compute_decimal(
             if not math.isfinite(number):
                 outside += 1
                 number = math.nan
-            elif abs(exact) > _FLOAT_EXACT and exact == exact.to_integral_value() and int(number) != exact:
+            elif _past_float(exact, number):
                 rounded += 1
             results.append(number)
     return pd.Series(results, index=frame.index, dtype="float64"), divided, outside, rounded
@@ -2517,24 +2549,41 @@ def _ordered_input(
 
 def _number_values(
     frame: pd.DataFrame, results: dict[Hashable, ExactDecimal], whole: bool
-) -> tuple[pd.Series, int, int]:
+) -> tuple[pd.Series, int, str]:
     """The exact results as the new column: whole numbers as integers (`_whole_numbers`), decimals as the nearest
-    float. Returns the values, the whole numbers stored as floats past 2**53, and the decimals beyond the float range,
-    which stay empty."""
+    float. Returns the values, the results beyond the float range, which stay empty, and the notice of results a
+    float holds only rounded: whole numbers past the int64 range (`whole_rounded`), or decimals past 2**53, such as
+    the mean of two ids that large (`stored_rounded`)."""
     if whole:
         exact = [None if (value := results.get(row)) is None else int(value) for row in frame.index]
         values, rounded = _whole_numbers(exact, frame.index)
-        return values, rounded, 0
+        return values, 0, whole_rounded(rounded) if rounded else ""
     floats: list[float] = []
-    outside = 0
+    outside = rounded = 0
     for row in frame.index:
         value = results.get(row)
         number = math.nan if value is None else float(value)
         if value is not None and not math.isfinite(number):
             outside += 1
             number = math.nan
+        elif value is not None and _past_float(value, number):
+            rounded += 1
         floats.append(number)
-    return pd.Series(floats, index=frame.index, dtype="float64"), 0, outside
+    return pd.Series(floats, index=frame.index, dtype="float64"), outside, stored_rounded(rounded) if rounded else ""
+
+
+def _past_float(exact: ExactDecimal, number: float) -> bool:
+    """Whether an exact result past 2**53, where a float holds no fraction and not every whole number, is held by
+    its float `number` only rounded."""
+    return abs(exact) > _FLOAT_EXACT and ExactDecimal(number) != exact
+
+
+def stored_rounded(count: int) -> str:
+    """The change-line clause of exact results past 2**53 that their float column holds only rounded."""
+    return (
+        f"{_count(count, 'value')} past 2^53 {_be(count)} stored as decimal numbers "
+        "(15 to 17 significant digits; a digit past them is rounded)"
+    )
 
 
 def _diff(frame: pd.DataFrame, op: Diff, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -2561,7 +2610,7 @@ def _diff(frame: pd.DataFrame, op: Diff, carried: _Carried) -> tuple[pd.DataFram
                     gap += 1
                     continue
                 results[row] = current - previous
-    values, rounded, outside = _number_values(frame, results, whole)
+    values, outside, notice = _number_values(frame, results, whole)
     result = _new_number_column(frame, op.name, values, carried)
     within = f" within each {' and '.join(keys)}" if keys else ""
     before = f"the previous {op.order}" if op.lag == 1 else f"{op.lag} rows before in the order of {op.order}"
@@ -2574,7 +2623,7 @@ def _diff(frame: pd.DataFrame, op: Diff, carried: _Carried) -> tuple[pd.DataFram
             (outside, "beyond the number range"),
         ]
     )
-    return result, _with_notice(change, _joined(empty, whole_rounded(rounded) if rounded else ""))
+    return result, _with_notice(change, _joined(empty, notice))
 
 
 def _rolling(frame: pd.DataFrame, op: Rolling, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -2609,7 +2658,7 @@ def _rolling(frame: pd.DataFrame, op: Rolling, carried: _Carried) -> tuple[pd.Da
                     continue
                 total = totals[position + 1] - totals[start]
                 results[row] = total if op.how == "sum" else total / op.window
-    values, rounded, outside = _number_values(frame, results, whole)
+    values, outside, notice = _number_values(frame, results, whole)
     result = _new_number_column(frame, op.name, values, carried)
     within = f" within each {' and '.join(keys)}" if keys else ""
     change = f"added column {op.name}: {op.how} of {op.column} over {op.window} rows in the order of {op.order}{within}"
@@ -2621,7 +2670,7 @@ def _rolling(frame: pd.DataFrame, op: Rolling, carried: _Carried) -> tuple[pd.Da
             (outside, "beyond the number range"),
         ]
     )
-    return result, _with_notice(change, _joined(empty, whole_rounded(rounded) if rounded else ""))
+    return result, _with_notice(change, _joined(empty, notice))
 
 
 # --- blank -----------------------------------------------------------------------------------

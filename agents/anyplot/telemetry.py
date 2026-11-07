@@ -266,6 +266,7 @@ PrepOp = Literal[
     "diff",
     "rolling",
     "blank",
+    "keep_rows",
     "unsupported",
 ]
 PREP_OPS: frozenset[str] = frozenset(get_args(PrepOp))
