@@ -79,8 +79,11 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    of years or months (`TIME,2019,,2020`) under a title or key-value metadata is the
    header (`_period_header`), and a key-value line never joins a header (`_joined_header`).
    A `:` cell is missing in a column that then reads as numbers or dates
-   (`_blank_not_available`), and a column of one-letter flags with an empty header right
-   of a number column stays, named after it (`2019 flag`, `_flag_columns`).
+   (`_blank_not_available`), and a column of flags of one to three letters (`p`, `ep`) with
+   an empty header right of a named number column stays, named after it (`2019 flag`,
+   `_flag_columns`). A Markdown table's alignment row under its header is layout
+   (`_without_alignment_rows`), and rows without values extend a table only up to a blank
+   line (`table_block`), so a padded export's legend below it stays notes.
 4. **Clean every cell.** Remove invisible format characters (Unicode category
    `Cf`: zero-width characters, bidi controls, BOMs inside the text, tag
    characters), turn line and paragraph separators (U+2028, U+2029) into spaces,

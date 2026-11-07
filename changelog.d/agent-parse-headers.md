@@ -7,7 +7,7 @@
   two `#` lines reads `decimal date` and `monthly average` instead of `#`, `date`,
   `alized`. A statistics export's header of years under key-value metadata is the header
   again, a key-value line no longer joins a header, a `:` cell is missing in a number
-  column, and a column of one-letter flags beside a year stays as `<year> flag` with a
+  column, and a column of flags (`p`, `e`, `ep`) beside a year stays as `<year> flag` with a
   warning that counts the flags. A title above a header of years no longer turns the
   table into one column of text. (#12602)
 - **A statistics export's legend below the table stays out of the rows.** A
