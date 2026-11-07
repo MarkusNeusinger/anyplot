@@ -811,8 +811,8 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     expect(await screen.findByLabelText('Message')).toBeInTheDocument();
     expect(currentStep()).toBe(1);
-    // Before data the status line names the step and the data; the how-to is behind the header
-    // row's ⓘ, not in a paragraph on the page (2026-11-02).
+    // Before data the status line names the step and the data; the how-to is behind the start
+    // item's ⓘ, not in a paragraph on the page (2026-11-02).
     expect(screen.getByTestId('data-step')).toHaveTextContent(/^>>> step 1 of 2 · your data$/);
     expect(screen.queryByText(/check the preview and the bindings/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'How the chat takes data' })).toBeInTheDocument();
@@ -955,8 +955,10 @@ describe('AgentChatPage gating', () => {
     await attachAndSend('hours,score\n1.5,52 %\n2.0,58 %\n');
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     const thread = screen.getByRole('log', { name: 'Conversation' });
-    // The paste opens the thread, its card follows, and the summary needs no line of its own.
-    expect(thread.firstElementChild).toHaveTextContent(/^❯▤ table · 3 lines · \d+ B$/);
+    // The start item opens the thread and stays first; the paste is the first turn after it, its
+    // card follows, and the summary needs no line of its own.
+    expect(thread.firstElementChild).toBe(screen.getByTestId('start-item'));
+    expect(thread.children[1]).toHaveTextContent(/^❯▤ table · 3 lines · \d+ B$/);
     expect(thread).not.toHaveTextContent('.summarize_data()');
     await turnEnded();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
@@ -1507,8 +1509,11 @@ describe('AgentChatPage gating', () => {
   });
 });
 
-describe('AgentChatPage catalogue plot', () => {
-  it('shows the catalogue plot beside the title in the library in use, and opens it large', async () => {
+describe('AgentChatPage start item', () => {
+  const follows = (first: Element, second: Element) =>
+    !!(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('shows the catalogue plot in the start item, in the library in use, and opens it large', async () => {
     const base = fetchMock.getMockImplementation() as (
       input: string,
       init?: RequestInit
@@ -1527,6 +1532,17 @@ describe('AgentChatPage catalogue plot', () => {
     const thumbnail = await screen.findByRole('button', {
       name: 'Show the matplotlib catalogue plot large',
     });
+    // The thread's first item holds it, the header row no longer: the row keeps the title, the
+    // two dropdowns and the admin menu, and every ⓘ of the start stands in the thread too.
+    const start = screen.getByTestId('start-item');
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(thread.firstElementChild).toBe(start);
+    expect(start).toContainElement(thumbnail);
+    expect(start).toHaveTextContent(/^You came from Basic Scatter Plot\. It needs/);
+    for (const name of ['Columns the plot expects', 'How the chat takes data']) {
+      expect(start).toContainElement(screen.getByRole('button', { name }));
+    }
+    expect(follows(screen.getByTestId('admin-menu'), thread)).toBe(true);
     // The site theme's preview, from the catalogue's responsive files.
     expect(thumbnail.querySelector('source')).toHaveAttribute(
       'srcset',
@@ -1567,7 +1583,7 @@ describe('AgentChatPage catalogue plot', () => {
       .map(item => item.textContent);
   }
 
-  it("lists the spec's roles behind the ⓘ after the title, as the session's open names them", async () => {
+  it("names the spec's roles as chips in plain words, and in full behind the ⓘ after them", async () => {
     const base = fetchMock.getMockImplementation() as (
       input: string,
       init?: RequestInit
@@ -1578,7 +1594,8 @@ describe('AgentChatPage catalogue plot', () => {
             session_id: 'S1',
             eligibility: { eligible: true, status: 'clean', reasons: [] },
             roles: [
-              ...DATASET.roles,
+              { ...DATASET.roles[0], kinds: ['numeric', 'datetime'] },
+              { ...DATASET.roles[1], variadic: true },
               {
                 name: 'series',
                 kinds: ['categorical'],
@@ -1594,9 +1611,16 @@ describe('AgentChatPage catalogue plot', () => {
     renderAt(PAGE);
     await screen.findByLabelText('Message');
 
+    // What a column holds, never a dtype; a family takes one or more, an optional role says so.
+    const chips = within(screen.getByRole('list', { name: 'What the plot needs' }));
+    expect(chips.getAllByRole('listitem').map(chip => chip.textContent)).toEqual([
+      'x · numbers or dates',
+      'y · numbers, one or more',
+      'series · categories, optional',
+    ]);
     expect(await expectedColumnsShown()).toEqual([
-      'x (numeric) · x values',
-      'y (numeric) · y values',
+      'x (numeric / datetime) · x values',
+      'y (numeric, one column each) · y values',
       'series (categorical, optional) · one colour per group',
     ]);
   });
@@ -1606,10 +1630,33 @@ describe('AgentChatPage catalogue plot', () => {
     renderAt(PAGE);
     await screen.findByLabelText('Message');
 
+    // No chips without roles: the ⓘ with the bullets ends the sentence.
+    expect(screen.queryByRole('list', { name: 'What the plot needs' })).not.toBeInTheDocument();
     expect(await expectedColumnsShown()).toEqual([
       'x (numeric) - Independent variable values plotted on the horizontal axis',
       'y (numeric) - Dependent variable values plotted on the vertical axis',
     ]);
+  });
+
+  it('repeats no control of the composer, and stays first in the thread once data arrives', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText('Message');
+    const start = screen.getByTestId('start-item');
+    // `.example_data()` and `.open()` are the data line's, right above the box: the item points there.
+    expect(start).toHaveTextContent(/drop a file or paste a table below$/);
+    expect(within(start).queryByRole('button', { name: 'Make example data' })).toBeNull();
+    expect(within(start).queryByRole('button', { name: 'Open a data file' })).toBeNull();
+    // Inside the polite log, a title or a picture that arrives late is no news to read out.
+    expect(start).toHaveAttribute('aria-live', 'off');
+
+    await parseAndSummarize();
+    // A message in the thread: nothing vanishes, the talk follows it.
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(thread.firstElementChild).toBe(start);
+    expect(start).toHaveTextContent(/^You came from Basic Scatter Plot\./);
+    expect(follows(start, screen.getByTestId('paste-item'))).toBe(true);
+    expect(follows(start, screen.getByText(SUMMARY))).toBe(true);
   });
 
   // A visitor's open and its source are recorded: AgentChatPage.public.test.tsx.
@@ -3772,17 +3819,18 @@ describe('AgentChatPage attachment', () => {
     expect(turnBodies()).toHaveLength(1);
   });
 
-  it("keeps the how-to of the data behind the ⓘ in the frame's header row, after the chips", async () => {
+  it("keeps the how-to of the data behind the ⓘ at the end of the start item's pointer to the box", async () => {
     await openChat();
-    // The `# chat` label it stood beside is gone: the ⓘ follows the language chip, before the
-    // thread, inside the frame.
+    // The header row had it until the start item took it: the ⓘ ends the item's last line,
+    // "drop a file or paste a table below", in the thread.
     const howto = screen.getByRole('button', { name: 'How the chat takes data' });
-    const follows = (first: Element, second: Element) =>
-      !!(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
     expect(screen.queryByText('# chat')).not.toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Chat' })).toContainElement(howto);
-    expect(follows(screen.getByTestId('language-chip'), howto)).toBe(true);
-    expect(follows(howto, screen.getByRole('log', { name: 'Conversation' }))).toBe(true);
+    const start = screen.getByTestId('start-item');
+    expect(screen.getByRole('log', { name: 'Conversation' })).toContainElement(start);
+    const hint = screen.getByTestId('start-hint');
+    expect(hint).toHaveTextContent(/^drop a file or paste a table below$/);
+    expect(hint).toContainElement(howto);
+    expect(start).toContainElement(hint);
     fireEvent.click(howto);
     const dialog = await screen.findByRole('dialog', { name: 'How the chat takes data' });
     expect(within(dialog).getByTestId('data-howto').children).toHaveLength(7);
