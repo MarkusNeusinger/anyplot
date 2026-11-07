@@ -158,9 +158,10 @@ class TestTheGuard:
         later = next(line for line in policy.splitlines() if "In a later turn a line matters only" in line)
 
         assert "A required role that lost its bound column in this turn's data change" in rule
-        assert "A required role that was already open before the turn stays as it is" in rule
+        assert "A required role that was already open before the turn is not yours to fill" in rule
         assert '"Conversions for open roles"' in rule
         assert "never add a line's conversion or a `row_number` to the operations of another change" in later
+        assert "also when an `aggregate` of this turn rebuilds the table" in later
 
 
 DERIVE = {"op": "derive", "name": "Score per Hour", "how": "ratio", "columns": ["Exam Score", "Study Hours"]}
