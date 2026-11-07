@@ -12,3 +12,4 @@
   the line above the message box; it is a message in the thread, so it stays
   first and scrolls up with the talk once data arrives. On a phone it is
   compact: a smaller thumbnail beside the first line, the chips below it.
+  (#12596)
