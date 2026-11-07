@@ -5,121 +5,141 @@
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (theoretical splitting-criterion curves over p in [0, 1]) --------
-// 101 points (step 0.01) so p=0.5 lands exactly on a sample — needed to mark
-// the shared peak on both curves, not just at the reference line.
-const POINT_COUNT = 101;
-const probabilities = Array.from({ length: POINT_COUNT }, (_, i) => i / (POINT_COUNT - 1));
+// Constants
+const GINI_LABEL = "Gini impurity: 2p(1 − p)";
+const ENTROPY_LABEL = "Entropy: −p log₂p − (1 − p) log₂(1 − p)";
+const IMPURITY_LABEL = "Impurity";
+const Y_DOMAIN_MAX = 1; // both criteria share the axis 0 to 1
+const Y_HEAD_SHARE = 0.08; // headroom above 1 so the entropy peak and its label stay inside
 
-// Gini impurity: 2p(1-p) peaks at 0.5 (p=0.5). Scaled x2 so it shares the
-// same [0, 1] range as entropy and the two curves can be read off one axis.
-const giniScaled = probabilities.map((p) => 4 * p * (1 - p));
+// Columns: set these to your data's column names
+const P = "Probability of class 1 (p)"; // role: p
 
-// Binary entropy in bits: -p*log2(p) - (1-p)*log2(1-p), already in [0, 1].
-// The 0*log2(0) term is undefined at p=0 and p=1, taken as its limit of 0.
-function binaryEntropy(p: number): number {
-  if (p <= 0 || p >= 1) return 0;
-  return -p * Math.log2(p) - (1 - p) * Math.log2(1 - p);
+// Data: replace this block with your own records, one object per row
+// 101 evenly spaced probabilities, so p = 0.5 is one of the samples.
+const data = Array.from({ length: 101 }, (_, i) => ({ [P]: i / 100 }));
+
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[P] - b[P]);
+const ps = rows.map((d) => d[P]);
+const gini = ps.map((p) => 2 * p * (1 - p));
+// 0 · log₂0 is undefined; its limit 0 closes the entropy curve at p = 0 and p = 1.
+const entropy = ps.map((p) => (p > 0 && p < 1 ? -p * Math.log2(p) - (1 - p) * Math.log2(1 - p) : 0));
+
+// Both curves fall strictly with |p − 0.5|, so the sample nearest 0.5 is the maximum of both.
+const peakIdx = gini.indexOf(Math.max(...gini));
+const peakP = ps[peakIdx];
+const curves = [
+  { id: "gini", label: GINI_LABEL, values: gini },
+  { id: "entropy", label: ENTROPY_LABEL, values: entropy },
+].map((c, i) => ({ ...c, color: t.palette[i], peak: c.values[peakIdx] }));
+const step = (ps[ps.length - 1] - ps[0]) / (ps.length - 1);
+
+const TITLE = "line-impurity-comparison · javascript · muix · anyplot.ai";
+const SUBTITLE = `${ps.length} evaluation points, p = ${ps[0].toFixed(2)} to ${ps[ps.length - 1].toFixed(2)} in steps of ${step.toFixed(2)}`;
+const HEADER_H = 80;
+const LEGEND_H = 44;
+
+// Value labels beside the two peak marks, placed in data coordinates
+function PeakLabels() {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  return (
+    <g>
+      {curves.map((c) => (
+        <text key={c.id} x={xScale(peakP) + 16} y={yScale(c.peak) - 14} fontSize={15} fontWeight={600} fill={t.ink}>
+          Maximum {c.peak.toFixed(2)}
+        </text>
+      ))}
+    </g>
+  );
 }
-const entropy = probabilities.map(binaryEntropy);
 
-const TITLE_HEIGHT = 60;
-
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        display: "flex",
-        flexDirection: "column",
-        paddingTop: "20px",
-      }}
-    >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-        }}
-      >
-        line-impurity-comparison · javascript · muix · anyplot.ai
-      </Typography>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 108px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
       <LineChart
         width={width}
-        height={height - TITLE_HEIGHT}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        colors={[t.palette[0], t.palette[1]]}
-        series={[
-          {
-            id: "gini",
-            data: giniScaled,
-            label: "Gini impurity ×2 — 4p(1−p)",
-            showMark: (params) => params.position === 0.5,
-            curve: "natural",
-            area: true,
-          },
-          {
-            id: "entropy",
-            data: entropy,
-            label: "Entropy — −p·log₂p − (1−p)·log₂(1−p)",
-            showMark: (params) => params.position === 0.5,
-            curve: "natural",
-            area: true,
-          },
-        ]}
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
-            data: probabilities,
+            data: ps,
             scaleType: "linear",
-            label: "Probability of Class 1 (p)",
-            min: 0,
-            max: 1,
+            min: ps[0],
+            max: ps[ps.length - 1],
+            tickNumber: 6,
+            label: P,
+            height: 64,
             valueFormatter: (v: number) => v.toFixed(2),
-            tickInterval: [0, 0.25, 0.5, 0.75, 1],
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Impurity (normalized)",
             min: 0,
-            max: 1.05,
+            max: Y_DOMAIN_MAX * (1 + Y_HEAD_SHARE),
+            tickNumber: 6,
+            label: IMPURITY_LABEL,
+            width: 76,
+            valueFormatter: (v: number) => v.toFixed(1),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true }}
-        margin={{ left: 90, right: 40, top: 30, bottom: 80 }}
+        series={curves.map((c) => ({
+          id: c.id,
+          data: c.values,
+          label: c.label,
+          color: c.color,
+          curve: "natural",
+          area: true,
+          shape: "circle",
+          showMark: ({ index }: { index: number }) => index === peakIdx,
+          valueFormatter: (v: number | null) => (v == null ? "" : v.toFixed(3)),
+        }))}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 16, color: t.ink, columnGap: 4 },
+          },
+        }}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiChartsLegend-label": { fontSize: "14px" },
-          "& .MuiLineElement-root": { strokeWidth: 3.5 },
-          // Two low-opacity area fills, gini drawn under entropy: where they
-          // overlap (0..gini(p)) the fills blend, while the uncovered band
-          // above (gini(p)..entropy(p)) reads as a single lavender wash —
-          // visually calling out where the two criteria diverge most.
-          "& .MuiAreaElement-series-gini": { fillOpacity: 0.22 },
-          "& .MuiAreaElement-series-entropy": { fillOpacity: 0.16 },
-          "& .MuiMarkElement-root": { strokeWidth: 2.5 },
+          "& .MuiLineChart-line": { strokeWidth: 3.5 },
+          // Gini's fill sits under entropy's: the lone entropy wash between the curves shows where they differ.
+          '& .MuiLineChart-area[data-series="gini"]': { fillOpacity: 0.22 },
+          '& .MuiLineChart-area[data-series="entropy"]': { fillOpacity: 0.16 },
+          "& .MuiLineChart-mark": { r: 7, strokeWidth: 2.5, stroke: t.pageBg },
+          ...Object.fromEntries(curves.map((c) => [`& .MuiLineChart-mark[data-series="${c.id}"]`, { fill: c.color }])),
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
         <ChartsReferenceLine
-          x={0.5}
-          label="Max impurity at p = 0.5"
+          x={peakP}
+          label={`Maximum impurity at p = ${peakP.toFixed(2)}`}
           labelAlign="end"
+          spacing={{ x: 12, y: 14 }}
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+          labelStyle={{ fontSize: 15, fill: t.inkSoft }}
         />
+        <PeakLabels />
       </LineChart>
-    </Box>
+    </div>
   );
 }
