@@ -4,330 +4,282 @@
 // Quality: 89/100 | Created: 2026-06-21
 //# anyplot-orientation: square
 
-import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME;
-const COURT_STROKE =
-  THEME === "light" ? "rgba(26,26,23,0.40)" : "rgba(240,239,232,0.50)";
 
-// --- Deterministic shot data (LCG seed=42) ------------------------------------
-function makeLCG(seed) {
-  let s = seed >>> 0;
-  return function () {
-    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
+// Constants
+// NBA half court in feet, origin at the basket center
+const COURT_WIDTH = 50;
+const COURT_DEPTH = 47; // baseline to half-court line
+const RIM_FROM_BASELINE = 5.25;
+const BACKBOARD_FROM_BASELINE = 4;
+const BACKBOARD_WIDTH = 6;
+const RIM_RADIUS = 0.75;
+const PAINT_WIDTH = 16;
+const FREE_THROW_FROM_BASELINE = 19; // 15 ft from the backboard
+const FREE_THROW_CIRCLE_R = 6;
+const RESTRICTED_R = 4;
+const THREE_ARC_R = 23.75;
+const THREE_CORNER_X = 22;
+const OUTCOME_LABELS = { made: "Made", missed: "Missed" };
+const MARKER_RADII = [4.5, 6, 7.5]; // px, by shot type ranked on its mean distance from the basket
+const MARKER_OPACITY = 0.8;
 
-// NBA half-court: x ∈ [-25, 25] ft, y ∈ [0, 47] ft (y=0 baseline)
-const BASKET_Y = 5.25;
-const THREE_PT_R = 23.75;
-const CORNER_X = 22;
-const CORNER_TOP_Y = BASKET_Y + Math.sqrt(THREE_PT_R ** 2 - CORNER_X ** 2);
+// Columns: set these to your data's column names
+const X = "Court x (ft from basket)"; // role: x
+const Y = "Court y (ft from basket)"; // role: y
+const MADE = "Made"; // role: made
+const SHOT_TYPE = "Shot type"; // role: shot_type
 
-function generateShots() {
-  const rng = makeLCG(42);
-  const shots = [];
-
-  for (let i = 0; i < 300; i++) {
-    const zone = rng();
-    let x, y, shot_type;
-
-    if (zone < 0.20) {
-      // At the rim / paint close range
-      const angle = rng() * Math.PI;
-      const dist = rng() * 4 + 0.5;
-      x = Math.cos(angle) * dist;
-      y = BASKET_Y + Math.abs(Math.sin(angle)) * dist;
-      shot_type = "2-pointer";
-    } else if (zone < 0.25) {
-      // Left corner three
-      x = -(rng() * 2.5 + 21.5);
-      y = rng() * 10 + 0.5;
-      shot_type = "3-pointer";
-    } else if (zone < 0.30) {
-      // Right corner three
-      x = rng() * 2.5 + 21.5;
-      y = rng() * 10 + 0.5;
-      shot_type = "3-pointer";
-    } else if (zone < 0.58) {
-      // Mid-range (inside three-point line)
-      const angle = rng() * Math.PI;
-      const dist = rng() * 8 + 9;
-      x = Math.cos(angle) * dist;
-      y = BASKET_Y + Math.sin(angle) * dist;
-      if (y < 0.5) y = 0.5 + rng() * 2;
-      const d = Math.sqrt(x ** 2 + (y - BASKET_Y) ** 2);
-      if (d > 22) {
-        x = (x / d) * 21.5;
-        y = BASKET_Y + ((y - BASKET_Y) / d) * 21.5;
-      }
-      shot_type = "2-pointer";
-    } else if (zone < 0.85) {
-      // Arc three-pointers
-      const angle = rng() * Math.PI;
-      const dist = rng() * 4.5 + THREE_PT_R;
-      x = Math.cos(angle) * dist;
-      y = BASKET_Y + Math.sin(angle) * dist;
-      if (y < 0.5) y = 0.5 + rng() * 2;
-      if (y > 44) y = 44;
-      x = Math.max(-24.5, Math.min(24.5, x));
-      shot_type = "3-pointer";
-    } else {
-      // Free throw (~15% of attempts, at the free-throw line ~19 ft from baseline)
-      x = rng() * 0.8 - 0.4;
-      y = 19 + rng() * 0.6 - 0.3;
-      shot_type = "free-throw";
-    }
-
-    const d = Math.sqrt(x ** 2 + (y - BASKET_Y) ** 2);
-    const makePct =
-      shot_type === "free-throw"
-        ? 0.78
-        : shot_type === "3-pointer"
-        ? 0.37
-        : d < 7
-        ? 0.60
-        : 0.41;
-    const made = rng() < makePct;
-
-    shots.push({
-      id: i,
-      x: parseFloat(x.toFixed(2)),
-      y: parseFloat(y.toFixed(2)),
-      made,
-      shot_type,
-    });
+// Data: replace this block with your own records, one object per row
+// One player's season of 300 attempts: rim, mid-range, corner and arc threes, free throws.
+let seed = 42;
+const u = Array.from({ length: 2400 }, () => (seed = (Math.imul(1664525, seed) + 1013904223) >>> 0) / 4294967296);
+let k = 0;
+const data: Record<string, number | boolean | string>[] = [];
+for (let i = 0; i < 300; i += 1) {
+  const zone = u[k++];
+  let x = 0;
+  let y = 0; // feet from the baseline while generating
+  let shotType = "2-pointer";
+  if (zone < 0.2) {
+    const angle = u[k++] * Math.PI;
+    const dist = u[k++] * 4 + 0.5;
+    x = Math.cos(angle) * dist;
+    y = RIM_FROM_BASELINE + Math.sin(angle) * dist;
+  } else if (zone < 0.3) {
+    x = (zone < 0.25 ? -1 : 1) * (u[k++] * 2.3 + 22.2);
+    y = u[k++] * 10 + 0.5;
+    shotType = "3-pointer";
+  } else if (zone < 0.58) {
+    const angle = u[k++] * Math.PI;
+    const dist = u[k++] * 8 + 9;
+    x = Math.cos(angle) * dist;
+    y = RIM_FROM_BASELINE + Math.sin(angle) * dist;
+  } else if (zone < 0.85) {
+    const angle = u[k++] * Math.PI;
+    const dist = u[k++] * 4.5 + THREE_ARC_R;
+    x = Math.max(-24.5, Math.min(24.5, Math.cos(angle) * dist));
+    y = RIM_FROM_BASELINE + Math.sin(angle) * dist;
+    shotType = "3-pointer";
+  } else {
+    x = u[k++] * 0.8 - 0.4;
+    y = FREE_THROW_FROM_BASELINE + u[k++] * 0.6 - 0.3;
+    shotType = "free-throw";
   }
-  return shots;
+  const near = Math.hypot(x, y - RIM_FROM_BASELINE) < 7;
+  const makePct = shotType === "free-throw" ? 0.78 : shotType === "3-pointer" ? 0.37 : near ? 0.6 : 0.41;
+  data.push({
+    [X]: Number(x.toFixed(2)),
+    [Y]: Number((y - RIM_FROM_BASELINE).toFixed(2)),
+    [MADE]: u[k++] < makePct,
+    [SHOT_TYPE]: shotType,
+  });
 }
 
-const allShots = generateShots();
-const madeShots = allShots.filter((s) => s.made).map((s) => ({ id: s.id, x: s.x, y: s.y }));
-const missedShots = allShots.filter((s) => !s.made).map((s) => ({ id: s.id, x: s.x, y: s.y }));
+// Plot: reads only data and the constants above
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const outcomeColor = { made: t.palette[0], missed: t.palette[4] };
 
-const X_MIN = -25, X_MAX = 25, Y_MIN = 0, Y_MAX = 47;
+const types = [...new Set(data.map((d) => String(d[SHOT_TYPE])))];
+const typeStats = types
+  .map((type) => {
+    const rows = data.filter((d) => d[SHOT_TYPE] === type);
+    const meanDist = rows.reduce((s, d) => s + Math.hypot(Number(d[X]), Number(d[Y])), 0) / rows.length;
+    return { type, attempts: rows.length, made: rows.filter((d) => d[MADE]).length, meanDist };
+  })
+  .sort((a, b) => a.meanDist - b.meanDist);
+const radiusOf = new Map(typeStats.map((s, i) => [s.type, MARKER_RADII[i]]));
 
-// Marker radius varies by shot type to encode the third data dimension
-function markerRadius(shot_type) {
-  if (shot_type === "free-throw") return 4.5;
-  if (shot_type === "3-pointer") return 6.5;
-  return 5.5; // 2-pointer
-}
+const shots = data.map((d, i) => ({
+  id: i,
+  x: Number(d[X]),
+  y: Number(d[Y]),
+  made: Boolean(d[MADE]),
+  r: radiusOf.get(String(d[SHOT_TYPE])) as number,
+}));
+const missedShots = shots.filter((s) => !s.made);
+const madeShots = shots.filter((s) => s.made);
+const madeTotal = madeShots.length;
 
-// --- Custom shot markers: ○ circles for made, × marks for missed -------------
-// Shape encoding provides color-blind-safe redundancy for made/missed outcome
-function ShotMarkers() {
-  const { left, top, width, height } = useDrawingArea();
-  const scX = (ft) => left + ((ft - X_MIN) / (X_MAX - X_MIN)) * width;
-  const scY = (ft) => top + ((Y_MAX - ft) / (Y_MAX - Y_MIN)) * height;
+// Court geometry in basket-centered feet
+const baselineY = -RIM_FROM_BASELINE;
+const halfCourtY = COURT_DEPTH - RIM_FROM_BASELINE;
+const backboardY = BACKBOARD_FROM_BASELINE - RIM_FROM_BASELINE;
+const freeThrowY = FREE_THROW_FROM_BASELINE - RIM_FROM_BASELINE;
+const cornerTopY = Math.sqrt(THREE_ARC_R ** 2 - THREE_CORNER_X ** 2);
 
+// Layout: equal px per foot on both axes, court centered in the chart area
+const HEADER_H = 92;
+const LEGEND_H = 56;
+const MIN_SIDE = 40;
+const MIN_VERT = 14;
+const chartH = H - HEADER_H - LEGEND_H;
+const pxPerFt = Math.min((W - 2 * MIN_SIDE) / COURT_WIDTH, (chartH - 2 * MIN_VERT) / COURT_DEPTH);
+const sideMargin = (W - pxPerFt * COURT_WIDTH) / 2;
+const vertMargin = (chartH - pxPerFt * COURT_DEPTH) / 2;
+
+const title = "scatter-shot-chart · javascript · muix · anyplot.ai";
+const subtitle = [
+  `${shots.length} attempts, ${madeTotal} made (${((100 * madeTotal) / shots.length).toFixed(1)}%)`,
+  ...types.map((type) => {
+    const s = typeStats.find((st) => st.type === type) as (typeof typeStats)[number];
+    return `${type} ${s.made}/${s.attempts} (${((100 * s.made) / s.attempts).toFixed(0)}%)`;
+  }),
+].join(" · ");
+
+function Court() {
+  const xs = useXScale("court-x") as (v: number) => number;
+  const ys = useYScale("court-y") as (v: number) => number;
+  const line = { fill: "none", stroke: t.inkSoft, strokeWidth: 2, strokeLinecap: "round" as const };
+  const ftR = FREE_THROW_CIRCLE_R * pxPerFt;
   return (
     <g>
-      {/* Missed shots: × marks in red (rendered first, under made shots) */}
-      {allShots
-        .filter((s) => !s.made)
-        .map((shot) => {
-          const sx = scX(shot.x);
-          const sy = scY(shot.y);
-          const r = markerRadius(shot.shot_type);
-          return (
+      <rect
+        x={xs(-COURT_WIDTH / 2)}
+        y={ys(halfCourtY)}
+        width={COURT_WIDTH * pxPerFt}
+        height={COURT_DEPTH * pxPerFt}
+        style={{ ...line, strokeWidth: 2.5 }}
+      />
+      <rect
+        x={xs(-PAINT_WIDTH / 2)}
+        y={ys(freeThrowY)}
+        width={PAINT_WIDTH * pxPerFt}
+        height={(freeThrowY - baselineY) * pxPerFt}
+        style={line}
+      />
+      <path
+        d={`M ${xs(-FREE_THROW_CIRCLE_R)} ${ys(freeThrowY)} A ${ftR} ${ftR} 0 0 1 ${xs(FREE_THROW_CIRCLE_R)} ${ys(freeThrowY)}`}
+        style={line}
+      />
+      <path
+        d={`M ${xs(-FREE_THROW_CIRCLE_R)} ${ys(freeThrowY)} A ${ftR} ${ftR} 0 0 0 ${xs(FREE_THROW_CIRCLE_R)} ${ys(freeThrowY)}`}
+        style={{ ...line, strokeDasharray: "8 7" }}
+      />
+      <path
+        d={`M ${xs(-RESTRICTED_R)} ${ys(backboardY)} L ${xs(-RESTRICTED_R)} ${ys(0)} A ${RESTRICTED_R * pxPerFt} ${RESTRICTED_R * pxPerFt} 0 0 1 ${xs(RESTRICTED_R)} ${ys(0)} L ${xs(RESTRICTED_R)} ${ys(backboardY)}`}
+        style={line}
+      />
+      <path
+        d={`M ${xs(-THREE_CORNER_X)} ${ys(baselineY)} L ${xs(-THREE_CORNER_X)} ${ys(cornerTopY)} A ${THREE_ARC_R * pxPerFt} ${THREE_ARC_R * pxPerFt} 0 0 1 ${xs(THREE_CORNER_X)} ${ys(cornerTopY)} L ${xs(THREE_CORNER_X)} ${ys(baselineY)}`}
+        style={line}
+      />
+      <line
+        x1={xs(-BACKBOARD_WIDTH / 2)}
+        y1={ys(backboardY)}
+        x2={xs(BACKBOARD_WIDTH / 2)}
+        y2={ys(backboardY)}
+        style={{ ...line, strokeWidth: 4 }}
+      />
+      <circle cx={xs(0)} cy={ys(0)} r={RIM_RADIUS * pxPerFt} style={{ ...line, strokeWidth: 2.5 }} />
+    </g>
+  );
+}
+
+function ShotMarkers() {
+  const xs = useXScale("court-x") as (v: number) => number;
+  const ys = useYScale("court-y") as (v: number) => number;
+  return (
+    <g>
+      {missedShots.map((s) => {
+        const px = xs(s.x);
+        const py = ys(s.y);
+        return (
+          <path
+            key={s.id}
+            d={`M ${px - s.r} ${py - s.r} L ${px + s.r} ${py + s.r} M ${px + s.r} ${py - s.r} L ${px - s.r} ${py + s.r}`}
+            stroke={outcomeColor.missed}
+            strokeWidth={s.r * 0.55}
+            strokeOpacity={MARKER_OPACITY}
+            strokeLinecap="round"
+          />
+        );
+      })}
+      {madeShots.map((s) => (
+        <circle
+          key={s.id}
+          cx={xs(s.x)}
+          cy={ys(s.y)}
+          r={s.r}
+          fill={outcomeColor.made}
+          fillOpacity={MARKER_OPACITY}
+        />
+      ))}
+    </g>
+  );
+}
+
+export default function Chart() {
+  const glyph = MARKER_RADII[MARKER_RADII.length - 1];
+  return (
+    <div style={{ width: W, height: H, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{title}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
+      </div>
+      <ChartsContainer
+        width={W}
+        height={chartH}
+        skipAnimation
+        series={[]}
+        margin={{ top: vertMargin, bottom: vertMargin, left: sideMargin, right: sideMargin }}
+        xAxis={[{ id: "court-x", min: -COURT_WIDTH / 2, max: COURT_WIDTH / 2, position: "none" }]}
+        yAxis={[{ id: "court-y", min: baselineY, max: halfCourtY, position: "none" }]}
+      >
+        <Court />
+        <ShotMarkers />
+      </ChartsContainer>
+      <div
+        style={{
+          height: LEGEND_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 22,
+          fontSize: 16,
+          color: t.ink,
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width={2 * glyph + 4} height={2 * glyph + 4}>
+            <circle cx={glyph + 2} cy={glyph + 2} r={glyph} fill={outcomeColor.made} fillOpacity={MARKER_OPACITY} />
+          </svg>
+          {OUTCOME_LABELS.made}
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width={2 * glyph + 4} height={2 * glyph + 4}>
             <path
-              key={shot.id}
-              d={`M ${sx - r} ${sy - r} L ${sx + r} ${sy + r} M ${sx + r} ${sy - r} L ${sx - r} ${sy + r}`}
-              stroke="#AE3030"
-              strokeWidth={r * 0.55}
-              strokeOpacity={0.7}
+              d={`M 2 2 L ${2 * glyph + 2} ${2 * glyph + 2} M ${2 * glyph + 2} 2 L 2 ${2 * glyph + 2}`}
+              stroke={outcomeColor.missed}
+              strokeWidth={glyph * 0.55}
+              strokeOpacity={MARKER_OPACITY}
               strokeLinecap="round"
             />
-          );
-        })}
-      {/* Made shots: filled circles in green */}
-      {allShots
-        .filter((s) => s.made)
-        .map((shot) => {
-          const sx = scX(shot.x);
-          const sy = scY(shot.y);
-          const r = markerRadius(shot.shot_type);
-          return (
-            <circle
-              key={shot.id}
-              cx={sx}
-              cy={sy}
-              r={r}
-              fill="#009E73"
-              fillOpacity={0.7}
-            />
-          );
-        })}
-    </g>
-  );
-}
-
-// --- Basketball court SVG overlay (accurate NBA half-court dimensions) --------
-function BasketballCourt() {
-  const { left, top, width, height } = useDrawingArea();
-  const cx = (ft) => left + ((ft - X_MIN) / (X_MAX - X_MIN)) * width;
-  const cy = (ft) => top + ((Y_MAX - ft) / (Y_MAX - Y_MIN)) * height;
-
-  const threeR_x = (THREE_PT_R / (X_MAX - X_MIN)) * width;
-  const threeR_y = (THREE_PT_R / (Y_MAX - Y_MIN)) * height;
-  const ftCircR = (6 / (X_MAX - X_MIN)) * width;
-  const raR_x = (4 / (X_MAX - X_MIN)) * width;
-  const raR_y = (4 / (Y_MAX - Y_MIN)) * height;
-  const basketR = (0.75 / (X_MAX - X_MIN)) * width;
-
-  const ls = {
-    fill: "none",
-    stroke: COURT_STROKE,
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-
-  return (
-    <g>
-      {/* Court boundary (baseline + sidelines + half-court line) */}
-      <rect
-        x={cx(-25)}
-        y={cy(47)}
-        width={cx(25) - cx(-25)}
-        height={cy(0) - cy(47)}
-        style={{ ...ls, strokeWidth: 2.5 }}
-      />
-      {/* Paint / key area */}
-      <rect
-        x={cx(-8)}
-        y={cy(19)}
-        width={cx(8) - cx(-8)}
-        height={cy(0) - cy(19)}
-        style={ls}
-      />
-      {/* Free throw circle */}
-      <ellipse
-        cx={cx(0)}
-        cy={cy(19)}
-        rx={ftCircR}
-        ry={(6 / (Y_MAX - Y_MIN)) * height}
-        style={ls}
-      />
-      {/* Restricted area arc (semicircle above baseline) */}
-      <path
-        d={`M ${cx(-4)} ${cy(BASKET_Y)} A ${raR_x} ${raR_y} 0 0 1 ${cx(4)} ${cy(BASKET_Y)}`}
-        style={ls}
-      />
-      {/* Corner three-point straight lines */}
-      <line
-        x1={cx(-CORNER_X)}
-        y1={cy(0)}
-        x2={cx(-CORNER_X)}
-        y2={cy(CORNER_TOP_Y)}
-        style={ls}
-      />
-      <line
-        x1={cx(CORNER_X)}
-        y1={cy(0)}
-        x2={cx(CORNER_X)}
-        y2={cy(CORNER_TOP_Y)}
-        style={ls}
-      />
-      {/* Three-point arc (large-arc=0, sweep=1 → curves toward half-court) */}
-      <path
-        d={`M ${cx(-CORNER_X)} ${cy(CORNER_TOP_Y)} A ${threeR_x} ${threeR_y} 0 0 1 ${cx(CORNER_X)} ${cy(CORNER_TOP_Y)}`}
-        style={ls}
-      />
-      {/* Backboard */}
-      <line
-        x1={cx(-3)}
-        y1={cy(4)}
-        x2={cx(3)}
-        y2={cy(4)}
-        style={{ ...ls, strokeWidth: 4 }}
-      />
-      {/* Basket rim */}
-      <ellipse
-        cx={cx(0)}
-        cy={cy(BASKET_Y)}
-        rx={basketR}
-        ry={(0.75 / (Y_MAX - Y_MIN)) * height}
-        style={{ ...ls, strokeWidth: 2.5 }}
-      />
-    </g>
-  );
-}
-
-// --- Chart title as SVG text above the drawing area --------------------------
-function ChartTitle() {
-  const { left, top, width } = useDrawingArea();
-  return (
-    <text
-      x={left + width / 2}
-      y={top - 24}
-      textAnchor="middle"
-      style={{
-        fontSize: 22,
-        fontWeight: 600,
-        fontFamily: "Inter, system-ui, -apple-system, sans-serif",
-        fill: t.ink,
-      }}
-    >
-      scatter-shot-chart · javascript · muix · anyplot.ai
-    </text>
-  );
-}
-
-// --- Main chart component ----------------------------------------------------
-export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  return (
-    <ChartContainer
-      width={W}
-      height={H}
-      skipAnimation
-      series={[
-        {
-          type: "scatter",
-          id: "missed",
-          label: "Missed",
-          data: missedShots,
-          color: "#AE3030",
-        },
-        {
-          type: "scatter",
-          id: "made",
-          label: "Made",
-          data: madeShots,
-          color: "#009E73",
-        },
-      ]}
-      xAxis={[{ min: X_MIN, max: X_MAX }]}
-      yAxis={[{ min: Y_MIN, max: Y_MAX }]}
-      margin={{ top: 70, bottom: 80, left: 60, right: 60 }}
-    >
-      <BasketballCourt />
-      <ShotMarkers />
-      <ChartsLegend
-        position={{ vertical: "bottom", horizontal: "middle" }}
-        slotProps={{
-          legend: {
-            direction: "row",
-            itemMarkWidth: 20,
-            itemMarkHeight: 20,
-            padding: 12,
-            labelStyle: {
-              fontSize: 20,
-              fill: t.ink,
-            },
-          },
-        }}
-      />
-      <ChartTitle />
-    </ChartContainer>
+          </svg>
+          {OUTCOME_LABELS.missed}
+        </span>
+        <span style={{ color: t.inkSoft, marginLeft: 18 }}>{SHOT_TYPE} (marker size):</span>
+        {typeStats.map((s, i) => (
+          <span key={s.type} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <svg width={2 * glyph + 4} height={2 * glyph + 4}>
+              <circle cx={glyph + 2} cy={glyph + 2} r={MARKER_RADII[i]} fill={t.inkSoft} fillOpacity={0.75} />
+            </svg>
+            {s.type}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
