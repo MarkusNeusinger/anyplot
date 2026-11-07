@@ -1337,7 +1337,8 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
         for place, operations in enumerate(case.before_operations):
             try:
                 args = PrepareArgs.model_validate({"operations": operations})
-                _, parsed = apply_and_parse(parsed, args.operations)
+                # In the case's language, as the session names a column the operations leave unnamed (`date_number`).
+                _, parsed = apply_and_parse(parsed, args.operations, language=case.locale)
             except (ValidationError, PrepareError) as exc:
                 raise SetupError(f"case {case.id}: before_operations[{place}] does not apply: {exc}") from exc
 

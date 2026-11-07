@@ -812,6 +812,17 @@ class TestRun:
 
         with pytest.raises(SetupError, match=r"v-005: before_operations\[0\] does not apply"):
             check_cases([bad])
+        # An unnamed `date_number` column is named in the case's language, so a later step finds it by that name.
+        dated = {"op": "date_number", "column": "Datum", "unit": "year"}
+        german = PrepCase(
+            id="v-007",
+            dataset_text="Datum,Wert\n2024-01-01,1\n2025-01-01,2\n",
+            message="zurück",
+            expected_operations=[],
+            locale="de",
+            before_operations=[[dated], [{"op": "rename", "column": "Datum (Jahr)", "name": "Jahr"}]],
+        )
+        check_cases([german])
         with pytest.raises(ValidationError, match="earlier changes come before a message"):
             PrepCase(
                 id="v-006",
