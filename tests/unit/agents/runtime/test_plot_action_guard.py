@@ -150,6 +150,19 @@ class TestTheGuard:
         for name in WRITES:
             assert f"`{name}`" in rule, name
 
+    def test_the_prompt_binds_only_a_role_the_turns_own_change_left_open(self) -> None:
+        """Prep eval of 2026-11-07: with the binding rule unscoped, the root filled a role that was open before the turn
+        with a `row_number` on a plain "drop the Total row" (7 of 8 case runs from #12593 on, 0 of 9 before it)."""
+        policy = root_instruction()
+        rule = next(line for line in policy.splitlines() if "you can bind yourself" in line)
+        later = next(line for line in policy.splitlines() if "In a later turn a line matters only" in line)
+
+        assert "A required role that lost its bound column in this turn's data change" in rule
+        assert "A required role that was already open before the turn is not yours to fill" in rule
+        assert '"Conversions for open roles"' in rule
+        assert "never add a line's conversion or a `row_number` to the operations of another change" in later
+        assert "also when an `aggregate` of this turn rebuilds the table" in later
+
 
 DERIVE = {"op": "derive", "name": "Score per Hour", "how": "ratio", "columns": ["Exam Score", "Study Hours"]}
 REBOUND = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Score per Hour"}]
