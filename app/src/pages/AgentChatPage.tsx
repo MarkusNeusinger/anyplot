@@ -692,14 +692,21 @@ function AgentChat({
   const startOverShown = !plotAll && ((step2 && hasPlot) || carryCount > 0);
   // The chat's own feedback before the first plot: `.feedback()` at the status line's end opens
   // its form above the line. Not while a turn runs, which may still bring the plot; a sent
-  // record stays in view.
+  // record stays in view. A library switch alone is no conversation to report.
   const feedbackOffer =
-    state.items.length > 0 && !state.run && Object.keys(state.versions).length === 0;
+    state.items.some(item => item.kind !== 'switch') &&
+    !state.run &&
+    Object.keys(state.versions).length === 0;
   const feedbackShown = !!state.chatFeedback || (feedbackOpen && feedbackOffer);
   // While a run's timeline stands below the thread, what the run sends into the thread waits
   // for its plot, which takes the timeline's place (`runView`).
   const view = runView(state);
-  const threadState = view.items === state.items ? state : { ...state, items: view.items };
+  // The folded list is the same for the same items (`shownItems`), so the thread's state changes
+  // only with the session's.
+  const threadState = useMemo(
+    () => (view.items === state.items ? state : { ...state, items: view.items }),
+    [state, view.items]
+  );
 
   // A key press on `.plot_all()` continues in the panel it opened: the button waits while
   // the panel is open, and the panel is where the plots come in.
