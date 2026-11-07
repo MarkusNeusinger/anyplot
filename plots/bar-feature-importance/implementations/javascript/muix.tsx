@@ -3,133 +3,120 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-02
 import { BarChart } from "@mui/x-charts/BarChart";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
-import { Box, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Feature importances from a random forest regressor predicting wine quality
-// (UCI Wine Quality dataset), sorted descending so the most influential
-// feature renders first.
-const features = [
-  "Alcohol",
-  "Sulphates",
-  "Volatile Acidity",
-  "Total Sulfur Dioxide",
-  "Density",
-  "Chlorides",
-  "Citric Acid",
-  "Fixed Acidity",
-  "pH",
-  "Free Sulfur Dioxide",
-  "Residual Sugar",
+// Constants
+const TITLE = "Wine Quality Random Forest · bar-feature-importance · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const PAD_SHARE = 0.1; // room beyond the longest bar for its value label
+const DECIMALS = 3;
+
+// Columns: set these to your data's column names
+const FEATURE = "Feature"; // role: feature
+const IMPORTANCE = "Importance (mean decrease in impurity)"; // role: importance
+
+// Data: replace this block with your own records, one object per row
+// Random forest regressor predicting wine quality (UCI Wine Quality dataset)
+const data = [
+  { [FEATURE]: "Alcohol", [IMPORTANCE]: 0.192 },
+  { [FEATURE]: "Sulphates", [IMPORTANCE]: 0.134 },
+  { [FEATURE]: "Volatile Acidity", [IMPORTANCE]: 0.121 },
+  { [FEATURE]: "Total Sulfur Dioxide", [IMPORTANCE]: 0.095 },
+  { [FEATURE]: "Density", [IMPORTANCE]: 0.084 },
+  { [FEATURE]: "Chlorides", [IMPORTANCE]: 0.069 },
+  { [FEATURE]: "Citric Acid", [IMPORTANCE]: 0.063 },
+  { [FEATURE]: "Fixed Acidity", [IMPORTANCE]: 0.058 },
+  { [FEATURE]: "pH", [IMPORTANCE]: 0.054 },
+  { [FEATURE]: "Free Sulfur Dioxide", [IMPORTANCE]: 0.049 },
+  { [FEATURE]: "Residual Sugar", [IMPORTANCE]: 0.041 },
 ];
-const importance = [0.192, 0.134, 0.121, 0.095, 0.084, 0.069, 0.063, 0.058, 0.054, 0.049, 0.041];
 
-const TITLE = "bar-feature-importance · javascript · muix · anyplot.ai";
-const LEAD_RATIO = (importance[0] / importance[1]).toFixed(1);
-const CALLOUT = `${features[0]} leads the ranking at ${importance[0].toFixed(3)} — ${LEAD_RATIO}× the next-highest driver.`;
+// Plot: reads only data and the constants above
+// Highest importance first, so the strongest feature sits at the top
+const rows = data.filter((d) => d[IMPORTANCE] != null).sort((a, b) => b[IMPORTANCE] - a[IMPORTANCE]);
+const features = rows.map((d) => d[FEATURE]);
+const importance = rows.map((d) => d[IMPORTANCE]);
+const maxImportance = Math.max(...importance);
+const minImportance = Math.min(...importance);
+const fmt = (v: number) => v.toFixed(DECIMALS);
 
-// Right-aligns the value just past each bar's tip (reading the real x/y
-// scales rather than the animated bar geometry, which still reports its
-// pre-mount "from" position during this synchronous render pass), falling
-// back to an inside-end placement when the bar runs close to the axis max
-// so the label never clips the canvas edge (spec asks for "text
-// annotations at the end of bars").
-function EndBarLabel({ dataIndex, className, children }) {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const drawingArea = useDrawingArea();
-  const value = importance[dataIndex];
-  if (value == null || !children) {
-    return null;
-  }
-  const barEnd = xScale(value);
-  const rowCenter = yScale(features[dataIndex]) + yScale.bandwidth() / 2;
-  const canvasRight = drawingArea.left + drawingArea.width + drawingArea.right;
-  const pad = 8;
-  const estimatedTextWidth = String(children).length * 9;
-  const fitsOutside = barEnd + pad + estimatedTextWidth <= canvasRight - 6;
-  return (
-    <text
-      x={fitsOutside ? barEnd + pad : barEnd - pad}
-      y={rowCenter}
-      textAnchor={fitsOutside ? "start" : "end"}
-      dominantBaseline="central"
-      className={className}
-      style={{ fontSize: 13, fontWeight: 700, fill: t.ink }}
-    >
-      {children}
-    </text>
-  );
-}
+const lead = rows[0];
+const runnerUp = rows[1];
+const SUBTITLE = [
+  `${rows.length} features, sorted by importance`,
+  runnerUp && runnerUp[IMPORTANCE] > 0
+    ? `${lead[FEATURE]} leads at ${fmt(lead[IMPORTANCE])}, ${(lead[IMPORTANCE] / runnerUp[IMPORTANCE]).toFixed(1)}× ${runnerUp[FEATURE]}`
+    : null,
+]
+  .filter(Boolean)
+  .join(" · ");
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const padding = { top: 28, right: 40, bottom: 24, left: 40 };
-  const titleBlockHeight = 76;
-  const chartWidth = size.width - padding.left - padding.right;
-  const chartHeight = size.height - padding.top - padding.bottom - titleBlockHeight;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: size.width,
-        height: size.height,
-        boxSizing: "border-box",
-        padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", mb: "4px", lineHeight: 1 }}>
-        {TITLE}
-      </Typography>
-      <Typography sx={{ fontSize: 14, color: t.inkSoft, mb: "20px", lineHeight: 1.3 }}>{CALLOUT}</Typography>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
+        </Typography>
+      </Box>
       <BarChart
-        width={chartWidth}
-        height={chartHeight}
+        width={width}
+        height={height - TITLE_H}
         layout="horizontal"
         skipAnimation
-        borderRadius={5}
+        hideLegend
+        borderRadius={4}
+        grid={{ vertical: true }}
         series={[
           {
+            id: "importance",
             data: importance,
-            label: "Feature importance",
-            valueFormatter: (v) => (v === null ? "" : `${v.toFixed(3)} importance`),
+            label: IMPORTANCE,
+            valueFormatter: (v: number | null) => (v == null ? null : fmt(v)),
+            barLabel: (item: { value: number | null }) => (item.value == null ? null : fmt(item.value)),
+            barLabelPlacement: "outside",
           },
         ]}
         xAxis={[
           {
+            id: "value",
             min: 0,
-            label: "Importance Score",
-            colorMap: {
-              type: "continuous",
-              min: Math.min(...importance),
-              max: Math.max(...importance),
-              color: [t.seq[0], t.seq[1]],
-            },
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            max: maxImportance * (1 + PAD_SHARE),
+            label: IMPORTANCE,
+            height: 64,
+            tickNumber: 8,
+            // The sequential Imprint ramp maps the same importance the bar length shows
+            colorMap: { type: "continuous", min: minImportance, max: maxImportance, color: [t.seq[0], t.seq[1]] },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             scaleType: "band",
             data: features,
-            tickLabelStyle: { fontSize: 14 },
+            label: FEATURE,
+            width: 210,
+            categoryGapRatio: 0.3,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 15, fill: t.ink },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        barLabel={(item) => (item.value === null ? "" : item.value.toFixed(3))}
-        slots={{ barLabel: EndBarLabel }}
-        grid={{ vertical: true }}
-        margin={{ left: 190, right: 64, top: 16, bottom: 56 }}
-        slotProps={{ legend: { hidden: true } }}
+        margin={{ top: 16, right: 48, bottom: 8, left: 24 }}
         sx={{
-          "& .MuiChartsAxis-line": { stroke: t.grid },
-          "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
+          "& .MuiBarChart-label": { fill: t.ink, fontSize: 15, fontWeight: 600 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       />
     </Box>
