@@ -233,15 +233,20 @@ def returning_keeps(pulls: Iterable[dict[str, Any]]) -> set[int]:
     """The kept PRs whose gate record is a keep with a code in ``RETURN_CODES``.
 
     The record must name the PR and its pair, so a record copied from another
-    PR never counts.
+    PR never counts. A PR whose ``comments`` is not a list of comments has no
+    record: the listing is best effort, so an unexpected shape costs the
+    return, never the night.
     """
     numbers: set[int] = set()
     for pull in pulls:
+        if not isinstance(pull, dict):
+            continue
         match = BRANCH_RE.match(str(pull.get("headRefName") or ""))
         number = pull.get("number")
-        if not match or not isinstance(number, int):
+        comments = pull.get("comments")
+        if not match or not isinstance(number, int) or not isinstance(comments, list):
             continue
-        record = gate_record(pull.get("comments") or [])
+        record = gate_record(comments)
         if (
             record is not None
             and record.get("pr") == number

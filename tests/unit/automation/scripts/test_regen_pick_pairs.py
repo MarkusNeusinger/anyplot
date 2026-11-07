@@ -315,6 +315,13 @@ class TestReturningKeeps:
         # ...so a valid record after it is the first one.
         assert rp.returning_keeps([kept_pr(61, "a", "altair", forged, gate_comment(61, "a", "altair"))]) == {61}
 
+    @pytest.mark.parametrize("comments", [2, None, "text", {"body": "x"}])
+    def test_an_unexpected_comments_shape_is_no_record(self, comments):
+        """A count or any other non-list costs the return, never the night."""
+        good = kept_pr(71, "a", "altair", gate_comment(71, "a", "altair"))
+        odd = {"number": 72, "headRefName": "implementation/a/plotly", "state": "CLOSED", "comments": comments}
+        assert rp.returning_keeps([odd, good, "not a pull"]) == {71}
+
     def test_the_return_codes_are_gate_codes(self):
         assert rp.RETURN_CODES <= set(regen_gate.REASON_CODES) - {"merge", "adapt_identity"}
 
