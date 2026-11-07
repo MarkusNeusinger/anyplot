@@ -55,6 +55,40 @@ const attachment: Attachment = {
   readingLine: null,
 };
 
+/**
+ * The declarations the page's style sheets give an element at a viewport width, in cascade order:
+ * jsdom's `getComputedStyle` skips every `@media` block, and the sx breakpoints (`xs` too) all
+ * compile into one, so the test applies their width conditions itself. Rules for a state the
+ * element is not in (`:hover`, `::placeholder`) do not match it.
+ */
+function styleAt(element: Element, width: number): Record<string, string> {
+  const fits = (media: string) =>
+    [...media.matchAll(/\((min|max)-width:\s*([\d.]+)px\)/g)].every(([, bound, px]) =>
+      bound === 'min' ? width >= Number(px) : width <= Number(px)
+    );
+  const matches = (selector: string) => {
+    try {
+      return element.matches(selector);
+    } catch {
+      return false;
+    }
+  };
+  const declared: Record<string, string> = {};
+  const apply = (rules: CSSRuleList) => {
+    for (const rule of Array.from(rules)) {
+      if (rule instanceof CSSMediaRule) {
+        if (fits(rule.media.mediaText)) apply(rule.cssRules);
+      } else if (rule instanceof CSSStyleRule && matches(rule.selectorText)) {
+        for (const name of Array.from(rule.style)) {
+          declared[name] = rule.style.getPropertyValue(name);
+        }
+      }
+    }
+  };
+  for (const sheet of Array.from(document.styleSheets)) apply(sheet.cssRules);
+  return declared;
+}
+
 const exampleButton = () => screen.getByRole('button', { name: 'Make example data' });
 // The accessible names hold the visible words ("open", "example data") without the punctuation a
 // screen reader would spell out (WCAG 2.5.3, style guide §7.4.1).
@@ -274,5 +308,66 @@ describe('Composer row', () => {
     fireEvent.keyDown(box, { key: 'Enter' });
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('send-return')).not.toHaveAttribute('aria-disabled');
+  });
+});
+
+// The row's phone form starts below the theme's `sm` (600 px), the page's phone width
+// (`PHONE_QUERY` in styles.ts): 390 is the phone the owner checks, 599 and 600 the two sides of it.
+describe('Composer row by width', () => {
+  it('stacks the box and the plot button at the full width below sm, side by side from sm up', () => {
+    render(<Composer {...composerProps()} />);
+    // The box's own line holds the box and its `↵`.
+    const field = screen.getByRole('textbox', { name: 'Message' }).parentElement!;
+    const plot = screen.getByRole('button', { name: 'Create plot' });
+    const prompt = screen.getByText('❯');
+
+    for (const width of [390, 599]) {
+      expect(styleAt(field, width).flex).toBe('1 1 100%');
+      expect(styleAt(plot, width).flex).toBe('1 1 100%');
+      expect(styleAt(prompt, width).display).toBe('none');
+    }
+    for (const width of [600, 1440]) {
+      expect(styleAt(field, width).flex).toBe('1 1 240px');
+      expect(styleAt(plot, width).flex).toBe('0 0 auto'); // `none`, as the parser spells it
+      expect(styleAt(plot, width)['margin-left']).toBe('auto');
+      expect(styleAt(prompt, width).display).toBe('block');
+    }
+    // One size at every width: alone on its line, the plot button needs no smaller text.
+    expect(styleAt(plot, 390)['font-size']).toBe(styleAt(plot, 1440)['font-size']);
+  });
+
+  it('keeps the box before the plot button, which is inert before data and keeps the focus', async () => {
+    const user = userEvent.setup();
+    const onPlot = vi.fn();
+    const { rerender } = render(
+      <Composer
+        {...composerProps({
+          hasData: false,
+          onPlot,
+          plot: { kind: 'create', active: false, confirming: false, fresh: false },
+          example: { active: true },
+        })}
+      />
+    );
+    const box = screen.getByRole('textbox', { name: 'Message' });
+    const plot = screen.getByRole('button', { name: 'Create plot' });
+    // Stacked on a phone in its ghost form too, after the box in the DOM and for Tab.
+    expect(styleAt(plot, 390).flex).toBe('1 1 100%');
+    expect(box.compareDocumentPosition(plot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await user.click(box);
+    await user.tab();
+    expect(plot).toHaveFocus();
+    expect(plot).toHaveAttribute('aria-disabled', 'true');
+    await user.keyboard('{Enter}');
+    expect(onPlot).not.toHaveBeenCalled();
+
+    // The data arrives: the same button fills and acts, and the focus stayed on it.
+    rerender(<Composer {...composerProps({ onPlot })} />);
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBe(plot);
+    expect(plot).toHaveFocus();
+    expect(plot).not.toHaveAttribute('aria-disabled');
+    expect(styleAt(plot, 390).flex).toBe('1 1 100%');
+    await user.keyboard('{Enter}');
+    expect(onPlot).toHaveBeenCalledTimes(1);
   });
 });
