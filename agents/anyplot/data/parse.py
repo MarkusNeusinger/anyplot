@@ -71,6 +71,19 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    `_space_block`), a short row of a fixed-width layout placed by position (`_aligned`);
    a line that declares the missing-value mark (`Missing values: -999`) makes that mark
    missing in number and date columns (`_declared_missing`, `_blank_marks`).
+   Since 2026-11-07 (persona test of 2026-11-06) three more shapes of public data read.
+   A paste that opens with two or more comment lines (`#`, `%` or `//`) is read below
+   them, the comments kept as notes; when the table there has no header line, the last
+   one or two comment lines name its columns, placed by the columns' character ranges
+   in an aligned table (`_comment_lead`, `_comment_header`). A first row that is a header
+   of years or months (`TIME,2019,,2020`) under a title or key-value metadata is the
+   header (`_period_header`), and a key-value line never joins a header (`_joined_header`).
+   A `:` cell is missing in a column that then reads as numbers or dates
+   (`_blank_not_available`), and a column of flags of one to three letters (`p`, `ep`) with
+   an empty header right of a named number column stays, named after it (`2019 flag`,
+   `_flag_columns`). A Markdown table's alignment row under its header is layout
+   (`_without_alignment_rows`), and rows without values extend a table only up to a blank
+   line (`table_block`), so a padded export's legend below it stays notes.
 4. **Clean every cell.** Remove invisible format characters (Unicode category
    `Cf`: zero-width characters, bidi controls, BOMs inside the text, tag
    characters), turn line and paragraph separators (U+2028, U+2029) into spaces,
@@ -266,6 +279,25 @@ _MARK_NUMBER = re.compile(r"[+-]?[0-9]+(?:[.,][0-9]+)?")
 MIN_SENTINEL = 999  # a positive missing-value number this large or larger reads as a sentinel (`9999`), never `1`
 _NOT_A_MARK: frozenset[str] = frozenset({"no", "yes", "ja", "nein", "non", "oui", "si"})
 """Words after `Missing values:` that answer whether values are missing, not which mark stands for them."""
+NOT_AVAILABLE: frozenset[str] = frozenset({":"})
+"""The cell a statistics office writes for a value that is not available (Eurostat and others write `:`). Like a
+declared mark (`_declared_missing`) it is missing only in a column that then reads as numbers or dates
+(`_blank_not_available`), counted in the column's missing-cell note; a text column keeps it."""
+MIN_COMMENT_LINES = 2
+"""The comment lines a paste must open with before they count as comments (`_comment_lead`): one line that starts
+with `#` or `%` is as often the header of a table with a column named so (`#,Player,Goals`, `% change;Land`)."""
+_COMMENT_LINE = re.compile(r"[ \t]*(?:#|%|//)(?=$| |[#%/]|[-=*~_+]{2})")
+"""A comment line of a data file (R, gnuplot, numpy, MATLAB, a weather service's `.txt`): `#`, `%` or `//`, then
+the end of the line, a space, the marker again or a rule (`#----`). A marker right before a tab, a comma or a letter
+is a cell (`#\tName`, `#,Player`, `#tbt`), never a comment."""
+_COMMENT_PREFIX = re.compile(r"[ \t]*(?:#+|%+|/{2,})")
+FLAG_SUFFIX = " flag"
+"""The end of the name a column of flags takes from the number column on its left (`_flag_columns`)."""
+_ALIGNMENT_CELL = re.compile(r":?-{3,}:?")
+"""A cell of a Markdown table's alignment row (`---`, `:---`, `---:`, `:---:`), the line under its header."""
+_FLAG = re.compile(r"[A-Za-z]{1,3}")
+"""A cell of a flag column: one letter, or up to three combined (`p`, `e`, `ep`), as statistics offices mark a value
+provisional, estimated or a break in the series."""
 
 # A cell is missing when, after cleaning, it is exactly one of these. The set is the
 # design's list (empty, `NA`, `NaN`, `null`, `-`) plus every other token pandas reads as
@@ -718,9 +750,15 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
     decides as before (`_sniff_by_header`).
     """
     lines = [line for line in _PHYSICAL_LINE.split(text) if line.strip()][:SNIFF_LINES]
+    return _sniff_table(lines) or _sniff_by_header("\n".join(lines))
+
+
+def _sniff_table(lines: Sequence[str]) -> tuple[str, SourceFormat] | None:
+    """The delimiter under which the sampled `lines` hold a table with a value column, see `sniff_delimiter`; None
+    when no candidate, spaces included, finds one."""
     sample = "\n".join(lines)
     best: tuple[int, int, int] | None = None
-    choice: tuple[str | None, SourceFormat] = (None, "csv")
+    choice: tuple[str, SourceFormat] | None = None
     for delimiter, source_format in DELIMITERS:
         try:
             rows = [row for row in csv.reader(io.StringIO(sample), delimiter=delimiter, skipinitialspace=True) if row]
@@ -733,15 +771,19 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
         key = (block.values, count, block.width)
         if best is None or key > best:
             best, choice = key, (delimiter, source_format)
-    if best is not None:
+    if choice is not None:
         return choice
     # A table aligned with spaces only where no real delimiter finds one: runs of two or more spaces first,
     # single spaces only when the runs find no table (`_space_block`).
+    return _sniff_spaces(lines)
+
+
+def _sniff_spaces(lines: Sequence[str], *, headerless: bool = False) -> tuple[str, SourceFormat] | None:
     for delimiter in (SPACE_RUN, SINGLE_SPACE):
         spaced = [fields for line in lines if (fields := _space_fields(line, delimiter))]
-        if _space_block(spaced, single=delimiter == SINGLE_SPACE) is not None:
+        if _space_block(spaced, single=delimiter == SINGLE_SPACE, headerless=headerless) is not None:
             return delimiter, "whitespace"
-    return _sniff_by_header(sample)
+    return None
 
 
 def _space_spans(line: str, delimiter: str) -> list[tuple[int, int]]:
@@ -762,7 +804,7 @@ def _unquoted(field_text: str) -> str:
     return match.group(1) if match.group(1) is not None else match.group(2)
 
 
-def _space_block(records: Sequence[Sequence[str]], *, single: bool) -> "TableBlock | None":
+def _space_block(records: Sequence[Sequence[str]], *, single: bool, headerless: bool = False) -> "TableBlock | None":
     """The table among space-separated records, or None when spaces are no reliable delimiter here.
 
     Spaces also separate the words of prose, the items of a list (`Hund 7`) and the keys and
@@ -782,17 +824,22 @@ def _space_block(records: Sequence[Sequence[str]], *, single: bool) -> "TableBlo
     reads as a value or is missing, and no two neighbours read as one value together (`1 234`,
     a thousands group; `2024-01-01 12:00`, a timestamp). A table with a text column (`Anna
     Lee 30`) is the transcriber's.
+
+    `headerless` reads the text below a file's comment lines, whose last lines name the columns
+    (`_comment_header`): there the first record must be a data row (`TableBlock.headerless`)
+    instead of a header, and every other rule stands, the first row counted among the rows.
     """
     block = table_block(records)
-    if not block.values or block.end - block.start - 1 < MIN_SPACE_ROWS:
+    rows = block.end - block.start - (0 if headerless else 1)
+    if not block.values or rows < MIN_SPACE_ROWS or (headerless and not block.headerless):
         return None
     header = records[block.start]
     if len(header) != block.width:
         return None
-    values = [cell for cell in header if _value_like(cell)]
+    values = [] if headerless else [cell for cell in header if _value_like(cell)]  # a first row's values are data
     if values and (len(values) < 2 or len(values) == len(header) or not all(_YEAR.fullmatch(cell) for cell in values)):
         return None
-    body = records[block.start + 1 : block.end]
+    body = records[block.start + (0 if headerless else 1) : block.end]
     if header[0].endswith(":") or all(record[0].endswith(":") for record in body if record):
         return None
     if not single:
@@ -837,8 +884,18 @@ def _read_delimited(
     declared: set[str] | None = None,
     table: int = 1,
     tables: list[str] | None = None,
+    comments: bool = True,
 ) -> tuple[list[str], list[list[str]], SourceFormat]:
     """The header, the rows and the format of delimited text; the left-out lines go to `context` when given.
+
+    A paste that opens with comment lines (`_comment_lead`: two or more lines that start with
+    `#`, `%` or `//`, as R, numpy, gnuplot and a weather service's `.txt` write them) is read
+    below them: the comments are notes, also where their commas or spaces would split them
+    into the table's width, and the delimiter is sniffed from the text below. When that text
+    has no header line, its first line being a row, the last comment lines carry the names
+    (`_comment_header`), so the table takes them as its header. Comments that lead to no
+    table, or a table without a header in them either, leave the text to be read as before
+    (`comments=False`).
 
     Text that holds several tables, each under its own header after a blank line (a report
     sheet: two tables one below the other), is narrowed to table number `table` first
@@ -853,14 +910,25 @@ def _read_delimited(
     go to `declared` when given, and count as missing while the table is found, so a row of
     marks (`.` under `Fehlwerte: .`) stays a row.
     """
-    delimiter, source_format = sniff_delimiter(text)
+    lead_comments = _comment_lead(text) if find_table and comments else None
+    body, offset = text, 0  # the text read for the table, and the physical lines above it
+    sniffed: tuple[str | None, SourceFormat] | None = None
+    if lead_comments is not None:
+        body, offset = lead_comments.body, lead_comments.offset
+        lines = [line for line in _PHYSICAL_LINE.split(body) if line.strip()][:SNIFF_LINES]
+        sniffed = _sniff_table(lines) or _sniff_spaces(lines, headerless=True)
+        if sniffed is None:
+            return _read_delimited(
+                text, warnings, context=context, declared=declared, table=table, tables=tables, comments=False
+            )
+    delimiter, source_format = sniffed or sniff_delimiter(text)
     spaced = delimiter in (SPACE_RUN, SINGLE_SPACE)
     records: list[tuple[int, list[str]]] = []
     spans: list[list[tuple[int, int]]] = []
     breaks: set[int] = set()  # the records that follow a blank line
     blank = False
     if delimiter is not None and spaced:
-        for line_num, line in enumerate(_PHYSICAL_LINE.split(text), start=1):
+        for line_num, line in enumerate(_PHYSICAL_LINE.split(body), start=1 + offset):
             if line_spans := _space_spans(line, delimiter):
                 if blank and records:
                     breaks.add(len(records))
@@ -869,11 +937,9 @@ def _read_delimited(
                 spans.append(line_spans)
             else:
                 blank = True
-        if delimiter == SINGLE_SPACE:
-            warnings.append("single spaces read as the column separator; check that no value was split in two")
     else:
         reader = csv.reader(
-            io.StringIO(text, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
+            io.StringIO(body, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
         )
         try:
             for record in reader:
@@ -881,31 +947,71 @@ def _read_delimited(
                     if blank and records:
                         breaks.add(len(records))
                     blank = False
-                    records.append((reader.line_num, record))
+                    records.append((reader.line_num + offset, record))
                 else:
                     blank = True
         except csv.Error as exc:
             raise ParseError(
                 "unparseable",
-                f"the quoting is malformed near line {reader.line_num} ({exc}); a value that starts with a quote "
-                "must end with one before the next separator, and a quote inside it is written twice",
+                f"the quoting is malformed near line {reader.line_num + offset} ({exc}); a value that starts with a "
+                "quote must end with one before the next separator, and a quote inside it is written twice",
             ) from exc
     if not records:
         raise ParseError("unparseable", "the data is empty")
+    if delimiter == "|":
+        records, breaks = _without_alignment_rows(records, breaks)
+    noted = [[_COMMENT_PREFIX.sub("", line, count=1)] for _, line in lead_comments.lines] if lead_comments else []
     marks = (
-        _declared_missing(_WHITESPACE_RUN.sub(" ", " ".join(record)).strip() for _, record in records)
+        _declared_missing(
+            _WHITESPACE_RUN.sub(" ", " ".join(record)).strip()
+            for record in [*noted, *(record for _, record in records)]
+        )
         if find_table
         else frozenset()
     )
+    missing = marks | NOT_AVAILABLE  # what counts as a missing cell while the table is found
+    # A file's comment lines are notes, and the last ones name the columns of a table without a header line.
+    lead: list[tuple[int, list[str]]] = []  # notes above the table: comment lines, a later table's title lines
+    if lead_comments is not None:
+        below = table_block([record for _, record in records], extra_missing=missing)
+        used: list[int] = []
+        if below.headerless:
+            named = _comment_header(lead_comments.lines, records, spans, below, delimiter)
+            if named is None:
+                return _read_delimited(
+                    text, warnings, context=context, declared=declared, table=table, tables=tables, comments=False
+                )
+            names, used, example, header_spans = named
+            records.insert(below.start, (used[-1], names))
+            if spaced:
+                spans.insert(below.start, header_spans)
+            breaks = {index + 1 if index >= below.start else index for index in breaks}
+            warnings.append(
+                f"the header stood in a comment line above the table; read the column names from it, such as '{example}'"
+                if len(used) == 1
+                else "the header stood in two comment lines above the table; joined them into one name per column, "
+                f"such as '{example}'"
+            )
+        lead = [
+            (number, [line if _NAME_WORDS.search(_COMMENT_PREFIX.sub("", line, count=1)) else ""])
+            for number, line in lead_comments.lines
+            if number not in used
+        ]
+    if delimiter == SINGLE_SPACE:
+        warnings.append("single spaces read as the column separator; check that no value was split in two")
     if declared is not None:
         declared.update(marks)
-    lead: list[tuple[int, list[str]]] = []  # a later table's title lines, kept as notes (`_one_table`)
+    after_blank = {records[index][0] for index in breaks}  # by line number, which survives `_one_table`'s cut
     if find_table:
-        records, spans = _one_table(records, spans, breaks, table, warnings, tables, marks, lead)
+        records, spans = _one_table(records, spans, breaks, table, warnings, tables, missing, lead)
     elif table > 1:
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     block = (
-        table_block([record for _, record in records], extra_missing=marks)
+        table_block(
+            [record for _, record in records],
+            extra_missing=missing,
+            breaks={index for index, (line_num, _) in enumerate(records) if line_num in after_blank},
+        )
         if find_table
         else TableBlock(0, len(records))
     )
@@ -1061,9 +1167,11 @@ def _joined_header(records: Sequence[tuple[int, list[str]]], block: "TableBlock"
     or the group name once per column when an HTML table's spans are expanded. `table_block` takes the
     second line for the header and the first for a note, which leaves columns named `column_1` and `/km2`.
     Both lines must have the table's width and hold no value. The first must show a group (an empty cell,
-    or a name over two columns), and the second its parts: an empty cell under a column of its own, a cell
-    that repeats the one above it, or a part repeated under each group (`Q1, Q2, Q1, Q2`). A line of notes
-    above a header (`Section,Finance,,` over `ID,Name,Qty,Price`) shows no parts, so it stays a note. Each
+    or a name over two columns), and the second its parts: an empty cell under a name of the first line
+    (a column of its own), a cell that repeats the one above it, or a part repeated under each group
+    (`Q1, Q2, Q1, Q2`). A line of notes above a header (`Section,Finance,,` over `ID,Name,Qty,Price`)
+    shows no parts, so it stays a note, and so does an export's key-value line (`Unit,Number,,` over
+    `Country,Value,,Flag`, whose empty cell stands under an empty one; persona test of 2026-11-06). Each
     column's name is then its group and its own part, `Density /km2`: an empty cell of the first line
     belongs to the group on its left when the second line names the column, and a part equal to its group is
     said once. Only when the joined names are all different and at least one joins two parts; otherwise the
@@ -1078,7 +1186,9 @@ def _joined_header(records: Sequence[tuple[int, list[str]]], block: "TableBlock"
     if all(top) and len(set(named)) == len(named):
         return None  # no empty cell and no repeated name: two headers, not one header in two lines
     parts = [cell for cell in bottom if cell]
-    beneath = any(not lower or lower == upper for upper, lower in zip(top, bottom, strict=True))
+    # A name of the first line over an empty cell or over itself. An empty cell under an empty one shows no group: an
+    # export's key-value lines (`Unit,Number,,`) over each other or over a header with an empty cell never join.
+    beneath = any(upper and (not lower or lower == upper) for upper, lower in zip(top, bottom, strict=True))
     if not beneath and len(set(parts)) == len(parts):
         return None  # a full line of distinct names under the first: a header under a line of notes
     names: list[str] = []
@@ -1128,6 +1238,173 @@ def _split_header(
         f"the header stands in two lines ({upper} names over {lower}), and the rows have {fields} fields: "
         "write it as one line with one name per column, a name and its unit together"
     )
+
+
+def _without_alignment_rows(
+    records: list[tuple[int, list[str]]], breaks: set[int]
+) -> tuple[list[tuple[int, list[str]]], set[int]]:
+    """The records of pipe-delimited text without each Markdown table's alignment row, and the blank-line breaks moved.
+
+    A Markdown table, as chat assistants write it, puts a row of dashes under its header
+    (`|-------|------:|`). Read as a row, it became the header (`Month -------`, `:------`)
+    or a text cell in a column of names (until 2026-11-07). A record goes only when
+    every cell is such a rule (`_ALIGNMENT_CELL`), as Markdown writes one for each column, the
+    empty fields outside a leading and a trailing pipe aside; so a sparse first row
+    (`| --- | | |`) stays. It must stand directly under the header: the record right above
+    it has its field count, a filled cell that is no rule, and is the first record of that
+    count since the last blank line (a title above has another count). A row of dashes
+    further down the table is data, a missing value as a statistics office writes it, and
+    stays. It is layout, like a blank line, so no warning counts it.
+    """
+    dropped: list[int] = []
+    for index in range(1, len(records)):
+        cells = [cell.strip() for cell in records[index][1]]
+        if cells and not cells[-1]:
+            cells.pop()  # the field after a trailing pipe
+        if cells and not cells[0]:
+            cells.pop(0)  # the field before a leading pipe
+        if index in breaks or not cells or not all(_ALIGNMENT_CELL.fullmatch(cell) for cell in cells):
+            continue
+        width = len(records[index][1])
+        header = [cell.strip() for cell in records[index - 1][1] if cell.strip()]
+        if len(records[index - 1][1]) != width or not header or any(map(_ALIGNMENT_CELL.fullmatch, header)):
+            continue
+        group = max((start for start in breaks if start < index), default=0)
+        if any(len(record) == width for _, record in records[group : index - 1]):
+            continue  # not the first record of its width: a row of the table, not its header
+        dropped.append(index)
+    if not dropped:
+        return records, breaks
+    gone = set(dropped)
+    kept = [record for index, record in enumerate(records) if index not in gone]
+    moved = {start - sum(1 for index in dropped if index < start) for start in breaks}
+    return kept, moved
+
+
+@dataclass(frozen=True)
+class _Comments:
+    """The comment lines a paste opens with (`_comment_lead`) and the text below them."""
+
+    lines: list[tuple[int, str]]
+    """Each comment line's number and its text as pasted."""
+    body: str
+    """The text below the last comment line, from its first line on."""
+    offset: int
+    """The physical lines above `body`, so the line numbers of its records count from the paste's first line."""
+
+
+def _comment_lead(text: str) -> _Comments | None:
+    """The comment lines the text opens with (`_COMMENT_LINE`, blank lines among them) and the text below them.
+
+    None when fewer than `MIN_COMMENT_LINES` open it or no other line follows them: a single `#`
+    or `%` line is as often the header of a table with a column named so, and comments alone are
+    no table.
+    """
+    starts = [0, *(match.end() for match in _PHYSICAL_LINE.finditer(text))]
+    comments: list[tuple[int, str]] = []
+    for index, line in enumerate(_PHYSICAL_LINE.split(text)):
+        if not line.strip():
+            continue
+        if _COMMENT_LINE.match(line):
+            comments.append((index + 1, line))
+            continue
+        if len(comments) < MIN_COMMENT_LINES:
+            return None
+        return _Comments(comments, text[starts[index] :], index)
+    return None
+
+
+def _comment_header(
+    comments: Sequence[tuple[int, str]],
+    records: Sequence[tuple[int, list[str]]],
+    spans: Sequence[Sequence[tuple[int, int]]],
+    block: "TableBlock",
+    delimiter: str | None,
+) -> tuple[list[str], list[int], str, list[tuple[int, int]]] | None:
+    """The column names the last comment lines carry for a table without a header line, else None.
+
+    Returned with the numbers of the comment lines they came from, an example name for the
+    warning, and the header's spans (the columns' ranges) for a table aligned with spaces.
+
+    A data file writes its header as its last comment line (numpy's `savetxt`, gnuplot), or wraps
+    it over the last two when the names are wider than the columns (a weather service's monthly
+    file: `#  decimal   monthly` over `#   date     average`; persona test of 2026-11-06, where
+    single spaces split it into `#`, `date`, `average`, `alized`). The last comment line with a
+    letter or a digit is the header's last line, and the one right above it, with no line between,
+    may be its first. A line is read as the rows are: split at the delimiter, or, in a table
+    aligned with runs of spaces, each field placed under the one column its range overlaps most
+    (`_column_extents` of the rows, so `of days` stays one name), every field in a column of its
+    own, left to right. Fields that do not line up so, and every line of a table separated by
+    single spaces, whose fields have no fixed place, name the columns in order when they are
+    exactly as many. Two lines join per column (`decimal date`), in delimited text by the rules
+    of a header in two lines (`_joined_header`). A line counts only when it holds two fields or
+    more and no value other than a header's years (`_period_header`); the names must be distinct
+    and name half of the columns at least, so a sentence above the data never names them. A
+    column no line names stays without a name (`column_1`), as an empty header does.
+    """
+    width = block.width
+    texted = [(number, line) for number, line in comments if _NAME_WORDS.search(_COMMENT_PREFIX.sub("", line, count=1))]
+    if not texted or not width or delimiter is None:
+        return None
+    spaced = delimiter in (SPACE_RUN, SINGLE_SPACE)
+    extents = _column_extents(spans, block.start, block.end, width) if spaced else []
+
+    def names_of(line: str) -> list[str] | None:
+        rest = _COMMENT_PREFIX.sub(lambda match: " " * len(match.group()), line, count=1)  # columns keep their place
+        if not spaced:
+            try:
+                fields = next(csv.reader([rest.strip()], delimiter=delimiter, skipinitialspace=True), [])
+            except csv.Error:
+                return None
+            while len(fields) > width and not fields[-1].strip():
+                fields.pop()
+            cells = [cell.strip() for cell in fields]
+            if len(cells) != width or (_header_cells(cells) is None and not _period_header(cells)):
+                return None
+            return cells
+        found = _space_spans(rest, delimiter)
+        texts = [_unquoted(rest[left:right]) for left, right in found]
+        if len(texts) < 2 or (any(map(_value_like, texts)) and not _period_header(texts)):
+            return None
+        placed = _placed_names(texts, found, extents) if delimiter == SPACE_RUN else None
+        return placed if placed is not None else (texts if len(texts) == width else None)
+
+    bottom_number, bottom_line = texted[-1]
+    bottom = names_of(bottom_line)
+    if bottom is None:
+        return None
+    names, used, example = bottom, [bottom_number], next((name for name in bottom if name), "")
+    if len(texted) > 1 and texted[-2][0] == bottom_number - 1 and (top := names_of(texted[-2][1])) is not None:
+        if spaced and any(upper and lower for upper, lower in zip(top, bottom, strict=True)):
+            names = [
+                " ".join(part for part in (upper, lower) if part) for upper, lower in zip(top, bottom, strict=True)
+            ]
+            used = [texted[-2][0], bottom_number]
+            example = next(name for upper, lower, name in zip(top, bottom, names, strict=True) if upper and lower)
+        elif not spaced and (two := _joined_header([(0, top), (1, bottom)], TableBlock(1, 2, width=width))):
+            names, example = two
+            used = [texted[-2][0], bottom_number]
+    filled = [name for name in names if name]
+    if len(filled) < 2 or 2 * len(filled) < width or len(set(filled)) < len(filled):
+        return None
+    return names, used, example, [(low, high) for low, high in extents]
+
+
+def _placed_names(
+    texts: Sequence[str], spans: Sequence[tuple[int, int]], extents: Sequence[Sequence[int]]
+) -> list[str] | None:
+    """The fields of a header line, each under the column its range overlaps most; None when one overlaps no column,
+    two columns alike, or a column left of or under the field before it, so no name is placed by guess."""
+    cells = [""] * len(extents)
+    last = -1
+    for text, (left, right) in zip(texts, spans, strict=True):
+        overlaps = [min(right, high) - max(left, low) for low, high in extents]
+        column = max(range(len(extents)), key=overlaps.__getitem__)
+        if overlaps[column] <= 0 or overlaps.count(overlaps[column]) > 1 or column <= last:
+            return None
+        cells[column] = text
+        last = column
+    return cells
 
 
 MIN_TABLE_ROWS = 2
@@ -1412,9 +1689,14 @@ class TableBlock:
     """The cells of the data rows that read as values."""
     skipped: tuple[int, ...] = ()
     """The records between the first and the last data row that are no row of the table, left out."""
+    headerless: bool = False
+    """The record at `start` is a data row itself: no line above the first row can be the header, so the caller
+    reads the first row as the header (as before) or finds the names elsewhere (`_comment_header`)."""
 
 
-def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[str] = frozenset()) -> TableBlock:
+def table_block(
+    records: Sequence[Sequence[str]], *, extra_missing: frozenset[str] = frozenset(), breaks: Collection[int] = ()
+) -> TableBlock:
     """The table among pasted records that may carry other lines (owner rule of 2026-10-14).
 
     Real pastes are rarely a bare table: an export starts with metadata (Open-Meteo writes
@@ -1429,13 +1711,25 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
     * The header is the record right above the first data row, past any wider record that
       also holds the data (a ragged table's full rows, whose header is wider than its short
       ones); everything above it is left out. When the first record already is a data row,
-      it is the header, as before.
+      it is the header, as before (`headerless`).
+    * A first data row that is a header of periods is the header itself (`_period_header`:
+      a name first, then years or months of a year running one way, `TIME,2019,,2020`), when
+      the next data row is none and the record above names fewer cells than it does (an
+      export's key-value metadata, `Unit of measure,Number`, or a title). Years read as
+      values, so without this rule the metadata line above became the header and the period
+      row the first row (persona test of 2026-11-06). A record above that names as many cells
+      stays the header: `Name,Born,Died` over `Anna,1901,1980`.
     * The rows end after the last data row and the records right below it that hold data at
       the table's width or wider, whose value cells are missing (`2024-01-11,,`), or that hold
       two of the rows' values at least but lost their empty last cells (`Dec 2022`, two empty cells,
       `$2099` under five columns, the last row of a copied web table, `short_row`); anything after that is
       left out, such as a source line or a sentence, also one that its commas split into
-      the table's width.
+      the table's width. A record whose value cells are missing extends the rows only up to
+      a blank line (`breaks`, the indices of the records that follow one): a spreadsheet
+      export pads every line to the table's width, so the legend a statistics office writes
+      below its table (`:,not available`, `p,provisional`) read as rows of its first column
+      and turned a year column into text (persona test of 2026-11-06); it is left out as
+      notes below the table now. Directly under the last data row such a record stays a row.
     * A line between the data rows that fills one cell, text under a value column, is no row: a
       button copied with a web table (`Show 36 earlier months`), a note. It is left out (`skipped`, owner's live test of 2026-11-02: it stayed a
       row of empty cells, which also kept the month column text), with a warning that names its
@@ -1500,8 +1794,20 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
     start = max(first - 1, 0)
     while start > 0 and wide_data_row(records[start]):
         start -= 1
+    if (
+        first > 0
+        and len(rows) > 1
+        and _period_header(records[first])
+        and not _period_header(records[rows[1]])
+        and _filled(records[first - 1]) < _filled(records[first])
+    ):
+        start = first
+        rows = rows[1:]
+        first = rows[0]
     end = last + 1
-    while end < len(records) and (sparse_row(records[end]) or wide_data_row(records[end]) or short_row(records[end])):
+    while end < len(records) and (
+        (sparse_row(records[end]) and end not in breaks) or wide_data_row(records[end]) or short_row(records[end])
+    ):
         end += 1
     below = len(records) - end
     summary = 0
@@ -1510,7 +1816,46 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
         summary += 1
     skipped = tuple(index for index in range(first + 1, last) if stray_row(records[index]))
     found = sum(_value_like(records[index][j]) for index in rows for j in range(width))
-    return TableBlock(start, end, above=start, below=below, summary=summary, width=width, values=found, skipped=skipped)
+    return TableBlock(
+        start,
+        end,
+        above=start,
+        below=below,
+        summary=summary,
+        width=width,
+        values=found,
+        skipped=skipped,
+        # A first row of years over the values (`Land,2020,2021`) reads as a data row, yet it is the header.
+        headerless=start == first and not _header_line(records[start]) and not _period_header(records[start]),
+    )
+
+
+def _filled(record: Sequence[str]) -> int:
+    return sum(1 for cell in record if cell.strip())
+
+
+def _period_header(record: Sequence[str]) -> bool:
+    """A record that reads as a header of periods: a name first, then two or more distinct years (`2019`) or months of
+    a year (`Nov 2026`), one kind, running one way, among names and empty cells (a statistics export's flag columns,
+    `TIME,2019,,2020,`). No other value stands in it. The first name is no missing mark and ends with no colon."""
+    cells = [cell.strip() for cell in record]
+    if not cells or not cells[0] or _value_like(cells[0]) or cells[0] in MISSING_VALUES or cells[0].endswith(":"):
+        return False
+    periods: list[tuple[int, int]] = []
+    for cell in cells[1:]:
+        if not cell or not _value_like(cell):
+            continue
+        if _YEAR.fullmatch(cell):
+            periods.append((int(cell), 0))
+        elif (month := month_year(cell)) is not None and MONTH_YEARS[0] <= month[0] <= MONTH_YEARS[1]:
+            periods.append(month)
+        else:
+            return False
+    return (
+        len(periods) >= 2
+        and len({month == 0 for _, month in periods}) == 1
+        and (all(a < b for a, b in pairwise(periods)) or all(a > b for a, b in pairwise(periods)))
+    )
 
 
 def value_like(cell: str) -> bool:
@@ -3569,6 +3914,8 @@ def _build(
         else:
             column.id_like = id_like(header)
             column.span_like = span_like(header)
+            if not canonical and not column.text_only:
+                _blank_not_available(column)
             marked += _blank_marks(column)
             _type_column(column)
     if marked:
@@ -3591,6 +3938,7 @@ def _build(
     for column in columns:
         _keep_na_codes(column)
         _fidelity_notes(column, layout_padding=source_format == "whitespace")
+    flagged, flags = ([], Counter[str]()) if canonical else _flag_columns(headers, columns)
 
     # A header that already names the unit (`Anteil (%)`, `Preis in €`) gets no suffix, unless it is
     # longer than a name may be: then the suffix is passed so the cut keeps the unit at the end.
@@ -3606,6 +3954,12 @@ def _build(
     for index in renamed_by_breaks:
         warnings.append(f"column '{names[index]}': tabs or line breaks in the header replaced with spaces")
     warnings.extend(header_warnings)
+    if flagged:
+        shown = ", ".join(f"'{flag}'" for flag, _ in flags.most_common(3))
+        warnings.append(
+            f"{_count(len(flagged), 'column')} of flags ({shown}) beside number columns kept as text columns named "
+            f"after them, such as '{names[flagged[0]]}', with {_count(flags.total(), 'flagged cell')}"
+        )
     if all(_looks_like_value(name) for name in names):
         warnings.append("every header looks like a value; the first row may be data rather than column names")
 
@@ -3699,6 +4053,68 @@ def _blank_marks(column: _Column) -> int:
     column.na_rows = [row for row in column.na_rows if row not in marked]
     column.missing_tokens -= column.mark_tokens  # counted once, by the declared mark's warning
     return len(marked)
+
+
+def _blank_not_available(column: _Column) -> None:
+    """Blank the `:` cells (`NOT_AVAILABLE`) of a column that then reads as numbers or dates; a text column keeps them.
+
+    A statistics office writes `:` for a value it does not have (persona test of 2026-11-06: a
+    Eurostat export, whose every year column stayed text for it). The blanked cells join the
+    column's missing tokens, so its note counts them (`_fidelity_notes`, `cells read as missing`).
+    It runs before `_blank_marks`, and its trial blanks the declared mark's cells too, so a column
+    that holds both (`-999` declared, and `:`) reads as numbers; the mark's cells stay for
+    `_blank_marks` to blank and count, also when `:` is the declared mark.
+    """
+    marked = set(column.mark_rows)
+    rows = {row for row, cell in enumerate(column.source) if cell in NOT_AVAILABLE and row not in marked}
+    if not rows:
+        return
+    trial = _Column(
+        name="",
+        source=["" if row in rows or row in marked else cell for row, cell in enumerate(column.source)],
+        cells=[],
+        id_like=column.id_like,
+    )
+    _type_column(trial)
+    if trial.dtype not in ("integer", "number", "datetime"):
+        return
+    column.missing_tokens.update(column.source[row] for row in rows)
+    column.source = ["" if row in rows else cell for row, cell in enumerate(column.source)]
+
+
+def _flag_columns(headers: list[str], columns: Sequence[_Column]) -> tuple[list[int], Counter[str]]:
+    """Name each column of flags beside a number column after it; the columns found and their flags, counted.
+
+    A statistics export writes a flag after each value (persona test of 2026-11-06: `p`
+    provisional, `e` estimated, `b` a break in the series) in a column with an empty header, so
+    the table read `column_3`, `column_5` between its years. Such a column is one with an empty
+    header right of a named integer or number column whose filled cells are each one to three letters
+    (`_FLAG`) and none a code of two or three capitals (`CH`, `USA`: `_LETTER_CODE`, a column of
+    countries). It stays in the table as a text column: a flag says something about its value that
+    a plot may show, as no parser rule drops a pasted column that holds anything (an empty column
+    goes, `_without_empty_columns`; a JSON-stat dataset's status object was never a column). It
+    takes the name of its number column with `FLAG_SUFFIX` (`2019 flag`), which `headers` gets in
+    place, and the caller's one warning counts the flagged cells.
+    """
+    found: list[int] = []
+    flags: Counter[str] = Counter()
+    for index in range(1, len(columns)):
+        column, left = columns[index], columns[index - 1]
+        # A number column without a name gives the flags none to take: such a column stays as it is.
+        if (
+            headers[index]
+            or not headers[index - 1]
+            or column.dtype != "text"
+            or left.dtype not in ("integer", "number")
+        ):
+            continue
+        present = [cell for cell in column.cells if cell]
+        if not present or not all(_FLAG.fullmatch(cell) and not _LETTER_CODE.fullmatch(cell) for cell in present):
+            continue
+        found.append(index)
+        flags.update(present)
+        headers[index] = headers[index - 1] + FLAG_SUFFIX
+    return found, flags
 
 
 def _keep_na_codes(column: _Column) -> None:
