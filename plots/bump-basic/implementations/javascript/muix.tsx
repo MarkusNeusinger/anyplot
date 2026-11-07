@@ -2,122 +2,132 @@
 // bump-basic: Basic Bump Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-08-24
-
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: programming-language popularity rank by year, 2018-2025 ----------
-// Each year column is a permutation of 1..6 (one rank per language).
-const YEARS = ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"];
+// Constants
+const RANK_PAD_SHARE = 0.08; // rank-axis padding as a share of the rank span, keeps end marks inside
 
-const LANGUAGES = [
-  { name: "JavaScript", ranks: [1, 1, 1, 2, 2, 2, 2, 2] },
-  { name: "Python", ranks: [3, 2, 2, 1, 1, 1, 1, 1] },
-  { name: "Java", ranks: [2, 3, 4, 4, 5, 5, 6, 6] },
-  { name: "TypeScript", ranks: [6, 6, 5, 5, 4, 3, 3, 3] },
-  { name: "Go", ranks: [5, 5, 6, 6, 6, 6, 5, 4] },
-  { name: "Rust", ranks: [4, 4, 3, 3, 3, 4, 4, 5] },
-];
+// Columns: set these to your data's column names
+const LANGUAGE = "Language"; // role: entity
+const YEAR = "Year"; // role: period
+const RANK = "Popularity rank"; // role: rank
 
-// Slugified id (no spaces) so per-series CSS selectors stay valid.
-const slug = (name) => name.replace(/\s+/g, "-");
+// Data: replace this block with your own records, one object per row
+// Programming-language popularity rank by year, 2018-2025 (each year ranks 1..6).
+const data = [
+  { lang: "JavaScript", ranks: [1, 1, 1, 2, 2, 2, 2, 2] },
+  { lang: "Python", ranks: [3, 2, 2, 1, 1, 1, 1, 1] },
+  { lang: "Java", ranks: [2, 3, 4, 4, 5, 5, 6, 6] },
+  { lang: "TypeScript", ranks: [6, 6, 5, 5, 4, 3, 3, 3] },
+  { lang: "Go", ranks: [5, 5, 6, 6, 6, 6, 5, 4] },
+  { lang: "Rust", ranks: [4, 4, 3, 3, 3, 4, 4, 5] },
+].flatMap(({ lang, ranks }) =>
+  ranks.map((rank, i) => ({ [LANGUAGE]: lang, [YEAR]: String(2018 + i), [RANK]: rank })),
+);
 
-const series = LANGUAGES.map((lang, i) => ({
-  id: slug(lang.name),
-  data: lang.ranks,
-  label: lang.name,
+// Plot: reads only data and the constants above
+// Periods keep their order of appearance; entities are colored in order of first appearance
+const periods = [...new Set(data.map((d) => d[YEAR]))];
+const entities = [...new Set(data.map((d) => d[LANGUAGE]))];
+const rankMap = new Map(data.map((d) => [`${d[LANGUAGE]}|${d[YEAR]}`, d[RANK]]));
+const series = entities.map((entity, i) => ({
+  id: `entity-${i}`,
+  label: entity,
   color: t.palette[i],
+  data: periods.map((p) => rankMap.get(`${entity}|${p}`) ?? null),
   showMark: true,
-  curve: "monotoneX",
+  shape: "circle" as const,
+  curve: "monotoneX" as const,
 }));
 
-// Direct end-of-line labels replace the legend — with 6 close hues, naming
-// each line right where it finishes is a clearer identity cue than a
-// color-matching exercise against a corner legend.
+// Whole-number rank ticks from 1 to the lowest rank in the data
+const maxRank = Math.max(...data.map((d) => d[RANK]));
+const rankTicks = Array.from({ length: maxRank }, (_, i) => i + 1);
+const rankPad = Math.max(1, maxRank - 1) * RANK_PAD_SHARE;
+
+// Direct labels at each line's last ranked period
+const endLabels = series.map((s) => {
+  const lastIndex = s.data.findLastIndex((v) => v !== null);
+  return { label: s.label, period: periods[lastIndex], rank: s.data[lastIndex] };
+});
+
+const TITLE = "Language Popularity Rankings · bump-basic · javascript · muix · anyplot.ai";
+const subtitle = `${RANK} of ${entities.length} ${LANGUAGE.toLowerCase()}s per ${YEAR.toLowerCase()}, ${periods[0]}–${periods[periods.length - 1]} · 1 = top`;
+const TITLE_H = 80;
+
 function EndLabels() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const xEnd = xScale(YEARS[YEARS.length - 1]);
-
+  const half = xScale.bandwidth() / 2;
   return (
-    <g fontFamily="'Roboto','Helvetica Neue',Arial,sans-serif" fontSize={14}>
-      {LANGUAGES.map((lang, i) => (
+    <g>
+      {endLabels.map((l) => (
         <text
-          key={lang.name}
-          x={xEnd + 14}
-          y={yScale(lang.ranks[lang.ranks.length - 1])}
-          textAnchor="start"
+          key={l.label}
+          x={xScale(l.period) + half + 16}
+          y={yScale(l.rank)}
           dominantBaseline="middle"
-          fill={t.palette[i]}
+          fontSize={16}
           fontWeight={500}
+          fill={t.ink}
         >
-          {lang.name}
+          {l.label}
         </text>
       ))}
     </g>
   );
 }
 
-const TITLE = "Language Popularity Rankings · bump-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length));
-const TITLE_H = 70;
-
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div style={{ width, height, background: t.pageBg, boxSizing: "border-box" }}>
-      <div style={{ height: TITLE_H, display: "flex", alignItems: "center", paddingLeft: 28 }}>
-        <span
-          style={{
-            color: t.ink,
-            fontSize: TITLE_FONT_SIZE,
-            fontWeight: 500,
-            fontFamily: "'Roboto','Helvetica Neue',Arial,sans-serif",
-            letterSpacing: 0.3,
-          }}
-        >
-          {TITLE}
-        </span>
+    <div style={{ width, height, display: "flex", flexDirection: "column", background: t.pageBg }}>
+      <div style={{ height: TITLE_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 10 }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
       </div>
-
       <LineChart
         width={width}
         height={height - TITLE_H}
         skipAnimation
-        margin={{ top: 30, bottom: 70, left: 90, right: 140 }}
+        hideLegend
+        grid={{ horizontal: true }}
+        margin={{ top: 16, bottom: 16, left: 24, right: 140 }}
         xAxis={[
           {
-            scaleType: "point",
-            data: YEARS,
-            label: "Year",
+            scaleType: "band",
+            data: periods,
+            label: YEAR,
+            height: 64,
+            tickPlacement: "middle",
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
-            min: 1,
-            max: 6,
+            min: 1 - rankPad,
+            max: maxRank + rankPad,
             reverse: true,
-            tickNumber: 6,
-            valueFormatter: (v) => `#${Math.round(v)}`,
-            label: "Rank",
+            tickInterval: rankTicks,
+            valueFormatter: (v: number) => `#${v}`,
+            label: RANK,
+            width: 72,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         series={series}
-        grid={{ horizontal: true, vertical: false }}
-        slotProps={{ legend: { hidden: true } }}
         sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiMarkElement-root": { r: 5, stroke: t.pageBg, strokeWidth: 2 },
+          "& .MuiLineChart-line": { strokeWidth: 3.5 },
+          "& .MuiLineChart-mark": { r: 6.5, strokeWidth: 3 },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
-          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
         <EndLabels />
