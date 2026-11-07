@@ -34,7 +34,7 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 | Event | When | Main fields |
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
-| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `conversion` (what the turn did about a required role left open: `none` when the session block listed no conversion, `date`, `number` or `index` for the column `prepare_data` made, `asked` when one was listed and none was made; `asked_question` tells a question from a skip), `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
+| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `capability_gap` (since 2026-11-07, see [Fields added on 2026-11-07](#fields-added-on-2026-11-07)), `conversion` (what the turn did about a required role left open: `none` when the session block listed no conversion, `date`, `number` or `index` for the column `prepare_data` made, `asked` when one was listed and none was made; `asked_question` tells a question from a skip), `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
 | `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps`, and since 2026-11-01 `lane`, `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` (see [Fields added on 2026-11-01](#fields-added-on-2026-11-01)) |
 | `plot_switch` | The session switches its (spec, library) target, since 2026-11-02 | `switch_source`, `from_library`, `spec_changed`, `library_changed`, `carried_count`, `newer_count`, `target_has_plot`, `offered`, `memory_kinds` (see [Fields added on 2026-11-02](#fields-added-on-2026-11-02)) |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_page`, `opened_preview`, `opened_data_view`, `downloaded_data`, `saved_session`, `feedback`; `downloaded_page` is a JavaScript plot's interactive `plot.html`, and `opened_preview` that page shown in the card, a look that keeps nothing, both since 2026-10-31; `opened_data_view` is the data panel's view of every row once it shows the rows, with version 0 because it looks at the session's data and not at a result, a look that keeps nothing either, since 2026-11-02), `version`, `reaction` |
@@ -225,6 +225,20 @@ of the `events` view.
   has no data: the example data a typed request asks for, in one click and as an action, so it sets no session
   language. Its `kind` is `example` when `run_data_code` stored the table, as for the typed request. The column is
   a string in the views, so they need no change.
+
+### Fields added on 2026-11-07
+
+- **`chat_turn.capability_gap`.** The data changes the root named in the turn as ones no `prepare_data` operation
+  can make, by family: `fill_values`, `edit_cells`, `add_rows`, `combine_tables`, `text_pattern`, `time_window` or
+  `other`, distinct and sorted. It is empty for every other turn. The family comes from the closed `unsupported`
+  operation (`prepare.UnsupportedFamily`), never from the request's words. Count the turns where it is not empty to
+  see what users ask the chat for that it cannot do, and group by family to see which operation to build next.
+- **`chat_turn.prep_ops` `compute`, `diff`, `rolling`, `blank`.** The operations of the same date. `unsupported` is
+  in the closed set too, but never appears: `prep_ops` lists only the calls that changed the data.
+
+The typed column `capability_gap` is in `agents/telemetry/views/02_event_views.sql` (`chat_turns`). Applying the
+changed view waits for the owner's approval, as on 2026-11-01; until then the field sits in `payload` of the
+`events` view.
 
 ## Where the lines go
 

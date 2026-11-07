@@ -61,6 +61,12 @@ OPERATIONS = (
     "extract",
     "strip",
     "replace",
+    "compute",
+    "diff",
+    "rolling",
+    "blank",
+    "keep_rows",
+    "unsupported",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
@@ -92,8 +98,12 @@ class TestFixtures:
         # another plot type and 7 notes sent with the paste (`first_turn`), one of them a decimal comma read again
         # from the pasted cells, one whose change comes with a conversion the data owes, one that asks to keep
         # that column as it is and one that names a statistic, which gets the summary and never the data refusal,
-        # and a short table the page kept as a message (`misrouted`), which the root asks for again.
-        assert len(cases) == 86
+        # and a short table the page kept as a message (`misrouted`), which the root asks for again. Since
+        # 2026-11-07, ten cases for the operations of the persona tests of 2026-11-06 (`compute` four times, `diff`,
+        # `rolling`, `blank`, the last value of several columns per month, several values into one class, and a
+        # request to fill in values, which the root names as a gap); the hard unit conversion became a `compute`.
+        # And the owner's top N of that day: revenue computed, sorted and its top 3 kept (`keep_rows`).
+        assert len(cases) == 97
         assert [item.id for item in cases if "misrouted" in item.tags] == ["en-table-as-message"]
         notes = [item for item in cases if item.first_turn]
         assert len(notes) == 7 and {item.locale for item in notes} == {"de", "en"}
@@ -111,6 +121,11 @@ class TestFixtures:
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 11
         assert {item.locale for item in cases if "text" in item.tags} == {"de", "en"}
+        assert {item.locale for item in cases if "compute" in item.tags} == {"de", "en"}
+        gaps = [
+            item for item in cases if item.expected_operations[:1] == [{"op": "unsupported", "family": "fill_values"}]
+        ]
+        assert [item.id for item in gaps] == ["en-fill-missing-refused"]
         # The owner's case of 2026-11-04 in both languages, and its summary, which only offers the conversion.
         dates = [item for item in cases if "date_number" in item.tags]
         assert {item.locale for item in dates if item.message} == {"de", "en"}
@@ -207,6 +222,8 @@ class TestFixtures:
                 spec = Generate.model_validate({key: value for key, value in formula.items() if key != "op"})
                 table = parse_dataset(generate(spec).csv)
                 assert set(table.column_dtypes.values()) == {"number"}, item.id
+            if [operation["op"] for operation in operations] == ["unsupported"]:
+                continue  # a named gap applies nothing: `prepare_data` answers it with its fixed sentence
             if operations:
                 assert parsed is not None, item.id
                 prepared = apply_operations(parsed, _operations(operations))
@@ -423,6 +440,73 @@ class TestCanonical:
         (formula,) = [line for line in undefined if "generate_data" in line]
         assert prep.comparison_key(formula) == formula and not prep.same_operations(undefined, parabola)
         assert prep.same_operations(undefined, undefined)
+
+    def test_a_compute_matches_by_the_values_it_computes(self) -> None:
+        """The short names and the form of the expression are the model's choice; the columns and the result are not."""
+
+        def lines(expression: str, name: str = "C", **inputs: str) -> list[str]:
+            call = {"op": "compute", "name": name, "expression": expression, "inputs": inputs}
+            return canonical_operations([call], ".")
+
+        celsius = lines("(f - 32) * 5 / 9", f="Temperatur_F")
+        assert prep.same_operations(lines("5/9*(t-32)", t="Temperatur_F"), celsius)
+        assert prep.same_operations(lines("(temp − 32) × 5 / 9", temp="Temperatur_F"), celsius)
+        assert not prep.same_operations(lines("(f - 32) * 5 / 9", name="Celsius", f="Temperatur_F"), celsius)
+        assert not prep.same_operations(lines("(f - 30) / 2", f="Temperatur_F"), celsius)
+        revenue = lines("q * p", q="Quantity", p="Price")
+        assert prep.same_operations(lines("price*quantity", price="Price", quantity="Quantity"), revenue)
+        assert not prep.same_operations(
+            lines("a / b", a="Quantity", b="Price"), lines("a / b", a="Price", b="Quantity")
+        )
+        # A shifted log is defined on the first probe set, so two spellings match by value (review of 2026-11-07:
+        # on small probe values both were empty everywhere and matched only by their spelling).
+        shifted = lines("log(p - 100)", name="log_excess", p="Price")
+        assert prep.same_operations(lines("log(price-100)", name="log_excess", price="Price"), shifted)
+        assert not prep.same_operations(lines("log(p - 99)", name="log_excess", p="Price"), shifted)
+        assert prep.comparison_key(shifted[0]) != shifted[0]
+        # Undefined on the large values, an expression takes the small ones; refused on both, it keeps its line.
+        reversed_log = lines("log(100 - p)", name="r", p="Price")
+        assert prep.comparison_key(reversed_log[0]) != reversed_log[0]
+        assert prep.same_operations(lines("log(-(p - 100))", name="r", p="Price"), reversed_log)
+        (refused,) = lines("q > 1", q="Quantity")
+        assert prep.comparison_key(refused) == refused
+        assert describe(revenue[0]) == "compute C = q * p (p=Price, q=Quantity)"
+
+    def test_the_new_operations_compare_their_lists_as_sets_and_describe_themselves(self) -> None:
+        def blank(*values: str) -> list[str]:
+            where = [{"column": "u", "test": "eq", "values": list(values)}]
+            return canonical_operations([{"op": "blank", "columns": ["u", "v"][: len(values)], "where": where}], ".")
+
+        assert blank("-1", "-0.99") == canonical_operations(
+            [{"op": "blank", "columns": ["v", "u"], "where": [{"column": "u", "test": "eq", "values": [-0.99, -1]}]}],
+            ".",
+        )
+        several = {"op": "aggregate", "by": ["Datum"], "columns": ["B", "A"], "how": "last", "period": "month"}
+        assert canonical_operations([several], ".") == canonical_operations([{**several, "columns": ["A", "B"]}], ".")
+        lines = canonical_operations(
+            [
+                several,
+                {"op": "diff", "name": "d", "column": "v", "order": "t", "lag": 12},
+                {
+                    "op": "rolling",
+                    "name": "m",
+                    "column": "v",
+                    "how": "mean",
+                    "window": 3,
+                    "order": "t",
+                    "within": ["g"],
+                },
+                {"op": "unsupported", "family": "fill_values"},
+            ],
+            ".",
+        )
+        assert sorted(describe(line) for line in [*lines, *blank("-1", "-0.99")]) == [
+            "aggregate A, B last by Datum/month",
+            "blank u, v where u eq '-0.99'|'-1'",
+            "diff d = v by t lag 12",
+            "rolling m = mean of v over 3 by t within g",
+            "unsupported fill_values",
+        ]
 
 
 class TestScore:
@@ -676,6 +760,24 @@ class TestRun:
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
+
+    def test_a_named_gap_is_the_roots_answer_and_no_failed_call(self, services: Services, swap_models) -> None:
+        """`unsupported_operation` is what the root asked for: compared like an operation, never a failure."""
+        gap = {"op": "unsupported", "family": "fill_values"}
+        cases = [case("g-001", "fill the gaps", [gap]), case("g-002", "fill the gaps", [gap])]
+        root_turns = [
+            [{"call": "prepare_data", "args": {"operations": [gap]}}, {"text": "I cannot fill in values."}],
+            [{"call": "prepare_data", "args": {"operations": [RENAME]}}, {"text": "Renamed."}],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        in_scope = JudgeVerdict(verdict="in_scope", lang="en", input_tokens=500, output_tokens=20)
+        judge.script.extend([in_scope, in_scope])
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, False]
+        assert (results[0].failed_calls, results[0].stored_calls) == (0, 0)
 
     @pytest.mark.parametrize(
         ("reply", "talk"),

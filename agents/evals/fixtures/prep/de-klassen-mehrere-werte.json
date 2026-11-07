@@ -1,0 +1,17 @@
+{
+  "dataset_text": "Datum,Kategorie,Betrag\n2024-03-01,Miete,950\n2024-03-02,Lebensmittel,64.3\n2024-03-05,Strom,82\n2024-03-08,Restaurant,41.5\n2024-03-12,Lebensmittel,38.9\n2024-03-15,Spenden,25\n2024-03-20,Versicherung,120\n",
+  "message": "Lege eine Spalte Gruppe an: Miete und Strom sind 'Wohnen', Lebensmittel und Restaurant sind 'Essen', alles andere 'Sonstiges'.",
+  "expected_operations": [
+    {
+      "op": "classify",
+      "name": "Gruppe",
+      "rules": [
+        {"where": [{"column": "Kategorie", "test": "eq", "values": ["Miete", "Strom"]}], "label": "Wohnen"},
+        {"where": [{"column": "Kategorie", "test": "eq", "values": ["Lebensmittel", "Restaurant"]}], "label": "Essen"}
+      ],
+      "otherwise": "Sonstiges"
+    }
+  ],
+  "locale": "de",
+  "tags": ["classify", "any_of"]
+}

@@ -54,7 +54,7 @@ import io
 import keyword
 import math
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Annotated, Literal, Self
 
@@ -62,9 +62,8 @@ import numpy as np
 import numpy.typing as npt
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
-from ..schemas import MAX_NOTE_CHARS
+from ..schemas import MAX_NOTE_CHARS, NewName
 from .parse import MAX_COMPUTED_BYTES, SNIFF_LINES, sniff_delimiter
-from .prepare import NewName
 from .transcribe import MAX_TRANSCRIBE_CHARS
 
 
@@ -148,7 +147,8 @@ _GLUED = re.compile(r"(?<![\w.])(?P<number>[0-9]+(?:\.[0-9]*)?)(?![eE][+-]?[0-9]
 _WHITESPACE = re.compile(r"\s+")
 _TYPOGRAPHIC = str.maketrans({"−": "-", "×": "*", "·": "*", "⋅": "*"})
 """Operators a model or a user types as typography; each reads as its ASCII form."""
-_IDENTIFIER = r"^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+IDENTIFIER = r"^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+"""A name an expression can hold: a variable here, an input of `prepare`'s `compute`."""
 
 
 class GenerateError(Exception):
@@ -180,7 +180,7 @@ def _variable_name(name: str) -> str:
 
 
 Expr = Annotated[str, Field(min_length=1, max_length=MAX_EXPRESSION_CHARS)]
-VariableName = Annotated[str, Field(min_length=1, max_length=64, pattern=_IDENTIFIER), AfterValidator(_variable_name)]
+VariableName = Annotated[str, Field(min_length=1, max_length=64, pattern=IDENTIFIER), AfterValidator(_variable_name)]
 
 
 class _Strict(BaseModel):
@@ -251,7 +251,7 @@ def generate(spec: Generate) -> Generated:
     warnings: list[str] = []
     for series, tree in trees:
         with np.errstate(all="ignore"):
-            result = np.broadcast_to(_evaluate(tree, values), (rows,))
+            result = np.broadcast_to(evaluate(tree, values), (rows,))
         defined = np.isfinite(result)
         undefined = rows - int(defined.sum())
         if undefined == rows:
@@ -295,7 +295,7 @@ def _range(variable: Range) -> tuple[float, float]:
 def _endpoint(text: str, where: str) -> float:
     tree = parse_expression(text, frozenset(), where, endpoint=True)
     with np.errstate(all="ignore"):
-        value = float(_evaluate(tree, {}))
+        value = float(evaluate(tree, {}))
     if not math.isfinite(value):
         raise GenerateError("invalid_range", f"{where}: the value is not a finite number")
     return value
@@ -346,7 +346,7 @@ def _change(spec: Generate, ranges: list[tuple[float, float]], rows: int) -> str
         span = f"{variable.name} from {_number_text(start)} to {_number_text(stop)}"
         spans.append(f"{span} ({variable.points} points)" if grid else span)
     # The source parse_expression read: whitespace collapsed, typographic operators in ASCII, no comment.
-    formulas = ", ".join(f"{series.name} = {_source(series.expression)}" for series in spec.series)
+    formulas = ", ".join(f"{series.name} = {source_text(series.expression)}" for series in spec.series)
     line = f"generated {rows} {'row' if rows == 1 else 'rows'}: {' and '.join(spans)}, {formulas}"
     return line if len(line) <= MAX_NOTE_CHARS else line[: MAX_NOTE_CHARS - 1] + "…"
 
@@ -368,8 +368,8 @@ def _one_line(text: str) -> str:
     return _WHITESPACE.sub(" ", text).strip()
 
 
-def _source(text: str) -> str:
-    """The text `parse_expression` reads: one line, the typographic operators in ASCII."""
+def source_text(text: str) -> str:
+    """The text `parse_expression` reads: one line, the typographic operators in ASCII; a change line quotes it."""
     return _one_line(text).translate(_TYPOGRAPHIC)
 
 
@@ -383,7 +383,7 @@ def parse_expression(text: str, variables: frozenset[str] | None, where: str, *,
     any name that is no function (`looks_like_formula` reads a pasted formula whose
     variables it cannot know). `where` names the series or endpoint in the message.
     """
-    source = _source(text)
+    source = source_text(text)
     try:
         tree = ast.parse(source, mode="eval")
     except SyntaxError as exc:
@@ -481,32 +481,44 @@ def _check(node: ast.expr, variables: frozenset[str] | None, where: str, endpoin
             raise fail(ONLY)
 
 
-def _evaluate(node: ast.expr, values: Mapping[str, Array]) -> Array:
+Visit = Callable[[ast.expr, Array], None]
+"""Called with every node of a tree and its value, children before their parent (`evaluate`)."""
+
+
+def evaluate(node: ast.expr, values: Mapping[str, Array], visit: Visit | None = None) -> Array:
     """The value of a checked tree as a float64 array (0-d for a constant part), never a Python number.
 
     Python floats raise on an overflow (`10.0**400`) and on a division by zero; NumPy's
     float64 under the caller's `np.errstate(all="ignore")` gives inf or NaN instead.
+    `visit`, when given, sees every node's value after its children's: the `compute`
+    operation of `prepare.py` reads from it which rows divided by zero or left a
+    function's domain on the way, also when a later step makes the value finite again.
     """
+    result: Array
     match node:
         case ast.Constant(value=int() | float() as value):
             try:
                 number = float(value)
             except OverflowError:  # an integer literal beyond the float range
                 number = math.inf
-            return np.asarray(number, dtype=np.float64)
+            result = np.asarray(number, dtype=np.float64)
         case ast.Name(id=name):
-            return values[name] if name in values else np.asarray(CONSTANTS[name], dtype=np.float64)
+            result = values[name] if name in values else np.asarray(CONSTANTS[name], dtype=np.float64)
         case ast.UnaryOp(op=op, operand=operand):
-            inner = _evaluate(operand, values)
-            return np.asarray(np.negative(inner), dtype=np.float64) if isinstance(op, ast.USub) else inner
+            inner = evaluate(operand, values, visit)
+            result = np.asarray(np.negative(inner), dtype=np.float64) if isinstance(op, ast.USub) else inner
         case ast.BinOp(left=left, op=op, right=right):
-            result = _OPERATORS[type(op)](_evaluate(left, values), _evaluate(right, values))
-            return np.asarray(result, dtype=np.float64)
+            pair = (evaluate(left, values, visit), evaluate(right, values, visit))
+            result = np.asarray(_OPERATORS[type(op)](*pair), dtype=np.float64)
         case ast.Call(func=ast.Name(id=name), args=args):
-            arguments = [_evaluate(arg, values) for arg in args]
+            arguments = [evaluate(arg, values, visit) for arg in args]
             function = UNARY_FUNCTIONS.get(name) or BINARY_FUNCTIONS[name]
-            return np.asarray(function(*arguments), dtype=np.float64)
-    raise GenerateError("invalid_expression", ONLY)  # unreachable for a checked tree
+            result = np.asarray(function(*arguments), dtype=np.float64)
+        case _:
+            raise GenerateError("invalid_expression", ONLY)  # unreachable for a checked tree
+    if visit is not None:
+        visit(node, result)
+    return result
 
 
 def _clip(text: str, limit: int = 40) -> str:

@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Lot,Price\nL1,148\nL2,212.5\nL3,97\nL4,130\nL5,305\nL6,101.5\n",
+  "message": "Add a column log_excess with the natural log of Price minus 100.",
+  "expected_operations": [
+    {"op": "compute", "name": "log_excess", "expression": "log(p - 100)", "inputs": {"p": "Price"}}
+  ],
+  "locale": "en",
+  "tags": ["compute", "log"]
+}

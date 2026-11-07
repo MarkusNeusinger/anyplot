@@ -47,6 +47,7 @@ SELECT
   JSON_VALUE_ARRAY(payload.tools) AS tools,
   JSON_VALUE_ARRAY(payload.prep_ops) AS prep_ops,
   LAX_INT64(payload.prep_calls) AS prep_calls,
+  JSON_VALUE_ARRAY(payload.capability_gap) AS capability_gap,
   JSON_VALUE(payload.conversion) AS conversion,
   LAX_BOOL(payload.undo) AS undo,
   LAX_BOOL(payload.to_long) AS to_long,

@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Month,Meter\n2024-01-01,20311.4\n2024-02-01,20698.0\n2024-03-01,21052.7\n2024-04-01,21340.2\n2024-05-01,21571.9\n2024-06-01,21760.3\n",
+  "message": "Meter is a cumulative reading. Add a column Consumption with the change from the previous month.",
+  "expected_operations": [
+    {"op": "diff", "name": "Consumption", "column": "Meter", "order": "Month"}
+  ],
+  "locale": "en",
+  "tags": ["diff", "lag"]
+}

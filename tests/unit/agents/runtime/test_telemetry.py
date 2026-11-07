@@ -332,6 +332,12 @@ def test_the_prep_ops_are_the_operations() -> None:
     assert {get_args(member.model_fields["op"].annotation)[0] for member in union} == telemetry.PREP_OPS
 
 
+def test_the_capability_gaps_are_the_unsupported_families() -> None:
+    from agents.anyplot.data.prepare import UnsupportedFamily
+
+    assert set(get_args(UnsupportedFamily)) == telemetry.CAPABILITY_GAPS
+
+
 def test_the_tool_names_are_the_root_tools() -> None:
     from agents.anyplot.agent import ROOT_TOOLS
 

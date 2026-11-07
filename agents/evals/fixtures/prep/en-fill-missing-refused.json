@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Week,Sales\n1,210\n2,\n3,236\n4,241\n5,\n6,259\n",
+  "message": "Fill the empty Sales cells with the average of the weeks around them.",
+  "expected_operations": [{"op": "unsupported", "family": "fill_values"}],
+  "locale": "en",
+  "tags": ["unsupported", "fill"]
+}

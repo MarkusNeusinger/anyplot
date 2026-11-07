@@ -2367,6 +2367,7 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         tools=sorted({tool for tool in ledger.tools if tool in telemetry.TOOL_NAMES}),
         prep_ops=sorted({op for op in ledger.prep_ops if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
+        capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
         refusal=telemetry.closed(ledger.refusal[0] if ledger.refusal else None, get_args(telemetry.RefusalCode)),
         error=telemetry.closed(error, get_args(telemetry.ErrorCode)),
         reply_reasked=ledger.reply_reasked,
