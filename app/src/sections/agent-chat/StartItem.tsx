@@ -36,11 +36,16 @@ const START_THUMBNAIL: ThumbnailSize = { xs: 96, sm: 144 };
 
 /**
  * The item's places: on a phone the thumbnail beside the first line and the chips and the hint
- * below at the full width; from `sm` up the thumbnail beside all three lines.
+ * below at the full width; from `sm` up the thumbnail beside all three lines. Without chips the
+ * row of the chips goes too, since an empty row would still take two of the grid's gaps.
  */
 const AREAS = {
   xs: '"thumb lead" "needs needs" "hint hint"',
   sm: '"thumb lead" "thumb needs" "thumb hint"',
+} as const;
+const AREAS_WITHOUT_CHIPS = {
+  xs: '"thumb lead" "hint hint"',
+  sm: '"thumb lead" "thumb hint"',
 } as const;
 
 /** The chips and the hint: the text's size, on a phone the 13 px floor, so a chip fits a line. */
@@ -97,7 +102,7 @@ export function StartItem({ title, library, preview, roles, bullets }: StartItem
         whiteSpace: 'normal',
         display: 'grid',
         gridTemplateColumns: 'auto minmax(0, 1fr)',
-        gridTemplateAreas: AREAS,
+        gridTemplateAreas: chips.length > 0 ? AREAS : AREAS_WITHOUT_CHIPS,
         alignItems: 'center',
         rowGap: 0.75,
       }}
