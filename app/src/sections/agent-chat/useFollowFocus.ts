@@ -1,9 +1,10 @@
 /**
  * The keyboard focus follows the live data card (`DataPanel.tsx`) to its new version. A version a
- * turn or a paste makes moves the card to the thread's end, and so does one its own controls make
- * after a plot (`placeData` in `useAgentSession.ts`): React moves the card's node, and a browser
- * drops the focus of an element whose node moves (it lands on the page's body). A control can also
- * go with the version it made (`.to_long()` leaves with the offer it applied).
+ * turn makes moves the card after that turn's message, and one its own controls make moves it to
+ * the thread's end, before and after a plot alike (`placeData` in `useAgentSession.ts`): React
+ * moves the card's node, and a browser drops the focus of an element whose node moves (it lands on
+ * the page's body). A control can also go with the version it made (`.to_long()` leaves with the
+ * offer it applied).
  *
  * So the card keeps the element inside it that held the focus last (`onFocus`), until the user
  * moves on: the focus leaves for another element (`onBlur` with a `relatedTarget` outside the

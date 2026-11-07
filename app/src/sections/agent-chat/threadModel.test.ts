@@ -162,8 +162,9 @@ describe('threadModel', () => {
       'assistant',
       '# data',
       'user',
-      'assistant',
+      // The turn's version stands before its reply, which streamed in before it.
       'data',
+      'assistant',
       '# plot',
       'action',
       'plot',
@@ -186,10 +187,12 @@ describe('threadModel', () => {
     expect(headings(state.items)).toEqual([
       '# data',
       'paste',
+      // `.to_long()` before the plot: the earlier version stays under its paste, its summary
+      // under it, and the card goes on at the end, in the same chapter.
       'data_stub ▸',
-      'data',
       'action',
       'assistant',
+      'data',
       '# plot',
       'action',
       'plot ▸',
@@ -204,6 +207,33 @@ describe('threadModel', () => {
     const { chapters } = threadModel(state.items);
     expect(chapters[0].dataVersions).toEqual([1, 2]);
     expect(chapters[1]).toMatchObject({ switches: 1, plotVersions: [1, 2] });
+  });
+
+  it("opens a data chapter of its own for a card's control after a question, which keeps its chapter", () => {
+    const state = run(
+      paste('▤ table'),
+      summary('12 rows.'),
+      plot(1),
+      ask('what does the dashed line mean?', 'answer'),
+      item({ type: 'data_prepared', dataset: CHANGED, toLong: true })
+    );
+    expect(headings(state.items)).toEqual([
+      '# data',
+      'paste',
+      'data_stub ▸',
+      'action',
+      'assistant',
+      '# plot',
+      'action',
+      'plot',
+      'assistant',
+      'user',
+      'assistant',
+      '# data',
+      'data',
+    ]);
+    const { chapters } = threadModel(state.items);
+    expect(chapters[1].questions).toHaveLength(1);
   });
 
   it('reads a data turn from its outcome, a plot turn from a failed plot, and leaves a refusal where it falls', () => {

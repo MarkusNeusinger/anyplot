@@ -5,11 +5,12 @@
  * the parser's warnings, and a column for each spec role (the server's defaults
  * come preselected). Every version keeps an item of its own: the card follows
  * the latest, and each older version folds to its label in the thread
- * (`FoldedData.tsx`). A version a turn or a paste made puts the card at the
- * thread's end, below the talk that made it; one its own controls made (an
- * undo, `.to_long()`, the table and sheet pickers) leaves it in place before the
- * first plot, and after a plot moves it to the end as a new `# data` chapter
- * (owner, 2026-11-07). The keyboard focus follows the card (`useFollowFocus`). A
+ * (`FoldedData.tsx`). A version a turn made puts the card right after that
+ * turn's message, before its reply, and a paste brings a card of its own; one
+ * its own controls made (an undo, `.to_long()`, the table and sheet pickers)
+ * moves it to the thread's end, before and after a plot alike, after a plot as
+ * a new `# data` chapter (owner, 2026-11-07). The keyboard focus follows the
+ * card (`useFollowFocus`). A
  * table read from text waits in a card of its own at its paste (`part:
  * 'transcription'`).
  *

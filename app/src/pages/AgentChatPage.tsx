@@ -33,8 +33,9 @@
  * goes as a turn and the assistant makes the first plot with that change. The
  * thread reads in chapters (`# data`, `# plot`, `threadModel.ts`), and the live data card stays
  * open in both steps (the v4 design; the pinned header with `.show()` and `.hide()` went
- * 2026-11-07): a change to the data after a plot opens a new `# data` chapter at the thread's
- * end with the card, and the status line names what dropped the confirmation. Once the
+ * 2026-11-07): a change to the data after a plot opens a new `# data` chapter with the card
+ * (after the request that made it, before its reply, or at the thread's end for a version of the
+ * card's own controls), and the status line names what dropped the confirmation. Once the
  * library has a plot, the same button reads `.update_plot() →` and sends the
  * box's text, a change in plain words on the latest version (as Enter does), and
  * `.start_over()` at the end of the status line makes a new plot from the

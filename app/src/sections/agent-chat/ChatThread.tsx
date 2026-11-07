@@ -15,10 +15,18 @@
  * `data v3 · made long · 48 rows × 4 cols`; every older data version folds to that label (`▸ data
  * v2 · sheet "2026" · 12 rows × 5 cols`, `FoldedData`), which opens it read-only. Every plot
  * version but the latest folds the same way (`▸ plot v1 · matplotlib · first plot`), each with its
- * own image and code a click away. The live card moves to the thread's end, under its own id, when
- * a turn or a paste makes a new version, and when the card's own controls make one after a plot
- * (`placeData` in `useAgentSession.ts`); the rows render as one flat list keyed by item, so React
- * moves the card's node and keeps its state (the notes and the code it showed open).
+ * own image and code a click away. The live card moves under its own id with every new version
+ * (`placeData` in `useAgentSession.ts`): a turn's version stands right after the turn's message,
+ * before its reply, as a plot card does; a version of the card's own controls goes to the
+ * thread's end, before and after a plot alike; a paste brings a card of its own. The rows render
+ * as one flat list keyed by item, so React moves the card's node and keeps its state (the notes
+ * and the code it showed open).
+ *
+ * A turn's version arrives with its `done`, after the reply streamed in, so the card lands above
+ * a reply the user may be reading. The thread holds that reply still (`HoldReadingPosition`): the
+ * browser's own scroll anchoring did not, since it anchors on the user's message above the card.
+ * The reply is then the first after the live card; held in view, its one scroll into view
+ * (`followReply`) moves nothing.
  *
  * While a turn without pipeline steps waits for its reply, an in-progress line with the site's
  * loader holds the assistant's slot (`pendingReply` in `steps.ts`); the log's own polite live
@@ -49,6 +57,7 @@ import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
 import { ChapterLine } from 'src/sections/agent-chat/ChapterLine';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import { FoldedData } from 'src/sections/agent-chat/FoldedData';
+import { HoldReadingPosition, REPLY_ATTRIBUTE } from 'src/sections/agent-chat/HoldReadingPosition';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import {
   ERROR_TEXT,
@@ -320,10 +329,10 @@ function Item({
 }
 
 /**
- * The id of the first reply after the live data card, or null while it has none yet. The card
- * moves to the thread's end with a version a turn, a paste or (after a plot) its own controls
- * made, so the reply this finds is always one that came after the card's latest move: the reply
- * a turn's version follows has already shown above the card.
+ * The id of the first reply after the live data card, or null while it has none yet: the summary
+ * after a paste, the reply of the turn whose version the card shows (the card lands right before
+ * it), or the first reply after a version of the card's own controls, which moved it to the end.
+ * Each comes into view once, the first time it is that reply.
  */
 function firstReplyId(items: ChatItem[]): number | null {
   let card = -1;
@@ -357,6 +366,7 @@ export function ChatThread(props: ChatThreadProps) {
   // it would land under the fold, while the user's eyes are on the composer.
   const replyId = firstReplyId(items);
   const replyRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   // A reply that was there when the thread mounted has arrived already: only a new one moves it.
   const followed = useRef<number | null>(replyId);
   const { followReply } = props;
@@ -368,6 +378,7 @@ export function ChatThread(props: ChatThreadProps) {
   }, [replyId, followReply]);
   return (
     <Box
+      ref={logRef}
       role="log"
       aria-label="Conversation"
       sx={{ display: 'flex', flexDirection: 'column', gap: THREAD_GAP, minWidth: 0 }}
@@ -375,41 +386,45 @@ export function ChatThread(props: ChatThreadProps) {
       {props.start}
       {/* One flat list of chapter lines and items, never a box per chapter: a card that moves
           into a later chapter stays a child of the same parent, so React moves its node and
-          keeps its state instead of mounting it anew. */}
-      {rows.map(row => {
-        if (row.kind === 'chapter') {
-          return <ChapterLine key={`chapter-${row.chapter.index}`} chapter={row.chapter} />;
-        }
-        const { item } = row;
-        // The page's summary turn has no button: its card says what was sent, and the summary
-        // follows.
-        if (item.kind === 'action' && item.action === 'summarize_data') return null;
-        const node = (
-          <Item
-            key={item.id}
-            item={item}
-            props={props}
-            latestVersion={latestVersion}
-            waiting={item.id === waitingId}
-            summaries={summaries}
-          />
-        );
-        // Every reply stands in the same wrapper, the first reply after the live card with the
-        // ref that brings it into view: a reply that stops being the first one (the card moved
-        // below it) keeps its element, so the polite log never reads it out a second time.
-        if (!REPLY_KINDS.has(item.kind)) return node;
-        const first = item.id === replyId;
-        return (
-          <Box
-            key={item.id}
-            ref={first ? replyRef : undefined}
-            data-testid={first ? 'first-reply' : undefined}
-            sx={{ minWidth: 0 }}
-          >
-            {node}
-          </Box>
-        );
-      })}
+          keeps its state instead of mounting it anew. The hold keeps a reply still when the card
+          lands above it, and adds no element. */}
+      <HoldReadingPosition items={items} log={logRef}>
+        {rows.map(row => {
+          if (row.kind === 'chapter') {
+            return <ChapterLine key={`chapter-${row.chapter.index}`} chapter={row.chapter} />;
+          }
+          const { item } = row;
+          // The page's summary turn has no button: its card says what was sent, and the summary
+          // follows.
+          if (item.kind === 'action' && item.action === 'summarize_data') return null;
+          const node = (
+            <Item
+              key={item.id}
+              item={item}
+              props={props}
+              latestVersion={latestVersion}
+              waiting={item.id === waitingId}
+              summaries={summaries}
+            />
+          );
+          // Every reply stands in the same wrapper, the first reply after the live card with the
+          // ref that brings it into view: a reply that stops being the first one (the card moved
+          // below it) keeps its element, so the polite log never reads it out a second time.
+          if (!REPLY_KINDS.has(item.kind)) return node;
+          const first = item.id === replyId;
+          return (
+            <Box
+              key={item.id}
+              ref={first ? replyRef : undefined}
+              data-testid={first ? 'first-reply' : undefined}
+              {...{ [REPLY_ATTRIBUTE]: item.id }}
+              sx={{ minWidth: 0 }}
+            >
+              {node}
+            </Box>
+          );
+        })}
+      </HoldReadingPosition>
       {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
           site's loader says it works; the log's live region reads the words alone. */}
       {/* Laid out as the progress timeline is (`ProgressTimeline.tsx`): a turn that reaches a

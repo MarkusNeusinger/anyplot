@@ -1334,62 +1334,87 @@ describe('AgentChatPage gating', () => {
     expect(chapters()).toEqual(['data', 'plot']);
   });
 
-  it('opens a new data chapter at the end for a data request after the plot, the card in it', async () => {
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt(PAGE);
-    await parseAndPlot();
-    const card = screen.getByTestId('data-card');
-    expect(chapters()).toEqual(['data', 'plot']);
+  it('opens a new data chapter for a data request after the plot, the card before the reply', async () => {
+    const scroll = vi.fn();
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      value: scroll,
+      configurable: true,
+      writable: true,
+    });
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      await parseAndPlot();
+      const card = screen.getByTestId('data-card');
+      expect(chapters()).toEqual(['data', 'plot']);
 
-    // A change to the data asked for below the plot: the card moves to the thread's end, below
-    // the turn, as a new data chapter; the version it showed folds where it stood.
-    const box = screen.getByLabelText('Message');
-    box.focus();
-    sendFromComposer('das ist prozent');
-    const change = await screen.findByTestId('data-change');
-    await turnEnded();
-    expect(chapters()).toEqual(['data', 'plot', 'data']);
-    expect(cardAtTheEnd()).toBe(true);
-    // The same card, moved, not a new one; the focus stays in the box the request came from.
-    expect(screen.getByTestId('data-card')).toBe(card);
-    expect(box).toHaveFocus();
-    expect(foldedData()).toEqual(['data v1 · pasted · 2 rows × 2 cols']);
-    expect(screen.getByTestId('data-card-label')).toHaveTextContent(
-      /^data v2 · changed · 2 rows × 2 cols/
-    );
-    expect(within(change).getByText('# changed')).toBeInTheDocument();
-    expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
-    expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
-    expect(currentStep()).toBe(1);
-    // Step 1 again with a plot here: the plot button acts with an empty box, named for what
-    // it does now: the next version from the changed data. `.start_over()` steps back.
-    expect(composerButtons()).toEqual(['.example_data() (inert)', 'plot the new data']);
-    expect(statusActions()).toEqual([]);
-    // The step line alone says it: no notice right above it in the thread.
-    expect(lossNotice()).not.toBeInTheDocument();
-    expect(screen.getByTestId('data-step')).toHaveTextContent(
-      'back to step 1 of 2 · data changed · check it above, then plot the new data'
-    );
+      // A change to the data asked for below the plot: a new data chapter, the card right after
+      // the request and before the reply (owner, 2026-11-07), the version it showed folded where
+      // it stood.
+      const box = screen.getByLabelText('Message');
+      box.focus();
+      scroll.mockClear();
+      sendFromComposer('das ist prozent');
+      const change = await screen.findByTestId('data-change');
+      await turnEnded();
+      expect(chapters()).toEqual(['data', 'plot', 'data']);
+      const request = screen.getByText('das ist prozent').closest('[role="log"] > *')!;
+      const reply = screen.getByText('I read score as numbers.');
+      expect(request.nextElementSibling).toBe(card);
+      expect(card.nextElementSibling).toContainElement(reply);
+      expect(cardAtTheEnd()).toBe(false);
+      // The card landed above the reply, which had streamed in already: the thread held the
+      // reply still (`HoldReadingPosition`, tested in ChatThread), gave the page's anchoring back,
+      // and the reply, the first after the card now, is brought into view once at the nearest
+      // edge, which moves nothing where it stands in view.
+      await waitFor(() => expect(document.documentElement.style.overflowAnchor).not.toBe('none'));
+      const replyBox = screen.getByTestId('first-reply');
+      expect(replyBox).toContainElement(reply);
+      expect(scroll.mock.contexts.filter(context => context === replyBox)).toHaveLength(1);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+      // The same card, moved, not a new one; the focus stays in the box the request came from.
+      expect(screen.getByTestId('data-card')).toBe(card);
+      expect(box).toHaveFocus();
+      expect(foldedData()).toEqual(['data v1 · pasted · 2 rows × 2 cols']);
+      expect(screen.getByTestId('data-card-label')).toHaveTextContent(
+        /^data v2 · changed · 2 rows × 2 cols/
+      );
+      expect(within(change).getByText('# changed')).toBeInTheDocument();
+      expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
+      expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
+      expect(currentStep()).toBe(1);
+      // Step 1 again with a plot here: the plot button acts with an empty box, named for what
+      // it does now: the next version from the changed data. `.start_over()` steps back.
+      expect(composerButtons()).toEqual(['.example_data() (inert)', 'plot the new data']);
+      expect(statusActions()).toEqual([]);
+      // The step line alone says it: no notice right above it in the thread.
+      expect(lossNotice()).not.toBeInTheDocument();
+      expect(screen.getByTestId('data-step')).toHaveTextContent(
+        'back to step 1 of 2 · data changed · check it above, then plot the new data'
+      );
 
-    // The older version opens read-only from its label: its preview, nothing to press.
-    const older = screen.getByRole('button', { name: 'Data v1, pasted, 2 rows by 2 columns' });
-    fireEvent.click(older);
-    const stub = screen.getByTestId('data-stub');
-    expect(older).toHaveAttribute('aria-expanded', 'true');
-    expect(within(stub).getByRole('cell', { name: '52' })).toBeInTheDocument();
-    expect(within(stub).getAllByRole('button')).toEqual([older]);
+      // The older version opens read-only from its label: its preview, nothing to press.
+      const older = screen.getByRole('button', { name: 'Data v1, pasted, 2 rows by 2 columns' });
+      fireEvent.click(older);
+      const stub = screen.getByTestId('data-stub');
+      expect(older).toHaveAttribute('aria-expanded', 'true');
+      expect(within(stub).getByRole('cell', { name: '52' })).toBeInTheDocument();
+      expect(within(stub).getAllByRole('button')).toEqual([older]);
 
-    // One click: the changed data confirmed, then a new version from the catalogue plot, which
-    // opens the next plot chapter below the card.
-    const create = screen.getByRole('button', { name: 'Plot the new data' });
-    await untilActive(create);
-    fireEvent.click(create);
-    await waitFor(() => expect(screen.getAllByText('Here is your plot.')).toHaveLength(2));
-    await turnEnded();
-    expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'create_plot']);
-    expect(composerButtons()).toEqual(['.example_data() (inert)', '.update_plot() → (inert)']);
-    expect(statusActions()).toEqual(['.start_over()']);
-    expect(chapters()).toEqual(['data', 'plot', 'data', 'plot']);
+      // One click: the changed data confirmed, then a new version from the catalogue plot, which
+      // opens the next plot chapter below the card.
+      const create = screen.getByRole('button', { name: 'Plot the new data' });
+      await untilActive(create);
+      fireEvent.click(create);
+      await waitFor(() => expect(screen.getAllByText('Here is your plot.')).toHaveLength(2));
+      await turnEnded();
+      expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'create_plot']);
+      expect(composerButtons()).toEqual(['.example_data() (inert)', '.update_plot() → (inert)']);
+      expect(statusActions()).toEqual(['.start_over()']);
+      expect(chapters()).toEqual(['data', 'plot', 'data', 'plot']);
+    } finally {
+      delete (Element.prototype as Partial<Element>).scrollIntoView;
+    }
   });
 
   it('holds step 1 while a table read from text waits, whatever a turn reports', async () => {

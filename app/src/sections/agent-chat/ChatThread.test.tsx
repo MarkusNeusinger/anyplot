@@ -438,6 +438,18 @@ describe('ChatThread data items', () => {
   const renderData = (part: 'data' | 'transcription') => (
     <div data-testid={`rendered-${part}`}>{part} card</div>
   );
+  /**
+   * The items after a turn's data version, as the reducer places it: a stub where the card
+   * stood, the card right after the turn's message (the fourth item), before its reply.
+   */
+  const moved = (before: ChatItem[]): ChatItem[] => [
+    before[0],
+    { id: 6, kind: 'data_stub', rows: 4, columns: 2, card: 2 },
+    before[2],
+    before[3],
+    { id: 2, kind: 'data' },
+    before[4],
+  ];
 
   function renderItems(
     state: AgentSessionState,
@@ -682,18 +694,74 @@ describe('ChatThread data items', () => {
     const { rerender } = render(thread(before));
     const summary = screen.getByText('4 rows.');
     expect(screen.getByTestId('first-reply')).toContainElement(summary);
-    // The turn's version moves the card below its reply: the summary is no first reply now, and
-    // stays the same node.
-    rerender(
-      thread([
-        before[0],
-        { id: 6, kind: 'data_stub', rows: 4, columns: 2, card: 2 },
-        ...before.slice(2),
-        { id: 2, kind: 'data' },
-      ])
-    );
+    // The turn's version moves the card in front of the turn's reply: the summary is no first
+    // reply now, and stays the same node; the turn's reply is the first one.
+    rerender(thread(moved(before)));
     expect(screen.getByText('4 rows.')).toBe(summary);
-    expect(screen.queryByTestId('first-reply')).not.toBeInTheDocument();
+    expect(screen.getByTestId('first-reply')).toHaveTextContent('Kept 2026.');
+  });
+
+  it('holds the reply still when the card lands above it, unless it stands below the window', async () => {
+    const thread = (items: ChatItem[]) => (
+      <ChatThread
+        state={ready(items)}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={renderData}
+      />
+    );
+    const before: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'assistant', text: '4 rows.' },
+      { id: 4, kind: 'user', text: 'only 2026' },
+      { id: 5, kind: 'assistant', text: 'Kept 2026.' },
+    ];
+    // jsdom lays nothing out: the turn's reply stands at `top`, 240 px lower once the card is in
+    // front of it.
+    let top = 600;
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element
+    ) {
+      const reply = this.getAttribute('data-reply') === '5';
+      const below = this.previousElementSibling?.getAttribute('data-testid') === 'rendered-data';
+      return { top: reply ? top + (below ? 240 : 0) : 0 } as DOMRect;
+    });
+    // An earlier test's frame may still hold the anchoring: let it run first.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const page = document.documentElement.style.overflowAnchor;
+    let during = '';
+    const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {
+      during = document.documentElement.style.overflowAnchor;
+    });
+    const frame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callback(0);
+      return 0;
+    });
+    try {
+      const { rerender, unmount } = render(thread(before));
+      rerender(thread(moved(before)));
+      // The page scrolls by the distance the reply moved, with the browser's anchoring off for
+      // that commit and back to the page's own value after it.
+      expect(scrollBy).toHaveBeenCalledWith({ top: 240, behavior: 'instant' });
+      expect(during).toBe('none');
+      expect(document.documentElement.style.overflowAnchor).toBe(page);
+      unmount();
+
+      // A reply below the window's bottom edge is not being read: it lands where it lands.
+      top = window.innerHeight + 10;
+      scrollBy.mockClear();
+      const again = render(thread(before));
+      again.rerender(thread(moved(before)));
+      expect(scrollBy).not.toHaveBeenCalled();
+    } finally {
+      rect.mockRestore();
+      scrollBy.mockRestore();
+      frame.mockRestore();
+    }
   });
 
   it('keeps the live card mounted with its own state when a version moves it into a new chapter', async () => {

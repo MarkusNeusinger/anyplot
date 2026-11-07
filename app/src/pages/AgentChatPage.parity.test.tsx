@@ -422,6 +422,21 @@ const STATES: Record<string, State> = {
       await waitFor(() => expect(screen.getByTestId('data-card-label')).toHaveFocus());
     },
   },
+  // Before any plot, the same rule: a data request puts the card before its reply, and `.undo()`
+  // then moves it to the end, each earlier version folded under its own talk.
+  'with a control version before any plot': {
+    open: 'ok',
+    reach: async () => {
+      await pasteTable();
+      await send(DATA_REQUEST, 'Score is a share now.');
+      const undo = screen.getByRole('button', { name: '.undo()' });
+      undo.focus();
+      fireEvent.click(undo);
+      await screen.findByText('# undone · back to the version before');
+      await waitFor(() => expect(screen.getByTestId('data-card-label')).toHaveFocus());
+      expect(screen.getAllByTestId('data-stub')).toHaveLength(2);
+    },
+  },
   // A library switch after a plot: a line of its own, which names the decisions the plot there
   // keeps.
   'with a library switch line': {

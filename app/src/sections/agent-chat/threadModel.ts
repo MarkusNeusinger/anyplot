@@ -7,9 +7,9 @@
  *
  * The items fall into turns: a turn starts at the user's typed message, a page action
  * (`.create_plot()`, the summary of new data) or a paste, and holds what followed it
- * until the next turn starts. A data version that a card's own control made after a plot
- * (`.undo()`, `.to_long()`, a picker) has no turn item: the reducer moves the card below
- * the plot, and a data item that follows a plot inside a turn starts a turn of its own.
+ * until the next turn starts. A data version that a card's own control made (`.undo()`,
+ * `.to_long()`, a picker) has no turn item: the reducer moves the card to the thread's end, and
+ * a data item that follows a turn's reply, plot or notice starts a turn of its own.
  * A turn is about the data when it holds a data version or a table read from text (a
  * paste, a pick, a change the assistant or the card made), asked for the summary or
  * example data, or changed the data in the user's words; about the plot when it ran the
@@ -95,14 +95,17 @@ function turnKind(turn: readonly ChatItem[]): ChapterKind | null {
 
 /**
  * The items cut into turns; what stands before the first turn (a copied card) is a turn of its
- * own, and so is a data version below a plot of the same turn (a card's control after a plot).
+ * own. A data version belongs to the turn it directly follows (a paste's card, a turn's version,
+ * which stands right after the turn's own item, the stubs before them); one that stands after a
+ * turn's reply, its plot or a notice is a version of the card's own controls, which has no turn
+ * item, and opens a turn of its own, so a question before it keeps its own chapter.
  */
 function turnsOf(items: readonly ChatItem[]): ChatItem[][] {
   const turns: ChatItem[][] = [];
   for (const item of items) {
     const current = turns[turns.length - 1];
-    const afterPlot = !!current && isDataItem(item) && current.some(isPlotItem);
-    if (!current || opensTurn(item) || afterPlot) turns.push([item]);
+    const ownVersion = !!current && isDataItem(item) && current.slice(1).some(i => !isDataItem(i));
+    if (!current || opensTurn(item) || ownVersion) turns.push([item]);
     else current.push(item);
   }
   return turns;

@@ -3,9 +3,12 @@
 - **The agent chat reads in chapters, and the data card stays open.** A `# data`
   or `# plot` line opens each stretch of the talk where it turns from the data to
   the plot and back, and a change of the data after a plot opens a new `# data`
-  chapter at the thread's end with the card in it, also when the card's own
-  `.undo()`, `.to_long()` or a picker made the change (the owner's decision of
-  2026-11-07, so the thread reads in time order). Every data version gets its
+  chapter with the card in it. The thread reads in time order (the owner's
+  decisions of 2026-11-07): a change asked for in the chat puts the card right
+  after the request, before the reply, and the card's own `.undo()`,
+  `.to_long()` or a picker moves it to the thread's end, before and after a plot
+  alike, each older version folded with its own summary under it. Every data
+  version gets its
   number on the card's border (`data v3 · made long · 48 rows × 4 cols`), and
   every older version folds to that label, which opens it read-only. The page
   names a version only by that number: the card's change lines, its full view

@@ -350,13 +350,14 @@ describe('ChatThread: the data versions of a long session', () => {
     expect(rows(end.container)).toEqual([
       '# data',
       `❯${PASTE}`,
-      // The card's own controls before the first plot: each version's stub stays above the card,
-      // which stayed in place; the second paste froze the card itself into the last stub.
+      // The card's own controls before the first plot, as after one (owner, 2026-11-07): the
+      // card went on at the end each time, and every version stays folded with its own summary
+      // under it.
       '▸ data v1 · Bericht.xlsx · 13 rows × 4 cols',
-      '▸ data v2 · sheet "2026" · 12 rows × 5 cols',
-      '▸ data v3 · made long · 48 rows × 3 cols',
       'Sheet 2025: 13 rows.',
+      '▸ data v2 · sheet "2026" · 12 rows × 5 cols',
       'Sheet 2026: 12 rows.',
+      '▸ data v3 · made long · 48 rows × 3 cols',
       '❯what is in Region?',
       'Four regions.',
       '# plot',
@@ -367,11 +368,12 @@ describe('ChatThread: the data versions of a long session', () => {
       '▸ plot v2 · matplotlib · a bigger title',
       'Bigger now.',
       // A data request after the plot: a new data chapter, the version before folded where the
-      // card stood (above, in the first chapter), the card below the turn.
+      // card stood (above, in the first chapter), the card right after the request, before its
+      // reply; its `.undo()` then took the card on to the end again.
       '# data',
       '❯only the 2026 rows',
-      'Kept the 2026 rows.',
       '▸ data v4 · changed · 24 rows × 3 cols',
+      'Kept the 2026 rows.',
       '▸ data v5 · undone · 48 rows × 3 cols',
       '# plot',
       '❯.update_plot() →# matplotlib',
@@ -392,8 +394,8 @@ describe('ChatThread: the data versions of a long session', () => {
       `❯${TEXT}`,
       '▸ data v8 · read from text · 1 row × 2 cols',
       '❯y = sin(x) instead',
-      'Computed 200 rows.',
       'data card #1',
+      'Computed 200 rows.',
     ]);
   });
 
@@ -421,8 +423,8 @@ describe('ChatThread: the data versions of a long session', () => {
     const steps = new Map(replay().map(({ name, state }) => [name, state]));
     const view = render(thread(steps.get('a typed change of the plot')!));
     expect(cards(view.container)).toEqual(['data card #1']);
-    // The card below the turn that changed the data, then below the plot its `.to_long()`
-    // followed: each time the last row, under a `# data` line of its own.
+    // The card after the request that changed the data, then below the plot its `.to_long()`
+    // followed, under a `# data` line of its own: the same card all along.
     for (const name of ['its end', 'a plot of it', '.to_long() below that plot']) {
       view.rerender(thread(steps.get(name)!));
       expect(cards(view.container), name).toEqual(['data card #1']);
@@ -430,7 +432,7 @@ describe('ChatThread: the data versions of a long session', () => {
     // The version before stays folded where the card stood, above the plot.
     const shown = rows(view.container);
     expect(shown.slice(-8)).toEqual([
-      '▸ data v4 · changed · 24 rows × 3 cols',
+      'Kept the 2026 rows.',
       '▸ data v5 · undone · 48 rows × 3 cols',
       '# plot',
       '❯.update_plot() →# matplotlib',

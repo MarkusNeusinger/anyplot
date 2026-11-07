@@ -283,9 +283,8 @@ export function runLine(state: AgentSessionState): string | null {
  * that failed) takes the timeline's place, and the waiting items come with it; a run that ends
  * without one shows them as it ends. Returns `state.items` itself while nothing waits.
  *
- * The data versions never wait: the live card moves to the thread's end with a new version, and
- * held back it would unmount and lose its own state, while the stub above it says it holds the
- * latest data. Today a version arrives only with a turn's `done`, which ends the run, or from the
+ * The data versions never wait: the live card moves with every new version, and held back it
+ * would unmount and lose its own state, while the stub it left says it holds the latest data. Today a version arrives only with a turn's `done`, which ends the run, or from the
  * card's own controls, which wait while a run lasts, so none lands under a running timeline.
  */
 export function runView(state: AgentSessionState): { items: ChatItem[]; timeline: boolean } {
