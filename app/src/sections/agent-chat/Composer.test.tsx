@@ -58,14 +58,17 @@ const attachment: Attachment = {
 /**
  * The declarations the page's style sheets give an element at a viewport width, in cascade order:
  * jsdom's `getComputedStyle` skips every `@media` block, and the sx breakpoints (`xs` too) all
- * compile into one, so the test applies their width conditions itself. Rules for a state the
+ * compile into one, so the test applies their width conditions itself. The screen has a fine
+ * pointer: a block on any other feature (`pointer: coarse`) never applies. Rules for a state the
  * element is not in (`:hover`, `::placeholder`) do not match it.
  */
 function styleAt(element: Element, width: number): Record<string, string> {
   const fits = (media: string) =>
-    [...media.matchAll(/\((min|max)-width:\s*([\d.]+)px\)/g)].every(([, bound, px]) =>
-      bound === 'min' ? width >= Number(px) : width <= Number(px)
-    );
+    (media.match(/\([^)]*\)/g) ?? []).every(condition => {
+      const bound = /^\((min|max)-width:\s*([\d.]+)px\)$/.exec(condition);
+      if (!bound) return false;
+      return bound[1] === 'min' ? width >= Number(bound[2]) : width <= Number(bound[2]);
+    });
   const matches = (selector: string) => {
     try {
       return element.matches(selector);
@@ -334,6 +337,8 @@ describe('Composer row by width', () => {
     }
     // One size at every width: alone on its line, the plot button needs no smaller text.
     expect(styleAt(plot, 390)['font-size']).toBe(styleAt(plot, 1440)['font-size']);
+    // The `↵` stays a touch screen's (`pointer: coarse`): hidden on this fine pointer at any width.
+    expect(styleAt(screen.getByTestId('send-return'), 390).display).toBe('none');
   });
 
   it('keeps the box before the plot button, which is inert before data and keeps the focus', async () => {
