@@ -181,7 +181,7 @@ describe('DataPanel card', () => {
   it('carries what the data holds on its border, in words for a screen reader', () => {
     render(panel(stateWith({ x: 'month', y1: 'shoes' })));
     const label = screen.getByTestId('data-card-label');
-    expect(label).toHaveTextContent(/^data · 1 row × 5 colsdata, 1 row by 5 columns$/);
+    expect(label).toHaveTextContent(/^data · 1 row × 5 cols data, 1 row by 5 columns$/);
     expect(within(label).getByText('data · 1 row × 5 cols')).toHaveAttribute('aria-hidden');
     expect(screen.queryByText('# your data')).not.toBeInTheDocument();
     // How the data came stays inside: the shape is the label's.
@@ -1411,7 +1411,7 @@ describe('DataPanel transcription', () => {
     expect(card.getByRole('cell', { name: 'Katze' })).toBeInTheDocument();
     // Its frame's label says what waits there.
     expect(screen.getByTestId('transcription-label')).toHaveTextContent(
-      /^read from text · 3 rows × 2 colstable read from text, 3 rows by 2 columns$/
+      /^read from text · 3 rows × 2 cols table read from text, 3 rows by 2 columns$/
     );
     // Nothing is stored yet: no bindings and no `.create_plot()`.
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();

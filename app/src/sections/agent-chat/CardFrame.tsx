@@ -8,9 +8,10 @@
  * A plot card can fold, and then its label is its toggle: open, the card's content stands under
  * the label on the border; folded, the card is that label alone, one line in the thread's flow
  * with `▸` before it. It is the same button in both, in the same place of the tree, so a click
- * leaves the keyboard focus on it. Its name says the label in words (`Plot version 2, matplotlib,
- * title in German`), since `·` and `×` read badly, and `aria-expanded` says whether the card is
- * open; the name stays the same in both states.
+ * leaves the keyboard focus on it. Its name keeps the label's words in their order (`Plot v2,
+ * matplotlib, title in German`, WCAG 2.5.3), the `·` read badly, and `aria-expanded` says whether
+ * the card is open; the name stays the same in both states. A label that names no control (the
+ * data card's) is read out in words instead: `data, 48 rows by 4 columns`.
  *
  * On the border the label stays on one line and ends in an ellipsis where the card is too narrow
  * for it (a long request on a phone); the folded line wraps instead.
@@ -130,7 +131,7 @@ export function CardFrame({
     <Box component="span" data-testid={labelTestId} sx={borderLabelSx}>
       {spokenLabel ? (
         <>
-          <span aria-hidden>{label}</span>
+          <span aria-hidden>{label}</span>{' '}
           <Box component="span" sx={visuallyHiddenSx}>
             {spokenLabel}
           </Box>

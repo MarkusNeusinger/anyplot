@@ -343,7 +343,7 @@ const STATES: Record<string, State> = {
       fireEvent.click(update);
       expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
       await turnEnded();
-      await screen.findByRole('button', { name: 'Plot version 1, matplotlib, first plot' });
+      await screen.findByRole('button', { name: 'Plot v1, matplotlib, first plot' });
     },
   },
   // The feedback form unfolded: its data box and the consent line under it.

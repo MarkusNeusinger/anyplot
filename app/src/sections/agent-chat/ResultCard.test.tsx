@@ -128,7 +128,7 @@ describe('ResultCard', () => {
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
     // A folded card has no image, so its actions go with it.
-    fireEvent.click(screen.getByRole('button', { name: /^Plot version 2/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
     expect(screen.queryByTestId('result-image-actions')).not.toBeInTheDocument();
   });
 
@@ -220,9 +220,9 @@ describe('ResultCard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Show code' }));
     await userEvent.click(screen.getByRole('button', { name: /^Run details/ }));
 
-    await userEvent.click(screen.getByRole('button', { name: /^Plot version 2,/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
     expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /^Plot version 2,/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
 
     expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
     expect(screen.getByText('Marker size raised')).toBeInTheDocument();
@@ -629,9 +629,9 @@ describe('ResultCard', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
       expect(screen.getByText('building the interactive light plot…')).toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole('button', { name: /^Plot version 2,/ }));
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
       finish(page('light'));
-      await userEvent.click(screen.getByRole('button', { name: /^Plot version 2,/ }));
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
       await waitFor(() =>
         expect(screen.getByRole('button', { name: 'Show interactive' })).toBeEnabled()
       );
@@ -666,7 +666,7 @@ describe('ResultCard', () => {
       rerender(<ResultCard {...props} latest={false} />);
       expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole('button', { name: /^Plot version 2,/ }));
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
       expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
       expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
     });
@@ -791,9 +791,10 @@ describe('ResultCard', () => {
   it('folds an earlier version to its label in one line, and opens it again on request', async () => {
     renderCard({ latest: false, summary: 'title in German' });
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
-    // One button, the label in the thread's flow with `▸`, named in words.
+    // One button, the label in the thread's flow with `▸`, named with its words in their order,
+    // so a voice command that says them finds it.
     const line = screen.getByRole('button', {
-      name: 'Plot version 2, matplotlib, title in German',
+      name: 'Plot v2, matplotlib, title in German',
     });
     expect(line).toHaveTextContent(/^▸plot v2 · matplotlib · title in German$/);
     expect(line).toHaveAttribute('aria-expanded', 'false');
@@ -850,7 +851,7 @@ describe('ResultCard', () => {
         feedback: { reaction: 'bug', message: null, includeData: false, caseId: 'c1' },
       }),
     });
-    await userEvent.click(screen.getByRole('button', { name: /^Plot version 2,/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plot v2,/ }));
     expect(screen.getByTestId('result-feedback-sent')).toHaveTextContent('sent · v2 · bug');
   });
 });

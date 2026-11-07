@@ -26,8 +26,10 @@ export function dataCardLabel(rows: number, columns: number, from?: 'text'): Car
 
 /**
  * A plot card's label on its border and its folded line: `plot v2 · matplotlib · title in German`,
- * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`), read out
- * as "Plot version 2, matplotlib, title in German".
+ * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`). It names
+ * the button the label is, so its name keeps the words on screen in their order, `Plot v2,
+ * matplotlib, title in German`, and a voice command that says them finds it (WCAG 2.5.3); only the
+ * `·` give way to commas.
  */
 export function plotCardLabel(
   number: number,
@@ -36,6 +38,6 @@ export function plotCardLabel(
 ): CardLabel {
   return {
     text: `plot v${number} · ${library}${summary ? ` · ${summary}` : ''}`,
-    spoken: `Plot version ${number}, ${library}${summary ? `, ${summary}` : ''}`,
+    spoken: `Plot v${number}, ${library}${summary ? `, ${summary}` : ''}`,
   };
 }

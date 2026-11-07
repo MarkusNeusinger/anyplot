@@ -345,7 +345,7 @@ export function DataCard(props: DataCardProps) {
             {narrow && (
               <Box
                 data-testid="data-actions"
-                sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1, ml: -1.25 }}
+                sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1, rowGap: 0.5, ml: -1.25 }}
               >
                 {viewAll}
                 {bindingsToggle}

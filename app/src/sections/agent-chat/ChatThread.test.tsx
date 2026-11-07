@@ -641,12 +641,12 @@ describe('ChatThread plot cards', () => {
         { id: 4, kind: 'plot', version: 2 },
       ],
     });
-    const older = screen.getByRole('button', { name: 'Plot version 1, matplotlib, first plot' });
+    const older = screen.getByRole('button', { name: 'Plot v1, matplotlib, first plot' });
     expect(older).toHaveTextContent(/^▸plot v1 · matplotlib · first plot$/);
     expect(older).toHaveAttribute('aria-expanded', 'false');
     // The latest is open under its label, the request cut to 40 characters.
     const latest = screen.getByRole('button', {
-      name: 'Plot version 2, matplotlib, put the title in German and make the ma…',
+      name: 'Plot v2, matplotlib, put the title in German and make the ma…',
     });
     expect(latest).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getAllByRole('img').map(image => image.getAttribute('alt'))).toEqual([

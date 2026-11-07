@@ -713,7 +713,14 @@ export function ResultCard({
               aria-label="Image actions"
               data-testid="result-image-actions"
               // The words line up with the card's text, the buttons' padding outside it.
-              sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1, ml: -1.25, mt: -1 }}
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                columnGap: 1,
+                rowGap: 0.5,
+                ml: -1.25,
+                mt: -1,
+              }}
             >
               {phoneImageActions}
             </Box>
