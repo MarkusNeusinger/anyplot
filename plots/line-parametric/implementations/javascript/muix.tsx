@@ -3,160 +3,220 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 86/100 | Created: 2026-06-20
 
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Linear interpolation between two hex colors (Imprint sequential gradient)
-function lerpColor(hex1: string, hex2: string, alpha: number): string {
-  const p = (h: string, o: number) => parseInt(h.slice(o, o + 2), 16);
-  const r = Math.round(p(hex1, 1) + (p(hex2, 1) - p(hex1, 1)) * alpha);
-  const g = Math.round(p(hex1, 3) + (p(hex2, 3) - p(hex1, 3)) * alpha);
-  const b = Math.round(p(hex1, 5) + (p(hex2, 5) - p(hex1, 5)) * alpha);
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-}
+// Constants
+const PAD_SHARE = 0.06; // share of the larger span added around each curve
+const LINE_WIDTH = 3.5;
+const MARGIN = { top: 12, right: 28, bottom: 8, left: 8 };
+const X_AXIS_H = 60;
+const Y_AXIS_W = 68;
+const HEADER_H = 80;
+const PANEL_TITLE_H = 52;
+const FOOTER_H = 56;
+const SIDE_PAD = 32;
+const PANEL_GAP = 32;
 
-// --- Data (deterministic, in-memory) ----------------------------------------
-const N = 800;
-const SEGS = 20;
-const PI2 = 2 * Math.PI;
+// Columns: set these to your data's column names
+const CURVE = "Curve"; // role: extra
+const T = "t"; // role: t
+const X = "x(t)"; // role: x
+const Y = "y(t)"; // role: y
 
-// Lissajous figure: x = sin(3t + π/4), y = sin(2t), t ∈ [0, 2π]
-const lissajousPoints = Array.from({ length: N }, (_, i) => {
-  const ti = (i / (N - 1)) * PI2;
-  return { x: Math.sin(3 * ti + Math.PI / 4), y: Math.sin(2 * ti), id: i };
+// Data: replace this block with your own records, one object per row
+// 800 samples of each curve: the Lissajous figure over one period and two turns of the spiral.
+const data = [
+  { name: "Lissajous figure: x = sin 3t, y = sin 2t", tEnd: 2 * Math.PI, fx: (s) => Math.sin(3 * s), fy: (s) => Math.sin(2 * s) },
+  { name: "Archimedean spiral: x = t cos t, y = t sin t", tEnd: 4 * Math.PI, fx: (s) => s * Math.cos(s), fy: (s) => s * Math.sin(s) },
+].flatMap((curve) =>
+  Array.from({ length: 800 }, (_, i) => {
+    const s = (i / 799) * curve.tEnd;
+    return { [CURVE]: curve.name, [T]: s, [X]: curve.fx(s), [Y]: curve.fy(s) };
+  }),
+);
+
+// Plot: reads only data and the constants above
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const panelW = (W - 2 * SIDE_PAD - PANEL_GAP) / 2;
+const panelH = H - HEADER_H - PANEL_TITLE_H - FOOTER_H;
+const drawW = panelW - MARGIN.left - MARGIN.right - Y_AXIS_W;
+const drawH = panelH - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+const seqRgb = t.seq.map((hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+
+// One panel per curve, its rows in order of t. Both axes get the same units per pixel
+// (equal aspect), centred on the curve, with the larger span setting the scale.
+const panels = [...new Set(data.map((d) => d[CURVE]))].map((name) => {
+  const rows = data.filter((d) => d[CURVE] === name).sort((a, b) => a[T] - b[T]);
+  const xs = rows.map((d) => d[X]);
+  const ys = rows.map((d) => d[Y]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const unitsPerPx = Math.max((x1 - x0) / drawW, (y1 - y0) / drawH) * (1 + 2 * PAD_SHARE);
+  const tStart = rows[0][T];
+  const tEnd = rows[rows.length - 1][T];
+  return {
+    name,
+    rows,
+    tStart,
+    tEnd,
+    xDomain: [(x0 + x1) / 2 - (unitsPerPx * drawW) / 2, (x0 + x1) / 2 + (unitsPerPx * drawW) / 2],
+    yDomain: [(y0 + y1) / 2 - (unitsPerPx * drawH) / 2, (y0 + y1) / 2 + (unitsPerPx * drawH) / 2],
+    // Imprint sequential ramp along increasing t: green at the start, blue at the end
+    colors: rows.map((d) => {
+      const f = tEnd > tStart ? (d[T] - tStart) / (tEnd - tStart) : 0;
+      return `rgb(${seqRgb[0].map((c: number, k: number) => Math.round(c + (seqRgb[1][k] - c) * f)).join(", ")})`;
+    }),
+  };
 });
 
-// Archimedean spiral: x = t·cos(t), y = t·sin(t), t ∈ [0, 4π]
-const spiralPoints = Array.from({ length: N }, (_, i) => {
-  const ti = (i / (N - 1)) * 2 * PI2;
-  return { x: ti * Math.cos(ti), y: ti * Math.sin(ti), id: i };
-});
+const TITLE = "line-parametric · javascript · muix · anyplot.ai";
+const SUBTITLE = `${panels.length} curves · ${data.length.toLocaleString("en-US")} samples · equal aspect ratio in each panel`;
 
-// Segment each curve into SEGS color bands for Imprint seq gradient
-// #009E73 (brand green, t=start) → #4467A3 (blue, t=end)
-const SEQ_START = "#009E73";
-const SEQ_END = "#4467A3";
-
-function buildGradientSeries(points: { x: number; y: number; id: number }[]) {
-  const segLen = Math.ceil(points.length / SEGS);
-  return Array.from({ length: SEGS }, (_, s) => ({
-    data: points.slice(s * segLen, Math.min((s + 1) * segLen + 1, points.length)),
-    color: lerpColor(SEQ_START, SEQ_END, s / (SEGS - 1)),
-    label: "",
-    markerSize: 3.5,
-    id: `seg-${s}`,
-  }));
-}
-
-const lissajousSeries = buildGradientSeries(lissajousPoints);
-const spiralSeries = buildGradientSeries(spiralPoints);
-
-// --- Chart ------------------------------------------------------------------
-export default function Chart() {
-  const { width, height } = window.ANYPLOT_SIZE;
-  const half = Math.floor((width - 60) / 2);
-  const chartH = height - 100;
-  // Square chart enforces equal aspect ratio when both axes cover the same numeric range.
-  // Margins top=25, bottom=50, left=55, right=20 → plot area = (side-75) × (side-75).
-  const chartSide = Math.min(half, chartH);
-
-  const axisLabel = { fill: t.ink, fontSize: 13 };
-  const axisTick = { fill: t.inkSoft, fontSize: 11 };
-
+// The curve as short segments coloured by t, an arrowhead ending on the last point and a start dot
+function CurveLayer({ panel }: { panel: (typeof panels)[number] }) {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  const pts = panel.rows.map((d) => [xScale(d[X]), yScale(d[Y])]);
+  const [sx, sy] = pts[0];
+  const [ex, ey] = pts[pts.length - 1];
+  const [px, py] = pts[pts.length - 2];
+  const angle = (Math.atan2(ey - py, ex - px) * 180) / Math.PI;
+  const midX = (xScale(panel.xDomain[0]) + xScale(panel.xDomain[1])) / 2;
+  const labels = [
+    { x: sx, y: sy - 18, text: `start, ${T} = ${panel.tStart.toFixed(2)}` },
+    { x: ex, y: ey + 30, text: `end, ${T} = ${panel.tEnd.toFixed(2)}` },
+  ];
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        px: 2,
-        pt: 1.5,
-        boxSizing: "border-box",
-      }}
-    >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 20,
-          fontWeight: 500,
-          textAlign: "center",
-          mb: 1,
-          letterSpacing: 0,
+    <g>
+      {pts.slice(1).map(([x2, y2], i) => (
+        <line
+          key={i}
+          x1={pts[i][0]}
+          y1={pts[i][1]}
+          x2={x2}
+          y2={y2}
+          stroke={panel.colors[i + 1]}
+          strokeWidth={LINE_WIDTH}
+          strokeLinecap="round"
+        />
+      ))}
+      {/* Arrow tip on the last point; the start dot comes after it so a closed curve shows both */}
+      <path
+        d="M 0 0 L -24 -10 L -24 10 Z"
+        transform={`translate(${ex}, ${ey}) rotate(${angle})`}
+        fill={panel.colors[panel.colors.length - 1]}
+        stroke={t.pageBg}
+        strokeWidth={2}
+      />
+      <circle cx={sx} cy={sy} r={8} fill={panel.colors[0]} stroke={t.pageBg} strokeWidth={2.5} />
+      {labels.map((lab) => (
+        <text
+          key={lab.text}
+          x={lab.x + (lab.x > midX ? -14 : 14)}
+          y={lab.y}
+          textAnchor={lab.x > midX ? "end" : "start"}
+          fontSize={15}
+          fontWeight={600}
+          fill={t.ink}
+          stroke={t.pageBg}
+          strokeWidth={4}
+          paintOrder="stroke"
+        >
+          {lab.text}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+export default function Chart() {
+  return (
+    <div style={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: `16px ${SIDE_PAD}px 0 ${SIDE_PAD + 8}px`, boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
+      <div style={{ display: "flex", gap: PANEL_GAP, padding: `0 ${SIDE_PAD}px` }}>
+        {panels.map((panel) => (
+          <div key={panel.name} style={{ width: panelW, display: "flex", flexDirection: "column" }}>
+            <div style={{ height: PANEL_TITLE_H, paddingLeft: MARGIN.left + Y_AXIS_W, boxSizing: "border-box" }}>
+              <div style={{ fontSize: 17, fontWeight: 600, color: t.ink }}>{panel.name}</div>
+              <div style={{ fontSize: 14, color: t.inkSoft, marginTop: 4 }}>
+                {panel.rows.length} samples, {T} from {panel.tStart.toFixed(2)} to {panel.tEnd.toFixed(2)}
+              </div>
+            </div>
+            <ChartsContainer
+              width={panelW}
+              height={panelH}
+              margin={MARGIN}
+              skipAnimation
+              series={[]}
+              xAxis={[
+                {
+                  scaleType: "linear",
+                  min: panel.xDomain[0],
+                  max: panel.xDomain[1],
+                  domainLimit: "strict",
+                  label: X,
+                  height: X_AXIS_H,
+                  tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+                  labelStyle: { fontSize: 16, fill: t.ink },
+                },
+              ]}
+              yAxis={[
+                {
+                  scaleType: "linear",
+                  min: panel.yDomain[0],
+                  max: panel.yDomain[1],
+                  domainLimit: "strict",
+                  label: Y,
+                  width: Y_AXIS_W,
+                  tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+                  labelStyle: { fontSize: 16, fill: t.ink },
+                },
+              ]}
+              sx={{
+                "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+                "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+                "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+              }}
+            >
+              <ChartsGrid horizontal vertical />
+              <CurveLayer panel={panel} />
+              <ChartsXAxis />
+              <ChartsYAxis />
+            </ChartsContainer>
+          </div>
+        ))}
+      </div>
+      <div
+        style={{
+          height: FOOTER_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          fontSize: 15,
+          color: t.inkSoft,
         }}
       >
-        line-parametric · javascript · muix · anyplot.ai
-      </Typography>
-
-      <Box sx={{ display: "flex", gap: 2, flex: 1, justifyContent: "center", alignItems: "flex-start" }}>
-        {/* Lissajous figure — equal aspect ratio: square chart, same axis range, balanced margins */}
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Typography sx={{ color: t.inkSoft, fontSize: 14, mb: 0.5 }}>
-            Lissajous Figure &mdash; x = sin(3t + π/4), y = sin(2t), t ∈ [0, 2π]
-          </Typography>
-          <ScatterChart
-            width={chartSide}
-            height={chartSide}
-            skipAnimation
-            series={lissajousSeries}
-            grid={{ horizontal: false, vertical: false }}
-            xAxis={[{
-              label: "x(t)",
-              labelStyle: axisLabel,
-              tickLabelStyle: axisTick,
-              min: -1.25,
-              max: 1.25,
-            }]}
-            yAxis={[{
-              label: "y(t)",
-              labelStyle: axisLabel,
-              tickLabelStyle: axisTick,
-              min: -1.25,
-              max: 1.25,
-            }]}
-            margin={{ top: 25, bottom: 50, left: 55, right: 20 }}
-            slotProps={{ legend: { hidden: true } }}
-          />
-        </Box>
-
-        {/* Archimedean spiral — equal aspect ratio: square chart, symmetric axis range */}
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Typography sx={{ color: t.inkSoft, fontSize: 14, mb: 0.5 }}>
-            Archimedean Spiral &mdash; x = t·cos(t), y = t·sin(t), t ∈ [0, 4π]
-          </Typography>
-          <ScatterChart
-            width={chartSide}
-            height={chartSide}
-            skipAnimation
-            series={spiralSeries}
-            grid={{ horizontal: false, vertical: false }}
-            xAxis={[{
-              label: "x(t)",
-              labelStyle: axisLabel,
-              tickLabelStyle: axisTick,
-              min: -14,
-              max: 14,
-            }]}
-            yAxis={[{
-              label: "y(t)",
-              labelStyle: axisLabel,
-              tickLabelStyle: axisTick,
-              min: -14,
-              max: 14,
-            }]}
-            margin={{ top: 25, bottom: 50, left: 55, right: 20 }}
-            slotProps={{ legend: { hidden: true } }}
-          />
-        </Box>
-      </Box>
-
-      <Typography sx={{ color: t.inkSoft, fontSize: 13, textAlign: "center", mt: 0.5 }}>
-        Color encodes direction of traversal — green (t = start) → blue (t = end)
-      </Typography>
-    </Box>
+        <span>Colour along each curve: {T} at the start</span>
+        <span
+          style={{
+            width: 260,
+            height: 14,
+            borderRadius: 7,
+            background: `linear-gradient(90deg, ${t.seq[0]}, ${t.seq[1]})`,
+            display: "inline-block",
+          }}
+        />
+        <span>{T} at the end</span>
+      </div>
+    </div>
   );
 }
