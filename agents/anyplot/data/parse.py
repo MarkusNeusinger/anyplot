@@ -290,6 +290,8 @@ is a cell (`#\tName`, `#,Player`, `#tbt`), never a comment."""
 _COMMENT_PREFIX = re.compile(r"[ \t]*(?:#+|%+|/{2,})")
 FLAG_SUFFIX = " flag"
 """The end of the name a column of flags takes from the number column on its left (`_flag_columns`)."""
+_ALIGNMENT_CELL = re.compile(r":?-{3,}:?")
+"""A cell of a Markdown table's alignment row (`---`, `:---`, `---:`, `:---:`), the line under its header."""
 _FLAG = re.compile(r"[A-Za-z]{1,3}")
 """A cell of a flag column: one letter, or up to three combined (`p`, `e`, `ep`), as statistics offices mark a value
 provisional, estimated or a break in the series."""
@@ -953,6 +955,8 @@ def _read_delimited(
             ) from exc
     if not records:
         raise ParseError("unparseable", "the data is empty")
+    if delimiter == "|":
+        records, breaks = _without_alignment_rows(records, breaks)
     noted = [[_COMMENT_PREFIX.sub("", line, count=1)] for _, line in lead_comments.lines] if lead_comments else []
     marks = (
         _declared_missing(
@@ -1226,6 +1230,41 @@ def _split_header(
         f"the header stands in two lines ({upper} names over {lower}), and the rows have {fields} fields: "
         "write it as one line with one name per column, a name and its unit together"
     )
+
+
+def _without_alignment_rows(
+    records: list[tuple[int, list[str]]], breaks: set[int]
+) -> tuple[list[tuple[int, list[str]]], set[int]]:
+    """The records of pipe-delimited text without each Markdown table's alignment row, and the blank-line breaks moved.
+
+    A Markdown table, as chat assistants write it, puts a row of dashes under its header
+    (`|-------|------:|`). Read as a row, it became the header (`Month -------`, `:------`)
+    or a text cell in a column of names (until 2026-11-07). A record goes only when
+    every filled cell is such a rule (`_ALIGNMENT_CELL`) and it stands directly under the
+    header: the record right above it has its field count, a filled cell that is no rule, and
+    is the first record of that count since the last blank line (a title above has another
+    count). A row of dashes further down the table is data, a missing value as a statistics
+    office writes it, and stays. It is layout, like a blank line, so no warning counts it.
+    """
+    dropped: list[int] = []
+    for index in range(1, len(records)):
+        cells = [cell.strip() for cell in records[index][1] if cell.strip()]
+        if index in breaks or not cells or not all(_ALIGNMENT_CELL.fullmatch(cell) for cell in cells):
+            continue
+        width = len(records[index][1])
+        header = [cell.strip() for cell in records[index - 1][1] if cell.strip()]
+        if len(records[index - 1][1]) != width or not header or any(map(_ALIGNMENT_CELL.fullmatch, header)):
+            continue
+        group = max((start for start in breaks if start < index), default=0)
+        if any(len(record) == width for _, record in records[group : index - 1]):
+            continue  # not the first record of its width: a row of the table, not its header
+        dropped.append(index)
+    if not dropped:
+        return records, breaks
+    gone = set(dropped)
+    kept = [record for index, record in enumerate(records) if index not in gone]
+    moved = {start - sum(1 for index in dropped if index < start) for start in breaks}
+    return kept, moved
 
 
 @dataclass(frozen=True)

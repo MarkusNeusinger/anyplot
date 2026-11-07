@@ -4284,3 +4284,48 @@ class TestFlagsAndNotAvailable:
 
         assert parsed.column_dtypes["b"] == "text"
         assert parsed.csv.splitlines()[1] == "1,:"
+
+
+class TestMarkdownTables:
+    """A Markdown table as chat assistants write it: its alignment row under the header is layout, not a row."""
+
+    @pytest.mark.parametrize("rule", ["|-------|-------|", "|:------|------:|", "| :---: | --- |", "|---|:---:|"])
+    def test_the_alignment_row_leaves_the_header_and_the_rows_alone(self, rule: str) -> None:
+        parsed = parse_dataset(f"| Month | Sales |\n{rule}\n| Jan | 100 |\n| Feb | 120 |\n| Mar | 90 |\n")
+
+        assert parsed.profile.source_format == "pipe"
+        assert parsed.column_dtypes == {"Month": "text", "Sales": "integer"}
+        assert parsed.csv.splitlines()[1:] == ["Jan,100", "Feb,120", "Mar,90"]
+        assert not warned(parsed, "two lines")
+
+    def test_a_table_without_outer_pipes(self) -> None:
+        parsed = parse_dataset("Month | Sales\n--- | ---\nJan | 100\nFeb | 120\nMar | 90\n")
+
+        assert parsed.column_dtypes == {"Month": "text", "Sales": "integer"}
+        assert parsed.profile.rows == 3
+
+    def test_a_table_without_an_alignment_row_reads_as_before(self) -> None:
+        parsed = parse_dataset("| Month | Sales |\n| Jan | 100 |\n| Feb | 120 |\n| Mar | 90 |\n")
+
+        assert parsed.column_dtypes == {"Month": "text", "Sales": "integer"}
+        assert parsed.profile.rows == 3
+
+    def test_a_row_of_dashes_further_down_stays_a_row(self) -> None:
+        parsed = parse_dataset("| Month | Sales |\n|---|---|\n| Jan | 100 |\n| --- | --- |\n| Mar | 90 |\n")
+
+        assert list(parsed.column_dtypes) == ["Month", "Sales"]
+        assert parsed.csv.splitlines()[1:] == ["Jan,100", "---,---", "Mar,90"]
+
+    @pytest.mark.parametrize(
+        ("text", "name", "dtype", "first"),
+        [
+            ("| Score |\n|-------|\n| 5 |\n| 7 |\n| 9 |\n", "Score", "integer", "5"),
+            ("| Name |\n|------|\n| Anna |\n| Ben |\n| Cara |\n", "Name", "text", "Anna"),
+        ],
+    )
+    def test_a_table_of_one_column(self, text: str, name: str, dtype: str, first: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {name: dtype}
+        assert parsed.profile.rows == 3
+        assert parsed.csv.splitlines()[1] == first

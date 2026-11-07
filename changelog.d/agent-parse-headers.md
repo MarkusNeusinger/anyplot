@@ -10,3 +10,8 @@
   column, and a column of one-letter flags beside a year stays as `<year> flag` with a
   warning that counts the flags. A title above a header of years no longer turns the
   table into one column of text.
+- **A pasted Markdown table keeps its column names.** The row of dashes under a Markdown
+  table's header (`|---|:---:|`), as chat assistants write it, became part of the names
+  (`Month -------`, `:------`) or a row of a column of names. It is now left out as
+  layout when it stands directly under the header; a row of dashes further down the
+  table stays a row.
