@@ -8,9 +8,10 @@ queue, and postpones a spec whose issue just saw activity. The no-loop rule
 is pinned here: a pair the gate kept, or whose generation failed, does not
 come back the next night, an infrastructure failure or a generation Claude
 stopped is no attempt, and a pick that cannot see its records fails closed.
-A keep on a regression holds its pair out for the window and then lets it
-return at its age from before the keep, instead of behind the whole catalogue.
-``main`` runs against a fake ``gh`` the way the workflow calls it.
+A returning keep (a regression or a technical failure) holds its pair out for
+the window and then lets it return at its age from before the keep, instead of
+behind the whole catalogue; the second in a row ages the pair like a plain
+keep. ``main`` runs against a fake ``gh`` the way the workflow calls it.
 """
 
 from __future__ import annotations
@@ -64,6 +65,11 @@ def records(**kw) -> rp.Records:
         issue_activity=kw.get("issues", {}),
         held=kw.get("held", {}),
     )
+
+
+def held(*keeps: tuple[int, float, str]) -> dict[int, tuple[datetime, str]]:
+    """A pair's returning keeps for ``Records.held``: (PR, days ago, code) each."""
+    return {number: (at(days), f"keep #{number} ({code})") for number, days, code in keeps}
 
 
 def gate_comment(
@@ -221,13 +227,13 @@ class TestFailedGenerations:
 
 
 class TestRegressionKeeps:
-    """A keep on a regression holds the pair for the window, then it returns at its age."""
+    """A returning keep holds the pair for the window, then it returns at its age."""
 
-    HOLD = "regression keep #31"
+    HOLD = "keep #31 (regression)"
 
     def test_inside_the_window_the_pair_is_held(self):
         cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
-        recs = records(held={("a", "altair"): (at(10), self.HOLD)})
+        recs = records(held={("a", "altair"): held((31, 10, "regression"))})
         picks, eligible = run_pick(cands, recs)
         assert picked(picks) == ["b/plotly"] and eligible == 1
 
@@ -235,17 +241,66 @@ class TestRegressionKeeps:
         # The same keep as a plain attempt queues behind b/plotly
         # (test_after_the_window_an_attempt_queues_behind_older_pairs).
         cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
-        recs = records(held={("a", "altair"): (at(45), self.HOLD)})
+        recs = records(held={("a", "altair"): held((31, 45, "regression"))})
         picks, _ = run_pick(cands, recs)
         assert picked(picks) == ["a/altair", "b/plotly"]
         assert picks[0].touched == at(200)
         assert picks[0].basis == f"metadata, back after {self.HOLD} of {at(45):%Y-%m-%d}"
         assert picks[1].basis == "metadata"
 
+    def test_a_technical_keep_returns_too(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): held((31, 45, "canvas_failed"))})
+        picks, _ = run_pick(cands, recs)
+        assert picked(picks) == ["a/altair", "b/plotly"]
+        assert picks[0].basis == f"metadata, back after keep #31 (canvas_failed) of {at(45):%Y-%m-%d}"
+
+    def test_the_second_returning_keep_in_a_row_ages_the_pair(self):
+        # First keep 80 days ago (returned), second 45 days ago: now the pair
+        # ages from the second keep and queues behind b/plotly.
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): held((31, 80, "regression"), (32, 45, "regression"))})
+        picks, _ = run_pick(cands, recs)
+        assert picked(picks) == ["b/plotly", "a/altair"]
+        assert picks[1].touched == at(45) and picks[1].basis == "keep #32 (regression), 2 in a row"
+
+    def test_the_second_in_a_row_counts_across_codes(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): held((31, 80, "script_crashed"), (32, 45, "regression"))})
+        assert picked(run_pick(cands, recs)[0]) == ["b/plotly", "a/altair"]
+
+    def test_the_second_in_a_row_inside_the_window_holds_like_a_plain_keep(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(held={("a", "altair"): held((31, 50, "regression"), (32, 10, "regression"))})
+        picks, eligible = run_pick(cands, recs)
+        assert picked(picks) == ["b/plotly"] and eligible == 1
+
+    def test_an_attempt_between_two_keeps_ends_the_streak(self):
+        # A merge, a failed generation or a plain keep between them: the second
+        # keep is the first of a new streak and returns.
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(
+            attempts={("a", "altair"): (at(70), "kept PR")},
+            held={("a", "altair"): held((31, 80, "regression"), (32, 45, "regression"))},
+        )
+        picks, _ = run_pick(cands, recs)
+        assert picked(picks) == ["a/altair", "b/plotly"]
+        assert picks[0].touched == at(70) and picks[0].basis.startswith("kept PR, back after keep #32")
+
+    def test_a_third_returning_keep_starts_a_new_streak(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        keeps = held((31, 120, "regression"), (32, 90, "regression"), (33, 45, "regression"))
+        picks, _ = run_pick(cands, records(held={("a", "altair"): keeps}))
+        # The second keep aged the pair (90 days ago); the third returns to that age.
+        assert picked(picks) == ["a/altair", "b/plotly"]
+        assert picks[0].touched == at(90) and "back after keep #33 (regression)" in picks[0].basis
+
     def test_the_age_is_the_one_from_before_the_keep(self):
-        # An older plain keep still ages the pair; only the keep on a regression doesn't.
+        # An older plain keep still ages the pair; only the returning keep doesn't.
         cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(120))]
-        recs = records(attempts={("a", "altair"): (at(100), "kept PR")}, held={("a", "altair"): (at(40), self.HOLD)})
+        recs = records(
+            attempts={("a", "altair"): (at(100), "kept PR")}, held={("a", "altair"): held((31, 40, "regression"))}
+        )
         picks, _ = run_pick(cands, recs)
         assert picked(picks) == ["b/plotly", "a/altair"]
         assert picks[1].touched == at(100) and picks[1].basis.startswith("kept PR, back after")
@@ -253,27 +308,38 @@ class TestRegressionKeeps:
     def test_a_newer_merge_ends_the_hold(self):
         # Merged after the keep: the metadata is the age and the window counts from it.
         cands = [rp.Candidate("a", "altair", at(40)), rp.Candidate("a", "plotly", at(12))]
-        recs = records(held={("a", "altair"): (at(50), self.HOLD), ("a", "plotly"): (at(50), self.HOLD)})
+        keep = held((31, 50, "regression"))
+        recs = records(held={("a", "altair"): keep, ("a", "plotly"): keep})
         picks, _ = run_pick(cands, recs)
         assert picked(picks) == ["a/altair"] and picks[0].basis == "metadata"
 
     def test_a_later_failed_generation_ages_the_pair(self):
         cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
-        recs = records(held={("a", "altair"): (at(50), self.HOLD)})
+        recs = records(held={("a", "altair"): held((31, 50, "regression"))})
         picks, _ = run_pick(cands, recs, failures=lambda spec: {"altair": at(35)} if spec == "a" else {})
         assert picked(picks) == ["b/plotly", "a/altair"]
         assert picks[1].touched == at(35) and picks[1].basis == "failed generation"
 
     def test_a_failure_older_than_the_keep_moves_the_age_only(self):
         cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(120))]
-        recs = records(held={("a", "altair"): (at(40), self.HOLD)})
+        recs = records(held={("a", "altair"): held((31, 40, "regression"))})
         picks, _ = run_pick(cands, recs, failures=lambda spec: {"altair": at(100)} if spec == "a" else {})
         assert picked(picks) == ["b/plotly", "a/altair"]
         assert picks[1].touched == at(100) and picks[1].basis.startswith("failed generation, back after")
 
+    def test_a_failure_between_two_keeps_read_late_lets_the_pair_return(self):
+        # Without the failure the second keep ages the pair (35 days); the
+        # failure read at the front of the queue ends the streak, so the pair
+        # is back at the failure's age and pops right back out.
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(33))]
+        recs = records(held={("a", "altair"): held((31, 80, "regression"), (32, 35, "regression"))})
+        picks, _ = run_pick(cands, recs, failures=lambda spec: {"altair": at(60)} if spec == "a" else {})
+        assert picked(picks) == ["a/altair", "b/plotly"]
+        assert picks[0].touched == at(60) and picks[0].basis.startswith("failed generation, back after keep #32")
+
     def test_a_failure_inside_the_window_drops_the_pair(self):
         cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
-        recs = records(held={("a", "altair"): (at(50), self.HOLD)})
+        recs = records(held={("a", "altair"): held((31, 50, "regression"))})
         picks, eligible = run_pick(cands, recs, failures=lambda spec: {"altair": at(3)} if spec == "a" else {})
         assert picked(picks) == ["b/plotly"] and eligible == 1
 
@@ -285,8 +351,10 @@ class TestReturningKeeps:
             kept_pr(32, "a", "plotly", gate_comment(32, "a", "plotly", login="github-actions[bot]")),  # REST shape
             kept_pr(33, "b", "altair", gate_comment(33, "b", "altair", code="no_visible_improvement")),
             kept_pr(34, "b", "plotly"),  # no record at all
+            kept_pr(35, "c", "altair", gate_comment(35, "c", "altair", code="script_crashed")),
+            kept_pr(36, "c", "plotly", gate_comment(36, "c", "plotly", code="adapt_regression")),
         ]
-        assert rp.returning_keeps(pulls) == {31, 32}
+        assert rp.returning_keeps(pulls) == {31: "regression", 32: "regression", 35: "script_crashed"}
 
     def test_a_record_must_be_the_workflows_and_name_its_pr_and_pair(self):
         pulls = [
@@ -300,46 +368,54 @@ class TestReturningKeeps:
             },
             {"headRefName": "implementation/c/altair", "comments": [gate_comment(45, "c", "altair")]},  # no number
         ]
-        assert rp.returning_keeps(pulls) == set()
+        assert rp.returning_keeps(pulls) == {}
 
     def test_the_first_workflow_record_wins(self):
         first = gate_comment(51, "a", "altair", code="below_tolerance", days=3)
         later = gate_comment(51, "a", "altair", days=1)
-        assert rp.returning_keeps([kept_pr(51, "a", "altair", later, first)]) == set()
+        assert rp.returning_keeps([kept_pr(51, "a", "altair", later, first)]) == {}
 
     def test_an_invalid_record_is_no_record(self):
         record = {"v": 1, "pr": 61, "spec": "a", "lib": "altair", "verdict": "keep", "code": "made_up"}
         forged = {"author": {"login": "github-actions"}, "createdAt": ts(2)}
         forged["body"] = f"<!-- regen-gate-record:v1 {json.dumps(record, separators=(',', ':'))} -->"
-        assert rp.returning_keeps([kept_pr(61, "a", "altair", forged)]) == set()
+        assert rp.returning_keeps([kept_pr(61, "a", "altair", forged)]) == {}
         # ...so a valid record after it is the first one.
-        assert rp.returning_keeps([kept_pr(61, "a", "altair", forged, gate_comment(61, "a", "altair"))]) == {61}
+        both = kept_pr(61, "a", "altair", forged, gate_comment(61, "a", "altair"))
+        assert rp.returning_keeps([both]) == {61: "regression"}
 
     @pytest.mark.parametrize("comments", [2, None, "text", {"body": "x"}])
     def test_an_unexpected_comments_shape_is_no_record(self, comments):
         """A count or any other non-list costs the return, never the night."""
         good = kept_pr(71, "a", "altair", gate_comment(71, "a", "altair"))
         odd = {"number": 72, "headRefName": "implementation/a/plotly", "state": "CLOSED", "comments": comments}
-        assert rp.returning_keeps([odd, good, "not a pull"]) == {71}
+        assert rp.returning_keeps([odd, good, "not a pull"]) == {71: "regression"}
 
-    def test_the_return_codes_are_gate_codes(self):
-        assert rp.RETURN_CODES <= set(regen_gate.REASON_CODES) - {"merge", "adapt_identity"}
+    def test_the_return_codes_are_the_regression_and_the_technical_keeps(self):
+        judged = {"no_visible_improvement", "no_defect_improvement", "below_tolerance", "score_zero"}
+        assert set(regen_gate.REASON_CODES) - {"merge", "adapt_identity"} == rp.RETURN_CODES | judged | {
+            "adapt_regression"
+        }
+        assert "adapt_regression" not in rp.RETURN_CODES and not judged & rp.RETURN_CODES
 
 
 class TestFoldPulls:
-    def test_a_keep_on_a_regression_holds_instead_of_aging(self):
+    def test_a_returning_keep_holds_instead_of_aging(self):
         recs = records()
+        kept_31 = pr("implementation/a/altair", "CLOSED", 31, ("regen:kept",), closedAt=ts(5))
         rp.fold_pulls(
             [
-                pr("implementation/a/altair", "CLOSED", 31, ("regen:kept",), closedAt=ts(5)),
+                kept_31,
+                kept_31,  # the same PR from the second listing: one keep
+                pr("implementation/a/altair", "CLOSED", 30, ("regen:kept",), closedAt=ts(40)),
                 pr("implementation/a/plotly", "CLOSED", 32, ("regen:kept",), closedAt=ts(6)),
                 pr("implementation/b/altair", "MERGED", 33, (), closedAt=ts(7)),  # a merge never holds
                 pr("implementation/b/plotly", "CLOSED", 34, (), closedAt=ts(8)),  # closed, not kept
             ],
             recs,
-            returning={31, 33, 34},
+            returning={30: "canvas_failed", 31: "regression", 33: "regression", 34: "regression"},
         )
-        assert recs.held == {("a", "altair"): (at(5), "regression keep #31")}
+        assert recs.held == {("a", "altair"): held((31, 5, "regression"), (30, 40, "canvas_failed"))}
         assert recs.attempts == {
             ("a", "plotly"): (at(6), "kept PR"),
             ("b", "altair"): (at(7), "merged PR"),
@@ -524,9 +600,10 @@ class TestMain:
         assert result.returncode == 0, result.stdout + result.stderr
         assert json.loads(outputs["pairs_json"])[0] == {"spec": "a-spec", "library": "altair"}
         assert (
-            f"| 1 | `a-spec` | `altair` | {ts(190, self.now)} | metadata, back after regression keep #31 of" in summary
+            f"| 1 | `a-spec` | `altair` | {ts(190, self.now)} | metadata, back after keep #31 (regression) of"
+            in summary
         )
-        assert "keeps on a regression for 1 pair(s)" in result.stdout
+        assert "returning keeps for 1 pair(s)" in result.stdout
 
     def test_the_window_comes_from_the_argument(self, tmp_path):
         self._plots(tmp_path)
@@ -773,11 +850,11 @@ class TestReadRecords:
         recs = rp.read_records("o/r")
         assert set(recs.attempts) == {("a", "altair"), ("b", "altair")}
         assert recs.attempts[("b", "altair")][1] == "kept PR"
-        assert recs.held == {("b", "plotly"): (at(20), "regression keep #9")}
+        assert recs.held == {("b", "plotly"): held((9, 20, "regression"))}
         assert recs.open_pairs == {("a", "plotly")} and [r.pr for r in recs.paused] == [7]
         assert set(recs.issue_activity) == {11}
         assert (
-            "Attempt records for 2 pair(s), 1 open PR(s) (1 paused), keeps on a regression for 1 pair(s), "
+            "Attempt records for 2 pair(s), 1 open PR(s) (1 paused), returning keeps for 1 pair(s), "
             "activity for 1 issue(s)" in capsys.readouterr().out
         )
         prs_call, kept_call, gates_call, issues_call = fake.calls

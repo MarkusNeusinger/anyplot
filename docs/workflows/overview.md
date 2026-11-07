@@ -556,16 +556,26 @@ night:
   `attempt_window_days` input, else the repository variable
   `REGEN_ATTEMPT_WINDOW_DAYS`, else 30 days. After the window, the pair queues
   behind every pair touched before it.
-- A keep on a regression is the exception: a `regen:kept` PR whose gate record
+- A returning keep is the exception: a `regen:kept` PR whose gate record
   (`<!-- regen-gate-record:v1 … -->` in the workflow's verdict comment) has
-  the code `regression`. The regeneration beat the live implementation except
-  for that regression, so the keep only holds the pair for the window. After
-  the window, the pair returns at its age from before the keep, usually its
-  metadata `updated`, instead of behind the whole catalogue. Every other keep
-  code ages the pair like any other attempt. If the next regeneration is kept
-  on a regression again, the pair returns again; a merge, a failed generation,
-  or a keep for another reason ages it as usual. When the gate records can't be
-  listed, every keep ages its pair.
+  one of these codes:
+  - `regression`: the regeneration beat the live implementation except for
+    that regression.
+  - A technical keep, where the gate kept because something failed, not
+    because it judged the new render worse: `canvas_failed`, `no_score`,
+    `prev_renders_missing`, `context_failed`, `regen_json_missing`,
+    `regen_json_unreadable`, `regen_json_invalid`, or `script_crashed`.
+
+  A returning keep only holds the pair for the window. After the window, the
+  pair returns at its age from before the keep, usually its metadata
+  `updated`, instead of behind the whole catalogue. Every other keep code ages
+  the pair like any other attempt, `adapt_regression` included: the
+  adaptability check ran, and the new code failed it.
+- The second returning keep in a row ages the pair like a plain keep, so a
+  pair returns at most once per streak. A merge, a failed generation, or a
+  keep for another reason between two returning keeps ends the streak, and so
+  does the second keep itself. When the gate records can't be listed, every
+  keep ages its pair.
 - An infrastructure failure, whose comment carries
   `<!-- impl-fail-cause:infra -->`, and a generation Claude stopped, whose
   comment carries `<!-- impl-paused-claude:… -->`, are not attempts: the pair
