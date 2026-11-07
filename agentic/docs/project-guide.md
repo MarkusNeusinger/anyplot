@@ -778,7 +778,7 @@ Issue ready for maintainer review
 | **sync-labels.yml** | Auto-syncs labels after manual PR merges (spec-ready, impl:*:done) |
 | **notify-deployment.yml** | Deployment notifications |
 | **util-claude.yml** | Claude utility workflow |
-| **daily-regen.yml** | Scheduled: picks the oldest specs, runs spec polish + cross-library similarity audit, then dispatches bulk-generate. With the repository variable `REGEN_PAIRS_PER_DAY` (or the manual `pairs` input) it picks the N oldest (spec, library) pairs instead (`automation/scripts/regen_pick_pairs.py`), skipping pairs merged or really attempted within the attempt window (30 days by default), skips the polish and dispatches each pair straight to impl-generate; see `docs/workflows/overview.md#daily-regeneration-modes` |
+| **daily-regen.yml** | Scheduled: picks the oldest specs, runs spec polish + cross-library similarity audit, then dispatches bulk-generate. With the repository variable `REGEN_PAIRS_PER_DAY` (or the manual `pairs` input) it picks the N oldest (spec, library) pairs instead (`automation/scripts/regen_pick_pairs.py`), skipping pairs merged or really attempted within the attempt window (30 days by default; a pair kept on a regression then returns at its age from before the keep), skips the polish and dispatches each pair straight to impl-generate; see `docs/workflows/overview.md#daily-regeneration-modes` |
 | **watchdog-stuck-jobs.yml** | Periodic safety net: detects and unsticks stalled impl-pipeline PRs |
 | **bot-serving-check.yml** | Daily synthetic monitor for the nginx bot -> seo-proxy path; routes and titles derived from `api/routers/seo.py` and the spec files, and a failure opens/comments the fixed-title issue "Bot serving check is red" (closed again by the next green run) |
 
