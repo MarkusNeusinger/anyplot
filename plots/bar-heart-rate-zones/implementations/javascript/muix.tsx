@@ -2,118 +2,138 @@
 // bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 91/100 | Created: 2026-06-14
-//# anyplot-orientation: landscape
-
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-const zoneLabels = ["Z1 Recovery", "Z2 Endurance", "Z3 Aerobic", "Z4 Threshold", "Z5 Maximum"];
-const hrRanges   = ["< 125 bpm", "126–145 bpm", "146–162 bpm", "163–174 bpm", "> 174 bpm"];
-const minutes    = [8, 22, 15, 12, 3];
+// Constants
+const TITLE = "60-Minute Tempo Run · bar-heart-rate-zones · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const PAD_SHARE = 0.12; // headroom above the tallest bar for its duration label
+// The style guide's muted anchor (not among the tokens) for the grey recovery zone
+const MUTED = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
+// Conventional zone colours (grey, blue, green, orange, red) in their nearest Imprint hues,
+// keyed by the zone code that opens each zone label
+const ZONE_COLORS = new Map([
+  ["Z1", MUTED],
+  ["Z2", t.palette[2]],
+  ["Z3", t.palette[0]],
+  ["Z4", t.palette[3]],
+  ["Z5", t.palette[4]],
+]);
 
-// Semantic zone colors: fitness-industry grey/blue/green/ochre/red → nearest Imprint members.
-// Z2 Endurance dominates at 22/60 min (37%) — rendered full opacity.
-// Remaining zones at 75% opacity (hex alpha BF) to direct the eye toward the dominant bar.
-const zoneColors = [
-  "#6B6A63BF",  // Z1 Recovery  — muted anchor, 75%
-  "#4467A3",    // Z2 Endurance — position 3 blue, full opacity (dominant)
-  "#009E73BF",  // Z3 Aerobic   — position 1 green, 75%
-  "#BD8233BF",  // Z4 Threshold — position 4 ochre, 75%
-  "#AE3030BF",  // Z5 Maximum   — position 5 matte red, 75%
+// Columns: set these to your data's column names
+const ZONE = "Heart rate zone"; // role: zone
+const MINUTES = "Time in zone (min)"; // role: minutes
+const HR_LOW = "Zone floor (bpm)"; // role: hr_low
+const HR_HIGH = "Zone ceiling (bpm)"; // role: hr_high
+
+// Data: replace this block with your own records, one object per row
+// Time per zone for a 60-minute tempo run; open-ended zones leave one bound empty
+const data = [
+  { [ZONE]: "Z1 Recovery", [MINUTES]: 8, [HR_LOW]: null, [HR_HIGH]: 125 },
+  { [ZONE]: "Z2 Endurance", [MINUTES]: 22, [HR_LOW]: 126, [HR_HIGH]: 145 },
+  { [ZONE]: "Z3 Aerobic", [MINUTES]: 15, [HR_LOW]: 146, [HR_HIGH]: 162 },
+  { [ZONE]: "Z4 Threshold", [MINUTES]: 12, [HR_LOW]: 163, [HR_HIGH]: 174 },
+  { [ZONE]: "Z5 Maximum", [MINUTES]: 3, [HR_LOW]: 175, [HR_HIGH]: null },
 ];
 
+// Plot: reads only data and the constants above
+// Zones keep the data's Z1 → Z5 order; they are never sorted by duration
+const zones = data.map((d) => d[ZONE]);
+const minutes = data.map((d) => d[MINUTES]);
+const timeUnit = MINUTES.match(/\(([^)]*)\)/)?.[1] ?? "";
+const hrUnit = HR_LOW.match(/\(([^)]*)\)/)?.[1] ?? "";
+
+// HR boundary range per zone; an open bound reads as "up to" or "from"
+const hrRanges = new Map(
+  data.map((d) => [
+    d[ZONE],
+    d[HR_LOW] == null
+      ? `≤ ${d[HR_HIGH]} ${hrUnit}`
+      : d[HR_HIGH] == null
+        ? `≥ ${d[HR_LOW]} ${hrUnit}`
+        : `${d[HR_LOW]}–${d[HR_HIGH]} ${hrUnit}`,
+  ]),
+);
+
+// Semantic colour by zone code; a zone outside the map takes the unused palette positions in order
+const codes = zones.map((z) => String(z).split(/\s+/)[0]);
+const spare = t.palette.filter((c) => ![...ZONE_COLORS.values()].includes(c));
+const unmatched = codes.filter((c) => !ZONE_COLORS.has(c));
+const zoneColors = codes.map((c) => ZONE_COLORS.get(c) ?? spare[unmatched.indexOf(c)]);
+
+const total = minutes.reduce((a, v) => a + (v ?? 0), 0);
+const top = minutes.indexOf(Math.max(...minutes));
+const SUBTITLE = `${total} ${timeUnit} across ${zones.length} zones · most time in ${zones[top]}: ${minutes[top]} ${timeUnit} (${Math.round((minutes[top] / total) * 100)}%)`;
+
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;   // 1600 CSS px (landscape mount)
-  const H = window.ANYPLOT_SIZE.height;  // 900 CSS px
-  const CHART_TOP = 84;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-
-      {/* Title + subtitle */}
-      <Box sx={{ position: "absolute", top: 22, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500, lineHeight: 1.25 }}>
-          bar-heart-rate-zones · javascript · muix · anyplot.ai
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
         </Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 14, mt: 0.5 }}>
-          60-minute tempo run — time spent in each training intensity zone
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
         </Typography>
       </Box>
-
-      {/* Bar chart */}
-      <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          skipAnimation
-          xAxis={[{
-            scaleType: "band",
-            data: zoneLabels,
-            colorMap: {
-              type: "ordinal",
-              values: zoneLabels,
-              colors: zoneColors,
-            },
-            disableLine: true,
-            disableTicks: true,
-            tickLabelStyle: { fontSize: 15, fill: t.ink, fontWeight: 500 },
-            categoryGapRatio: 0.38,
-          }]}
-          yAxis={[{
-            label: "Time (minutes)",
-            labelStyle: { fontSize: 14, fill: t.inkSoft },
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-            disableTicks: true,
-            max: 28,
-          }]}
-          series={[{
+      <BarChart
+        width={width}
+        height={height - TITLE_H}
+        skipAnimation
+        hideLegend
+        borderRadius={4}
+        grid={{ horizontal: true }}
+        series={[
+          {
+            id: "minutes",
             data: minutes,
-            label: "Time in zone",
-            valueFormatter: (v, ctx) => {
-              const i = ctx?.dataIndex ?? 0;
-              return `${v} min | HR: ${hrRanges[i]}`;
-            },
-          }]}
-          barLabel={(item) => (item.value !== null ? `${item.value} min` : null)}
-          margin={{ top: 30, right: 60, bottom: 80, left: 76 }}
-          grid={{ horizontal: true }}
-          sx={{
-            "& .MuiBarLabel-root": {
-              fill: "#F0EFE8",  // warm white — readable on all zone colors in both themes
-              fontSize: "16px",
-              fontWeight: 700,
-            },
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-            "& .MuiChartsLegend-root": { display: "none" },
-          }}
-        />
-      </Box>
-
-      {/* HR boundary ranges below each zone (bottom strip) */}
-      <Box
+            label: MINUTES,
+            valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) =>
+              v == null ? null : `${v} ${timeUnit} · ${hrRanges.get(zones[dataIndex])}`,
+            barLabel: (item: { value: number | null }) => (item.value == null ? null : `${item.value} ${timeUnit}`),
+            barLabelPlacement: "outside",
+          },
+        ]}
+        xAxis={[
+          {
+            scaleType: "band",
+            data: zones,
+            label: ZONE,
+            height: 84,
+            categoryGapRatio: 0.38,
+            colorMap: { type: "ordinal", values: zones, colors: zoneColors },
+            // Second tick line: the zone's heart rate boundaries
+            valueFormatter: (z: string, ctx: { location: string }) =>
+              ctx.location === "tick" ? `${z}\n${hrRanges.get(z)}` : z,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            max: Math.max(...minutes) * (1 + PAD_SHARE),
+            label: MINUTES,
+            width: 84,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        margin={{ top: 16, right: 48, bottom: 8, left: 24 }}
         sx={{
-          position: "absolute",
-          bottom: 12,
-          left: 76 + 60,
-          right: 60,
-          display: "flex",
-          justifyContent: "space-around",
-          pointerEvents: "none",
+          "& .MuiBarChart-label": { fill: t.ink, fontSize: 16, fontWeight: 700 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
-      >
-        {hrRanges.map((range, i) => (
-          <Typography
-            key={i}
-            sx={{ color: t.inkSoft, fontSize: 12, textAlign: "center" }}
-          >
-            {range}
-          </Typography>
-        ))}
-      </Box>
+      />
     </Box>
   );
 }
