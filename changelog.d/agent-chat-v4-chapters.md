@@ -14,4 +14,4 @@
   line of its own that names the decisions it keeps. The pinned header above the
   thread and its `.show()` and `.hide()` are gone: the card stays open in both
   steps. The keyboard focus follows a card that moves, and the page keeps the
-  focus clear of the site's sticky masthead.
+  focus clear of the site's sticky masthead. (#12604)
