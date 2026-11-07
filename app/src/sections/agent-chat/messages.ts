@@ -263,8 +263,11 @@ export const DATA_HOWTO = [
   'afterwards, ask for changes: "log scale on y", "label the outliers"',
 ] as const;
 
-/** The message box's placeholder before any data: the ways in, a table, a file, or the chat's own. */
-export const NO_DATA_PLACEHOLDER = 'paste a table, drop a file, or ask for example data or a curve';
+/**
+ * The message box's placeholder before any data: the box's own ways in, a table or a file; the
+ * data line right above it offers example data and `.open()`.
+ */
+export const NO_DATA_PLACEHOLDER = 'paste a table or drop a file';
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {

@@ -30,7 +30,7 @@ function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
     hasPlot: false,
     chatLocked: false,
     plot: { kind: 'create', active: true, confirming: false, fresh: false },
-    example: { filled: false, active: false },
+    example: { active: false },
     confirmError: null,
     pausedUntil: null,
     onExampleData: vi.fn(),
@@ -59,30 +59,44 @@ const exampleButton = () => screen.getByRole('button', { name: 'Make example dat
 const openButton = () => screen.getByRole('button', { name: 'Attach a data file' });
 
 describe('Composer row', () => {
-  it('keeps the same four places in every state, and moves only the filled style', () => {
-    // Before data: `.example_data()` is the step's action, the plot button stands quiet and inert.
+  it('holds the box and the plot button in the row, and the two ways to data in the line above', () => {
+    // Before data: the line is highlighted and its links act, the plot button stands inert.
     const props = composerProps({
       hasData: false,
       plot: { kind: 'create', active: false, confirming: false, fresh: false },
-      example: { filled: true, active: true },
+      example: { active: true },
     });
     const { rerender } = render(<Composer {...props} />);
+    const row = screen.getByTestId('composer-row');
+    const line = screen.getByTestId('data-line');
     const box = screen.getByRole('textbox', { name: 'Message' });
-    const open = openButton();
     const example = exampleButton();
     const plot = screen.getByRole('button', { name: 'Create plot' });
+    expect(line).toHaveTextContent(/^# no data at hand\?\.example_data\(\)·\.open\(\)a file$/);
+    expect(line).toHaveAttribute('data-highlighted', 'true');
+    expect(line).toContainElement(example);
+    expect(line).toContainElement(openButton());
+    expect(row).toContainElement(box);
+    expect(row).toContainElement(plot);
+    expect(row).not.toContainElement(example);
+    expect(box).toHaveAttribute('placeholder', 'paste a table or drop a file');
     expect(example).not.toHaveAttribute('aria-disabled');
     expect(plot).toHaveAttribute('aria-disabled', 'true');
     expect(plot).toHaveTextContent('.create_plot() →');
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
 
-    // With data the plot button is the action, `.example_data()` quiet and inert, in the same
-    // elements: nothing came or went.
+    // With data the line stays, muted, `.open()` first; `.example_data()` is the same element,
+    // inert, so a focus on it survives the change. The plot button is the action.
+    example.focus();
     rerender(<Composer {...composerProps()} />);
+    expect(screen.getByTestId('data-line')).toBe(line);
+    expect(line).not.toHaveAttribute('data-highlighted');
+    expect(line).toHaveTextContent(/^# other data\?\.open\(\)·\.example_data\(\)$/);
     expect(screen.getByRole('textbox', { name: 'Message' })).toBe(box);
-    expect(openButton()).toBe(open);
     expect(exampleButton()).toBe(example);
+    expect(example).toHaveFocus();
     expect(example).toHaveAttribute('aria-disabled', 'true');
+    expect(openButton()).not.toHaveAttribute('aria-disabled');
     expect(screen.getByRole('button', { name: 'Create plot' })).toBe(plot);
     expect(plot).not.toHaveAttribute('aria-disabled');
 
@@ -99,6 +113,36 @@ describe('Composer row', () => {
     expect(screen.getByRole('button', { name: 'Update plot' })).toBe(plot);
     expect(plot).toHaveTextContent('.update_plot() →');
     expect(plot).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('makes the data line’s links real buttons that Tab reaches; .open() opens the file picker', async () => {
+    const user = userEvent.setup();
+    const onExampleData = vi.fn();
+    const fileInputRef = createRef<HTMLInputElement>();
+    render(
+      <Composer
+        {...composerProps({
+          hasData: false,
+          example: { active: true },
+          onExampleData,
+          fileInputRef,
+        })}
+      />
+    );
+    const pick = vi.spyOn(fileInputRef.current!, 'click');
+    await user.tab();
+    expect(exampleButton()).toHaveFocus();
+    expect(exampleButton().tagName).toBe('BUTTON');
+    await user.keyboard('{Enter}');
+    expect(onExampleData).toHaveBeenCalledTimes(1);
+    await user.tab();
+    expect(openButton()).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(pick).toHaveBeenCalledTimes(1);
+    // The file input stays out of the tab order: the box comes next.
+    expect(screen.getByTestId('chat-file-input')).toHaveAttribute('tabindex', '-1');
+    await user.tab();
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveFocus();
   });
 
   it('names each kind of the plot button in words, and the status line as its description', () => {

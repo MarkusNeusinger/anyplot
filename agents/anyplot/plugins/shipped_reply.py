@@ -159,10 +159,15 @@ def replace_reply(response: LlmResponse, text: str) -> None:
     response.content.parts = parts
 
 
+_QUESTION = re.compile(r"[?？؟]")
+"""A question mark in any script: the one sign of a question that needs no word list."""
+
+
 def user_named_plot_button(ledger: RequestLedger) -> bool:
-    """The user's own last message in the root's request names the plot button ("what does .update_plot() do?"):
-    then the answer is about the button, and its sentences stay. Tool results come back as user content without
-    text, so the last user content that has text is the user's message."""
+    """The user's own last message in the root's request asks about the plot button ("what does .update_plot()
+    do?"): it names the button and asks a question. Then the answer is about the button, and its sentences stay; a
+    mere mention ("I already pressed .create_plot(); now change the title") is no question about it. Tool results
+    come back as user content without text, so the last user content that has text is the user's message."""
     request = ledger.root_request
     contents = getattr(request, "contents", None) or []
     for content in reversed(contents):
@@ -170,7 +175,7 @@ def user_named_plot_button(ledger: RequestLedger) -> bool:
             continue
         text = " ".join(part.text for part in content.parts or [] if part.text and not part.thought)
         if text:
-            return bool(PLOT_BUTTON.search(text))
+            return bool(PLOT_BUTTON.search(text)) and bool(_QUESTION.search(text))
     return False
 
 

@@ -138,10 +138,11 @@ def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> N
 
 
 def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None:
-    """The same for the composer row: a button added to it fails here until the bullet names it, and a
-    button it lost fails until the bullet drops it: `.confirm()`, which `.create_plot()` took into its own
-    click, `.send()`, which Enter replaced, and `.stop()`, which moved to the line at the chat's foot.
-    The plot button's labels carry an arrow (`'.update_plot() →'`), which the label pattern reads past."""
+    """The same for the composer, its row and the data line above the box (`.example_data()` and `.open()`
+    as links): a button added to it fails here until the bullet names it, and a button it lost fails until
+    the bullet drops it: `.confirm()`, which `.create_plot()` took into its own click, `.send()`, which
+    Enter replaced, and `.stop()`, which moved to the line at the chat's foot. The plot button's labels
+    carry an arrow (`'.update_plot() →'`), which the label pattern reads past."""
     buttons = buttons_of(composer_components())
     bullet = controls_of("The composer")
 

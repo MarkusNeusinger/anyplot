@@ -447,13 +447,18 @@ async function transcribeInStep2() {
 }
 
 /**
- * The composer row's buttons in their fixed order, as each reads now: `.open()`, which stands in
- * every state, is left out, and an inert one (`aria-disabled`, so it keeps the focus) ends in
- * ` (inert)`. The `↵` in the box shows on a touch screen only, so it is hidden here.
+ * The composer's controls in their fixed order, as each reads now: the data line's
+ * `.example_data()`, then the row's buttons. `.open()`, which stands in every state, is left out,
+ * and an inert one (`aria-disabled`, so it keeps the focus) ends in ` (inert)`. The `↵` in the box
+ * shows on a touch screen only, so it is hidden here.
  */
 const composerButtons = () =>
-  within(screen.getByLabelText('Message').closest('form') as HTMLElement)
-    .queryAllByRole('button')
+  [
+    ...within(screen.getByTestId('data-line')).queryAllByRole('button'),
+    ...within(screen.getByLabelText('Message').closest('form') as HTMLElement).queryAllByRole(
+      'button'
+    ),
+  ]
     .filter(button => button.textContent !== '.open()')
     .map(
       button =>
@@ -1021,12 +1026,13 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     const textbox = await screen.findByLabelText('Message');
-    // Without data the one box names the ways in: a table, a file, example data or a curve; the
-    // how-to paragraph under the card is gone (2026-11-02).
-    expect(textbox).toHaveAttribute(
-      'placeholder',
-      'paste a table, drop a file, or ask for example data or a curve'
+    // Without data the one box names its own ways in, a table or a file, and the highlighted line
+    // above it the other two; the how-to paragraph under the card is gone (2026-11-02).
+    expect(textbox).toHaveAttribute('placeholder', 'paste a table or drop a file');
+    expect(screen.getByTestId('data-line')).toHaveTextContent(
+      /^# no data at hand\?\.example_data\(\)·\.open\(\)a file$/
     );
+    expect(screen.getByTestId('data-line')).toHaveAttribute('data-highlighted', 'true');
     expect(screen.queryByText(/paste your data above/)).not.toBeInTheDocument();
 
     // One line is a message: the paste lands in the box as typed text, and Enter sends it.
@@ -1730,8 +1736,14 @@ describe('AgentChatPage .example_data()', () => {
     releaseTurn?.();
     expect(await screen.findByText(EXAMPLE_REPLY)).toBeInTheDocument();
     await turnEnded();
-    // The data is there: the button turns quiet and inert, the plot button is the action, the
-    // card shows the table, and nothing set a language.
+    // The data is there: the line turns muted and leads with `.open()`, `.example_data()` stays
+    // the same element, inert, with the focus, the plot button is the action, the card shows the
+    // table, and nothing set a language.
+    expect(screen.getByTestId('data-line')).toHaveTextContent(
+      /^# other data\?\.open\(\)·\.example_data\(\)$/
+    );
+    expect(screen.getByRole('button', { name: 'Make example data' })).toBe(example);
+    expect(example).toHaveFocus();
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() →']);
     expect(screen.getByLabelText(/^x/)).toHaveValue('x');
     expect(screen.queryByText(/reply language/)).not.toBeInTheDocument();
@@ -2388,10 +2400,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(composerButtons()).toEqual(['.example_data()', '.plot_all() (inert)']);
     const box = screen.getByLabelText('Message');
     expect(box).toBeEnabled();
-    expect(box).toHaveAttribute(
-      'placeholder',
-      'paste a table, drop a file, or ask for example data or a curve'
-    );
+    expect(box).toHaveAttribute('placeholder', 'paste a table or drop a file');
     expect(box).not.toHaveAccessibleDescription();
 
     // Step 1: `.plot_all()` is the action, and a question about the data goes: the box waits
@@ -3084,7 +3093,7 @@ describe('AgentChatPage attachment', () => {
     expect(chip()).toHaveAccessibleName('Attached table, 4 lines, 33 B');
     expect(chip()).toHaveTextContent('▤ table · 4 lines · 33 B');
     expect(screen.getByTestId('composer-status')).toHaveTextContent('Attached table, 4 lines');
-    expect(composerButtons()).toEqual(['×', '.example_data() (inert)', '.create_plot() → (inert)']);
+    expect(composerButtons()).toEqual(['.example_data() (inert)', '×', '.create_plot() → (inert)']);
     expect(screen.getByTestId('send-return')).not.toHaveAttribute('aria-disabled');
     expect(message()).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
     expect(screen.getByTestId('data-step')).toHaveTextContent(

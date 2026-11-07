@@ -297,17 +297,39 @@ class TestPlugin:
         assert reply_text(await check(response(types.Part(text=text)))) == text
         assert lines == [{"verdict": "asked", "sentences": 0}]
 
-    async def test_a_question_about_something_else_drops_the_button_as_ever(
-        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    @pytest.mark.parametrize(
+        "message",
+        [
+            "add a column z",
+            # A mention of the button is no question about it.
+            "I already pressed .create_plot(); now add a column z",
+            # A question about something else, beside a mention.
+            "I pressed .create_plot(), add a column z",
+        ],
+    )
+    async def test_a_message_that_asks_nothing_about_the_button_drops_it_as_ever(
+        self, message: str, ledger: RequestLedger, lines: list[dict[str, Any]]
     ) -> None:
         ledger.shipped_in_turn = False
         ledger.root_request = LlmRequest(
-            model="m", contents=[types.Content(role="user", parts=[types.Part(text="add a column z")])]
+            model="m", contents=[types.Content(role="user", parts=[types.Part(text=message)])]
         )
         text = "I added the column. Check the data and press `.create_plot()`."
 
         assert reply_text(await check(response(types.Part(text=text)))) == "I added the column."
         assert lines == [{"verdict": "dropped", "sentences": 1}]
+
+    async def test_a_german_question_about_the_button_keeps_the_answer(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+        ledger.root_request = LlmRequest(
+            model="m", contents=[types.Content(role="user", parts=[types.Part(text="Was macht .create_plot()?")])]
+        )
+        text = "Klar. `.create_plot()` übernimmt die Daten, wie die Karte sie zeigt, und zeichnet den Plot."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "asked", "sentences": 0}]
 
     async def test_two_checks_that_would_leave_nothing_keep_the_reply_as_written(
         self, ledger: RequestLedger, lines: list[dict[str, Any]]

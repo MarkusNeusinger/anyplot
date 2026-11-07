@@ -1,12 +1,15 @@
 ### Changed
 
-- **The agent chat's composer is one row in four fixed places.** The message
-  box with a brand-green border and a `❯`, `.open()`, `.example_data()` and the
-  plot button stand in their places from the first moment; nothing comes, goes
-  or moves. A state only moves the filled style, from `.example_data()` before
-  there is data to the plot button after, and makes a button inert with
-  `aria-disabled`, so a focused button keeps the focus and a second key press
-  does nothing. The buttons share one size with 44 px targets. (#12594)
+- **The agent chat's composer is the message box and the plot button.** The
+  box with a brand-green border and a `❯` and the plot button share one row,
+  on a phone too; one quiet line right above them holds `.example_data()` and
+  `.open()` as links, `# no data at hand? .example_data() · .open() a file`,
+  highlighted in green until the first data arrives, then muted, `# other
+  data? .open() · .example_data()`. Nothing comes, goes or moves: a state
+  changes how the line reads, fills the plot button once there is data, and
+  makes a control inert with `aria-disabled`, so a focused one keeps the focus
+  and a second key press does nothing. Targets are 44 px. Before data the box
+  reads "paste a table or drop a file". (#12594)
 - **The plot button keeps its place and changes its name.** It stands quiet
   and inert before data, reads `.create_plot() →` with data, `.update_plot() →`
   once the library has a plot (it sends the box's text and waits while the box

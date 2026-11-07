@@ -14,8 +14,8 @@
  * header row inside it, and at its foot the status line, `>>> step 1 of 2 · …`, which names the
  * step and what the plot button waits for. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
- * the assistant computes; while the session has no data, the composer's filled
- * `.example_data()` asks it for a made-up table to try the plot),
+ * the assistant computes; while the session has no data, `.example_data()` in
+ * the highlighted line above the message box asks it for a made-up table to try the plot),
  * read the assistant's summary of it in the next
  * turn, fix it in plain words if needed (each change updates the card in
  * place, with `.undo()`), check the preview and the role bindings, and press
@@ -60,11 +60,14 @@
  * (`Remembered`), each with `.forget()`, and `.forget_all()` for a blank start:
  * nothing else clears them.
  *
- * The composer is one row in four fixed places (`Composer.tsx`, since the v4
- * composer row): the message box, `.open()`, `.example_data()` and the plot
- * button. Nothing comes or goes, so nothing moves and a focused button keeps
- * the focus: a state changes only which button is filled (`.example_data()`
- * before data, the plot button from then on) and which are inert. The plot
+ * The composer is one row in two fixed places (`Composer.tsx`, since the v4
+ * composer row), the message box and the plot button, under one quiet line of
+ * links that is never gone: `# no data at hand? .example_data() · .open() a
+ * file`, highlighted until the first data arrives, then muted, `# other data?
+ * .open() · .example_data()`. Nothing comes or goes, so nothing moves and a
+ * focused control keeps the focus: a state changes only how the line reads,
+ * whether the plot button is filled (from the moment data is stored) and which
+ * controls are inert (`.example_data()` once there is data). The plot
  * button reads `.create_plot() →` until the library has a plot, while the data
  * is unconfirmed its click confirms it as shown first, and the status line at
  * the frame's foot, its description, names what it waits for (a table read from
@@ -649,9 +652,10 @@ function AgentChat({
   // The columns ⓘ after the title: the spec's roles as the session's open named them, else the
   // spec's `data` bullets (an older server, or no session: ineligible, an error).
   const expectedLines = columnLines(state.specRoles, reference?.data);
-  // `.example_data()`, the composer's filled button before there is data: the other way to data
-  // besides a paste. A table read from text that waits for its decision is data at hand, and so
-  // is a table or a file waiting in the box: it waits then, as while anything is in flight.
+  // `.example_data()` in the data line above the box: the other way to data besides a paste,
+  // inert once there is data, which it would replace. A table read from text that waits for its
+  // decision is data at hand, and so is a table or a file waiting in the box: it waits then, as
+  // while anything is in flight.
   const exampleActive =
     state.phase === 'ready' && !state.dataset && !state.transcription && !attachment && !busy;
   // The plot button in its fixed place: what it is, and the label the status line, the card's
@@ -1308,7 +1312,7 @@ function AgentChat({
                     confirming: state.confirmBusy,
                     fresh: plotFresh,
                   }}
-                  example={{ filled: !state.dataset, active: exampleActive }}
+                  example={{ active: exampleActive }}
                   confirmError={state.confirmError}
                   pausedUntil={pausedUntil}
                   onExampleData={() => void session.exampleData()}

@@ -1,7 +1,7 @@
 /**
  * Shared styles of the agent chat surfaces, after docs/reference/style-guide.md:
- * method-call buttons (§7.4), the composer row's four fixed places with the one filled button
- * (the step's action, the one place outside the landing hero that §7.4 allows it), the message
+ * method-call buttons (§7.4), the composer row's plot button, the one filled button (the step's
+ * action, the one place outside the landing hero that §7.4 allows it), the message
  * box, native form controls on the theme tokens, the chat frame (§7.9) with its header row's
  * chips and the actions of its foot, the panel and card surfaces, and the pinned data header's
  * offset and clearance. Colours come from the CSS variables, so both themes work.
@@ -46,10 +46,9 @@ const INERT = '&:disabled, &[aria-disabled="true"]';
 const ACTIVE_HOVER = '&:hover:not(:disabled):not([aria-disabled="true"])';
 
 /**
- * The composer row's buttons (§7.4, §7.9): `.open()`, `.example_data()` and the plot button in
- * four fixed places, all in one size, 44 px high in the text's size, so moving the filled style
- * from one place to another changes no width and moves nothing beside them. An inert one is
- * `aria-disabled`: it dims, its click does nothing and it keeps the keyboard focus.
+ * The composer row's plot button (§7.4, §7.9), 44 px high in the text's size, one size in every
+ * state, ghost before there is data and filled after. An inert one is `aria-disabled`: it dims,
+ * its click does nothing and it keeps the keyboard focus.
  */
 const composerButtonSx = {
   fontFamily: typography.mono,
@@ -67,15 +66,7 @@ const composerButtonSx = {
   [INERT]: { opacity: 0.45, cursor: 'default' },
 } as const;
 
-/** A quiet button of the composer row: soft ink, no boundary, green on hover. */
-export const composerQuietSx = {
-  ...composerButtonSx,
-  color: 'var(--ink-soft)',
-  bgcolor: 'transparent',
-  [ACTIVE_HOVER]: { color: colors.primary, bgcolor: 'var(--bg-elevated)' },
-} as const;
-
-/** `.open()`: a ghost button, ink in the quiet rule. */
+/** The plot button before there is data: a ghost button, ink in the quiet rule, inert. */
 export const composerGhostSx = {
   ...composerButtonSx,
   color: 'var(--ink)',
@@ -85,9 +76,9 @@ export const composerGhostSx = {
 } as const;
 
 /**
- * The filled button (§7.4): ink on the page colour, green on hover. The chat has one, the step's
- * action: `.example_data()` before there is data, the plot button from the moment data is
- * stored (`.create_plot() →`, `.update_plot() →`, `plot the new data`, or `.plot_all()`).
+ * The filled button (§7.4): ink on the page colour, green on hover. The chat has one, the plot
+ * button from the moment data is stored (`.create_plot() →`, `.update_plot() →`, `plot the new
+ * data`, or `.plot_all()`); before that, the data line above the box is the highlighted way in.
  */
 export const composerFilledSx = {
   ...composerButtonSx,
