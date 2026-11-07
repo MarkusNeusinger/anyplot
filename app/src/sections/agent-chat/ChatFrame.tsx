@@ -223,7 +223,7 @@ interface StopButtonProps {
 }
 
 /**
- * `.stop()`, in the error colour, for the run in progress. While the stop is on its way it says
+ * `.stop()`, framed in the error colour, for the run in progress. While the stop is on its way it says
  * so and is inert, and keeps the focus; when the run ends the button goes, and a focus it held
  * moves on to `focusAfter`, so the keyboard continues in the message box instead of at the
  * page's top. The check runs as the button unmounts, while it still holds the focus; the box
@@ -248,9 +248,11 @@ function StopButton({ stopping, onStop, focusAfter }: StopButtonProps) {
       }}
       aria-disabled={stopping || undefined}
       aria-label="Stop"
+      // The words in the line's soft ink, legible in both themes (the red reads about 2.9:1 at
+      // 13 px on the dark page); the red marks the button's boundary and its hover.
       sx={{
         ...statusActionSx,
-        color: colors.error,
+        border: `1px solid ${colors.error}`,
         '&:hover:not(:disabled):not([aria-disabled="true"])': {
           color: colors.error,
           bgcolor: 'var(--bg-elevated)',

@@ -2063,6 +2063,23 @@ describe('AgentChatPage step CTA', () => {
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() →']);
   });
 
+  it('reads a table typed into the box as data on the plot click too, as on Enter', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndSummarize();
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    await untilActive(create);
+    fireEvent.change(screen.getByLabelText('Message'), {
+      target: { value: 'hours,score\n3,70\n4,80\n5,85\n' },
+    });
+    fireEvent.click(create);
+    await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
+    await turnEnded();
+    // The table went to the dataset route: no confirmation, no plot, no message with the table.
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'summarize_data']);
+    expect(screen.getByLabelText('Message')).toHaveValue('');
+  });
+
   it('holds the plot button back while the box holds text over the cap: nothing confirms or goes', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
@@ -2393,6 +2410,34 @@ describe('AgentChatPage .plot_all()', () => {
     expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
     expect(libraryChip()).toHaveTextContent(/^all \d+ libraries ▾$/);
     expect(confirmAndTurns()).toEqual(['summarize_data', 'text: what is the mean score?']);
+  });
+
+  it('lets an attachment go with Enter while the fan-out holds the box in step 2, note and all', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndPlot();
+    await toggleAll();
+    const box = screen.getByLabelText('Message');
+    expect(box).toBeDisabled();
+
+    // New data goes all the same: the box opens for Enter and a note, since on a desktop no `↵`
+    // shows and no `.send()` stands beside it.
+    fireEvent.paste(box, {
+      clipboardData: { files: [], getData: () => 'hours,score\n3,70\n4,80\n' },
+    });
+    await screen.findByRole('group', { name: /^Attached/ });
+    expect(box).toBeEnabled();
+    expect(box).toBeVisible();
+    fireEvent.change(box, { target: { value: 'what is the mean score?' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    const posts = agentCalls().filter(
+      ([input, init]) =>
+        pathOf(input).endsWith('/dataset') && (init as RequestInit | undefined)?.method === 'POST'
+    );
+    expect(posts).toHaveLength(2);
+    expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
   });
 
   /**

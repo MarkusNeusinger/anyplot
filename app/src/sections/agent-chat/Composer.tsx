@@ -70,7 +70,7 @@ const PLOT_BUTTON: Record<PlotButtonKind, { text: string; name: string }> = {
 /** The hidden help the plot button names when its click starts from the catalogue plot. */
 const PLOT_HELP_ID = 'agent-plot-help';
 
-/** The row's buttons, one size in every state: smaller at phone width, where three share a line. */
+/** The row's buttons, one size in every state: smaller at phone width, where the row wraps. */
 const ROW_BUTTON_SIZE = {
   fontSize: { xs: smallText, sm: fontSize.md },
   px: { xs: 1, sm: 1.5 },
@@ -139,7 +139,8 @@ export function Composer(props: ComposerProps) {
   const { ready, busy, hasData, step2, hasPlot, chatLocked, plot, example } = props;
   const { confirmError, pausedUntil, onExampleData, onPlot } = props;
   // While `all` holds the box in step 2, the line at the frame's foot says why, and the box names
-  // it as its description; an attachment, new data, goes all the same.
+  // it as its description; an attachment, new data, goes all the same, with Enter in the box,
+  // which it opens for that.
   const lockedBox = chatLocked && !attachment;
   // An attachment goes once it is read and the dataset route can take it; a refused one again.
   const sendable = !attachment || attachment.status === 'ready' || attachment.status === 'failed';
@@ -192,8 +193,9 @@ export function Composer(props: ComposerProps) {
           {dropHint.text}
         </Box>
       )}
-      {/* One row on a wide screen; at phone width the box takes the first line and the three
-          buttons follow below it, the plot button at the right end. */}
+      {/* One row on a wide screen. At phone width the box takes the first line, `.open()` and
+          `.example_data()` the next, and the plot button a line of its own at the right end:
+          the three need about 390 px, a phone's frame about 330. Every state wraps the same. */}
       <Box
         component="form"
         data-testid="composer-row"
@@ -235,13 +237,13 @@ export function Composer(props: ComposerProps) {
             placeholder={
               // Without data, the chat is the other way to get some: example data or a formula.
               // With data, step 1 talks about the data and what the plot should do, step 2 about
-              // the plot; short since 2026-11-02, the how-to is behind the header's ⓘ. While
-              // `all` is pressed in step 2 the box waits: the fan-out takes no text. With an
-              // attachment the text is its note.
-              chatLocked
-                ? 'all libraries: the table goes as it is · turn all off to chat'
-                : attachment
-                  ? ATTACHMENT_PLACEHOLDER
+              // the plot; short since 2026-11-02, the how-to is behind the header's ⓘ. With an
+              // attachment the text is its note, also while `all` is pressed in step 2, which
+              // otherwise holds the box: the fan-out takes no text.
+              attachment
+                ? ATTACHMENT_PLACEHOLDER
+                : chatLocked
+                  ? 'all libraries: the table goes as it is · turn all off to chat'
                   : !hasData
                     ? NO_DATA_PLACEHOLDER
                     : !step2
@@ -252,7 +254,8 @@ export function Composer(props: ComposerProps) {
             }
             value={draft}
             rows={1}
-            disabled={!ready || chatLocked}
+            // An attachment, new data, goes while `all` holds the box: Enter in the box sends it.
+            disabled={!ready || lockedBox}
             aria-invalid={tooLong || undefined}
             aria-describedby={lockedBox ? STATUS_LINE_ID : undefined}
             onChange={onDraftChange}
@@ -330,7 +333,8 @@ export function Composer(props: ComposerProps) {
             columnGap: 1,
             rowGap: 1,
             flex: { xs: '1 1 100%', sm: '0 1 auto' },
-            // Below the box when the row wraps between phone and desktop width: at its right end.
+            // Below the box when the row wraps, at its right end; at phone width the plot button
+            // wraps once more, to a line of its own.
             ml: 'auto',
             minWidth: 0,
           }}

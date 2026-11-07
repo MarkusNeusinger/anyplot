@@ -38,12 +38,14 @@ told the root to say so in four places while its reply rules forbade it, so the 
 same code check: every root reply, not only after a shipped plot, drops the sentences that name
 one of the three, whose names are the same in every language, and logs `plot_button` with the
 same verdicts. A reply in which every sentence names it stays whole, as above; a sentence that
-says what to check without naming the button stays.
+says what to check without naming the button stays. When the user's own message names the
+button ("what does .update_plot() do?"), the answer is about it: nothing is dropped, and the
+verdict is `asked`. No share-of-the-reply rule: it would keep exactly the replies the check is
+for ("I added the column. Check the data and press .create_plot()").
 """
 
 import logging
 import re
-from collections.abc import Callable
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_response import LlmResponse
@@ -67,11 +69,41 @@ _BREAK = re.compile(
 )
 """Between two sentences of one line: after a full stop, a question or exclamation mark and a space, also when up
 to two closing quotes, brackets or Markdown marks follow it (`."`, `.)`, `.**`), or after a CJK one. A dot inside
-`.confirm()` or `3.5` is followed by no space, so it never ends a sentence."""
+`.confirm()` or `3.5` is followed by no space, so it never ends a sentence. A break this finds is only a candidate:
+`_sentences` joins the pieces again after an abbreviation, or before a piece that starts in lower case."""
+_ABBREVIATIONS = frozenset(
+    {
+        # English
+        "e.g.", "i.e.", "etc.", "vs.", "ca.", "approx.", "no.", "nr.", "fig.", "incl.", "max.", "min.", "resp.",
+        # German
+        "z.", "b.", "z.b.", "bzw.", "mio.", "mrd.", "tsd.", "usw.", "evtl.", "ggf.", "inkl.", "d.", "h.", "d.h.",
+        "u.", "a.", "u.a.", "s.", "vgl.", "bspw.", "zzgl.", "abb.",
+    }
+)  # fmt: skip
+"""Words that end in a dot without ending the sentence ("e.g. with a title", "z. B. mit Titel", "6,5 Mio. Euro"),
+lower-cased; German nouns start in upper case, so the case of the next word alone cannot tell."""
 _MARKER = re.compile(r"^\s*(?:[-*+•]|\d+[.)])\s+")
 """A list item's marker at the start of a line, which a dropped first sentence must not take with it."""
 _BARE_MARKER = re.compile(r"^\s*(?:[-*+•]|\d+[.)])?\s*$")
 """A line with no sentence left: empty, or only a list marker."""
+
+
+def _sentences(line: str) -> list[tuple[str, str]]:
+    """The sentences of one line, each with the gap after it. A candidate break (`_BREAK`) after a known
+    abbreviation, or before a piece that starts in lower case, is no break: the pieces stay one sentence."""
+    parts = _BREAK.split(line)
+    pieces = list(zip(parts[0::2], [*parts[1::2], ""], strict=True))
+    joined: list[tuple[str, str]] = []
+    for sentence, gap in pieces:
+        if joined:
+            before, between = joined[-1]
+            words = before.split()
+            after_abbreviation = bool(words) and words[-1].lower().lstrip("(\"'`*_") in _ABBREVIATIONS
+            if after_abbreviation or sentence[:1].islower():
+                joined[-1] = (before + between + sentence, gap)
+                continue
+        joined.append((sentence, gap))
+    return joined
 
 
 def drop_sentences(text: str, pattern: re.Pattern[str]) -> tuple[str, int]:
@@ -88,10 +120,8 @@ def drop_sentences(text: str, pattern: re.Pattern[str]) -> tuple[str, int]:
             continue
         marker = _MARKER.match(line)
         prefix = marker.group(0) if marker else ""
-        parts = _BREAK.split(line[len(prefix) :])
-        sentences, breaks = parts[0::2], [*parts[1::2], ""]
         kept = ""
-        for sentence, gap in zip(sentences, breaks, strict=True):
+        for sentence, gap in _sentences(line[len(prefix) :]):
             if pattern.search(sentence):
                 dropped += 1
                 continue
@@ -129,21 +159,29 @@ def replace_reply(response: LlmResponse, text: str) -> None:
     response.content.parts = parts
 
 
-def _scrubbed(text: str, drop: Callable[[str], tuple[str, int]], hook: str, ledger: RequestLedger) -> str:
-    """`text` after `drop`, logged under `hook`; the text as it was when nothing would be left."""
-    edited, dropped = drop(text)
-    if not edited:
-        attribution(hook, ledger, verdict="kept", sentences=dropped)
-        return text
-    attribution(hook, ledger, verdict="dropped", sentences=dropped)
-    return edited
+def user_named_plot_button(ledger: RequestLedger) -> bool:
+    """The user's own last message in the root's request names the plot button ("what does .update_plot() do?"):
+    then the answer is about the button, and its sentences stay. Tool results come back as user content without
+    text, so the last user content that has text is the user's message."""
+    request = ledger.root_request
+    contents = getattr(request, "contents", None) or []
+    for content in reversed(contents):
+        if getattr(content, "role", None) != "user":
+            continue
+        text = " ".join(part.text for part in content.parts or [] if part.text and not part.thought)
+        if text:
+            return bool(PLOT_BUTTON.search(text))
+    return False
 
 
 def scrub_shipped_reply(ledger: RequestLedger, response: LlmResponse) -> None:
     """Drop the `.confirm()` sentences of a root reply in a turn whose plot shipped, and the sentences that name
     the plot button in any turn, in place; never raises.
 
-    The plugin's check, and ReplyLanguage's on the reply it asked for again, which no plugin sees.
+    The plugin's check, and ReplyLanguage's on the reply it asked for again, which no plugin sees. Each check logs
+    its own line (`shipped_reply`, `plot_button`): `dropped`, `kept` when nothing would be left, or for the plot
+    button `asked` when the user's message named it. When the two checks together would leave nothing, the reply
+    goes out as the model wrote it, never as what the first check left of it.
     """
     try:
         if ledger.halted:
@@ -152,10 +190,25 @@ def scrub_shipped_reply(ledger: RequestLedger, response: LlmResponse) -> None:
         if reply is None or reply in fixed_replies():
             return
         edited = reply
+        lines: list[tuple[str, str, int]] = []
         if ledger.shipped_in_turn and CONFIRM.search(edited):
-            edited = _scrubbed(edited, drop_confirm, "shipped_reply", ledger)
+            kept, dropped = drop_confirm(edited)
+            lines.append(("shipped_reply", "dropped" if kept else "kept", dropped))
+            edited = kept or edited
         if PLOT_BUTTON.search(edited):
-            edited = _scrubbed(edited, drop_plot_button, "plot_button", ledger)
+            if user_named_plot_button(ledger):
+                lines.append(("plot_button", "asked", 0))
+            else:
+                kept, dropped = drop_plot_button(edited)
+                lines.append(("plot_button", "dropped" if kept else "kept", dropped))
+                if not kept:
+                    # Nothing would be left: the whole reply as written, also what the first check dropped.
+                    edited = reply
+                    lines = [(hook, "kept", count) for hook, _, count in lines]
+                else:
+                    edited = kept
+        for hook, verdict, count in lines:
+            attribution(hook, ledger, verdict=verdict, sentences=count)
         if edited != reply:
             replace_reply(response, edited)
     except Exception as exc:

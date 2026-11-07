@@ -27,4 +27,6 @@
   assistant in four places to say "press `.create_plot()`" while its reply
   rules forbade it; the instructions now leave the button to the status line,
   and ShippedReply drops a sentence that names `.create_plot()`,
-  `.update_plot()` or `.plot_all()` in any turn, logged as `plot_button`.
+  `.update_plot()` or `.plot_all()` in any turn, logged as `plot_button`,
+  unless the user's own message asked about the button. Its sentence split no
+  longer ends a sentence after an abbreviation such as "e.g." or "z. B.".

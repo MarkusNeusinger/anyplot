@@ -255,6 +255,70 @@ class TestPlugin:
         assert reply_text(await check(response(types.Part(text=text)))) == kept
         assert lines == [verdict]
 
+    @pytest.mark.parametrize(
+        ("text", "kept"),
+        [
+            # An abbreviation's dot ends no sentence: the button's sentence goes whole, nothing of it stays.
+            ("The data has 6 rows. Press `.create_plot()`, e.g. with a title in the box.", "The data has 6 rows."),
+            ("Press `.create_plot()`, i.e. the button. The data has 6 rows.", "The data has 6 rows."),
+            (
+                "Die Daten haben 6 Zeilen. Drück `.create_plot()`, z. B. mit einem Titel im Feld.",
+                "Die Daten haben 6 Zeilen.",
+            ),
+            (
+                "Der Umsatz liegt bei 6,5 Mio. Euro. Drück dann `.update_plot()` für den neuen Plot.",
+                "Der Umsatz liegt bei 6,5 Mio. Euro.",
+            ),
+            ("Ich habe bzw. Spalten umbenannt. Drück ca. jetzt `.create_plot()`.", "Ich habe bzw. Spalten umbenannt."),
+        ],
+    )
+    def test_an_abbreviation_ends_no_sentence(self, text: str, kept: str) -> None:
+        assert plugin_module.drop_plot_button(text) == (kept, 1)
+
+    async def test_an_answer_to_a_question_about_the_button_keeps_it(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        """The user asked about the button: the answer names it, and a short filler before it must not be all that
+        is left. The tools the turn ran come back as user content without text, after the question."""
+        ledger.shipped_in_turn = False
+        ledger.root_request = LlmRequest(
+            model="m",
+            contents=[
+                types.Content(role="user", parts=[types.Part(text="what does .update_plot() do?")]),
+                types.Content(role="model", parts=[types.Part(function_call=types.FunctionCall(name="get_spec"))]),
+                types.Content(
+                    role="user",
+                    parts=[types.Part(function_response=types.FunctionResponse(name="get_spec", response={}))],
+                ),
+            ],
+        )
+        text = "Sure. `.update_plot() →` redraws the plot with the change in the box."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "asked", "sentences": 0}]
+
+    async def test_a_question_about_something_else_drops_the_button_as_ever(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+        ledger.root_request = LlmRequest(
+            model="m", contents=[types.Content(role="user", parts=[types.Part(text="add a column z")])]
+        )
+        text = "I added the column. Check the data and press `.create_plot()`."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == "I added the column."
+        assert lines == [{"verdict": "dropped", "sentences": 1}]
+
+    async def test_two_checks_that_would_leave_nothing_keep_the_reply_as_written(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        """After a shipped plot, `.confirm()` goes first; when the plot button's sentence is all that is left, the
+        reply goes out whole, never as what the first check left of it."""
+        text = "Confirm with `.confirm()`. Then press `.create_plot()`."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "kept", "sentences": 1}, {"verdict": "kept", "sentences": 1}]
+
     async def test_a_reply_that_only_names_the_plot_button_stays_whole(
         self, ledger: RequestLedger, lines: list[dict[str, Any]]
     ) -> None:

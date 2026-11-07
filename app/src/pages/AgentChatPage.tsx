@@ -779,8 +779,9 @@ function AgentChat({
    */
   const sendAttachment = async (sent: Attachment, ownNote?: string) => {
     if (busy || (sent.status !== 'ready' && sent.status !== 'failed')) return;
-    // While `all` holds the box in step 2 it takes no text: the attachment goes alone.
-    const note = ownNote ?? (chatLocked ? '' : draft.trim());
+    // Also while `all` holds the box in step 2: an attachment opens the box for its note, since
+    // the new data takes the session back to step 1, where the chat about the data goes on.
+    const note = ownNote ?? draft.trim();
     if (note.length > MAX_MESSAGE_CHARS) return;
     if (note) setDraft(current => (current.trim() === note ? '' : current));
     attach.settle(sent.id, 'sending');
@@ -822,13 +823,20 @@ function AgentChat({
    * switch's offer (`carry_plot`), under `label`, the button as it read, which the thread shows
    * for the turn. The confirmation's busy state and the session's own guards hold back a second
    * click, also one before the state caught up. The button stays where it is, inert while the
-   * plot runs, so the focus stays on it.
+   * plot runs, so the focus stays on it. A table typed into the box is data, as on Enter: it
+   * goes to the dataset route, and nothing is confirmed or plotted.
    */
   const startPlot = async (kind: 'create' | 'carry', withText: boolean, label: string) => {
     if (!canCreate) return;
     const text = withText ? draft.trim() : '';
     // The turn would refuse it after the box let go of it: nothing confirms, nothing is lost.
     if (text.length > MAX_MESSAGE_CHARS) return;
+    const typed = text ? attach.attachTyped(text) : null;
+    if (typed) {
+      setDraft('');
+      void sendAttachment(typed, '');
+      return;
+    }
     if (!state.dataConfirmed && !(await session.confirmData())) return;
     if (text) {
       // Only the text that went: an edit made while the confirmation ran stays in the box. The

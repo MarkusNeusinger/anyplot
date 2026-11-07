@@ -207,18 +207,26 @@ describe('Composer row', () => {
     // The locked line moved into the status line: none stands above the box any more.
     expect(screen.queryByText(/libraries at once/)).not.toBeInTheDocument();
 
-    // An attachment, new data, goes all the same: the `↵` sends it, and the box names nothing.
+    // An attachment, new data, goes all the same: the box opens for Enter and a note (the `↵`
+    // shows on a touch screen only, so on a desktop Enter in the box is the one way), and it names
+    // nothing.
+    const onSubmit = vi.fn();
     rerender(
       <Composer
         {...composerProps({
           step2: true,
           chatLocked: true,
           attachment,
+          onSubmit,
           plot: { kind: 'all', active: false, confirming: false, fresh: false },
         })}
       />
     );
+    expect(box).toBeEnabled();
+    expect(box).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
     expect(box).not.toHaveAttribute('aria-describedby');
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('send-return')).not.toHaveAttribute('aria-disabled');
   });
 });
