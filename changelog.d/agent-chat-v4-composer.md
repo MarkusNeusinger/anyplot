@@ -35,3 +35,10 @@
   unless the user's own message asked about the button. Its sentence split no
   longer ends a sentence after an abbreviation such as "e.g." or "z. B.".
   (#12594)
+
+### Fixed
+
+- **The admin fan-out starts one plot per library.** A render between a
+  library's finished plot and the panel's freeing of its place could start a
+  second plot there, which held the card at `adapting…`; a run now starts once
+  per grant of a place. This was the flaky `FanOut` test in CI. (#12594)
