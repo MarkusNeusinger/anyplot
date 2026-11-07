@@ -9,4 +9,4 @@
   then lets it return at its age from before the keep, usually its metadata
   `updated`. Every other keep code still ages the pair. The picker reads the
   records from the workflow's own verdict comments in one extra listing; when
-  that listing fails, every keep ages its pair as before.
+  that listing fails, every keep ages its pair as before. (#12605)
