@@ -2,6 +2,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   type AgentSessionState,
+  type DataSnapshot,
   initialAgentState,
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
@@ -9,49 +10,24 @@ import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent'
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { StepStatus } from 'src/sections/agent-chat/ChatFrame';
 import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
-import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
-import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { act, fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
-type PanelProps = Omit<React.ComponentProps<typeof DataPanel>, 'view' | 'part'>;
+type PanelProps = Omit<React.ComponentProps<typeof DataPanel>, 'part'>;
 
 /**
- * The card as the page composes it: the pinned header above the thread, the stored data's card
- * at its item and the card of a table read from text at its own (`AgentChatPage`, `ChatThread`),
- * and the step's live region by the status line at the frame's foot.
+ * The card as the page composes it: the stored data's card at its item and the card of a table
+ * read from text at its own (`AgentChatPage`, `ChatThread`), and the step's live region by the
+ * status line at the frame's foot.
  */
 function Panel(props: PanelProps) {
-  const view = useDataCardView(props.state);
   return (
     <>
-      <PinnedHeader state={props.state} view={view} />
-      <DataPanel {...props} view={view} part="data" />
-      <DataPanel {...props} view={view} part="transcription" />
+      <DataPanel {...props} part="data" />
+      <DataPanel {...props} part="transcription" />
       <StepStatus state={props.state} />
     </>
   );
 }
-
-/** `scrollIntoView` as a spy: jsdom has none. */
-function stubScrollIntoView() {
-  const scroll = vi.fn();
-  Object.defineProperty(Element.prototype, 'scrollIntoView', {
-    value: scroll,
-    configurable: true,
-    writable: true,
-  });
-  return scroll;
-}
-
-function restoreScrollIntoView() {
-  delete (Element.prototype as Partial<Element>).scrollIntoView;
-}
-
-/** The options of every `scrollIntoView` call on `element`. */
-const scrolledTo = (scroll: ReturnType<typeof vi.fn>, element: Element) =>
-  scroll.mock.contexts.flatMap((context, index) =>
-    context === element ? [scroll.mock.calls[index][0]] : []
-  );
 
 /** The bindings' heading while nothing runs. */
 const IDLE_HEADING = /^# bindings — which column plays which role$/;
@@ -76,12 +52,6 @@ function stubPhone() {
     }))
   );
 }
-
-/** Whether the page's styles hold the pinned header's scroll padding (40 + 64 px). */
-const scrollPaddingRule = () =>
-  [...document.querySelectorAll('style')].some(style =>
-    /scroll-padding-top:\s*104px/.test(style.textContent ?? '')
-  );
 
 const role = (name: string, overrides: Partial<RoleSpec> = {}): RoleSpec => ({
   name,
@@ -668,12 +638,10 @@ describe('DataPanel bindings', () => {
     openBindings();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
 
-    // Step 2: opening the card is only a look, so it works, but nothing in it starts.
+    // Step 2: the card stays open as it was, the dropdowns too, and nothing in it starts.
     rerender(
       panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true, dataConfirmed: true }))
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    openBindings();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
 
@@ -771,188 +739,301 @@ describe('DataPanel steps', () => {
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
 
-  it('collapses into the pinned header after the confirmation, which .show() opens', async () => {
-    renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true }));
-    expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'data fits · 1 row · 5 columns · version 1'
-    );
+  it('stays open in both steps, through the confirmation and back to step 1', () => {
+    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+    const { rerender } = renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
+    const card = screen.getByRole('region', { name: 'Your data' });
+    openBindings();
+    // The confirmation `.create_plot()` starts with, then step 2: the same card, open as it was,
+    // its dropdowns too; no header, no `.show()` or `.hide()` for the card.
+    rerender(stateWith({ x: 'month', y1: 'shoes' }, { confirmBusy: true }));
+    rerender(confirmed);
+    expect(screen.getByRole('region', { name: 'Your data' })).toBe(card);
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 2: the data is confirmed; create the plot below'
     );
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
+    expect(within(card).getByLabelText(/^x/)).toBeEnabled();
+    expect(screen.queryByRole('button', { name: /the data$/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
     // Step 2's action is the page composer's, not the card's.
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    const card = within(screen.getByRole('region', { name: 'Your data' }));
-    expect(card.getByText(/a change here takes the data back to step 1/)).toBeInTheDocument();
-    openBindings();
-    expect(card.getByLabelText(/^x/)).toBeEnabled();
-    expect(card.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Hide the data' }));
-    expect(screen.queryByRole('region', { name: 'Your data' })).not.toBeInTheDocument();
+    // A binding change, a data change or an undo dropped the confirmation: the status line at
+    // the frame's foot names it, and the card says nothing of its own.
+    rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
+    expect(screen.getByRole('region', { name: 'Your data' })).toBe(card);
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+      'step 1: check the data, then create the plot'
+    );
+    expect(screen.queryByText(/step 1 again/)).not.toBeInTheDocument();
   });
 
-  it("names the composer's own action in step 1's line, .plot_all() while all is pressed", async () => {
-    stubScrollIntoView();
-    try {
-      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-      const panel = (state: AgentSessionState) => (
-        <Panel
-          state={state}
-          plotAction=".plot_all()"
-          onParse={vi.fn()}
-          onConfirmTranscription={vi.fn()}
-          onDiscardTranscription={vi.fn()}
-          onBind={vi.fn()}
-          onUndo={vi.fn()}
-        />
-      );
-      const { rerender } = render(panel(confirmed));
-      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-      // A data change with `all` pressed: the composer shows `.plot_all()`, never the plot button.
-      rerender(panel({ ...confirmed, dataConfirmed: false, confirmLoss: 'data' }));
-      expect(
-        screen.getByText('# step 1 again: check the data, then .plot_all() below')
-      ).toBeVisible();
-    } finally {
-      restoreScrollIntoView();
-    }
-  });
-
-  it('opens in full when the confirmation drops, and collapses at the next .create_plot()', async () => {
-    const scroll = stubScrollIntoView();
-    try {
-      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-      const { rerender } = renderPanel(confirmed);
-      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-
-      // A binding change, a data change or an undo: the server dropped the confirmation.
-      // The header stays and says so, and the line above the card stays in its place.
-      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
-      const summary = screen.getByTestId('data-summary');
-      expect(summary).toHaveTextContent('check again · 1 row · 5 columns · version 1');
-      // It reads as a warning: the phrase in bold, not only the colour of the `!`.
-      const phrase = within(summary).getByText('check again');
-      expect(phrase).toHaveAttribute('data-tone', 'warning');
-      expect(phrase).toHaveStyle({ fontWeight: '600' });
-      expect(
-        screen.getByText('# step 1 again: check the data, then .create_plot() below')
-      ).toBeVisible();
-      // After a change of the data the composer's button reads `plot the new data`: the line too.
-      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'data' });
-      expect(
-        screen.getByText('# step 1 again: check the data, then plot the new data below')
-      ).toBeVisible();
-      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
-      expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
-      expect(screen.getByTestId('data-step-status')).toHaveTextContent(
-        'step 1: check the data, then create the plot'
-      );
-      // The card is open in step 1 anyway: the header's button leads to its top.
-      const go = screen.getByRole('button', { name: 'Go to the data' });
-      expect(go).toHaveTextContent('.show()');
-      expect(go).not.toHaveAttribute('aria-expanded');
-      scroll.mockClear();
-      await userEvent.click(go);
-      expect(scrolledTo(scroll, screen.getByTestId('data-card'))).toEqual([
-        { behavior: 'smooth', block: 'start' },
-      ]);
-      expect(screen.getByTestId('data-card')).toBeInTheDocument();
-
-      // The user's `.create_plot()` at the composer's end starts with the confirmation: the
-      // card collapses with it, although the user had opened it before the confirmation dropped.
-      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings', confirmBusy: true });
-      rerender(confirmed);
-      expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Show the data' })).toHaveAttribute(
-        'aria-expanded',
-        'false'
-      );
-      expect(within(screen.getByTestId('data-summary')).queryByText('check again')).toBeNull();
-    } finally {
-      restoreScrollIntoView();
-    }
-  });
-
-  it('brings the card in at its top on .show(), and .hide() goes back to the reading position', async () => {
-    const scroll = stubScrollIntoView();
-    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
-    const scrollY = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(1400);
-    try {
-      const { unmount } = render(
-        <Panel
-          state={stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true })}
-          onParse={vi.fn()}
-          onConfirmTranscription={vi.fn()}
-          onDiscardTranscription={vi.fn()}
-          onBind={vi.fn()}
-          onUndo={vi.fn()}
-        />
-      );
-      // While the header sticks, the page keeps focus and scrolling clear of it.
-      expect(scrollPaddingRule()).toBe(true);
-
-      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-      expect(scrolledTo(scroll, screen.getByTestId('data-card'))).toEqual([
-        { behavior: 'smooth', block: 'start' },
-      ]);
-
-      scrollY.mockReturnValue(380);
-      await userEvent.click(screen.getByRole('button', { name: 'Hide the data' }));
-      expect(scrollTo).toHaveBeenCalledWith({ top: 1400 });
-
-      unmount();
-      expect(scrollPaddingRule()).toBe(false);
-    } finally {
-      scrollY.mockRestore();
-      scrollTo.mockRestore();
-      restoreScrollIntoView();
-    }
-  });
-
-  it('holds step 1 while a table read from text waits, and the header names the decision', () => {
+  it('holds step 1 while a table read from text waits, beside the open card', () => {
     const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
     const { rerender } = renderPanel(confirmed);
     // The server keeps its confirmation until `.use()`, and a turn's sync can report it.
     rerender({ ...confirmed, transcription: TRANSCRIPTION });
-    expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'decide on the table first: .use() or .discard()'
-    );
     expect(screen.getByTestId('transcription-card')).toBeVisible();
+    expect(screen.getByTestId('data-card')).toBeVisible();
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 1: check the data, then create the plot'
     );
   });
+});
 
-  it("leads the header's button to the table read from text, where .use() and .discard() wait", async () => {
-    const scroll = stubScrollIntoView();
+describe('DataPanel version', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const snapshot = (n: number, change: DataSnapshot['change'], summary: string): DataSnapshot => ({
+    n,
+    change,
+    summary,
+    label: `data v${n} · ${summary}`,
+    rows: 1,
+    columns: 5,
+    sheet: null,
+    fileName: null,
+    changes: [],
+    preview: [],
+    profile: { rows: 1, columns: COLUMNS, source_format: 'csv', decimal: '.', warnings: [] },
+  });
+
+  /**
+   * The live card as the thread holds it: an item among others in one list, where a new version
+   * can move it to the end under its own key, as `ChatThread` renders the card's `data` item.
+   */
+  function Thread({
+    state,
+    version,
+    last,
+    onUndo,
+  }: {
+    state: AgentSessionState;
+    version: DataSnapshot;
+    last: boolean;
+    onUndo: () => void;
+  }) {
+    const card = (
+      <DataPanel
+        key="card"
+        state={state}
+        part="data"
+        version={version}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onUndo={onUndo}
+        onToLong={vi.fn()}
+      />
+    );
+    const plot = <div key="plot">plot v1</div>;
+    return <div>{last ? [plot, card] : [card, plot]}</div>;
+  }
+
+  it('carries its version on its border: the number, how it came and the shape', () => {
+    render(
+      <Thread
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        version={snapshot(3, 'to_long', 'made long')}
+        last={false}
+        onUndo={vi.fn()}
+      />
+    );
+    const label = screen.getByTestId('data-card-label');
+    expect(label).toHaveTextContent(
+      /^data v3 · made long · 1 row × 5 cols Data v3, made long, 1 row by 5 columns$/
+    );
+    expect(within(label).getByText('data v3 · made long · 1 row × 5 cols')).toHaveAttribute(
+      'aria-hidden'
+    );
+    // A target for the focus from code only, never in the tab order.
+    expect(label).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('keeps the focus on .undo() when the version it made moves the card below the plot', async () => {
+    const onUndo = vi.fn();
+    const before = changedState(2);
+    const view = render(
+      <Thread
+        state={before}
+        version={snapshot(2, 'turn', 'changed')}
+        last={false}
+        onUndo={onUndo}
+      />
+    );
+    const card = screen.getByTestId('data-card');
+    const undo = within(card).getByRole('button', { name: '.undo()' });
+    await userEvent.click(undo);
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(undo).toHaveFocus();
+
+    // The undo runs, then lands: version 3 of the session, the card at the thread's end.
+    view.rerender(
+      <Thread
+        state={changedState(2, { undoBusy: true })}
+        version={snapshot(2, 'turn', 'changed')}
+        last={false}
+        onUndo={onUndo}
+      />
+    );
+    view.rerender(
+      <Thread
+        state={changedState(2, { dataChange: { kind: 'undone', version: 2 } })}
+        version={snapshot(3, 'undo', 'undone')}
+        last
+        onUndo={onUndo}
+      />
+    );
+    // The same card, moved: the plot stands above it now, and the focus is back on `.undo()`.
+    expect(screen.getByTestId('data-card')).toBe(card);
+    expect(card.previousElementSibling).toHaveTextContent('plot v1');
+    expect(within(card).getByRole('button', { name: '.undo()' })).toHaveFocus();
+  });
+
+  it("puts the focus on the card's label when the control went with its version", async () => {
+    const plain = stateWith({ x: 'month', y1: 'shoes' });
+    const offer = {
+      kind: 'to_long' as const,
+      columns: ['shoes', 'hats', 'scarves'],
+      names_to: 'item',
+      values_to: 'sold',
+      keys: [],
+      rows: 3,
+      siblings: [],
+    };
+    const before = {
+      ...plain,
+      dataset: plain.dataset && {
+        ...plain.dataset,
+        parsed: { ...plain.dataset.parsed, suggestion: offer },
+      },
+    };
+    const view = render(
+      <Thread
+        state={before}
+        version={snapshot(1, 'paste', 'pasted')}
+        last={false}
+        onUndo={vi.fn()}
+      />
+    );
+    const toLong = screen.getByRole('button', { name: 'Make the table long' });
+    await userEvent.click(toLong);
+    expect(toLong).toHaveFocus();
+    // `.to_long()` applied: the offer is gone with its button, and the card moved below the plot.
+    view.rerender(
+      <Thread
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        version={snapshot(2, 'to_long', 'made long')}
+        last
+        onUndo={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Make the table long' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-card-label')).toHaveFocus();
+  });
+
+  it('leaves the focus where the user is when a turn makes the version', async () => {
+    const box = document.createElement('textarea');
+    document.body.append(box);
     try {
-      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-      const { rerender } = renderPanel(confirmed);
-      rerender({ ...confirmed, transcription: TRANSCRIPTION });
-      scroll.mockClear();
-      await userEvent.click(screen.getByRole('button', { name: 'Go to the data' }));
-      expect(scrolledTo(scroll, screen.getByTestId('transcription-item'))).toEqual([
-        { behavior: 'smooth', block: 'start' },
-      ]);
-      expect(scrolledTo(scroll, screen.getByTestId('data-card'))).toEqual([]);
+      const view = render(
+        <Thread
+          state={stateWith({ x: 'month', y1: 'shoes' })}
+          version={snapshot(1, 'paste', 'pasted')}
+          last={false}
+          onUndo={vi.fn()}
+        />
+      );
+      // The user was in the card, then went on to the message box and sent a data request.
+      await userEvent.click(
+        within(screen.getByTestId('data-card')).getByRole('button', {
+          name: 'Change the bindings',
+        })
+      );
+      box.focus();
+      view.rerender(
+        <Thread
+          state={stateWith({ x: 'month', y1: 'shoes' })}
+          version={snapshot(2, 'turn', 'changed')}
+          last
+          onUndo={vi.fn()}
+        />
+      );
+      expect(box).toHaveFocus();
     } finally {
-      restoreScrollIntoView();
+      box.remove();
     }
   });
 
-  it('keeps a card the user opened when step 2 returns without a confirmation', async () => {
-    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-    const { rerender } = renderPanel(confirmed);
-    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    // A table read from text, then discarded: step 1 and back, with no confirmation call.
-    rerender({ ...confirmed, transcription: TRANSCRIPTION });
-    rerender(confirmed);
-    expect(screen.getByTestId('data-card')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Hide the data' })).toBeInTheDocument();
+  it('follows a press that gave no focus (Safari), unless a press outside came after it', () => {
+    const plain = (next: DataSnapshot, last: boolean, state = changedState(2)) => (
+      <Thread state={state} version={next} last={last} onUndo={vi.fn()} />
+    );
+    const undone = changedState(1, { dataChange: { kind: 'undone', version: 1 } });
+    // A press on `.undo()` that focuses nothing, as Safari's click on a button does.
+    const view = render(plain(snapshot(2, 'turn', 'changed'), false));
+    fireEvent.pointerDown(
+      within(screen.getByTestId('data-card')).getByRole('button', { name: '.undo()' })
+    );
+    view.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
+    expect(screen.getByTestId('data-card-label')).toHaveFocus();
+    view.unmount();
+
+    // The same press, then one on the page outside while the version is on its way.
+    const again = render(plain(snapshot(2, 'turn', 'changed'), false));
+    fireEvent.pointerDown(
+      within(screen.getByTestId('data-card')).getByRole('button', { name: '.undo()' })
+    );
+    fireEvent.pointerDown(document.body);
+    again.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
+    expect(document.body).toHaveFocus();
+    again.unmount();
+
+    // The keyboard visited `.change()` before; the press names `.undo()`, which can still go
+    // back one more step, so the focus lands on it, never on the control visited earlier.
+    const visited = render(plain(snapshot(2, 'turn', 'changed'), false, changedState(3)));
+    const card = within(screen.getByTestId('data-card'));
+    const change = card.getByRole('button', { name: 'Change the bindings' });
+    change.focus();
+    change.blur();
+    fireEvent.pointerDown(card.getByRole('button', { name: '.undo()' }));
+    visited.rerender(
+      plain(
+        snapshot(3, 'undo', 'undone'),
+        true,
+        changedState(2, { dataChange: { kind: 'undone', version: 2 } })
+      )
+    );
+    expect(card.getByRole('button', { name: '.undo()' })).toHaveFocus();
+  });
+
+  it('never pulls the focus back into the card after a press on the page outside it', async () => {
+    const view = render(
+      <Thread
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        version={snapshot(1, 'paste', 'pasted')}
+        last={false}
+        onUndo={vi.fn()}
+      />
+    );
+    const change = within(screen.getByTestId('data-card')).getByRole('button', {
+      name: 'Change the bindings',
+    });
+    await userEvent.click(change);
+    expect(change).toHaveFocus();
+    // A click on the page's background: the body takes the focus, with no element to name.
+    fireEvent.pointerDown(document.body);
+    change.blur();
+    view.rerender(
+      <Thread
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        version={snapshot(2, 'turn', 'changed')}
+        last
+        onUndo={vi.fn()}
+      />
+    );
+    expect(document.body).toHaveFocus();
   });
 });
 
@@ -1029,7 +1110,6 @@ describe('DataPanel working states', () => {
 
   it('names the same bindings lock in step 2', async () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true, themeBusy: true }));
-    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     openBindings();
     expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
       /^# bindings — wait while the assistant works$/
@@ -1078,14 +1158,15 @@ describe('DataPanel data changes', () => {
   it('lists what changed, line by line above the preview, with .undo()', async () => {
     const { onUndo } = renderPanel(changedState(2));
     const block = within(screen.getByTestId('data-change'));
-    expect(block.getByText('# changed · version 2')).toBeInTheDocument();
+    // No server version: the card's label names the version by the chat's own count.
+    expect(block.getByText('# changed')).toBeInTheDocument();
     expect(block.getAllByRole('listitem').map(item => item.textContent)).toEqual(CHANGES);
     expect(
       screen.getByTestId('data-change').compareDocumentPosition(screen.getByText(/^# preview/)) &
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
     const undo = screen.getByRole('button', { name: '.undo()' });
-    expect(undo).toHaveAccessibleDescription('# changed · version 2');
+    expect(undo).toHaveAccessibleDescription('# changed');
     await userEvent.click(undo);
     expect(onUndo).toHaveBeenCalledTimes(1);
     // The changed data is unconfirmed: the panel is at step 1 again, the card open.
@@ -1094,18 +1175,18 @@ describe('DataPanel data changes', () => {
     );
   });
 
-  it('names the version an undo brought back and holds .undo() at the paste', () => {
+  it('says an undo brought the version before back, and holds .undo() at the paste', () => {
     const { rerender } = renderPanel(
       changedState(1, { dataChange: { kind: 'undone', version: 1 } })
     );
     const block = within(screen.getByTestId('data-change'));
-    expect(block.getByText('# undone · back to version 1')).toBeInTheDocument();
+    expect(block.getByText('# undone · back to the version before')).toBeInTheDocument();
     expect(block.queryAllByRole('listitem')).toHaveLength(0);
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
 
     // Two changes, one undone: the first can still go.
     rerender(changedState(2, { dataChange: { kind: 'undone', version: 2 } }));
-    expect(screen.getByText('# undone · back to version 2')).toBeInTheDocument();
+    expect(screen.getByText('# undone · back to the version before')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '.undo()' })).toBeEnabled();
   });
 
@@ -1148,7 +1229,7 @@ describe('DataPanel data changes', () => {
       })
     );
     const block = within(screen.getByTestId('data-change'));
-    expect(block.getByText('# changed · version 1')).toBeInTheDocument();
+    expect(block.getByText('# changed')).toBeInTheDocument();
     expect(block.getAllByRole('listitem').map(item => item.textContent)).toEqual([
       generated,
       undefinedValues,

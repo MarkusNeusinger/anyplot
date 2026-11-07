@@ -67,6 +67,7 @@ import { colors, fontSize } from 'src/theme';
 export interface DataViewProps {
   /** The profile of the version the panel shows; a new one (a new version) reads the data again. */
   profile: DatasetProfile;
+  /** The version's number in the chat, as its card's label names it (`data v3`). */
   version: number;
   /** The current version's `data.csv` (`agentApi.datasetCsv`). */
   load: (signal: AbortSignal) => Promise<string>;
@@ -278,7 +279,7 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
               id={TITLE_ID}
               sx={{ ...labelSx, fontSize: fontSize.md, color: 'var(--ink)', fontWeight: 600, m: 0 }}
             >
-              # every row · {countOf(rowCount, 'row')} · {countOf(columnCount, 'column')} · version{' '}
+              # every row · {countOf(rowCount, 'row')} · {countOf(columnCount, 'column')} · data v
               {version}
             </Box>
             <Box id={NOTE_ID} sx={{ ...labelSx, mt: 0.25, overflowWrap: 'anywhere' }}>

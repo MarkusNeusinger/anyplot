@@ -1,26 +1,44 @@
 /**
  * The chat thread: first the start item (`StartItem`, what the chat adapts and what it needs),
- * which stays first and scrolls up with the talk, then the user's turns and the page's own
- * (`.example_data()`, `.create_plot()`, `.carry_plot()`), the attachments the user sent and the
- * data card after each (a later
- * paste leaves the card it replaced as a stub of its shape), the assistant's replies, the fixed
- * refusal under a plain label (its code behind the label's ⓘ), errors with their code and
- * request id, and a result card per plot version, its label on its border naming what it
- * answered (`plotSummaries` in `threadModel.ts`). Earlier versions stay in the thread, folded to
- * that label (`▸ plot v1 · matplotlib · first plot`), each with its own image and code a click
- * away. A lost confirmation adds nothing here: the status
- * line at the chat frame's foot names it. While a turn without pipeline steps waits for its reply, an
- * in-progress line with the site's loader holds the assistant's slot
- * (`pendingReply` in `steps.ts`); the log's own polite live region announces
- * it once, and the reply takes its place. So does a plot run once its card is
+ * which stays first and scrolls up with the talk, then the session in chapters
+ * (`threadModel.ts`): a `# data` line where the talk turns to the data, a `# plot` line where it
+ * turns to the plot (`ChapterLine`), and a new `# data` line when the data changes after a plot.
+ * In them: the user's turns and the page's own (`.example_data()`, `.create_plot()`,
+ * `.carry_plot()`), the attachments the user sent, the data versions, the assistant's replies,
+ * the fixed refusal under a plain label (its code behind the label's ⓘ), errors with their code
+ * and request id, a library switch as a line of its own that names the decisions the plot in the
+ * new library keeps, and a result card per plot version, its label on its border naming what it
+ * answered (`plotSummaries`). A lost confirmation adds nothing here: the status line at the chat
+ * frame's foot names it.
+ *
+ * Versions: the live data card at the latest data version stays open in both steps, its label
+ * `data v3 · made long · 48 rows × 4 cols`; every older data version folds to that label (`▸ data
+ * v2 · sheet "2026" · 12 rows × 5 cols`, `FoldedData`), which opens it read-only. Every plot
+ * version but the latest folds the same way (`▸ plot v1 · matplotlib · first plot`), each with its
+ * own image and code a click away. The live card moves under its own id with every new version
+ * (`placeData` in `useAgentSession.ts`): a turn's version stands right after the turn's message,
+ * before its reply, as a plot card does; a version of the card's own controls goes to the
+ * thread's end, before and after a plot alike; a paste brings a card of its own. The rows render
+ * as one flat list keyed by item, so React moves the card's node and keeps its state (the notes
+ * and the code it showed open).
+ *
+ * A turn's version arrives with its `done`, after the reply streamed in, so the card lands above
+ * a reply the user may be reading. The thread holds that reply still (`HoldReadingPosition`): the
+ * browser's own scroll anchoring did not, since it anchors on the user's message above the card.
+ * The reply is then the first after the live card; held in view, its one scroll into view
+ * (`followReply`) moves nothing.
+ *
+ * While a turn without pipeline steps waits for its reply, an in-progress line with the site's
+ * loader holds the assistant's slot (`pendingReply` in `steps.ts`); the log's own polite live
+ * region announces it once, and the reply takes its place. So does a plot run once its card is
  * in, below the card, while the reply to it is written (`writing the reply`).
  *
  * The page's own turns show as the button the user pressed (`.start_over()`, "plot in plotly with
  * your 3 decisions"), never as the action the page sends. The summary of the data after a paste
  * has no button and shows no line of its own: the card says what was sent, and the summary
  * follows it. Its item stays in the state, which the in-progress line reads. The first reply
- * after a card comes into view as it arrives, when the user's focus is in the composer
- * (`followReply`): a tall card would leave it below the fold.
+ * after the latest data card comes into view as it arrives, when the user's focus is in the
+ * composer (`followReply`): a tall card would leave it below the fold.
  */
 
 import { type ReactNode, useEffect, useMemo, useRef } from 'react';
@@ -31,11 +49,15 @@ import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import {
   type AgentSessionState,
   type ChatItem,
+  type DataSnapshot,
   type FeedbackInput,
   sessionBusy,
 } from 'src/hooks/useAgentSession';
 import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
+import { ChapterLine } from 'src/sections/agent-chat/ChapterLine';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { FoldedData } from 'src/sections/agent-chat/FoldedData';
+import { HoldReadingPosition, REPLY_ATTRIBUTE } from 'src/sections/agent-chat/HoldReadingPosition';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import {
   ERROR_TEXT,
@@ -56,7 +78,7 @@ import {
   readableSx as textSx,
   THREAD_GAP,
 } from 'src/sections/agent-chat/styles';
-import { plotSummaries } from 'src/sections/agent-chat/threadModel';
+import { plotSummaries, threadModel } from 'src/sections/agent-chat/threadModel';
 import { colors, fontSize, typography } from 'src/theme';
 
 /** A passage of a reply in backticks, on one line: code, a column or a button the reply names. */
@@ -111,15 +133,18 @@ interface ChatThreadProps {
   onOutcome?: (action: CardOutcome, version: number) => void;
   /** The result cards' quick feedback; without it they show no control. */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
-  /** The card at a `data` item, or at the `transcription` item that waits (`DataPanel`). */
-  renderData?: (part: 'data' | 'transcription') => React.ReactNode;
+  /**
+   * The card at a `data` item, with the version it shows (`snapshot`), or at the `transcription`
+   * item that waits (`DataPanel`).
+   */
+  renderData?: (part: 'data' | 'transcription', snapshot?: DataSnapshot) => React.ReactNode;
   /** Whether the first reply after a card may come into view: the user's focus is in the composer. */
   followReply?: () => boolean;
   /** The thread's first item, before every turn: the start item (`StartItem`). */
   start?: ReactNode;
 }
 
-/** The kinds of item that answer a turn: the first of them after a card is its reply. */
+/** The kinds of item that answer a turn: the first of them after the live card is its reply. */
 const REPLY_KINDS: ReadonlySet<ChatItem['kind']> = new Set(['assistant', 'refusal', 'error']);
 
 /**
@@ -165,12 +190,16 @@ function Item({
         </Box>
       );
     case 'data':
-      return <>{props.renderData?.('data')}</>;
+      return <>{props.renderData?.('data', item.snapshot)}</>;
     case 'data_stub':
+      return <FoldedData item={item} />;
+    case 'switch':
+      // The library the plots are made in from here, and what the plot there keeps; never "0
+      // decisions": a switch that carries none says only where the plots go.
       return (
-        <Box data-testid="data-stub" sx={{ ...labelSx, ...textSx }}>
-          # earlier data · {countOf(item.rows, 'row')} · {countOf(item.columns, 'column')} ·
-          replaced below
+        <Box data-testid="switch-line" sx={{ ...labelSx, ...textSx, color: 'var(--ink-soft)' }}>
+          · plotting in {item.library} from here
+          {item.decisions ? `, ${countOf(item.decisions, 'decision')} kept` : ''}
         </Box>
       );
     case 'transcription':
@@ -299,7 +328,12 @@ function Item({
   }
 }
 
-/** The id of the first reply after the latest card, or null while it has none yet. */
+/**
+ * The id of the first reply after the live data card, or null while it has none yet: the summary
+ * after a paste, the reply of the turn whose version the card shows (the card lands right before
+ * it), or the first reply after a version of the card's own controls, which moved it to the end.
+ * Each comes into view once, the first time it is that reply.
+ */
 function firstReplyId(items: ChatItem[]): number | null {
   let card = -1;
   for (let index = items.length - 1; index >= 0; index -= 1) {
@@ -320,6 +354,7 @@ export function ChatThread(props: ChatThreadProps) {
     () => plotSummaries(items, version => versions[version]?.library),
     [items, versions]
   );
+  const { rows } = useMemo(() => threadModel(items), [items]);
   const pending = pendingReply(props.state);
   // Below a run's card no timeline follows: the line stands where the reply will, which takes
   // its place without a jump.
@@ -331,6 +366,7 @@ export function ChatThread(props: ChatThreadProps) {
   // it would land under the fold, while the user's eyes are on the composer.
   const replyId = firstReplyId(items);
   const replyRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   // A reply that was there when the thread mounted has arrived already: only a new one moves it.
   const followed = useRef<number | null>(replyId);
   const { followReply } = props;
@@ -342,33 +378,53 @@ export function ChatThread(props: ChatThreadProps) {
   }, [replyId, followReply]);
   return (
     <Box
+      ref={logRef}
       role="log"
       aria-label="Conversation"
       sx={{ display: 'flex', flexDirection: 'column', gap: THREAD_GAP, minWidth: 0 }}
     >
       {props.start}
-      {items.map(item => {
-        // The page's summary turn has no button: its card says what was sent, and the summary
-        // follows.
-        if (item.kind === 'action' && item.action === 'summarize_data') return null;
-        const node = (
-          <Item
-            key={item.id}
-            item={item}
-            props={props}
-            latestVersion={latestVersion}
-            waiting={item.id === waitingId}
-            summaries={summaries}
-          />
-        );
-        return item.id === replyId ? (
-          <Box key={item.id} ref={replyRef} data-testid="first-reply" sx={{ minWidth: 0 }}>
-            {node}
-          </Box>
-        ) : (
-          node
-        );
-      })}
+      {/* One flat list of chapter lines and items, never a box per chapter: a card that moves
+          into a later chapter stays a child of the same parent, so React moves its node and
+          keeps its state instead of mounting it anew. The hold keeps a reply still when the card
+          lands above it, and adds no element. */}
+      <HoldReadingPosition items={items} log={logRef}>
+        {rows.map(row => {
+          if (row.kind === 'chapter') {
+            return <ChapterLine key={`chapter-${row.chapter.index}`} chapter={row.chapter} />;
+          }
+          const { item } = row;
+          // The page's summary turn has no button: its card says what was sent, and the summary
+          // follows.
+          if (item.kind === 'action' && item.action === 'summarize_data') return null;
+          const node = (
+            <Item
+              key={item.id}
+              item={item}
+              props={props}
+              latestVersion={latestVersion}
+              waiting={item.id === waitingId}
+              summaries={summaries}
+            />
+          );
+          // Every reply stands in the same wrapper, the first reply after the live card with the
+          // ref that brings it into view: a reply that stops being the first one (the card moved
+          // below it) keeps its element, so the polite log never reads it out a second time.
+          if (!REPLY_KINDS.has(item.kind)) return node;
+          const first = item.id === replyId;
+          return (
+            <Box
+              key={item.id}
+              ref={first ? replyRef : undefined}
+              data-testid={first ? 'first-reply' : undefined}
+              {...{ [REPLY_ATTRIBUTE]: item.id }}
+              sx={{ minWidth: 0 }}
+            >
+              {node}
+            </Box>
+          );
+        })}
+      </HoldReadingPosition>
       {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
           site's loader says it works; the log's live region reads the words alone. */}
       {/* Laid out as the progress timeline is (`ProgressTimeline.tsx`): a turn that reaches a

@@ -359,9 +359,9 @@ export function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: Change
         }}
       >
         <Box id="agent-change-title" sx={{ ...labelSx, color: 'var(--ink)' }}>
-          {change.kind === 'changed'
-            ? `# changed · version ${change.version}`
-            : `# undone · back to version ${change.version}`}
+          {/* No version number: the card's label names the version by the chat's own count
+              (`data v3`), and the server's `version` starts over with every paste. */}
+          {change.kind === 'changed' ? '# changed' : '# undone · back to the version before'}
         </Box>
         {!first && (
           <Box

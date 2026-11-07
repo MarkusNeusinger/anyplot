@@ -507,6 +507,26 @@ const openBindings = () =>
 /** The data card's bindings line (`x (across): hours · y (up): score`). */
 const bindingsLine = () => screen.getByTestId('bindings-line');
 
+/** The thread's chapters in order, by their line (`# data`, `# plot`). */
+const chapters = () =>
+  screen.queryAllByTestId('chapter-line').map(line => line.getAttribute('data-chapter'));
+
+/** The labels of the folded data versions, in thread order (`▸ data v1 · pasted · …`). */
+const foldedData = () =>
+  screen.queryAllByTestId('data-stub-label').map(label => label.textContent?.replace(/^▸/, ''));
+
+/** Whether the live data card is the thread's last entry, in the `# data` chapter that ends it. */
+const cardAtTheEnd = () => {
+  const card = screen.getByTestId('data-card');
+  const lines = screen.getAllByTestId('chapter-line');
+  const chapter = lines[lines.length - 1];
+  return (
+    screen.getByRole('log', { name: 'Conversation' }).lastElementChild === card &&
+    chapter.getAttribute('data-chapter') === 'data' &&
+    !!(chapter.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING)
+  );
+};
+
 /** The step the status line at the frame's foot names (`step 1 of 2 · …`). */
 const currentStep = () => {
   const line = screen.getByTestId('data-step');
@@ -854,18 +874,24 @@ describe('AgentChatPage gating', () => {
       'ask about your data, or say what the first plot should do'
     );
 
+    // One data chapter so far, and the card names its version.
+    expect(chapters()).toEqual(['data']);
+    expect(screen.getByTestId('data-card-label')).toHaveTextContent(
+      /^data v1 · pasted · 2 rows × 2 cols/
+    );
+
     holdNextTurn = true;
     fireEvent.click(create);
-    // The card folds with the click and the run starts: the confirmation came first.
-    await screen.findByTestId('data-pinned');
+    // The run starts, the confirmation first. The card stays open in its chapter, no header
+    // pins it, and the plot turn opens the plot chapter below it.
     await waitFor(() =>
       expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot'])
     );
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-card')).toBe(card);
+    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show the data' })).not.toBeInTheDocument();
     expect(currentStep()).toBe(2);
-    expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'data fits · 2 rows · 2 columns · version 1'
-    );
+    expect(chapters()).toEqual(['data', 'plot']);
     // The button waits in its place, inert, while its run lasts; `.stop()` stands at the status
     // line's end.
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() → (inert)']);
@@ -895,7 +921,7 @@ describe('AgentChatPage gating', () => {
     expect(statusActions()).toEqual(['.start_over()']);
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      /^>>> step 2 of 2 · data fits · 2 rows · 2 columns · version 1$/
+      /^>>> step 2 of 2 · data v1 fits · 2 rows · 2 columns$/
     );
     expect(screen.getByRole('button', { name: 'Start over' })).toHaveAccessibleDescription(
       'new from the catalogue plot; keeps your remembered decisions'
@@ -922,7 +948,6 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndPlot();
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(bindingsLine()).toHaveTextContent(/^x \(across\): hours · y \(up\): score$/);
 
     // Text after the plot goes as a turn, whatever it asks for.
@@ -938,9 +963,11 @@ describe('AgentChatPage gating', () => {
     expect(update).toHaveAccessibleDescription(
       'back to step 1 of 2 · bindings changed · check them above, then .update_plot() new from the catalogue plot; keeps your remembered decisions'
     );
-    expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'check again · 2 rows · 2 columns · version 1'
-    );
+    // A binding change is no new data version: the card stays where it is, in the first chapter,
+    // while the turn that changed the bindings opens a data chapter of its own.
+    expect(foldedData()).toEqual([]);
+    expect(chapters()).toEqual(['data', 'plot', 'data']);
+    expect(cardAtTheEnd()).toBe(false);
     // The root's binding change dropped the confirmation: the step line says so, and only it.
     expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -967,7 +994,8 @@ describe('AgentChatPage gating', () => {
     // The start item opens the thread and stays first; the paste is the first turn after it, its
     // card follows, and the summary needs no line of its own.
     expect(thread.firstElementChild).toBe(screen.getByTestId('start-item'));
-    expect(thread.children[1]).toHaveTextContent(/^❯▤ table · 3 lines · \d+ B$/);
+    expect(thread.children[1]).toHaveTextContent(/^# data$/);
+    expect(thread.children[2]).toHaveTextContent(/^❯▤ table · 3 lines · \d+ B$/);
     expect(thread).not.toHaveTextContent('.summarize_data()');
     await turnEnded();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
@@ -981,7 +1009,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
     const change = await screen.findByTestId('data-change');
     await turnEnded();
-    expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
+    expect(within(change).getByText('# changed')).toBeInTheDocument();
     expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
     expect(currentStep()).toBe(1);
@@ -995,16 +1023,29 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(create);
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     await turnEnded();
-    expect(screen.getByTestId('data-summary')).toHaveTextContent('version 2');
-    expect(screen.queryByTestId('data-change')).not.toBeInTheDocument();
-
-    // The change and its `.undo()` are one `.show()` away; an undo is step 1 again.
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    // The card stayed open through the plot, its change and `.undo()` at hand; the change in
+    // words moved it below its turn, and the version before folded where it stood.
+    expect(chapters()).toEqual(['data', 'plot']);
+    expect(foldedData()).toEqual(['data v1 · pasted · 2 rows × 2 cols']);
+    expect(screen.getByTestId('data-card-label')).toHaveTextContent(
+      /^data v2 · changed · 2 rows × 2 cols/
+    );
     const undo = within(screen.getByTestId('data-change')).getByRole('button', { name: '.undo()' });
     expect(undo).toBeEnabled();
+
+    // `.undo()` on the card above the plot: an undo is step 1 again, and its version moves the
+    // card to the thread's end as a new data chapter (owner, 2026-11-07). The focus follows the
+    // card: `.undo()` waits now (version 1 has nothing before it), so it lands on the label.
+    undo.focus();
     fireEvent.click(undo);
-    expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
-    expect(screen.getByTestId('data-summary')).toHaveTextContent('check again');
+    expect(await screen.findByText('# undone · back to the version before')).toBeInTheDocument();
+    expect(chapters()).toEqual(['data', 'plot', 'data']);
+    expect(cardAtTheEnd()).toBe(true);
+    expect(foldedData()).toEqual([
+      'data v1 · pasted · 2 rows × 2 cols',
+      'data v2 · changed · 2 rows × 2 cols',
+    ]);
+    expect(screen.getByTestId('data-card-label')).toHaveFocus();
     // One line says what to do, the step line above the composer; no notice repeats it above.
     expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -1062,7 +1103,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
     const change = await screen.findByTestId('data-change');
-    expect(within(change).getByText('# changed · version 1')).toBeInTheDocument();
+    expect(within(change).getByText('# changed')).toBeInTheDocument();
     expect(within(change).getByText(GENERATED.changes[0])).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
     expect(bindingsLine()).toHaveTextContent(/^x \(across\): x · /);
@@ -1073,53 +1114,52 @@ describe('AgentChatPage gating', () => {
     const create = screen.getByRole('button', { name: 'Create plot' });
     await waitFor(() => expect(create).toBeEnabled());
     fireEvent.click(create);
-    await screen.findByTestId('data-pinned');
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    // The computed table is the session's first version, its card open beside the plot.
+    expect(screen.getByTestId('data-card-label')).toHaveTextContent(/^data v1 · generated · /);
   });
 
-  it('collapses the confirmed data into a pinned header that .show() opens and .hide() closes', async () => {
+  it('keeps the confirmed data open in its chapter above the plot, with no header pinned', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndPlot();
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-    const show = screen.getByRole('button', { name: 'Show the data' });
-    expect(show).toHaveTextContent('.show()');
-    expect(show).toHaveAttribute('aria-expanded', 'false');
-
-    fireEvent.click(show);
-    const hide = screen.getByRole('button', { name: 'Hide the data' });
-    expect(hide).toHaveTextContent('.hide()');
-    expect(hide).toHaveAttribute('aria-expanded', 'true');
-    expect(hide).toHaveAttribute('aria-controls', 'agent-data-card');
     const card = within(screen.getByTestId('data-card'));
-    expect(card.getByText(/a change here takes the data back to step 1/)).toBeInTheDocument();
     expect(card.getByRole('cell', { name: '52' })).toBeInTheDocument();
     expect(card.getByTestId('bindings-line')).toHaveTextContent(/^x \(across\): hours · /);
-    // Looking is no change: the data stays confirmed, and step 2 stays.
+    expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^(Show|Hide|Go to) the data$/ })).toBeNull();
+    // The data chapter holds the card, the plot chapter the plot below it.
+    const [data, plot] = screen.getAllByRole('heading', { level: 3 });
+    expect(data).toHaveTextContent('# data');
+    expect(plot).toHaveTextContent('# plot');
+    const follows = (first: Element, second: Element) =>
+      !!(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(follows(data, screen.getByTestId('data-card'))).toBe(true);
+    expect(follows(screen.getByTestId('data-card'), plot)).toBe(true);
+    expect(follows(plot, screen.getByRole('article', { name: 'Plot version 1' }))).toBe(true);
+    // The page keeps the focus and a jump clear of the site's sticky masthead.
+    expect(
+      [...document.querySelectorAll('style')].some(style =>
+        /scroll-padding-top:\s*56px/.test(style.textContent ?? '')
+      )
+    ).toBe(true);
     expect(currentStep()).toBe(2);
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
-
-    fireEvent.click(hide);
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Show the data' })).toBeInTheDocument();
   });
 
   it('goes back to step 1 with the card open when a binding changes in step 2', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndPlot();
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    const card = screen.getByTestId('data-card');
     openBindings();
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
 
     const update = screen.getByRole('button', { name: 'Update plot' });
     await waitFor(() => expect(currentStep()).toBe(1));
-    // The header stays, now in step 1's words, and leads back to the open card.
-    expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'check again · 2 rows · 2 columns · version 1'
-    );
-    expect(screen.getByRole('button', { name: 'Go to the data' })).toBeInTheDocument();
-    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    // The card stays open where it is: a binding change makes no data version.
+    expect(screen.getByTestId('data-card')).toBe(card);
+    expect(foldedData()).toEqual([]);
     await untilActive(update);
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.update_plot() →']);
     // The loss is named once, in the plot button's description, and no notice in the thread
@@ -1134,16 +1174,12 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
     expect(screen.getByTestId('data-step')).toHaveTextContent('bindings changed');
 
-    // One click takes the data again: the card collapses with it, and the row's reason goes
-    // with the step.
+    // One click takes the data again, and the row's reason goes with the step; the card stays.
     await untilActive(update);
     fireEvent.click(update);
-    expect(await screen.findByTestId('data-pinned')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByTestId('data-card')).not.toBeInTheDocument());
-    expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
+    await waitFor(() => expect(currentStep()).toBe(2));
     await turnEnded();
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    expect(currentStep()).toBe(2);
+    expect(screen.getByTestId('data-card')).toBe(card);
     expect(screen.getByTestId('data-step')).not.toHaveTextContent('bindings changed');
   });
 
@@ -1151,7 +1187,6 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndPlot();
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     openBindings();
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
@@ -1294,10 +1329,12 @@ describe('AgentChatPage gating', () => {
     expect(startOver).toHaveAccessibleDescription(
       expect.stringContaining('new from the catalogue plot; keeps your remembered decisions')
     );
-    expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
+    // The data the plot was made from stays open in its chapter above.
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(chapters()).toEqual(['data', 'plot']);
   });
 
-  it('goes back to step 1 on a data request after the plot, with the header leading to the card', async () => {
+  it('opens a new data chapter for a data request after the plot, the card before the reply', async () => {
     const scroll = vi.fn();
     Object.defineProperty(Element.prototype, 'scrollIntoView', {
       value: scroll,
@@ -1308,13 +1345,41 @@ describe('AgentChatPage gating', () => {
       localStorage.setItem(ADMIN_HINT_KEY, '1');
       renderAt(PAGE);
       await parseAndPlot();
-      expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+      const card = screen.getByTestId('data-card');
+      expect(chapters()).toEqual(['data', 'plot']);
 
-      // A change to the data asked for below the plot, with the card collapsed.
+      // A change to the data asked for below the plot: a new data chapter, the card right after
+      // the request and before the reply (owner, 2026-11-07), the version it showed folded where
+      // it stood.
+      const box = screen.getByLabelText('Message');
+      box.focus();
+      scroll.mockClear();
       sendFromComposer('das ist prozent');
       const change = await screen.findByTestId('data-change');
       await turnEnded();
-      expect(within(change).getByText('# changed · version 2')).toBeInTheDocument();
+      expect(chapters()).toEqual(['data', 'plot', 'data']);
+      const request = screen.getByText('das ist prozent').closest('[role="log"] > *')!;
+      const reply = screen.getByText('I read score as numbers.');
+      expect(request.nextElementSibling).toBe(card);
+      expect(card.nextElementSibling).toContainElement(reply);
+      expect(cardAtTheEnd()).toBe(false);
+      // The card landed above the reply, which had streamed in already: the thread held the
+      // reply still (`HoldReadingPosition`, tested in ChatThread), gave the page's anchoring back,
+      // and the reply, the first after the card now, is brought into view once at the nearest
+      // edge, which moves nothing where it stands in view.
+      await waitFor(() => expect(document.documentElement.style.overflowAnchor).not.toBe('none'));
+      const replyBox = screen.getByTestId('first-reply');
+      expect(replyBox).toContainElement(reply);
+      expect(scroll.mock.contexts.filter(context => context === replyBox)).toHaveLength(1);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+      // The same card, moved, not a new one; the focus stays in the box the request came from.
+      expect(screen.getByTestId('data-card')).toBe(card);
+      expect(box).toHaveFocus();
+      expect(foldedData()).toEqual(['data v1 · pasted · 2 rows × 2 cols']);
+      expect(screen.getByTestId('data-card-label')).toHaveTextContent(
+        /^data v2 · changed · 2 rows × 2 cols/
+      );
+      expect(within(change).getByText('# changed')).toBeInTheDocument();
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toBe(1);
@@ -1327,16 +1392,17 @@ describe('AgentChatPage gating', () => {
       expect(screen.getByTestId('data-step')).toHaveTextContent(
         'back to step 1 of 2 · data changed · check it above, then plot the new data'
       );
-      // The header stays pinned in view and leads to the card's top, far above.
-      expect(screen.getByTestId('data-summary')).toHaveTextContent(
-        'check again · 2 rows · 2 columns · version 2'
-      );
-      scroll.mockClear();
-      fireEvent.click(screen.getByRole('button', { name: 'Go to the data' }));
-      expect(scroll.mock.contexts).toEqual([screen.getByTestId('data-card')]);
-      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
 
-      // One click: the changed data confirmed, then a new version from the catalogue plot.
+      // The older version opens read-only from its label: its preview, nothing to press.
+      const older = screen.getByRole('button', { name: 'Data v1, pasted, 2 rows by 2 columns' });
+      fireEvent.click(older);
+      const stub = screen.getByTestId('data-stub');
+      expect(older).toHaveAttribute('aria-expanded', 'true');
+      expect(within(stub).getByRole('cell', { name: '52' })).toBeInTheDocument();
+      expect(within(stub).getAllByRole('button')).toEqual([older]);
+
+      // One click: the changed data confirmed, then a new version from the catalogue plot, which
+      // opens the next plot chapter below the card.
       const create = screen.getByRole('button', { name: 'Plot the new data' });
       await untilActive(create);
       fireEvent.click(create);
@@ -1345,6 +1411,7 @@ describe('AgentChatPage gating', () => {
       expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'create_plot']);
       expect(composerButtons()).toEqual(['.example_data() (inert)', '.update_plot() → (inert)']);
       expect(statusActions()).toEqual(['.start_over()']);
+      expect(chapters()).toEqual(['data', 'plot', 'data', 'plot']);
     } finally {
       delete (Element.prototype as Partial<Element>).scrollIntoView;
     }
@@ -1365,9 +1432,8 @@ describe('AgentChatPage gating', () => {
     expect(lastTurn()).toEqual({ text: 'what columns are there?' });
     expect(currentStep()).toBe(1);
     expect(screen.getByTestId('transcription-card')).toBeInTheDocument();
-    expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'decide on the table first: .use() or .discard()'
-    );
+    // The stored data's card stays open above it until the decision.
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
     // The plot button waits for the decision, and its description, the status line, says so.
     const update = screen.getByRole('button', { name: 'Update plot' });
     expect(update).toHaveAttribute('aria-disabled', 'true');
@@ -1396,7 +1462,7 @@ describe('AgentChatPage gating', () => {
     // is back where the user was, with no turn in between.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toBe(2);
-    expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
+    expect(screen.getByTestId('data-step')).toHaveTextContent('data v1 fits');
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
   });
@@ -1703,45 +1769,32 @@ describe('AgentChatPage card in the thread', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndPlot();
-    // Step 2: the card waits behind the pinned header.
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    // Step 2: the card stays open after its paste.
+    const before = screen.getByTestId('data-card');
+    expect(follows(screen.getByTestId('paste-item'), before)).toBe(true);
+    // Inside the polite log, the card's own changes are no news to read out.
+    expect(before).toHaveAttribute('aria-live', 'off');
 
     await attachAndSend('hours,score\n3,70\n4,80\n');
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     const stub = screen.getByTestId('data-stub');
-    expect(stub).toHaveTextContent('# earlier data · 2 rows · 2 columns · replaced below');
+    expect(within(stub).getByRole('button')).toHaveTextContent(
+      /^▸data v1 · pasted · 2 rows × 2 cols$/
+    );
     const [first, second] = screen.getAllByTestId('paste-item');
     const card = screen.getByTestId('data-card');
-    // The first paste, its stub, the plot of that data, then the new paste and its card.
+    expect(card).not.toBe(before);
+    // The first paste, its folded version, the plot of that data, then a new data chapter with
+    // the new paste and its card.
     expect(follows(first, stub)).toBe(true);
     expect(follows(stub, screen.getByText('Here is your plot.'))).toBe(true);
     expect(follows(screen.getByText('Here is your plot.'), second)).toBe(true);
     expect(follows(second, card)).toBe(true);
+    expect(chapters()).toEqual(['data', 'plot', 'data']);
+    expect(screen.getByTestId('data-card-label')).toHaveTextContent(/^data v2 · pasted · /);
     // New data nobody confirmed: step 1, its card open.
     expect(currentStep()).toBe(1);
-  });
-
-  it("opens the card at its place in the thread from the pinned header's .show(), and scrolls to it", async () => {
-    const { scroll, done } = spyScroll();
-    try {
-      localStorage.setItem(ADMIN_HINT_KEY, '1');
-      renderAt(PAGE);
-      await parseAndPlot();
-      scroll.mockClear();
-      fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-      const card = await screen.findByTestId('data-card');
-      expect(screen.getByRole('log', { name: 'Conversation' })).toContainElement(card);
-      expect(follows(screen.getByTestId('paste-item'), card)).toBe(true);
-      // Inside the polite log, the card's own changes are no news to read out.
-      expect(card).toHaveAttribute('aria-live', 'off');
-      const calls = scroll.mock.contexts.flatMap((context, index) =>
-        context === card ? [scroll.mock.calls[index][0]] : []
-      );
-      expect(calls).toEqual([{ behavior: 'smooth', block: 'start' }]);
-    } finally {
-      done();
-    }
   });
 
   it('brings the summary after a card into view while the focus is in the composer', async () => {
@@ -1901,13 +1954,13 @@ describe('AgentChatPage leave warning', () => {
     // The back link to the plot, declined: the chat and its session stay.
     fireEvent.click(backLink());
     await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
-    expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(deletes()).toHaveLength(0);
 
     // Agreed: the page goes, and the session with it.
     confirm.mockReturnValue(true);
     fireEvent.click(backLink());
-    await waitFor(() => expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByTestId('data-card')).not.toBeInTheDocument());
     expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
     await waitFor(() => expect(deletes()).toHaveLength(1));
     expect(unload()).toBe(false);
@@ -2600,8 +2653,7 @@ describe('AgentChatPage .plot_all()', () => {
     fireEvent.click(plotAllButton(), { detail: 1 });
     const panel = await screen.findByRole('region', { name: 'All libraries' });
 
-    // Opening the card is only a look: it opens, but nothing in it changes the data.
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    // The card stays open, but nothing in it changes the data.
     const card = screen.getByRole('region', { name: 'Your data' });
     const line = '# the data waits while all libraries plot it · .close() the panel to change it';
     expect(within(card).getByTestId('data-lock')).toHaveTextContent(line);
@@ -2920,7 +2972,6 @@ describe('AgentChatPage library switch and plot memory', () => {
       expect(screen.getByTestId('data-step')).toHaveTextContent('2 decisions kept in seaborn')
     );
     // A binding changed in the new library drops the confirmation the switch kept.
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     openBindings();
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
     await waitFor(() => expect(currentStep()).toBe(1));

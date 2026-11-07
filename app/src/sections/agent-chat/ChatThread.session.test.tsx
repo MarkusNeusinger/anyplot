@@ -1,8 +1,9 @@
 /**
- * The thread renders the reducer's data version items exactly as it rendered the items before
- * them: one long session, replayed through the reducer and rendered the way the page renders it
- * (`runView`, then `ChatThread`), against the items main's reducer built for the same actions
- * (captured at 2164ca3c0, before the version items).
+ * The thread renders the reducer's items in chapters (`threadModel.ts`): one long session,
+ * replayed through the reducer and rendered the way the page renders it (`runView`, then
+ * `ChatThread`), checked after every step. It has a workbook, a sheet pick, `.to_long()`, a
+ * question, four plots, a data change in step 2, an undo and a `.to_long()` below a plot, a
+ * library switch, a second paste, a table read from text and a formula.
  */
 
 import { useState } from 'react';
@@ -12,13 +13,12 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   agentReducer,
   type AgentSessionState,
-  type ChatItem,
   initialAgentState,
   type PlotVersion,
 } from 'src/hooks/useAgentSession';
 import type { DatasetChanged, DatasetParsed, DatasetProfile } from 'src/lib/agent';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { runView, shownItems } from 'src/sections/agent-chat/steps';
+import { runView } from 'src/sections/agent-chat/steps';
 import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 import { render } from 'src/test-utils';
 
@@ -277,105 +277,6 @@ const STEPS: [string, Action[]][] = [
   ],
 ];
 
-/** The items main's reducer built up to the turn that changed the data in step 2, still running. */
-const MAIN_DURING_THE_CHANGE: ChatItem[] = [
-  { id: 1, kind: 'paste', text: PASTE },
-  { id: 2, kind: 'data' },
-  { id: 3, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
-  { id: 4, kind: 'assistant', text: 'Sheet 2025: 13 rows.' },
-  { id: 5, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
-  { id: 6, kind: 'assistant', text: 'Sheet 2026: 12 rows.' },
-  { id: 7, kind: 'user', text: 'what is in Region?' },
-  { id: 8, kind: 'assistant', text: 'Four regions.' },
-  {
-    id: 9,
-    kind: 'action',
-    action: 'create_plot',
-    library: 'matplotlib',
-    label: '.create_plot() →',
-  },
-  { id: 10, kind: 'plot', version: 1 },
-  { id: 11, kind: 'assistant', text: 'Plot 1.' },
-  { id: 12, kind: 'user', text: 'a bigger title' },
-  { id: 13, kind: 'plot', version: 2 },
-  { id: 14, kind: 'assistant', text: 'Bigger now.' },
-  { id: 15, kind: 'user', text: 'only the 2026 rows' },
-  { id: 16, kind: 'assistant', text: 'Kept the 2026 rows.' },
-];
-
-/** The items main's reducer built for the whole session. */
-const MAIN_AT_THE_END: ChatItem[] = [
-  ...MAIN_DURING_THE_CHANGE.slice(0, 1),
-  { id: 2, kind: 'data_stub', rows: 48, columns: 3 },
-  ...MAIN_DURING_THE_CHANGE.slice(2),
-  {
-    id: 17,
-    kind: 'action',
-    action: 'create_plot',
-    library: 'matplotlib',
-    label: '.update_plot() →',
-  },
-  { id: 18, kind: 'plot', version: 3 },
-  { id: 19, kind: 'assistant', text: 'Plot 3.' },
-  { id: 20, kind: 'action', action: 'carry_plot', library: 'seaborn', label: '.update_plot() →' },
-  { id: 21, kind: 'plot', version: 4 },
-  { id: 22, kind: 'assistant', text: 'Plot 4.' },
-  { id: 23, kind: 'paste', text: SECOND },
-  { id: 24, kind: 'data_stub', rows: 4, columns: 2 },
-  { id: 25, kind: 'action', action: 'summarize_data', library: 'seaborn' },
-  { id: 26, kind: 'assistant', text: '4 rows.' },
-  { id: 27, kind: 'paste', text: TEXT },
-  { id: 28, kind: 'data' },
-  { id: 29, kind: 'user', text: 'y = sin(x) instead' },
-  { id: 30, kind: 'assistant', text: 'Computed 200 rows.' },
-];
-
-/**
- * The item list main's reducer built after every step, one token per item: its kind, a stub with
- * its shape, a plot with its version. The ids differ by design (the reducer gives a split stub and
- * a switch ids of their own), so the tokens pin what a fold can get wrong: which item stands
- * where, which stub shows which shape. The mount test below pins the React identities.
- */
-const SUMMARIZED = 'paste data action assistant';
-const SHEETS = `${SUMMARIZED} action assistant`;
-const ASKED = `${SHEETS} user assistant`;
-const PLOT_1 = `${ASKED} action plot:1 assistant`;
-const PLOT_2 = `${PLOT_1} user plot:2 assistant`;
-const CHANGED = `${PLOT_2} user assistant`;
-const PLOT_3 = `${CHANGED} action plot:3 assistant`;
-const PLOT_4 = `${PLOT_3} action plot:4 assistant`;
-// The second paste froze the first card into a stub of the shape it showed last.
-const FROZEN = PLOT_4.replace('paste data', 'paste stub:48x3');
-const MAIN_FOLDS: string[] = [
-  SUMMARIZED,
-  SHEETS,
-  SHEETS,
-  ASKED,
-  PLOT_1,
-  PLOT_2,
-  CHANGED,
-  CHANGED,
-  CHANGED,
-  PLOT_3,
-  PLOT_3,
-  PLOT_3,
-  PLOT_4,
-  `${FROZEN} ${SUMMARIZED}`,
-  `${FROZEN} ${SUMMARIZED} paste transcription`,
-  `${FROZEN} paste stub:4x2 action assistant paste data`,
-  `${FROZEN} paste stub:4x2 action assistant paste data user assistant`,
-];
-const tokens = (items: ChatItem[]) =>
-  items
-    .map(item =>
-      item.kind === 'data_stub'
-        ? `stub:${item.rows}x${item.columns}`
-        : item.kind === 'plot'
-          ? `plot:${item.version}`
-          : item.kind
-    )
-    .join(' ');
-
 const START: AgentSessionState = {
   ...initialAgentState('matplotlib'),
   phase: 'ready',
@@ -401,10 +302,10 @@ function Card({ part }: { part: string }) {
   return <div data-testid={`card-${part}`}>{`${part} card #${mount}`}</div>;
 }
 
-/** The thread as the page renders it: the run's view first (`runView`), with `raw` the items as they are. */
-function thread(state: AgentSessionState, raw = false) {
+/** The thread as the page renders it: the run's view first (`runView`). */
+function thread(state: AgentSessionState) {
   const view = runView(state);
-  const shown = raw || view.items === state.items ? state : { ...state, items: view.items };
+  const shown = view.items === state.items ? state : { ...state, items: view.items };
   return (
     <ChatThread
       state={shown}
@@ -419,49 +320,86 @@ function thread(state: AgentSessionState, raw = false) {
   );
 }
 
-/**
- * The thread's HTML, React's ids numbered by first appearance: a client render counts them over
- * every render of the file, and an open plot card's label names its content by one.
- */
-function html(state: AgentSessionState): string {
-  const ids = new Map<string, string>();
-  return render(thread(state)).container.innerHTML.replace(/_r_[0-9a-z]+_/g, id => {
-    if (!ids.has(id)) ids.set(id, `_id${ids.size}_`);
-    return ids.get(id) ?? id;
-  });
-}
 const cards = (container: HTMLElement) =>
   [...container.querySelectorAll('[data-testid^="card-"]')].map(card => card.textContent);
 
-describe('ChatThread: the data versions of a long session', () => {
-  it('folds the version items into the list main built, after every step', () => {
-    const steps = replay();
-    expect(steps.map(({ state }) => tokens(shownItems(state.items)))).toEqual(MAIN_FOLDS);
-    // The items themselves hold more: a stub per version and the switch.
-    expect(steps.map(({ state }) => tokens(state.items))).not.toEqual(MAIN_FOLDS);
-  });
-
-  it('renders the version items as main rendered its items, during a turn and at the end', () => {
-    const states = new Map(replay().map(({ name, state }) => [name, state]));
-    const during = states.get('a data change in step 2, its turn still running')!;
-    const end = states.get('a formula over it')!;
-    // The reducer holds more: a stub per version, the switch.
-    expect(during.items.length).toBeGreaterThan(MAIN_DURING_THE_CHANGE.length);
-    expect(end.items.length).toBeGreaterThan(MAIN_AT_THE_END.length);
-    expect(end.items.filter(next => next.kind === 'switch')).toHaveLength(1);
-
-    for (const [state, main] of [
-      [during, MAIN_DURING_THE_CHANGE],
-      [end, MAIN_AT_THE_END],
-    ] as const) {
-      mounts = 0;
-      const ours = html(state);
-      mounts = 0;
-      expect(ours).toBe(html({ ...state, items: main }));
+/**
+ * The thread as one short line per row: a chapter's line, a folded version's label (`▸ …`), the
+ * open plot card's label, the live card, a turn and a reply as their text.
+ */
+function rows(container: HTMLElement): string[] {
+  const log = container.querySelector('[role="log"]');
+  return [...(log?.children ?? [])].map(child => {
+    const label = child.querySelector(
+      '[data-testid="data-stub-label"], [data-testid="result-label"]'
+    );
+    if (label) {
+      return label.getAttribute('aria-expanded') === 'false'
+        ? `▸ ${label.textContent?.replace(/^▸/, '')}`
+        : `${label.textContent} ▾`;
     }
+    return child.textContent ?? '';
+  });
+}
+
+describe('ChatThread: the data versions of a long session', () => {
+  it('reads in chapters, a new # data for each change after a plot, older versions folded', () => {
+    mounts = 0;
+    const steps = new Map(replay().map(({ name, state }) => [name, state]));
+    const end = render(thread(steps.get('a formula over it')!));
+    expect(rows(end.container)).toEqual([
+      '# data',
+      `❯${PASTE}`,
+      // The card's own controls before the first plot, as after one (owner, 2026-11-07): the
+      // card went on at the end each time, and every version stays folded with its own summary
+      // under it.
+      '▸ data v1 · Bericht.xlsx · 13 rows × 4 cols',
+      'Sheet 2025: 13 rows.',
+      '▸ data v2 · sheet "2026" · 12 rows × 5 cols',
+      'Sheet 2026: 12 rows.',
+      '▸ data v3 · made long · 48 rows × 3 cols',
+      '❯what is in Region?',
+      'Four regions.',
+      '# plot',
+      '❯.create_plot() →# matplotlib',
+      '▸ plot v1 · matplotlib · first plot',
+      'Plot 1.',
+      '❯a bigger title',
+      '▸ plot v2 · matplotlib · a bigger title',
+      'Bigger now.',
+      // A data request after the plot: a new data chapter, the version before folded where the
+      // card stood (above, in the first chapter), the card right after the request, before its
+      // reply; its `.undo()` then took the card on to the end again.
+      '# data',
+      '❯only the 2026 rows',
+      '▸ data v4 · changed · 24 rows × 3 cols',
+      'Kept the 2026 rows.',
+      '▸ data v5 · undone · 48 rows × 3 cols',
+      '# plot',
+      '❯.update_plot() →# matplotlib',
+      '▸ plot v3 · matplotlib',
+      'Plot 3.',
+      // `.to_long()` on the card above the plot: the card went on below the plot, a new chapter.
+      '# data',
+      '▸ data v6 · made long · 48 rows × 3 cols',
+      '· plotting in seaborn from here, 2 decisions kept',
+      '# plot',
+      '❯.update_plot() →# seaborn',
+      'plot v4 · seaborn · first plot ▾',
+      'Plot 4.',
+      '# data',
+      `❯${SECOND}`,
+      '▸ data v7 · pasted · 4 rows × 2 cols',
+      '4 rows.',
+      `❯${TEXT}`,
+      '▸ data v8 · read from text · 1 row × 2 cols',
+      '❯y = sin(x) instead',
+      'data card #1',
+      'Computed 200 rows.',
+    ]);
   });
 
-  it('mounts the data card once per paste and per table read from text, as main did', () => {
+  it('mounts the data card once per paste and per table read from text', () => {
     mounts = 0;
     const steps = replay();
     const view = render(thread(START));
@@ -469,7 +407,7 @@ describe('ChatThread: the data versions of a long session', () => {
       view.rerender(thread(state));
       return cards(view.container).join(' | ');
     });
-    // Main: the card of the paste through every version and the plots, a new card for the
+    // The card of the paste through every version, the moves and the plots, a new card for the
     // second paste, the table read from text in its own frame, which `.use()` turns into the card.
     expect(seen).toEqual([
       ...Array(13).fill('data card #1'),
@@ -480,18 +418,29 @@ describe('ChatThread: the data versions of a long session', () => {
     ]);
   });
 
-  it('keeps the card mounted when a turn or a control after a plot moves it to the end', () => {
+  it('keeps the card mounted when a turn or a control after a plot moves it into a new chapter', () => {
     mounts = 0;
     const steps = new Map(replay().map(({ name, state }) => [name, state]));
-    const view = render(thread(steps.get('a typed change of the plot')!, true));
+    const view = render(thread(steps.get('a typed change of the plot')!));
     expect(cards(view.container)).toEqual(['data card #1']);
-    // The items as they are: the card below the turn that changed the data, then below the plot
-    // its `.to_long()` followed.
+    // The card after the request that changed the data, then below the plot its `.to_long()`
+    // followed, under a `# data` line of its own: the same card all along.
     for (const name of ['its end', 'a plot of it', '.to_long() below that plot']) {
-      const state = steps.get(name)!;
-      view.rerender(thread(state, true));
+      view.rerender(thread(steps.get(name)!));
       expect(cards(view.container), name).toEqual(['data card #1']);
     }
+    // The version before stays folded where the card stood, above the plot.
+    const shown = rows(view.container);
+    expect(shown.slice(-8)).toEqual([
+      'Kept the 2026 rows.',
+      '▸ data v5 · undone · 48 rows × 3 cols',
+      '# plot',
+      '❯.update_plot() →# matplotlib',
+      'plot v3 · matplotlib ▾',
+      'Plot 3.',
+      '# data',
+      'data card #1',
+    ]);
     const long = steps.get('.to_long() below that plot')!.items;
     expect(long[long.length - 1]).toMatchObject({ kind: 'data', id: 2 });
     expect(long[long.length - 2]).toMatchObject({ kind: 'assistant', text: 'Plot 3.' });
