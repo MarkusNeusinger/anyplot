@@ -1,118 +1,86 @@
 """ anyplot.ai
 line-basic: Basic Line Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-04-29
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-07
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette: first position is the single series color
 BRAND = "#009E73"
-BRAND_FILL = "rgba(0,158,115,0.12)"
 
-# Data - Monthly temperature readings (seasonal pattern)
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: x
+TEMPERATURE = "Temperature (°C)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("temperature.csv")
 np.random.seed(42)
-months = np.arange(1, 13)
-month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-temperature = 15 + 12 * np.sin((months - 4) * np.pi / 6) + np.random.randn(12) * 1.5
+month_numbers = np.arange(1, 13)
+df = pd.DataFrame(
+    {
+        MONTH: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        TEMPERATURE: 15 + 12 * np.sin((month_numbers - 4) * np.pi / 6) + np.random.randn(12) * 1.5,
+    }
+)
 
-peak_idx = int(np.argmax(temperature))
-
-# Plot
+# Plot: reads only df and the constants above
 fig = go.Figure()
-
 fig.add_trace(
     go.Scatter(
-        x=months,
-        y=temperature,
+        x=df[MONTH],
+        y=df[TEMPERATURE],
         mode="lines+markers",
-        line={"color": BRAND, "width": 5},
-        marker={"size": 18, "color": BRAND},
-        fill="tozeroy",
-        fillcolor=BRAND_FILL,
-        hovertemplate="%{customdata}<br>%{y:.1f}°C<extra></extra>",
-        customdata=month_labels,
+        line={"color": BRAND, "width": 3},
+        marker={"size": 8, "color": BRAND},
+        hovertemplate="%{x}<br>%{y:.1f}<extra></extra>",
     )
 )
 
-# Peak annotation for visual storytelling
-fig.add_annotation(
-    x=months[peak_idx],
-    y=temperature[peak_idx],
-    text=f"Peak: {temperature[peak_idx]:.1f}°C",
-    showarrow=True,
-    arrowhead=2,
-    arrowcolor=INK_SOFT,
-    arrowwidth=2,
-    ax=40,
-    ay=-50,
-    font={"size": 20, "color": INK},
-    bgcolor=ELEVATED_BG,
-    bordercolor=INK_SOFT,
-    borderwidth=1,
-    borderpad=6,
-)
-
+# Style
 fig.update_layout(
+    autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     title={
-        "text": "line-basic · plotly · anyplot.ai",
-        "font": {"size": 36, "color": INK},
+        "text": "line-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Month", "font": {"size": 28, "color": INK}},
-        "tickfont": {"size": 22, "color": INK_SOFT},
-        "tickmode": "array",
-        "tickvals": months,
-        "ticktext": month_labels,
-        "showgrid": True,
-        "gridwidth": 1,
-        "gridcolor": GRID,
+        "title": {"text": MONTH, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": False,
         "showline": True,
         "linecolor": INK_SOFT,
-        "mirror": False,
-        "zerolinecolor": GRID,
-        "showspikes": True,
-        "spikemode": "across",
-        "spikethickness": 1,
-        "spikedash": "dot",
-        "spikecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Temperature (°C)", "font": {"size": 28, "color": INK}},
-        "tickfont": {"size": 22, "color": INK_SOFT},
+        "title": {"text": TEMPERATURE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
         "gridcolor": GRID,
         "showline": True,
         "linecolor": INK_SOFT,
-        "mirror": False,
-        "zerolinecolor": GRID,
-        "rangemode": "tozero",
-        "showspikes": True,
-        "spikemode": "across",
-        "spikethickness": 1,
-        "spikedash": "dot",
-        "spikecolor": INK_SOFT,
+        "zeroline": False,
     },
     hovermode="x",
-    margin={"t": 120, "b": 100, "l": 120, "r": 60},
+    margin={"t": 80, "b": 60, "l": 80, "r": 40},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
