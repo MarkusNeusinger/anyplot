@@ -2,211 +2,166 @@
 // funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 91/100 | Created: 2026-06-10
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) -----------------------------------------
-// Meta-analysis of 18 RCTs: antihypertensive therapy vs placebo on major CV events
-// Log odds ratios (negative = protective effect) with standard errors
-const studies = [
-  // Large trials — low SE, cluster tightly around pooled effect
-  { id: "s01", x: -0.42, y: 0.10 },
-  { id: "s02", x: -0.29, y: 0.12 },
-  { id: "s03", x: -0.38, y: 0.11 },
-  // Medium trials
-  { id: "s04", x: -0.55, y: 0.22 },
-  { id: "s05", x: -0.18, y: 0.20 },
-  { id: "s06", x: -0.47, y: 0.24 },
-  { id: "s07", x: -0.33, y: 0.19 },
-  { id: "s08", x: -0.61, y: 0.26 },
-  { id: "s09", x: -0.12, y: 0.23 },
-  // Small trials — wider scatter; asymmetry: fewer on the positive side
-  { id: "s10", x: -0.72, y: 0.38 },
-  { id: "s11", x: -0.25, y: 0.35 },
-  { id: "s12", x: -0.88, y: 0.42 },
-  { id: "s13", x: -0.50, y: 0.40 },
-  { id: "s14", x: -1.04, y: 0.46 },
-  // Very small trials
-  { id: "s15", x: -0.65, y: 0.58 },
-  { id: "s16", x: -1.20, y: 0.62 },
-  { id: "s17", x: -0.40, y: 0.55 },
-  { id: "s18", x: -0.80, y: 0.60 },
+// Constants
+const Z_95 = 1.96; // two-sided 95 % normal quantile for the pseudo-confidence limits
+const NULL_EFFECT = 0; // no effect on a log odds ratio scale
+const X_PAD_SHARE = 0.05; // x padding as a share of the plotted span
+const SE_PAD_SHARE = 0.08; // standard-error padding below the least precise study
+const TITLE = "funnel-meta-analysis · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+
+// Columns: set these to your data's column names
+const EFFECT = "Log odds ratio"; // role: effect_size
+const STD_ERROR = "Standard error"; // role: std_error
+const STUDY = "Study"; // role: study
+
+// Data: replace this block with your own records, one object per row
+// 18 randomized trials of antihypertensive therapy vs placebo on major cardiovascular events
+// (negative log odds ratio = protective); the small trials lean to the protective side
+const data = [
+  { [STUDY]: "Halvorsen 2008", [EFFECT]: -0.42, [STD_ERROR]: 0.1 },
+  { [STUDY]: "Okonkwo 2011", [EFFECT]: -0.29, [STD_ERROR]: 0.12 },
+  { [STUDY]: "Brandt 2014", [EFFECT]: -0.38, [STD_ERROR]: 0.11 },
+  { [STUDY]: "Varga 2006", [EFFECT]: -0.55, [STD_ERROR]: 0.22 },
+  { [STUDY]: "Delacroix 2012", [EFFECT]: -0.18, [STD_ERROR]: 0.2 },
+  { [STUDY]: "Sundqvist 2009", [EFFECT]: -0.47, [STD_ERROR]: 0.24 },
+  { [STUDY]: "Moreau 2015", [EFFECT]: -0.33, [STD_ERROR]: 0.19 },
+  { [STUDY]: "Ishikawa 2007", [EFFECT]: -0.61, [STD_ERROR]: 0.26 },
+  { [STUDY]: "Castellano 2016", [EFFECT]: -0.12, [STD_ERROR]: 0.23 },
+  { [STUDY]: "Novak 2004", [EFFECT]: -0.72, [STD_ERROR]: 0.38 },
+  { [STUDY]: "Achterberg 2013", [EFFECT]: -0.25, [STD_ERROR]: 0.35 },
+  { [STUDY]: "Petrakis 2005", [EFFECT]: -0.88, [STD_ERROR]: 0.42 },
+  { [STUDY]: "Lindgren 2010", [EFFECT]: -0.5, [STD_ERROR]: 0.4 },
+  { [STUDY]: "Ferreira 2003", [EFFECT]: -1.04, [STD_ERROR]: 0.46 },
+  { [STUDY]: "Kowalczyk 2008", [EFFECT]: -0.65, [STD_ERROR]: 0.58 },
+  { [STUDY]: "Abernathy 2002", [EFFECT]: -1.2, [STD_ERROR]: 0.62 },
+  { [STUDY]: "Rahman 2017", [EFFECT]: -0.4, [STD_ERROR]: 0.55 },
+  { [STUDY]: "Østergaard 2006", [EFFECT]: -0.8, [STD_ERROR]: 0.6 },
 ];
 
-// Inverse-variance weighted pooled effect
-const weights = studies.map((s) => 1 / (s.y * s.y));
+// Plot: reads only data and the constants above
+const studies = data.filter((d) => Number.isFinite(d[EFFECT]) && Number.isFinite(d[STD_ERROR]) && d[STD_ERROR] > 0);
+
+// Fixed-effect (inverse-variance) pooled estimate
+const weights = studies.map((d) => 1 / d[STD_ERROR] ** 2);
 const totalWeight = weights.reduce((a, b) => a + b, 0);
-const pooledEffect = studies.reduce((sum, s, i) => sum + s.x * weights[i], 0) / totalWeight;
+const pooled = studies.reduce((sum, d, i) => sum + d[EFFECT] * weights[i], 0) / totalWeight;
 
-// Axis extents — generous padding around data range
-const maxSE = 0.72; // y-axis max (bottom)
-const xMin = -1.55;
-const xMax = 0.65;
+// The funnel opens to the padded bottom of the axis; the x extent holds the points, both limits and the null line
+const seMax = Math.max(...studies.map((d) => d[STD_ERROR])) * (1 + SE_PAD_SHARE);
+const xLow = Math.min(...studies.map((d) => d[EFFECT]), pooled - Z_95 * seMax, NULL_EFFECT);
+const xHigh = Math.max(...studies.map((d) => d[EFFECT]), pooled + Z_95 * seMax, NULL_EFFECT);
+const xPad = (xHigh - xLow) * X_PAD_SHARE;
 
-// Funnel cone: x = pooled ± 1.96 * SE at each SE level
-// At SE=0 → x = pooled (apex); at SE=maxSE → x = pooled ± 1.96*maxSE (base)
-const funnelHalfWidth = 1.96 * maxSE;
+const points = studies.map((d) => ({ id: d[STUDY], x: d[EFFECT], y: d[STD_ERROR] }));
+const subtitle = `n = ${studies.length} studies · inverse-variance pooled effect ${pooled.toFixed(2)} · funnel: pooled ± ${Z_95} × SE (pseudo 95 % limits)`;
 
-// --- Chart title (mandatory anyplot title format) ----------------------------
-const TITLE = "funnel-meta-analysis · javascript · muix · anyplot.ai";
-
-function ChartTitle() {
-  const { left, top, width } = useDrawingArea();
-  return (
-    <text
-      x={left + width / 2}
-      y={top * 0.55}
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fill={t.ink}
-      fontSize={22}
-      fontWeight="500"
-      fontFamily="sans-serif"
-    >
-      {TITLE}
-    </text>
-  );
-}
-
-// --- Funnel cone overlay (custom SVG using drawing-area + scales) ------------
-function FunnelCone() {
-  const { left, top, width, height } = useDrawingArea();
-  const xScale = useXScale();
-  const yScale = useYScale();
-
-  // SVG pixel coordinates for funnel apex (SE=0) and base (SE=maxSE)
-  const apexX = xScale(pooledEffect);
+function FunnelLimits() {
+  const xScale = useXScale() as unknown as (v: number) => number;
+  const yScale = useYScale() as unknown as (v: number) => number;
+  const apexX = xScale(pooled);
   const apexY = yScale(0);
-  const baseY = yScale(maxSE);
-  const baseXLeft = xScale(pooledEffect - funnelHalfWidth);
-  const baseXRight = xScale(pooledEffect + funnelHalfWidth);
-
-  // Clamp to drawing area
-  const clampX = (x) => Math.max(left, Math.min(left + width, x));
-
-  const cLeft = clampX(baseXLeft);
-  const cRight = clampX(baseXRight);
-
-  const lineStyle = {
-    stroke: t.inkSoft,
-    strokeWidth: 2,
-    strokeDasharray: "8 5",
-    fill: "none",
-    opacity: 0.8,
-  };
-
+  const baseY = yScale(seMax);
+  const leftX = xScale(pooled - Z_95 * seMax);
+  const rightX = xScale(pooled + Z_95 * seMax);
   return (
     <g>
-      {/* Funnel left boundary: apex → lower-left */}
-      <line
-        x1={apexX}
-        y1={apexY}
-        x2={cLeft}
-        y2={baseY}
-        style={lineStyle}
-      />
-      {/* Funnel right boundary: apex → lower-right */}
-      <line
-        x1={apexX}
-        y1={apexY}
-        x2={cRight}
-        y2={baseY}
-        style={lineStyle}
-      />
-      {/* Shaded funnel region (subtle) */}
-      <polygon
-        points={`${apexX},${apexY} ${cLeft},${baseY} ${cRight},${baseY}`}
-        fill={t.palette[0]}
-        fillOpacity={0.04}
-      />
+      <polygon points={`${apexX},${apexY} ${leftX},${baseY} ${rightX},${baseY}`} fill={t.inkSoft} fillOpacity={0.07} />
+      <line x1={apexX} y1={apexY} x2={leftX} y2={baseY} stroke={t.inkSoft} strokeWidth={2} strokeDasharray="10 6" />
+      <line x1={apexX} y1={apexY} x2={rightX} y2={baseY} stroke={t.inkSoft} strokeWidth={2} strokeDasharray="10 6" />
     </g>
   );
 }
 
-// --- Chart (default-exported component) -------------------------------------
 export default function Chart() {
-  const w = window.ANYPLOT_SIZE.width;
-  const h = window.ANYPLOT_SIZE.height;
-
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ScatterChart
-      width={w}
-      height={h}
-      skipAnimation
-      margin={{ top: 80, right: 60, bottom: 90, left: 90 }}
-      xAxis={[
-        {
-          id: "xMain",
-          scaleType: "linear",
-          min: xMin,
-          max: xMax,
-          label: "Log Odds Ratio",
-          tickNumber: 7,
-          tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
-          labelStyle: { fill: t.ink, fontSize: 16 },
-        },
-      ]}
-      yAxis={[
-        {
-          id: "yMain",
-          scaleType: "linear",
-          min: 0,
-          max: maxSE,
-          reverse: true,
-          label: "Standard Error",
-          tickNumber: 6,
-          tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
-          labelStyle: { fill: t.ink, fontSize: 16 },
-        },
-      ]}
-      series={[
-        {
-          type: "scatter",
-          data: studies,
-          color: t.palette[0],
-          markerSize: 9,
-          label: "Individual study",
-        },
-      ]}
-      grid={{ vertical: true, horizontal: true }}
-      slotProps={{
-        legend: { hidden: true },
-      }}
-    >
-      {/* Mandatory plot title */}
-      <ChartTitle />
-
-      {/* Funnel cone lines drawn in data-coordinate space */}
-      <FunnelCone />
-
-      {/* Pooled effect — solid vertical reference line */}
-      <ChartsReferenceLine
-        x={pooledEffect}
-        lineStyle={{
-          stroke: t.palette[0],
-          strokeWidth: 2.5,
-          strokeDasharray: "0",
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
+      </Box>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H}
+        skipAnimation
+        margin={{ top: 16, right: 56, bottom: 20, left: 24 }}
+        series={[
+          {
+            type: "scatter",
+            id: "studies",
+            label: STUDY,
+            data: points,
+            color: t.palette[0],
+            markerSize: 8,
+            valueFormatter: (v) => `${v?.id}: ${EFFECT} ${v?.x}, ${STD_ERROR} ${v?.y}`,
+          },
+        ]}
+        xAxis={[
+          {
+            scaleType: "linear",
+            min: xLow - xPad,
+            max: xHigh + xPad,
+            label: EFFECT,
+            height: 68,
+            tickNumber: 10,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: 0,
+            max: seMax,
+            reverse: true,
+            label: STD_ERROR,
+            width: 84,
+            tickNumber: 7,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
-        labelStyle={{ fill: t.ink, fontSize: 13 }}
-        label={`Pooled: ${pooledEffect.toFixed(2)}`}
-        labelAlign="start"
-      />
-
-      {/* Null effect (log OR = 0) — dashed reference line */}
-      <ChartsReferenceLine
-        x={0}
-        lineStyle={{
-          stroke: t.inkSoft,
-          strokeWidth: 1.5,
-          strokeDasharray: "6 4",
-        }}
-        labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
-        label="Null (OR=1)"
-        labelAlign="end"
-      />
-    </ScatterChart>
+      >
+        <ChartsGrid vertical horizontal />
+        <FunnelLimits />
+        {pooled !== NULL_EFFECT && (
+          <ChartsReferenceLine
+            x={NULL_EFFECT}
+            label={`Null effect ${NULL_EFFECT}`}
+            labelAlign="end"
+            lineStyle={{ stroke: t.inkSoft, strokeWidth: 2, strokeDasharray: "3 5" }}
+            labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
+          />
+        )}
+        <ChartsReferenceLine
+          x={pooled}
+          label={`Pooled ${pooled.toFixed(2)}`}
+          labelAlign="end"
+          lineStyle={{ stroke: t.ink, strokeWidth: 2.5 }}
+          labelStyle={{ fill: t.ink, fontSize: 14 }}
+        />
+        <ScatterPlot />
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
+    </Box>
   );
 }
