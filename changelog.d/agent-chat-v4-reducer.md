@@ -12,7 +12,7 @@
   below it too. A library switch adds an item with the decisions it carries,
   and a typed turn carries what it changed (data, plot, switch, language,
   memory, or nothing, which marks a question), read from the stream until the
-  server names it. `threadModel.ts` reads chapters, folds and counts from the items
-  for the chapter lines to come, and the thread still renders one card per
-  paste: a long session replayed through both reducers renders byte for byte
-  as before.
+  server names it. `threadModel.ts` reads chapters, folds and counts from the
+  items for the chapter lines to come, and the thread still renders one card
+  per paste: a long session replayed through both reducers renders byte for
+  byte as before. (#12598)
