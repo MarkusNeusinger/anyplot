@@ -150,6 +150,15 @@ class TestTheGuard:
         for name in WRITES:
             assert f"`{name}`" in rule, name
 
+    def test_the_prompt_binds_only_a_role_the_turns_own_change_left_open(self) -> None:
+        """Prep eval of 2026-11-07: with the binding rule unscoped, the root filled a role that was open before the turn
+        with a `row_number` on a plain "drop the Total row" (7 of 8 case runs from #12593 on, 0 of 9 before it)."""
+        rule = next(line for line in root_instruction().splitlines() if "you can bind yourself" in line)
+
+        assert "A required role that this turn's data change left open, one that had a column before the change" in rule
+        assert "A required role that was open before the turn is no such role" in rule
+        assert '"Conversions for open roles"' in rule
+
 
 DERIVE = {"op": "derive", "name": "Score per Hour", "how": "ratio", "columns": ["Exam Score", "Study Hours"]}
 REBOUND = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Score per Hour"}]
