@@ -4,152 +4,153 @@
 // Quality: 94/100 | Created: 2026-08-11
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG) ------------------------------------
-// Systolic blood pressure (mmHg) for 70 patients, each measured once with a
-// new oscillometric cuff and once with the mercury-column reference standard.
-let seed = 42;
-function nextRandom() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
+// Constants
+const LOA_Z = 1.96; // 95% limits of agreement: bias ± 1.96 SD of the differences
+const X_PAD_SHARE = 0.04; // axis padding as a share of the data span
+const Y_PAD_SHARE = 0.08;
+
+// Columns: set these to your data's column names
+const CUFF = "Oscillometric cuff (mmHg)"; // role: method1
+const REFERENCE = "Mercury reference (mmHg)"; // role: method2
+
+// Data: replace this block with your own records, one object per row
+// Systolic blood pressure of 70 patients, each measured once with a new
+// oscillometric cuff and once with the mercury-column reference standard.
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const gaussian = () => {
+    const u1 = Math.max(rand(), 1e-9);
+    const u2 = rand();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  };
+  const reference = Array.from({ length: 70 }, () => 122 + gaussian() * 15);
+  // The cuff reads slightly high and its scatter widens with the pressure
+  return reference.map((value) => ({
+    [CUFF]: value + 3.4 + gaussian() * (4 + value * 0.02),
+    [REFERENCE]: value,
+  }));
+})();
+
+// Plot: reads only data and the constants above
+const n = data.length;
+const points = data.map((d, i) => ({
+  id: i,
+  x: (d[CUFF] + d[REFERENCE]) / 2,
+  y: d[CUFF] - d[REFERENCE],
+}));
+const bias = points.reduce((sum, p) => sum + p.y, 0) / n;
+const sdDiff = Math.sqrt(points.reduce((sum, p) => sum + (p.y - bias) ** 2, 0) / (n - 1));
+const upperLimit = bias + LOA_Z * sdDiff;
+const lowerLimit = bias - LOA_Z * sdDiff;
+
+const xs = points.map((p) => p.x);
+const xMin = Math.min(...xs);
+const xMax = Math.max(...xs);
+const xPad = (xMax - xMin) * X_PAD_SHARE;
+const ys = [...points.map((p) => p.y), upperLimit, lowerLimit];
+const yMin = Math.min(...ys);
+const yMax = Math.max(...ys);
+const yPad = (yMax - yMin) * Y_PAD_SHARE;
+
+// Axis titles name both methods; the shared unit comes from the column names
+const cuffName = CUFF.replace(/\s*\([^)]*\)\s*$/, "");
+const referenceName = REFERENCE.replace(/\s*\([^)]*\)\s*$/, "");
+const unit = CUFF.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const unitSuffix = unit ? ` ${unit}` : "";
+const xLabel = `Mean of ${cuffName} and ${referenceName}${unit ? ` (${unit})` : ""}`;
+const yLabel = `${cuffName} − ${referenceName}${unit ? ` (${unit})` : ""}`;
+
+const references = [
+  { value: upperLimit, name: `+${LOA_Z} SD`, color: t.inkSoft, weight: 400, dash: "8 6", stroke: 1.75 },
+  { value: bias, name: "Bias", color: t.ink, weight: 600, dash: undefined, stroke: 2.5 },
+  { value: lowerLimit, name: `−${LOA_Z} SD`, color: t.inkSoft, weight: 400, dash: "8 6", stroke: 1.75 },
+];
+
+const TITLE = "bland-altman-basic · javascript · muix · anyplot.ai";
+const subtitle = `n = ${n} paired readings · SD of the differences ${sdDiff.toFixed(1)}${unitSuffix}`;
+const TITLE_H = 76;
+
+function LimitLabels() {
+  const yScale = useYScale();
+  const area = useDrawingArea();
+  const x = area.left + area.width + 14;
+  return (
+    <g>
+      {references.map((r) => (
+        <text key={r.name} x={x} y={yScale(r.value)} fill={r.color} fontSize={15} fontWeight={r.weight}>
+          <tspan x={x} dy="-0.25em">
+            {r.name}
+          </tspan>
+          <tspan x={x} dy="1.25em">
+            {`${r.value.toFixed(1).replace("-", "−")}${unitSuffix}`}
+          </tspan>
+        </text>
+      ))}
+    </g>
+  );
 }
-function gaussian() {
-  const u1 = Math.max(nextRandom(), 1e-9);
-  const u2 = nextRandom();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
 
-const PATIENT_COUNT = 70;
-const reference = Array.from({ length: PATIENT_COUNT }, () => 122 + gaussian() * 15);
-// The cuff reads slightly high on average, and its scatter widens a little
-// for higher pressures — a realistic proportional-error pattern.
-const cuff = reference.map((value) => value + 3.4 + gaussian() * (4 + value * 0.02));
-
-const meanValues = reference.map((value, i) => (value + cuff[i]) / 2);
-const diffValues = reference.map((value, i) => cuff[i] - value);
-
-const bias = diffValues.reduce((sum, d) => sum + d, 0) / PATIENT_COUNT;
-const variance =
-  diffValues.reduce((sum, d) => sum + (d - bias) ** 2, 0) / (PATIENT_COUNT - 1);
-const stdDev = Math.sqrt(variance);
-const upperLimit = bias + 1.96 * stdDev;
-const lowerLimit = bias - 1.96 * stdDev;
-
-// Points outside the ±1.96 SD limits of agreement get an accent treatment —
-// they're the story the reviewer of a Bland-Altman plot looks for first.
-const withinLimits = [];
-const outsideLimits = [];
-meanValues.forEach((mean, i) => {
-  const diff = diffValues[i];
-  const point = { x: mean, y: diff, id: i };
-  if (diff > upperLimit || diff < lowerLimit) {
-    outsideLimits.push(point);
-  } else {
-    withinLimits.push(point);
-  }
-});
-
-const TITLE_HEIGHT = 66;
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        display: "flex",
-        flexDirection: "column",
-        paddingTop: "20px",
-      }}
-    >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 26,
-          fontWeight: 600,
-          textAlign: "center",
-          lineHeight: 1.2,
-        }}
-      >
-        bland-altman-basic · javascript · muix · anyplot.ai
-      </Typography>
+    <div style={{ width, height, display: "flex", flexDirection: "column", background: t.pageBg }}>
+      <div style={{ height: TITLE_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 10 }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
+      </div>
       <ScatterChart
         width={width}
-        height={height - TITLE_HEIGHT}
+        height={height - TITLE_H}
         skipAnimation
-        series={[
-          {
-            id: "within",
-            data: withinLimits,
-            label: "Within limits of agreement",
-            markerSize: 7,
-            color: "rgba(0, 158, 115, 0.6)",
-          },
-          {
-            id: "outside",
-            data: outsideLimits,
-            label: "Outside limits of agreement",
-            markerSize: 11,
-            color: "rgba(174, 48, 48, 0.85)",
-          },
-        ]}
+        hideLegend
+        grid={{ horizontal: true, vertical: true }}
+        series={[{ id: "pairs", data: points, markerSize: 7, color: t.palette[0] }]}
         xAxis={[
           {
-            label: "Mean of Cuff & Reference (mmHg)",
+            min: xMin - xPad,
+            max: xMax + xPad,
+            label: xLabel,
+            height: 64,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
-            label: "Difference: Cuff − Reference (mmHg)",
+            min: yMin - yPad,
+            max: yMax + yPad,
+            label: yLabel,
+            width: 84,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
-        margin={{ left: 100, right: 140, top: 20, bottom: 90 }}
-        grid={{ horizontal: true, vertical: true }}
-        slotProps={{
-          legend: {
-            position: { vertical: "top", horizontal: "middle" },
-            direction: "row",
-            labelStyle: { fontSize: 13, fill: t.inkSoft },
-          },
-        }}
+        margin={{ left: 24, right: 150, top: 16, bottom: 16 }}
         sx={{
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
-          "& circle": { stroke: t.pageBg, strokeWidth: 1 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiScatterChart-marker": { fillOpacity: 0.6, stroke: t.pageBg, strokeWidth: 1 },
         }}
       >
-        <ChartsReferenceLine
-          y={bias}
-          label={`Bias: ${bias.toFixed(1)} mmHg`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.ink, strokeWidth: 2.5 }}
-          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 600 }}
-        />
-        <ChartsReferenceLine
-          y={upperLimit}
-          label={`+1.96 SD: ${upperLimit.toFixed(1)}`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.75 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
-        />
-        <ChartsReferenceLine
-          y={lowerLimit}
-          label={`−1.96 SD: ${lowerLimit.toFixed(1)}`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.75 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
-        />
+        {references.map((r) => (
+          <ChartsReferenceLine
+            key={r.name}
+            y={r.value}
+            lineStyle={{ stroke: r.color, strokeWidth: r.stroke, strokeDasharray: r.dash }}
+          />
+        ))}
+        <LimitLabels />
       </ScatterChart>
-    </Box>
+    </div>
   );
 }
