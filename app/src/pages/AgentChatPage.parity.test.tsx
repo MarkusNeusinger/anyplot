@@ -282,6 +282,7 @@ const STATES: Record<string, State> = {
     open: 'ok',
     roles: true,
     reach: async () => {
+      await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
       fireEvent.click(
         await screen.findByRole('button', { name: 'Show the matplotlib catalogue plot large' })
       );
