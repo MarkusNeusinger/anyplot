@@ -988,6 +988,24 @@ describe('DataPanel version', () => {
     fireEvent.pointerDown(document.body);
     again.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
     expect(document.body).toHaveFocus();
+    again.unmount();
+
+    // The keyboard visited `.change()` before; the press names `.undo()`, which can still go
+    // back one more step, so the focus lands on it, never on the control visited earlier.
+    const visited = render(plain(snapshot(2, 'turn', 'changed'), false, changedState(3)));
+    const card = within(screen.getByTestId('data-card'));
+    const change = card.getByRole('button', { name: 'Change the bindings' });
+    change.focus();
+    change.blur();
+    fireEvent.pointerDown(card.getByRole('button', { name: '.undo()' }));
+    visited.rerender(
+      plain(
+        snapshot(3, 'undo', 'undone'),
+        true,
+        changedState(2, { dataChange: { kind: 'undone', version: 2 } })
+      )
+    );
+    expect(card.getByRole('button', { name: '.undo()' })).toHaveFocus();
   });
 
   it('never pulls the focus back into the card after a press on the page outside it', async () => {

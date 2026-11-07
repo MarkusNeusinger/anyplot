@@ -43,6 +43,9 @@ export interface FollowFocus {
   onBlur: (event: React.FocusEvent<HTMLElement>) => void;
 }
 
+/** The elements a press on the card names as the control the user used. */
+const CONTROLS = 'button, select, input, textarea, a[href], [tabindex]';
+
 /** A control the focus should not land on now: a disabled button or select, or `aria-disabled`. */
 function inert(element: HTMLElement): boolean {
   return (
@@ -79,12 +82,21 @@ export function useFollowFocus(version: DataSnapshot | undefined): FollowFocus {
   }, [n, own]);
 
   // A press anywhere outside the card is the user moving on, also where it gives no element the
-  // focus (the page's background), so a later move never pulls the focus back into the card.
+  // focus (the page's background), so a later move never pulls the focus back into the card. A
+  // press on a control inside the card names that control, also where the press gives it no focus
+  // (a button in Safari), so the focus lands on it as after a click in Chrome, never on a control
+  // the keyboard visited before.
   useEffect(() => {
     const press = (event: PointerEvent) => {
-      const inside = event.target instanceof Node && !!cardRef.current?.contains(event.target);
+      const card = cardRef.current;
+      const inside = event.target instanceof Element && !!card?.contains(event.target);
       away.current = !inside;
-      if (!inside) held.current = null;
+      if (!inside) {
+        held.current = null;
+        return;
+      }
+      const control = (event.target as Element).closest<HTMLElement>(CONTROLS);
+      if (control && card?.contains(control)) held.current = control;
     };
     document.addEventListener('pointerdown', press, true);
     return () => document.removeEventListener('pointerdown', press, true);

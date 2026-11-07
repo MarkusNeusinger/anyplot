@@ -49,12 +49,15 @@ const borderLabelSx = {
   maxWidth: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 20px)' },
 } as const;
 
-/** A label the focus can land on from code: the toggle's focus ring, no hover, since it does nothing. */
+/**
+ * A label the focus can land on from code: the toggle's focus ring, no hover, since it does
+ * nothing. The ring shows on every focus, not only a keyboard one: the focus lands here after the
+ * card moved, also after a mouse click, and the ring shows where the card went (WCAG 2.4.7).
+ */
 const focusableLabelSx = {
   ...borderLabelSx,
   borderRadius: '4px',
-  '&:focus': { outline: 'none' },
-  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
+  '&:focus': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
 } as const;
 
 /** The label as a toggle on the border: the same place, a button's hover and focus ring. */
