@@ -226,6 +226,11 @@ async def session_context(context: ReadonlyContext) -> str:
             # a summary turn's that failed after them; the lines name the user's columns.
             lines.append(f"- {MADE_HEADING.format(count=len(made.lines))}")
             lines.append(fence("user_data", "\n".join(made.lines)))
+        # After the root's own data change in this turn the candidates are no longer listed, for the rest of the turn:
+        # recomputed on the new version, the row-number line came back on the next call worded as certain, and the
+        # root added a `row_number` nobody asked for to a chain of drop, aggregate and sort (prep eval, 2026-11-07).
+        # The made lines above stay, since the summary names them; the next turn lists the candidates again.
+        changed_now = ledger is not None and bool(ledger.prep_ops)
         found = (
             candidates(
                 view.bindings,
@@ -236,7 +241,7 @@ async def session_context(context: ReadonlyContext) -> str:
                 keep_text=dataset.text_columns,
                 cache=dataset.dry_runs,
             )
-            if check.missing_roles
+            if check.missing_roles and not changed_now
             else []
         )
         if found:
