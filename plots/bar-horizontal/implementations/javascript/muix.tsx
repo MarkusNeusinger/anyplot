@@ -8,109 +8,109 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// "muted" semantic anchor (other / rest) — not in ANYPLOT_TOKENS, so it's
-// derived the same way the style guide defines it: theme-adaptive gray.
-const MUTED = t.theme === "light" ? "#6B6A63" : "#A8A79F";
+// Constants
+const TITLE = "Feature Requests by Customer Votes · bar-horizontal · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const PAD_SHARE = 0.08; // room beyond the longest bar for its value label
+// The style guide's muted anchor (other / rest): the bars behind the accented leader
+const MUTED = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
 
-// Fixed (theme-independent) label colors — the bar fills below don't flip
-// with theme, so label contrast is chosen per fill, not via t.ink/t.inkSoft.
-const LABEL_ON_BRAND = "#1A1A17"; // dark ink — reads on the brand-green bar
-const LABEL_ON_MUTED = t.pageBg; // page background — reads on the muted-gray bars (adapts per theme)
+// Columns: set these to your data's column names
+const FEATURE_REQUEST = "Feature request"; // role: category
+const VOTES = "Customer votes"; // role: value
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Product roadmap survey: feature requests ranked by customer votes, most
-// requested first. Long descriptive labels are exactly why this ranking is
-// horizontal rather than vertical — they'd collide or need rotation otherwise.
-const FEATURES = [
-  "Dark mode support",
-  "Offline data sync",
-  "Advanced search filters",
-  "Bulk CSV export",
-  "Customizable dashboards",
-  "Real-time collaboration",
-  "Mobile app redesign",
-  "API rate limit increase",
+// Data: replace this block with your own records, one object per row
+// Product roadmap survey: feature requests and the votes each received
+const data = [
+  { [FEATURE_REQUEST]: "Dark mode support", [VOTES]: 842 },
+  { [FEATURE_REQUEST]: "Offline data sync", [VOTES]: 715 },
+  { [FEATURE_REQUEST]: "Advanced search filters", [VOTES]: 693 },
+  { [FEATURE_REQUEST]: "Bulk CSV export", [VOTES]: 588 },
+  { [FEATURE_REQUEST]: "Customizable dashboards", [VOTES]: 511 },
+  { [FEATURE_REQUEST]: "Real-time collaboration", [VOTES]: 467 },
+  { [FEATURE_REQUEST]: "Mobile app redesign", [VOTES]: 398 },
+  { [FEATURE_REQUEST]: "API rate limit increase", [VOTES]: 312 },
 ];
-const VOTES = [842, 715, 693, 588, 511, 467, 398, 312];
 
-// Chart renders category index 0 at the top of the y-axis, so the array
-// above (already sorted highest → lowest) reads as a top-to-bottom ranking.
-// Only the top request is highlighted brand green; the rest use the "muted"
-// semantic anchor (other / rest) so the eye lands on the leading request.
-const BAR_COLORS = FEATURES.map((_, i) => (i === 0 ? t.palette[0] : MUTED));
-const LABEL_COLORS = FEATURES.map((_, i) => (i === 0 ? LABEL_ON_BRAND : LABEL_ON_MUTED));
+// Plot: reads only data and the constants above
+// A ranking: most votes first, so the leader sits at the top
+const rows = data.filter((d) => d[VOTES] != null).sort((a, b) => b[VOTES] - a[VOTES]);
+const requests = rows.map((d) => d[FEATURE_REQUEST]);
+const votes = rows.map((d) => d[VOTES]);
+const maxVotes = Math.max(...votes);
+
+// Accent on the most-voted request; every other bar takes the muted anchor
+const barColors = votes.map((v) => (v === maxVotes ? t.palette[0] : MUTED));
+
+const SUBTITLE = [
+  `${rows.length} requests ranked by ${VOTES.toLowerCase()}`,
+  rows.length > 1
+    ? `${requests[0]} leads with ${votes[0]}, ${votes[0] - votes[1]} ahead of ${requests[1]}`
+    : null,
+]
+  .filter(Boolean)
+  .join(" · ");
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
-  const H = window.ANYPLOT_SIZE.height; // 900 CSS px
-  const CHART_TOP = 84;
-
-  const title = "Feature Requests by Customer Votes · bar-horizontal · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round(22 * 67 / title.length) : 22;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      {/* Title + subtitle */}
-      <Box sx={{ position: "absolute", top: 24, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>{title}</Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 14, mt: 0.5 }}>
-          Dark mode leads a 2026 product roadmap survey of 1,842 respondents
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
         </Typography>
       </Box>
-
-      {/* Bar chart */}
-      <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          layout="horizontal"
-          skipAnimation
-          borderRadius={4}
-          xAxis={[
-            {
-              label: "Customer Votes",
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              disableTicks: true,
-              max: 950,
-            },
-          ]}
-          yAxis={[
-            {
-              scaleType: "band",
-              data: FEATURES,
-              colorMap: { type: "ordinal", values: FEATURES, colors: BAR_COLORS },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              disableTicks: true,
-              categoryGapRatio: 0.35,
-            },
-          ]}
-          series={[
-            {
-              id: "votes",
-              label: "Votes",
-              data: VOTES,
-              valueFormatter: (v) => `${v} votes`,
-            },
-          ]}
-          barLabel="value"
-          slotProps={{
-            barLabel: (ownerState) => ({
-              style: {
-                fontSize: 13,
-                fontWeight: 600,
-                fill: LABEL_COLORS[ownerState.dataIndex],
-              },
-            }),
-            legend: { hidden: true },
-          }}
-          margin={{ top: 14, right: 60, bottom: 60, left: 230 }}
-          sx={{
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        />
-      </Box>
+      <BarChart
+        width={width}
+        height={height - TITLE_H}
+        layout="horizontal"
+        skipAnimation
+        hideLegend
+        borderRadius={4}
+        grid={{ vertical: true }}
+        series={[
+          {
+            id: "votes",
+            label: VOTES,
+            data: votes,
+            barLabel: "value",
+            barLabelPlacement: "outside",
+          },
+        ]}
+        xAxis={[
+          {
+            min: 0,
+            max: maxVotes * (1 + PAD_SHARE),
+            label: VOTES,
+            height: 64,
+            tickNumber: 8,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: requests,
+            colorMap: { type: "ordinal", values: requests, colors: barColors },
+            width: 240,
+            categoryGapRatio: 0.35,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 15, fill: t.ink },
+          },
+        ]}
+        margin={{ top: 16, right: 48, bottom: 8, left: 24 }}
+        sx={{
+          "& .MuiBarChart-label": { fill: t.ink, fontSize: 15, fontWeight: 600 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      />
     </Box>
   );
 }
