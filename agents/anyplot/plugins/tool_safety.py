@@ -1,6 +1,6 @@
 """ToolSafety: which agent may call which tool, with which arguments, and what comes back.
 
-* `before_tool_callback`: a per-agent allowlist (the root's ten session tools and its
+* `before_tool_callback`: a per-agent allowlist (the root's twelve session tools and its
   `plot_pipeline` workflow; none for the adapters and the reviewer); Pydantic
   validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
@@ -32,6 +32,10 @@
   as a category label, or the `https://` to strip off a column of links. A column reference (`column`,
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
+  On a turn of the page's plot buttons (`RequestLedger.plot_action`: `create_plot`, `carry_plot`) only the reads and
+  `plot_pipeline` pass (`PLOT_ACTION_TOOLS`); every tool that would store a change answers `plot_as_confirmed`. The
+  click confirmed the data with its bindings as shown, and the confirmation is a fingerprint of both, so a binding the
+  root added in that turn voided it and the run stopped on `data_unconfirmed` (persona tests of 2026-11-06).
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
   `get_current_code`, 16 KB for `prepare_data`, `query_data`, `generate_data`, `run_data_code` and `plot_pipeline`, 25 KB
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
@@ -76,6 +80,11 @@ DATA_CODE_TOOL = "run_data_code"
 SWITCH_TOOL = "switch_plot"
 """A turn has either a plot run or a switch the page carries out, never both (`switch_requested`,
 `plot_already_run`)."""
+PLOT_ACTION_TOOLS = frozenset({"get_dataset_profile", "get_spec_brief", "get_current_code", QUERY_TOOL, PIPELINE_TOOL})
+"""What a plot button's turn may call: the reads and the plot run. An allowlist, so a tool added later that stores
+something is refused there until it is listed: the click confirmed what the panel showed, and the turn plots it as it is
+(the data, the bindings, the language, the plot memory and the library)."""
+PLOT_ACTION_REFUSAL = "plot_as_confirmed"
 MAX_DATA_CODE_CALLS = 2
 """`run_data_code` calls per invocation: the first, and one retry after the validator's findings."""
 MAX_DATA_CODE_CHARS = 6_000
@@ -360,6 +369,9 @@ class ToolSafetyPlugin(BasePlugin):
             ledger = ledger_for(tool_context.invocation_id)
             agent = tool_context.agent_name
             verdict = self.check(tool.name, tool_args, agent)
+            if verdict != "tool_not_allowed" and ledger.plot_action and tool.name not in PLOT_ACTION_TOOLS:
+                # Before the arguments' verdict: a fixed call would be refused all the same, so the root never retries.
+                verdict = PLOT_ACTION_REFUSAL
             if verdict is None and tool.name == PIPELINE_TOOL:
                 if ledger.pipeline_calls >= 1:
                     verdict = "one_pipeline_per_turn"
@@ -393,7 +405,10 @@ class ToolSafetyPlugin(BasePlugin):
 
     @staticmethod
     def check(name: str, arguments: dict[str, Any], agent: str) -> ErrorCode | None:
-        """The refusal code for a call, or None: allowlist, arguments, no URL or path (also used by Budget)."""
+        """The refusal code for a call, or None: allowlist, arguments, no URL or path (also used by Budget).
+
+        The bounds of the turn (a plot button's `PLOT_ACTION_TOOLS`, the per-turn pipeline and data-run counts) are
+        `before_tool_callback`'s: a call this passes can still be refused there."""
         if name not in ALLOWED_TOOLS.get(agent, frozenset()):
             return "tool_not_allowed"
         try:

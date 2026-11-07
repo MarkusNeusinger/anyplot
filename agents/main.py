@@ -348,6 +348,9 @@ run takes no switch's carry but applies the plot memory, which only the user cle
 the page's "plot in <library> with your
 decisions" after a switch: its run takes the carry and the memory (`switch.py`); the root calls the same bare
 `plot_pipeline` for both."""
+PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot"})
+"""The actions of the page's plot buttons: the click confirmed the data and bindings as shown, so the turn plots them
+as they are (`RequestLedger.plot_action`, the guard in `plugins/tool_safety.py`)."""
 ACTION_LANGUAGE_LINE = "Reply in {name}, the session language."
 """Appended to an action message when the session language is a known one other than English (`english_name`)."""
 ACTION_MESSAGE = ACTION_MESSAGES["create_plot"]
@@ -2474,6 +2477,7 @@ async def post_message(
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
         fresh_start=body.action == "create_plot",
+        plot_action=body.action in PLOT_ACTIONS,
     )
     _stamp(ledger, view, session)
     ledger.turn += 1  # this turn's number: the user turns before it, plus one
