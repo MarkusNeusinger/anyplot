@@ -3,182 +3,153 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 87/100 | Created: 2026-06-09
 //# anyplot-orientation: square
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Utilities ---------------------------------------------------------------
+// Constants
+const REFERENCE = "normal"; // role: theoretical_distribution; its CDF is evaluated with the sample's mean and sd
+const AS_P = 0.2316419; // Abramowitz & Stegun 26.2.17 approximation of the normal CDF
+const AS_B = [0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429];
+const PROBABILITY_TICKS = Array.from({ length: 11 }, (_, i) => i / 10); // the fixed 0–1 domain in steps of 0.1
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 40;
+const AXIS_BAND = 72; // y-axis width and x-axis height, px
+const MARGIN = { top: 16, right: 40, bottom: 24, left: 16 }; // left + band + right = top + band + bottom keeps the plot area square
 
-function lcgRng(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
+// Columns: set these to your data's column names
+const LEAD_TIME = "Delivery lead time (days)"; // role: observed
 
-function boxMuller(u1, u2) {
-  const mag = Math.sqrt(-2 * Math.log(Math.max(u1, 1e-10)));
-  return [mag * Math.cos(2 * Math.PI * u2), mag * Math.sin(2 * Math.PI * u2)];
-}
+// Data: replace this block with your own records, one object per row
+// 200 supplier lead times, mildly right-skewed (log-normal), from fixed-seed mulberry32 uniforms and Box-Muller
+let rngState = 42;
+const uniforms = Array.from({ length: 200 }, () => {
+  rngState = (rngState + 0x6d2b79f5) | 0;
+  let z = Math.imul(rngState ^ (rngState >>> 15), 1 | rngState);
+  z = (z + Math.imul(z ^ (z >>> 7), 61 | z)) ^ z;
+  return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+});
+const data = Array.from({ length: 200 }, (_, i) => {
+  const pair = i - (i % 2);
+  const radius = Math.sqrt(-2 * Math.log(Math.max(uniforms[pair], 1e-10)));
+  const angle = 2 * Math.PI * uniforms[pair + 1];
+  const z = i % 2 === 0 ? radius * Math.cos(angle) : radius * Math.sin(angle);
+  return { [LEAD_TIME]: 4 * Math.exp(0.35 * z) };
+});
 
-// Standard normal CDF (Abramowitz & Stegun 26.2.17)
-function normCDF(x) {
-  const p = 0.2316419;
-  const b = [0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429];
-  const k = 1.0 / (1.0 + p * Math.abs(x));
-  const poly = k * (b[0] + k * (b[1] + k * (b[2] + k * (b[3] + k * b[4]))));
-  const phi = Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
-  return x >= 0 ? 1.0 - phi * poly : phi * poly;
-}
+// Plot: reads only data and the constants above
+const values = data.map((d) => d[LEAD_TIME]).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+const n = values.length;
+const mean = values.reduce((a, b) => a + b, 0) / n;
+const sd = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1));
 
-// --- Data (200 samples from a mildly right-skewed log-normal distribution) ---
+// Empirical plotting positions i / (n + 1) against the fitted normal CDF at the same value
+const points = values.map((v, i) => {
+  const z = (v - mean) / sd;
+  const k = 1 / (1 + AS_P * Math.abs(z));
+  const tail = (Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI)) * k * (AS_B[0] + k * (AS_B[1] + k * (AS_B[2] + k * (AS_B[3] + k * AS_B[4]))));
+  return { x: z >= 0 ? 1 - tail : tail, y: (i + 1) / (n + 1), id: i };
+});
 
-const rng = lcgRng(42);
-const samples = [];
-for (let i = 0; i < 100; i++) {
-  const [z0, z1] = boxMuller(rng(), rng());
-  samples.push(Math.exp(0.35 * z0));
-  samples.push(Math.exp(0.35 * z1));
-}
-samples.sort((a, b) => a - b);
+const unitMatch = LEAD_TIME.match(/\(([^)]+)\)/);
+const unit = unitMatch ? ` ${unitMatch[1]}` : "";
 
-const N = samples.length;
-const mean = samples.reduce((s, x) => s + x, 0) / N;
-const variance = samples.reduce((s, x) => s + (x - mean) ** 2, 0) / (N - 1);
-const std = Math.sqrt(variance);
-
-// Weibull plotting positions: i / (N+1), i = 1..N
-const empirical = samples.map((_, i) => (i + 1) / (N + 1));
-// Theoretical normal CDF with MLE-fitted mean and std
-const theoretical = samples.map((x) => normCDF((x - mean) / std));
-
-const ppData = theoretical.map((thCdf, i) => ({
-  id: String(i),
-  x: thCdf,
-  y: empirical[i],
-}));
-
-// --- Custom SVG components ---------------------------------------------------
-
-// 45-degree reference diagonal and annotations within the drawing area
-function Overlay() {
-  const { left, top, width, height } = useDrawingArea();
-  return (
-    <g>
-      {/* 45° reference diagonal: data (0,0)→(1,1) maps to drawing-area corners */}
-      <line
-        x1={left}
-        y1={top + height}
-        x2={left + width}
-        y2={top}
-        stroke={t.inkSoft}
-        strokeWidth={1.5}
-        strokeDasharray="8 4"
-        strokeLinecap="round"
-      />
-      {/* "Perfect fit" label — at ~78% along diagonal, clear of the upper-right data cluster */}
-      <text
-        x={left + width * 0.74}
-        y={top + height * 0.24}
-        textAnchor="end"
-        fill={t.inkSoft}
-        fontSize={13}
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-      >
-        Perfect fit
-      </text>
-      {/* S-curve deviation annotation near the peak separation (theoretical CDF ~0.45) */}
-      <text
-        x={left + width * 0.36}
-        y={top + height * 0.29}
-        textAnchor="end"
-        fill={t.inkSoft}
-        fontSize={12}
-        fontStyle="italic"
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-      >
-        log-normal
-      </text>
-      <text
-        x={left + width * 0.36}
-        y={top + height * 0.29 + 15}
-        textAnchor="end"
-        fill={t.inkSoft}
-        fontSize={12}
-        fontStyle="italic"
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-      >
-        deviation →
-      </text>
-    </g>
-  );
-}
-
-function ChartTitle() {
-  const { left, width } = useDrawingArea();
-  return (
-    <text
-      x={left + width / 2}
-      y={26}
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fill={t.ink}
-      fontSize={20}
-      fontWeight="600"
-      fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    >
-      pp-basic · javascript · muix · anyplot.ai
-    </text>
-  );
-}
-
-// --- Chart -------------------------------------------------------------------
+const TITLE = "pp-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${LEAD_TIME}: n = ${n} against a ${REFERENCE} distribution with the sample's mean ${mean.toFixed(2)}${unit} and sd ${sd.toFixed(2)}${unit}`;
 
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const side = Math.min(width, height - TITLE_H - SUBTITLE_H - LEGEND_H);
+
   return (
-    <ScatterChart
-      width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
-      colors={t.palette}
-      skipAnimation
-      margin={{ top: 55, bottom: 90, left: 95, right: 30 }}
-      sx={{
-        "& .MuiChartsGrid-line": { opacity: 0.15 },
-      }}
-      xAxis={[{
-        min: 0,
-        max: 1,
-        label: "Theoretical CDF (Normal)",
-        labelStyle: { fontSize: 16 },
-        tickLabelStyle: { fontSize: 12 },
-      }]}
-      yAxis={[{
-        min: 0,
-        max: 1,
-        label: "Empirical CDF",
-        labelStyle: { fontSize: 16 },
-        tickLabelStyle: { fontSize: 12 },
-      }]}
-      series={[{
-        data: ppData,
-        label: "Observed (log-normal)",
-        markerSize: 6,
-        valueFormatter: (v) =>
-          `Theoretical: ${v.x.toFixed(3)}, Empirical: ${v.y.toFixed(3)}`,
-      }]}
-      slotProps={{
-        legend: {
-          position: { vertical: "bottom", horizontal: "middle" },
-          itemMarkWidth: 10,
-          itemMarkHeight: 10,
-          labelStyle: { fontSize: 13, fontWeight: 500 },
-        },
-      }}
-    >
-      <Overlay />
-      <ChartTitle />
-    </ScatterChart>
+    <div style={{ width, height, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
+      <ChartsDataProvider
+        width={side}
+        height={side}
+        margin={MARGIN}
+        skipAnimation
+        series={[
+          {
+            type: "line",
+            id: "diagonal",
+            label: "Perfect fit (y = x)",
+            data: [0, 1],
+            color: t.inkSoft,
+            curve: "linear",
+            showMark: false,
+            disableHighlight: true,
+          },
+          {
+            type: "scatter",
+            id: "observations",
+            label: `Observations (n = ${n})`,
+            data: points,
+            color: t.palette[0],
+            markerSize: 5,
+          },
+        ]}
+        xAxis={[
+          {
+            id: "theoretical",
+            data: [0, 1],
+            scaleType: "linear",
+            min: 0,
+            max: 1,
+            tickInterval: PROBABILITY_TICKS,
+            label: `Theoretical cumulative probability (fitted ${REFERENCE})`,
+            height: AXIS_BAND,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "empirical",
+            scaleType: "linear",
+            min: 0,
+            max: 1,
+            tickInterval: PROBABILITY_TICKS,
+            label: "Empirical cumulative probability",
+            width: AXIS_BAND,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+      >
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 15, color: t.inkSoft, height: LEGEND_H, alignItems: "center" }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiLineChart-line[data-series='diagonal']": { strokeWidth: 2, strokeDasharray: "9 6" },
+              "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 0.75 },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+            }}
+          >
+            <ChartsGrid vertical horizontal />
+            <LinePlot skipAnimation />
+            <ScatterPlot />
+            <ChartsXAxis axisId="theoretical" />
+            <ChartsYAxis axisId="empirical" />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
