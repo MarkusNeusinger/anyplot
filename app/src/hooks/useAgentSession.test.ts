@@ -3163,6 +3163,116 @@ describe('useAgentSession: what a typed turn changed', () => {
     await act(() => turn);
     expect(lastUser(result.current.state.items)).not.toHaveProperty('outcome');
   });
+
+  it("moves a question's mark by its own memory read, also when that read lands while the next turn runs", async () => {
+    const kept = {
+      id: 'm1',
+      kind: 'other',
+      target: null,
+      text: 'title: Sales',
+      expect: null,
+      turn: 1,
+    };
+    const routes = baseRoutes();
+    const plotRun = liveSse([['ready', {}]]);
+    routes['POST /sessions/S1/messages'] = call =>
+      (call.body as { action?: string }).action === 'create_plot'
+        ? plotRun.response
+        : sse([
+            ['message', { text: 'Kept for the first plot.' }],
+            ['done', {}],
+          ]);
+    const read = deferred<Response>();
+    routes['GET /sessions/S1/memory'] = () => read.promise;
+    const { result } = await openSession(routes);
+
+    // The reply came, and the plot button was pressed before the memory read after it landed.
+    await act(() => result.current.sendMessage('title: Sales, ok?'));
+    let plot: Promise<void> = Promise.resolve();
+    act(() => {
+      plot = result.current.createPlot();
+    });
+    await waitFor(() => expect(result.current.state.run?.kind).toBe('create_plot'));
+    await act(async () => {
+      read.resolve(json(200, { entries: [kept], max_entries: 30, written: true }));
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toEqual([kept]));
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'kept' });
+
+    plotRun.push('done', {});
+    plotRun.close();
+    await act(() => plot);
+  });
+});
+
+describe('agentReducer: the memory read after a turn', () => {
+  const list = (...ids: string[]) => ({
+    entries: ids.map(id => ({ id, kind: 'other', target: null, text: id, expect: null, turn: 1 })),
+    max_entries: 30,
+    written: ids.length > 0,
+  });
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+    memory: list(),
+  };
+  const asked = (state: AgentSessionState, text: string) =>
+    agentReducer(agentReducer(state, { type: 'item', item: { kind: 'user', text } }), {
+      type: 'turn_outcome',
+      outcome: 'answer',
+    });
+  const outcomes = (state: AgentSessionState) =>
+    state.items.flatMap(item => (item.kind === 'user' ? [item.outcome] : []));
+
+  it('speaks for the typed turn it follows, by its id, and only once', () => {
+    // An action's turn started meanwhile: the read still speaks for the question before it.
+    const pressed = agentReducer(asked(ready, 'a title, ok?'), {
+      type: 'item',
+      item: { kind: 'action', action: 'create_plot', library: 'matplotlib' },
+    });
+    expect(pressed.memoryTurn).toBe(1);
+    const read = agentReducer(pressed, {
+      type: 'memory_sync',
+      memory: list('m1'),
+      afterTurn: true,
+    });
+    expect(outcomes(read)).toEqual(['kept']);
+    expect(read.memoryTurn).toBeNull();
+    // A later read after an action's turn speaks for nobody.
+    const later = agentReducer(read, { type: 'memory_sync', memory: list(), afterTurn: true });
+    expect(outcomes(later)).toEqual(['kept']);
+  });
+
+  it('speaks for the newest typed turn, and waits no longer once any list arrived', () => {
+    const twice = asked(asked(ready, 'first?'), 'second?');
+    expect(
+      outcomes(agentReducer(twice, { type: 'memory_sync', memory: list('m1'), afterTurn: true }))
+    ).toEqual(['answer', 'kept']);
+
+    // The user's own removal lands first: the turn's read compares with that list, so it is no
+    // longer the turn's.
+    const clicked = agentReducer(asked(ready, 'what is on x?'), {
+      type: 'memory_sync',
+      memory: list('m2'),
+    });
+    const after = agentReducer(clicked, {
+      type: 'memory_sync',
+      memory: list('m2', 'm3'),
+      afterTurn: true,
+    });
+    expect(outcomes(after)).toEqual(['answer']);
+
+    // A turn that changed something is no question: its read waits for nothing.
+    const changed = agentReducer(
+      agentReducer(ready, { type: 'item', item: { kind: 'user', text: 'swap' } }),
+      {
+        type: 'turn_outcome',
+        outcome: 'data',
+      }
+    );
+    expect(changed.memoryTurn).toBeNull();
+  });
 });
 
 describe('useAgentSession: session language', () => {

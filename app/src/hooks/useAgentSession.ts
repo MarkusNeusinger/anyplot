@@ -832,6 +832,11 @@ export interface AgentSessionState {
    * change and undo counts one up, while the server's `version` starts over with every paste.
    */
   nextDataVersion: number;
+  /**
+   * The typed turn read as an answer whose memory read after its `done` is still to come: that
+   * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait.
+   */
+  memoryTurn: number | null;
   versions: Record<number, PlotVersion>;
   /** The last feedback case stored on the chat itself (version 0), for a session without a plot. */
   chatFeedback: FeedbackRecord | null;
@@ -979,6 +984,7 @@ export function initialAgentState(library: string): AgentSessionState {
     items: [],
     nextItemId: 1,
     nextDataVersion: 1,
+    memoryTurn: null,
     versions: {},
     chatFeedback: null,
     run: null,
@@ -1331,20 +1337,24 @@ function latestTurn(items: ChatItem[]): { index: number; item: ChatItem } | null
 /**
  * The memory read after a turn's `done` found another list than before: a turn read as an
  * answer (nothing in its stream changed) did change the memory, a decision kept for the first
- * plot (`keep_plot_request`) or one it forgot. The mark moves from `answer` to what it changed.
+ * plot (`keep_plot_request`) or one it forgot. The mark of that turn's item (`turn`, the
+ * reducer's `memoryTurn`) moves from `answer` to what it changed. The item is named by its id,
+ * since the read can land while the next turn runs, such as the summary after a paste's note.
  */
 function memoryOutcome(
   items: ChatItem[],
+  turn: number | null,
   before: PlotMemory | null,
   after: PlotMemory
 ): ChatItem[] {
-  const turn = latestTurn(items);
-  if (!turn || turn.item.kind !== 'user' || turn.item.outcome !== 'answer') return items;
+  const index = turn === null ? -1 : items.findIndex(item => item.id === turn);
+  const item = index >= 0 ? items[index] : null;
+  if (item?.kind !== 'user' || item.outcome !== 'answer') return items;
   const old = new Set((before?.entries ?? []).map(entry => entry.id));
   const ids = after.entries.map(entry => entry.id);
   if (ids.length === old.size && ids.every(id => old.has(id))) return items;
   const outcome: TurnOutcome = ids.some(id => !old.has(id)) ? 'kept' : 'memory';
-  return replaceAt(items, turn.index, { ...turn.item, outcome });
+  return replaceAt(items, index, { ...item, outcome });
 }
 
 /**
@@ -1644,11 +1654,12 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
             : state.carryOffer,
       };
       // Only the read after a turn's `done` speaks for that turn: a removal the user clicked
-      // changes the list too, and no turn of theirs.
+      // changes the list too, and no turn of theirs. Any list ends the wait, so a later read,
+      // which compares with this one, never speaks for the turn.
       const items = action.afterTurn
-        ? memoryOutcome(state.items, state.memory, action.memory)
+        ? memoryOutcome(state.items, state.memoryTurn, state.memory, action.memory)
         : state.items;
-      return { ...next, items: switchDecisions(items, next) };
+      return { ...next, items: switchDecisions(items, next), memoryTurn: null };
     }
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
@@ -1754,10 +1765,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'turn_outcome': {
       // The turn's own item is the latest: no other turn starts before its `done`, and the late
       // read of a cut turn adds none, so its outcome lands on the cut turn's item.
+      // An action's turn names nothing: a typed turn's memory read still in flight speaks for that
+      // turn (`memoryTurn`), also when it lands while the next turn runs.
       const turn = latestTurn(state.items);
       if (turn?.item.kind !== 'user') return state;
       const marked: ChatItem = { ...turn.item, outcome: action.outcome };
-      return { ...state, items: replaceAt(state.items, turn.index, marked) };
+      return {
+        ...state,
+        items: replaceAt(state.items, turn.index, marked),
+        memoryTurn: action.outcome === 'answer' ? turn.item.id : null,
+      };
     }
     case 'run_end':
       return { ...state, run: null };
