@@ -1,9 +1,9 @@
 /**
  * A card of the agent chat's thread in the v4 design (style guide §7.9): a 1 px rule with the
  * card's label on its top border, the chat frame's tab-label construction at a card's size
- * (`ChatFrame.tsx`). The label says what the card holds: the data card's its shape (`data · 48
- * rows × 4 cols`), a plot card's its version, library and request (`plot v2 · matplotlib · title
- * in German`).
+ * (`ChatFrame.tsx`). The label says what the card holds: the data card's shape (`data · 48 rows
+ * × 4 cols`), or a plot card's version, library and request (`plot v2 · matplotlib · title in
+ * German`).
  *
  * A plot card can fold, and then its label is its toggle: open, the card's content stands under
  * the label on the border; folded, the card is that label alone, one line in the thread's flow

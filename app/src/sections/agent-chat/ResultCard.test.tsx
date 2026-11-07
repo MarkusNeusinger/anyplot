@@ -123,6 +123,12 @@ describe('ResultCard', () => {
         .getAllByRole('button')
         .map(button => button.textContent)
     ).toEqual(['.download()', '.copy_png()', '.open()']);
+    // Each name holds the words on screen, so a voice command that says them finds the button.
+    for (const button of within(line).getAllByRole('button')) {
+      for (const word of (button.textContent ?? '').replace(/[.()]/g, '').split('_')) {
+        expect(button).toHaveAccessibleName(new RegExp(`\\b${word}\\b`, 'i'));
+      }
+    }
     expect(
       screen.getByTestId('result-image-box').compareDocumentPosition(line) &
         Node.DOCUMENT_POSITION_FOLLOWING

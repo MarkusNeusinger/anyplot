@@ -490,13 +490,14 @@ export function ResultCard({
       </Tooltip>
     </>
   );
-  // The same actions on the phone's action line, the PNG's download first.
+  // The same actions on the phone's action line, the PNG's download first. Their names hold the
+  // words on screen (`.copy_png()` is "Copy PNG image"), so a voice command finds them (WCAG 2.5.3).
   const phoneImageActions = interactive ? (
     <Box
       component="button"
       type="button"
       onClick={handleClosePreview}
-      aria-label="Show image"
+      aria-label="Preview: show the image"
       sx={cardActionSx}
     >
       .preview()
@@ -517,7 +518,7 @@ export function ResultCard({
         component="button"
         type="button"
         onClick={handleCopyImage}
-        aria-label="Copy image"
+        aria-label="Copy PNG image"
         disabled={!readyImage}
         sx={cardActionSx}
       >
