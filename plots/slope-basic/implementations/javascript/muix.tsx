@@ -8,198 +8,151 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: employee satisfaction score (0-100) by department, 2023 vs 2025 -
-const PERIODS = ["2023", "2025"];
-const departments = [
-  { name: "Customer Support", start: 52, end: 46 },
-  { name: "Sales", start: 57, end: 51 },
-  { name: "Design", start: 47, end: 55 },
-  { name: "Marketing", start: 65, end: 60 },
-  { name: "Finance", start: 61, end: 68 },
-  { name: "Product", start: 79, end: 72 },
-  { name: "HR", start: 70, end: 77 },
-  { name: "Operations", start: 74, end: 82 },
-  { name: "Engineering", start: 83, end: 90 },
+// Constants
+const Y_PAD_SHARE = 0.08; // value-axis padding as a share of the value range
+const LABEL_GAP_PX = 20; // minimum vertical distance between two end labels
+const LABEL_FONT = 15; // px
+const DIRECTIONS = [
+  { key: "up", label: "Increase", color: t.palette[0] },
+  { key: "down", label: "Decrease", color: t.palette[4] },
+  { key: "flat", label: "No change", color: t.palette[1] },
 ];
 
-// Direction semantics — profit/up/gain -> brand green, loss/down -> matte red
-const IMPROVED = t.palette[0];
-const DECLINED = t.palette[4];
+// Columns: set these to your data's column names
+const ENTITY = "Department"; // role: entity
+const START = "Satisfaction 2023"; // role: value_start
+const END = "Satisfaction 2025"; // role: value_end
 
-// Slugified id (no spaces) so the per-series CSS class selectors below stay valid.
-const slug = (name) => name.replace(/\s+/g, "-");
+// Data: replace this block with your own records, one object per row
+// Employee satisfaction score (0-100) by department in two survey waves.
+const data = [
+  { [ENTITY]: "Customer Support", [START]: 52, [END]: 46 },
+  { [ENTITY]: "Sales", [START]: 57, [END]: 51 },
+  { [ENTITY]: "Design", [START]: 47, [END]: 55 },
+  { [ENTITY]: "Marketing", [START]: 65, [END]: 60 },
+  { [ENTITY]: "Finance", [START]: 61, [END]: 68 },
+  { [ENTITY]: "Product", [START]: 79, [END]: 72 },
+  { [ENTITY]: "HR", [START]: 70, [END]: 77 },
+  { [ENTITY]: "Operations", [START]: 74, [END]: 82 },
+  { [ENTITY]: "Engineering", [START]: 83, [END]: 90 },
+];
 
-const series = departments.map((d) => ({
-  id: slug(d.name),
-  data: [d.start, d.end],
-  label: d.name,
-  color: d.end >= d.start ? IMPROVED : DECLINED,
-  showMark: true,
-  curve: "linear",
-}));
+// Plot: reads only data and the constants above
+const rows = data.map((d) => {
+  const delta = Number(d[END]) - Number(d[START]);
+  const dir = DIRECTIONS.find((k) => k.key === (delta > 0 ? "up" : delta < 0 ? "down" : "flat"));
+  return { name: String(d[ENTITY]), start: Number(d[START]), end: Number(d[END]), color: dir?.color as string, dir: dir?.key };
+});
+const shownDirections = DIRECTIONS.filter((k) => rows.some((r) => r.dir === k.key));
 
-// The biggest riser and biggest decliner get a bolder stroke + a delta
-// callout — a focal point so the eye isn't spread evenly across all 9
-// equally-weighted lines.
-const biggestRiser = departments.reduce((best, d) => (d.end - d.start > best.end - best.start ? d : best));
-const biggestDecliner = departments.reduce((best, d) => (d.end - d.start < best.end - best.start ? d : best));
+const values = rows.flatMap((r) => [r.start, r.end]);
+const vMin = Math.min(...values);
+const vMax = Math.max(...values);
+const yPad = (vMax - vMin) * Y_PAD_SHARE;
+const sideMargin = Math.max(...rows.map((r) => `${r.name} · ${Math.max(r.start, r.end)}`.length)) * LABEL_FONT * 0.55 + 36;
 
-// Direct endpoint labels — name + value on BOTH columns so a reader never
-// has to trace color/slope back to the left label to identify a department.
-function EndpointLabels() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const xStart = xScale("2023");
-  const xEnd = xScale("2025");
+const title = "slope-basic · javascript · muix · anyplot.ai";
+const subtitle = `n = ${rows.length} · ${START} → ${END} · ${shownDirections
+  .map((k) => `${k.label}: ${rows.filter((r) => r.dir === k.key).length}`)
+  .join(", ")}`;
+const HEADER_H = 96;
 
-  return (
-    <g fontFamily="'Roboto','Helvetica Neue',Arial,sans-serif" fontSize={14}>
-      {departments.map((d) => (
-        <g key={d.name}>
-          <text
-            x={xStart - 16}
-            y={yScale(d.start)}
-            textAnchor="end"
-            dominantBaseline="middle"
-            fill={t.ink}
-          >
-            {d.name} · {d.start}
-          </text>
-          <text
-            x={xEnd + 16}
-            y={yScale(d.end)}
-            textAnchor="start"
-            dominantBaseline="middle"
-            fill={t.ink}
-          >
-            {d.end} · {d.name}
-          </text>
-        </g>
-      ))}
-    </g>
-  );
-}
-
-// Delta callouts for the single biggest riser and biggest decliner — a small
-// chip near the line's midpoint so the standout changes read at a glance.
-function DeltaAnnotations() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const xMid = (xScale("2023") + xScale("2025")) / 2;
-
-  const callouts = [
-    { d: biggestRiser, color: IMPROVED, dy: -22 },
-    { d: biggestDecliner, color: DECLINED, dy: 22 },
-  ].map(({ d, color, dy }) => {
-    const delta = d.end - d.start;
-    return {
-      key: d.name,
-      label: `${delta > 0 ? "+" : ""}${delta}`,
-      color,
-      x: xMid,
-      y: yScale((d.start + d.end) / 2) + dy,
-    };
+function EndLabels() {
+  const xScale = useXScale() as (v: string) => number;
+  const yScale = useYScale() as (v: number) => number;
+  // Labels keep their line end's value; only crowded labels shift apart along their axis
+  const sides = [
+    { x: xScale(START) - 16, anchor: "end", key: "start" as const },
+    { x: xScale(END) + 16, anchor: "start", key: "end" as const },
+  ].map((side) => {
+    const placed = rows
+      .map((r) => ({ r, y: yScale(r[side.key]) }))
+      .sort((a, b) => a.y - b.y);
+    for (let i = 1; i < placed.length; i += 1) {
+      placed[i].y = Math.max(placed[i].y, placed[i - 1].y + LABEL_GAP_PX);
+    }
+    return { ...side, placed };
   });
-
   return (
-    <g fontFamily="'Roboto','Helvetica Neue',Arial,sans-serif" fontSize={15} fontWeight={700}>
-      {callouts.map((c) => (
-        <g key={c.key}>
-          <rect x={c.x - 22} y={c.y - 14} width={44} height={22} rx={11} fill={t.pageBg} stroke={c.color} strokeWidth={1.5} />
-          <text x={c.x} y={c.y - 3} textAnchor="middle" dominantBaseline="middle" fill={c.color}>
-            {c.label}
+    <g fontSize={LABEL_FONT} fill={t.ink}>
+      {sides.map((side) =>
+        side.placed.map(({ r, y }) => (
+          <text
+            key={`${side.key}-${r.name}`}
+            x={side.x}
+            y={y}
+            textAnchor={side.anchor}
+            dominantBaseline="middle"
+          >
+            {side.key === "start" ? `${r.name} · ${r.start}` : `${r.end} · ${r.name}`}
           </text>
-        </g>
-      ))}
+        )),
+      )}
     </g>
   );
 }
-
-const TITLE = "Employee Satisfaction by Department · slope-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length));
-const TITLE_H = 70;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-
   return (
-    <div
-      style={{
-        width,
-        height,
-        background: t.pageBg,
-        boxSizing: "border-box",
-        fontFamily: "'Roboto','Helvetica Neue',Arial,sans-serif",
-      }}
-    >
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
       <div
         style={{
-          height: TITLE_H,
+          height: HEADER_H,
           display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
           alignItems: "center",
-          justifyContent: "space-between",
-          paddingLeft: 28,
-          paddingRight: 28,
+          gap: 10,
         }}
       >
-        <span style={{ color: t.ink, fontSize: TITLE_FONT_SIZE, fontWeight: 500, letterSpacing: 0.3 }}>
-          {TITLE}
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <svg width={24} height={12} style={{ overflow: "visible" }}>
-              <line x1={1} y1={6} x2={23} y2={6} stroke={IMPROVED} strokeWidth={3} strokeLinecap="round" />
-              <circle cx={12} cy={6} r={3} fill={t.pageBg} stroke={IMPROVED} strokeWidth={2} />
-            </svg>
-            <span style={{ color: t.inkSoft, fontSize: 15 }}>Improved</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <svg width={24} height={12} style={{ overflow: "visible" }}>
-              <line x1={1} y1={6} x2={23} y2={6} stroke={DECLINED} strokeWidth={3} strokeLinecap="round" />
-              <circle cx={12} cy={6} r={3} fill={t.pageBg} stroke={DECLINED} strokeWidth={2} />
-            </svg>
-            <span style={{ color: t.inkSoft, fontSize: 15 }}>Declined</span>
-          </div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 15, color: t.inkSoft }}>
+          <span>{subtitle}</span>
+          {shownDirections.map((k) => (
+            <span key={k.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, color: t.ink }}>
+              <svg width={28} height={12}>
+                <line x1={2} y1={6} x2={26} y2={6} stroke={k.color} strokeWidth={3} strokeLinecap="round" />
+                <circle cx={14} cy={6} r={4} fill={t.pageBg} stroke={k.color} strokeWidth={2.5} />
+              </svg>
+              {k.label}
+            </span>
+          ))}
         </div>
       </div>
-
       <LineChart
         width={width}
-        height={height - TITLE_H}
+        height={height - HEADER_H}
         skipAnimation
-        margin={{ left: 210, right: 200, top: 50, bottom: 30 }}
+        hideLegend
+        margin={{ left: sideMargin, right: sideMargin, top: 8, bottom: 24 }}
         xAxis={[
           {
             scaleType: "point",
-            data: PERIODS,
+            data: [START, END],
             position: "top",
+            height: 40,
             disableLine: true,
             disableTicks: true,
-            tickLabelStyle: { fontSize: 16, fontWeight: 500, fill: t.ink },
+            tickLabelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
           },
         ]}
-        yAxis={[
-          {
-            min: 35,
-            max: 100,
-            disableLine: true,
-            disableTicks: true,
-            tickLabelInterval: () => false,
-          },
-        ]}
-        series={series}
-        slotProps={{ legend: { hidden: true } }}
+        yAxis={[{ min: vMin - yPad, max: vMax + yPad, position: "none" }]}
+        series={rows.map((r, i) => ({
+          id: `entity-${i}`,
+          label: r.name,
+          data: [r.start, r.end],
+          color: r.color,
+          curve: "linear",
+          showMark: true,
+          shape: "circle",
+        }))}
         sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiMarkElement-root": { strokeWidth: 2 },
-          [`& .MuiLineElement-series-${slug(biggestRiser.name)}`]: { strokeWidth: 5 },
-          [`& .MuiLineElement-series-${slug(biggestDecliner.name)}`]: { strokeWidth: 5 },
-          [`& .MuiMarkElement-series-${slug(biggestRiser.name)}`]: { strokeWidth: 3 },
-          [`& .MuiMarkElement-series-${slug(biggestDecliner.name)}`]: { strokeWidth: 3 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiLineChart-mark": { strokeWidth: 2.5 },
         }}
       >
-        <EndpointLabels />
-        <DeltaAnnotations />
+        <EndLabels />
       </LineChart>
     </div>
   );
