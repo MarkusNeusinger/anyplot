@@ -12,4 +12,4 @@
   stays in the store past the five-version undo history, and a version of
   data a new paste replaced is refused with a closed code (`other_paste`).
   It came from the persona tests of 2026-11-06, where the chat sent users to
-  `.undo()` or a new paste three times.
+  `.undo()` or a new paste three times. (#12600)
