@@ -91,9 +91,27 @@ const PLOT = {
   version: 1,
 };
 
+/**
+ * The spec's roles as the open names them for the start item's chips: a role of two kinds, a
+ * family and an optional role of categories.
+ */
+const OPEN_ROLES = [
+  { name: 'x', kinds: ['numeric', 'datetime'], required: true, variadic: false, description: 'x' },
+  { name: 'y', kinds: ['numeric'], required: true, variadic: true, description: 'the series' },
+  {
+    name: 'series',
+    kinds: ['categorical'],
+    required: false,
+    variadic: false,
+    description: 'one colour per group',
+  },
+];
+
 /** How the session's open answers, the same on both lanes. */
 type Open = 'ok' | 'hold' | 'error' | 'ineligible' | 'not_enabled';
 let open: Open;
+/** The open names the spec's roles (`OPEN_ROLES`); without, the start item has no chips. */
+let roles: boolean;
 /** The public lane's door (`GET /agent/lane`). */
 let door: boolean;
 /** The service spent its day budget: `/status` says `paused` until the next day. */
@@ -116,10 +134,16 @@ function stubFetch() {
         return door ? json(200, { open: true }) : json(404, { detail: 'not_enabled' });
       }
       if (path.endsWith('/specs/scatter-basic')) {
+        // With previews, so the start item shows the catalogue plot's thumbnail.
         return json(200, {
           title: 'Basic Scatter Plot',
           data: ['`x` (numeric) - the horizontal axis', '`y` (numeric) - the vertical axis'],
-          implementations: ['matplotlib', 'seaborn'].map(library_id => ({ library_id })),
+          implementations: ['matplotlib', 'seaborn'].map(library_id => ({
+            library_id,
+            preview_url: `https://img.test/scatter-basic/${library_id}/plot.png`,
+            preview_url_light: `https://img.test/scatter-basic/${library_id}/plot-light.png`,
+            preview_url_dark: `https://img.test/scatter-basic/${library_id}/plot-dark.png`,
+          })),
         });
       }
       if (path === '/debug/agent/status' || path === '/agent/status') {
@@ -139,6 +163,7 @@ function stubFetch() {
         return json(200, {
           session_id: 'S1',
           eligibility: { eligible: true, status: 'clean', reasons: [] },
+          ...(roles ? { roles: OPEN_ROLES } : {}),
         });
       }
       const rest = path.match(/^\/debug\/agent\/sessions\/S1(\/.*)?$|^\/agent\/session(\/.*)?$/);
@@ -218,6 +243,8 @@ type Who = 'visitor' | 'admin' | 'as visitor';
 interface State {
   open: Open;
   reach: () => Promise<void>;
+  /** The open names the spec's roles; not unless said. */
+  roles?: boolean;
   /** The public door; open unless said. */
   door?: boolean;
   /** The service's day budget is spent. */
@@ -240,7 +267,41 @@ const STATES: Record<string, State> = {
       await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
     },
   },
+  // The start item with its chips, the thumbnail and both ⓘ.
+  'ready with the spec roles': {
+    open: 'ok',
+    roles: true,
+    reach: async () => {
+      await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
+      await screen.findByRole('list', { name: 'What the plot needs' });
+      await screen.findByRole('button', { name: 'Show the matplotlib catalogue plot large' });
+    },
+  },
+  // The start item's thumbnail opened large, in its dialog.
+  'with the catalogue plot open': {
+    open: 'ok',
+    roles: true,
+    reach: async () => {
+      await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Show the matplotlib catalogue plot large' })
+      );
+      await screen.findByRole('dialog', { name: '# Basic Scatter Plot · matplotlib' });
+    },
+  },
+  // The start item's columns ⓘ open, in its popover.
+  'with the columns ⓘ open': {
+    open: 'ok',
+    roles: true,
+    reach: async () => {
+      await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
+      fireEvent.click(await screen.findByRole('button', { name: 'Columns the plot expects' }));
+      await screen.findByRole('dialog', { name: 'Columns the plot expects' });
+    },
+  },
   'with data': { open: 'ok', reach: pasteTable },
+  // The start item stays first, above the paste, its chips and its thumbnail.
+  'with data after the spec roles': { open: 'ok', roles: true, reach: pasteTable },
   'with a plot': { open: 'ok', reach: plotOnce },
   // The feedback form unfolded: its data box and the consent line under it.
   'with the feedback form open': {
@@ -300,6 +361,40 @@ const STATES: Record<string, State> = {
       await screen.findByRole('dialog', { name: 'Library of the plot' });
     },
   },
+  // A table waiting in the box: the plot button inert, the status line saying Enter reads it.
+  'with a table attached': {
+    open: 'ok',
+    reach: async () => {
+      const box = await screen.findByLabelText('Message');
+      await waitFor(() => expect(box).toBeEnabled());
+      fireEvent.paste(box, {
+        clipboardData: { files: [], getData: () => 'hours,score\n1.5,52\n2.0,58\n' },
+      });
+      await screen.findByRole('group', { name: /^Attached/ });
+    },
+  },
+  // Text in the box after a plot: `.update_plot() →` acts, `.start_over()` at the line's end.
+  'with a change typed after a plot': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Update plot' })).not.toHaveAttribute(
+          'aria-disabled'
+        )
+      );
+    },
+  },
+  // The chat's own feedback before a plot, opened from `.feedback()` at the status line's end.
+  'with the chat feedback form open': {
+    open: 'ok',
+    reach: async () => {
+      await pasteTable();
+      fireEvent.click(screen.getByRole('button', { name: 'Give feedback on this chat' }));
+      await screen.findByRole('form', { name: 'Feedback on this chat' });
+    },
+  },
   // The closed door: the admin lane opens anyway, by design, so only the visitor's view compares.
   'with the public lane closed': {
     open: 'ok',
@@ -354,6 +449,7 @@ async function pageFor(who: Who, state: string): Promise<string> {
   if (who !== 'visitor') localStorage.setItem(ADMIN_HINT_KEY, '1');
   if (who === 'as visitor') sessionStorage.setItem(VIEW_AS_VISITOR_KEY, '1');
   open = STATES[state].open;
+  roles = STATES[state].roles ?? false;
   door = STATES[state].door ?? true;
   paused = STATES[state].paused ?? false;
   stubFetch();

@@ -226,27 +226,29 @@ describe('FanOut', () => {
     );
     expect(screen.getByText(/0 of 3 done · at most 2 at a time/)).toBeInTheDocument();
 
-    // A finished plot frees its place: the third library starts.
+    // A finished plot frees its place, and the freed place goes to the third library: exactly one
+    // plot per library. The session's own state changes before the panel frees the place, and a
+    // render in between must start no second matplotlib plot in that place: its stream would never
+    // end here and would hold the card at `adapting…`.
     turns.get('S-matplotlib')!.finish();
-    await waitFor(() => expect(plotTurns()).toHaveLength(3));
-    // The card's status follows the session's version, a few hops behind the freed place (the
-    // stream's plot and done, the version, its image). Under a loaded runner (CI with coverage)
-    // those hops took longer than waitFor's default second, so they get three.
-    await waitFor(
-      () =>
-        expect(within(card('matplotlib')).getByTestId('fanout-status')).toHaveTextContent(
-          'v1 · ok'
-        ),
-      { timeout: 3000 }
+    await waitFor(() =>
+      expect(plotTurns().map(call => call.path)).toEqual([
+        '/sessions/S-matplotlib/messages',
+        '/sessions/S-seaborn/messages',
+        '/sessions/S-altair/messages',
+      ])
     );
+    // The card's status follows the session's version: the stream's plot and done, then its image.
+    await waitFor(() => expect(status('matplotlib')).toHaveTextContent('v1 · ok'));
     expect(
-      await within(card('matplotlib')).findByRole(
-        'img',
-        { name: /matplotlib plot, version 1/ },
-        { timeout: 3000 }
-      )
+      await within(card('matplotlib')).findByRole('img', { name: /matplotlib plot, version 1/ })
     ).toHaveAttribute('src', 'blob:mock');
-    expect(within(card('altair')).getByTestId('fanout-status')).toHaveTextContent('adapting…');
+    await waitFor(() => expect(status('altair')).toHaveTextContent('adapting…'));
+    // Nothing more starts once every library holds or held its place.
+    turns.get('S-seaborn')!.finish();
+    turns.get('S-altair')!.finish();
+    await waitFor(() => expect(screen.getByText(/3 of 3 done/)).toBeInTheDocument());
+    expect(plotTurns()).toHaveLength(3);
   });
 
   it('sends a library the cap refused back to waiting and tries it again at the next freed place', async () => {

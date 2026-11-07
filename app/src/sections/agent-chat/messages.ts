@@ -250,7 +250,7 @@ export const VIEW_SWITCH_TEXT =
  * formula instead of a table, the steps, a fix in plain words and changes afterwards. Code and a
  * formula go as a message, which takes 2,000 characters (`MAX_MESSAGE_CHARS`); the assistant
  * translates code in any language into Python, so no line lists the languages as if they were
- * all. Example data is `.example_data()` above the composer. The owner reads every user-facing
+ * all. Example data is `.example_data()` in the composer's row. The owner reads every user-facing
  * text: keep them in the PR's "Texts to read".
  */
 export const DATA_HOWTO = [
@@ -263,8 +263,11 @@ export const DATA_HOWTO = [
   'afterwards, ask for changes: "log scale on y", "label the outliers"',
 ] as const;
 
-/** The message box's placeholder before any data: the ways in, a table, a file, or the chat's own. */
-export const NO_DATA_PLACEHOLDER = 'paste a table, drop a file, or ask for example data or a curve';
+/**
+ * The message box's placeholder before any data: the box's own ways in, a table or a file; the
+ * data line right above it offers example data and `.open()`.
+ */
+export const NO_DATA_PLACEHOLDER = 'paste a table or drop a file';
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
@@ -291,13 +294,12 @@ export function describeLibraryFailure(code: string, ref: string | null): string
 }
 
 /**
- * The composer's offer after a library switch: the plot in the new library with
- * the remembered decisions, the owner's wording of 2026-11-02.
+ * What `.start_over()` at the end of the line at the chat frame's foot does, and the plot button
+ * when its click starts from the catalogue plot although the library has one (data or bindings
+ * changed since): the catalogue code again, with the remembered decisions, which only the user
+ * clears. Its `title`, and the hidden text both name as their description.
  */
-export function carryActionText(library: string, decisions: number): string {
-  if (decisions <= 0) return `plot in ${library}`;
-  return `plot in ${library} with your ${decisions} decision${decisions === 1 ? '' : 's'}`;
-}
+export const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 
 /** What the remembered list does, behind the ⓘ of its one-line heading (`Remembered`). */
 export const REMEMBERED_DETAILS = [
@@ -497,10 +499,11 @@ export function describeConvertWarnings(
 
 /**
  * The status line's part while an attachment waits, in place of the step's part: the plot
- * buttons wait for it, since they would plot the data before it, or none.
+ * button waits for it, since it would plot the data before it, or none. Enter sends it; the `↵`
+ * names the key, and the button that a phone shows inside the message box.
  */
 export const ATTACHMENT_LINE =
-  'the attached table is read when you send it: Enter or .send(), with a note if you like';
+  'the attached table is read when you press Enter ↵, with a note if you like';
 
 /**
  * `ATTACHMENT_LINE`, or, while the session holds data of `rows` rows, the line that says the
@@ -509,7 +512,7 @@ export const ATTACHMENT_LINE =
  */
 export function attachmentWaitLine(rows: number | null): string {
   if (rows === null) return ATTACHMENT_LINE;
-  return `the attached table replaces your data (${countOf(rows, 'row')}, no .undo()) when you send it: Enter or .send(), with a note if you like`;
+  return `the attached table replaces your data (${countOf(rows, 'row')}, no .undo()) when you press Enter ↵, with a note if you like`;
 }
 
 /** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */

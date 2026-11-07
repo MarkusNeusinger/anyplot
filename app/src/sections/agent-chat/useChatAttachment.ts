@@ -1,7 +1,8 @@
 /**
  * The attachment of the chat's one message box: a table pasted into the box, a file opened with
  * `.open()`, dropped on the chat or pasted as a file. It waits as a chip in the composer until
- * Enter or `.send()` posts it to the dataset route with the typed text as its note; the text of
+ * Enter (or the `↵` a touch screen shows in the box) posts it to the dataset route with the typed
+ * text as its note; the text of
  * a paste never enters the textarea, and nothing of it goes to browser storage.
  *
  * A paste is routed first (`routeInput.ts`): a table becomes the attachment, anything else the

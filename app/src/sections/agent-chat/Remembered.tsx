@@ -3,8 +3,8 @@
  * memory's entries, the decisions every later plot of the session takes over,
  * also in another library ("horizontal reference line at y = 7", "x-axis
  * label: 'Zeit (h)'"). The page shows it above the composer, where the next
- * plot is asked for and where the offer after a library switch counts these
- * decisions. Each entry has `.forget()`, which removes it from the memory: the
+ * plot is asked for; after a library switch the status line at the chat's foot
+ * counts these decisions. Each entry has `.forget()`, which removes it from the memory: the
  * plot itself does not change, the next one no longer takes it over;
  * `.forget_all()` removes every entry, for a blank start. Nothing else clears
  * the memory: `.start_over()` keeps it (owner decision of 2026-11-02). Editing

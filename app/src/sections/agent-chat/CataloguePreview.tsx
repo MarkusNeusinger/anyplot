@@ -1,9 +1,12 @@
 /**
- * The catalogue plot the chat adapts, small in the page header beside the spec's title: the
- * preview of the library in use, in the site theme, so the plot the data should become stays in
- * view. It follows a library switch. A click (or Enter, or Space) opens it large in a dialog,
- * which keeps the keyboard focus inside until Escape, `.close()` or a click outside closes it and
- * returns the focus to the thumbnail. Without a preview (the spec did not load) nothing shows.
+ * The catalogue plot the chat adapts, as a thumbnail in the thread's start item (`StartItem`,
+ * in the header row beside the spec's title until the v4 start of 2026-11-07): the preview of
+ * the library in use, in the site theme, so the plot the data should become is what the chat
+ * opens with. It follows a library switch. The caller sets its width (`size`, at phone width
+ * and from `sm` up); its height follows the catalogue's 16:9. A click (or Enter, or Space) opens
+ * it large in a dialog, which keeps the keyboard focus inside until Escape, `.close()` or a click
+ * outside closes it and returns the focus to the thumbnail. Without a preview (the spec did not
+ * load) nothing shows.
  *
  * Both sizes come from the catalogue's responsive files (`buildSrcSet`): the thumbnail loads the
  * 400 px WebP, the large view up to the full-size original.
@@ -20,11 +23,14 @@ import { colors, fontSize } from 'src/theme';
 import { buildDetailSrcSet, buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl, type ThemedPreviewSource } from 'src/utils/themedPreview';
 
-/** The thumbnail's width; its height follows the catalogue's 16:9. */
-const THUMB_WIDTH = { xs: 64, sm: 80 } as const;
-const THUMB_SIZES = '80px';
 /** The large view takes the dialog's width, at most `lg` (1200 px) less its padding. */
 const LARGE_SIZES = '(max-width: 1232px) calc(100vw - 96px), 1136px';
+
+/** A thumbnail's width in px, at phone width (`xs`) and from `sm` (600 px) up. */
+export interface ThumbnailSize {
+  xs: number;
+  sm: number;
+}
 
 export interface CataloguePreviewProps {
   /** The spec's title, for the dialog's heading. */
@@ -33,6 +39,8 @@ export interface CataloguePreviewProps {
   library: string;
   /** That library's catalogue previews; null without one. */
   preview: ThemedPreviewSource | null;
+  /** The thumbnail's width; its height follows the catalogue's 16:9. */
+  size: ThumbnailSize;
 }
 
 function Picture({
@@ -61,12 +69,14 @@ function Picture({
   );
 }
 
-export function CataloguePreview({ title, library, preview }: CataloguePreviewProps) {
+export function CataloguePreview({ title, library, preview, size }: CataloguePreviewProps) {
   const { isDark } = useTheme();
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const url = selectPreviewUrl(preview, isDark);
   if (!url) return null;
+  // The width the browser picks a file for: the phone's below `sm`, else the wide one.
+  const thumbSizes = `(max-width: 599px) ${size.xs}px, ${size.sm}px`;
 
   return (
     <>
@@ -79,7 +89,7 @@ export function CataloguePreview({ title, library, preview }: CataloguePreviewPr
         data-testid="catalogue-thumbnail"
         sx={{
           flex: 'none',
-          width: THUMB_WIDTH,
+          width: { xs: size.xs, sm: size.sm },
           aspectRatio: '16 / 9',
           p: 0,
           overflow: 'hidden',
@@ -95,7 +105,7 @@ export function CataloguePreview({ title, library, preview }: CataloguePreviewPr
         }}
       >
         {/* The button's name says what it shows; the image adds nothing for a screen reader. */}
-        <Picture url={url} srcSet={format => buildSrcSet(url, format)} sizes={THUMB_SIZES} alt="" />
+        <Picture url={url} srcSet={format => buildSrcSet(url, format)} sizes={thumbSizes} alt="" />
       </Box>
       <Dialog
         open={open}

@@ -4,7 +4,9 @@ import type { RoleSpec } from 'src/lib/agent';
 import {
   columnLines,
   expectedColumns,
+  kindWords,
   previewsByLibrary,
+  roleChip,
   roleLine,
 } from 'src/sections/agent-chat/specReference';
 
@@ -39,6 +41,43 @@ describe('roleLine', () => {
 
   it('takes any column without kinds and leaves an empty description out', () => {
     expect(roleLine(role('label', { kinds: [], description: '  ' }))).toBe('`label` (any column)');
+  });
+});
+
+describe('kindWords', () => {
+  it("says every kind the server knows in a table user's words", () => {
+    expect(
+      ['numeric', 'categorical', 'datetime', 'text', 'boolean'].map(k => kindWords([k]))
+    ).toEqual(['numbers', 'categories', 'dates', 'text', 'yes/no']);
+  });
+
+  it("joins several kinds in the server's order, once each, and keeps an unknown one", () => {
+    expect(kindWords(['numeric', 'datetime'])).toBe('numbers or dates');
+    expect(kindWords(['datetime', 'numeric', 'datetime'])).toBe('dates or numbers');
+    expect(kindWords(['geometry'])).toBe('geometry');
+    expect(kindWords([])).toBe('any column');
+  });
+});
+
+describe('roleChip', () => {
+  it('names the role and what it takes', () => {
+    expect(roleChip(role('x'))).toBe('x · numbers');
+    expect(roleChip(role('when', { kinds: ['datetime', 'numeric'] }))).toBe(
+      'when · dates or numbers'
+    );
+  });
+
+  it('says a family takes one or more, and an optional or computed role that it is optional', () => {
+    expect(roleChip(role('y', { variadic: true }))).toBe('y · numbers, one or more');
+    expect(roleChip(role('series', { kinds: ['categorical'], required: false }))).toBe(
+      'series · categories, optional'
+    );
+    expect(roleChip(role('sma', { required: false, computed: true }))).toBe(
+      'sma · numbers, optional'
+    );
+    expect(roleChip(role('label', { kinds: [], required: false, variadic: true }))).toBe(
+      'label · any column, one or more, optional'
+    );
   });
 });
 

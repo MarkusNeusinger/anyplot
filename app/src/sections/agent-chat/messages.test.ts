@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   ATTACHMENT_LINE,
   attachmentWaitLine,
-  carryActionText,
   describeConvertFailure,
   describeDataFailure,
   describeLibraryFailure,
@@ -18,7 +17,7 @@ describe('attachmentWaitLine', () => {
   it('reads the table without data, and says it replaces the data with', () => {
     expect(attachmentWaitLine(null)).toBe(ATTACHMENT_LINE);
     expect(attachmentWaitLine(22)).toBe(
-      'the attached table replaces your data (22 rows, no .undo()) when you send it: Enter or .send(), with a note if you like'
+      'the attached table replaces your data (22 rows, no .undo()) when you press Enter ↵, with a note if you like'
     );
     expect(attachmentWaitLine(1)).toContain('(1 row, no .undo())');
   });
@@ -138,16 +137,6 @@ describe('describeConvertFailure', () => {
     expect(describeConvertFailure('a.bin', 'file_corrupt', null, null, null)).toBe(
       '"a.bin" could not be read: the file looks damaged, or it is not the format it seems to be'
     );
-  });
-});
-
-describe('carryActionText', () => {
-  it.each([
-    [0, 'plot in seaborn'],
-    [1, 'plot in seaborn with your 1 decision'],
-    [3, 'plot in seaborn with your 3 decisions'],
-  ])('reads %i decisions as the owner worded it', (decisions, text) => {
-    expect(carryActionText('seaborn', decisions)).toBe(text);
   });
 });
 

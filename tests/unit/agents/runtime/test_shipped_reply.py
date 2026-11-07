@@ -187,6 +187,169 @@ class TestPlugin:
 
         assert reply_text(await check(response(types.Part(text=text)))) == text
 
+    @pytest.mark.parametrize("shipped", [True, False])
+    async def test_a_sentence_that_names_the_plot_button_goes_in_any_turn(
+        self, shipped: bool, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        """The line at the chat's foot names the plot button; a reply never sends the user to it, before a
+        plot (a kept wish, a `data_unconfirmed`) or after one."""
+        ledger.shipped_in_turn = shipped
+        summary = "48 rows and 4 columns: x is month, y is revenue."
+        text = f"{summary} Check the bindings and press `.create_plot()` to draw it."
+
+        reply = await check(response(types.Part(text=text)))
+
+        assert reply_text(reply) == summary
+        assert lines == [{"verdict": "dropped", "sentences": 1}]
+
+    @pytest.mark.parametrize(
+        ("text", "kept", "dropped"),
+        [
+            (f"{READY} Type a change and press `.update_plot()`.", READY, 1),
+            ("Ich merke mir den Titel. Drück dann .create_plot().", "Ich merke mir den Titel.", 1),
+            (f"{READY}\n\n- Use `.plot_all()` for every library.", READY, 1),
+            ("Press `.create_plot()`.", "", 1),
+        ],
+    )
+    def test_drops_every_sentence_that_names_the_plot_button(self, text: str, kept: str, dropped: int) -> None:
+        assert plugin_module.drop_plot_button(text) == (kept, dropped)
+
+    async def test_a_reply_after_a_shipped_plot_loses_both_asks(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        text = f"{READY} Confirm with `.confirm()`. Then press `.update_plot()` for more."
+
+        reply = await check(response(types.Part(text=text)))
+
+        assert reply_text(reply) == READY
+        assert lines == [{"verdict": "dropped", "sentences": 1}, {"verdict": "dropped", "sentences": 1}]
+
+    @pytest.mark.parametrize(
+        ("text", "kept", "verdict"),
+        [
+            # A one-sentence answer to "how do I plot?" is all the reply there is: it stays whole.
+            (
+                "Press `.create_plot()` beside the message box to draw it.",
+                "Press `.create_plot()` beside the message box to draw it.",
+                {"verdict": "kept", "sentences": 1},
+            ),
+            # A mixed reply loses the button's sentence alone.
+            (
+                "I kept the title for the first plot. Press `.create_plot()` once y has a column. Then it draws.",
+                "I kept the title for the first plot. Then it draws.",
+                {"verdict": "dropped", "sentences": 1},
+            ),
+            # A German reply the same: the button's name is the same in every language.
+            (
+                "Ich habe die Spalte umbenannt: 48 Zeilen. Drück danach `.update_plot()`, um den Plot zu ändern.",
+                "Ich habe die Spalte umbenannt: 48 Zeilen.",
+                {"verdict": "dropped", "sentences": 1},
+            ),
+        ],
+    )
+    async def test_the_plot_button_check_keeps_a_lone_answer_and_drops_the_ask_in_any_language(
+        self, text: str, kept: str, verdict: dict[str, Any], ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+
+        assert reply_text(await check(response(types.Part(text=text)))) == kept
+        assert lines == [verdict]
+
+    @pytest.mark.parametrize(
+        ("text", "kept"),
+        [
+            # An abbreviation's dot ends no sentence: the button's sentence goes whole, nothing of it stays.
+            ("The data has 6 rows. Press `.create_plot()`, e.g. with a title in the box.", "The data has 6 rows."),
+            ("Press `.create_plot()`, i.e. the button. The data has 6 rows.", "The data has 6 rows."),
+            (
+                "Die Daten haben 6 Zeilen. Drück `.create_plot()`, z. B. mit einem Titel im Feld.",
+                "Die Daten haben 6 Zeilen.",
+            ),
+            (
+                "Der Umsatz liegt bei 6,5 Mio. Euro. Drück dann `.update_plot()` für den neuen Plot.",
+                "Der Umsatz liegt bei 6,5 Mio. Euro.",
+            ),
+            ("Ich habe bzw. Spalten umbenannt. Drück ca. jetzt `.create_plot()`.", "Ich habe bzw. Spalten umbenannt."),
+        ],
+    )
+    def test_an_abbreviation_ends_no_sentence(self, text: str, kept: str) -> None:
+        assert plugin_module.drop_plot_button(text) == (kept, 1)
+
+    async def test_an_answer_to_a_question_about_the_button_keeps_it(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        """The user asked about the button: the answer names it, and a short filler before it must not be all that
+        is left. The tools the turn ran come back as user content without text, after the question."""
+        ledger.shipped_in_turn = False
+        ledger.root_request = LlmRequest(
+            model="m",
+            contents=[
+                types.Content(role="user", parts=[types.Part(text="what does .update_plot() do?")]),
+                types.Content(role="model", parts=[types.Part(function_call=types.FunctionCall(name="get_spec"))]),
+                types.Content(
+                    role="user",
+                    parts=[types.Part(function_response=types.FunctionResponse(name="get_spec", response={}))],
+                ),
+            ],
+        )
+        text = "Sure. `.update_plot() →` redraws the plot with the change in the box."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "asked", "sentences": 0}]
+
+    @pytest.mark.parametrize(
+        "message",
+        [
+            "add a column z",
+            # A mention of the button is no question about it.
+            "I already pressed .create_plot(); now add a column z",
+            # A question about something else, beside a mention.
+            "I pressed .create_plot(), add a column z",
+        ],
+    )
+    async def test_a_message_that_asks_nothing_about_the_button_drops_it_as_ever(
+        self, message: str, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+        ledger.root_request = LlmRequest(
+            model="m", contents=[types.Content(role="user", parts=[types.Part(text=message)])]
+        )
+        text = "I added the column. Check the data and press `.create_plot()`."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == "I added the column."
+        assert lines == [{"verdict": "dropped", "sentences": 1}]
+
+    async def test_a_german_question_about_the_button_keeps_the_answer(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+        ledger.root_request = LlmRequest(
+            model="m", contents=[types.Content(role="user", parts=[types.Part(text="Was macht .create_plot()?")])]
+        )
+        text = "Klar. `.create_plot()` übernimmt die Daten, wie die Karte sie zeigt, und zeichnet den Plot."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "asked", "sentences": 0}]
+
+    async def test_two_checks_that_would_leave_nothing_keep_the_reply_as_written(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        """After a shipped plot, `.confirm()` goes first; when the plot button's sentence is all that is left, the
+        reply goes out whole, never as what the first check left of it."""
+        text = "Confirm with `.confirm()`. Then press `.create_plot()`."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "kept", "sentences": 1}, {"verdict": "kept", "sentences": 1}]
+
+    async def test_a_reply_that_only_names_the_plot_button_stays_whole(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+        text = "Press `.create_plot()` once the bindings look right."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "kept", "sentences": 1}]
+
     async def test_a_language_reask_gets_the_same_check(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch, lines: list[dict[str, Any]]
     ) -> None:

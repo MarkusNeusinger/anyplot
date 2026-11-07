@@ -4,8 +4,8 @@
  * buttons rather than removed). The experimental notice (`ExperimentalNotice`), the data card's
  * `# your data` header (`DataCard`), the thread's reply-language line (`ChatThread`), the
  * remembered list's heading (`Remembered`), a result card's notes (`ResultCard`, the review's
- * lines in full) and the columns the plot expects, after the spec's title in the page header,
- * use it.
+ * lines in full) and the thread's start item (`StartItem`: the columns the plot expects, after
+ * the chips, and the how-to of the data) use it.
  *
  * A popover rather than a tooltip: it opens on a tap as on a click, it can hold a link, and it
  * keeps the keyboard focus inside until Escape or a click outside closes it, which returns the
