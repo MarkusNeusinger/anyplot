@@ -834,7 +834,9 @@ export interface AgentSessionState {
   nextDataVersion: number;
   /**
    * The typed turn read as an answer whose memory read after its `done` is still to come: that
-   * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait.
+   * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait,
+   * and so does the end of every later turn but the summary and example data, which cannot change
+   * the memory: a read that failed or was overtaken never lands on an older question.
    */
   memoryTurn: number | null;
   versions: Record<number, PlotVersion>;
@@ -934,8 +936,11 @@ type Action =
   | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
   | { type: 'run_stopping' }
   | { type: 'run_reconnecting'; on: boolean }
-  /** A turn reached its `done`: what it changed goes on its item, when the user typed it. */
-  | { type: 'turn_outcome'; outcome: TurnOutcome }
+  /**
+   * A turn ended: what it changed goes on its item when the user typed it; `null` for a turn that
+   * did not reach its `done` (refused, failed, stopped), which gets no mark.
+   */
+  | { type: 'turn_outcome'; outcome: TurnOutcome | null }
   | { type: 'run_end' }
   | { type: 'version_add'; version: PlotVersion }
   | { type: 'version_image'; number: number; theme: Theme; image: ThemeImage }
@@ -1275,7 +1280,9 @@ const MOVES_THE_CARD: ReadonlySet<DataVersionChange> = new Set(['turn', 'copy'])
  *   state (notes, code) as it moves.
  * - A version the card's own controls made (`.undo()`, `.to_long()`, the table and sheet
  *   pickers): the stub goes above the card, which stays where it is, so nothing moves under the
- *   focus.
+ *   focus. Once a plot (or a failed plot's card) stands below the card, though, the version is
+ *   new data after a plot, and moves the card to the end as a turn's does: the current data
+ *   stays in the latest chapter, and the chat's scroll and focus follow the move.
  * - Data without a card yet (example data, a formula, code, a copy) adds the card at the end.
  */
 function placeData(
@@ -1303,11 +1310,15 @@ function placeData(
   if (!card) return appendItem(numbered, { kind: 'data', snapshot });
   const stub = stubOf(card, numbered.nextItemId, state.dataset);
   const moved = { ...card, snapshot };
+  const plotBelow = items
+    .slice(live + 1)
+    .some(item => item.kind === 'plot' || item.kind === 'plot_failed');
   return {
     ...numbered,
-    items: MOVES_THE_CARD.has(change)
-      ? [...items.slice(0, live), stub, ...items.slice(live + 1), moved]
-      : [...items.slice(0, live), stub, moved, ...items.slice(live + 1)],
+    items:
+      MOVES_THE_CARD.has(change) || plotBelow
+        ? [...items.slice(0, live), stub, ...items.slice(live + 1), moved]
+        : [...items.slice(0, live), stub, moved, ...items.slice(live + 1)],
     nextItemId: numbered.nextItemId + 1,
   };
 }
@@ -1763,16 +1774,23 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'run_reconnecting':
       return state.run ? { ...state, run: { ...state.run, reconnecting: action.on } } : state;
     case 'turn_outcome': {
-      // The turn's own item is the latest: no other turn starts before its `done`, and the late
-      // read of a cut turn adds none, so its outcome lands on the cut turn's item.
-      // An action's turn names nothing: a typed turn's memory read still in flight speaks for that
-      // turn (`memoryTurn`), also when it lands while the next turn runs.
+      // The turn's own item is the latest: no other turn starts before its end, and the late read
+      // of a cut turn adds none, so its outcome lands on the cut turn's item.
       const turn = latestTurn(state.items);
-      if (turn?.item.kind !== 'user') return state;
+      const unwaited = state.memoryTurn === null ? state : { ...state, memoryTurn: null };
+      if (turn?.item.kind === 'action') {
+        // The summary and example data cannot change the memory: a question's read still in flight
+        // speaks for the question. Any other action ends the wait, since its own read compares
+        // with the list it changed.
+        const keeps = turn.item.action === 'summarize_data' || turn.item.action === 'example_data';
+        return keeps ? state : unwaited;
+      }
+      if (turn?.item.kind !== 'user' || action.outcome === null) return unwaited;
       const marked: ChatItem = { ...turn.item, outcome: action.outcome };
       return {
         ...state,
         items: replaceAt(state.items, turn.index, marked),
+        // Only a question waits for its memory read: anything else it changed is named already.
         memoryTurn: action.outcome === 'answer' ? turn.item.id : null,
       };
     }
@@ -1862,6 +1880,10 @@ function failureOf(err: unknown): Failure {
 }
 
 const isAbort = (err: unknown) => err instanceof DOMException && err.name === 'AbortError';
+
+/** The server refused the run because it holds no confirmation: no round ran, no plot was made. */
+const unconfirmedPlot = (result: PlotResult) =>
+  result.status === 'not_ready' && result.reason === 'data_unconfirmed';
 
 export function useAgentSession({
   specId,
@@ -2542,7 +2564,7 @@ export function useAgentSession({
         repaired: result.attempts > 1 ? 'yes' : 'no',
         spec: specId,
       });
-      if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
+      if (unconfirmedPlot(result)) {
         // The server holds no confirmation: the next `.create_plot()` confirms again instead of
         // starting a run the server refuses. The turn's `done` sync normally says so as well, and
         // a data change of this turn comes only with it, so the flag drops at the turn's end, where
@@ -2687,7 +2709,8 @@ export function useAgentSession({
               read.refused = true;
               read.refusalCode = event.code;
             }
-            if (event.type === 'plot') {
+            // A plot the server refused for unconfirmed data ran no round: the turn made no plot.
+            if (event.type === 'plot' && !unconfirmedPlot(event.result)) {
               read.plotted = true;
               if (event.result.status === 'ok' || event.result.status === 'needs_attention') {
                 read.shipped = true;
@@ -2812,16 +2835,19 @@ export function useAgentSession({
         // After `done`: a data change of the turn has named the loss already, and this changes nothing then.
         if (unconfirmedRef.current) safeDispatch({ type: 'confirm_lost' });
         unconfirmedRef.current = false;
-        // A typed turn that reached its `done` says what it changed; one that was refused, failed
-        // or stopped says so in the thread already.
-        if (turnEndRef.current === 'done') {
-          safeDispatch({ type: 'turn_outcome', outcome: turnOutcome(read) });
-        }
+        // Every turn's end says what it changed, `null` for one that did not reach its `done`
+        // (refused, failed, stopped, which the thread names already); that also ends the wait of
+        // an earlier question's memory read (`memoryTurn`).
+        safeDispatch({
+          type: 'turn_outcome',
+          outcome: turnEndRef.current === 'done' ? turnOutcome(read) : null,
+        });
         safeDispatch({ type: 'run_end' });
       }
       // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
-      // empties the list: after every `done` the list follows the server.
-      if (read.finished) void refreshMemory(true);
+      // empties the list: after every `done` the list follows the server. Only the read after a
+      // turn that ended with its `done` speaks for that turn.
+      if (read.finished) void refreshMemory(turnEndRef.current === 'done');
       return read;
     },
     [safeDispatch, addItem, handleFailure, refreshMemory]

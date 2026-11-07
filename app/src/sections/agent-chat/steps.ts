@@ -257,15 +257,28 @@ export function runLine(state: AgentSessionState): string | null {
   return state.run?.stopping ? 'stopping…' : RUN_LINE;
 }
 
+/** The folded lists by the item list they came from; the reducer never changes a list in place. */
+const FOLDED = new WeakMap<ChatItem[], ChatItem[]>();
+
 /**
  * The thread's items as the page shows them until it renders a version per item: one card per
  * paste, where its first version stood, showing the latest one (or, once a later paste replaced
  * it, one stub of the last version it showed), and no line for a library switch. The reducer
  * keeps an item per data version (`placeData`): the versions a card's own controls or a turn
  * made fold back into the card they continued (`data_stub.card`). Returns `items` itself when
- * there is nothing to fold.
+ * there is nothing to fold, and the same folded list for the same `items`, so a render that
+ * changed no item hands the thread the list it had.
  */
 export function shownItems(items: ChatItem[]): ChatItem[] {
+  let shown = FOLDED.get(items);
+  if (!shown) {
+    shown = foldItems(items);
+    FOLDED.set(items, shown);
+  }
+  return shown;
+}
+
+function foldItems(items: ChatItem[]): ChatItem[] {
   const lineOf = (item: ChatItem) =>
     item.kind === 'data' ? item.id : item.kind === 'data_stub' ? (item.card ?? item.id) : null;
   // The item that stands for a card's versions: the live card, or the stub a paste froze it into.

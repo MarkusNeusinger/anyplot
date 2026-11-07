@@ -8,10 +8,11 @@
   made leaves a stub where the card stood and moves the card, under its id, to
   the thread's end; a version from the card's own controls (`.undo()`,
   `.to_long()`, the pickers) puts the stub above the card, which stays in
-  place. A library switch adds an item with the decisions it carries, and a
-  typed turn carries what it changed (data, plot, switch, language, memory, or
-  nothing, which marks a question), read from the stream until the server
-  names it. `threadModel.ts` reads chapters, folds and counts from the items
+  place, unless a plot stands below the card, in which case the card moves
+  below it too. A library switch adds an item with the decisions it carries,
+  and a typed turn carries what it changed (data, plot, switch, language,
+  memory, or nothing, which marks a question), read from the stream until the
+  server names it. `threadModel.ts` reads chapters, folds and counts from the items
   for the chapter lines to come, and the thread still renders one card per
   paste: a long session replayed through both reducers renders byte for byte
   as before.

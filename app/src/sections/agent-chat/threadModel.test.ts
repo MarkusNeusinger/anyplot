@@ -225,6 +225,70 @@ describe('threadModel', () => {
     ]);
   });
 
+  it("opens a data chapter at the card that a card's own control moved below a plot", () => {
+    const state = run(
+      paste('▤ table'),
+      summary('12 rows.'),
+      plot(1),
+      item({ type: 'undo_done', parsed: PARSED }),
+      item({ type: 'data_prepared', dataset: CHANGED, toLong: true }),
+      plot(2)
+    );
+    // The second control finds no plot below the moved card: its stub goes above the card, and
+    // both stay in the chapter the first one opened.
+    expect(headings(state.items)).toEqual([
+      '# data',
+      'paste',
+      'data_stub ▸',
+      'action',
+      'assistant',
+      '# plot',
+      'action',
+      'plot ▸',
+      'assistant',
+      '# data',
+      'data_stub ▸',
+      'data',
+      '# plot',
+      'action',
+      'plot',
+      'assistant',
+    ]);
+    // The chapter starts at its first item, the stub right below the plot's reply.
+    const { chapters } = threadModel(state.items);
+    expect(state.items[7]).toMatchObject({ kind: 'data_stub', card: 2, snapshot: { n: 2 } });
+    expect(chapters[2]).toMatchObject({
+      kind: 'data',
+      start: state.items[7].id,
+      dataVersions: [2, 3],
+    });
+  });
+
+  it('leaves a paste whose table read from text was discarded in the chapter it falls in', () => {
+    const transcription = {
+      text: 'a,b\n1,2\n',
+      preview: [['1', '2']],
+      profile: PARSED.profile,
+      warnings: [],
+      note: '',
+      bytes: 8,
+    };
+    const waiting = run(
+      paste('▤ table'),
+      summary('12 rows.'),
+      plot(1),
+      item({ type: 'transcribed', transcription, chip: '▤ text · 2 lines' })
+    );
+    // While it waits, the table read from text is data to decide on.
+    expect(headings(waiting.items).slice(-3)).toEqual(['# data', 'paste', 'transcription']);
+    const discarded = agentReducer(waiting, { type: 'transcription_clear' });
+    expect(headings(discarded.items).slice(-4)).toEqual(['plot', 'assistant', 'paste', 'notice']);
+    expect(threadModel(discarded.items).chapters.map(chapter => chapter.kind)).toEqual([
+      'data',
+      'plot',
+    ]);
+  });
+
   it('gives a thread without a turn one data chapter, and an empty thread none', () => {
     expect(threadModel([])).toEqual({ rows: [], chapters: [] });
     const copied: ChatItem[] = [{ id: 1, kind: 'data' }];

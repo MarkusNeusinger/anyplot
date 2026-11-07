@@ -21,10 +21,18 @@ import {
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
 import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
-import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
+import type {
+  DatasetChanged,
+  DatasetParsed,
+  PlotResult,
+  RoleSpec,
+  TurnAction,
+} from 'src/lib/agent';
 import { nextUtcMidnight } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
+
+type Action = Parameters<typeof agentReducer>[1];
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
 const kindsOf = (items: ChatItem[]) => items.map(item => item.kind);
@@ -3077,6 +3085,24 @@ describe('useAgentSession: what a typed turn changed', () => {
       ],
       'plot',
     ],
+    [
+      // No round ran: the server held no confirmation, and the turn made no plot.
+      'a plot refused for unconfirmed data',
+      [
+        [
+          'plot',
+          {
+            ...PLOT_OK,
+            status: 'not_ready',
+            reason: 'data_unconfirmed',
+            attempts: 0,
+            version: null,
+          },
+        ],
+        ['done', {}],
+      ],
+      'answer',
+    ],
     ['a switch', [['done', { switch: { library: 'seaborn', plot: true } }]], 'switch'],
     [
       'a language chosen',
@@ -3203,6 +3229,37 @@ describe('useAgentSession: what a typed turn changed', () => {
     plotRun.close();
     await act(() => plot);
   });
+
+  it("keeps a question's mark when its memory read failed and a later plot grew the list", async () => {
+    const decision = { id: 'm1', kind: 'other', target: null, text: 'red', expect: null, turn: 2 };
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = call =>
+      (call.body as { action?: string }).action === 'create_plot'
+        ? sse([
+            ['plot', PLOT_OK],
+            ['done', {}],
+          ])
+        : sse([
+            ['message', { text: 'x is the hours.' }],
+            ['done', {}],
+          ]);
+    let reads = 0;
+    routes['GET /sessions/S1/memory'] = () => {
+      reads += 1;
+      return reads === 1
+        ? json(503, { detail: 'unavailable', ref: 'r-m' })
+        : json(200, { entries: [decision], max_entries: 30, written: true });
+    };
+    const { result } = await openSession(routes);
+
+    await act(() => result.current.sendMessage('what is on x?'));
+    await waitFor(() => expect(reads).toBe(1));
+    expect(result.current.state.memory).toBeNull();
+    // The plot ran and its decisions came with the next read: they are the plot's, not the question's.
+    await act(() => result.current.createPlot());
+    await waitFor(() => expect(result.current.state.memory?.entries).toEqual([decision]));
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
+  });
 });
 
 describe('agentReducer: the memory read after a turn', () => {
@@ -3272,6 +3329,27 @@ describe('agentReducer: the memory read after a turn', () => {
       }
     );
     expect(changed.memoryTurn).toBeNull();
+  });
+
+  it('ends the wait with every later turn but the summary and example data', () => {
+    const question = asked(ready, 'what is on x?');
+    const ended = (state: AgentSessionState, item: Extract<Action, { type: 'item' }>['item']) =>
+      agentReducer(agentReducer(state, { type: 'item', item }), {
+        type: 'turn_outcome',
+        outcome: item.kind === 'user' ? null : 'plot',
+      });
+    const action = (name: TurnAction) =>
+      ({ kind: 'action', action: name, library: 'matplotlib' }) as const;
+    // Neither can change the memory: the question's read still speaks for it.
+    expect(ended(question, action('summarize_data')).memoryTurn).toBe(1);
+    expect(ended(question, action('example_data')).memoryTurn).toBe(1);
+    // A plot can, and its own read compares with the list it changed.
+    expect(ended(question, action('create_plot')).memoryTurn).toBeNull();
+    expect(ended(question, action('carry_plot')).memoryTurn).toBeNull();
+    // A typed turn that did not reach its `done` (refused, failed, stopped) gets no mark.
+    const stopped = ended(question, { kind: 'user', text: 'and y?' });
+    expect(stopped.memoryTurn).toBeNull();
+    expect(outcomes(stopped)).toEqual(['answer', undefined]);
   });
 });
 
@@ -4138,6 +4216,59 @@ describe('agentReducer: the card in the thread', () => {
     expect(
       table.items.slice(1, 5).every(item => item.kind === 'data_stub' && item.card === 2)
     ).toBe(true);
+  });
+
+  it("moves the card below a plot for a version of its own controls, as a turn's version does", () => {
+    const pasted = agentReducer(ready, {
+      type: 'parse_done',
+      parsed,
+      bytes: 10,
+      chip: '▤ Bericht.xlsx',
+      file: workbook('2025'),
+    });
+    const failed: PlotResult = {
+      ...(PLOT_OK as PlotResult),
+      status: 'failed',
+      reason: 'render',
+      version: null,
+    };
+    const below = [
+      { kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      { kind: 'plot', version: 1 },
+    ] as const;
+    const plotted = below.reduce<AgentSessionState>(
+      (state, value) => agentReducer(state, { type: 'item', item: value }),
+      pasted
+    );
+    const failedBelow = agentReducer(agentReducer(pasted, { type: 'item', item: below[0] }), {
+      type: 'item',
+      item: { kind: 'plot_failed', result: failed },
+    });
+    const controls: [string, Action][] = [
+      ['.undo()', { type: 'undo_done', parsed }],
+      ['.to_long()', { type: 'data_prepared', dataset: PREPARED as DatasetChanged, toLong: true }],
+      ['the sheet picker', { type: 'parse_done', parsed, bytes: 10, file: workbook('2026') }],
+      [
+        'the table picker',
+        { type: 'parse_done', parsed: { ...parsed, tables: ['a', 'b'], table: 2 }, bytes: 10 },
+      ],
+    ];
+    for (const before of [plotted, failedBelow]) {
+      for (const [name, control] of controls) {
+        const next = agentReducer(before, control);
+        // The stub of the version before stays where the card stood, the card goes on below the
+        // plot under its id, so the current data stays in the latest chapter.
+        expect(kindsOf(next.items), name).toEqual([
+          'paste',
+          'data_stub',
+          'action',
+          before === plotted ? 'plot' : 'plot_failed',
+          'data',
+        ]);
+        expect(next.items[1], name).toMatchObject({ id: 5, card: 2, snapshot: { n: 1 } });
+        expect(next.items[4], name).toMatchObject({ id: 2, snapshot: { n: 2 } });
+      }
+    }
   });
 
   it('adds the card at the end for data that had none: example data, a formula, code', () => {

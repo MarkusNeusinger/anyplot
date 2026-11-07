@@ -6,12 +6,17 @@
  *
  * The items fall into turns: a turn starts at the user's typed message, a page action
  * (`.create_plot()`, the summary of new data) or a paste, and holds what followed it
- * until the next turn starts. A turn is about the data when it brought a data version
- * (a paste, a pick, a change the assistant or the card made), asked for the summary or
+ * until the next turn starts. A data version that a card's own control made after a plot
+ * (`.undo()`, `.to_long()`, a picker) has no turn item: the reducer moves the card below
+ * the plot, and a data item that follows a plot inside a turn starts a turn of its own.
+ * A turn is about the data when it holds a data version or a table read from text (a
+ * paste, a pick, a change the assistant or the card made), asked for the summary or
  * example data, or changed the data in the user's words; about the plot when it ran the
  * plot pipeline (a plot button's action, a plot card, a failed plot, or a typed turn
  * whose outcome is a plot). Anything else (a question, a refusal, a library switch, a
- * notice) belongs to the chapter it falls in.
+ * notice) belongs to the chapter it falls in. So does a paste whose table read from text
+ * was discarded: it left the data as it was, and the thread shows it as a line of its own
+ * (`# table discarded`), so it opens no data chapter after a plot.
  *
  * A chapter is a run of turns about one step: `data` (step 1, the data and the talk
  * about it) or `plot` (step 2). The thread opens with a data chapter; a plot turn after
@@ -64,22 +69,21 @@ const opensTurn = (item: ChatItem) =>
 /** The data actions: the summary of new data, and example data. */
 const DATA_ACTIONS = new Set(['summarize_data', 'example_data']);
 
+const isPlotItem = (item: ChatItem) => item.kind === 'plot' || item.kind === 'plot_failed';
+const isDataItem = (item: ChatItem) => item.kind === 'data' || item.kind === 'data_stub';
+
 /** What a turn's items are about, or null for a turn that stays in the chapter it falls in. */
 function turnKind(turn: readonly ChatItem[]): ChapterKind | null {
   const opener = turn[0];
-  const brought = turn.some(
-    item => item.kind === 'data' || item.kind === 'data_stub' || item.kind === 'transcription'
-  );
   if (
-    brought ||
-    opener.kind === 'paste' ||
+    turn.some(item => isDataItem(item) || item.kind === 'transcription') ||
     (opener.kind === 'action' && DATA_ACTIONS.has(opener.action)) ||
     (opener.kind === 'user' && opener.outcome === 'data')
   ) {
     return 'data';
   }
   if (
-    turn.some(item => item.kind === 'plot' || item.kind === 'plot_failed') ||
+    turn.some(isPlotItem) ||
     (opener.kind === 'action' && isPlotAction(opener.action)) ||
     (opener.kind === 'user' && opener.outcome === 'plot')
   ) {
@@ -88,12 +92,17 @@ function turnKind(turn: readonly ChatItem[]): ChapterKind | null {
   return null;
 }
 
-/** The items cut into turns; what stands before the first turn (a copied card) is a turn of its own. */
+/**
+ * The items cut into turns; what stands before the first turn (a copied card) is a turn of its
+ * own, and so is a data version below a plot of the same turn (a card's control after a plot).
+ */
 function turnsOf(items: readonly ChatItem[]): ChatItem[][] {
   const turns: ChatItem[][] = [];
   for (const item of items) {
-    if (opensTurn(item) || turns.length === 0) turns.push([item]);
-    else turns[turns.length - 1].push(item);
+    const current = turns[turns.length - 1];
+    const afterPlot = !!current && isDataItem(item) && current.some(isPlotItem);
+    if (!current || opensTurn(item) || afterPlot) turns.push([item]);
+    else current.push(item);
   }
   return turns;
 }

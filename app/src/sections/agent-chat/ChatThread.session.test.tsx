@@ -18,7 +18,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import type { DatasetChanged, DatasetParsed, DatasetProfile } from 'src/lib/agent';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { runView } from 'src/sections/agent-chat/steps';
+import { runView, shownItems } from 'src/sections/agent-chat/steps';
 import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 import { render } from 'src/test-utils';
 
@@ -201,6 +201,18 @@ const STEPS: [string, Action[]][] = [
   ],
   ['a plot of it', [...confirm, ...plot(3, '.update_plot() →')]],
   [
+    '.to_long() below that plot',
+    [
+      { type: 'to_long_start' },
+      {
+        type: 'data_prepared',
+        toLong: true,
+        dataset: changed(48, ['Region', 'Quarter', 'Sales'], ['made long'], 3),
+      },
+      ...confirm,
+    ],
+  ],
+  [
     'a switch',
     [
       { type: 'library_start' },
@@ -318,6 +330,52 @@ const MAIN_AT_THE_END: ChatItem[] = [
   { id: 30, kind: 'assistant', text: 'Computed 200 rows.' },
 ];
 
+/**
+ * The item list main's reducer built after every step, one token per item: its kind, a stub with
+ * its shape, a plot with its version. The ids differ by design (the reducer gives a split stub and
+ * a switch ids of their own), so the tokens pin what a fold can get wrong: which item stands
+ * where, which stub shows which shape. The mount test below pins the React identities.
+ */
+const SUMMARIZED = 'paste data action assistant';
+const SHEETS = `${SUMMARIZED} action assistant`;
+const ASKED = `${SHEETS} user assistant`;
+const PLOT_1 = `${ASKED} action plot:1 assistant`;
+const PLOT_2 = `${PLOT_1} user plot:2 assistant`;
+const CHANGED = `${PLOT_2} user assistant`;
+const PLOT_3 = `${CHANGED} action plot:3 assistant`;
+const PLOT_4 = `${PLOT_3} action plot:4 assistant`;
+// The second paste froze the first card into a stub of the shape it showed last.
+const FROZEN = PLOT_4.replace('paste data', 'paste stub:48x3');
+const MAIN_FOLDS: string[] = [
+  SUMMARIZED,
+  SHEETS,
+  SHEETS,
+  ASKED,
+  PLOT_1,
+  PLOT_2,
+  CHANGED,
+  CHANGED,
+  CHANGED,
+  PLOT_3,
+  PLOT_3,
+  PLOT_3,
+  PLOT_4,
+  `${FROZEN} ${SUMMARIZED}`,
+  `${FROZEN} ${SUMMARIZED} paste transcription`,
+  `${FROZEN} paste stub:4x2 action assistant paste data`,
+  `${FROZEN} paste stub:4x2 action assistant paste data user assistant`,
+];
+const tokens = (items: ChatItem[]) =>
+  items
+    .map(item =>
+      item.kind === 'data_stub'
+        ? `stub:${item.rows}x${item.columns}`
+        : item.kind === 'plot'
+          ? `plot:${item.version}`
+          : item.kind
+    )
+    .join(' ');
+
 const START: AgentSessionState = {
   ...initialAgentState('matplotlib'),
   phase: 'ready',
@@ -366,6 +424,13 @@ const cards = (container: HTMLElement) =>
   [...container.querySelectorAll('[data-testid^="card-"]')].map(card => card.textContent);
 
 describe('ChatThread: the data versions of a long session', () => {
+  it('folds the version items into the list main built, after every step', () => {
+    const steps = replay();
+    expect(steps.map(({ state }) => tokens(shownItems(state.items)))).toEqual(MAIN_FOLDS);
+    // The items themselves hold more: a stub per version and the switch.
+    expect(steps.map(({ state }) => tokens(state.items))).not.toEqual(MAIN_FOLDS);
+  });
+
   it('renders the version items as main rendered its items, during a turn and at the end', () => {
     const states = new Map(replay().map(({ name, state }) => [name, state]));
     const during = states.get('a data change in step 2, its turn still running')!;
@@ -397,7 +462,7 @@ describe('ChatThread: the data versions of a long session', () => {
     // Main: the card of the paste through every version and the plots, a new card for the
     // second paste, the table read from text in its own frame, which `.use()` turns into the card.
     expect(seen).toEqual([
-      ...Array(12).fill('data card #1'),
+      ...Array(13).fill('data card #1'),
       'data card #2',
       'data card #2 | transcription card #3',
       'data card #3',
@@ -405,16 +470,20 @@ describe('ChatThread: the data versions of a long session', () => {
     ]);
   });
 
-  it('keeps the card mounted when a turn moves it to the end of the thread', () => {
+  it('keeps the card mounted when a turn or a control after a plot moves it to the end', () => {
     mounts = 0;
-    const steps = replay();
-    const before = steps.find(step => step.name === 'a typed change of the plot')!.state;
-    const after = steps.find(step => step.name === 'its end')!.state;
-    // The items as they are, with the card below the turn that changed the data.
-    expect(after.items[after.items.length - 1]).toMatchObject({ kind: 'data', id: 2 });
-    const view = render(thread(before, true));
+    const steps = new Map(replay().map(({ name, state }) => [name, state]));
+    const view = render(thread(steps.get('a typed change of the plot')!, true));
     expect(cards(view.container)).toEqual(['data card #1']);
-    view.rerender(thread(after, true));
-    expect(cards(view.container)).toEqual(['data card #1']);
+    // The items as they are: the card below the turn that changed the data, then below the plot
+    // its `.to_long()` followed.
+    for (const name of ['its end', 'a plot of it', '.to_long() below that plot']) {
+      const state = steps.get(name)!;
+      view.rerender(thread(state, true));
+      expect(cards(view.container), name).toEqual(['data card #1']);
+    }
+    const long = steps.get('.to_long() below that plot')!.items;
+    expect(long[long.length - 1]).toMatchObject({ kind: 'data', id: 2 });
+    expect(long[long.length - 2]).toMatchObject({ kind: 'assistant', text: 'Plot 3.' });
   });
 });
