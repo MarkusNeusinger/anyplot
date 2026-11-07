@@ -4375,6 +4375,25 @@ class TestMarkdownTables:
         assert list(parsed.column_dtypes) == ["Month", "Sales"]
         assert parsed.csv.splitlines()[1:] == ["Jan,100", "---,---", "Mar,90"]
 
+    def test_a_sparse_first_row_of_dashes_under_the_header_is_never_dropped(self) -> None:
+        """No rule in every column, so no alignment row: its `---` is a missing value. A row without values right
+        under the header is `table_block`'s to read, as it always was (here as the header, the line above said as
+        left out); the rule only must not drop it silently."""
+        parsed = parse_dataset(
+            "| Land | Wert | Note |\n| --- | | |\n| A | 1.5 | x |\n| B | 2.5 | y |\n| C | 3.5 | z |\n"
+        )
+
+        assert "---" in parsed.column_dtypes
+        assert parsed.context_lines == ["Land | Wert | Note"]
+
+    def test_an_unnamed_first_column_keeps_its_alignment_row_out(self) -> None:
+        parsed = parse_dataset(
+            "| | 2020 | 2021 |\n|---|---:|---:|\n| CH | 8.6 | 8.7 |\n| AT | 8.9 | 9.0 |\n| IT | 59.4 | 59.2 |\n"
+        )
+
+        assert list(parsed.column_dtypes) == ["column_1", "2020", "2021"]
+        assert parsed.csv.splitlines()[1] == "CH,8.6,8.7"
+
     @pytest.mark.parametrize(
         ("text", "name", "dtype", "first"),
         [

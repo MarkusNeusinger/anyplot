@@ -1245,15 +1245,21 @@ def _without_alignment_rows(
     A Markdown table, as chat assistants write it, puts a row of dashes under its header
     (`|-------|------:|`). Read as a row, it became the header (`Month -------`, `:------`)
     or a text cell in a column of names (until 2026-11-07). A record goes only when
-    every filled cell is such a rule (`_ALIGNMENT_CELL`) and it stands directly under the
-    header: the record right above it has its field count, a filled cell that is no rule, and
-    is the first record of that count since the last blank line (a title above has another
-    count). A row of dashes further down the table is data, a missing value as a statistics
-    office writes it, and stays. It is layout, like a blank line, so no warning counts it.
+    every cell is such a rule (`_ALIGNMENT_CELL`), as Markdown writes one for each column, the
+    empty fields outside a leading and a trailing pipe aside; so a sparse first row
+    (`| --- | | |`) stays. It must stand directly under the header: the record right above
+    it has its field count, a filled cell that is no rule, and is the first record of that
+    count since the last blank line (a title above has another count). A row of dashes
+    further down the table is data, a missing value as a statistics office writes it, and
+    stays. It is layout, like a blank line, so no warning counts it.
     """
     dropped: list[int] = []
     for index in range(1, len(records)):
-        cells = [cell.strip() for cell in records[index][1] if cell.strip()]
+        cells = [cell.strip() for cell in records[index][1]]
+        if cells and not cells[-1]:
+            cells.pop()  # the field after a trailing pipe
+        if cells and not cells[0]:
+            cells.pop(0)  # the field before a leading pipe
         if index in breaks or not cells or not all(_ALIGNMENT_CELL.fullmatch(cell) for cell in cells):
             continue
         width = len(records[index][1])
