@@ -755,7 +755,8 @@ class CaseRunner:
                     rows.add(int(data["dataset"]["profile"]["rows"]))  # the version this turn made
             texts = await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
             score_conversions(result, owed, decimal)
-            score_from_version(result, case.expected_from_version)
+            # A message case on summarized data gets no server conversion: the turn starts after the earlier changes.
+            score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -903,24 +904,26 @@ class CaseRunner:
         return texts
 
 
-def version_key(value: object) -> str:
-    """A `from_version` as one comparable text: `original` is version 1, `"2"` is 2."""
+def version_key(value: object, current: int) -> str:
+    """A `from_version` as one comparable text: `original` is version 1, `current` the number the turn started on,
+    `"2"` is 2."""
     text = str(value).strip()
-    return "1" if text == "original" else text
+    return "1" if text == "original" else str(current) if text == "current" else text
 
 
-def score_from_version(result: CaseResult, expected: str | int | None) -> None:
+def score_from_version(result: CaseResult, expected: str | int | None, current: int = 1) -> None:
     """Whether the turn started from the version the case expects: some `prepare_data` or `query_data` call names it,
     and no `prepare_data` call names another (a question read from elsewhere first changes nothing). A miss otherwise.
 
-    `result.from_versions` holds `<tool>:<from_version>`; a case without an expectation is not scored.
+    `result.from_versions` holds `<tool>:<from_version>`; `current` is the version the turn started on (one more per
+    earlier change), so `current` and its number are the same version. A case without an expectation is not scored.
     """
     if expected is None:
         return
     calls = [item.split(":", 1) for item in result.from_versions]
-    want = version_key(expected)
-    named = any(version_key(version) == want for _, version in calls)
-    stray = any(tool == PREPARE_TOOL and version_key(version) != want for tool, version in calls)
+    want = version_key(expected, current)
+    named = any(version_key(version, current) == want for _, version in calls)
+    stray = any(tool == PREPARE_TOOL and version_key(version, current) != want for tool, version in calls)
     result.version_miss = not named or stray
     if result.version_miss:
         result.match = False

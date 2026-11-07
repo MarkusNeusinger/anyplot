@@ -831,13 +831,16 @@ class TestRun:
             (["query_data:original", "prepare_data:current"], "original", True),  # then changed the current
             ([], "original", True),
             (["prepare_data:2"], 2, False),
+            (["prepare_data:current"], 2, False),  # the turn started on version 2: the same version
+            (["prepare_data:2"], "current", False),
+            (["prepare_data:current"], "original", True),
             (["prepare_data:original"], None, False),  # no expectation, no score
         ],
     )
     def test_the_version_score(self, versions: list[str], expected: str | int | None, miss: bool) -> None:
         result = CaseResult("v", [], [], match=True, from_versions=versions)
 
-        score_from_version(result, expected)
+        score_from_version(result, expected, current=2)
 
         assert result.version_miss is miss and result.match is not miss
 

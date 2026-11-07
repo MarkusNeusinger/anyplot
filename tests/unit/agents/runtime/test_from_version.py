@@ -483,6 +483,36 @@ def test_state_from_before_the_key_finds_the_original_in_the_history() -> None:
     assert kept_versions(store, SID, view_of(state))[0].stored.dataset_id == original
 
 
+def test_a_date_column_a_rebuild_brings_back_fills_the_role_its_drop_left_open() -> None:
+    """The bindings carried are the current version's, so "new" is measured against the current version, not the
+    base: the dropped date column, back from the original, takes the date role again (Flash review of B4b)."""
+    rolling = snapshot_from_repo("line-timeseries-rolling", "matplotlib")
+    store = DatasetStore()
+    state = initial_state(
+        spec_id="line-timeseries-rolling",
+        library="matplotlib",
+        locale="en",
+        snapshot=rolling,
+        normalised="",
+        readiness={},
+    )
+    text = "Datum,Temperature\n" + "".join(f"2024-{month:02d}-01,{month * 1.5}\n" for month in range(1, 13))
+    state.update(store_dataset(store, SID, parse_dataset(text), rolling, notes_screened=True).state_delta())
+    assert {binding.role for binding in view_of(state).bindings} == {"date", "value"}
+    dropped = "Temperature\n" + "".join(f"{month * 1.5}\n" for month in range(1, 13))
+    state.update(push_version(store, SID, view_of(state), parse_dataset(dropped), rolling).delta)
+    assert {binding.role for binding in view_of(state).bindings} == {"value"}  # the date role is open
+    view = view_of(state)
+    original = resolve_version(kept_versions(store, SID, view), view, "original")
+
+    back = push_version(store, SID, view, original.stored.as_parsed(), rolling, made_from=original.stored)
+
+    assert {(binding.role, binding.column) for binding in back.bindings} == {
+        ("date", "Datum"),
+        ("value", "Temperature"),
+    }
+
+
 def test_the_lines_and_the_where() -> None:
     store = DatasetStore()
     state = opened(store)

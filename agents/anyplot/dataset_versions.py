@@ -289,7 +289,9 @@ def push_version(
     stored = store.get(dataset_id, session_id)
     assert stored is not None  # just stored for this session
     roles = snapshot.roles()
-    # The version before: a date column it did not have fills an open required date role (`carry_bindings`).
+    # The version the carried bindings were made on, the current one also for a rebuild: a date column it did not have
+    # fills an open required date role (`carry_bindings`), so a date column a rebuild brings back takes the role the
+    # drop left open, as one the change made would.
     previous = current.profile if current is not None else None
     if pinned is not None:
         # The user's bindings on the kept columns stay (review of #12206: `.to_long()` dropped them for the
