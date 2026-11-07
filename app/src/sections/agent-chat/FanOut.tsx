@@ -103,7 +103,6 @@ function FanOutRun({
   });
   const [dataFailure, setDataFailure] = useState<Failure | null>(null);
   const stored = useRef(false);
-  const inFlight = useRef(false);
 
   // The session opened: the server copies the page session's confirmed data into it. A session
   // that could not open (not eligible, an error) gives its place up at once.
@@ -144,21 +143,23 @@ function FanOutRun({
 
   // Given a place: one `create_plot`, whose end frees the place. A `run_limit` (the admin's runs in other
   // windows hold every place) sends the library back to waiting for another place; anything else ends it.
+  // One turn per grant of the place: a place given anew after a `run_limit` is a new grant (the limit's
+  // count went up), while a render between the turn's end and the panel's freeing of the place (the
+  // session's own state changes first) is the same grant and starts nothing, where a second plot would
+  // otherwise run in the place the first one just left.
+  const grant = slot === 'running' ? `running:${limit?.count ?? 0}` : null;
+  const startedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (slot !== 'running' || inFlight.current) return;
-    inFlight.current = true;
+    if (grant === null || startedFor.current === grant) return;
+    startedFor.current = grant;
     void plotTurn()
       .then(code => {
-        inFlight.current = false;
         if (code === 'run_limit') onLimited(library);
         else onDone(library);
       })
-      .catch(() => {
-        // The turn handles its own errors; this only keeps an unexpected rejection from holding the place.
-        inFlight.current = false;
-        onDone(library);
-      });
-  }, [slot, plotTurn, library, onDone, onLimited]);
+      // The turn handles its own errors; this only keeps an unexpected rejection from holding the place.
+      .catch(() => onDone(library));
+  }, [grant, plotTurn, library, onDone, onLimited]);
 
   const status = runStatus(state, slot, dataFailure, limit);
   const versions = Object.values(state.versions).filter(version => version.library === library);

@@ -79,8 +79,13 @@ def data_card_components() -> list[Path]:
 
 
 def composer_components() -> list[Path]:
-    """`Composer.tsx` and the components it renders, such as the `.example_data()` line."""
+    """`Composer.tsx` and the components it renders, such as the attachment chip."""
     return components_from("Composer.tsx")
+
+
+def status_line_components() -> list[Path]:
+    """`ChatFrame.tsx`, whose line at the frame's foot holds `.stop()`, `.start_over()` and `.feedback()`."""
+    return components_from("ChatFrame.tsx")
 
 
 def buttons_of(components: list[Path]) -> set[str]:
@@ -133,17 +138,28 @@ def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> N
 
 
 def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None:
-    """The same for the composer: a button added to the composer fails here until the bullet names it, and
-    a button it lost (`.confirm()`, which `.create_plot()` took into its own click) fails until the bullet
-    drops it. `.feedback()` stands below the composer, not in it (`ChatFeedback.tsx`), and is the bullet's
-    one control from elsewhere."""
+    """The same for the composer, its row and the data line above the box (`.example_data()` and `.open()`
+    as links): a button added to it fails here until the bullet names it, and a button it lost fails until
+    the bullet drops it: `.confirm()`, which `.create_plot()` took into its own click, `.send()`, which
+    Enter replaced, and `.stop()`, which moved to the line at the chat's foot. The plot button's labels
+    carry an arrow (`'.update_plot() →'`), which the label pattern reads past."""
     buttons = buttons_of(composer_components())
     bullet = controls_of("The composer")
 
-    assert {".send()", ".create_plot()", ".stop()", ".example_data()", ".open()"} <= buttons
-    assert ".confirm()" not in buttons
+    assert {".create_plot()", ".update_plot()", ".plot_all()", ".example_data()", ".open()"} <= buttons
+    assert not {".confirm()", ".send()", ".stop()"} & buttons
     assert sorted(buttons - bullet) == []
-    assert sorted(bullet - buttons) == [".feedback()"]
+    assert sorted(bullet - buttons) == []
+
+
+def test_the_status_line_bullet_names_exactly_the_buttons_at_its_end() -> None:
+    """The line at the chat's foot holds the actions that are not the step's: `.stop()`, a button of its
+    own since nothing in the composer turns into it, `.start_over()` and the chat's `.feedback()`."""
+    buttons = buttons_of(status_line_components())
+    bullet = controls_of("The line at the chat's foot")
+
+    assert buttons == {".stop()", ".start_over()", ".feedback()"}
+    assert sorted(bullet ^ buttons) == []
 
 
 def test_the_prompt_names_no_confirm_button() -> None:
@@ -153,4 +169,14 @@ def test_the_prompt_names_no_confirm_button() -> None:
 
     assert re.findall(r"\bconfirm\(\)", text) == []
     assert re.findall(r"\bconfirm\(\)", AGENT.read_text(encoding="utf-8")) == []
-    assert "`.create_plot()` beside the message box" in text
+    assert "the plot button at the end of the message box's row (`.create_plot()`)" in text
+
+
+def test_the_prompt_never_has_a_reply_send_the_user_to_the_plot_button() -> None:
+    """The line at the chat's foot names the plot button and what it waits for, so a reply never has to:
+    root.md once told the root in four places to say "press `.create_plot()`" while its reply rules forbade
+    it. No instruction asks for it now, and ShippedReply drops a sentence that names it anyway."""
+    text = PROMPT.read_text(encoding="utf-8")
+
+    assert re.findall(r"press(?:es|ing)? `\.(?:create|update)_plot\(\)`", text) == []
+    assert "never tells the user to press the plot button" in text

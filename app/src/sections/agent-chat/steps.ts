@@ -14,7 +14,7 @@ export type AgentStep = 1 | 2;
 
 /**
  * The status line at the chat frame's foot (`StatusLine`, `ChatFrame.tsx`), which the composer's
- * plot buttons name as their description, and `.send()` while an attachment waits. It holds the
+ * plot button names as its description, and the message box while `all` holds it. It holds the
  * id the pinned header's summary had, so a description that points at it stays valid while the
  * composer changes around it.
  */
@@ -36,18 +36,42 @@ export function dataChanged(state: AgentSessionState): boolean {
   return state.confirmLoss === 'data';
 }
 
-/**
- * The name of the composer's filled plot button, as the lines that lead to it say it:
- * `.create_plot()`, and `plot the new data` after a change to data the user had confirmed, which
- * the click confirms and plots like any other (`Composer.tsx` names the button the same).
- */
-export function plotButtonLabel(state: AgentSessionState): string {
-  return dataChanged(state) ? NEW_DATA_PLOT : '.create_plot()';
-}
-
 /** The server files a version under its (spec, library) pair: whether the library in use has one. */
 export function hasPlotHere(state: AgentSessionState): boolean {
   return Object.values(state.versions).some(version => version.library === state.library);
+}
+
+/**
+ * What the composer's plot button is, in its one fixed place at the row's end (`Composer.tsx`):
+ * `create` (`.create_plot() →`) until the library has a plot, `update` (`.update_plot() →`) once
+ * it has one, `new_data` (`plot the new data`) after a change to data the user had confirmed or a
+ * paste after the plot, and `all` (`.plot_all()`) while the admin's fan-out is on. A switch keeps
+ * the name: the line at the frame's foot names the decisions a carry keeps.
+ */
+export type PlotButtonKind = 'create' | 'update' | 'new_data' | 'all';
+
+export function plotButtonKind(state: AgentSessionState, plotAll = false): PlotButtonKind {
+  if (plotAll) return 'all';
+  if (dataChanged(state)) return 'new_data';
+  if (!hasPlotHere(state)) return 'create';
+  // A paste after the plot clears what dropped the confirmation, and is new data all the same.
+  const pastedSince = !!state.dataset && !state.dataConfirmed && state.confirmLoss === null;
+  return pastedSince ? 'new_data' : 'update';
+}
+
+/**
+ * The plot button's name as the lines that lead to it say it, without the arrow the button
+ * carries: `.create_plot()`, `.update_plot()` once the library has a plot, and `plot the new
+ * data` after a change to data the user had confirmed, which the click confirms and plots like
+ * any other. The thread names a plot turn the same.
+ */
+export function plotButtonLabel(state: AgentSessionState): string {
+  const kind = plotButtonKind(state);
+  return kind === 'new_data'
+    ? NEW_DATA_PLOT
+    : kind === 'update'
+      ? '.update_plot()'
+      : '.create_plot()';
 }
 
 /** The data's shape in one line: `2 rows · 2 columns · version 1`. */
@@ -85,10 +109,16 @@ export interface StatusLineOptions {
   action: string;
   /** The line of a table or a file waiting in the message box (`attachmentWaitLine`), else null. */
   attachmentLine: string | null;
-  /** A switch's carry as its button reads (`carryActionText`); null without one shown. */
-  carryText: string | null;
-  /** `all` holds the message box in step 2: the composer's own line above the box says why. */
-  chatLocked: boolean;
+  /**
+   * A switch's offer to plot with the remembered decisions (`carryDecisions`): the library and
+   * how many decisions the plot button's next plot keeps there; null without an offer.
+   */
+  carry: { library: string; decisions: number } | null;
+  /**
+   * `all` holds the message box in step 2: the libraries `.plot_all()` plots in, which the line
+   * names together with the way back to the chat; null otherwise.
+   */
+  lockedLibraries: number | null;
 }
 
 /** The status line's step and its words, after the `>>>` the line starts with. */
@@ -100,8 +130,9 @@ export interface StatusLineText {
 /**
  * The status line at the chat frame's foot, `step 1 of 2 · …` (`back to step 1 of 2 · …` after a
  * lost confirmation), which took the step header's place and the step lines above the message
- * box in the v4 frame (2026-11-06). After the step it names, in this order: the attachment that
- * waits for Enter, the plot that runs and the `.stop()` it leaves, step 1's line, before the
+ * box in the v4 frame (2026-11-06), and since the v4 composer row is the plot button's
+ * description. After the step it names, in this order: the attachment that waits for Enter, the
+ * plot that runs, step 1's line, while `all` holds the box what `.plot_all()` does, before the
  * library's first plot in step 2 what the plot button does, else the confirmed data's shape.
  */
 export function statusLine(state: AgentSessionState, options: StatusLineOptions): StatusLineText {
@@ -117,16 +148,26 @@ export function statusLine(state: AgentSessionState, options: StatusLineOptions)
 
 /**
  * Step 2's part of the status line, and step 1's while the session has no data yet: a table read
- * from text before any data was stored waits for its decision, else `your data`.
+ * from text before any data was stored waits for its decision, else `your data`. After a switch
+ * that offered it, the line names the decisions the plot button's next plot keeps in the new
+ * library, since the button keeps its own name.
  */
 function stepTwoLine(state: AgentSessionState, options: StatusLineOptions): string {
   if (!state.dataset && state.transcription)
     return 'decide on the table first: .use() or .discard()';
   if (!state.dataset || !inStep2(state)) return 'your data';
-  if (!hasPlotHere(state) && !options.chatLocked) {
-    const action = options.carryText ?? 'create the plot as it is';
-    return `${action}, or say first what it should do differently`;
+  if (options.lockedLibraries !== null) {
+    return `plot the table as it is in all ${options.lockedLibraries} libraries at once · turn all off to chat`;
   }
+  const carry = options.carry;
+  const kept =
+    carry && carry.decisions > 0
+      ? `${countOf(carry.decisions, 'decision')} kept in ${carry.library} · `
+      : '';
+  if (!hasPlotHere(state)) {
+    return `${kept}create the plot as it is, or say first what it should do differently`;
+  }
+  if (kept) return `${kept}${options.action} brings them in, or ask for a change`;
   return `data fits · ${dataShape(state.dataset)}`;
 }
 
@@ -202,15 +243,18 @@ export function showsTimeline(state: AgentSessionState): boolean {
   return !!run && (isPlotAction(run.kind) || run.steps.some(entry => entry.step !== 'queued'));
 }
 
+/** The status line's words while a plot runs: what happens, and how long it usually takes. */
+export const RUN_LINE = 'drawing your plot · usually 1–3 min';
+
 /**
  * The status line's part while a plot runs (the progress timeline stands below the thread,
  * `runView`): it takes the step's part, which would still invite the click that started the run,
- * and names the one action the run leaves, `.stop()`. `null` while no plot runs, and once the
- * run's card took the timeline's place.
+ * and says how long a plot takes; `.stop()` stands at the line's end. `null` while no plot runs,
+ * and once the run's card took the timeline's place.
  */
 export function runLine(state: AgentSessionState): string | null {
   if (!runView(state).timeline) return null;
-  return state.run?.stopping ? 'stopping…' : 'plotting… .stop() to cancel';
+  return state.run?.stopping ? 'stopping…' : RUN_LINE;
 }
 
 /**

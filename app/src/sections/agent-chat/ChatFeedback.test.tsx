@@ -14,14 +14,17 @@ const SENT: FeedbackRecord = {
 };
 
 describe('ChatFeedback', () => {
-  it('opens from one line and sends the chat as version 0', async () => {
+  it('is the form .feedback() opens, takes the focus once, and sends the chat as version 0', async () => {
     const user = userEvent.setup();
     const onSend = vi.fn<Send>(async () => undefined);
-    render(<ChatFeedback sent={null} dataAvailable onSend={onSend} />);
+    // `.feedback()` at the status line's end went with its click: the form's first reaction
+    // takes the focus, and only once.
+    const takeFocus = vi.fn().mockReturnValueOnce(true).mockReturnValue(false);
+    render(<ChatFeedback sent={null} dataAvailable onSend={onSend} takeFocus={takeFocus} />);
 
-    expect(screen.queryByRole('form')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Give feedback on this chat' }));
     expect(screen.getByRole('form', { name: 'Feedback on this chat' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Thumbs up' })).toHaveFocus();
+    expect(takeFocus).toHaveBeenCalledTimes(1);
     expect(screen.getByText('# feedback on this chat')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Idea' }));
@@ -40,7 +43,8 @@ describe('ChatFeedback', () => {
     const user = userEvent.setup();
     const onSend = vi.fn<Send>(async () => undefined);
     render(<ChatFeedback sent={null} dataAvailable={false} onSend={onSend} />);
-    await user.click(screen.getByRole('button', { name: 'Give feedback on this chat' }));
+    // A form that mounts again later, after a turn, leaves the focus where it is.
+    expect(document.body).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Bug' }));
 
     const box = screen.getByRole('checkbox', {

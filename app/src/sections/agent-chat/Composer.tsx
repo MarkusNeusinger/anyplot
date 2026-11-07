@@ -1,30 +1,33 @@
 /**
- * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the line that says
- * why the box waits while `all` holds it, the service's pause note, `.example_data()` while the
- * session has no data, the message box and its buttons, and the counter near the message cap.
- * What the step's action waits for is the status line's, at the chat frame's foot below
- * (`StatusLine`, `ChatFrame.tsx`), since the v4 frame (2026-11-06).
+ * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the service's pause
+ * note, the drop hint, the data line, and one row in two fixed places, the message box with its
+ * `❯` and the plot button, with the counter near the message cap below it. Nothing comes or goes
+ * and nothing moves: a state only changes how the data line reads, whether the plot button is
+ * filled, and which controls are inert (`aria-disabled`, so a focused one keeps the focus). What
+ * the step waits for is the line's at the chat frame's foot (`StatusLine`, `ChatFrame.tsx`), the
+ * plot button's description, which also holds `.stop()`, `.start_over()` and `.feedback()`.
  *
- * The step's one filled call to action sits at the composer's right end from the moment data is
- * stored: `.create_plot()` (with `all` pressed `.plot_all()`, after a switch's offer the carry,
- * after a change to data the user had confirmed `plot the new data`), while the data is unconfirmed, also when this library already has a plot (the click makes a
- * new version from the data as the card shows it), and while the data is confirmed and the
- * library has no plot yet. Its click takes the data and the bindings as shown, confirms them
- * first when they are not (the page chains it), and starts the plot, with the box's text as its
- * request; the status line, its description, says what it waits for. `.start_over()` is
- * the quiet button beside it once the confirmed data has a plot in this library, and beside a
- * switch's offer.
- * `.send()` shows only while the box holds text: Enter sends a turn too, and a disabled outline
- * beside the CTA read as "blocked until something". `.stop()` stands beside the CTA while a run
- * is in progress, a button of its own key, so no button turns into `.stop()` in place with a
- * focus that a second key press would spend on stopping.
+ * - The data line, one quiet line right above the box, never gone: before the first data
+ *   `# no data at hand? .example_data() · .open() a file`, highlighted (the words in green, the two
+ *   links underlined in green); after it, muted, `# other data? .open() · .example_data()`.
+ *   `.example_data()` asks the assistant for a made-up table to try the plot, and is inert once
+ *   there is data, since it would replace the data; `.open()` opens the file picker. Both are
+ *   buttons styled as links, with a 44 px target at phone width.
+ * - The message box: Enter sends its text as a turn, or the attachment with the text as its note;
+ *   Shift+Enter is a new line. On a touch screen, whose keyboard names Enter "return", a small
+ *   `↵` inside the box sends too. It has no `.send()` beside it any more.
+ * - The plot button, filled from the moment data is stored, quiet and inert before: `.create_plot()
+ *   →` (confirms the data and the bindings as shown, then plots, with the box's text as the
+ *   request), `.update_plot() →` once the library has a plot (sends the box's text, inert while
+ *   the box is empty), `plot the new data` after a change to data the user had confirmed (acts
+ *   with an empty box), `.plot_all()` while the admin's fan-out is on. A switch keeps its name.
  *
  * A table pasted into the box, or a file opened with `.open()` or dropped on the chat, waits
- * above the text as an attachment (`AttachmentChip`, `useChatAttachment.ts`): Enter or `.send()`
- * reads it with the typed text as its note, and the plot buttons wait until it is read, since
- * they would plot the data before it.
+ * above the text as an attachment (`AttachmentChip`, `useChatAttachment.ts`): Enter reads it with
+ * the typed text as its note, and the plot button waits until it is read, since it would plot
+ * the data before it.
  *
- * The page decides what each button does and when it waits; this component only lays them out.
+ * The page decides what each button does and when it acts; this component only lays them out.
  */
 
 import Box from '@mui/material/Box';
@@ -33,7 +36,6 @@ import type { Failure } from 'src/hooks/useAgentSession';
 import { MAX_MESSAGE_CHARS } from 'src/lib/agent';
 import { AttachmentChip } from 'src/sections/agent-chat/AttachmentChip';
 import { attachmentLabel } from 'src/sections/agent-chat/attachmentText';
-import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
 import { FILE_ACCEPT } from 'src/sections/agent-chat/fileText';
 import {
   ATTACHMENT_PLACEHOLDER,
@@ -42,30 +44,99 @@ import {
   NEW_DATA_PLOT,
   NO_DATA_PLACEHOLDER,
   servicePausedText,
+  START_OVER_HELP,
 } from 'src/sections/agent-chat/messages';
-import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
+import { type PlotButtonKind, STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import {
-  actionButtonSx,
   bodyTextSx,
-  ctaButtonSx,
-  ghostButtonSx,
+  composerFilledSx,
+  composerGhostSx,
   labelSx,
-  nativeControlSx,
+  messageBoxSx,
+  smallText,
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
-import { colors, fontSize } from 'src/theme';
+import { colors, fontSize, typography } from 'src/theme';
 
 /**
- * What `.start_over()` does, unlike `.send()` beside it (the two are easy to mistake for each other),
- * also beside the offer after a switch, and `.create_plot()` on changed data when the library has
- * a plot: the catalogue code again, with the remembered decisions, which only the user clears.
+ * The plot button's words and its accessible name, per kind. The arrow says that the click sends
+ * the box's text along; `.plot_all()` opens the fan-out's panel instead.
  */
-const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
-const START_OVER_HELP_ID = 'agent-start-over-help';
+const PLOT_BUTTON: Record<PlotButtonKind, { text: string; name: string }> = {
+  create: { text: '.create_plot() →', name: 'Create plot' },
+  update: { text: '.update_plot() →', name: 'Update plot' },
+  new_data: { text: NEW_DATA_PLOT, name: 'Plot the new data' },
+  all: { text: '.plot_all()', name: 'Plot in all libraries' },
+};
 
-/** The line above the box while `all` holds it in step 2, which the box names as its description. */
-const CREATE_LINE_ID = 'agent-create-line';
+/** The hidden help the plot button names when its click starts from the catalogue plot. */
+const PLOT_HELP_ID = 'agent-plot-help';
+
+/** The plot button's size, one in every state: smaller at phone width, where it shares the line. */
+const ROW_BUTTON_SIZE = {
+  fontSize: { xs: smallText, sm: fontSize.md },
+  px: { xs: 1, sm: 1.5 },
+} as const;
+
+/**
+ * A link of the data line: a button in the line's small mono, with a 44 px target at phone width
+ * and the site's focus ring. Highlighted, its words are ink with a brand-green underline; muted,
+ * soft ink without one. Green as a line, never as small text: the hover turns the words into the
+ * green that reads 4.5:1 in each theme (`--code-comment`).
+ */
+function dataLinkSx(highlighted: boolean) {
+  return {
+    fontFamily: typography.mono,
+    fontSize: smallText,
+    fontWeight: 500,
+    color: highlighted ? 'var(--ink)' : 'var(--ink-soft)',
+    bgcolor: 'transparent',
+    border: 'none',
+    borderRadius: '4px',
+    px: 0.5,
+    py: 0,
+    minHeight: { xs: 44, sm: 28 },
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    textDecoration: highlighted ? 'underline' : 'none',
+    textDecorationColor: colors.primary,
+    textUnderlineOffset: '3px',
+    '&:hover:not([aria-disabled="true"])': {
+      color: 'var(--code-comment)',
+      textDecoration: 'underline',
+      textDecorationColor: colors.primary,
+    },
+    '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
+    '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default', textDecoration: 'none' },
+  } as const;
+}
+
+/** The muted words between the data line's links; hidden at phone width when `wide` is set. */
+function LineWords({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
+  return (
+    <Box
+      component="span"
+      sx={{ color: 'var(--ink-muted)', display: wide ? { xs: 'none', sm: 'inline' } : 'inline' }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** The plot button as the page decides it. */
+export interface PlotButtonState {
+  kind: PlotButtonKind;
+  /** The click acts now; else the button is inert and keeps its place and the focus. */
+  active: boolean;
+  /** The confirmation the click starts with is in flight: the button says it works on it. */
+  confirming: boolean;
+  /**
+   * The click starts from the catalogue plot although the library has one (the data or the
+   * bindings changed since): the button names what that keeps as part of its description.
+   */
+  fresh: boolean;
+}
 
 export interface ComposerProps {
   draft: string;
@@ -84,210 +155,55 @@ export interface ComposerProps {
   canOpen: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onFileChosen: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  /** The form's submit, Enter in the box and `.send()`: the page's `handleSend`, a turn. */
+  /** The form's submit, Enter in the box and the `↵`: the page's `handleSend`, a turn. */
   onSubmit: (event?: React.FormEvent) => void;
   messageRef: React.RefObject<HTMLTextAreaElement | null>;
-  /** The step's action button, where the keyboard returns after the fan-out's panel. */
-  createRef: React.RefObject<HTMLButtonElement | null>;
+  /** The plot button, where the keyboard returns after the fan-out's panel. */
+  plotRef: React.RefObject<HTMLButtonElement | null>;
   /** The session is open and answers. */
   ready: boolean;
   busy: boolean;
-  running: boolean;
-  stopping: boolean;
   /** The session holds data. */
   hasData: boolean;
   step2: boolean;
   hasPlot: boolean;
-  /** The filled CTA is a plot button: data stored, unconfirmed or without a plot in this library. */
-  ctaPlot: boolean;
-  canCreate: boolean;
-  plotAll: boolean;
+  /** `all` holds the box in step 2: the fan-out takes no text. */
   chatLocked: boolean;
-  /** The libraries `.plot_all()` plots in, for the line that names them. */
-  libraryCount: number;
-  /** The fan-out's panel is open: `.plot_all()` waits. */
-  fanOutOpen: boolean;
-  /** The carry after a switch, as the button names it; null without an offer. */
-  carryText: string | null;
-  /** Data the user had confirmed changed (`dataChanged`): the filled plot button reads `plot the new data`. */
-  newData: boolean;
-  /** The confirmation a plot button starts with is in flight. */
-  confirming: boolean;
-  /** Why that confirmation was refused; it shows under the composer. */
+  plot: PlotButtonState;
+  /** `.example_data()` in the data line: whether its click acts now. */
+  example: { active: boolean };
+  /** Why the confirmation a plot click starts with was refused; it shows under the composer. */
   confirmError: Failure | null;
   /** Until when (ISO) the service paused, for the note above the box. */
   pausedUntil: string | null;
-  exampleOffer: boolean;
-  exampleWorking: boolean;
-  onExampleData: (event: React.MouseEvent) => void;
-  onStop: (event: React.MouseEvent) => void;
-  /** The filled `.create_plot()`: the plot, with the box's text as its request. */
+  onExampleData: () => void;
   onPlot: (event: React.MouseEvent) => void;
-  /** The quiet `.create_plot()` or `.start_over()`: the catalogue plot again, text left in the box. */
-  onCreate: (event: React.MouseEvent) => void;
-  onCarry: (event: React.MouseEvent) => void;
-  onPlotAll: (event: React.MouseEvent) => void;
-  /** A key press on a button a run replaces continues in the message box. */
-  keepKeyboardFocus: (event: React.MouseEvent) => void;
 }
 
 export function Composer(props: ComposerProps) {
-  const { draft, onDraftChange, onPaste, onSubmit, messageRef, createRef } = props;
+  const { draft, onDraftChange, onPaste, onSubmit, messageRef, plotRef } = props;
   const { attachment, attachmentNotice, onRemoveAttachment, dropHint } = props;
   const { canOpen, fileInputRef, onFileChosen } = props;
-  const { ready, busy, running, stopping, hasData, step2, hasPlot, ctaPlot, canCreate } = props;
-  const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, newData } = props;
-  const { confirming, confirmError, pausedUntil, exampleOffer, exampleWorking } = props;
-  const { onExampleData, onStop, onPlot, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
-  const carry = carryText !== null;
-  const firstPlot = step2 && !hasPlot;
-  // While `all` holds the box in step 2, the line above it says why, and the box and `.send()`
-  // name it as their description; an attachment, new data, goes all the same and has the status
-  // line's words instead.
-  const lockedLine = chatLocked && !attachment;
-  // The confirmation the click starts with: the button says it works on it.
-  const working = (label: string) => (confirming ? `${label} …` : label);
+  const { ready, busy, hasData, step2, hasPlot, chatLocked, plot, example } = props;
+  const { confirmError, pausedUntil, onExampleData, onPlot } = props;
+  // While `all` holds the box in step 2, the line at the frame's foot says why, and the box names
+  // it as its description; an attachment, new data, goes all the same, with Enter in the box,
+  // which it opens for that.
+  const lockedBox = chatLocked && !attachment;
   // An attachment goes once it is read and the dataset route can take it; a refused one again.
   const sendable = !attachment || attachment.status === 'ready' || attachment.status === 'failed';
   // A message over the cap is never cut: the counter turns red and nothing sends until it fits.
   const tooLong = draft.length > MAX_MESSAGE_CHARS;
+  // What Enter and the `↵` send now: text or an attachment, while nothing else runs.
+  const canSend =
+    ready && !busy && sendable && !tooLong && (!!draft.trim() || !!attachment) && !lockedBox;
 
-  // What the filled CTA names as its description: the status line, and the line of `all` while it
-  // holds the box; on changed data with a plot, also what a new version is made from.
-  const ctaDescription = [
-    STATUS_LINE_ID,
-    lockedLine ? CREATE_LINE_ID : null,
-    ctaPlot && hasPlot && !carry && !plotAll ? START_OVER_HELP_ID : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  // `.send()`: a turn about the data or the plot, or the attachment with the text as its note,
-  // only while the box holds either. An attachment goes also while `all` holds the box: it is
-  // new data, not text for the fan-out.
-  const sendButton =
-    draft.trim() || attachment ? (
-      <Box
-        key="send"
-        component="button"
-        type="submit"
-        onClick={keepKeyboardFocus}
-        disabled={!ready || busy || !sendable || tooLong || (chatLocked && !attachment)}
-        aria-describedby={attachment ? STATUS_LINE_ID : chatLocked ? CREATE_LINE_ID : undefined}
-        sx={ghostButtonSx}
-      >
-        .send()
-      </Box>
-    ) : null;
-
-  // `.open()`: a file for the attachment, the keyboard's and the phone's way in (iOS has no drag
-  // and drop into a page).
-  const openButton = (
-    <Box
-      key="open"
-      component="button"
-      type="button"
-      onClick={() => fileInputRef.current?.click()}
-      disabled={!canOpen}
-      aria-label="Attach a data file"
-      sx={actionButtonSx}
-    >
-      .open()
-    </Box>
-  );
-
-  // The admin's plot in every library at once while `all` is pressed: the filled CTA while the
-  // step's action is a plot, the quiet button once the confirmed data has a plot here. It waits
-  // while the panel is open.
-  const plotAllButton = (
-    <Box
-      key="plot-all"
-      component="button"
-      type="button"
-      ref={createRef}
-      onClick={onPlotAll}
-      disabled={fanOutOpen || !canCreate}
-      aria-label="Plot in all libraries"
-      aria-describedby={ctaPlot ? ctaDescription : STATUS_LINE_ID}
-      sx={ctaPlot ? ctaButtonSx : actionButtonSx}
-    >
-      {working('.plot_all()')}
-    </Box>
-  );
-
-  // After a switch that offered it: the plot in this library with the remembered decisions, the
-  // step's filled action whatever else the row holds.
-  const carryButton = carry && (
-    <Box
-      key="carry"
-      component="button"
-      type="button"
-      ref={createRef}
-      data-testid="carry-plot"
-      onClick={onCarry}
-      disabled={!canCreate}
-      aria-describedby={ctaPlot ? ctaDescription : STATUS_LINE_ID}
-      // The library's name and the count make it long: it wraps at phone width.
-      sx={{ ...ctaButtonSx, whiteSpace: 'normal', textAlign: 'left', maxWidth: '100%' }}
-    >
-      {working(carryText)}
-    </Box>
-  );
-
-  // The quiet plot from the catalogue code, `.start_over()`: once the library has a plot, and
-  // beside a switch's offer before it, where a second `.create_plot()` beside the filled
-  // "plot in …" read as the same click.
-  const quietCreate = (
-    <Box
-      key="create-quiet"
-      component="button"
-      type="button"
-      ref={carry ? undefined : createRef}
-      onClick={onCreate}
-      disabled={!canCreate}
-      aria-label="Start over"
-      title={START_OVER_HELP}
-      // Beside a switch's offer the status line describes the offer, not this button.
-      aria-describedby={carry ? START_OVER_HELP_ID : `${START_OVER_HELP_ID} ${STATUS_LINE_ID}`}
-      sx={actionButtonSx}
-    >
-      .start_over()
-    </Box>
-  );
-
-  // The step's one filled action while it is a plot button: a plain button, so Enter in the box
-  // sends a turn and never confirms. It stays in its place while a turn runs, waiting beside
-  // `.stop()`, so the next step is in view the whole time. After a change to data the user had
-  // confirmed, its name says in words what the click plots (`plotButtonLabel` names it the same).
-  const filledCta = plotAll ? (
-    plotAllButton
-  ) : carry ? (
-    carryButton
-  ) : (
-    <Box
-      key="create"
-      component="button"
-      type="button"
-      ref={createRef}
-      onClick={onPlot}
-      disabled={!canCreate}
-      aria-label={newData ? 'Plot the new data' : 'Create plot'}
-      aria-describedby={ctaDescription}
-      sx={ctaButtonSx}
-    >
-      {working(newData ? NEW_DATA_PLOT : '.create_plot()')}
-    </Box>
-  );
+  const plotWords = PLOT_BUTTON[plot.kind];
+  // The confirmation the click starts with: the button says it works on it.
+  const plotText = plot.confirming ? `${plotWords.text} …` : plotWords.text;
 
   return (
     <>
-      {/* While the chat waits for `all`, the line says so in the ink of the text, and the
-          message box names it as its description. */}
-      {lockedLine && (
-        <Box id={CREATE_LINE_ID} sx={{ ...labelSx, color: 'var(--ink)', mb: -1 }}>
-          {`# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraryCount} libraries at once · turn all off to chat`}
-        </Box>
-      )}
       {/* Told before the user types: every turn would get `service_paused` until then. */}
       {pausedUntil && (
         <Box
@@ -303,11 +219,6 @@ export function Composer(props: ComposerProps) {
         >
           # {servicePausedText(pausedUntil)}
         </Box>
-      )}
-      {/* A key press continues in the message box: the button gives way to the working
-          line while the turn runs. */}
-      {exampleOffer && (
-        <ExampleDataLine working={exampleWorking} disabled={busy} onClick={onExampleData} />
       )}
       {/* A file dragged over the chat: whether a drop attaches it, or why it waits. */}
       {dropHint && (
@@ -330,59 +241,203 @@ export function Composer(props: ComposerProps) {
           {dropHint.text}
         </Box>
       )}
-      {/* At phone width the buttons wrap below the box and stay at its right end, as the
-          step's one CTA does beside it on a wide screen. */}
+      {/* The data line: the two ways to data besides a paste, highlighted until the first data
+          arrives, muted after, never gone. `.example_data()` holds the same slot in both forms,
+          so a focus on it survives the change; the `.open()` before or after it is a slot of its
+          own. At phone width the line drops "at hand" and "a file". */}
+      <Box
+        data-testid="data-line"
+        data-highlighted={!hasData || undefined}
+        sx={{
+          ...labelSx,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          columnGap: 0.5,
+          mb: -1,
+        }}
+      >
+        <Box component="span" sx={{ color: hasData ? 'var(--ink-muted)' : 'var(--code-comment)' }}>
+          {hasData ? (
+            '# other data?'
+          ) : (
+            <>
+              # no data<LineWords wide> at hand</LineWords>?
+            </>
+          )}
+        </Box>
+        {hasData && (
+          <Box
+            component="button"
+            type="button"
+            onClick={() => {
+              if (canOpen) fileInputRef.current?.click();
+            }}
+            aria-disabled={!canOpen || undefined}
+            aria-label="Open a data file"
+            sx={dataLinkSx(false)}
+          >
+            .open()
+          </Box>
+        )}
+        {hasData && <LineWords>·</LineWords>}
+        <Box
+          component="button"
+          type="button"
+          onClick={() => {
+            if (example.active) onExampleData();
+          }}
+          aria-disabled={!example.active || undefined}
+          aria-label="Make example data"
+          sx={dataLinkSx(!hasData)}
+        >
+          .example_data()
+        </Box>
+        {!hasData && <LineWords>·</LineWords>}
+        {!hasData && (
+          <Box
+            component="button"
+            type="button"
+            onClick={() => {
+              if (canOpen) fileInputRef.current?.click();
+            }}
+            aria-disabled={!canOpen || undefined}
+            aria-label="Open a data file"
+            sx={dataLinkSx(true)}
+          >
+            .open()
+          </Box>
+        )}
+        {!hasData && <LineWords wide>a file</LineWords>}
+      </Box>
+      {/* One row: the box and the plot button, on a phone too. A row too narrow for both, such as
+          a long label on a small phone, wraps the plot button to a line of its own, at the right
+          end. */}
       <Box
         component="form"
+        data-testid="composer-row"
         onSubmit={onSubmit}
         sx={{
           display: 'flex',
-          gap: 1,
-          alignItems: 'flex-end',
-          justifyContent: 'flex-end',
           flexWrap: 'wrap',
+          alignItems: 'center',
+          columnGap: 1,
+          rowGap: 1,
         }}
       >
         {attachment && <AttachmentChip attachment={attachment} onRemove={onRemoveAttachment} />}
+        {/* The terminal prompt before the box, beside it as the line at the foot has `>>>`. */}
         <Box
-          component="textarea"
-          ref={messageRef}
-          aria-label="Message"
-          placeholder={
-            // Without data, the chat is the other way to get some: example data or a formula.
-            // With data, step 1 talks about the data and what the plot should do, step 2 about
-            // the plot; short since 2026-11-02, the how-to is behind the data card's ⓘ. While
-            // `all` is pressed in step 2 the box waits: the fan-out takes no text. With an
-            // attachment the text is its note.
-            chatLocked
-              ? 'all libraries: the table goes as it is · turn all off to chat'
-              : attachment
-                ? ATTACHMENT_PLACEHOLDER
-                : !hasData
-                  ? NO_DATA_PLACEHOLDER
-                  : !step2
-                    ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
-                    : firstPlot
-                      ? 'optional: what the first plot should do differently'
-                      : 'ask for a change, e.g. log scale on y'
-          }
-          value={draft}
-          rows={2}
-          disabled={!ready || chatLocked}
-          aria-invalid={tooLong || undefined}
-          aria-describedby={lockedLine ? CREATE_LINE_ID : undefined}
-          onChange={onDraftChange}
-          onPaste={onPaste}
-          onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            // Enter (also with Ctrl or ⌘) sends text as a turn, or the attachment with the text
-            // as its note; Shift+Enter is a new line, and an empty box creates nothing by
-            // accident. An input method's composition takes Enter for itself.
-            if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
-            event.preventDefault();
-            if ((draft.trim() || attachment) && !tooLong) onSubmit();
+          component="span"
+          aria-hidden
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            fontFamily: typography.mono,
+            fontSize: fontSize.md,
+            color: colors.primary,
           }}
-          sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
-        />
+        >
+          ❯
+        </Box>
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            flex: { xs: '1 1 120px', sm: '1 1 240px' },
+            minWidth: 0,
+          }}
+        >
+          <Box
+            component="textarea"
+            ref={messageRef}
+            aria-label="Message"
+            placeholder={
+              // Without data, the chat is the other way to get some: example data or a formula.
+              // With data, step 1 talks about the data and what the plot should do, step 2 about
+              // the plot; short since 2026-11-02, the how-to is behind the header's ⓘ. With an
+              // attachment the text is its note, also while `all` is pressed in step 2, which
+              // otherwise holds the box: the fan-out takes no text.
+              attachment
+                ? ATTACHMENT_PLACEHOLDER
+                : chatLocked
+                  ? 'all libraries: the table goes as it is · turn all off to chat'
+                  : !hasData
+                    ? NO_DATA_PLACEHOLDER
+                    : !step2
+                      ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
+                      : !hasPlot
+                        ? 'optional: what the first plot should do differently'
+                        : 'ask for a change, e.g. log scale on y'
+            }
+            value={draft}
+            rows={1}
+            // An attachment, new data, goes while `all` holds the box: Enter in the box sends it.
+            disabled={!ready || lockedBox}
+            aria-invalid={tooLong || undefined}
+            aria-describedby={lockedBox ? STATUS_LINE_ID : undefined}
+            onChange={onDraftChange}
+            onPaste={onPaste}
+            onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+              // Enter (also with Ctrl or ⌘) sends text as a turn, or the attachment with the text
+              // as its note; Shift+Enter is a new line, and an empty box sends nothing by
+              // accident. An input method's composition takes Enter for itself.
+              if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+              event.preventDefault();
+              if ((draft.trim() || attachment) && !tooLong) onSubmit();
+            }}
+            sx={{
+              ...messageBoxSx,
+              flex: 1,
+              resize: 'vertical',
+              // The box grows with its text up to a few lines, where the browser can. Empty, it
+              // stays one line beside the plot button, its placeholder cut with an ellipsis.
+              fieldSizing: 'content',
+              maxHeight: '12rem',
+              '&:placeholder-shown': { fieldSizing: 'fixed' },
+              '&::placeholder': {
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              },
+              // Room for the `↵` at the box's right end, where the resize grip would sit under it.
+              '@media (pointer: coarse)': { pr: '48px', resize: 'none' },
+            }}
+          />
+          {/* A touch keyboard names Enter "return" and may read it as a new line: the `↵` says
+              where sending is. A pointer and a keyboard have Enter, so it shows on touch only. */}
+          <Box
+            component="button"
+            type="button"
+            data-testid="send-return"
+            onClick={() => {
+              if (canSend) onSubmit();
+            }}
+            aria-disabled={!canSend || undefined}
+            aria-label="Send"
+            sx={{
+              display: 'none',
+              '@media (pointer: coarse)': { display: 'inline-flex' },
+              position: 'absolute',
+              right: 0,
+              bottom: 0,
+              width: 44,
+              height: 44,
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: typography.mono,
+              fontSize: fontSize.md,
+              color: 'var(--ink)',
+              bgcolor: 'transparent',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: -2 },
+              '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
+            }}
+          >
+            ↵
+          </Box>
+        </Box>
         <Box
           component="input"
           type="file"
@@ -394,50 +449,34 @@ export function Composer(props: ComposerProps) {
           data-testid="chat-file-input"
           sx={{ display: 'none' }}
         />
-        {openButton}
-        {/* One fragment in every state, with keyed children: the filled CTA keeps its element
-            from idle to running and back. */}
-        {running ? (
-          <>
-            <Box
-              key="stop"
-              component="button"
-              type="button"
-              onClick={onStop}
-              disabled={stopping}
-              aria-label="Stop"
-              sx={{
-                ...ghostButtonSx,
-                color: colors.error,
-                '&:hover:not(:disabled)': { color: colors.error, borderColor: colors.error },
-              }}
-            >
-              {stopping ? '.stop() …' : '.stop()'}
-            </Box>
-            {ctaPlot && filledCta}
-          </>
-        ) : ctaPlot ? (
-          <>
-            {sendButton}
-            {/* Beside a switch's offer: the plot from the catalogue code, without the carry. */}
-            {carry && !plotAll && quietCreate}
-            {filledCta}
-          </>
-        ) : hasData ? (
-          <>
-            {/* The confirmed data has a plot here: the offer after a switch, if any, then
-                starting over from the catalogue plot; `.send()` changes the latest version. */}
-            {carryButton}
-            {plotAll ? plotAllButton : quietCreate}
-            {sendButton}
-          </>
-        ) : (
-          // No data yet: nothing to plot, only a request for example data or a curve to send.
-          sendButton
-        )}
+        {/* The step's action from the moment data is stored, quiet and inert before. A plain
+            button: Enter in the box sends a turn and never confirms. */}
+        <Box
+          component="button"
+          type="button"
+          ref={plotRef}
+          data-plot={plot.kind}
+          onClick={(event: React.MouseEvent) => {
+            if (plot.active) onPlot(event);
+          }}
+          aria-disabled={!plot.active || undefined}
+          aria-label={plotWords.name}
+          aria-describedby={plot.fresh ? `${STATUS_LINE_ID} ${PLOT_HELP_ID}` : STATUS_LINE_ID}
+          sx={{
+            ...(hasData ? composerFilledSx : composerGhostSx),
+            ...ROW_BUTTON_SIZE,
+            // As wide as its longest name (`plot the new data`, mono), so a new name moves
+            // nothing beside it.
+            minWidth: { xs: 'calc(17ch + 18px)', sm: 'calc(17ch + 26px)' },
+            flex: 'none',
+            ml: 'auto',
+          }}
+        >
+          {plotText}
+        </Box>
       </Box>
-      {hasData && !plotAll && (hasPlot || carry) && (
-        <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
+      {plot.fresh && (
+        <Box component="span" id={PLOT_HELP_ID} sx={visuallyHiddenSx}>
           {START_OVER_HELP}
         </Box>
       )}
