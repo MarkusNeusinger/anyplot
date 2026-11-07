@@ -7,3 +7,4 @@
   as a certain line, and a chain of a drop, an aggregate and a sort gained a
   `row_number` column in about half the prep-eval runs. The conversions the
   server made stay listed, and the next turn lists the candidates again.
+  (#12599)
