@@ -5,192 +5,238 @@
 //# anyplot-orientation: landscape
 
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Tour du Mont Blanc — Alpine hiking segment, 40 km
-// 81 elevation samples at 500 m intervals (deterministic, no RNG)
-function lerp(a, b, f) {
-  return Math.round(a + (b - a) * Math.max(0, Math.min(1, f)));
-}
+// Constants
+const TITLE = "area-elevation-profile · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const ELEV_PAD_SHARE = 0.15; // room below the lowest sample, as a share of the elevation range
+const LABEL_HEADROOM_SHARE = 0.32; // room above the highest sample for the landmark labels
+const LABEL_MIN_GAP_PX = 230; // landmark labels closer than this step up one line
+const CHAR_W_PX = 9; // approximate width of one 15 px bold label character
+const X_AXIS_H = 64;
+const Y_AXIS_W = 84;
 
-// Control points [km, m]: key terrain waypoints along the route
-const ctrl = [
-  [0, 1010], [2.5, 1280], [4, 1653], [6, 1710], [8, 1780],
-  [10, 2020], [13, 2195], [14, 2360], [15, 2516], [16.5, 2260],
-  [18, 1973], [20, 2180], [22, 2435], [24, 2230], [26, 2010],
-  [28, 1820], [30, 1650], [32, 1490], [34, 1370], [36, 1280],
-  [38, 1250], [40, 1224],
-];
+// Columns: set these to your data's column names
+const DISTANCE = "Distance (km)"; // role: distance
+const ELEVATION = "Elevation (m)"; // role: elevation
+// A place on the first and last sample names the start and end of the transect;
+// on any other sample it marks a landmark at that sample's distance and elevation
+const PLACE = "Place"; // role: landmark_name
+const ELEVATION_PER_DISTANCE = 1000; // elevation units per distance unit (m per km), for the exaggeration note
 
-const distKm = [];
-const elevM = [];
-for (let i = 0; i <= 80; i++) {
-  const d = i * 0.5;
-  distKm.push(d);
-  let j = 0;
-  while (j < ctrl.length - 2 && ctrl[j + 1][0] <= d) j++;
-  const [d0, e0] = ctrl[j];
-  const [d1, e1] = ctrl[j + 1];
-  elevM.push(lerp(e0, e1, (d - d0) / (d1 - d0)));
-}
+// Data: replace this block with your own records, one object per row
+// Tour du Mont Blanc, Les Houches to Courmayeur: 81 samples every 500 m, linearly
+// interpolated between surveyed waypoints [km, m]
+const data = (() => {
+  const waypoints = [
+    [0, 1010], [2.5, 1280], [4, 1653], [6, 1710], [8, 1780],
+    [10, 2020], [13, 2195], [14, 2360], [15, 2516], [16.5, 2260],
+    [18, 1973], [20, 2180], [22, 2435], [24, 2230], [26, 2010],
+    [28, 1820], [30, 1650], [32, 1490], [34, 1370], [36, 1280],
+    [38, 1250], [40, 1224],
+  ];
+  const places = new Map([
+    [0, "Les Houches"],
+    [4, "Col de Voza"],
+    [15, "Col de la Seigne"],
+    [22, "Col du Mont Favre"],
+    [40, "Courmayeur"],
+  ]);
+  return Array.from({ length: 81 }, (_, i) => {
+    const d = i * 0.5;
+    let j = 0;
+    while (j < waypoints.length - 2 && waypoints[j + 1][0] <= d) j += 1;
+    const [d0, e0] = waypoints[j];
+    const [d1, e1] = waypoints[j + 1];
+    const f = Math.max(0, Math.min(1, (d - d0) / (d1 - d0)));
+    return { [DISTANCE]: d, [ELEVATION]: Math.round(e0 + (e1 - e0) * f), [PLACE]: places.get(d) ?? null };
+  });
+})();
 
-// Notable landmarks: mountain passes along the route
-const landmarks = [
-  { x: 4,  elev: 1653, label: "Col de Voza" },
-  { x: 15, elev: 2516, label: "Col de la Seigne" },
-  { x: 22, elev: 2435, label: "Col du Mont Favre" },
-];
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[DISTANCE] - b[DISTANCE]);
+const distances = rows.map((d) => d[DISTANCE]);
+const elevations = rows.map((d) => d[ELEVATION]);
+const start = rows[0];
+const end = rows[rows.length - 1];
+const landmarks = rows.slice(1, -1).filter((d) => d[PLACE]);
 
-const TITLE = "Tour du Mont Blanc · area-elevation-profile · javascript · muix · anyplot.ai";
-const TITLE_FS = Math.max(16, Math.round(22 * 67 / TITLE.length));
+const known = elevations.filter((v) => v != null);
+const elevMin = Math.min(...known);
+const elevMax = Math.max(...known);
+const elevSpan = elevMax - elevMin || 1;
+const yLo = elevMin - ELEV_PAD_SHARE * elevSpan;
+const yHi = elevMax + LABEL_HEADROOM_SHARE * elevSpan;
+const xMin = distances[0];
+const xMax = distances[distances.length - 1];
 
-// Chart coordinate space constants — shared by LineChart and overlay labels
-const Y_MIN = 800;
-const Y_MAX = 2700;
-const X_MIN = 0;
-const X_MAX = 40;
-const MARGIN = { top: 20, right: 30, bottom: 72, left: 82 };
+const DIST_UNIT = DISTANCE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const ELEV_UNIT = ELEVATION.match(/\(([^)]+)\)/)?.[1] ?? "";
+const fmtElev = (v: number) => `${Math.round(v).toLocaleString("en-US")} ${ELEV_UNIT}`.trim();
 
-function toPixel(dx, dy, chartW, chartH) {
-  const pw = chartW - MARGIN.left - MARGIN.right;
-  const ph = chartH - MARGIN.top - MARGIN.bottom;
-  return {
-    left: MARGIN.left + ((dx - X_MIN) / (X_MAX - X_MIN)) * pw,
-    top:  MARGIN.top  + (1 - (dy - Y_MIN) / (Y_MAX - Y_MIN)) * ph,
-  };
+const SUBTITLE = [
+  start[PLACE] && end[PLACE] ? `${start[PLACE]} → ${end[PLACE]}` : null,
+  `${Number((xMax - xMin).toFixed(1))} ${DIST_UNIT} transect`.trim(),
+  `${rows.length} samples`,
+  `${landmarks.length} landmarks`,
+]
+  .filter(Boolean)
+  .join(" · ");
+
+// Start, end and landmark labels plus the exaggeration note, placed in data coordinates
+function ProfileAnnotations() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const { left, top, width, height } = useDrawingArea();
+
+  const pxPerDistance = Math.abs(xScale(xMax) - xScale(xMin)) / ((xMax - xMin) * ELEVATION_PER_DISTANCE);
+  const pxPerElevation = Math.abs(yScale(yLo) - yScale(yHi)) / (yHi - yLo);
+  const exaggeration = pxPerElevation / pxPerDistance;
+
+  const labelXs = landmarks.map((d) => xScale(d[DISTANCE]));
+  const levels: number[] = [];
+  labelXs.forEach((x, i) => {
+    levels.push(i > 0 && x - labelXs[i - 1] < LABEL_MIN_GAP_PX && levels[i - 1] === 0 ? 1 : 0);
+  });
+
+  // End labels sit just above the highest stretch of profile they span, so the
+  // line never runs through them; a leader drops to the end point when they rise
+  const sx = xScale(start[DISTANCE]);
+  const sy = yScale(start[ELEVATION]);
+  const ex = xScale(end[DISTANCE]);
+  const ey = yScale(end[ELEVATION]);
+  const startW = String(start[PLACE] ?? "").length * CHAR_W_PX + 24;
+  const endW = String(end[PLACE] ?? "").length * CHAR_W_PX + 24;
+  const startTop = Math.min(
+    sy,
+    ...rows.filter((d) => xScale(d[DISTANCE]) <= sx + startW).map((d) => yScale(d[ELEVATION])),
+  );
+  const endTop = Math.min(
+    ey,
+    ...rows.filter((d) => xScale(d[DISTANCE]) >= ex - endW).map((d) => yScale(d[ELEVATION])),
+  );
+
+  return (
+    <g>
+      {landmarks.map((d, i) => {
+        const x = labelXs[i];
+        const py = yScale(d[ELEVATION]);
+        const labelY = top + 22 + levels[i] * 40;
+        return (
+          <g key={`${d[PLACE]}-${d[DISTANCE]}`}>
+            <line
+              x1={x}
+              x2={x}
+              y1={labelY + 26}
+              y2={py}
+              stroke={t.inkSoft}
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+            />
+            <circle cx={x} cy={py} r={5} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
+            <text x={x} y={labelY} textAnchor="middle" fontSize={15} fontWeight={600} fill={t.ink}>
+              {d[PLACE]}
+            </text>
+            <text x={x} y={labelY + 18} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
+              {fmtElev(d[ELEVATION])}
+            </text>
+          </g>
+        );
+      })}
+      <line x1={sx + 4} x2={sx + 4} y1={startTop - 10} y2={sy} stroke={t.inkSoft} strokeWidth={1.5} />
+      <circle cx={sx} cy={sy} r={5} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
+      <text x={sx + 12} y={startTop - 34} textAnchor="start" fontSize={15} fontWeight={700} fill={t.ink}>
+        {start[PLACE]}
+      </text>
+      <text x={sx + 12} y={startTop - 15} textAnchor="start" fontSize={14} fill={t.inkSoft}>
+        {fmtElev(start[ELEVATION])}
+      </text>
+      <line x1={ex - 4} x2={ex - 4} y1={endTop - 10} y2={ey} stroke={t.inkSoft} strokeWidth={1.5} />
+      <circle cx={ex} cy={ey} r={5} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
+      <text x={ex - 12} y={endTop - 34} textAnchor="end" fontSize={15} fontWeight={700} fill={t.ink}>
+        {end[PLACE]}
+      </text>
+      <text x={ex - 12} y={endTop - 15} textAnchor="end" fontSize={14} fill={t.inkSoft}>
+        {fmtElev(end[ELEVATION])}
+      </text>
+      <text x={left + width} y={top + height + X_AXIS_H - 12} textAnchor="end" fontSize={14} fill={t.inkSoft}>
+        {`Vertical exaggeration ≈ ${Math.round(exaggeration)}×`}
+      </text>
+    </g>
+  );
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  const PAD_TOP  = 16;
-  const HEADER_H = 52;
-  const FOOTER_H = 28;
-  const PAD_H    = 48;
-  const chartW   = W - PAD_H;
-  const chartH   = H - PAD_TOP - HEADER_H - FOOTER_H;
-
-  const startPx = toPixel(X_MIN, 1010, chartW, chartH);
-  const endPx   = toPixel(X_MAX, 1224, chartW, chartH);
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div style={{
-      width:           W,
-      height:          H,
-      backgroundColor: t.pageBg,
-      display:         "flex",
-      flexDirection:   "column",
-      padding:         `${PAD_TOP}px 24px 0`,
-      boxSizing:       "border-box",
-      fontFamily:      "sans-serif",
-    }}>
-      {/* Chart title */}
-      <div style={{
-        color:       t.ink,
-        fontSize:    TITLE_FS,
-        fontWeight:  600,
-        lineHeight:  `${HEADER_H}px`,
-        flexShrink:  0,
-        whiteSpace:  "nowrap",
-        overflow:    "hidden",
-        textOverflow:"ellipsis",
-      }}>
-        {TITLE}
-      </div>
-
-      {/* Elevation profile chart with start/end overlay labels */}
-      <div style={{ position: "relative", width: chartW, height: chartH, flexShrink: 0 }}>
-        <LineChart
-          width={chartW}
-          height={chartH}
-          margin={MARGIN}
-          skipAnimation
-          grid={{ horizontal: true }}
-          xAxis={[{
-            data:           distKm,
-            label:          "Distance (km)",
-            min:            X_MIN,
-            max:            X_MAX,
-            tickMinStep:    5,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle:     { fontSize: 16, fill: t.ink },
-          }]}
-          yAxis={[{
-            label:          "Elevation (m)",
-            min:            Y_MIN,
-            max:            Y_MAX,
-            tickMinStep:    200,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle:     { fontSize: 16, fill: t.ink },
-          }]}
-          series={[{
-            data:      elevM,
-            area:      true,
-            showMark:  false,
-            color:     t.palette[0],
-            curve:     "linear",
-          }]}
-          sx={{
-            "& .MuiAreaElement-root": { fillOpacity: 0.35 },
-            "& .MuiLineElement-root": { strokeWidth: 2.5 },
-            "& .MuiChartsGrid-line":  { stroke: t.grid, strokeDasharray: "4 3" },
-            "& .MuiChartsAxis-line":  { stroke: t.inkSoft, strokeOpacity: 0.4 },
-            "& .MuiChartsAxis-tick":  { stroke: t.inkSoft, strokeOpacity: 0.4 },
-          }}
-        >
-          {landmarks.map(lm => (
-            <ChartsReferenceLine
-              key={lm.x}
-              x={lm.x}
-              label={`${lm.label} · ${lm.elev} m`}
-              labelAlign="start"
-              lineStyle={{ stroke: t.inkSoft, strokeDasharray: "5 3", strokeWidth: 1.5 }}
-              labelStyle={{ fontSize: 12, fill: t.ink }}
-            />
-          ))}
-        </LineChart>
-
-        {/* Start point: Les Houches */}
-        <div style={{
-          position:      "absolute",
-          left:           startPx.left + 6,
-          top:            startPx.top - 46,
-          pointerEvents: "none",
-          fontFamily:    "sans-serif",
-        }}>
-          <div style={{ color: t.ink,     fontSize: 13, fontWeight: 700 }}>Les Houches</div>
-          <div style={{ color: t.inkSoft, fontSize: 12 }}>1010 m  ▶</div>
-        </div>
-
-        {/* End point: Courmayeur */}
-        <div style={{
-          position:      "absolute",
-          left:           endPx.left - 6,
-          top:            endPx.top - 46,
-          transform:     "translateX(-100%)",
-          textAlign:     "right",
-          pointerEvents: "none",
-          fontFamily:    "sans-serif",
-        }}>
-          <div style={{ color: t.ink,     fontSize: 13, fontWeight: 700 }}>Courmayeur</div>
-          <div style={{ color: t.inkSoft, fontSize: 12 }}>◀  1224 m</div>
-        </div>
-      </div>
-
-      {/* Footer: vertical exaggeration note */}
-      <div style={{
-        color:       t.inkSoft,
-        fontSize:    13,
-        textAlign:   "center",
-        lineHeight:  `${FOOTER_H}px`,
-        flexShrink:  0,
-        fontFamily:  "sans-serif",
-      }}>
-        Vertical exaggeration ≈ 10× · Tour du Mont Blanc (Italy / France)
-      </div>
-    </div>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
+        </Typography>
+      </Box>
+      <LineChart
+        width={width}
+        height={height - TITLE_H}
+        skipAnimation
+        hideLegend
+        grid={{ horizontal: true }}
+        xAxis={[
+          {
+            data: distances,
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            label: DISTANCE,
+            tickNumber: 9,
+            height: X_AXIS_H,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            label: ELEVATION,
+            min: yLo,
+            max: yHi,
+            width: Y_AXIS_W,
+            valueFormatter: (v: number) => v.toLocaleString("en-US"),
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={[
+          {
+            id: "profile",
+            data: elevations,
+            label: ELEVATION,
+            color: t.palette[0],
+            area: true,
+            baseline: "min",
+            showMark: false,
+            curve: "linear",
+          },
+        ]}
+        margin={{ top: 12, right: 48, bottom: 8, left: 24 }}
+        sx={{
+          "& .MuiLineChart-area": { fillOpacity: 0.35 },
+          "& .MuiLineChart-line": { strokeWidth: 2.5 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      >
+        <ProfileAnnotations />
+      </LineChart>
+    </Box>
   );
 }
