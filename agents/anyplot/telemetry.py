@@ -262,8 +262,19 @@ PrepOp = Literal[
     "extract",
     "strip",
     "replace",
+    "compute",
+    "diff",
+    "rolling",
+    "blank",
+    "unsupported",
 ]
 PREP_OPS: frozenset[str] = frozenset(get_args(PrepOp))
+CapabilityGap = Literal[
+    "fill_values", "edit_cells", "add_rows", "combine_tables", "text_pattern", "time_window", "other"
+]
+"""What kind of data change the root named as one no operation can make (`prepare.UnsupportedFamily`, pinned equal by
+a test): the family only, never the request."""
+CAPABILITY_GAPS: frozenset[str] = frozenset(get_args(CapabilityGap))
 ConversionOutcome = Literal["none", "date", "number", "index", "asked"]
 """What a turn did about a required role left open (`data/conversions.py`): `none` when the session block listed no
 conversion; `date`, `number` or `index` for the column `prepare_data` made; `asked` when a conversion was listed and
@@ -484,6 +495,9 @@ class ChatTurn(_Event):
     tools: list[ToolName] = _list()
     prep_ops: list[PrepOp] = _list()
     prep_calls: Count = 0
+    capability_gap: list[CapabilityGap] = _list()
+    """The families of the data changes the root named as ones no operation can make in this turn (`unsupported`,
+    since 2026-11-07): what the chat is asked for and cannot do, counted without a word of the request."""
     conversion: ConversionOutcome = "none"
     undo: bool = False
     to_long: bool = False

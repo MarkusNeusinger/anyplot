@@ -1,0 +1,14 @@
+{
+  "dataset_text": "Monat,PV_kWh,Einspeisung_kWh\n2024-04-01,412.6,250.1\n2024-05-01,530.2,341.8\n2024-06-01,588.9,402.3\n2024-07-01,601.4,398.7\n2024-08-01,540.0,350.5\n",
+  "message": "Berechne die Eigenverbrauchsquote als (PV − Einspeisung) / PV in einer neuen Spalte Eigenverbrauch.",
+  "expected_operations": [
+    {
+      "op": "compute",
+      "name": "Eigenverbrauch",
+      "expression": "(pv - ein) / pv",
+      "inputs": {"pv": "PV_kWh", "ein": "Einspeisung_kWh"}
+    }
+  ],
+  "locale": "de",
+  "tags": ["compute", "ratio_expression"]
+}

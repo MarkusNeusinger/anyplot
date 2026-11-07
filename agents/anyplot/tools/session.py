@@ -56,9 +56,14 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   as `<tool_notes>` and the new profile fenced as `<user_data>`; a `PrepareError`
   answers its code and its message (which names columns at most, fenced too).
   Refused while the pipeline runs. The model never writes data rows: the operations
-  only move, type, aggregate, label or compute from the cells that are there (a
+  only move, type, aggregate, label, empty or compute from the cells that are there (a
   `make_date` builds a date from the year and month columns of the same row, a `split`
-  cuts `10–25` into 10 and 25 at a literal separator).
+  cuts `10–25` into 10 and 25 at a literal separator, a `compute` evaluates a checked
+  expression over number columns). A change no operation can make is the `unsupported`
+  operation with its `family`: the call changes nothing and answers `unsupported_operation`
+  with the `family` and a fixed sentence in the session language (`refusals.yaml`,
+  `unsupported_<family>`), which the root sends instead of pointing the user to their file,
+  and the turn's `chat_turn` line counts the gap (`capability_gap`).
 * `query_data(operations, columns, limit)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
@@ -94,14 +99,22 @@ from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
-from ..data.prepare import MAX_OPERATIONS, Operation, Prepared, PrepareError, apply_and_parse, validation_lines
+from ..data.prepare import (
+    MAX_OPERATIONS,
+    Operation,
+    Prepared,
+    PrepareError,
+    Unsupported,
+    apply_and_parse,
+    validation_lines,
+)
 from ..data.query import DEFAULT_QUERY_ROWS, QueryArgs, QueryResult, run_query
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
 from ..dataset_context import code_source, generated_source
 from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from ..dataset_versions import push_version
-from ..language import LANGUAGE_TARGETS, is_valid, normalise, same_language
+from ..language import LANGUAGE_TARGETS, is_valid, normalise, refusal_lang, same_language
 from ..memory import ForgetArgs, MemoryRefused, memory_delta, read_memory
 from ..memory import forget as memory_forget
 from ..opening import store_dataset
@@ -116,7 +129,7 @@ from ..plugins.tool_safety import (
     result_limit,
     result_size,
 )
-from ..policy import DATA_PREAMBLE, fence, file_name_block, user_notes_block
+from ..policy import DATA_PREAMBLE, fence, file_name_block, refusal, user_notes_block
 from ..render.contract import DataJob, DataOutput, RendererUnavailable
 from ..render.gates import error_summary
 from ..render.harness import DATA_EXIT
@@ -405,9 +418,12 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     """Change the user's dataset with one to five operations, applied in order by the server; the result becomes the next version of the data, which the user then checks and confirms.
 
     Each operation is an object with "op" and its fields, column names exactly as the profile lists them:
-    rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold);
-    set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column, how sum|mean|count|min|max,
-    period hour|day|week|month|quarter|year); sort (column, descending); pivot_longer (columns, names_to, values_to); pivot_wider
+    rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold,
+    each {column, test, value}, or with values: a list of which any one may match, for test eq or contains);
+    set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column or columns: several
+    value columns, how sum|mean|count|min|max|first|last, period hour|day|week|month|quarter|year; first and last
+    take a group's first and last value, by time when a key is a date); sort (column, descending); pivot_longer
+    (columns, names_to, values_to); pivot_wider
     (names_from, values_from, index); classify (name, rules: each where conditions and a label, otherwise: the optional
     label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds); derive
     (name, how ratio|difference|sum|share|percent_change|cumsum|index, columns, within, order, percent; adds the number
@@ -424,7 +440,15 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     (column, separator: a literal text such as - or –, names: 2 to 10 new columns; 10–25 gives 10 and 25), extract
     (column, keep number|digits|letters, name; number for an amount, CHF 1'200 gives 1200; digits for an id or a
     code), strip (column, prefix, suffix, name; takes a literal
-    text off the start or the end of each cell) and replace (column, old, new, name; new empty removes old). Steps
+    text off the start or the end of each cell) and replace (column, old, new, name; new empty removes old); compute
+    (name, expression, inputs; adds the number column name from an expression over number columns, with the
+    expression language of generate_data, inputs mapping each short name of the expression to its column, such as
+    {"q": "Quantity", "p": "Price"} for q * p); diff (name, column, order, within, lag; adds the change of column from
+    the row lag places before, default 1, in the order of a number or date column order); rolling (name, column, how
+    mean|sum, window, order, within; adds the mean or sum over window rows, each row and the ones before it); blank
+    (columns, where; empties the cells of columns in the rows where the conditions hold, the rows stay); unsupported
+    (family fill_values|edit_cells|add_rows|combine_tables|text_pattern|time_window|other; alone, for a change no
+    operation can make: it changes nothing and answers unsupported_operation with a fixed message to send). Steps
     chain in one call: a later operation may name a column an earlier one made. Returns the change lines and the new
     profile, or an error with a code and a message.
     """
@@ -448,6 +472,13 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
     except ValueError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
+    gap = next((operation for operation in parsed_operations if isinstance(operation, Unsupported)), None)
+    if gap is not None:
+        # A change no operation can make: the service's own sentence in the session language, never a word of the
+        # request, and the gap counted by its family alone (`capability_gap`). Nothing changes.
+        ledger.capability_gaps.append(gap.family)
+        message = refusal(f"unsupported_{gap.family}", refusal_lang(view.language))
+        return {"status": "error", "code": "unsupported_operation", "family": gap.family, "message": message}
     try:
         prepared, parsed = apply_and_parse(stored.as_parsed(), parsed_operations, language=view.language)
     except PrepareError as exc:
@@ -498,8 +529,9 @@ async def query_data(
     """Answer a question about the user's data without changing it: the operations are applied to a copy and the first rows of the result come back as a small table; nothing is stored, and the data, its version and its confirmation stay as they are.
 
     operations: zero to five operations of the same set as prepare_data, applied in order (keep only some rows with
-    drop_rows on the others, such as test ne on the year asked about; a top N is a sort with limit; a share, a change
-    or an index is a derive; a total or a mean per group an aggregate). columns: the columns to return, at most 8
+    drop_rows on the others, such as test ne on the year asked about; a top N is a sort with limit; a share, a percent
+    change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
+    per group an aggregate). columns: the columns to return, at most 8
     (default: the first 8). limit: the rows to return, 1 to 25 (default 10). Returns the table (columns and rows),
     the number of rows of the whole result, whether it was cut, and the change lines, or an error with a code and a
     message.

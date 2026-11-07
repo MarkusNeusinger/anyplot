@@ -69,16 +69,20 @@ The operations:
   be taken back; the order travels to the next version as a warning
   (`Prepared.date_notes`, `with_date_notes`). A column whose order is settled (ISO, or
   a day over 12) stays as it is (see `_reread_dates`).
-* `aggregate`: group by one or two key columns and reduce one value column with `sum`,
-  `mean`, `count`, `min` or `max`. A `period` turns every datetime key into `YYYY-MM`,
+* `aggregate`: group by one or two key columns and reduce one value column (`column`), or
+  each of 2 to 10 (`columns`, one `how` for all, never `count`), with `sum`, `mean`,
+  `count`, `min`, `max`, `first` or `last` (since 2026-11-07: the last meter reading of
+  each month). `first` and `last` take a group's first and last value that is there, in
+  the order of the rows, or of the datetime keys' moments when there are some, so the
+  last reading of a month is its latest one. A `period` turns every datetime key into `YYYY-MM`,
   `YYYY-Qn` or `YYYY` text before grouping, or, since live test round 5 of 2026-10-15
   ("Tagesmittel pro Sensor" on readings every 13 minutes), into the first moment of its
   `hour`, `day` or ISO `week` (its Monday), which stays a datetime, so the result keeps
   a time axis: a day and a week are written as dates, an hour with its time and offset.
   The buckets follow the column's clock as stored: a column with one UTC offset is cut
   at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
-  and the change line names that offset. The result holds the key columns and one
-  value column named like the source, or `count`; every other column is dropped, rows
+  and the change line names that offset. The result holds the key columns and the
+  value columns named like their sources, or `count`; every other column is dropped, rows
   with a missing key form their own group, and the rows are sorted by the keys.
 * `pivot_longer`: 2 to 20 columns become a `names_to`/`values_to` pair (long format,
   one row per source row and column, missing values kept; columns of unlike kinds melt
@@ -95,7 +99,11 @@ The operations:
   labels such as `1` and `2` remain categories. This is how a category is derived from
   the cells that are there ("positive y is class 1, the rest class 2"); a rule that
   matches no row is reported with its count of 0, and a column that would hold no
-  label at all is an `invalid_operation`.
+  label at all is an `invalid_operation`. A rule takes several values into one label
+  with an "any of" condition (`values`, see below: `Miete` or `Strom` is `Wohnen`). The
+  change line counts the rows no rule named, under `otherwise` or without a label, and
+  names their three largest groups by the text column the rules test most often, so a
+  fallback that took a category of its own is seen (persona tests of 2026-11-06).
 * `derive`: a new number column `name`, appended last, computed row by row from number
   columns by one of a closed set of formulas (`DeriveHow`; never a free expression):
   `ratio` (`a / b`) and `difference` (`a - b`) of exactly two columns, `sum` of 2 to 10
@@ -189,12 +197,54 @@ The operations:
   spreadsheet, and the root sent the user there. A text column whose every cell
   is two numbers around one dash, the first never above the second (`range_run`), is what a
   lower and upper bound pair left open asks for (`conversions.py`).
+* The operations of 2026-11-07, from the persona tests of 2026-11-06, where five of ten
+  personas got no plot because a column could not be derived and the root sent them to a
+  spreadsheet:
+  * `compute`: a new number column, appended last, from an `expression` over number
+    columns, which `inputs` maps to short names (`{"l": "Länge l in m"}`). The expression
+    language is `generate_data`'s, checked by its AST whitelist (`generate.parse_expression`)
+    before a cell is read, so one language serves both tools: numbers, the inputs, `pi`,
+    `e` and `tau`, `+ - * / ** % //` (`//` and `%` for whole-number buckets such as a
+    decade), and the functions `log log10 log2 exp sqrt abs` (logs, growth, roots), `sin
+    cos tan asin acos atan atan2` (angles and directions, such as wind components), `sinh
+    cosh tanh`, `floor ceil round` (a whole part or a rounding the user asks for, written
+    into the new column while the source stays), `sign` (the direction of a change) and
+    `min max` (an elementwise cap). No comparison, condition or other call parses. Where
+    every input is a whole-number column and every step keeps whole numbers whole, the
+    rows are computed in Python integers, exactly; otherwise in float64, as `derive`
+    computes, never rounded to fewer digits (`generate`'s `SIGNIFICANT_DIGITS` is a
+    formula's, not the user's data). A cell is empty where an input is missing, a step
+    divides by zero, or a step leaves a function's domain or the number range, and the
+    change line quotes the checked expression and counts the empty cells by reason.
+  * `diff`: each row's value minus the one `lag` rows before it (1 by default) within its
+    group, in the order of `order`, as the ordered `derive` formulas walk (`_order_rows`);
+    the first `lag` rows of each group are empty and counted. `rolling`: the `mean` or the
+    `sum` over `window` rows, a row and the ones before it; the first `window - 1` rows of
+    each group, and a row whose window holds a missing value, are empty and counted. Both
+    work in exact decimals, so whole numbers stay whole and `12.3 - 10.1` is `2.2`. An
+    order column may also hold the period labels an `aggregate` writes (`2024-03`), whose
+    text sorts in time order, so the last reading per month and its change from the month
+    before chain in one call. A window over a span of time (seven days of irregular
+    readings) is no option: an `aggregate` by `day` first makes it one of rows.
+  * `blank`: the cells of 1 to 10 columns emptied in place where 1 to 3 conditions hold,
+    as in `drop_rows` (missing codes such as `-0.99`); the rows stay, each column counts
+    its emptied cells, and a column that would lose every value is refused. It empties
+    and never fills: `prepare_data` still never invents or fills in a value.
+  * `unsupported`: names a change no operation can make by a closed `family` (fill in
+    values, edit single cells, add rows, combine tables, a text pattern, a window over
+    time, other). It changes nothing: `apply_operations` refuses it as
+    `unsupported_operation` before any operation runs, and `prepare_data` answers with a
+    fixed sentence in the session language instead of the root telling the user to fix
+    the file.
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
 the model may also pass as a JSON number), moments for a datetime column (the value is
 an ISO date or date-time), `true`/`false` for a boolean column. A missing cell matches
 only `is_missing`. `contains` searches the cell's canonical text, case-sensitively.
+`values` in place of `value` is an "any of" list (1 to 20) for `eq` and `contains`: the
+condition holds when the cell equals one of them or contains one, and each value is read
+as `value` is.
 
 What the canonical CSV does not say about its columns travels with the frame as
 `_Carried`: the columns the parser read by guess, the columns kept text, and whether a
@@ -206,33 +256,40 @@ round 5: `30` and `30.0` are the same number), any other value in its shortest e
 form, and a whole number past 2**53 with the `.0` that shows a float holds it.
 
 Errors raise `PrepareError(code, message)`: `unknown_column`, `type_mismatch`,
-`empty_result` (no rows or no columns would remain), `too_wide` and
+`empty_result` (no rows or no columns would remain), `too_wide`,
 `invalid_operation` (an operation that is well-formed but cannot apply, such as a
-condition without its value, a `period` without a datetime key, or a long format that
-would exceed the 2 MiB cap of computed data, `parse.MAX_COMPUTED_BYTES`). Messages name columns, never cells.
+condition without its value, a `period` without a datetime key, an expression outside
+the whitelist, or a long format that would exceed the 2 MiB cap of computed data,
+`parse.MAX_COMPUTED_BYTES`) and `unsupported_operation` (an `unsupported` operation).
+Messages name columns, never cells.
 Change lines name column names bare, condition values quoted and clipped to 40
-characters, and are at most `MAX_NOTE_CHARS` long. `validation_lines` formats a
+characters (an "any of" list shows its first three and how many more), the cells of a
+`classify` fallback's largest groups quoted and clipped to 24, and are at most
+`MAX_NOTE_CHARS` long; the counts a line must never lose (empty cells, values stored
+rounded, a fallback) are kept whole and the rest is shortened (`_with_notice`). `validation_lines` formats a
 Pydantic error of the operation models for the model (`tools/session.py` and
 `plugins/tool_safety.py` share it), one line per error with its location.
 """
 
+import ast
 import calendar
 import io
 import math
 import re
 import unicodedata
 import warnings
-from collections.abc import Callable, Collection, Iterable, Sequence
+from collections import Counter
+from collections.abc import Callable, Collection, Hashable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta, tzinfo
-from decimal import ROUND_FLOOR, InvalidOperation
+from decimal import ROUND_FLOOR, InvalidOperation, localcontext
 from decimal import Decimal as ExactDecimal
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, Self
 
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_dtype, is_numeric_dtype
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from ..language import DEFAULT_LANGUAGE, canonical
 from ..schemas import (
@@ -243,7 +300,9 @@ from ..schemas import (
     MAX_ROWS,
     MAX_WARNINGS,
     ColumnName,
+    NewName,
 )
+from .generate import CONSTANTS, Expr, GenerateError, VariableName, evaluate, parse_expression, source_text
 from .months import month_number, month_year, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
@@ -278,9 +337,16 @@ MAX_SPLIT_PARTS = 10  # the new columns of one `split`
 MAX_LITERAL_CHARS = (
     MAX_CELL_CHARS  # a separator, prefix, suffix or replaced text, at most what the profile shows of a cell
 )
+MAX_INPUTS = 10  # the input columns of one `compute`
+MAX_AGGREGATE_COLUMNS = 10  # the value columns of one `aggregate`
+MAX_ANY_VALUES = 20  # the values of one condition's "any of" list (`Condition.values`)
+SHOWN_ANY_VALUES = 3  # of an "any of" list, the values a change line quotes before "and N more"
+FALLBACK_GROUPS = 3  # the largest groups of a `classify` fallback that its change line names
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
 Test = Literal["eq", "ne", "contains", "is_missing", "gt", "lt"]
+ANY_OF_TESTS: frozenset[str] = frozenset(("eq", "contains"))
+"""The tests an "any of" list (`Condition.values`) takes: a cell equal to one of the values, or one that contains one."""
 TargetType = Literal["number", "datetime", "text"]
 DateFormat = Literal[
     "DD.MM.YYYY",
@@ -295,7 +361,8 @@ DateFormat = Literal[
     "YYYY",
 ]
 Decimal = Literal[".", ","]
-How = Literal["sum", "mean", "count", "min", "max"]
+How = Literal["sum", "mean", "count", "min", "max", "first", "last"]
+RollingHow = Literal["mean", "sum"]
 Period = Literal["hour", "day", "week", "month", "quarter", "year"]
 DATE_PERIODS = frozenset(("hour", "day", "week"))
 """The periods whose bucket stays a datetime, its first moment (`_period_starts`); the others become text labels."""
@@ -313,7 +380,24 @@ _DERIVE_ARITY: dict[str, tuple[int, int]] = {
     "index": (1, 1),
 }
 """How many value columns each formula takes, as (at least, at most)."""
-PrepareErrorCode = Literal["unknown_column", "type_mismatch", "empty_result", "too_wide", "invalid_operation"]
+PrepareErrorCode = Literal[
+    "unknown_column", "type_mismatch", "empty_result", "too_wide", "invalid_operation", "unsupported_operation"
+]
+UnsupportedFamily = Literal[
+    "fill_values", "edit_cells", "add_rows", "combine_tables", "text_pattern", "time_window", "other"
+]
+"""What kind of data change no operation can make (`Unsupported`): a closed set, so the reply is a fixed sentence and
+the telemetry counts the gap by kind (`capability_gap`) without a word of the request."""
+UNSUPPORTED_WORDS: dict[str, str] = {
+    "fill_values": "fill in, interpolate or invent values",
+    "edit_cells": "change single cells by hand",
+    "add_rows": "add rows",
+    "combine_tables": "combine the table with another one",
+    "text_pattern": "match text by a pattern or a wildcard",
+    "time_window": "compute over a span of time instead of a number of rows",
+    "other": "make this change",
+}
+"""The English message of an `unsupported_operation` refusal, after "no operation can"."""
 
 STRPTIME: dict[str, str] = {
     "DD.MM.YYYY": "%d.%m.%Y",
@@ -378,7 +462,19 @@ _VERBS: dict[str, str] = {
     "count": "counted",
     "min": "took the minimum of",
     "max": "took the maximum of",
+    "first": "took the first value of",
+    "last": "took the last value of",
 }
+_PERIOD_LABEL_SHAPES = (YEAR_MONTH, re.compile(r"[0-9]{4}-Q[1-4]"), re.compile(r"[0-9]{4}"))
+"""The labels an `aggregate` with a `period` writes (`2024-03`, `2024-Q1`, `2024`): text whose order is the time's."""
+_DIVISIONS = (ast.Div, ast.FloorDiv, ast.Mod)
+_WHOLE_OPERATORS = (ast.Add, ast.Sub, ast.Mult, ast.FloorDiv, ast.Mod)
+_WHOLE_FUNCTIONS = frozenset(("abs", "sign", "min", "max"))
+"""The steps of a `compute` that keep whole numbers whole, besides a power with a whole exponent of 0 or more."""
+_WHOLE_BITS = 1023
+"""A whole result of more bits is beyond what a float64 holds at all: the cell is empty, counted (`_whole_value`)."""
+_DECIMAL_DIGITS = 100
+"""The digits a `rolling` window adds its decimal cells with: exact for cells within some 80 orders of magnitude."""
 _TEST_SIGNS: dict[str, str] = {"eq": "=", "ne": "≠", "gt": ">", "lt": "<"}
 
 # The parser's number shape: a dot decimal with an optional exponent, ASCII digits only.
@@ -545,15 +641,6 @@ class _Carried:
 # --- Operation models -----------------------------------------------------------------------
 
 
-def _clean_name(name: str) -> str:
-    """A new column name as the parser would keep it: no surrounding whitespace, breaks or invisible characters."""
-    if name != name.strip() or _HEADER_BREAKS.search(name):
-        raise ValueError("a column name has no surrounding whitespace, tabs or line breaks")
-    if any(unicodedata.category(char) == "Cf" for char in name):
-        raise ValueError("a column name has no invisible formatting characters")
-    return name
-
-
 def _clean_label(label: str) -> str:
     """A `classify` label that the re-parse keeps exactly as written.
 
@@ -586,7 +673,6 @@ def _clean_affix(text: str) -> str:
     return _clean_text(text).strip()
 
 
-NewName = Annotated[ColumnName, AfterValidator(_clean_name)]
 Value = Annotated[str, Field(max_length=MAX_VALUE_CHARS)]
 Label = Annotated[str, Field(min_length=1, max_length=MAX_CELL_CHARS), AfterValidator(_clean_label)]
 Literal_ = Annotated[str, Field(min_length=1, max_length=MAX_LITERAL_CHARS), AfterValidator(_clean_text)]
@@ -602,7 +688,10 @@ class Condition(_Strict):
     """One test on one column; `value` is required for every test but `is_missing`.
 
     A JSON number as the value (`{"test": "gt", "value": 100}`) is read as its text,
-    so a numeric comparison needs no quoting.
+    so a numeric comparison needs no quoting. `values` in place of `value` is an "any
+    of" list for `eq` and `contains`: the condition holds when the cell equals one of
+    them, or contains one (`Miete` or `Strom` into one category, the missing codes
+    `-0.99` and `-1` in one `blank`).
     """
 
     model_config = ConfigDict(extra="forbid", coerce_numbers_to_str=True)
@@ -610,6 +699,7 @@ class Condition(_Strict):
     column: ColumnName
     test: Test
     value: Value | None = None
+    values: list[Value] | None = Field(default=None, min_length=1, max_length=MAX_ANY_VALUES)
 
 
 class Rename(_Strict):
@@ -647,11 +737,31 @@ class SetType(_Strict):
 
 
 class Aggregate(_Strict):
+    """Group by one or two key columns and reduce the value `column`, or each of 2 to 10 `columns`, with `how`.
+
+    One `how` for every value column; `count` takes one. `first` and `last` take a group's first and last value
+    that is there, in the order of the rows, or of the moments of the datetime keys when there are some.
+    """
+
     op: Literal["aggregate"]
     by: list[ColumnName] = Field(min_length=1, max_length=MAX_KEYS)
-    column: ColumnName
+    column: ColumnName | None = None
+    columns: list[ColumnName] | None = Field(default=None, min_length=1, max_length=MAX_AGGREGATE_COLUMNS)
     how: How
     period: Period | None = None
+
+    @model_validator(mode="after")
+    def _one_or_several(self) -> Self:
+        if (self.column is None) == (self.columns is None):
+            raise ValueError("aggregate takes column (one value column) or columns (several), not both and not neither")
+        if self.columns is not None and len(self.columns) == 1:
+            self.column, self.columns = self.columns[0], None  # one column in a list is the one value column
+        return self
+
+    @property
+    def value_columns(self) -> list[str]:
+        """The value columns, in the order given."""
+        return [self.column] if self.column is not None else list(self.columns or [])
 
 
 class Sort(_Strict):
@@ -791,6 +901,66 @@ class Replace(_Strict):
     name: NewName
 
 
+class Compute(_Strict):
+    """A new number column `name`, appended last, computed row by row from `expression` over number columns.
+
+    `inputs` maps each short name the expression uses to its column, since a column name such as `Länge l in m`
+    is no name an expression can hold (`{"l": "Länge l in m", "T": "Periode T in s"}`). The expression language
+    is `generate_data`'s (`generate.parse_expression`): numbers, the inputs, the constants, `+ - * / ** % //`,
+    parentheses and its functions; no comparison and no other call.
+    """
+
+    op: Literal["compute"]
+    name: NewName
+    expression: Expr
+    inputs: dict[VariableName, ColumnName] = Field(min_length=1, max_length=MAX_INPUTS)
+
+
+class Diff(_Strict):
+    """A new number column `name`: each row's `column` minus the one `lag` rows before it, within each group of
+    `within`, in the order of `order`; the first `lag` rows of each group are empty."""
+
+    op: Literal["diff"]
+    name: NewName
+    column: ColumnName
+    order: ColumnName
+    within: list[ColumnName] = Field(default_factory=list, max_length=MAX_KEYS)
+    lag: int = Field(default=1, ge=1, le=MAX_ROWS)
+
+
+class Rolling(_Strict):
+    """A new number column `name`: the `mean` or the `sum` of `column` over `window` rows, each row and the
+    `window - 1` before it, within each group of `within`, in the order of `order`; the first `window - 1` rows of
+    each group are empty."""
+
+    op: Literal["rolling"]
+    name: NewName
+    column: ColumnName
+    how: RollingHow
+    window: int = Field(ge=2, le=MAX_ROWS)
+    order: ColumnName
+    within: list[ColumnName] = Field(default_factory=list, max_length=MAX_KEYS)
+
+
+class Blank(_Strict):
+    """The cells of `columns` emptied in every row for which all conditions hold; the rows stay, nothing is filled."""
+
+    op: Literal["blank"]
+    columns: list[ColumnName] = Field(min_length=1, max_length=MAX_DROP_COLUMNS)
+    where: list[Condition] = Field(min_length=1, max_length=MAX_CONDITIONS)
+
+
+class Unsupported(_Strict):
+    """A data change no operation can make, named by its `family`: refused as `unsupported_operation`, nothing changes.
+
+    The root reports it instead of telling the user to change the file: `prepare_data` answers with a fixed sentence in
+    the session language (`refusals.yaml`, `unsupported_<family>`) and the telemetry counts the gap.
+    """
+
+    op: Literal["unsupported"]
+    family: UnsupportedFamily
+
+
 Operation = Annotated[
     Rename
     | DropColumns
@@ -808,7 +978,12 @@ Operation = Annotated[
     | Split
     | Extract
     | Strip
-    | Replace,
+    | Replace
+    | Compute
+    | Diff
+    | Rolling
+    | Blank
+    | Unsupported,
     Field(discriminator="op"),
 ]
 
@@ -828,6 +1003,10 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation], languag
         raise PrepareError("invalid_operation", "there is no operation to apply")
     if len(operations) > MAX_OPERATIONS:
         raise PrepareError("invalid_operation", f"at most {MAX_OPERATIONS} operations can be applied at once")
+    gap = next((operation for operation in operations if isinstance(operation, Unsupported)), None)
+    if gap is not None:
+        # Reported before anything is applied: a call that names a gap changes nothing.
+        raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[gap.family]}")
     carried = _Carried.of(parsed, language)
     frame = _read(parsed)
     changes: list[str] = []
@@ -934,6 +1113,16 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _strip(frame, operation, carried)
         case Replace():
             return _replace(frame, operation, carried)
+        case Compute():
+            return _compute(frame, operation, carried)
+        case Diff():
+            return _diff(frame, operation, carried)
+        case Rolling():
+            return _rolling(frame, operation, carried)
+        case Blank():
+            return _blank(frame, operation, carried)
+        case Unsupported():  # `apply_operations` refuses it before any operation runs
+            raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[operation.family]}")
 
 
 def _read(parsed: ParsedDataset) -> pd.DataFrame:
@@ -978,14 +1167,20 @@ def _drop_columns(frame: pd.DataFrame, op: DropColumns, carried: _Carried) -> tu
     return frame.drop(columns=columns), f"dropped {len(columns)} columns: {', '.join(columns)}"
 
 
-def _drop_rows(frame: pd.DataFrame, op: DropRows, carried: _Carried) -> tuple[pd.DataFrame, str]:
+def _rows_where(frame: pd.DataFrame, conditions: Sequence[Condition], carried: _Carried) -> tuple[pd.Series, list[str]]:
+    """The rows for which every condition holds, and each condition in the change line's words."""
     mask = pd.Series(True, index=frame.index)
     clauses: list[str] = []
-    for condition in op.where:
+    for condition in conditions:
         _require(frame, condition.column)
         series = frame[condition.column]
         mask &= _matches(series, condition, _with_time(series, carried))
         clauses.append(_describe(condition, _kind(series)))
+    return mask, clauses
+
+
+def _drop_rows(frame: pd.DataFrame, op: DropRows, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    mask, clauses = _rows_where(frame, op.where, carried)
     dropped = int(mask.sum())
     if dropped == len(frame):
         raise PrepareError("empty_result", "every row matches the conditions; no row would remain")
@@ -1423,53 +1618,49 @@ def _group_mean(values: pd.Series) -> float:
 
 def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[pd.DataFrame, str]:
     keys = _distinct(op.by)
-    for name in [*keys, op.column]:
+    values = _distinct(op.value_columns)
+    for name in [*keys, *values]:
         _require(frame, name)
-    if op.column in keys:
-        raise PrepareError("invalid_operation", f"column '{op.column}' cannot be both a key and the value")
+    for name in values:
+        if name in keys:
+            raise PrepareError("invalid_operation", f"column '{name}' cannot be both a key and the value")
+    if op.how == "count" and len(values) > 1:
+        raise PrepareError("invalid_operation", "count counts the rows of each group: give it one column")
     date_keys = [name for name in keys if _kind(frame[name]) == "datetime"]
     if op.period and not date_keys:
         raise PrepareError("invalid_operation", "a period needs a datetime column among the keys")
-    value_kind = _kind(frame[op.column])
-    if op.how in ("sum", "mean") and value_kind not in ("number", "boolean"):
-        raise PrepareError("type_mismatch", f"column '{op.column}' is {value_kind}; {op.how} needs a number column")
-    value_name = "count" if op.how == "count" else op.column
-    if value_name in keys:
-        raise PrepareError("invalid_operation", f"a key column is already named '{value_name}'")
+    kinds = {name: _kind(frame[name]) for name in values}
+    for name, kind in kinds.items():
+        if op.how in ("sum", "mean") and kind not in ("number", "boolean"):
+            raise PrepareError("type_mismatch", f"column '{name}' is {kind}; {op.how} needs a number column")
+    value_names = ["count"] if op.how == "count" else values
+    if value_names[0] in keys:
+        raise PrepareError("invalid_operation", f"a key column is already named '{value_names[0]}'")
 
-    work = frame[[*keys, op.column]].copy()
+    work = frame[[*keys, *values]].copy()
+    if op.how in ("first", "last") and date_keys:
+        # A bucket's first and last value are its earliest and latest moment's; rows of one moment keep their order.
+        work = work.sort_values(date_keys, kind="stable", na_position="last")
     if op.period in DATE_PERIODS:
         for name in date_keys:
             work[name] = _period_starts(work[name], op.period)
     elif op.period:
         for name in date_keys:
             work[name] = _period_labels(work[name], op.period)
-    if value_kind == "boolean" and op.how in ("sum", "mean"):
-        work[op.column] = work[op.column].astype("Int64")
-    grouped = work.groupby(keys, dropna=False, sort=True)[op.column]
+    for name, kind in kinds.items():
+        if kind == "boolean" and op.how in ("sum", "mean"):
+            work[name] = work[name].astype("Int64")
+    grouped = work.groupby(keys, dropna=False, sort=True)
+    reduced: list[pd.Series] = []
     rounded = cast = 0
-    match op.how:
-        case "sum" if is_integer_dtype(work[op.column].dtype):
-            # In Python integers: pandas' Int64 sum wraps around silently past 2**63 (review of 2026-10-15).
-            # Summed outside pandas, which would infer a dtype for the totals; the groups come in the order of `size`.
-            totals = [sum(int(value) for value in values.dropna()) for _, values in grouped]
-            aggregated, rounded = _whole_numbers(totals, grouped.size().index)
-        case "sum":
-            aggregated = grouped.agg(_group_sum)
-        case "mean" if is_integer_dtype(work[op.column].dtype):
-            aggregated = grouped.mean()
-            cast = _past_exact(work[op.column])  # a mean is a float: inputs past 2**53 are counted
-        case "mean":
-            aggregated = grouped.agg(_group_mean)
-        case "count":
-            aggregated = grouped.count()
-        case "min":
-            aggregated = grouped.min()
-        case "max":
-            aggregated = grouped.max()
-    result = aggregated.reset_index()
-    result.columns = pd.Index([*keys, value_name])
-    carried.keep_only([*keys, value_name])
+    for name in values:
+        series, whole_rounded_count, cast_count = _reduce(grouped[name], work[name], op.how)
+        reduced.append(series.rename(value_names[0] if op.how == "count" else name))
+        rounded += whole_rounded_count
+        cast += cast_count
+    result = pd.concat(reduced, axis=1).reset_index()
+    result.columns = pd.Index([*keys, *value_names])
+    carried.keep_only([*keys, *value_names])
     if op.period in DATE_PERIODS:
         # Each key is the bucket's first moment: a date for a day or an ISO week (its Monday), a time for an hour.
         carried.forget(date_keys)
@@ -1484,13 +1675,44 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     if op.period in DATE_PERIODS and zones:
         period += f", by the clock of {', '.join(zones)}"  # the column's own offset decides where a day ends
     by = " and ".join(keys) + (f" ({period})" if period else "")
-    change = f"{_VERBS[op.how]} {op.column} by {by}: {_count(len(result), 'row')}"
-    other = frame.shape[1] - len(keys) - 1
+    verb = _VERBS[op.how]
+    if op.how in ("first", "last"):
+        verb = verb.replace(" value", " value (by time)" if date_keys else " value (in row order)")
+    change = f"{verb} {_listed(values)} by {by}: {_count(len(result), 'row')}"
+    other = frame.shape[1] - len(keys) - len(values)
     if other:
         change += f", {_count(other, 'other column')} dropped"
     if cast:
-        return result, _with_notice(change, cast_note(cast, f"in {op.column}"))
+        return result, _with_notice(change, cast_note(cast, f"in {_listed(values)}"))
     return result, _with_notice(change, whole_rounded(rounded) if rounded else "")
+
+
+def _reduce(grouped: Any, values: pd.Series, how: str) -> tuple[pd.Series, int, int]:
+    """One value column of an `aggregate` reduced per group (`grouped` is its `SeriesGroupBy`), with the counts of
+    whole numbers stored as decimals past the int64 range and of inputs past 2**53 a mean read as decimals."""
+    match how:
+        case "sum" if is_integer_dtype(values.dtype):
+            # In Python integers: pandas' Int64 sum wraps around silently past 2**63 (review of 2026-10-15).
+            # Summed outside pandas, which would infer a dtype for the totals; the groups come in the order of `size`.
+            totals = [sum(int(value) for value in cells.dropna()) for _, cells in grouped]
+            aggregated, rounded = _whole_numbers(totals, grouped.size().index)
+            return aggregated, rounded, 0
+        case "sum":
+            return grouped.agg(_group_sum), 0, 0
+        case "mean" if is_integer_dtype(values.dtype):
+            return grouped.mean(), 0, _past_exact(values)  # a mean is a float: inputs past 2**53 are counted
+        case "mean":
+            return grouped.agg(_group_mean), 0, 0
+        case "count":
+            return grouped.count(), 0, 0
+        case "min":
+            return grouped.min(), 0, 0
+        case "max":
+            return grouped.max(), 0, 0
+        case "first":
+            return grouped.first(), 0, 0  # the first value that is there, as `last` the last one
+        case _:
+            return grouped.last(), 0, 0
 
 
 def _sort(frame: pd.DataFrame, op: Sort) -> tuple[pd.DataFrame, str]:
@@ -1626,13 +1848,7 @@ def _classify(frame: pd.DataFrame, op: Classify, carried: _Carried) -> tuple[pd.
     open_rows = pd.Series(True, index=frame.index)
     parts: list[str] = []
     for rule in op.rules:
-        mask = pd.Series(True, index=frame.index)
-        clauses: list[str] = []
-        for condition in rule.where:
-            _require(frame, condition.column)
-            series = frame[condition.column]
-            mask &= _matches(series, condition, _with_time(series, carried))
-            clauses.append(_describe(condition, _kind(series)))
+        mask, clauses = _rows_where(frame, rule.where, carried)
         hit = mask & open_rows  # the first rule that holds names a row
         labels[hit] = rule.label
         open_rows &= ~hit
@@ -1640,14 +1856,34 @@ def _classify(frame: pd.DataFrame, op: Classify, carried: _Carried) -> tuple[pd.
     rest = int(open_rows.sum())
     if rest and op.otherwise is not None:
         labels[open_rows] = op.otherwise
-        parts.append(f"'{op.otherwise}' for the other {_count(rest, 'row')}")
-    elif rest:
-        parts.append(f"{_count(rest, 'row')} without a label")
+        fallback = f"'{op.otherwise}' for the other {_count(rest, 'row')}"
+    else:
+        fallback = f"{_count(rest, 'row')} without a label" if rest else ""
     if not labels.notna().any():
         raise PrepareError("invalid_operation", f"no row matches a rule, so column '{op.name}' would hold no label")
     # Kept text through the re-parse: labels such as `1` and `2` are categories, not numbers.
     carried.text_columns.add(op.name)
-    return frame.assign(**{op.name: labels}), f"added column {op.name}: {', '.join(parts)}"
+    change = f"added column {op.name}: {', '.join(parts)}"
+    if fallback:
+        # The rows no rule named are counted, with their largest groups, and never cut from the line: a fallback
+        # that took two categories silently is the failure this names (persona tests of 2026-11-06).
+        fallback += _fallback_groups(frame, op, open_rows)
+    return frame.assign(**{op.name: labels}), _with_notice(change, fallback)
+
+
+def _fallback_groups(frame: pd.DataFrame, op: Classify, rows: pd.Series) -> str:
+    """The largest groups of the rows no rule named, by the text column the rules test most often (the first of
+    them on a tie): `, the largest by Kategorie: 'Spenden' 3, 'Bank' 2, 'Post' 1`; "" when that column holds no text
+    or those rows no value of it (a threshold on numbers says what fell through by itself)."""
+    named = Counter(condition.column for rule in op.rules for condition in rule.where)
+    column = named.most_common(1)[0][0]
+    if _kind(frame[column]) != "text":
+        return ""
+    groups = Counter(value for value in frame.loc[rows, column] if isinstance(value, str))
+    if not groups:
+        return ""
+    largest = ", ".join(f"'{_clip(value, 24)}' {count}" for value, count in groups.most_common(FALLBACK_GROUPS))
+    return f", the largest by {column}: {largest}"
 
 
 def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -1836,27 +2072,10 @@ def _ordered(
     """`percent_change`, `cumsum` or `index` of `values` within each group, in the order of `order`, what it
     computed, and the notice of values stored rounded (an integer running total past int64), else "".
 
-    The order column holds numbers or dates: a text column would sort alphabetically
-    (`April` before `Januar`, `10` before `9`) and give a silently wrong result. A row
-    without an order value has no place in the order: its cell stays empty and it is
-    skipped by its group's other rows. Two rows of a group with the same order value
-    make "previous" a guess and are refused.
+    The rows are put in order as for every ordered operation (`_order_rows`).
     """
-    kind = _kind(frame[order])
-    if kind not in ("number", "datetime"):
-        raise PrepareError(
-            "type_mismatch",
-            f"column '{order}' is {kind} and would sort alphabetically; derive {how} needs a number or datetime "
-            "order column: set_type it to number or datetime first",
-        )
-    placed = frame[frame[order].notna()]
+    ordered = _order_rows(frame, keys, order, f"derive {how}")
     within = f" within each {' and '.join(keys)}" if keys else ""
-    if placed.duplicated(subset=[*keys, order]).any():
-        raise PrepareError(
-            "invalid_operation",
-            f"column '{order}' repeats a value{within}, so the order of the rows is unclear; aggregate first",
-        )
-    ordered = placed.sort_values(order, kind="stable").index
     current = values.loc[ordered]
     groups = [frame[key].loc[ordered] for key in keys]
     if how == "percent_change":
@@ -1879,6 +2098,444 @@ def _ordered(
         result = current / base.where(base != 0) * 100
         what = f"index of {column}, the first {order}{within} = 100"
     return result.reindex(frame.index), what, ""
+
+
+def _order_rows(frame: pd.DataFrame, keys: list[str], order: str, what: str) -> pd.Index:
+    """The rows that have an `order` value, sorted by it (stable): the order every ordered operation walks.
+
+    The order column holds numbers or dates, or the period labels an `aggregate` writes
+    (`2024-03`, `2024-Q1`, `2024`), whose text sorts in time order: any other text column
+    would sort alphabetically (`April` before `Januar`, `10` before `9`) and give a silently
+    wrong result. A row without an order value has no place in the order: its cell stays
+    empty and its group's other rows skip it. Two rows of a group with the same order value
+    make "previous" a guess and are refused. `what` names the operation in a refusal.
+    """
+    kind = _kind(frame[order])
+    if kind not in ("number", "datetime") and not _period_labels_only(frame[order]):
+        raise PrepareError(
+            "type_mismatch",
+            f"column '{order}' is {kind} and would sort alphabetically; {what} needs a number or datetime "
+            "order column: set_type it to number or datetime first",
+        )
+    placed = frame[frame[order].notna()]
+    if placed.duplicated(subset=[*keys, order]).any():
+        within = f" within each {' and '.join(keys)}" if keys else ""
+        raise PrepareError(
+            "invalid_operation",
+            f"column '{order}' repeats a value{within}, so the order of the rows is unclear; aggregate first",
+        )
+    return placed.sort_values(order, kind="stable").index
+
+
+def _period_labels_only(series: pd.Series) -> bool:
+    """Whether a text column holds period labels of one shape only (`_PERIOD_LABEL_SHAPES`), and at least one."""
+    if _kind(series) != "text":
+        return False
+    cells = [cell for cell in series if isinstance(cell, str)]
+    return bool(cells) and any(all(shape.fullmatch(cell) for cell in cells) for shape in _PERIOD_LABEL_SHAPES)
+
+
+def _sequences(frame: pd.DataFrame, keys: list[str], ordered: pd.Index) -> list[list[Hashable]]:
+    """The rows of `ordered` by group of `keys`, each group's rows in that order.
+
+    Native key values group as pandas does (`-0.0` with `0.0`), and every missing kind is one group, as the
+    `dropna=False` groups of the ordered derives (`_integer_cumsum`).
+    """
+    missing = {key: frame[key].isna() for key in keys}
+    groups: dict[tuple[object, ...], list[Hashable]] = {}
+    for row in ordered:
+        group = tuple(None if missing[key].at[row] else frame.at[row, key] for key in keys)
+        groups.setdefault(group, []).append(row)
+    return list(groups.values())
+
+
+def _empty_clause(reasons: Sequence[tuple[int, str]]) -> str:
+    """`3 cells are empty (2 with a missing input, 1 with a division by zero)`: the reasons that hold, each with its
+    count; "" when no cell is empty. A change line keeps it whole (`_with_notice`)."""
+    present = [(count, reason) for count, reason in reasons if count]
+    total = sum(count for count, _ in present)
+    if not total:
+        return ""
+    listed = ", ".join(f"{count} {reason}" for count, reason in present)
+    return f"{_count(total, 'cell')} {_be(total)} empty ({listed})"
+
+
+def _joined(*parts: str) -> str:
+    """The notices of a change line that hold something, in order."""
+    return ", ".join(part for part in parts if part)
+
+
+def _new_number_column(frame: pd.DataFrame, name: str, values: pd.Series, carried: _Carried) -> pd.DataFrame:
+    """`frame` with the number column `name` appended; refused when no row has a value."""
+    if not values.notna().any():
+        raise PrepareError("invalid_operation", f"no row has a value for column '{name}'; check the input columns")
+    carried.forget([name])
+    return frame.assign(**{name: values})
+
+
+def _number_input(frame: pd.DataFrame, column: str, what: str) -> None:
+    """Refuse a column that holds no numbers, with the operation that would make it numbers."""
+    _require(frame, column)
+    kind = _kind(frame[column])
+    if kind == "number":
+        return
+    hint = "date_number turns dates into numbers" if kind == "datetime" else "set_type it to number first"
+    raise PrepareError("type_mismatch", f"column '{column}' is {kind}; {what} needs number columns: {hint}")
+
+
+# --- compute ---------------------------------------------------------------------------------
+
+
+class _DividedByZero(Exception):
+    """A whole-number step divided by zero (`//`, `%`): the row's cell stays empty."""
+
+
+class _OutOfRange(Exception):
+    """A whole-number step went past `_WHOLE_BITS`: the row's cell stays empty."""
+
+
+def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """A number column from an expression over number columns, row by row.
+
+    The expression is checked by `generate_data`'s whitelist before a cell is read. Where
+    every input is a whole-number column and every step keeps whole numbers whole
+    (`_whole_tree`), each row is computed in Python integers, exactly, and a result past the
+    int64 range is stored as a float and counted, as `derive` does. Otherwise the rows are
+    computed in float64, as `derive` computes, never rounded to fewer digits. A cell stays
+    empty, and is counted by its reason, when an input is missing, when a step divides by
+    zero, or when a step leaves a function's domain or the number range (`log` of 0, `sqrt`
+    of a negative number, `exp(1000)`), also when a later step would make the value finite
+    again (`atan(1/0)`): every step of a written cell is defined.
+    """
+    _check_new_columns(frame, [op.name])
+    try:
+        tree = parse_expression(op.expression, frozenset(op.inputs), f"compute {op.name}")
+    except GenerateError as exc:
+        raise PrepareError("invalid_operation", exc.message) from None
+    used = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    unused = [name for name in op.inputs if name not in used]
+    if unused:
+        raise PrepareError(
+            "invalid_operation", f"compute {op.name}: the input '{unused[0]}' is not in the expression; leave it out"
+        )
+    columns = list(dict.fromkeys(op.inputs.values()))
+    for column in columns:
+        _number_input(frame, column, "compute")
+    missing = np.zeros(len(frame), dtype=bool)
+    for column in columns:
+        missing |= frame[column].isna().to_numpy()
+    whole = all(is_integer_dtype(frame[column].dtype) for column in columns) and _whole_tree(tree)
+    notice = ""
+    if whole:
+        values, divided, outside, rounded = _compute_whole(frame, op, tree, missing)
+        notice = whole_rounded(rounded) if rounded else ""
+    else:
+        values, divided, outside = _compute_floats(frame, op, tree, missing)
+        cast = sum(_past_exact(frame[column]) for column in columns if is_integer_dtype(frame[column].dtype))
+        notice = cast_note(cast, "in the inputs") if cast else ""
+    result = _new_number_column(frame, op.name, values, carried)
+    change = f"added column {op.name}: {source_text(op.expression)}"
+    named = [f"{name} = {column}" for name, column in op.inputs.items() if name != column]
+    if named:
+        change += f" with {', '.join(named)}"
+    empty = _empty_clause(
+        [
+            (int(missing.sum()), "with a missing input"),
+            (divided, "with a division by zero"),
+            (outside, "outside a function's domain or the number range"),
+        ]
+    )
+    return result, _with_notice(change, _joined(empty, notice))
+
+
+def _whole_tree(node: ast.expr) -> bool:
+    """Whether every step of a checked tree keeps whole numbers whole: whole literals, the inputs, a sign, `+ - * //
+    %`, a power with a whole literal exponent of 0 or more, `abs`, `sign`, `min` and `max`."""
+    match node:
+        case ast.Constant(value=int()):
+            return True
+        case ast.Name(id=name):
+            return name not in CONSTANTS
+        case ast.UnaryOp(operand=operand):
+            return _whole_tree(operand)
+        case ast.BinOp(left=left, op=ast.Pow(), right=ast.Constant(value=int() as exponent)):
+            return exponent >= 0 and _whole_tree(left)
+        case ast.BinOp(left=left, op=operator, right=right):
+            return isinstance(operator, _WHOLE_OPERATORS) and _whole_tree(left) and _whole_tree(right)
+        case ast.Call(func=ast.Name(id=name), args=args):
+            return name in _WHOLE_FUNCTIONS and all(_whole_tree(arg) for arg in args)
+    return False
+
+
+def _whole_value(node: ast.expr, row: dict[str, int]) -> int:
+    """One row's value of a whole tree (`_whole_tree`) in Python integers; raises `_DividedByZero` or `_OutOfRange`."""
+    result: int
+    match node:
+        case ast.Constant(value=int() as number):
+            result = number
+        case ast.Name(id=name):
+            result = row[name]
+        case ast.UnaryOp(op=operator, operand=operand):
+            inner = _whole_value(operand, row)
+            result = -inner if isinstance(operator, ast.USub) else inner
+        case ast.BinOp(left=left, op=operator, right=right):
+            a, b = _whole_value(left, row), _whole_value(right, row)
+            if isinstance(operator, _DIVISIONS) and b == 0:
+                raise _DividedByZero
+            match operator:
+                case ast.Add():
+                    result = a + b
+                case ast.Sub():
+                    result = a - b
+                case ast.Mult():
+                    result = a * b
+                case ast.FloorDiv():
+                    result = a // b
+                case ast.Mod():
+                    result = a % b
+                case _:  # a power: checked before it is computed, so a huge one never takes the time it would
+                    if abs(a) > 1 and (abs(a).bit_length() - 1) * b > _WHOLE_BITS:
+                        raise _OutOfRange
+                    result = a**b
+        case ast.Call(func=ast.Name(id=name), args=args):
+            numbers = [_whole_value(arg, row) for arg in args]
+            if name == "abs":
+                result = abs(numbers[0])
+            elif name == "sign":
+                result = (numbers[0] > 0) - (numbers[0] < 0)
+            else:
+                result = min(numbers) if name == "min" else max(numbers)
+        case _:
+            raise _OutOfRange  # unreachable for a whole tree
+    if abs(result).bit_length() > _WHOLE_BITS:
+        raise _OutOfRange
+    return result
+
+
+def _compute_whole(
+    frame: pd.DataFrame, op: Compute, tree: ast.expr, missing: np.ndarray
+) -> tuple[pd.Series, int, int, int]:
+    """The rows in Python integers: the values (`_whole_numbers`), the cells divided by zero and beyond the range,
+    and the results past the int64 range stored as floats past 2**53."""
+    cells = {name: frame[column].tolist() for name, column in op.inputs.items()}
+    results: list[int | None] = []
+    divided = outside = 0
+    for position, gap in enumerate(missing):
+        if gap:
+            results.append(None)
+            continue
+        try:
+            results.append(_whole_value(tree, {name: int(values[position]) for name, values in cells.items()}))
+        except _DividedByZero:
+            divided += 1
+            results.append(None)
+        except _OutOfRange:
+            outside += 1
+            results.append(None)
+    values, rounded = _whole_numbers(results, frame.index)
+    return values, divided, outside, rounded
+
+
+def _compute_floats(
+    frame: pd.DataFrame, op: Compute, tree: ast.expr, missing: np.ndarray
+) -> tuple[pd.Series, int, int]:
+    """The rows in float64 (`generate.evaluate`): the values, and the cells divided by zero and outside a domain.
+
+    Every step's value is seen (`visit`): a row where a step's divisor is 0 counts as divided by zero, a row where a
+    step is not finite as outside a domain or the range; a missing input counts as that alone.
+    """
+    size = len(frame)
+    inputs = {name: frame[column].to_numpy(dtype=np.float64, na_value=np.nan) for name, column in op.inputs.items()}
+    seen: dict[int, np.ndarray] = {}
+    divided = np.zeros(size, dtype=bool)
+    undefined = np.zeros(size, dtype=bool)
+
+    def visit(node: ast.expr, value: np.ndarray) -> None:
+        full = np.broadcast_to(value, (size,))
+        seen[id(node)] = full
+        if isinstance(node, ast.BinOp) and isinstance(node.op, _DIVISIONS):
+            np.logical_or(divided, seen[id(node.right)] == 0, out=divided)
+        np.logical_or(undefined, ~np.isfinite(full), out=undefined)
+
+    with np.errstate(all="ignore"):
+        result = np.array(np.broadcast_to(evaluate(tree, inputs, visit), (size,)), dtype=np.float64)
+    divided &= ~missing
+    undefined &= ~missing & ~divided
+    result[missing | divided | undefined] = np.nan
+    return pd.Series(result, index=frame.index, dtype="float64"), int(divided.sum()), int(undefined.sum())
+
+
+# --- diff and rolling -----------------------------------------------------------------------
+
+
+def _ordered_input(
+    frame: pd.DataFrame, op: Diff | Rolling, what: str
+) -> tuple[list[str], pd.Index, dict[Hashable, ExactDecimal | None]]:
+    """The checks a `diff` and a `rolling` share, the ordered rows, and each row's value as an exact decimal: the
+    whole number, or the decimal the cell writes (`_decimal_total`'s reading); None when missing."""
+    _check_new_columns(frame, [op.name])
+    keys = _distinct(op.within)
+    for name in [*keys, op.order]:
+        _require(frame, name)
+    _number_input(frame, op.column, what)
+    if op.column in {*keys, op.order}:
+        raise PrepareError("invalid_operation", "a value column cannot also be a within or order column")
+    ordered = _order_rows(frame, keys, op.order, what)
+    whole = is_integer_dtype(frame[op.column].dtype)
+    cells: dict[Hashable, ExactDecimal | None] = {}
+    for row, value in frame[op.column].items():
+        if pd.isna(value):
+            cells[row] = None
+        else:
+            cells[row] = ExactDecimal(int(value)) if whole else ExactDecimal(repr(float(value)))
+    return keys, ordered, cells
+
+
+def _number_values(
+    frame: pd.DataFrame, results: dict[Hashable, ExactDecimal], whole: bool
+) -> tuple[pd.Series, int, int]:
+    """The exact results as the new column: whole numbers as integers (`_whole_numbers`), decimals as the nearest
+    float. Returns the values, the whole numbers stored as floats past 2**53, and the decimals beyond the float range,
+    which stay empty."""
+    if whole:
+        exact = [None if (value := results.get(row)) is None else int(value) for row in frame.index]
+        values, rounded = _whole_numbers(exact, frame.index)
+        return values, rounded, 0
+    floats: list[float] = []
+    outside = 0
+    for row in frame.index:
+        value = results.get(row)
+        number = math.nan if value is None else float(value)
+        if value is not None and not math.isfinite(number):
+            outside += 1
+            number = math.nan
+        floats.append(number)
+    return pd.Series(floats, index=frame.index, dtype="float64"), 0, outside
+
+
+def _diff(frame: pd.DataFrame, op: Diff, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """Each row's value minus the one `lag` rows before it in its group, in the order of `order`.
+
+    The values subtract as exact decimals (`_DECIMAL_DIGITS` digits): whole numbers stay whole and exact, and
+    decimals subtract as their cells write them, so `12.3 - 10.1` is `2.2`, as `_decimal_total` adds them, never
+    the float noise `2.200000000000001`. The first `lag` rows of each group have no row before them and stay
+    empty, as does a row whose value or earlier value is missing; every empty cell is counted by its reason.
+    """
+    keys, ordered, cells = _ordered_input(frame, op, "diff")
+    whole = is_integer_dtype(frame[op.column].dtype)
+    results: dict[Hashable, ExactDecimal] = {}
+    first = gap = 0
+    with localcontext() as context:
+        context.prec = _DECIMAL_DIGITS
+        for rows in _sequences(frame, keys, ordered):
+            for position, row in enumerate(rows):
+                if position < op.lag:
+                    first += 1
+                    continue
+                current, previous = cells[row], cells[rows[position - op.lag]]
+                if current is None or previous is None:
+                    gap += 1
+                    continue
+                results[row] = current - previous
+    values, rounded, outside = _number_values(frame, results, whole)
+    result = _new_number_column(frame, op.name, values, carried)
+    within = f" within each {' and '.join(keys)}" if keys else ""
+    before = f"the previous {op.order}" if op.lag == 1 else f"{op.lag} rows before in the order of {op.order}"
+    change = f"added column {op.name}: change of {op.column} from {before}{within}"
+    empty = _empty_clause(
+        [
+            (first, f"without {'a row' if op.lag == 1 else f'{op.lag} rows'} before them"),
+            (gap, "with a missing value"),
+            (len(frame) - len(ordered), f"without a {op.order}"),
+            (outside, "beyond the number range"),
+        ]
+    )
+    return result, _with_notice(change, _joined(empty, whole_rounded(rounded) if rounded else ""))
+
+
+def _rolling(frame: pd.DataFrame, op: Rolling, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """The mean or the sum of the `window` rows up to each row in its group, in the order of `order`.
+
+    The window trails: a row and the `window - 1` rows before it, so the first `window - 1` rows of each group stay
+    empty, as does a row whose window holds a missing value (a shorter window would be another mean). A whole-number
+    sum stays a whole number; every other window adds the decimals its cells write, with `_DECIMAL_DIGITS` digits,
+    and a mean divides that total once, so no float noise builds up along the rows. A window over a span of time
+    (seven days of irregular readings) is no option: an `aggregate` by `day` first makes it a window of rows.
+    """
+    keys, ordered, cells = _ordered_input(frame, op, "rolling")
+    whole = is_integer_dtype(frame[op.column].dtype) and op.how == "sum"
+    results: dict[Hashable, ExactDecimal] = {}
+    short = gap = 0
+    with localcontext() as context:
+        context.prec = _DECIMAL_DIGITS
+        for rows in _sequences(frame, keys, ordered):
+            # Running totals and running counts of missing cells: a window is the difference of two of each.
+            totals, gaps = [ExactDecimal(0)], [0]
+            for row in rows:
+                cell = cells[row]
+                totals.append(totals[-1] + (ExactDecimal(0) if cell is None else cell))
+                gaps.append(gaps[-1] + (cell is None))
+            for position, row in enumerate(rows):
+                start = position + 1 - op.window
+                if start < 0:
+                    short += 1
+                    continue
+                if gaps[position + 1] - gaps[start]:
+                    gap += 1
+                    continue
+                total = totals[position + 1] - totals[start]
+                results[row] = total if op.how == "sum" else total / op.window
+    values, rounded, outside = _number_values(frame, results, whole)
+    result = _new_number_column(frame, op.name, values, carried)
+    within = f" within each {' and '.join(keys)}" if keys else ""
+    change = f"added column {op.name}: {op.how} of {op.column} over {op.window} rows in the order of {op.order}{within}"
+    empty = _empty_clause(
+        [
+            (short, f"before a full window of {op.window} rows"),
+            (gap, "with a missing value in the window"),
+            (len(frame) - len(ordered), f"without a {op.order}"),
+            (outside, "beyond the number range"),
+        ]
+    )
+    return result, _with_notice(change, _joined(empty, whole_rounded(rounded) if rounded else ""))
+
+
+# --- blank -----------------------------------------------------------------------------------
+
+
+def _blank(frame: pd.DataFrame, op: Blank, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """The cells of `columns` emptied in the rows where every condition holds; the rows stay, nothing is filled in.
+
+    Each column counts the cells it had and lost; a column that would lose every value is refused (`drop_columns`
+    removes a column). The emptied column's cells as pasted are forgotten, so a later re-reading of the paste
+    (`set_type` with a decimal comma) never brings them back.
+    """
+    columns = _distinct(op.columns)
+    for name in columns:
+        _require(frame, name)
+    mask, clauses = _rows_where(frame, op.where, carried)
+    result = frame.copy()
+    counts: list[int] = []
+    for name in columns:
+        series = frame[name]
+        hit = mask & series.notna()
+        count = int(hit.sum())
+        if count and count == int(series.notna().sum()):
+            raise PrepareError(
+                "invalid_operation",
+                f"every value of column '{name}' matches, so it would be empty; drop_columns removes it",
+            )
+        if is_bool_dtype(series.dtype):
+            series = series.astype("boolean")  # a numpy bool column holds no missing cell
+        result[name] = series.mask(hit)
+        counts.append(count)
+        carried.pasted_cells.pop(name, None)
+    total = sum(counts)
+    where = " and ".join(clauses)
+    if len(columns) == 1:
+        return result, f"emptied {_count(total, 'cell')} of {columns[0]} where {where}; the rows stay"
+    per = ", ".join(f"{count} of {name}" for name, count in zip(columns, counts, strict=True))
+    return result, f"emptied {_count(total, 'cell')} ({per}) where {where}; the rows stay"
 
 
 def _row_number(frame: pd.DataFrame, op: RowNumber, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -2512,6 +3169,20 @@ def _replace(frame: pd.DataFrame, op: Replace, carried: _Carried) -> tuple[pd.Da
 def _matches(series: pd.Series, condition: Condition, with_time: bool | None) -> pd.Series:
     """The rows of `series` that satisfy `condition`, as booleans; a missing cell matches only `is_missing`."""
     column, test, value = condition.column, condition.test, condition.value
+    if condition.values is not None:
+        if value is not None:
+            raise PrepareError(
+                "invalid_operation", f"the condition on column '{column}' takes value or values, not both"
+            )
+        if test not in ANY_OF_TESTS:
+            raise PrepareError(
+                "invalid_operation", f"values on column '{column}' takes the test eq or contains, not {test}"
+            )
+        # Any of them: each value is tested as a condition of its own, with the same reading and refusals.
+        hit = pd.Series(False, index=series.index)
+        for item in condition.values:
+            hit |= _matches(series, condition.model_copy(update={"value": item, "values": None}), with_time)
+        return hit
     if test == "is_missing":
         if value is not None:
             raise PrepareError("invalid_operation", f"the condition is_missing on column '{column}' takes no value")
@@ -2553,6 +3224,16 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
 def _describe(condition: Condition, kind: Kind) -> str:
     if condition.test == "is_missing":
         return f"{condition.column} is missing"
+    if condition.values is not None:
+        # `Kategorie is 'Miete' or 'Strom'`, `Text contains 'REWE', 'EDEKA', 'LIDL' or 2 more`.
+        quoted = condition.test == "contains" or kind == "text"
+        clipped = [_clip(item, MAX_CELL_CHARS) for item in condition.values]
+        listed = [f"'{item}'" if quoted else item for item in clipped][:SHOWN_ANY_VALUES]
+        more = len(condition.values) - len(listed)
+        if more:
+            listed.append(f"{more} more")
+        words = listed[0] if len(listed) == 1 else f"{', '.join(listed[:-1])} or {listed[-1]}"
+        return f"{condition.column} {'contains' if condition.test == 'contains' else 'is'} {words}"
     shown = _clip(condition.value or "", MAX_CELL_CHARS)
     if condition.test == "contains":
         return f"{condition.column} contains '{shown}'"

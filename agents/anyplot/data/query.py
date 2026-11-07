@@ -4,15 +4,17 @@ A live test of 2026-10-15 asked "Welches Land hatte 2023 den höchsten Pro-Kopf-
 the root answered it correctly, but by filtering the user's dataset to the five rows of 2023
 with `prepare_data`, which stores a new version, and then asked the user to `.undo()` it. A
 question must never change the data. `run_query` applies the same operations as
-`prepare_data` (`prepare.Operation`, the same closed vocabulary: no free expression, no row
-the model writes) to the canonical CSV of the current version and returns a small table: the
+`prepare_data` (`prepare.Operation`, the same closed vocabulary: no code, only a `compute`
+expression the whitelist checks, no row the model writes) to the canonical CSV of the current
+version and returns a small table: the
 first `limit` rows (at most `MAX_QUERY_ROWS`) of the result, in at most `MAX_QUERY_COLUMNS`
 columns (the ones named in `columns`, else the first ones), every cell clipped like the
 profile's (`parse.display_copy`). Nothing is stored and the bindings and the confirmation stay
 as they are.
 
 To keep only some rows, `drop_rows` drops the others (`ne 2023` keeps 2023); a top-N is a
-`sort` with `limit`; a share or a trend is a `derive`, an aggregate an `aggregate`. The
+`sort` with `limit`; a share or a trend is a `derive`, the change from the row before a `diff`,
+another formula a `compute`, an aggregate an `aggregate`. The
 operations raise `PrepareError` as in `prepare_data`; a column in `columns` that the result
 lacks is `unknown_column`. No ADK import.
 """

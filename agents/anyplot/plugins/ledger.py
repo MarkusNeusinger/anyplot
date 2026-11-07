@@ -224,6 +224,9 @@ class RequestLedger:
     """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
     prep_ops: list[str] = field(default_factory=list)
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
+    capability_gaps: list[str] = field(default_factory=list)
+    """The families of the `unsupported` operations the root named in this turn: a data change no operation can make
+    (closed: `telemetry.CAPABILITY_GAPS`), never a word of what the user asked."""
     reply_question: bool = False
     """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
     queue_position: int | None = None

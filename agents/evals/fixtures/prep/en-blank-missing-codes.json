@@ -1,0 +1,13 @@
+{
+  "dataset_text": "station,temperature,uncertainty\nS1,12.4,0.21\nS2,13.1,-0.99\nS3,11.8,0.35\nS4,12.9,-1\nS5,13.6,0.18\nS6,12.2,-0.99\n",
+  "message": "In uncertainty, -0.99 and -1 are missing-value codes. Make those cells empty but keep the rows.",
+  "expected_operations": [
+    {
+      "op": "blank",
+      "columns": ["uncertainty"],
+      "where": [{"column": "uncertainty", "test": "eq", "values": ["-0.99", "-1"]}]
+    }
+  ],
+  "locale": "en",
+  "tags": ["blank", "missing_codes"]
+}

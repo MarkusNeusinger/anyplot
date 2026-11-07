@@ -22,7 +22,7 @@
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
   judge's call, by intent. These `prepare_data` (and `query_data`) arguments are exempt from the link rule
-  by key (`DATA_ARGUMENT_KEYS`): a condition's `value`, a rename's or a new column's
+  by key (`DATA_ARGUMENT_KEYS`): a condition's `value` and its "any of" `values`, a rename's or a new column's
   `name` and a `split`'s `names`, a `classify` rule's `label` and its `otherwise`, and the
   literals of the text operations (`separator`, `prefix`, `suffix`, `old`, `new`). They are
   data, not an instruction to follow: a value or a literal is compared with the cells of a
@@ -121,8 +121,8 @@ RESULT_LIMITS: dict[str, int] = {
 TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
 """The literals of the text operations (`split`, `strip`, `replace`): compared with the cells or written into them."""
 DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
-    PREPARE_TOOL: frozenset({"value", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
-    QUERY_TOOL: frozenset({"value", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
+    PREPARE_TOOL: frozenset({"value", "values", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
+    QUERY_TOOL: frozenset({"value", "values", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
     # Code holds `x / 2` and `a // b`, which the path rule reads as paths; the DATA validator bans URL literals,
     # file names reach no reader (`open`, `read_*` and the I/O modules are banned) and the sandbox has no egress.
     DATA_CODE_TOOL: frozenset({"code"}),
@@ -227,7 +227,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "forget": frozenset({"status", "code", "entries"}),
     # Whether the page will switch after the turn; the library is the root's own argument, nothing to echo.
     "switch_plot": frozenset({"status", "code", "switch_requested"}),
-    PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings"},  # when a conversion moved them, fenced as in `get_dataset_profile`
+    # `bindings` when a conversion moved them, fenced as in `get_dataset_profile`; `family` with `unsupported_operation`.
+    PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings", "family"},
     QUERY_TOOL: frozenset({"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes"}),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     DATA_CODE_TOOL: _DATA_VERSION_KEYS,

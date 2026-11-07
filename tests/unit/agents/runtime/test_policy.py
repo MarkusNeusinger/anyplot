@@ -4,11 +4,13 @@ import hashlib
 import re
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import get_args
 
 import pytest
 import yaml
 
 from agents.anyplot import policy
+from agents.anyplot.data.prepare import UnsupportedFamily
 from core.palette import IMPRINT, muted_for
 
 
@@ -815,6 +817,7 @@ REASONS = [
     "other_library",
     "locked_out",
     "close_warning",
+    *(f"unsupported_{family}" for family in get_args(UnsupportedFamily)),
 ]
 
 
@@ -884,6 +887,16 @@ class TestRefusals:
         )
         assert "Dein eigenes Limit" in texts["de"]
         assert texts["en"] != policy.refusal("budget", "en")
+
+    @pytest.mark.parametrize("family", get_args(UnsupportedFamily))
+    def test_every_data_gap_has_its_sentence_and_never_sends_the_user_to_a_spreadsheet(self, family: str) -> None:
+        """`prepare_data` answers an `unsupported` operation with this sentence (persona tests of 2026-11-06: the
+        chat told users to fix their data in Excel). Each names what the chat cannot do, in its own words."""
+        texts = policy.refusals()[f"unsupported_{family}"]
+
+        assert texts["en"].startswith("I cannot") and texts["en"] == policy.refusal(f"unsupported_{family}", "ja")
+        for text in texts.values():
+            assert not re.search(r"(?i)excel|spreadsheet|tabellenkalkulation|tableur|hoja de c[aá]lculo", text)
 
     def test_a_missing_root_refusal_breaks_the_build(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         (tmp_path / "refusals.yaml").write_text('out_of_scope:\n  en: "x"\n', encoding="utf-8")

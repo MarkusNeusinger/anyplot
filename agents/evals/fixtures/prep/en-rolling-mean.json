@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Month,Sales\n2023-01-01,118\n2023-02-01,124\n2023-03-01,131\n2023-04-01,127\n2023-05-01,140\n2023-06-01,152\n2023-07-01,149\n2023-08-01,158\n",
+  "message": "Add a 3-month moving average of Sales as a column MA3.",
+  "expected_operations": [
+    {"op": "rolling", "name": "MA3", "column": "Sales", "how": "mean", "window": 3, "order": "Month"}
+  ],
+  "locale": "en",
+  "tags": ["rolling", "moving_average"]
+}

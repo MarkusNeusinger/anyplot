@@ -93,6 +93,21 @@ MAX_DEFECT_TEXT_CHARS = 200
 MAX_LINE_CHARS = 640
 
 ColumnName = Annotated[str, Field(min_length=1, max_length=MAX_COLUMN_NAME_CHARS)]
+_NAME_BREAKS = re.compile(r"[\t\r\n]")
+
+
+def _clean_name(name: str) -> str:
+    """A new column name as the parser would keep it: no surrounding whitespace, breaks or invisible characters."""
+    if name != name.strip() or _NAME_BREAKS.search(name):
+        raise ValueError("a column name has no surrounding whitespace, tabs or line breaks")
+    if any(unicodedata.category(char) == "Cf" for char in name):
+        raise ValueError("a column name has no invisible formatting characters")
+    return name
+
+
+NewName = Annotated[ColumnName, AfterValidator(_clean_name)]
+"""A column name a data operation (`data/prepare.py`) or a formula (`data/generate.py`) writes. It lives here, not in
+`prepare.py`, so that `prepare.py` can use the expression language of `generate.py`, which names its series with it."""
 Cell = Annotated[str, Field(max_length=MAX_CELL_CHARS)]
 Note = Annotated[str, Field(min_length=1, max_length=MAX_NOTE_CHARS)]
 Line = Annotated[str, Field(min_length=1, max_length=MAX_LINE_CHARS)]

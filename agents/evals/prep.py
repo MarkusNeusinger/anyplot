@@ -32,7 +32,10 @@ Scoring is exact operation match, order-insensitive, and every `prepare_data` an
 `generate_data` call of the turn must have succeeded: the operations are applied in
 order, so a list the data refuses (a column named before its rename, a type its cells
 cannot take) is a miss however it reads, and so is a formula the server cannot compute
-(`failed_calls`). The operations of every `prepare_data` call of the turn are taken
+(`failed_calls`). An `unsupported_operation` answer is no failure: the root named a change no
+operation can make (`{"op": "unsupported", "family": ...}`), which a case expects as it expects
+any operation, since 2026-11-07. A `compute` operation matches by the values it computes on
+invented rows, whatever short names and form the expression has (`compute_key`). The operations of every `prepare_data` call of the turn are taken
 together (one call with two operations and two calls with one each are the same) and
 each is normalised through the `Operation`
 models (`canonical_operations`): a default the model left out and one it wrote are
@@ -181,8 +184,22 @@ GENERATE_TOOL = "generate_data"
 DATA_CODE_TOOL = "run_data_code"
 DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The root's tools that store a dataset version; every call of them in a turn must succeed."""
-SET_OPERATIONS: dict[str, str] = {"drop_columns": "columns", "pivot_longer": "columns", "drop_rows": "where"}
-"""Per operation, the list field whose order carries no meaning (compared as a set)."""
+GAP_CODE = "unsupported_operation"
+"""`prepare_data`'s answer to the `unsupported` operation: the root named a change no operation can make."""
+SET_OPERATIONS: dict[str, str] = {
+    "drop_columns": "columns",
+    "pivot_longer": "columns",
+    "drop_rows": "where",
+    "blank": "columns",
+    "aggregate": "columns",
+}
+"""Per operation, the list field whose order carries no meaning (compared as a set); a condition list is sorted by
+`_sorted_conditions`, and an "any of" list of values in any condition is a set too. An `aggregate` names `columns`
+only for two or more value columns, whose order is only the order of the result's columns."""
+CONDITION_OPERATIONS = frozenset({"drop_rows", "blank"})
+"""The operations whose `where` is one list of conditions that must all hold."""
+COMPUTE_PROBE_ROWS = 8
+"""The rows of invented values two `compute` expressions are compared on (`comparison_key`)."""
 ROOT_AUTHOR = "anyplot"
 INSTRUCTION_TALK = re.compile(
     # ADK's own markers (`flows/llm_flows/context/_fencing.py`), named or quoted.
@@ -329,19 +346,22 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> 
         data = operation.model_dump(exclude_none=True)
         if data["op"] == "set_type" and data.get("decimal") == decimal:
             data.pop("decimal")
-        if data["op"] == "drop_rows":
+        if data["op"] in CONDITION_OPERATIONS:
             data["where"] = _sorted_conditions(data["where"])
         elif data["op"] == "classify":  # the rules keep their order (the first that holds wins), their conditions not
             for rule in data["rules"]:
                 rule["where"] = _sorted_conditions(rule["where"])
-        elif data["op"] in SET_OPERATIONS:
-            data[SET_OPERATIONS[data["op"]]] = sorted(data[SET_OPERATIONS[data["op"]]])
+        field_name = SET_OPERATIONS.get(data["op"])
+        if field_name is not None and field_name in data and field_name != "where":
+            data[field_name] = sorted(data[field_name])
         lines.append(json.dumps(data, sort_keys=True, ensure_ascii=False))
     return sorted(lines)
 
 
 def _sorted_conditions(conditions: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return sorted(conditions, key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))
+    """The conditions in a fixed order, each "any of" list of values as a set."""
+    tidy = [{**item, "values": sorted(item["values"])} if "values" in item else item for item in conditions]
+    return sorted(tidy, key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))
 
 
 def canonical_generate(item: dict[str, Any]) -> str:
@@ -372,7 +392,8 @@ def comparison_key(line: str) -> str:
     Two formula calls that compute the same table (the same names, points and values at
     eight significant digits) are the same choice however the model wrote the endpoints
     or the expressions (`-3.0` and `-3`, `tau` and `2*pi`, `x*x` and `x**2`). A call the
-    server cannot compute keeps its line, so it matches nothing but itself.
+    server cannot compute keeps its line, so it matches nothing but itself. A `compute`
+    operation is compared the same way, by the values it computes (`compute_key`).
     """
     from agents.anyplot.data.generate import Generate, GenerateError, generate
 
@@ -380,6 +401,8 @@ def comparison_key(line: str) -> str:
         data = json.loads(line)
     except ValueError:
         return line
+    if isinstance(data, dict) and data.get("op") == "compute":
+        return compute_key(data, line)
     if not isinstance(data, dict) or data.get("op") != GENERATE_TOOL:
         return line
     try:
@@ -387,6 +410,41 @@ def comparison_key(line: str) -> str:
     except ValidationError, GenerateError:
         return line
     return json.dumps({"op": GENERATE_TOOL, "table": hashlib.sha256(table.encode("utf-8")).hexdigest()})
+
+
+def compute_key(data: dict[str, Any], line: str) -> str:
+    """A `compute` operation as the values it computes on `COMPUTE_PROBE_ROWS` rows of invented decimals, at ten
+    significant digits, with its new column's name: the short names the model chose for the inputs and how it wrote
+    the expression (`q*p` or `p * q`, `(f - 32) * 5 / 9` or `5/9*(f-32)`) carry no meaning. Each input column gets
+    values of its own, all above 0 and none whole, so a swapped pair of columns differs and the float path runs. An
+    operation the server refuses keeps its line, so it matches nothing but itself.
+    """
+    import csv
+    import io
+
+    from pydantic import TypeAdapter
+
+    from agents.anyplot.data.parse import ParseError, parse_dataset
+    from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
+
+    inputs = data.get("inputs")
+    if not isinstance(inputs, dict) or not inputs:
+        return line
+    columns = sorted({str(column) for column in inputs.values()})
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(columns)
+    for row in range(COMPUTE_PROBE_ROWS):
+        writer.writerow([f"{1.5 + 0.913 * row + 2.17 * index:.4f}" for index in range(len(columns))])
+    try:
+        operation = TypeAdapter(Operation).validate_python(data)
+        prepared = apply_operations(parse_dataset(buffer.getvalue()), [operation])
+    except ValidationError, ParseError, PrepareError:
+        return line
+    values = list(csv.reader(io.StringIO(prepared.csv)))
+    computed = [row[-1] for row in values[1:]]
+    shown = [f"{float(cell):.10g}" if cell else "" for cell in computed]
+    return json.dumps({"op": "compute", "name": data.get("name"), "values": shown})
 
 
 def same_operations(found: Sequence[str], expected: Sequence[str]) -> bool:
@@ -481,7 +539,20 @@ def describe(line: str) -> str:
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")
     if op == "aggregate":
         period = f"/{data['period']}" if "period" in data else ""
-        return f"aggregate {data['column']} {data['how']} by {', '.join(data['by'])}{period}"
+        values = data["column"] if "column" in data else ", ".join(data["columns"])
+        return f"aggregate {values} {data['how']} by {', '.join(data['by'])}{period}"
+    if op == "compute":
+        inputs = ", ".join(f"{name}={column}" for name, column in data["inputs"].items())
+        return f"compute {data['name']} = {data['expression']} ({inputs})"
+    if op in ("diff", "rolling"):
+        within = f" within {', '.join(data['within'])}" if data.get("within") else ""
+        what = f"{data['how']} of {data['column']} over {data['window']}" if op == "rolling" else data["column"]
+        lag = f" lag {data['lag']}" if data.get("lag", 1) != 1 else ""
+        return f"{op} {data['name']} = {what} by {data['order']}{within}{lag}"
+    if op == "blank":
+        return f"blank {', '.join(data['columns'])} where {_conditions(data['where'])}"
+    if op == "unsupported":
+        return f"unsupported {data['family']}"
     if op == "sort":
         return f"sort {data['column']} {'desc' if data.get('descending') else 'asc'}"
     if op == "pivot_longer":
@@ -490,7 +561,12 @@ def describe(line: str) -> str:
 
 
 def _conditions(conditions: list[dict[str, Any]]) -> str:
-    return " and ".join(f"{c['column']} {c['test']}" + (f" {c['value']!r}" if "value" in c else "") for c in conditions)
+    def value(condition: dict[str, Any]) -> str:
+        if "values" in condition:
+            return " " + "|".join(repr(item) for item in condition["values"])
+        return f" {condition['value']!r}" if "value" in condition else ""
+
+    return " and ".join(f"{c['column']} {c['test']}{value(c)}" for c in conditions)
 
 
 @dataclass
@@ -731,7 +807,10 @@ class CaseRunner:
                 if response.name in DATA_TOOLS:
                     answer = response.response if isinstance(response.response, dict) else {}
                     ok = answer.get("status") == "ok"
-                    result.failed_calls += not ok
+                    # A gap the root named (`unsupported`) is its answer, not a call that failed: the operation is
+                    # compared like any other, and it stores nothing.
+                    named_gap = answer.get("code") == GAP_CODE
+                    result.failed_calls += not ok and not named_gap
                     result.stored_calls += ok
                     if ok and response.name == DATA_CODE_TOOL:
                         operations.append(

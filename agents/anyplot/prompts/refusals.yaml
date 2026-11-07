@@ -156,3 +156,98 @@ unsupported_content:
   zh: "请用文字发送你的请求。你的数据请粘贴到消息框中，或用 .open() 打开数据文件。"
   vi: "Bạn vui lòng gửi yêu cầu dưới dạng văn bản. Để dùng dữ liệu của mình, bạn hãy dán vào ô tin nhắn hoặc mở tệp của nó bằng .open()."
   ru: "Пожалуйста, отправь свой запрос в виде текста. Чтобы использовать свои данные, вставь их в поле сообщения или открой их файл через .open()."
+
+# A data change no `prepare_data` operation can make, one sentence per family of the
+# `unsupported` operation (`prepare.UnsupportedFamily`): the tool answers it as `message`
+# and the root sends it word for word. Each names what the chat cannot do and why, and
+# never sends the user to a spreadsheet or to their file.
+unsupported_fill_values:
+  en: "I cannot fill in, interpolate or invent values: my data operations only compute from the cells that are there."
+  de: "Ich kann keine Werte ergänzen, interpolieren oder erfinden: Meine Datenoperationen rechnen nur mit den Zellen, die da sind."
+  fr: "Je ne peux pas compléter, interpoler ni inventer de valeurs : mes opérations sur les données calculent uniquement à partir des cellules présentes."
+  es: "No puedo completar, interpolar ni inventar valores: mis operaciones de datos solo calculan a partir de las celdas que existen."
+  it: "Non posso completare, interpolare o inventare valori: le mie operazioni sui dati calcolano solo a partire dalle celle presenti."
+  pt: "Não consigo completar, interpolar nem inventar valores: minhas operações de dados só calculam a partir das células que existem."
+  nl: "Ik kan geen waarden aanvullen, interpoleren of verzinnen: mijn databewerkingen rekenen alleen met de cellen die er zijn."
+  pl: "Nie mogę uzupełniać, interpolować ani wymyślać wartości: moje operacje na danych liczą tylko na podstawie komórek, które istnieją."
+  zh: "我无法补全、插值或编造数值：我的数据操作只根据已有的单元格计算。"
+  vi: "Tôi không thể điền, nội suy hay bịa ra giá trị: các thao tác dữ liệu của tôi chỉ tính từ những ô đang có."
+  ru: "Я не могу дополнять, интерполировать или придумывать значения: мои операции с данными считают только по имеющимся ячейкам."
+
+unsupported_edit_cells:
+  en: "I cannot change single cells by hand: my data operations change cells only by a rule, such as a condition or a formula."
+  de: "Ich kann keine einzelnen Zellen von Hand ändern: Meine Datenoperationen ändern Zellen nur nach einer Regel, etwa einer Bedingung oder einer Formel."
+  fr: "Je ne peux pas modifier des cellules une par une à la main : mes opérations sur les données ne changent les cellules que selon une règle, comme une condition ou une formule."
+  es: "No puedo cambiar celdas sueltas a mano: mis operaciones de datos solo cambian celdas según una regla, como una condición o una fórmula."
+  it: "Non posso modificare singole celle a mano: le mie operazioni sui dati cambiano le celle solo in base a una regola, come una condizione o una formula."
+  pt: "Não consigo alterar células individuais à mão: minhas operações de dados só alteram células segundo uma regra, como uma condição ou uma fórmula."
+  nl: "Ik kan geen losse cellen met de hand wijzigen: mijn databewerkingen wijzigen cellen alleen volgens een regel, zoals een voorwaarde of een formule."
+  pl: "Nie mogę ręcznie zmieniać pojedynczych komórek: moje operacje na danych zmieniają komórki tylko według reguły, takiej jak warunek lub wzór."
+  zh: "我无法手动修改单个单元格：我的数据操作只按规则修改单元格，例如条件或公式。"
+  vi: "Tôi không thể sửa từng ô bằng tay: các thao tác dữ liệu của tôi chỉ đổi ô theo một quy tắc, như một điều kiện hay một công thức."
+  ru: "Я не могу вручную менять отдельные ячейки: мои операции с данными меняют ячейки только по правилу, например по условию или формуле."
+
+unsupported_add_rows:
+  en: "I cannot add rows to your data: I work only with the rows your table holds."
+  de: "Ich kann deinen Daten keine Zeilen hinzufügen: Ich arbeite nur mit den Zeilen, die deine Tabelle enthält."
+  fr: "Je ne peux pas ajouter de lignes à tes données : je travaille uniquement avec les lignes de ton tableau."
+  es: "No puedo añadir filas a tus datos: solo trabajo con las filas que tiene tu tabla."
+  it: "Non posso aggiungere righe ai tuoi dati: lavoro solo con le righe della tua tabella."
+  pt: "Não consigo adicionar linhas aos seus dados: trabalho apenas com as linhas que a sua tabela tem."
+  nl: "Ik kan geen rijen aan je gegevens toevoegen: ik werk alleen met de rijen die je tabel bevat."
+  pl: "Nie mogę dodawać wierszy do twoich danych: pracuję tylko z wierszami, które ma twoja tabela."
+  zh: "我无法给你的数据添加行：我只处理你的表格中已有的行。"
+  vi: "Tôi không thể thêm hàng vào dữ liệu của bạn: tôi chỉ làm việc với các hàng có trong bảng của bạn."
+  ru: "Я не могу добавлять строки в твои данные: я работаю только со строками, которые есть в твоей таблице."
+
+unsupported_combine_tables:
+  en: "I cannot combine your table with another one: I work with one table at a time."
+  de: "Ich kann deine Tabelle nicht mit einer anderen zusammenführen: Ich arbeite immer mit einer Tabelle."
+  fr: "Je ne peux pas combiner ton tableau avec un autre : je travaille avec un seul tableau à la fois."
+  es: "No puedo combinar tu tabla con otra: trabajo con una sola tabla a la vez."
+  it: "Non posso unire la tua tabella con un'altra: lavoro con una sola tabella alla volta."
+  pt: "Não consigo combinar a sua tabela com outra: trabalho com uma tabela de cada vez."
+  nl: "Ik kan je tabel niet met een andere samenvoegen: ik werk met één tabel tegelijk."
+  pl: "Nie mogę połączyć twojej tabeli z inną: pracuję z jedną tabelą naraz."
+  zh: "我无法把你的表格与另一个表格合并：我一次只处理一个表格。"
+  vi: "Tôi không thể ghép bảng của bạn với một bảng khác: tôi chỉ làm việc với một bảng mỗi lần."
+  ru: "Я не могу объединить твою таблицу с другой: я работаю с одной таблицей за раз."
+
+unsupported_text_pattern:
+  en: "I cannot match text by a pattern or a wildcard: my text operations take literal texts only."
+  de: "Ich kann Text nicht nach Mustern oder Platzhaltern durchsuchen: Meine Textoperationen nehmen Texte nur wörtlich."
+  fr: "Je ne peux pas rechercher du texte selon un motif ou un caractère générique : mes opérations sur le texte prennent les textes tels quels."
+  es: "No puedo buscar texto con un patrón o un comodín: mis operaciones de texto toman los textos de forma literal."
+  it: "Non posso cercare testo con un modello o un carattere jolly: le mie operazioni sul testo prendono i testi alla lettera."
+  pt: "Não consigo procurar texto por um padrão ou um curinga: minhas operações de texto usam os textos literalmente."
+  nl: "Ik kan tekst niet op een patroon of jokerteken doorzoeken: mijn tekstbewerkingen nemen teksten letterlijk."
+  pl: "Nie mogę wyszukiwać tekstu według wzorca ani symbolu wieloznacznego: moje operacje na tekście biorą teksty dosłownie."
+  zh: "我无法按模式或通配符匹配文本：我的文本操作只按字面处理文本。"
+  vi: "Tôi không thể tìm văn bản theo mẫu hay ký tự đại diện: các thao tác văn bản của tôi chỉ dùng văn bản đúng nguyên văn."
+  ru: "Я не могу искать текст по шаблону или подстановочному знаку: мои текстовые операции берут тексты буквально."
+
+unsupported_time_window:
+  en: "I cannot compute over a span of time such as 7 days: my rolling mean and sum take a number of rows."
+  de: "Ich kann nicht über eine Zeitspanne wie 7 Tage rechnen: Mein gleitender Mittelwert und meine gleitende Summe nehmen eine Anzahl Zeilen."
+  fr: "Je ne peux pas calculer sur une période comme 7 jours : ma moyenne mobile et ma somme mobile portent sur un nombre de lignes."
+  es: "No puedo calcular sobre un periodo de tiempo como 7 días: mi media móvil y mi suma móvil toman un número de filas."
+  it: "Non posso calcolare su un intervallo di tempo come 7 giorni: la mia media mobile e la mia somma mobile usano un numero di righe."
+  pt: "Não consigo calcular sobre um período de tempo como 7 dias: minha média móvel e minha soma móvel usam um número de linhas."
+  nl: "Ik kan niet over een tijdspanne zoals 7 dagen rekenen: mijn voortschrijdend gemiddelde en mijn voortschrijdende som nemen een aantal rijen."
+  pl: "Nie mogę liczyć w przedziale czasu, takim jak 7 dni: moja średnia krocząca i suma krocząca obejmują określoną liczbę wierszy."
+  zh: "我无法按时间跨度（例如 7 天）计算：我的滚动平均和滚动求和按行数计算。"
+  vi: "Tôi không thể tính theo một khoảng thời gian như 7 ngày: trung bình trượt và tổng trượt của tôi tính theo số hàng."
+  ru: "Я не могу считать за промежуток времени, например 7 дней: моё скользящее среднее и скользящая сумма берут число строк."
+
+unsupported_other:
+  en: "I cannot make this change to your data with my data operations."
+  de: "Diese Änderung kann ich mit meinen Datenoperationen nicht an deinen Daten vornehmen."
+  fr: "Je ne peux pas faire cette modification de tes données avec mes opérations sur les données."
+  es: "No puedo hacer este cambio en tus datos con mis operaciones de datos."
+  it: "Non posso fare questa modifica ai tuoi dati con le mie operazioni sui dati."
+  pt: "Não consigo fazer essa alteração nos seus dados com minhas operações de dados."
+  nl: "Deze wijziging kan ik niet met mijn databewerkingen in je gegevens maken."
+  pl: "Nie mogę wprowadzić tej zmiany w twoich danych za pomocą moich operacji na danych."
+  zh: "我无法用我的数据操作对你的数据做这项修改。"
+  vi: "Tôi không thể thực hiện thay đổi này trên dữ liệu của bạn bằng các thao tác dữ liệu của mình."
+  ru: "Я не могу внести это изменение в твои данные с помощью моих операций с данными."
