@@ -26,7 +26,9 @@
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
 * `app` carries the plugins in their fixed order, `ScopeGuard → Budget → ToolSafety →
-  ShippedReply → ReplyLanguage → ContextFilter(6)`, behind the development-only fixture seed when
+  EmptyReply → ShippedReply → ReplyLanguage → ContextFilter(6)` (EmptyReply after Budget,
+  which books the empty response, and before the two checks that read the answer it puts
+  in that response's place), behind the development-only fixture seed when
   `AGENT_DEV_FIXTURE` is set, and, on Claude only, a context-cache config so ADK
   marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
 """
@@ -54,6 +56,7 @@ from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .paste_conversions import make_conversions
 from .plugins.budget import BudgetPlugin
+from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
 from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.scope_guard import ScopeGuardPlugin
@@ -354,6 +357,7 @@ def build_plugins() -> list[BasePlugin]:
         ScopeGuardPlugin(),
         BudgetPlugin(),
         ToolSafetyPlugin(),
+        EmptyReplyPlugin(),
         ShippedReplyPlugin(),
         ReplyLanguagePlugin(),
         ContextFilterPlugin(num_invocations_to_keep=CONTEXT_INVOCATIONS),

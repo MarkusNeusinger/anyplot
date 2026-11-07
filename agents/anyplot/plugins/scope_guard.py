@@ -13,7 +13,7 @@
   inside `<last_assistant_turn>`, and the user's last three
   earlier turns (500 characters each, 1,500 in all, oldest first, as a JSON list)
   inside `<earlier_user_turns>`, so a request split across turns is judged as a
-  whole; the fence tags are neutralised in all three;
+  whole; the fence tags are neutralised in every block;
 * a timeout, transport error or unparseable answer after the one retry, which
   waits a short back-off first (`models.JUDGE_RETRY_BACKOFF_S`), inside the 4-second
   budget blocks with the error `guard_unavailable`;
@@ -24,11 +24,20 @@
   the language the judge names (`policy.refusal`: English, German, French, Spanish,
   Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English for every
   other language); the run ends there, at the first turn;
-* the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is never
-  `needs_data`: it came with the data it is about, and a statistic's name in it
-  ("unemployment rate per country") read as a request to fetch figures. Such a verdict
-  goes on as `in_scope`, with a `paste_note_in_scope` attribution line after the judge's;
-  `attack`, `out_of_scope` and `other_library` refuse the note as any message;
+* the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is judged
+  as notes that came with a table: a `<pasted_table>` block before the message names the
+  spec's title and the table's column names on one bounded line, never a cell
+  (`paste_table_line`, which the route writes to `RequestLedger.paste_table` when the
+  table is still stored). Such a note is never `needs_data` or `out_of_scope` while that
+  table is there: it came with the data it is about, and the judge read a statistic's
+  name in it ("unemployment rate per country") as a request to fetch figures and a
+  question about the table's entries as general advice (persona tests of 2026-11-06).
+  Either verdict goes on as `in_scope`, with a `paste_note_in_scope` attribution line
+  after the judge's. A rescued `out_of_scope` counts toward no refusal, so at most
+  `AGENT_PASTE_NOTE_RESCUES` go on per user and day (`UsageBook.note_rescue_ok`, twice
+  as many per network); past that the verdict stands (`paste_note_rescues_spent`) and
+  the note is refused and counted as any message. `attack` refuses the note as any
+  message, and `other_library` gets its fixed pointer to the catalogue;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the `locked_out` refusal for the rest of the day (a
@@ -70,15 +79,25 @@ the next message alike.
 
 `on_event_callback` is the output side: the root's final reply goes through the
 output guard's length cap (`output_guard.reply_too_long`, the same in every language)
-before ADK stores it. A reply over the cap is replaced, in the stored event too, by
-the fixed `out_of_scope` refusal in the ledger's language, and the ledger's refusal
-makes the translator send it as a `refusal` event; so a refused reply never reaches
-the user, the judge's next context or the root's own. A turn that called
-`plot_pipeline` is the exception: its reply describes a plot the user already has, so
-it is stored and sent cut at the cap, as the sanitiser cuts it, instead of being
-refused after the plot. Either case writes a content-free `output_guard` attribution
-line (`reply_too_long` or `reply_cut`, with the reply's length); an internal failure
-lets the reply through to the translator's sanitiser.
+before ADK stores it. A reply over the cap is never refused: the persona tests of
+2026-11-06 got the fixed `out_of_scope` refusal for an on-topic summary of a pasted
+bank export and for an on-topic answer about the user's data, both too long. The root
+is asked once for a shorter reply instead, the way ReplyLanguage asks again
+(`reply_language.follow_up_request` and `ask_root`): its own request without tools, the
+long reply as its previous turn and `SHORTEN_LINE`. The shorter answer replaces the
+reply when it fits the cap and is whole (not cut at the output cap, not surely in
+another language than the session's, ShippedReply's check run on it); otherwise the
+shorter of the two is stored and sent cut at the cap, as the sanitiser cuts it. At
+most one such ask per turn (`RequestLedger.reply_shortened`), booked like any call
+(`budget.book_response`). The stored event holds the reply at the length the user reads
+it (a shorter answer as the root wrote it, like any reply the translator sanitises on
+its way out; a cut one as the sanitiser cut it), so a long reply never re-enters the
+judge's or the root's context whole. Each step writes a
+content-free `output_guard` attribution line: `reply_too_long` (the reply's length),
+then `shortened` (the new length) or `reply_cut` (the length cut, and the `reason` the
+shorter answer was not used: `asked`, `no_request`, `budget`, `error`, `cut_off`,
+`empty`, `language` or `too_long`). An internal failure lets the reply through to the
+translator's sanitiser, which cuts it at the cap too.
 
 The plugin never raises: an internal failure of the input side is a
 `guard_unavailable` block.
@@ -93,17 +112,22 @@ from typing import Literal
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.models.llm_request import LlmRequest
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
 from ..language import DEFAULT_LANGUAGE
+from ..language_detect import mismatch
 from ..models import JudgeUnavailable, JudgeVerdict
-from ..output_guard import reply_length, reply_too_long, sanitize
+from ..output_guard import MAX_MESSAGE_CHARS, reply_length, reply_too_long, sanitize
 from ..policy import fence, fixed_replies, refusal, refusals, scope_rubric
 from ..services import KeptRefusal, get_services
 from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
 from ..settings import get_settings
-from .ledger import RequestLedger, attribution, day_refusal, judge_budget_tokens, ledger_for
+from .budget import book_response
+from .ledger import RequestLedger, attribution, budget_allows, day_refusal, finish_name, judge_budget_tokens, ledger_for
+from .reply_language import ask_root, checked_language, follow_up_request, reply_text
+from .shipped_reply import scrub_shipped_reply
 
 
 logger = logging.getLogger(__name__)
@@ -123,6 +147,24 @@ MIN_ENGLISH_DETECTION_WORDS = 3
 the judge also answers `en` for a message without a clear language, such as `sin x`."""
 HALT_AUTHOR = "model"
 """ADK's author of the event a `before_run_callback` halt emits: the fixed refusal or the outage text."""
+PASTE_NOTE_PASSES = frozenset({"needs_data", "out_of_scope"})
+"""The verdicts a note sent with a stored paste goes on with as `in_scope` (owner decision of 2026-11-06), `out_of_scope`
+within the day's `AGENT_PASTE_NOTE_RESCUES`: it came with the table it is about, so nothing is to be fetched and a
+question about the table is no general advice. `attack` refuses it as any message, and `other_library` gets its fixed
+pointer to the catalogue."""
+MAX_TABLE_COLUMNS = 20
+MAX_TABLE_NAME_CHARS = 40
+MAX_TABLE_TITLE_CHARS = 120
+"""The `<pasted_table>` line's bounds (`paste_table_line`): at most 20 column names of 40 characters each and a
+title of 120, about 1,100 characters at their worst, beside a judge input of about 2,500 tokens."""
+SHORTEN_TARGET_CHARS = 800
+"""The length the output guard asks a too-long reply to be rewritten in: two thirds of the cap
+(`output_guard.MAX_MESSAGE_CHARS`), since a model counts characters loosely."""
+SHORTEN_LINE = (
+    "Your last reply is {chars} characters long, and the chat shows at most {limit}. Write the same reply again in "
+    "at most {target} characters: the same language and the same answer, with every notice it gives, and column "
+    "names, values and code unchanged; leave out detail. Answer with the reply only."
+)
 
 Turn = tuple[Literal["user", "assistant"], str]
 
@@ -253,15 +295,48 @@ def judge_context(turns: Sequence[Turn]) -> tuple[str, list[str]]:
     return assistant, earlier[::-1]
 
 
-def judge_input(message_text: str, context: str, earlier: Sequence[str] = ()) -> str:
-    """The judge's input: the earlier user turns, the root's last reply and the message, each fenced, in that order."""
+def _one_line(text: str, limit: int) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def paste_table_line(title: str, columns: Sequence[str]) -> str:
+    """The table a paste note came with, as the scope judge reads it: the spec's title and the column names, no cell.
+
+    One line, bounded (`MAX_TABLE_COLUMNS`, `MAX_TABLE_NAME_CHARS`, `MAX_TABLE_TITLE_CHARS`), each name JSON-quoted
+    (it is the user's text, screened at the paste by the dataset judge), and the count of the names left out. The
+    title is catalogue text that started as a public issue: `judge_input` fences the whole line as data.
+    """
+    names = [
+        json.dumps(_one_line(name, MAX_TABLE_NAME_CHARS), ensure_ascii=False) for name in columns[:MAX_TABLE_COLUMNS]
+    ]
+    more = len(columns) - len(names)
+    listed = ", ".join(names) + (f", and {more} more" if more > 0 else "")
+    return f"Plot: {_one_line(title, MAX_TABLE_TITLE_CHARS)}. Columns of the pasted table: {listed or 'none'}."
+
+
+def judge_input(message_text: str, context: str, earlier: Sequence[str] = (), table: str | None = None) -> str:
+    """The judge's input: the earlier user turns, the root's last reply, the pasted table and the message, each fenced.
+
+    `table` is the `<pasted_table>` line of a note sent with a paste (`paste_table_line`), right before the note.
+    """
     parts = []
     if earlier:
         parts.append(fence("earlier_user_turns", json.dumps(list(earlier), ensure_ascii=False)))
     if context:
         parts.append(fence("last_assistant_turn", context))
+    if table:
+        parts.append(fence("pasted_table", table))
     parts.append(fence("user_message", message_text))
     return "\n".join(parts)
+
+
+def _replaced(event: Event, text: str) -> Event:
+    """The root's final reply event with `text` in place of its reply, as the output guard stores and sends it.
+
+    A copy of the event, so its id, invocation, actions and usage stay with it whatever ADK's runner merges back.
+    """
+    return event.model_copy(update={"content": types.Content(role="model", parts=[types.Part(text=text)])})
 
 
 class ScopeGuardPlugin(BasePlugin):
@@ -302,8 +377,9 @@ class ScopeGuardPlugin(BasePlugin):
             return _withheld()
         text = "\n".join(part.text or "" for part in parts)
         context, earlier = judge_context(session_turns(invocation_context))
+        table = ledger.paste_table if ledger.paste_note else None
         try:
-            verdict = await services.judge.judge(judge_input(text, context, earlier), scope_rubric())
+            verdict = await services.judge.judge(judge_input(text, context, earlier, table), scope_rubric())
         except JudgeUnavailable:
             ledger.fail("guard_unavailable")
             attribution("scope_guard", ledger, verdict="guard_unavailable")
@@ -327,11 +403,17 @@ class ScopeGuardPlugin(BasePlugin):
             judge_output=verdict.output_tokens,
             **({"strikes": strikes} if strikes is not None else {}),
         )
-        if verdict.verdict == "needs_data" and ledger.paste_note:
-            # The note came with the data it is about, so nothing is to be fetched: the root reads it beside the table.
-            # The judge sees the note alone, and a statistic's name in it reads as a request for figures.
-            attribution("scope_guard", ledger, verdict="paste_note_in_scope")
-            verdict = verdict.model_copy(update={"verdict": "in_scope"})
+        if verdict.verdict in PASTE_NOTE_PASSES and ledger.paste_note and ledger.paste_table:
+            # The note came with the data it is about: the root reads it beside the table. A statistic's name in it
+            # reads as a request for figures, a question about the table as general advice; an attack stays refused.
+            # A rescued `out_of_scope` counts toward no refusal, so the user's day caps how many go on.
+            if verdict.verdict == "out_of_scope" and not services.usage.note_rescue_ok(user, settings):
+                attribution("scope_guard", ledger, verdict="paste_note_rescues_spent")
+            else:
+                if verdict.verdict == "out_of_scope":
+                    services.usage.add_note_rescue(user)
+                attribution("scope_guard", ledger, verdict="paste_note_in_scope")
+                verdict = verdict.model_copy(update={"verdict": "in_scope"})
         if verdict.verdict != "in_scope":
             if settings.keep_refusals:
                 services.refusals.add(
@@ -391,17 +473,18 @@ class ScopeGuardPlugin(BasePlugin):
 
     async def on_event_callback(self, *, invocation_context: InvocationContext, event: Event) -> Event | None:
         try:
-            return self._guard_reply(invocation_context, event)
+            return await self._guard_reply(invocation_context, event)
         except Exception as exc:  # the translator's sanitiser still runs
             logger.warning("output guard failed: %s", type(exc).__name__)
             return None
 
-    @staticmethod
-    def _guard_reply(invocation_context: InvocationContext, event: Event) -> Event | None:
+    @classmethod
+    async def _guard_reply(cls, invocation_context: InvocationContext, event: Event) -> Event | None:
         """A final reply of the root over the cap, replaced; None keeps the event.
 
-        After a `plot_pipeline` call in this turn the reply describes a plot the user already has, so it is
-        cut at the cap as the sanitiser cuts it; otherwise it becomes the fixed `out_of_scope` refusal.
+        The root is asked once for a shorter reply (`_shorter`), which replaces the reply when it fits the cap;
+        otherwise the shorter of the two is cut at the cap as the sanitiser cuts it. Never a refusal: a long reply is
+        an on-topic one at least as often as not, and the judge on the input side decides what a request is for.
         """
         if event.author != ROOT_AGENT or event.partial or not event.content or not event.content.parts:
             return None
@@ -416,14 +499,59 @@ class ScopeGuardPlugin(BasePlugin):
         if not reply_too_long(text, spec_id=spec_id):
             return None
         chars = reply_length(text, spec_id=spec_id)
-        if ledger.pipeline_calls:
-            attribution("output_guard", ledger, verdict="reply_cut", chars=chars)
-            cut = sanitize(text, spec_id=spec_id)
-            return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=cut)]))
         attribution("output_guard", ledger, verdict="reply_too_long", chars=chars)
-        fixed = refusal("out_of_scope", ledger.lang)
-        ledger.refuse("out_of_scope", fixed)
-        return Event(author=event.author, content=types.Content(role="model", parts=[types.Part(text=fixed)]))
+        shorter, reason = await cls._shorter(invocation_context, ledger, text, chars)
+        if shorter is not None:
+            if not reply_too_long(shorter, spec_id=spec_id):
+                attribution("output_guard", ledger, verdict="shortened", chars=reply_length(shorter, spec_id=spec_id))
+                return _replaced(event, shorter)
+            reason = "too_long"
+            if reply_length(shorter, spec_id=spec_id) < chars:
+                text, chars = shorter, reply_length(shorter, spec_id=spec_id)
+        attribution("output_guard", ledger, verdict="reply_cut", chars=chars, reason=reason)
+        return _replaced(event, sanitize(text, spec_id=spec_id))
+
+    @staticmethod
+    async def _shorter(
+        invocation_context: InvocationContext, ledger: RequestLedger, text: str, chars: int
+    ) -> tuple[str | None, str]:
+        """The root's shorter answer for a too-long reply, asked once per turn; else None and why not.
+
+        Its own request without tools, the long reply as its previous turn and `SHORTEN_LINE`, the way ReplyLanguage
+        asks again. The answer is no use when it was cut at the output cap, holds no text, or is surely in another
+        language than the session's; ShippedReply's check runs on it, since no plugin sees this direct call.
+        """
+        request = ledger.root_request
+        if ledger.reply_shortened:
+            return None, "asked"
+        if not isinstance(request, LlmRequest):
+            return None, "no_request"
+        if not budget_allows(ledger, get_services().usage, get_settings()):
+            return None, "budget"
+        ledger.reply_shortened = True
+        line = SHORTEN_LINE.format(chars=chars, limit=MAX_MESSAGE_CHARS, target=SHORTEN_TARGET_CHARS)
+        turns = [
+            types.Content(role="model", parts=[types.Part(text=text)]),
+            types.Content(role="user", parts=[types.Part(text=line)]),
+        ]
+        try:
+            answer = await ask_root(follow_up_request(request, turns))
+        except Exception as exc:
+            logger.warning("output guard re-ask failed: %s", type(exc).__name__)
+            return None, "error"
+        if answer is None:
+            return None, "error"
+        book_response(ledger, ROOT_AGENT, invocation_context.session.user_id, answer)
+        if finish_name(answer.finish_reason) == "MAX_TOKENS":
+            return None, "cut_off"
+        scrub_shipped_reply(ledger, answer)
+        again = reply_text(answer)
+        if again is None or again in fixed_replies():
+            return None, "empty"
+        language = checked_language(invocation_context.session.state)
+        if language is not None and mismatch(again, language) is not None:
+            return None, "language"
+        return again, ""
 
     async def before_run_callback(self, *, invocation_context: InvocationContext) -> types.Content | None:
         try:

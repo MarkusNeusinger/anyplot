@@ -197,7 +197,8 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
         {"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion", "switch"}
     ),
 }
-_ERROR_CODES = frozenset({"capacity", "run_limit", "deadline", "guard_unavailable", "upstream", "internal"})
+# `no_reply`: the assistant wrote no reply, also when asked once more (`agents/anyplot/plugins/empty_reply.py`).
+_ERROR_CODES = frozenset({"capacity", "run_limit", "deadline", "guard_unavailable", "no_reply", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
 _MAX_BINDING_ERROR_CHARS = 300
 _MAX_CAUSE_CHARS = 300  # agents/main.py MAX_CAUSE_CHARS; copied, because the API image does not ship the agents package

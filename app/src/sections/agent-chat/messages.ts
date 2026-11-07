@@ -22,6 +22,8 @@ export const ERROR_TEXT: Record<string, string> = {
     'your plots and data runs in other windows, or others on your network, already fill the share; wait until one finishes, then try again',
   deadline: 'the run took too long and was stopped',
   guard_unavailable: 'the scope check is unavailable right now; try again',
+  // The assistant wrote no reply, also when asked once more; a paste stays unsummarized for the next message.
+  no_reply: 'the assistant sent no reply; send your message again',
   upstream: 'the agents service did not answer or cut the stream',
   internal: 'something went wrong on the server',
   // Per window since 2026-10-21: the user's other windows never cause it.

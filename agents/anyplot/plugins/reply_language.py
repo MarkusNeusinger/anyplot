@@ -30,6 +30,7 @@ the reply as it was.
 """
 
 import logging
+from collections.abc import Sequence
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
@@ -90,21 +91,48 @@ def root_model() -> Any:
     return root_agent.canonical_model
 
 
-def reask_request(request: LlmRequest, reply: str, name: str) -> LlmRequest:
-    """A copy of the root's request with its wrong reply and the re-ask line after it, without tools."""
+def follow_up_request(request: LlmRequest, turns: Sequence[types.Content], *, tools: bool = False) -> LlmRequest:
+    """A copy of the root's request with `turns` after its contents; without tools unless `tools`.
+
+    The one request builder of every direct re-ask of the root: this plugin's language re-ask, the output guard's
+    request for a shorter reply (`scope_guard`) and the empty reply's second ask (`empty_reply`).
+    """
     config = request.config.model_copy(deep=True) if request.config is not None else types.GenerateContentConfig()
     copy = LlmRequest(
         model=request.model,
-        contents=[
-            *(content.model_copy(deep=True) for content in request.contents),
-            types.Content(role="model", parts=[types.Part(text=reply)]),
-            types.Content(role="user", parts=[types.Part(text=REASK_LINE.format(name=name))]),
-        ],
+        contents=[*(content.model_copy(deep=True) for content in request.contents), *turns],
         config=config,
     )
     copy.cache_config = request.cache_config
-    strip_tools(copy)
+    if tools:
+        copy.tools_dict = dict(request.tools_dict)
+    else:
+        strip_tools(copy)
     return copy
+
+
+def reask_request(request: LlmRequest, reply: str, name: str) -> LlmRequest:
+    """A copy of the root's request with its wrong reply and the re-ask line after it, without tools."""
+    return follow_up_request(
+        request,
+        [
+            types.Content(role="model", parts=[types.Part(text=reply)]),
+            types.Content(role="user", parts=[types.Part(text=REASK_LINE.format(name=name))]),
+        ],
+    )
+
+
+async def ask_root(request: LlmRequest) -> LlmResponse | None:
+    """The root model's final response to `request`, None when it sends none; raises what the call raises.
+
+    A direct call outside ADK's flow, so no plugin sees it: the caller books it (`budget.book_response`) and runs the
+    checks the plugins would have run.
+    """
+    final: LlmResponse | None = None
+    async for response in root_model().generate_content_async(request, stream=False):
+        if not response.partial:
+            final = response
+    return final
 
 
 class ReplyLanguagePlugin(BasePlugin):
@@ -153,12 +181,8 @@ class ReplyLanguagePlugin(BasePlugin):
         if not budget_allows(ledger, get_services().usage, get_settings()):
             return None
         ledger.reply_reasked = True
-        final: LlmResponse | None = None
         try:
-            asked = reask_request(request, reply, name)
-            async for response in root_model().generate_content_async(asked, stream=False):
-                if not response.partial:
-                    final = response
+            final = await ask_root(reask_request(request, reply, name))
         except Exception as exc:
             logger.warning("reply language re-ask failed: %s", type(exc).__name__)
             attribution("reply_language", ledger, verdict="error", expected=expected, found=found)

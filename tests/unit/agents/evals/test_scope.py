@@ -190,6 +190,18 @@ class TestCaseFile:
         assert any("https://" in item.text for item in kept) and any("Fahrenheit" in item.text for item in kept)
         assert any(item.expected == "attack" and item.group == "adversarial" for item in cases)
 
+    def test_a_note_typed_with_a_paste_is_about_its_table_and_the_old_rules_still_win(self) -> None:
+        """Persona tests of 2026-11-06: a question typed with a pasted table read as general advice. Beside the
+        table's columns it is about the table; an attack, an essay and a general question stay what they were."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "paste_note" in item.tags]
+
+        assert all(item.table is not None and item.table.columns for item in cases)
+        kept = [item for item in cases if item.expected == "in_scope"]
+        assert len(kept) >= 5 and all(item.group == "inscope" for item in kept)
+        assert {item.expected for item in cases} >= {"in_scope", "attack", "out_of_scope", "needs_data"}
+        assert any("injection" in item.tags for item in cases if item.expected == "attack")
+        assert any("writing" in item.tags for item in cases if item.expected == "out_of_scope")
+
     def test_multi_turn_cases_carry_their_turns(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "multi_turn" in item.tags]
 
@@ -293,6 +305,34 @@ class TestRun:
         asyncio.run(run_cases([notes], judge, concurrency=1))
 
         assert judge.calls[0][0] == "<user_notes>\nTitle\nSource: example.org\n</user_notes>"
+
+    def test_a_paste_note_case_is_judged_beside_its_table_as_the_plugin_judges_it(self) -> None:
+        note = case(
+            "paste-001",
+            "in_scope",
+            "inscope",
+            text="where does my budget go?",
+            tags=["inscope", "paste_note"],
+            table={"title": "Basic Pie Chart", "columns": ["Booked", "Category", "Amount"]},
+        )
+        judge = FakeJudge()
+
+        asyncio.run(run_cases([note], judge, concurrency=1))
+
+        assert judge.calls[0][0] == (
+            "<pasted_table>\n"
+            'Plot: Basic Pie Chart. Columns of the pasted table: "Booked", "Category", "Amount".\n'
+            "</pasted_table>\n"
+            "<user_message>\nwhere does my budget go?\n</user_message>"
+        )
+
+    def test_a_table_goes_with_the_paste_note_tag_only(self) -> None:
+        table = {"title": "Basic Bar Chart", "columns": ["month"]}
+
+        with pytest.raises(ValueError, match="paste_note"):
+            case("paste-001", "in_scope", "inscope", tags=["inscope", "paste_note"])
+        with pytest.raises(ValueError, match="paste_note"):
+            case("in-001", "in_scope", "inscope", table=table)
 
     def test_a_judge_outage_is_an_unavailable_case_with_its_cause(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(models, "JUDGE_RETRY_BACKOFF_S", 0.0)

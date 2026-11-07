@@ -12,7 +12,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`: the step it ended in, whether its render is the one shipped, the rubric ids it passed on to the repair, and the closed ids of the gates its renders failed and of a crash, which the page does not show) |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched), `other_library` (this plot in another library or language: a fixed pointer to the catalogue, not counted toward closing by default), `unsupported_content`, `locked_out` (past the day's `attack` strikes) and `session_closed` (the session's third counted refusal) from the scope guard, `budget` from the budgets (`service_paused` when only the service's day budget is spent, for every user); the refusal one before the closing one ends with the fixed `close_warning` sentence; right after `ready`, before the scope judge: `locked_out`, `budget` for a user over the daily budget, `service_paused` for everyone else once the service's day budget is spent, `rate_limited` or `daily_limit` past the user's message limits, `session_closed` in a closed session |
-| `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `run_limit` (the user already has `AGENT_USER_MAX_RUNS` sandbox runs queued or running in other sessions; the turn ends the same way), `deadline` or `internal` |
+| `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `run_limit` (the user already has `AGENT_USER_MAX_RUNS` sandbox runs queued or running in other sessions; the turn ends the same way), `deadline`, `no_reply` (the root wrote no reply, also when asked once more: `plugins/empty_reply.py`) or `internal` |
 | `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
 
 The route numbers every event on its way out (`id: <run_id>.<n>`, `agents/turn_log.py`) and keeps the
@@ -27,9 +27,13 @@ becomes one plain line. Personal data in them (names, addresses, e-mail addresse
 phone numbers) stays: the user may plot and discuss their own table.
 
 The output guard's length cap (`output_guard.reply_too_long`) runs earlier, in the
-ScopeGuard plugin before ADK stores the root's reply: a refused reply reaches the
-translator as the ledger's `out_of_scope` refusal, so it goes out as a `refusal` event,
-and a reply after a `plot_pipeline` call arrives already cut at the cap.
+ScopeGuard plugin before ADK stores the root's reply: a reply over the cap arrives
+already shortened by the root or cut at the cap, never as a refusal. A final reply
+without text sends no `message`; the EmptyReply plugin asks the root once more for one
+and, when it stays empty, fails the turn with `no_reply`, which the route sends as the
+`error` event. A reply the sanitiser empties fails the turn the same way here, unless
+the turn sent a plot, asked for a library switch or stored a change
+(`empty_reply.carries_answer`).
 """
 
 import json
@@ -40,6 +44,7 @@ from google.adk.events.event import Event
 
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
+from agents.anyplot.plugins.empty_reply import NO_REPLY, carries_answer
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.schemas import RoundOutcome
 from agents.anyplot.telemetry import ends_with_question
@@ -173,7 +178,13 @@ class Translator:
         if clean:
             # The usage telemetry's `asked_question`: a bool computed here, the reply itself is never kept.
             self.ledger.reply_question = ends_with_question(clean)
-        return [sse("message", {"text": clean})] if clean else []
+            return [sse("message", {"text": clean})]
+        if not self.plot_sent and not carries_answer(self.ledger):
+            # A reply the sanitiser emptied (only a link, an HTML block, another spec's token) leaves the user as little
+            # as an empty one: the route ends the turn with `no_reply`, as EmptyReply does, and a paste stays pending.
+            # A plot, a switch or a stored change is the turn's answer, which sending it again would repeat.
+            self.ledger.fail(NO_REPLY)
+        return []
 
     def error(self, code: str) -> list[str]:
         if self.closing_sent:

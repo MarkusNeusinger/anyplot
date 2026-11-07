@@ -399,6 +399,20 @@ class TestReplies:
             ("refusal", {"code": "out_of_scope", "text": "Ich kann nur bei diesem Plot helfen."})
         ]
 
+    def test_a_reply_the_sanitiser_empties_is_no_reply(self) -> None:
+        """Only a link or another spec's token is as little for the user as an empty reply: the route then ends the
+        turn with `no_reply`. After a plot, the plot is the answer."""
+        empty = Translator(RequestLedger(request_id="r"), "run", spec_id="scatter-basic")
+        after_plot = Translator(RequestLedger(request_id="r"), "run", spec_id="scatter-basic")
+        after_plot.translate(Event(author="plot_pipeline", output={"status": "ok", "attempts": 1, "artifacts": []}))
+
+        after_change = Translator(RequestLedger(request_id="r", state_changed=True), "run", spec_id="scatter-basic")
+
+        for translator in (empty, after_plot, after_change):
+            assert translator.translate(text_event("anyplot", "https://example.org [[spec:bar-basic]]")) == []
+        assert empty.ledger.error == "no_reply"
+        assert after_plot.ledger.error is None and after_change.ledger.error is None  # the plot, the stored change
+
     def test_a_short_reply_without_the_plot_stays(self, translator: Translator) -> None:
         reply = "Hello! Happy to help."
 

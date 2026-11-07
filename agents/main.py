@@ -252,7 +252,7 @@ from agents.anyplot.plugins.ledger import (
     utc_stamp,
     weighted_usd,
 )
-from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
+from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, paste_table_line, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.contract import ConvertJob, PageFailed, PageUnsupported, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
@@ -2535,7 +2535,8 @@ async def post_message(
     # The summary of a paste not summarized yet: the root's before-agent callback makes its `certain` conversions
     # (`paste_conversions.py`). A summary action on data already summarized makes none, nor does any later turn.
     ledger.summary_turn = first_turn and summary_pending
-    # The note came with the data, so the scope judge's `needs_data` cannot apply to it (`ScopeGuardPlugin._judge`).
+    # The note came with the data, so while that table is stored (`paste_table` below) the scope judge's `needs_data`
+    # and, within the user's day of `AGENT_PASTE_NOTE_RESCUES`, `out_of_scope` go on (`ScopeGuardPlugin._judge`).
     ledger.paste_note = summary_pending and body.text is not None
     # What the user wrote, which a text the plot is checked for must stand in (`pipeline.in_users_words`): the typed
     # message, and the notes pasted with the data, on any turn ("the title from my notes" may come later). A line the
@@ -2545,6 +2546,9 @@ async def post_message(
     stored = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
     if stored is not None:
         words += [line for line in stored.context_lines if not line.endswith(CONSTANT_NOTE_SUFFIX)]
+    if ledger.paste_note and view is not None and stored is not None:
+        # The judge reads the note as notes that came with this table: the spec's title and the column names, no cell.
+        ledger.paste_table = paste_table_line(view.snapshot.title, [column.name for column in stored.profile.columns])
     if first_turn and stored is not None:
         blocks: list[str] = []
         if stored.context_lines:
@@ -2629,8 +2633,9 @@ async def post_message(
                 for chunk in translator.error(failure):
                     yield chunk
             if summary_pending and failure is None and ledger.refusal is None:
-                # The root answered on the paste: summarized. A refused or failed turn leaves it pending, so the
-                # page's summary action, or the next typed message, still gets the paste's notes.
+                # The root answered on the paste: summarized. A refused or failed turn leaves it pending, a turn whose
+                # root wrote no reply too (`no_reply`, `plugins/empty_reply.py`), so the page's summary action, or the
+                # next typed message, still gets the paste's notes.
                 started_on = view.dataset_id if view is not None else None
                 summarized = {dataset_id for dataset_id in (started_on, ledger.conversions_made) if dataset_id}
                 await _summarized(runtime, user, sid, summarized)

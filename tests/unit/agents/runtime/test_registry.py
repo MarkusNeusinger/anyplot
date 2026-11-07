@@ -19,6 +19,7 @@ from agents.anyplot import agent as agent_module
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import VertexClaude
 from agents.anyplot.plugins.budget import BudgetPlugin
+from agents.anyplot.plugins.empty_reply import EmptyReplyPlugin
 from agents.anyplot.plugins.reply_language import ReplyLanguagePlugin
 from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin
 from agents.anyplot.plugins.shipped_reply import ShippedReplyPlugin
@@ -126,6 +127,7 @@ class TestRegistry:
             ScopeGuardPlugin,
             BudgetPlugin,
             ToolSafetyPlugin,
+            EmptyReplyPlugin,
             ShippedReplyPlugin,
             ReplyLanguagePlugin,
             ContextFilterPlugin,

@@ -282,9 +282,12 @@ RefusalCode = Literal[
     "other",
 ]
 """`service_paused` (since 2026-11-02): the service's day budget is spent, not the user's own (`ledger.day_refusal`)."""
-ErrorCode = Literal["guard_unavailable", "capacity", "run_limit", "deadline", "internal", "cancelled", "other"]
+ErrorCode = Literal[
+    "guard_unavailable", "capacity", "run_limit", "deadline", "no_reply", "internal", "cancelled", "other"
+]
 """`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection);
-`run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions."""
+`run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions;
+`no_reply`: the root wrote no reply, also when asked once more (`plugins/empty_reply.py`)."""
 LanguageSource = Literal["default", "pasted", "detected", "chosen"]
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 

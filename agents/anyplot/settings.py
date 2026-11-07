@@ -78,6 +78,7 @@ another provider, model or location.
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, in a bounded in-memory ring per session that only the feedback bundle shows; never in a log |
 | `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the `locked_out` refusal (and a paste `429 locked_out`) for the rest of the day |
+| `AGENT_PASTE_NOTE_RESCUES` | `5` | Notes typed with a paste per user and day (twice as many per network for anonymous users) whose `out_of_scope` verdict goes on as `in_scope`; past it the verdict stands |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle seconds after which the sweeper drops a session and its stores |
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` (comma-separated) |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` (comma-separated): the service URL, which Cloud Run requires as the audience even for a request to a tag URL |
@@ -584,6 +585,12 @@ class AgentSettings(BaseSettings):
     """`attack` verdicts of the scope or dataset judge per user and day (`AGENT_ATTACK_STRIKES`) after
     which the user gets the `locked_out` refusal for the rest of the (UTC) day, in every session and on
     the paste route (`429 locked_out`); before 2026-10-14 it was the misleading `budget` text."""
+
+    paste_note_rescues: PositiveInt = 5
+    """Notes typed with a paste per user and day whose `out_of_scope` verdict goes on as `in_scope`
+    (`AGENT_PASTE_NOTE_RESCUES`; the anonymous users of one network share twice as many). Such a note reaches the
+    root uncounted, so the cap bounds that channel; past it the verdict stands, and the note is refused and counted
+    toward the session's refusals as any message. Every tier, like the strikes."""
 
     session_idle_s: PositiveInt = 3600
     """Idle seconds before the sweeper drops a session (`AGENT_SESSION_IDLE_S`)."""
