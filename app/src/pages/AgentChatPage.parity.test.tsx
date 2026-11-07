@@ -300,6 +300,40 @@ const STATES: Record<string, State> = {
       await screen.findByRole('dialog', { name: 'Library of the plot' });
     },
   },
+  // A table waiting in the box: the plot button inert, the status line saying Enter reads it.
+  'with a table attached': {
+    open: 'ok',
+    reach: async () => {
+      const box = await screen.findByLabelText('Message');
+      await waitFor(() => expect(box).toBeEnabled());
+      fireEvent.paste(box, {
+        clipboardData: { files: [], getData: () => 'hours,score\n1.5,52\n2.0,58\n' },
+      });
+      await screen.findByRole('group', { name: /^Attached/ });
+    },
+  },
+  // Text in the box after a plot: `.update_plot() →` acts, `.start_over()` at the line's end.
+  'with a change typed after a plot': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Update plot' })).not.toHaveAttribute(
+          'aria-disabled'
+        )
+      );
+    },
+  },
+  // The chat's own feedback before a plot, opened from `.feedback()` at the status line's end.
+  'with the chat feedback form open': {
+    open: 'ok',
+    reach: async () => {
+      await pasteTable();
+      fireEvent.click(screen.getByRole('button', { name: 'Give feedback on this chat' }));
+      await screen.findByRole('form', { name: 'Feedback on this chat' });
+    },
+  },
   // The closed door: the admin lane opens anyway, by design, so only the visitor's view compares.
   'with the public lane closed': {
     open: 'ok',

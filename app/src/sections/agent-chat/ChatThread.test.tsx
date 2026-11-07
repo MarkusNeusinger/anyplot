@@ -160,12 +160,13 @@ describe('ChatThread', () => {
           library: 'seaborn',
           label: '.start_over()',
         },
+        // The carry after a switch from the plot button, which keeps its name.
         {
           id: 5,
           kind: 'action',
           action: 'carry_plot',
           library: 'plotly',
-          label: 'plot in plotly with your 3 decisions',
+          label: '.create_plot()',
         },
         // A carry the chat started ("make it in plotly") has no button of its own.
         { id: 6, kind: 'action', action: 'carry_plot', library: 'plotly' },
@@ -177,7 +178,7 @@ describe('ChatThread', () => {
       '12 rows and 3 columns.',
       '❯.create_plot()# seaborn',
       '❯.start_over()# seaborn',
-      '❯plot in plotly with your 3 decisions',
+      '❯.create_plot()# plotly',
       '❯plot in plotly with your decisions',
       '❯.example_data()',
     ]);

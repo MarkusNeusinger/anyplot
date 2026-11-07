@@ -5,11 +5,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
 import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
-import { render, screen } from 'src/test-utils';
+import { fireEvent, render, screen, userEvent } from 'src/test-utils';
 
-/** A composer in a running plot turn, in step 1 unless a case says otherwise. */
-function renderComposer(overrides: Partial<ComposerProps> = {}) {
-  const props: ComposerProps = {
+/** The composer's props with data in step 1, its plot button active, unless a case says otherwise. */
+function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
+  return {
     draft: '',
     onDraftChange: vi.fn(),
     onPaste: vi.fn(),
@@ -17,42 +17,26 @@ function renderComposer(overrides: Partial<ComposerProps> = {}) {
     attachmentNotice: null,
     onRemoveAttachment: vi.fn(),
     dropHint: null,
-    canOpen: false,
+    canOpen: true,
     fileInputRef: createRef<HTMLInputElement>(),
     onFileChosen: vi.fn(),
     onSubmit: vi.fn(),
     messageRef: createRef<HTMLTextAreaElement>(),
-    createRef: createRef<HTMLButtonElement>(),
+    plotRef: createRef<HTMLButtonElement>(),
     ready: true,
-    busy: true,
-    running: true,
-    stopping: false,
+    busy: false,
     hasData: true,
     step2: false,
     hasPlot: false,
-    ctaPlot: true,
-    canCreate: false,
-    plotAll: false,
     chatLocked: false,
-    libraryCount: 2,
-    fanOutOpen: false,
-    carryText: null,
-    newData: false,
-    confirming: false,
+    plot: { kind: 'create', active: true, confirming: false, fresh: false },
+    example: { filled: false, active: false },
     confirmError: null,
     pausedUntil: null,
-    exampleOffer: false,
-    exampleWorking: false,
     onExampleData: vi.fn(),
-    onStop: vi.fn(),
     onPlot: vi.fn(),
-    onCreate: vi.fn(),
-    onCarry: vi.fn(),
-    onPlotAll: vi.fn(),
-    keepKeyboardFocus: vi.fn(),
     ...overrides,
   };
-  return render(<Composer {...props} />);
 }
 
 const attachment: Attachment = {
@@ -71,62 +55,170 @@ const attachment: Attachment = {
   readingLine: null,
 };
 
-describe('Composer and the status line', () => {
-  it("leaves the step's line to the status line at the frame's foot, which the plot button names", () => {
-    const { unmount } = renderComposer();
-    // The step lines stood above the box until the v4 frame: none stands there now.
-    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
-    expect(screen.queryByText(/plotting…|check the preview/)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute(
-      'aria-describedby',
-      STATUS_LINE_ID
-    );
-    unmount();
+const exampleButton = () => screen.getByRole('button', { name: 'Make example data' });
+const openButton = () => screen.getByRole('button', { name: 'Attach a data file' });
 
-    // Once the confirmed data has a plot here, `.start_over()` names it after its own help.
-    const { unmount: unmountPlotted } = renderComposer({
-      running: false,
-      step2: true,
-      hasPlot: true,
-      ctaPlot: false,
+describe('Composer row', () => {
+  it('keeps the same four places in every state, and moves only the filled style', () => {
+    // Before data: `.example_data()` is the step's action, the plot button stands quiet and inert.
+    const props = composerProps({
+      hasData: false,
+      plot: { kind: 'create', active: false, confirming: false, fresh: false },
+      example: { filled: true, active: true },
     });
-    const startOver = screen.getByRole('button', { name: 'Start over' });
-    expect(startOver.getAttribute('aria-describedby')?.split(' ')).toContain(STATUS_LINE_ID);
-    unmountPlotted();
+    const { rerender } = render(<Composer {...props} />);
+    const box = screen.getByRole('textbox', { name: 'Message' });
+    const open = openButton();
+    const example = exampleButton();
+    const plot = screen.getByRole('button', { name: 'Create plot' });
+    expect(example).not.toHaveAttribute('aria-disabled');
+    expect(plot).toHaveAttribute('aria-disabled', 'true');
+    expect(plot).toHaveTextContent('.create_plot() →');
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
 
-    // Beside a switch's offer the status line describes the offer: `.start_over()` keeps its help.
-    renderComposer({
-      running: false,
-      step2: true,
-      carryText: 'plot in seaborn with your 2 decisions',
-    });
-    expect(screen.getByTestId('carry-plot').getAttribute('aria-describedby')).toBe(STATUS_LINE_ID);
-    expect(
-      screen.getByRole('button', { name: 'Start over' }).getAttribute('aria-describedby')
-    ).not.toContain(STATUS_LINE_ID);
+    // With data the plot button is the action, `.example_data()` quiet and inert, in the same
+    // elements: nothing came or went.
+    rerender(<Composer {...composerProps()} />);
+    expect(screen.getByRole('textbox', { name: 'Message' })).toBe(box);
+    expect(openButton()).toBe(open);
+    expect(exampleButton()).toBe(example);
+    expect(example).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBe(plot);
+    expect(plot).not.toHaveAttribute('aria-disabled');
+
+    // Once the library has a plot the same button updates it.
+    rerender(
+      <Composer
+        {...composerProps({
+          step2: true,
+          hasPlot: true,
+          plot: { kind: 'update', active: false, confirming: false, fresh: false },
+        })}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Update plot' })).toBe(plot);
+    expect(plot).toHaveTextContent('.update_plot() →');
+    expect(plot).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('lets .send() name the status line while an attachment waits, which says it goes with Enter', () => {
-    renderComposer({ running: false, busy: false, attachment });
-    expect(screen.getByRole('button', { name: '.send()' })).toHaveAttribute(
-      'aria-describedby',
-      STATUS_LINE_ID
+  it('names each kind of the plot button in words, and the status line as its description', () => {
+    const { rerender } = render(
+      <Composer
+        {...composerProps({
+          plot: { kind: 'new_data', active: true, confirming: false, fresh: false },
+        })}
+      />
+    );
+    const plot = screen.getByRole('button', { name: 'Plot the new data' });
+    expect(plot).toHaveTextContent('plot the new data');
+    expect(plot).toHaveAttribute('aria-describedby', STATUS_LINE_ID);
+
+    rerender(
+      <Composer
+        {...composerProps({ plot: { kind: 'all', active: true, confirming: true, fresh: false } })}
+      />
+    );
+    // The confirmation the click starts with is in flight: the button says it works on it.
+    expect(screen.getByRole('button', { name: 'Plot in all libraries' })).toHaveTextContent(
+      '.plot_all() …'
+    );
+
+    // A click that starts from the catalogue plot although the library has one says so too.
+    rerender(
+      <Composer
+        {...composerProps({
+          hasPlot: true,
+          plot: { kind: 'update', active: true, confirming: false, fresh: true },
+        })}
+      />
+    );
+    const described = screen.getByRole('button', { name: 'Update plot' });
+    const [line, help] = described.getAttribute('aria-describedby')!.split(' ');
+    expect(line).toBe(STATUS_LINE_ID);
+    expect(document.getElementById(help)).toHaveTextContent(
+      'new from the catalogue plot; keeps your remembered decisions'
     );
   });
 
-  it('keeps the line of all above the box, which the box and the plot button name', () => {
-    renderComposer({ step2: true, plotAll: true, chatLocked: true });
-    const lock = screen.getByText(/plot the table as it is in all 2 libraries at once/);
-    // The box names the line as its description: it must stand.
-    expect(screen.getByLabelText('Message')).toHaveAttribute('aria-describedby', lock.id);
-    expect(
-      screen.getByRole('button', { name: 'Plot in all libraries' }).getAttribute('aria-describedby')
-    ).toBe(`${STATUS_LINE_ID} ${lock.id}`);
+  it('never acts on an inert button, which keeps the keyboard focus', async () => {
+    const user = userEvent.setup();
+    const onPlot = vi.fn();
+    const onExampleData = vi.fn();
+    const props = composerProps({ onPlot, onExampleData });
+    const { rerender } = render(<Composer {...props} />);
+    const plot = screen.getByRole('button', { name: 'Create plot' });
+    plot.focus();
+    await user.keyboard('{Enter}');
+    expect(onPlot).toHaveBeenCalledTimes(1);
+
+    // The plot runs: the button turns inert in its place, and the focus stays on it, so a
+    // second key press does nothing at all.
+    rerender(
+      <Composer
+        {...props}
+        busy
+        plot={{ kind: 'create', active: false, confirming: false, fresh: false }}
+      />
+    );
+    expect(plot).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await user.click(exampleButton());
+    expect(onPlot).toHaveBeenCalledTimes(1);
+    expect(onExampleData).not.toHaveBeenCalled();
   });
 
-  it('drops the line of all while an attachment waits: new data goes, and the box names nothing', () => {
-    renderComposer({ step2: true, plotAll: true, chatLocked: true, attachment });
+  it('sends with Enter and, on a touch screen, with the ↵ inside the box, never with an empty box', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const { rerender } = render(<Composer {...composerProps({ onSubmit })} />);
+    // The `↵` shows only on a coarse pointer (a CSS media query): here it is in the DOM, hidden.
+    const send = screen.getByTestId('send-return');
+    expect(send).toHaveAttribute('aria-label', 'Send');
+    expect(send).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(send);
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Message' }), { key: 'Enter' });
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    rerender(<Composer {...composerProps({ onSubmit, draft: 'log scale on y' })} />);
+    expect(send).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(send);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const box = screen.getByRole('textbox', { name: 'Message' });
+    await user.click(box);
+    await user.keyboard('{Shift>}{Enter}{/Shift}');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+  });
+
+  it('names the status line as the box’s description while all holds it, not with an attachment', () => {
+    const { rerender } = render(
+      <Composer
+        {...composerProps({
+          step2: true,
+          chatLocked: true,
+          plot: { kind: 'all', active: true, confirming: false, fresh: false },
+        })}
+      />
+    );
+    const box = screen.getByRole('textbox', { name: 'Message' });
+    expect(box).toBeDisabled();
+    expect(box).toHaveAttribute('aria-describedby', STATUS_LINE_ID);
+    // The locked line moved into the status line: none stands above the box any more.
     expect(screen.queryByText(/libraries at once/)).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Message')).not.toHaveAttribute('aria-describedby');
+
+    // An attachment, new data, goes all the same: the `↵` sends it, and the box names nothing.
+    rerender(
+      <Composer
+        {...composerProps({
+          step2: true,
+          chatLocked: true,
+          attachment,
+          plot: { kind: 'all', active: false, confirming: false, fresh: false },
+        })}
+      />
+    );
+    expect(box).not.toHaveAttribute('aria-describedby');
+    expect(screen.getByTestId('send-return')).not.toHaveAttribute('aria-disabled');
   });
 });

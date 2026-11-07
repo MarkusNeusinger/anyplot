@@ -94,8 +94,8 @@
  * code carries the Python that ran (`code`). Only text the chat takes
  * (`MAX_MESSAGE_CHARS`) can move there: longer code fails with a line that
  * asks to shorten it.
- * `exampleData` (`.example_data()`, the page's line above the composer while
- * the session has no data) asks for the same in one click as the action
+ * `exampleData` (`.example_data()`, the composer's filled button while the
+ * session has no data) asks for the same in one click as the action
  * `example_data`, never as typed words: the session's first typed message sets
  * the session language, and an action leaves it to the visitor's own words.
  *
@@ -1087,8 +1087,8 @@ function lossOf(state: AgentSessionState, action: Action): ConfirmLoss {
  * drops, whatever action dropped it, the reducer keeps the reason for the step
  * lines (`stepOneLine`, the card's own line), which say what dropped it and
  * end with the plot button's name. It appends no notice to the thread: every
- * state a loss leaves is step 1 with data, where the step line stands right
- * above the composer and says the same. A confirmation clears the reason. A
+ * state a loss leaves is step 1 with data, where the step line, the plot
+ * button's description, says the same. A confirmation clears the reason. A
  * first binding setup after a paste lands while the flag is already clear, so
  * it names nothing. While the flag stays clear the reason follows the data
  * (`reduce`): a new paste clears it, a data change or an undo makes it `data`.
@@ -2551,7 +2551,7 @@ export function useAgentSession({
   const exampleData = useCallback(() => runTurn({ action: 'example_data' }), [runTurn]);
 
   /**
-   * The offer after a switch ("plot in seaborn with your 3 decisions"): the plot
+   * The offer after a switch, which the plot button runs with an empty box: the plot
    * in the new library from its catalogue code, with the plot memory's
    * decisions and the theme the user asked for (`carry_plot`). `label` is the button as it read,
    * for the thread; a carry the chat started has none.

@@ -1,10 +1,10 @@
 /**
  * Shared styles of the agent chat surfaces, after docs/reference/style-guide.md:
- * method-call buttons (§7.4), the filled CTA reserved for the one primary action
- * (`.create_plot()`, which also ends step 1, the one place outside the landing hero
- * that §7.4 allows it), native form controls on the theme tokens, the chat frame (§7.9) and
- * its header row's chips, the panel and card surfaces, and the pinned data header's offset and
- * clearance. Colours come from the CSS variables, so both themes work.
+ * method-call buttons (§7.4), the composer row's four fixed places with the one filled button
+ * (the step's action, the one place outside the landing hero that §7.4 allows it), the message
+ * box, native form controls on the theme tokens, the chat frame (§7.9) with its header row's
+ * chips and the actions of its foot, the panel and card surfaces, and the pinned data header's
+ * offset and clearance. Colours come from the CSS variables, so both themes work.
  */
 
 import { colors, fontSize, typography } from 'src/theme';
@@ -40,23 +40,75 @@ export const ghostButtonSx = {
   '&:hover:not(:disabled)': { color: colors.primary, borderColor: 'var(--ink-muted)' },
 } as const;
 
+/** A button the click would not act on now: `disabled`, or `aria-disabled`, which keeps the focus. */
+const INERT = '&:disabled, &[aria-disabled="true"]';
+/** The hover of a button that acts. */
+const ACTIVE_HOVER = '&:hover:not(:disabled):not([aria-disabled="true"])';
+
 /**
- * The filled CTA (§7.4): ink on the page colour, green on hover. The chat has one, at
- * the composer's right end from the moment data is stored: `.create_plot()` (or
- * `.plot_all()`, or a switch's carry), the action the whole page leads to.
+ * The composer row's buttons (§7.4, §7.9): `.open()`, `.example_data()` and the plot button in
+ * four fixed places, all in one size, 44 px high in the text's size, so moving the filled style
+ * from one place to another changes no width and moves nothing beside them. An inert one is
+ * `aria-disabled`: it dims, its click does nothing and it keeps the keyboard focus.
  */
-export const ctaButtonSx = {
-  ...actionButtonSx,
+const composerButtonSx = {
+  fontFamily: typography.mono,
   fontSize: fontSize.md,
+  fontWeight: 500,
+  border: '1px solid transparent',
+  borderRadius: '4px',
+  px: 1.5,
+  py: 1,
+  minHeight: 44,
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  transition: 'color 0.2s, background 0.2s, border-color 0.2s',
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
+  [INERT]: { opacity: 0.45, cursor: 'default' },
+} as const;
+
+/** A quiet button of the composer row: soft ink, no boundary, green on hover. */
+export const composerQuietSx = {
+  ...composerButtonSx,
+  color: 'var(--ink-soft)',
+  bgcolor: 'transparent',
+  [ACTIVE_HOVER]: { color: colors.primary, bgcolor: 'var(--bg-elevated)' },
+} as const;
+
+/** `.open()`: a ghost button, ink in the quiet rule. */
+export const composerGhostSx = {
+  ...composerButtonSx,
+  color: 'var(--ink)',
+  bgcolor: 'transparent',
+  borderColor: 'var(--rule)',
+  [ACTIVE_HOVER]: { color: colors.primary, borderColor: 'var(--ink-muted)' },
+} as const;
+
+/**
+ * The filled button (§7.4): ink on the page colour, green on hover. The chat has one, the step's
+ * action: `.example_data()` before there is data, the plot button from the moment data is
+ * stored (`.create_plot() →`, `.update_plot() →`, `plot the new data`, or `.plot_all()`).
+ */
+export const composerFilledSx = {
+  ...composerButtonSx,
   color: 'var(--bg-page)',
   bgcolor: 'var(--ink)',
-  border: '1px solid transparent',
-  px: 2,
-  py: 1,
   // The hover uses the light theme's ink in both themes: 14 px white text on the brand
   // green reads 3.4:1 and the dark theme's ink 3.0:1, under the 4.5:1 of WCAG AA, while
   // this dark foreground reads 5.1:1.
-  '&:hover:not(:disabled)': { color: colors.gray[800], bgcolor: colors.primary },
+  [ACTIVE_HOVER]: { color: colors.gray[800], bgcolor: colors.primary },
+} as const;
+
+/**
+ * An action at the end of the line at the chat frame's foot: `.stop()`, `.start_over()` and
+ * `.feedback()`. The line's own small size, a 44 px target at phone width and 32 px from `sm` up.
+ */
+export const statusActionSx = {
+  ...actionButtonSx,
+  minHeight: { xs: 44, sm: 32 },
+  '&:hover:not(:disabled)': {},
+  [ACTIVE_HOVER]: { color: colors.primary, bgcolor: 'var(--bg-elevated)' },
+  [INERT]: { opacity: 0.45, cursor: 'default' },
 } as const;
 
 /** Native input, textarea and select on the theme tokens. */
@@ -73,6 +125,22 @@ export const nativeControlSx = {
   minWidth: 0,
   '&:focus': { borderColor: colors.primary },
   '&:disabled': { opacity: 0.6 },
+} as const;
+
+/**
+ * The message box (§7.9): the one field that takes text, with the brand green as its boundary in
+ * both themes, 3.1:1 against the light page and its own surface and more on the dark one, so it
+ * stands out of the quiet frame (WCAG 1.4.11 asks 3:1 of a control's boundary). Green here is a
+ * line, never text, so it needs no darker shade. The focus adds a ring in the same green.
+ */
+export const messageBoxSx = {
+  ...nativeControlSx,
+  border: `1px solid ${colors.primary}`,
+  borderRadius: '6px',
+  px: 1.25,
+  py: 1.25,
+  minHeight: 44,
+  '&:focus': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
 } as const;
 
 /**

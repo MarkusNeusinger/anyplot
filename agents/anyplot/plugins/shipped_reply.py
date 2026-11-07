@@ -1,4 +1,4 @@
-"""ShippedReply: the closing reply after a shipped plot never asks for `.confirm()`.
+"""ShippedReply: the closing reply after a shipped plot never asks for `.confirm()`, and no reply names the plot button.
 
 A shipped plot (`ok`, `needs_attention`) was drawn from the data the user confirmed: the
 pipeline refuses unconfirmed data (`not_ready`, `data_unconfirmed`), the result says
@@ -30,14 +30,20 @@ every language. The plugin never raises; a failure keeps the reply as it was.
 The page has no `.confirm()` any more: `.create_plot()` confirms the data in its own click,
 and neither `root.md` nor the session block names the old button. The check stays as the
 backstop for a reply that still names it, which after a shipped plot is wrong twice over.
-It does not move to `.create_plot()`: a turn that shipped a plot and then changed the
-bindings or the data (`set_bindings`, `prepare_data`) leaves the data unconfirmed, and then
-`.create_plot()` is the right next step. Only the claim around the name ("to confirm the
-data") tells the two apart, and no code check reads that claim in every language.
+
+The plot button, in every turn: since the composer row has four fixed places, the line at the
+chat's foot names the plot button and what it waits for, and `root.md` says a reply never
+tells the user to press it (`.create_plot()`, `.update_plot()`, `.plot_all()`). The prompt had
+told the root to say so in four places while its reply rules forbade it, so the rule gets the
+same code check: every root reply, not only after a shipped plot, drops the sentences that name
+one of the three, whose names are the same in every language, and logs `plot_button` with the
+same verdicts. A reply in which every sentence names it stays whole, as above; a sentence that
+says what to check without naming the button stays.
 """
 
 import logging
 import re
+from collections.abc import Callable
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_response import LlmResponse
@@ -53,6 +59,8 @@ logger = logging.getLogger(__name__)
 
 CONFIRM = re.compile(r"\bconfirm\(\)", re.IGNORECASE)
 """Step 1's button as a reply names it (`.confirm()`, also without the dot); `reconfirm()` is no match."""
+PLOT_BUTTON = re.compile(r"\b(?:create_plot|update_plot|plot_all)\(\)", re.IGNORECASE)
+"""The composer's plot button by any of its names (`.create_plot()`, `.update_plot()`, `.plot_all()`)."""
 _CLOSERS = "\"'”’)\\]*_`"
 _BREAK = re.compile(
     rf"((?<=[.!?…])[ \t]+|(?<=[.!?…][{_CLOSERS}])[ \t]+|(?<=[.!?…][{_CLOSERS}]{{2}})[ \t]+|(?<=[。！？])[ \t]*)"
@@ -66,8 +74,8 @@ _BARE_MARKER = re.compile(r"^\s*(?:[-*+•]|\d+[.)])?\s*$")
 """A line with no sentence left: empty, or only a list marker."""
 
 
-def drop_confirm(text: str) -> tuple[str, int]:
-    """`text` without its sentences that name `.confirm()`, and how many it dropped.
+def drop_sentences(text: str, pattern: re.Pattern[str]) -> tuple[str, int]:
+    """`text` without its sentences that `pattern` finds, and how many it dropped.
 
     Lines are kept apart (a list, paragraphs), a line left with only its list marker goes, and
     so does the blank line a dropped paragraph leaves behind.
@@ -75,7 +83,7 @@ def drop_confirm(text: str) -> tuple[str, int]:
     lines: list[str] = []
     dropped = 0
     for line in text.split("\n"):
-        if not CONFIRM.search(line):
+        if not pattern.search(line):
             lines.append(line)
             continue
         marker = _MARKER.match(line)
@@ -84,7 +92,7 @@ def drop_confirm(text: str) -> tuple[str, int]:
         sentences, breaks = parts[0::2], [*parts[1::2], ""]
         kept = ""
         for sentence, gap in zip(sentences, breaks, strict=True):
-            if CONFIRM.search(sentence):
+            if pattern.search(sentence):
                 dropped += 1
                 continue
             kept += sentence + gap
@@ -93,6 +101,16 @@ def drop_confirm(text: str) -> tuple[str, int]:
             lines.append(kept)
     joined = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
     return joined, dropped
+
+
+def drop_confirm(text: str) -> tuple[str, int]:
+    """`text` without its sentences that name `.confirm()`, and how many it dropped."""
+    return drop_sentences(text, CONFIRM)
+
+
+def drop_plot_button(text: str) -> tuple[str, int]:
+    """`text` without its sentences that name the plot button, and how many it dropped."""
+    return drop_sentences(text, PLOT_BUTTON)
 
 
 def replace_reply(response: LlmResponse, text: str) -> None:
@@ -111,29 +129,42 @@ def replace_reply(response: LlmResponse, text: str) -> None:
     response.content.parts = parts
 
 
+def _scrubbed(text: str, drop: Callable[[str], tuple[str, int]], hook: str, ledger: RequestLedger) -> str:
+    """`text` after `drop`, logged under `hook`; the text as it was when nothing would be left."""
+    edited, dropped = drop(text)
+    if not edited:
+        attribution(hook, ledger, verdict="kept", sentences=dropped)
+        return text
+    attribution(hook, ledger, verdict="dropped", sentences=dropped)
+    return edited
+
+
 def scrub_shipped_reply(ledger: RequestLedger, response: LlmResponse) -> None:
-    """Drop the `.confirm()` sentences of a root reply in a turn whose plot shipped, in place; never raises.
+    """Drop the `.confirm()` sentences of a root reply in a turn whose plot shipped, and the sentences that name
+    the plot button in any turn, in place; never raises.
 
     The plugin's check, and ReplyLanguage's on the reply it asked for again, which no plugin sees.
     """
     try:
-        if not ledger.shipped_in_turn or ledger.halted:
+        if ledger.halted:
             return
         reply = reply_text(response)
-        if reply is None or reply in fixed_replies() or not CONFIRM.search(reply):
+        if reply is None or reply in fixed_replies():
             return
-        edited, dropped = drop_confirm(reply)
-        if not edited:
-            attribution("shipped_reply", ledger, verdict="kept", sentences=dropped)
-            return
-        replace_reply(response, edited)
-        attribution("shipped_reply", ledger, verdict="dropped", sentences=dropped)
+        edited = reply
+        if ledger.shipped_in_turn and CONFIRM.search(edited):
+            edited = _scrubbed(edited, drop_confirm, "shipped_reply", ledger)
+        if PLOT_BUTTON.search(edited):
+            edited = _scrubbed(edited, drop_plot_button, "plot_button", ledger)
+        if edited != reply:
+            replace_reply(response, edited)
     except Exception as exc:
         logger.warning("shipped reply check failed: %s", type(exc).__name__)
 
 
 class ShippedReplyPlugin(BasePlugin):
-    """Drops the sentences of the root's reply after a shipped plot that ask for `.confirm()`."""
+    """Drops the sentences of the root's reply that ask for `.confirm()` after a shipped plot, or name the plot
+    button in any turn."""
 
     def __init__(self, name: str = "anyplot_shipped_reply") -> None:
         super().__init__(name=name)

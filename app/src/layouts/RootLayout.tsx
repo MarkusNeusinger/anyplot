@@ -34,7 +34,7 @@ export function RootLayout() {
   const { effective } = useTheme();
   const mastheadSticks = pathname !== paths.plots;
   // The agent chat has a feedback row of its own on every result, and the chat's for a session
-  // without one; on a phone the site's button covered the composer's `.send()` and the replies.
+  // without one; on a phone the site's button covered the composer's buttons and the replies.
   const siteFeedback = pathname !== paths.agent;
 
   // Set synchronously during render so the first pageview from a child page's

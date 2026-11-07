@@ -8,6 +8,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import {
   pendingReply,
+  plotButtonKind,
   plotButtonLabel,
   runLine,
   runView,
@@ -56,8 +57,9 @@ describe('the waits of a turn', () => {
     expect(pendingReply(stepped)).toBeNull();
   });
 
-  it('names .stop() in the status line while a plot runs, and that it stops once pressed', () => {
-    expect(runLine(running(queued('create_plot')))).toBe('plotting… .stop() to cancel');
+  it('says in the status line that a plot runs and how long it takes, and that it stops once pressed', () => {
+    // `.stop()` stands at the line's end as a button of its own, so the words leave it out.
+    expect(runLine(running(queued('create_plot')))).toBe('drawing your plot · usually 1–3 min');
     expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toBe('stopping…');
     // A turn without a pipeline step keeps the step's line: its in-progress line says what runs.
     expect(runLine(running(queued('example_data')))).toBeNull();
@@ -174,6 +176,26 @@ describe('stepOneLine', () => {
     expect(plotButtonLabel(step1({ confirmLoss: 'data' }))).toBe('plot the new data');
   });
 
+  it('names the plot button .update_plot() once the library has a plot, in its own library only', () => {
+    const plotted = {
+      1: { version: 1, library: 'matplotlib' },
+    } as unknown as AgentSessionState['versions'];
+    expect(plotButtonKind(step1({ dataConfirmed: true, versions: plotted }))).toBe('update');
+    expect(plotButtonLabel(step1({ dataConfirmed: true, versions: plotted }))).toBe(
+      '.update_plot()'
+    );
+    // Bindings changed after the plot: the button keeps its name, and the step line leads to it.
+    expect(stepOneLine(step1({ versions: plotted, confirmLoss: 'bindings' }))).toBe(
+      'bindings changed · check them above, then .update_plot()'
+    );
+    // New data says so, with or without a plot, also a paste after the plot, which clears the
+    // loss's reason; a switch to a library without a plot creates it.
+    expect(plotButtonKind(step1({ versions: plotted, confirmLoss: 'data' }))).toBe('new_data');
+    expect(plotButtonKind(step1({ versions: plotted }))).toBe('new_data');
+    expect(plotButtonKind(step1({ versions: plotted, library: 'seaborn' }))).toBe('create');
+    expect(plotButtonKind(step1({ versions: plotted }), true)).toBe('all');
+  });
+
   it('leads to .plot_all() while all is pressed, where no .create_plot() shows', () => {
     expect(stepOneLine(step1(), '.plot_all()')).toBe(
       'check the preview and the bindings above, then .plot_all()'
@@ -207,8 +229,8 @@ describe('statusLine', () => {
   const options = {
     action: '.create_plot()',
     attachmentLine: null,
-    carryText: null,
-    chatLocked: false,
+    carry: null,
+    lockedLibraries: null,
   };
   const plotted = {
     1: { version: 1, library: 'matplotlib' },
@@ -248,7 +270,7 @@ describe('statusLine', () => {
     const confirmed = ready({ dataset, dataConfirmed: true, run, items: running(run).items });
     expect(statusLine(confirmed, options)).toEqual({
       step: 2,
-      text: 'step 2 of 2 · plotting… .stop() to cancel',
+      text: 'step 2 of 2 · drawing your plot · usually 1–3 min',
     });
     expect(
       statusLine(confirmed, { ...options, attachmentLine: 'the attached table is read' }).text
@@ -260,14 +282,25 @@ describe('statusLine', () => {
     expect(statusLine(confirmed, options).text).toBe(
       'step 2 of 2 · create the plot as it is, or say first what it should do differently'
     );
-    expect(
-      statusLine(confirmed, { ...options, carryText: 'plot in seaborn with your 2 decisions' }).text
-    ).toBe(
-      'step 2 of 2 · plot in seaborn with your 2 decisions, or say first what it should do differently'
+    // After a switch the plot button keeps its name: the line names the decisions it keeps.
+    const carry = { library: 'seaborn', decisions: 2 };
+    expect(statusLine(confirmed, { ...options, carry }).text).toBe(
+      'step 2 of 2 · 2 decisions kept in seaborn · create the plot as it is, or say first what it should do differently'
     );
-    // While `all` holds the box, the composer's own line says why; the status line names the data.
-    expect(statusLine(confirmed, { ...options, chatLocked: true }).text).toBe(
-      'step 2 of 2 · data fits · 2 rows · 0 columns · version 3'
+    expect(statusLine(confirmed, { ...options, carry: { ...carry, decisions: 0 } }).text).toBe(
+      'step 2 of 2 · create the plot as it is, or say first what it should do differently'
+    );
+    expect(
+      statusLine(
+        { ...confirmed, versions: plotted },
+        { ...options, action: '.update_plot()', carry }
+      ).text
+    ).toBe(
+      'step 2 of 2 · 2 decisions kept in seaborn · .update_plot() brings them in, or ask for a change'
+    );
+    // While `all` holds the box, the line says what `.plot_all()` does and how to chat again.
+    expect(statusLine(confirmed, { ...options, lockedLibraries: 15 }).text).toBe(
+      'step 2 of 2 · plot the table as it is in all 15 libraries at once · turn all off to chat'
     );
     expect(statusLine({ ...confirmed, versions: plotted }, options).text).toBe(
       'step 2 of 2 · data fits · 2 rows · 0 columns · version 3'

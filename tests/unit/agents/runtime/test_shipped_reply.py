@@ -187,6 +187,52 @@ class TestPlugin:
 
         assert reply_text(await check(response(types.Part(text=text)))) == text
 
+    @pytest.mark.parametrize("shipped", [True, False])
+    async def test_a_sentence_that_names_the_plot_button_goes_in_any_turn(
+        self, shipped: bool, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        """The line at the chat's foot names the plot button; a reply never sends the user to it, before a
+        plot (a kept wish, a `data_unconfirmed`) or after one."""
+        ledger.shipped_in_turn = shipped
+        summary = "48 rows and 4 columns: x is month, y is revenue."
+        text = f"{summary} Check the bindings and press `.create_plot()` to draw it."
+
+        reply = await check(response(types.Part(text=text)))
+
+        assert reply_text(reply) == summary
+        assert lines == [{"verdict": "dropped", "sentences": 1}]
+
+    @pytest.mark.parametrize(
+        ("text", "kept", "dropped"),
+        [
+            (f"{READY} Type a change and press `.update_plot()`.", READY, 1),
+            ("Ich merke mir den Titel. Drück dann .create_plot().", "Ich merke mir den Titel.", 1),
+            (f"{READY}\n\n- Use `.plot_all()` for every library.", READY, 1),
+            ("Press `.create_plot()`.", "", 1),
+        ],
+    )
+    def test_drops_every_sentence_that_names_the_plot_button(self, text: str, kept: str, dropped: int) -> None:
+        assert plugin_module.drop_plot_button(text) == (kept, dropped)
+
+    async def test_a_reply_after_a_shipped_plot_loses_both_asks(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        text = f"{READY} Confirm with `.confirm()`. Then press `.update_plot()` for more."
+
+        reply = await check(response(types.Part(text=text)))
+
+        assert reply_text(reply) == READY
+        assert lines == [{"verdict": "dropped", "sentences": 1}, {"verdict": "dropped", "sentences": 1}]
+
+    async def test_a_reply_that_only_names_the_plot_button_stays_whole(
+        self, ledger: RequestLedger, lines: list[dict[str, Any]]
+    ) -> None:
+        ledger.shipped_in_turn = False
+        text = "Press `.create_plot()` once the bindings look right."
+
+        assert reply_text(await check(response(types.Part(text=text)))) == text
+        assert lines == [{"verdict": "kept", "sentences": 1}]
+
     async def test_a_language_reask_gets_the_same_check(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch, lines: list[dict[str, Any]]
     ) -> None:

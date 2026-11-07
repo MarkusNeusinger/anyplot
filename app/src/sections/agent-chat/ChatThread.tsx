@@ -180,16 +180,17 @@ function Item({
         </Box>
       );
     case 'action':
-      // The page's own turns as their buttons: `.example_data()` without data, `.create_plot()`
-      // or `.start_over()`, the carry after a library switch. A plot names the library it is made
-      // in, which the carry's text names already.
+      // The page's own turns as their buttons: `.example_data()` without data, the plot button
+      // as it read (also for the carry after a library switch, since the button keeps its name)
+      // or `.start_over()`. A plot names the library it is made in, which the text of a carry the
+      // chat started (no button, no label) names already.
       return (
         <Box data-testid="action-item" sx={{ ...promptSx, fontFamily: typography.mono }}>
           <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
             ❯
           </Box>
           {actionText(item)}
-          {isPlotAction(item.action) && item.action !== 'carry_plot' && (
+          {isPlotAction(item.action) && (item.action !== 'carry_plot' || !!item.label) && (
             <Box component="span" sx={{ color: 'var(--ink-muted)', ml: 1 }}>
               # {item.library}
             </Box>
