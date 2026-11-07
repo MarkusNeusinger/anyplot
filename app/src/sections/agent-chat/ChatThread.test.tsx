@@ -579,6 +579,40 @@ describe('ChatThread data items', () => {
 
     await userEvent.click(toggle);
     expect(within(stub).queryByRole('table')).not.toBeInTheDocument();
+    // Each version is a card of its own, named as a plot card is.
+    expect(screen.getByRole('article', { name: 'Data version 2' })).toBe(stub);
+  });
+
+  it('says a file name the content check withheld as withheld, as the live card does', async () => {
+    const withheld = {
+      n: 1,
+      change: 'paste',
+      summary: 'pasted',
+      label: 'data v1 · pasted',
+      rows: 1,
+      columns: 1,
+      sheet: null,
+      fileName: '(name withheld)',
+      changes: [],
+      preview: [['1']],
+      profile: {
+        rows: 1,
+        columns: [{ name: 'a', dtype: 'integer', missing: 0, unique: 1 }],
+        source_format: 'csv',
+        decimal: '.',
+        warnings: [],
+      },
+    } satisfies DataSnapshot;
+    renderItems(
+      ready([
+        { id: 1, kind: 'data_stub', rows: 1, columns: 1, snapshot: withheld, card: 2 },
+        { id: 2, kind: 'data' },
+      ])
+    );
+    await userEvent.click(screen.getByTestId('data-stub-label'));
+    expect(screen.getByTestId('folded-data-source')).toHaveTextContent(
+      /^read as csv · from a file, name withheld by the content check$/
+    );
   });
 
   it('opens a chapter where the step changes, and a library switch is a line of its own', () => {

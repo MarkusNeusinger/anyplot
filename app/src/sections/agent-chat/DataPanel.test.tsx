@@ -966,6 +966,30 @@ describe('DataPanel version', () => {
     }
   });
 
+  it('follows a press that gave no focus (Safari), unless a press outside came after it', () => {
+    const plain = (next: DataSnapshot, last: boolean, state = changedState(2)) => (
+      <Thread state={state} version={next} last={last} onUndo={vi.fn()} />
+    );
+    const undone = changedState(1, { dataChange: { kind: 'undone', version: 1 } });
+    // A press on `.undo()` that focuses nothing, as Safari's click on a button does.
+    const view = render(plain(snapshot(2, 'turn', 'changed'), false));
+    fireEvent.pointerDown(
+      within(screen.getByTestId('data-card')).getByRole('button', { name: '.undo()' })
+    );
+    view.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
+    expect(screen.getByTestId('data-card-label')).toHaveFocus();
+    view.unmount();
+
+    // The same press, then one on the page outside while the version is on its way.
+    const again = render(plain(snapshot(2, 'turn', 'changed'), false));
+    fireEvent.pointerDown(
+      within(screen.getByTestId('data-card')).getByRole('button', { name: '.undo()' })
+    );
+    fireEvent.pointerDown(document.body);
+    again.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
+    expect(document.body).toHaveFocus();
+  });
+
   it('never pulls the focus back into the card after a press on the page outside it', async () => {
     const view = render(
       <Thread

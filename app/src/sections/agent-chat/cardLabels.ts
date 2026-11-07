@@ -50,6 +50,20 @@ export function dataVersionLabel(
   };
 }
 
+/** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
+const FILE_NAME_WITHHELD = '(name withheld)';
+
+/**
+ * The file a data version came from, as its card's source line names it: `from "sales.csv"`, or
+ * that the content check withheld the name. The live card and an older version's folded card say
+ * it alike.
+ */
+export function fileSource(name: string): string {
+  return name === FILE_NAME_WITHHELD
+    ? 'from a file, name withheld by the content check'
+    : `from "${name}"`;
+}
+
 /**
  * A plot card's label on its border and its folded line: `plot v2 · matplotlib · title in German`,
  * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`). It names

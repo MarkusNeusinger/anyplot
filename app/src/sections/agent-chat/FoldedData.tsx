@@ -20,7 +20,7 @@ import Box from '@mui/material/Box';
 
 import type { ChatItem, DataSnapshot } from 'src/hooks/useAgentSession';
 import { CardFrame } from 'src/sections/agent-chat/CardFrame';
-import { dataCardLabel, dataVersionLabel } from 'src/sections/agent-chat/cardLabels';
+import { dataCardLabel, dataVersionLabel, fileSource } from 'src/sections/agent-chat/cardLabels';
 import { PreviewTable, WarningList } from 'src/sections/agent-chat/dataCardParts';
 import { labelSx, readableSx } from 'src/sections/agent-chat/styles';
 import { typography } from 'src/theme';
@@ -30,7 +30,7 @@ function VersionContent({ snapshot }: { snapshot: DataSnapshot }) {
   const { profile } = snapshot;
   const source = [
     `read as ${profile.source_format}`,
-    snapshot.fileName ? `from "${snapshot.fileName}"` : null,
+    snapshot.fileName ? fileSource(snapshot.fileName) : null,
     snapshot.sheet ? `sheet "${snapshot.sheet}"` : null,
   ].filter(Boolean);
   return (
@@ -91,7 +91,10 @@ export function FoldedData({ item }: { item: Extract<ChatItem, { kind: 'data_stu
   }
   const label = dataVersionLabel(snapshot);
   return (
+    // An article named like a plot card's ("Plot version 1"): each version is a card of its own.
     <CardFrame
+      component="article"
+      aria-label={`Data version ${snapshot.n}`}
       label={label.text}
       spokenLabel={label.spoken}
       toggle={{ expanded: open, onToggle: () => setOpen(value => !value), bodyId }}
