@@ -1816,7 +1816,8 @@ def table_block(
         width=width,
         values=found,
         skipped=skipped,
-        headerless=start == first,
+        # A first row of years over the values (`Land,2020,2021`) reads as a data row, yet it is the header.
+        headerless=start == first and not _header_line(records[start]) and not _period_header(records[start]),
     )
 
 
@@ -3904,9 +3905,9 @@ def _build(
         else:
             column.id_like = id_like(header)
             column.span_like = span_like(header)
-            marked += _blank_marks(column)
             if not canonical and not column.text_only:
                 _blank_not_available(column)
+            marked += _blank_marks(column)
             _type_column(column)
     if marked:
         warnings.append(
@@ -4051,17 +4052,25 @@ def _blank_not_available(column: _Column) -> None:
     A statistics office writes `:` for a value it does not have (persona test of 2026-11-06: a
     Eurostat export, whose every year column stayed text for it). The blanked cells join the
     column's missing tokens, so its note counts them (`_fidelity_notes`, `cells read as missing`).
+    It runs before `_blank_marks`, and its trial blanks the declared mark's cells too, so a column
+    that holds both (`-999` declared, and `:`) reads as numbers; the mark's cells stay for
+    `_blank_marks` to blank and count, also when `:` is the declared mark.
     """
-    rows = {row for row, cell in enumerate(column.source) if cell in NOT_AVAILABLE}
+    marked = set(column.mark_rows)
+    rows = {row for row, cell in enumerate(column.source) if cell in NOT_AVAILABLE and row not in marked}
     if not rows:
         return
-    blanked = ["" if row in rows else cell for row, cell in enumerate(column.source)]
-    trial = _Column(name="", source=blanked, cells=[], id_like=column.id_like)
+    trial = _Column(
+        name="",
+        source=["" if row in rows or row in marked else cell for row, cell in enumerate(column.source)],
+        cells=[],
+        id_like=column.id_like,
+    )
     _type_column(trial)
     if trial.dtype not in ("integer", "number", "datetime"):
         return
     column.missing_tokens.update(column.source[row] for row in rows)
-    column.source = blanked
+    column.source = ["" if row in rows else cell for row, cell in enumerate(column.source)]
 
 
 def _flag_columns(headers: list[str], columns: Sequence[_Column]) -> tuple[list[int], Counter[str]]:
@@ -4070,7 +4079,7 @@ def _flag_columns(headers: list[str], columns: Sequence[_Column]) -> tuple[list[
     A statistics export writes a flag after each value (persona test of 2026-11-06: `p`
     provisional, `e` estimated, `b` a break in the series) in a column with an empty header, so
     the table read `column_3`, `column_5` between its years. Such a column is one with an empty
-    header right of an integer or number column whose filled cells are each one to three letters
+    header right of a named integer or number column whose filled cells are each one to three letters
     (`_FLAG`) and none a code of two or three capitals (`CH`, `USA`: `_LETTER_CODE`, a column of
     countries). It stays in the table as a text column: a flag says something about its value that
     a plot may show, as no parser rule drops a pasted column that holds anything (an empty column
@@ -4082,15 +4091,20 @@ def _flag_columns(headers: list[str], columns: Sequence[_Column]) -> tuple[list[
     flags: Counter[str] = Counter()
     for index in range(1, len(columns)):
         column, left = columns[index], columns[index - 1]
-        if headers[index] or column.dtype != "text" or left.dtype not in ("integer", "number"):
+        # A number column without a name gives the flags none to take: such a column stays as it is.
+        if (
+            headers[index]
+            or not headers[index - 1]
+            or column.dtype != "text"
+            or left.dtype not in ("integer", "number")
+        ):
             continue
         present = [cell for cell in column.cells if cell]
         if not present or not all(_FLAG.fullmatch(cell) and not _LETTER_CODE.fullmatch(cell) for cell in present):
             continue
         found.append(index)
         flags.update(present)
-        if headers[index - 1]:
-            headers[index] = headers[index - 1] + FLAG_SUFFIX
+        headers[index] = headers[index - 1] + FLAG_SUFFIX
     return found, flags
 
 

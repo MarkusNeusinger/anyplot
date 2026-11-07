@@ -4067,6 +4067,14 @@ class TestCommentLines:
         assert parsed.context_lines == ["# Invented log", "# exported today"]
         assert not warned(parsed, "comment line")
 
+    def test_a_header_of_years_below_the_comments_is_the_header(self) -> None:
+        """Its years read as values, yet it is a header: a comment line that fits never takes its place."""
+        parsed = parse_dataset("# Invented export\n# a,b,c\nLand,2020,2021\nCH,8.6,8.7\nAT,8.9,9.0\nIT,59.4,59.2\n")
+
+        assert parsed.column_dtypes == {"Land": "text", "2020": "number", "2021": "number"}
+        assert parsed.context_lines == ["# Invented export", "# a,b,c"]
+        assert not warned(parsed, "comment line")
+
     def test_a_quote_in_a_comment_line_opens_no_quoted_cell(self) -> None:
         """Read with the table, the quote ran to the end of the text and the paste became one column of text."""
         parsed = parse_dataset('# Invented rain log\n# Remark, "unclosed note\nday,rain\n1,2.5\n2,0.0\n3,1.5\n')
@@ -4298,6 +4306,7 @@ class TestFlagsAndNotAvailable:
             "value,\n1,CH\n2,DE\n3,AT\n",  # country codes under an empty header
             "Land,,2021\nA,p,1.5\nB,e,2.5\nC,,3.5\n",  # letters right of a text column
             "Land,2021,\nA,1.5,note\nB,2.5,\nC,3.5,x\n",  # a word is no flag
+            "Land,,\nA,1.5,p\nB,2.5,\nC,3.5,e\n",  # beside a number column without a name to take
         ],
     )
     def test_letters_that_are_no_flags_keep_their_column(self, text: str) -> None:
@@ -4313,6 +4322,21 @@ class TestFlagsAndNotAvailable:
         assert column(parsed, "Wert").missing == 1
         assert warned(parsed, "column 'Wert': 1 cell read as missing (':')")
         assert parsed.csv.splitlines()[1:] == ["A,1.5,:", "B,,x", "C,3.5,y"]
+
+    def test_a_declared_mark_and_a_colon_in_one_column_are_both_missing(self) -> None:
+        parsed = parse_dataset("Missing values: X\n\nLand,Wert\nA,1.5\nB,X\nC,:\nD,4.5\n")
+
+        assert column(parsed, "Wert").dtype == "number"
+        assert column(parsed, "Wert").missing == 2
+        assert warned(parsed, "1 cell of number or date columns matched the missing-value mark the notes declare")
+        assert warned(parsed, "column 'Wert': 1 cell read as missing (':')")
+
+    def test_a_colon_declared_as_the_mark_is_counted_once(self) -> None:
+        parsed = parse_dataset("Missing values: :\n\nLand,Wert\nA,1.5\nB,:\nC,4.5\n")
+
+        assert column(parsed, "Wert").missing == 1
+        assert warned(parsed, "1 cell of number or date columns matched the missing-value mark the notes declare")
+        assert not warned(parsed, "read as missing")
 
     def test_the_services_own_csv_keeps_a_colon(self) -> None:
         parsed = parse_dataset("a,b\n1,:\n2,3\n", canonical=True)
