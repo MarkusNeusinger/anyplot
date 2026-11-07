@@ -14,8 +14,8 @@ export type AgentStep = 1 | 2;
 
 /**
  * The status line at the chat frame's foot (`StatusLine`, `ChatFrame.tsx`), which the composer's
- * plot button names as its description, and the message box while `all` holds it. It holds the
- * id the pinned header's summary had, so a description that points at it stays valid while the
+ * plot button names as its description, and the message box while `all` holds it. It stands in
+ * every state of an open session, so a description that points at it stays valid while the
  * composer changes around it.
  */
 export const STATUS_LINE_ID = 'agent-status-line';
@@ -74,10 +74,26 @@ export function plotButtonLabel(state: AgentSessionState): string {
       : '.create_plot()';
 }
 
-/** The data's shape in one line: `2 rows · 2 columns · version 1`. */
-export function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
-  const { profile, version } = dataset.parsed;
-  return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
+/**
+ * The live data card's version in the session (`DataSnapshot.n`, the `3` of `data v3` on its
+ * label), the number every line of the page names the data by; null for a thread built by hand,
+ * whose card carries no snapshot. The server's own `version` starts over with every paste and
+ * goes back on `.undo()`, so the page never shows it.
+ */
+export function liveDataVersion(state: AgentSessionState): number | null {
+  for (let index = state.items.length - 1; index >= 0; index -= 1) {
+    const item = state.items[index];
+    if (item.kind === 'data') return item.snapshot?.n ?? null;
+  }
+  return null;
+}
+
+/** Step 2's line for the confirmed data: `data v3 fits · 48 rows · 4 columns`. */
+function dataFits(state: AgentSessionState, dataset: NonNullable<AgentSessionState['dataset']>) {
+  const { profile } = dataset.parsed;
+  const version = liveDataVersion(state);
+  const name = version === null ? 'data' : `data v${version}`;
+  return `${name} fits · ${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')}`;
 }
 
 /**
@@ -169,7 +185,7 @@ function stepTwoLine(state: AgentSessionState, options: StatusLineOptions): stri
     return `${kept}create the plot as it is, or say first what it should do differently`;
   }
   if (kept) return `${kept}${options.action} brings them in, or ask for a change`;
-  return `data fits · ${dataShape(state.dataset)}`;
+  return dataFits(state, state.dataset);
 }
 
 /**
@@ -258,56 +274,17 @@ export function runLine(state: AgentSessionState): string | null {
   return state.run?.stopping ? 'stopping…' : RUN_LINE;
 }
 
-/** The folded lists by the item list they came from; the reducer never changes a list in place. */
-const FOLDED = new WeakMap<ChatItem[], ChatItem[]>();
-
 /**
- * The thread's items as the page shows them until it renders a version per item: one card per
- * paste, where its first version stood, showing the latest one (or, once a later paste replaced
- * it, one stub of the last version it showed), and no line for a library switch. The reducer
- * keeps an item per data version (`placeData`): the versions a card's own controls or a turn
- * made fold back into the card they continued (`data_stub.card`). Returns `items` itself when
- * there is nothing to fold, and the same folded list for the same `items`, so a render that
- * changed no item hands the thread the list it had.
- */
-export function shownItems(items: ChatItem[]): ChatItem[] {
-  let shown = FOLDED.get(items);
-  if (!shown) {
-    shown = foldItems(items);
-    FOLDED.set(items, shown);
-  }
-  return shown;
-}
-
-function foldItems(items: ChatItem[]): ChatItem[] {
-  const lineOf = (item: ChatItem) =>
-    item.kind === 'data' ? item.id : item.kind === 'data_stub' ? (item.card ?? item.id) : null;
-  // The item that stands for a card's versions: the live card, or the stub a paste froze it into.
-  const heads = new Map<number, ChatItem>();
-  for (const item of items) if (lineOf(item) === item.id) heads.set(item.id, item);
-  const shown: ChatItem[] = [];
-  const placed = new Set<number>();
-  for (const item of items) {
-    const line = lineOf(item);
-    if (item.kind === 'switch' || (line !== null && placed.has(line))) continue;
-    if (line !== null) placed.add(line);
-    shown.push(line !== null ? (heads.get(line) ?? item) : item);
-  }
-  return shown.length === items.length && shown.every((item, index) => item === items[index])
-    ? items
-    : shown;
-}
-
-/**
- * The thread and the progress timeline of a run, as the page shows them (`shownItems`). While
- * the timeline stands below the thread, an item the run sends in (a reply, a refusal, a note)
- * would land above it and push it and the composer down: it waits, and the user's own message
- * or action stays in view. The run's result card (a plot, or the card of a run that failed)
- * takes the timeline's place, and the waiting items come with it; a run that ends without one
- * shows them as it ends.
+ * The thread and the progress timeline of a run, as the page shows them: every item the reducer
+ * keeps, a version per data item and a line per library switch (`threadModel.ts` puts them in
+ * chapters). While the timeline stands below the thread, an item the run sends in (a reply, a
+ * refusal, a note) would land above it and push it and the composer down: it waits, and the
+ * user's own message or action stays in view. The run's result card (a plot, or the card of a run
+ * that failed) takes the timeline's place, and the waiting items come with it; a run that ends
+ * without one shows them as it ends. Returns `state.items` itself while nothing waits.
  */
 export function runView(state: AgentSessionState): { items: ChatItem[]; timeline: boolean } {
-  const items = shownItems(state.items);
+  const items = state.items;
   if (!showsTimeline(state)) return { items, timeline: false };
   let ask = items.length - 1;
   while (ask >= 0 && items[ask].kind !== 'user' && items[ask].kind !== 'action') ask -= 1;

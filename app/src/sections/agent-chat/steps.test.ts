@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type AgentSessionState,
   type ChatItem,
+  type DataSnapshot,
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
@@ -302,8 +303,14 @@ describe('statusLine', () => {
     expect(statusLine(confirmed, { ...options, lockedLibraries: 15 }).text).toBe(
       'step 2 of 2 · plot the table as it is in all 15 libraries at once · turn all off to chat'
     );
+    // The confirmed data by the number its card carries (`data v3`), never the server's version,
+    // which starts over with every paste; a thread built without snapshots names no number.
     expect(statusLine({ ...confirmed, versions: plotted }, options).text).toBe(
-      'step 2 of 2 · data fits · 2 rows · 0 columns · version 3'
+      'step 2 of 2 · data fits · 2 rows · 0 columns'
+    );
+    const card = { id: 7, kind: 'data' as const, snapshot: { n: 3 } as DataSnapshot };
+    expect(statusLine({ ...confirmed, versions: plotted, items: [card] }, options).text).toBe(
+      'step 2 of 2 · data v3 fits · 2 rows · 0 columns'
     );
   });
 

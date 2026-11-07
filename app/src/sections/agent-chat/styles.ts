@@ -3,8 +3,8 @@
  * method-call buttons (§7.4), the composer row's plot button, the one filled button (the step's
  * action, the one place outside the landing hero that §7.4 allows it), the message
  * box, native form controls on the theme tokens, the chat frame (§7.9) with its header row's
- * chips and the actions of its foot, the panel and card surfaces, and the pinned data header's
- * offset and clearance. Colours come from the CSS variables, so both themes work.
+ * chips and the actions of its foot, the panel and card surfaces, and the room the site's
+ * masthead takes. Colours come from the CSS variables, so both themes work.
  */
 
 import { colors, fontSize, typography } from 'src/theme';
@@ -217,24 +217,16 @@ export const cardFrameSx = {
 } as const;
 
 /**
- * Where the pinned data header sticks: just under the site's sticky masthead
- * (`src/layouts/RootLayout.tsx`, 42 to 44 px high, z-index 100). A few pixels
- * less than its height, so the masthead covers the header's top edge instead of
- * leaving a gap the thread shows through.
+ * The room the site's sticky masthead takes at the top of the window
+ * (`src/layouts/RootLayout.tsx`, 42 to 44 px high, z-index 100), with a gap: the
+ * chat page's `scroll-padding-top`. A control that gets the keyboard focus, a
+ * chapter a jump goes to and the data card the focus follows land below the
+ * masthead, never under it (WCAG 2.4.11). A per-element `scroll-margin-top` is
+ * not enough: Chrome's keyboard focus checks whether a control is in view
+ * against the padded viewport only, so a control under the masthead counts as
+ * in view and stays hidden.
  */
-export const PINNED_TOP = 40;
-
-/**
- * The room the masthead and the pinned data header take at the top of the
- * window (the header is 42 to 49 px high, two lines at phone width), with a gap.
- * While the header shows, the page's `scroll-padding-top`: a control that gets
- * the keyboard focus, or a card brought into view, lands below the header, never
- * under it (WCAG 2.4.11). A per-element `scroll-margin-top` is not enough:
- * Chrome's keyboard focus checks whether a control is in view against the
- * padded viewport only. The header's own toggle sits in the padding where it
- * sticks, so code focuses it with `preventScroll`.
- */
-export const PINNED_CLEARANCE = PINNED_TOP + 64;
+export const MASTHEAD_CLEARANCE = 56;
 
 /** Read by screen readers, invisible on screen. */
 export const visuallyHiddenSx = {

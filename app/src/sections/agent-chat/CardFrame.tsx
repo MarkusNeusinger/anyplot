@@ -1,20 +1,25 @@
 /**
  * A card of the agent chat's thread in the v4 design (style guide §7.9): a 1 px rule with the
  * card's label on its top border, the chat frame's tab-label construction at a card's size
- * (`ChatFrame.tsx`). The label says what the card holds: the data card's shape (`data · 48 rows
- * × 4 cols`), or a plot card's version, library and request (`plot v2 · matplotlib · title in
- * German`).
+ * (`ChatFrame.tsx`). The label says what the card holds: a data version's number, how it came
+ * about and its shape (`data v3 · made long · 48 rows × 4 cols`), or a plot card's version, library
+ * and request (`plot v2 · matplotlib · title in German`).
  *
- * A plot card can fold, and then its label is its toggle: open, the card's content stands under
- * the label on the border; folded, the card is that label alone, one line in the thread's flow
- * with `▸` before it. It is the same button in both, in the same place of the tree, so a click
- * leaves the keyboard focus on it. Its name keeps the label's words in their order (`Plot v2,
- * matplotlib, title in German`, WCAG 2.5.3), the `·` read badly, and `aria-expanded` says whether
- * the card is open; the name stays the same in both states. A label that names no control (the
- * data card's) is read out in words instead: `data, 48 rows by 4 columns`.
+ * A plot card and an older data version fold, and then the label is the toggle: open, the card's
+ * content stands under the label on the border; folded, the card is that label alone, one line in
+ * the thread's flow with `▸` before it. It is the same button in both, in the same place of the
+ * tree, so a click leaves the keyboard focus on it. Its name keeps the label's words in their
+ * order (`Plot v2, matplotlib, title in German`, WCAG 2.5.3), the `·` read badly, and
+ * `aria-expanded` says whether the card is open; the name stays the same in both states. A label
+ * that names no control (the live data card's) is read out in words instead: `Data v3, made long,
+ * 48 rows by 4 columns`.
  *
  * On the border the label stays on one line and ends in an ellipsis where the card is too narrow
  * for it (a long request on a phone); the folded line wraps instead.
+ *
+ * A label that names no control can still take the focus from code (`labelRef`): the live data
+ * card puts it there when the control the user pressed went with the version it made
+ * (`useFollowFocus`).
  */
 
 import Box from '@mui/material/Box';
@@ -42,6 +47,14 @@ const borderLabelSx = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   maxWidth: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 20px)' },
+} as const;
+
+/** A label the focus can land on from code: the toggle's focus ring, no hover, since it does nothing. */
+const focusableLabelSx = {
+  ...borderLabelSx,
+  borderRadius: '4px',
+  '&:focus': { outline: 'none' },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
 } as const;
 
 /** The label as a toggle on the border: the same place, a button's hover and focus ring. */
@@ -90,12 +103,20 @@ export interface CardFrameProps {
   toggle?: CardFrameToggle;
   /** The test id of the label, for the page's tests. */
   labelTestId?: string;
+  /**
+   * The label of a card that does not fold, as a target for the focus from code (`tabIndex` -1):
+   * never in the tab order, since it names no control.
+   */
+  labelRef?: React.Ref<HTMLElement>;
   ref?: React.Ref<HTMLElement>;
   id?: string;
   'aria-label'?: string;
   'aria-describedby'?: string;
   'aria-live'?: 'off' | 'polite' | 'assertive';
   'data-testid'?: string;
+  /** The focus entering and leaving the card, its label and content included (`useFollowFocus`). */
+  onFocus?: React.FocusEventHandler<HTMLElement>;
+  onBlur?: React.FocusEventHandler<HTMLElement>;
   children?: React.ReactNode;
 }
 
@@ -105,6 +126,7 @@ export function CardFrame({
   spokenLabel,
   toggle,
   labelTestId,
+  labelRef,
   children,
   ...rest
 }: CardFrameProps) {
@@ -128,7 +150,13 @@ export function CardFrame({
       {label}
     </Box>
   ) : (
-    <Box component="span" data-testid={labelTestId} sx={borderLabelSx}>
+    <Box
+      component="span"
+      data-testid={labelTestId}
+      ref={labelRef}
+      tabIndex={labelRef ? -1 : undefined}
+      sx={labelRef ? focusableLabelSx : borderLabelSx}
+    >
       {spokenLabel ? (
         <>
           <span aria-hidden>{label}</span>{' '}

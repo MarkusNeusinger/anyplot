@@ -36,7 +36,7 @@ describe('DataView', () => {
   it('shows every value exactly as the file holds it, with the dtype in each header', async () => {
     const { onShown } = renderView(() => Promise.resolve(CSV));
     const dialog = await screen.findByRole('dialog', {
-      name: /every row · 3 rows · 2 columns · version 2/,
+      name: /every row · 3 rows · 2 columns · data v2/,
     });
     const grid = await within(dialog).findByRole('grid');
     expect(within(grid).getByRole('columnheader', { name: /city\s*text/ })).toBeInTheDocument();

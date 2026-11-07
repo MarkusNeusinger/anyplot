@@ -1,8 +1,9 @@
 /**
  * The agent chat's thread as chapters: a pure view over the session's items
  * (`useAgentSession`), for the chapter lines, the folded versions and the counts the
- * chat shows. The thread reads only the plot cards' labels from it yet (`plotSummaries`)
- * and renders the items as before (`shownItems` in `steps.ts`).
+ * chat shows. The thread renders its rows (`ChatThread.tsx`): a chapter's line
+ * (`ChapterLine.tsx`) before the chapter's first item, every item in thread order, and the
+ * plot cards' labels from `plotSummaries`.
  *
  * The items fall into turns: a turn starts at the user's typed message, a page action
  * (`.create_plot()`, the summary of new data) or a paste, and holds what followed it
@@ -23,8 +24,8 @@
  * data starts a plot chapter, and a data turn after a plot starts a data chapter again.
  * A library switch stays inside its chapter as a line of its own.
  *
- * Folds: an older data version (a `data_stub`) and every plot card but the latest
- * version's fold to one line; the live data card stays open.
+ * Folds: an older data version (a `data_stub`, `FoldedData.tsx`) and every plot card but the
+ * latest version's fold to one line; the live data card stays open.
  */
 
 import type { ChatItem } from 'src/hooks/useAgentSession';

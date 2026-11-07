@@ -41,6 +41,7 @@ import {
 } from 'src/sections/agent-chat/dataCardParts';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
+import { liveDataVersion } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -380,7 +381,7 @@ export function DataCard(props: DataCardProps) {
             >
               <DataView
                 profile={dataset.parsed.profile}
-                version={dataset.parsed.version ?? 1}
+                version={liveDataVersion(state) ?? dataset.parsed.version ?? 1}
                 load={onLoadData}
                 onShown={onDataViewShown}
                 onClose={() => {

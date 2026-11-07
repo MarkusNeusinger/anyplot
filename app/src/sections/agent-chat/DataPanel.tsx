@@ -1,34 +1,31 @@
 /**
- * The data card of the agent chat, at its place in the thread: right after the
- * paste it came from (its `data` item, `ChatThread.tsx`), the data the
- * composer's message box sent (a pasted table or a file, with a note), as the
- * server parsed it: the 20-row preview and the parser's warnings, and a column
- * for each spec role (the server's defaults come preselected). A later paste
- * gets a card of its own below it, and this one stays as a stub of its shape;
- * a change to the data, an undo, `.to_long()` and the table and sheet pickers
- * update the card where it is. A table read from text waits in a card of its
- * own at its paste (`part: 'transcription'`).
+ * The live data card of the agent chat, at the latest data version (its `data`
+ * item, `ChatThread.tsx`): the data the composer's message box sent (a pasted
+ * table or a file, with a note), as the server parsed it: the 20-row preview and
+ * the parser's warnings, and a column for each spec role (the server's defaults
+ * come preselected). Every version keeps an item of its own: the card follows
+ * the latest, and each older version folds to its label in the thread
+ * (`FoldedData.tsx`). A version a turn or a paste made puts the card at the
+ * thread's end, below the talk that made it; one its own controls made (an
+ * undo, `.to_long()`, the table and sheet pickers) leaves it in place before the
+ * first plot, and after a plot moves it to the end as a new `# data` chapter
+ * (owner, 2026-11-07). The keyboard focus follows the card (`useFollowFocus`). A
+ * table read from text waits in a card of its own at its paste (`part:
+ * 'transcription'`).
  *
  * Two steps, data first. Step 1 ends with `.create_plot()` at the composer's end
  * (`Composer.tsx`), once every required role has a column: its click takes the
  * preview and the bindings as shown, confirms them on the server and starts the
- * plot. The card collapses with that click; the pinned header above the thread
- * (`PinnedHeader`), which stays in view on scroll, says `✓ data fits · N rows ·
- * M columns · version V` with `.show()`, which opens the card again at its
- * place without leaving step 2 and brings its top into view, and `.hide()`,
- * which closes it and goes back to where the user was (`useDataCardView`). The
- * plot buttons are the page's composer's, not the card's. A new parse, a
- * binding change, a change the assistant made to the data and an undo take the
- * page back to step 1 with the card open, because a plot of the wrong data is
- * wrong however good it looks; the server drops its confirmation for each of
- * them already. The header stays then and reads as a warning (`! check again ·
- * ...`, the phrase in bold on a surface tinted with the warning token), and its
- * `.show()` leads back to the card from anywhere in the thread, for example
- * after a data request sent from below the plot. The status line at the chat
- * frame's foot names what dropped the confirmation, and only it: the thread
- * adds no notice that would say the same. A table read from text that waits for its decision holds the page in
- * step 1 as well, whatever a turn's sync says, and the header names that
- * decision.
+ * plot. The card stays open in both steps, so the data the plot was made from
+ * stays in view in its chapter. The plot buttons are the page's composer's, not
+ * the card's. A new parse, a binding change, a change the assistant made to the
+ * data and an undo take the page back to step 1, because a plot of the wrong
+ * data is wrong however good it looks; the server drops its confirmation for
+ * each of them already. The status line at the chat frame's foot names what
+ * dropped the confirmation, and only it: the thread adds no notice that would
+ * say the same. A table read from text that waits for its decision holds the
+ * page in step 1 as well, whatever a turn's sync says, and the status line
+ * names that decision.
  *
  * Work in flight shows on the card: while anything runs (the parse, a turn, a
  * theme render, a binding change, a confirmation, an undo), a line under the
@@ -39,8 +36,8 @@
  * way, since its sessions copy this data, and a line at the top of the card,
  * which the card names as its description, says to close the panel first.
  *
- * The card is framed like the chat window (`CardFrame.tsx`), with what the data
- * holds on its top border (`data · 48 rows × 4 cols`). The bindings read as one
+ * The card is framed like the chat window (`CardFrame.tsx`), with the version on
+ * its top border (`data v3 · made long · 48 rows × 4 cols`). The bindings read as one
  * line under the preview (`x (across): month · y (up): revenue`), and `.change()`
  * at its end opens a column choice for every role of the spec (`bindingRows` in
  * `bindings.ts`): a single role one dropdown, a variadic family its columns as
@@ -107,30 +104,36 @@
 
 import { useRef, useState } from 'react';
 
-import { type AgentSessionState, sessionBusy } from 'src/hooks/useAgentSession';
+import Box from '@mui/material/Box';
+
+import { type AgentSessionState, type DataSnapshot, sessionBusy } from 'src/hooks/useAgentSession';
 import { AgentApiError, type ConvertAnswer, tableChoice } from 'src/lib/agent';
 import { CardFrame } from 'src/sections/agent-chat/CardFrame';
-import { dataCardLabel } from 'src/sections/agent-chat/cardLabels';
+import { dataCardLabel, dataVersionLabel } from 'src/sections/agent-chat/cardLabels';
 import { DataCard } from 'src/sections/agent-chat/DataCard';
 import { DataViewUnavailable } from 'src/sections/agent-chat/dataCardParts';
 import { describeConvertFailure } from 'src/sections/agent-chat/messages';
-import { DATA_LOCK_TEXT, DataCardShell } from 'src/sections/agent-chat/PinnedData';
-import { plotButtonLabel } from 'src/sections/agent-chat/steps';
+import { labelSx } from 'src/sections/agent-chat/styles';
 import {
   type ConvertedFile,
   convertedSource,
   sheetLabel,
 } from 'src/sections/agent-chat/useChatAttachment';
-import type { DataCardView } from 'src/sections/agent-chat/useDataCardView';
+import { useFollowFocus } from 'src/sections/agent-chat/useFollowFocus';
 
-export { DATA_LOCK_TEXT, DataViewUnavailable };
+export { DataViewUnavailable };
+
+/** The card's line while the fan-out's panel is open, which the card names as its description. */
+export const DATA_LOCK_TEXT =
+  '# the data waits while all libraries plot it · .close() the panel to change it';
+const DATA_LOCK_ID = 'agent-data-lock';
 
 interface DataPanelProps {
   state: AgentSessionState;
-  /** The card's view, shared with the pinned header above the thread (`useDataCardView`). */
-  view: DataCardView;
   /** Which item this card stands for: the stored data, or a table read from text that waits. */
   part: 'data' | 'transcription';
+  /** The version the live card shows (its `data` item's snapshot), for its label and the focus. */
+  version?: DataSnapshot;
   /**
    * A parse of the stored data's text again: `table` reads another of the tables the stored
    * paste named (the table picker), `file` is the workbook a sheet picker's text came from.
@@ -157,11 +160,6 @@ interface DataPanelProps {
    */
   locked?: boolean;
   /**
-   * The composer's plot action as it stands, which step 1's line in the card names: `.plot_all()`
-   * while `all` is pressed, else the plot button's own name (`plotButtonLabel`).
-   */
-  plotAction?: string;
-  /**
    * `.view_all()`: the current data version's canonical `data.csv` (`GET .../dataset/data.csv`)
    * for the full view of every row. Without it the preview has no `.view_all()`.
    */
@@ -172,8 +170,8 @@ interface DataPanelProps {
 
 export function DataPanel({
   state,
-  view,
   part,
+  version,
   onParse,
   onConfirmTranscription,
   onDiscardTranscription,
@@ -183,10 +181,11 @@ export function DataPanel({
   onTrack,
   onConvert,
   locked = false,
-  plotAction,
   onLoadData,
   onDataViewShown,
 }: DataPanelProps) {
+  // The focus follows the live card to its new version, wherever the version put it.
+  const follow = useFollowFocus(part === 'data' ? version : undefined);
   // `.view_all()`: the full view of every row is open. Read-only, so it opens while a step runs too.
   const [viewOpen, setViewOpen] = useState(false);
   const viewButtonRef = useRef<HTMLButtonElement>(null);
@@ -294,29 +293,52 @@ export function DataPanel({
     const { profile } = transcription;
     const label = dataCardLabel(profile.rows, profile.columns.length, 'text');
     return (
-      // Off for the thread's live log, as the data card's shell is.
+      // Off for the thread's live log, as the data card is.
       <CardFrame
         label={label.text}
         spokenLabel={label.spoken}
         labelTestId="transcription-label"
         data-testid="transcription-item"
-        ref={view.transcriptionRef}
         aria-live="off"
       >
         {card}
       </CardFrame>
     );
   }
-  // Step 2 without `.show()`: the card waits behind the pinned header.
-  if (!view.open || !dataset) return null;
+  if (!dataset) return null;
+  // A thread built by hand gives its card no version: the label names the shape alone.
+  const label = version
+    ? dataVersionLabel(version)
+    : dataCardLabel(dataset.parsed.profile.rows, dataset.parsed.profile.columns.length);
   return (
-    <DataCardShell
-      view={view}
-      locked={locked}
-      plotLabel={plotAction ?? plotButtonLabel(state)}
-      label={dataCardLabel(dataset.parsed.profile.rows, dataset.parsed.profile.columns.length)}
+    <CardFrame
+      component="section"
+      label={label.text}
+      spokenLabel={label.spoken}
+      labelTestId="data-card-label"
+      labelRef={follow.labelRef}
+      aria-label="Your data"
+      aria-describedby={locked ? DATA_LOCK_ID : undefined}
+      // The thread is a polite live log: a dropdown or a preview changing in the card is no news
+      // to read out. The card's own status lines keep their roles.
+      aria-live="off"
+      id="agent-data-card"
+      data-testid="data-card"
+      ref={follow.cardRef}
+      onFocus={follow.onFocus}
+      onBlur={follow.onBlur}
     >
+      {/* Why every control below waits: the fan-out's sessions copy this data. */}
+      {locked && (
+        <Box
+          id={DATA_LOCK_ID}
+          data-testid="data-lock"
+          sx={{ ...labelSx, color: 'var(--ink)', mb: 1.5 }}
+        >
+          {DATA_LOCK_TEXT}
+        </Box>
+      )}
       {card}
-    </DataCardShell>
+    </CardFrame>
   );
 }
