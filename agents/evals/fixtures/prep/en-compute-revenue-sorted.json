@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Product,Quantity,Price\nTea,12,3.5\nCake,4,12\nJam,30,2.25\nHoney,7,8.4\nBread,25,2.9\n",
+  "message": "Add a column Revenue as Quantity times Price, and sort the rows by Revenue, largest first.",
+  "expected_operations": [
+    {"op": "compute", "name": "Revenue", "expression": "q * p", "inputs": {"q": "Quantity", "p": "Price"}},
+    {"op": "sort", "column": "Revenue", "descending": true}
+  ],
+  "locale": "en",
+  "tags": ["compute", "product", "sort"]
+}

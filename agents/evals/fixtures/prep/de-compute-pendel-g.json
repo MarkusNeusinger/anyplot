@@ -1,0 +1,14 @@
+{
+  "dataset_text": "Länge l in m,Periode T in s\n0.25,1.01\n0.40,1.27\n0.55,1.49\n0.70,1.68\n0.85,1.85\n1.00,2.01\n",
+  "message": "Berechne g = 4π²·l / T² als neue Spalte g.",
+  "expected_operations": [
+    {
+      "op": "compute",
+      "name": "g",
+      "expression": "4*pi**2*l/T**2",
+      "inputs": {"l": "Länge l in m", "T": "Periode T in s"}
+    }
+  ],
+  "locale": "de",
+  "tags": ["compute", "power", "constants"]
+}

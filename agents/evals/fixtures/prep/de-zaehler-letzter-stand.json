@@ -1,0 +1,15 @@
+{
+  "dataset_text": "Datum,Bezug,Einspeisung\n2024-01-03,10482.1,3120.4\n2024-01-17,10566.8,3151.0\n2024-01-30,10641.2,3170.9\n2024-02-12,10730.5,3215.6\n2024-02-27,10801.9,3260.2\n2024-03-09,10870.3,3322.8\n2024-03-28,10944.7,3401.5\n",
+  "message": "Das sind Zählerstände. Nimm pro Monat jeweils den letzten Stand von Bezug und Einspeisung.",
+  "expected_operations": [
+    {
+      "op": "aggregate",
+      "by": ["Datum"],
+      "columns": ["Bezug", "Einspeisung"],
+      "how": "last",
+      "period": "month"
+    }
+  ],
+  "locale": "de",
+  "tags": ["aggregate", "last", "several_columns", "period"]
+}
