@@ -378,6 +378,9 @@ export function Composer(props: ComposerProps) {
             sx={{
               ...(hasData ? composerFilledSx : composerQuietSx),
               ...ROW_BUTTON_SIZE,
+              // As wide as its longest name (`plot the new data`, mono), so a new name moves
+              // nothing beside it.
+              minWidth: { xs: 'calc(17ch + 18px)', sm: 'calc(17ch + 26px)' },
               ml: 'auto',
             }}
           >
