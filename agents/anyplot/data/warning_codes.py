@@ -28,6 +28,7 @@ WarningCode = Literal[
     "lines_below_left_out",
     "lines_inside_left_out",
     "header_lines_joined",
+    "header_from_comments",
     "summary_rows_left_out",
     "short_rows_positional",
     "short_rows_padded",
@@ -65,6 +66,7 @@ WarningCode = Literal[
     "valueless_columns_dropped",
     "row_number_column_dropped",
     "constant_columns_to_notes",
+    "flag_columns",
     "leading_zeros_text",
     "big_integers_text",
     "decimal_commas_ambiguous",
@@ -116,6 +118,11 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
         (r"^left out [0-9,]+ lines? below the table \(notes or a source line\)$", "lines_below_left_out"),
         (r"^left out [0-9,]+ lines? inside the table that (?:is|are) no row of it \(.*\)$", "lines_inside_left_out"),
         (r"^the header stood in two lines; joined them into one name per column, such as '.*'$", "header_lines_joined"),
+        (
+            r"^the header stood in (?:a comment line|two comment lines) above the table; "
+            r"(?:read the column names from it|joined them into one name per column), such as '.*'$",
+            "header_from_comments",
+        ),
         (r"^left out [0-9,]+ summary rows? at the end of the table .*$", "summary_rows_left_out"),
         (
             r"^[0-9,]+ rows? had fewer fields than the header; their cells were placed under the header's columns by their position.*$",
@@ -180,6 +187,11 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
         (r"^[0-9,]+ columns? without any value dropped: .*$", "valueless_columns_dropped"),
         (r"^left out the column .*: its [0-9,]+ cells? only number the rows .*$", "row_number_column_dropped"),
         (r"^[0-9,]+ columns? with the same text in every row moved to the notes: .*$", "constant_columns_to_notes"),
+        (
+            r"^[0-9,]+ columns? of flags \([A-Za-z', ]+\) beside number columns kept as text columns named after them, "
+            r"such as '.*', with [0-9,]+ flagged cells?$",
+            "flag_columns",
+        ),
         (_COLUMN + r"numbers with leading zeros kept as text$", "leading_zeros_text"),
         (_COLUMN + r"whole numbers beyond the 64-bit range kept as text, so no digit is lost$", "big_integers_text"),
         (

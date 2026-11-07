@@ -1,7 +1,9 @@
 /**
  * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the service's pause
  * note, the drop hint, the data line, and one row in two fixed places, the message box with its
- * `❯` and the plot button, with the counter near the message cap below it. Nothing comes or goes
+ * `❯` and the plot button, with the counter near the message cap below it. Below the theme's `sm`
+ * (a phone) the row stacks them: the box takes the whole line, the plot button the line under it
+ * at the full width, in the same order for the eye, the DOM and Tab. Nothing comes or goes
  * and nothing moves: a state only changes how the data line reads, whether the plot button is
  * filled, and which controls are inert (`aria-disabled`, so a focused one keeps the focus). What
  * the step waits for is the line's at the chat frame's foot (`StatusLine`, `ChatFrame.tsx`), the
@@ -72,12 +74,6 @@ const PLOT_BUTTON: Record<PlotButtonKind, { text: string; name: string }> = {
 
 /** The hidden help the plot button names when its click starts from the catalogue plot. */
 const PLOT_HELP_ID = 'agent-plot-help';
-
-/** The plot button's size, one in every state: smaller at phone width, where it shares the line. */
-const ROW_BUTTON_SIZE = {
-  fontSize: { xs: smallText, sm: fontSize.md },
-  px: { xs: 1, sm: 1.5 },
-} as const;
 
 /**
  * A link of the data line: a button in the line's small mono, with a 44 px target at phone width
@@ -310,9 +306,10 @@ export function Composer(props: ComposerProps) {
         )}
         {!hasData && <LineWords wide>a file</LineWords>}
       </Box>
-      {/* One row: the box and the plot button, on a phone too. A row too narrow for both, such as
-          a long label on a small phone, wraps the plot button to a line of its own, at the right
-          end. */}
+      {/* One row: the box and the plot button side by side from `sm` up, where a row too narrow
+          for both wraps the plot button to a line of its own at the right end. Below `sm` the box
+          takes the whole line and the plot button the next one at the full width, so the box's
+          placeholder reads on a phone; the order is the same, box first. */}
       <Box
         component="form"
         data-testid="composer-row"
@@ -343,7 +340,7 @@ export function Composer(props: ComposerProps) {
           sx={{
             position: 'relative',
             display: 'flex',
-            flex: { xs: '1 1 120px', sm: '1 1 240px' },
+            flex: { xs: '1 1 100%', sm: '1 1 240px' },
             minWidth: 0,
           }}
         >
@@ -390,7 +387,7 @@ export function Composer(props: ComposerProps) {
               flex: 1,
               resize: 'vertical',
               // The box grows with its text up to a few lines, where the browser can. Empty, it
-              // stays one line beside the plot button, its placeholder cut with an ellipsis.
+              // stays one line, its placeholder cut with an ellipsis where the line is too short.
               fieldSizing: 'content',
               maxHeight: '12rem',
               '&:placeholder-shown': { fieldSizing: 'fixed' },
@@ -464,11 +461,11 @@ export function Composer(props: ComposerProps) {
           aria-describedby={plot.fresh ? `${STATUS_LINE_ID} ${PLOT_HELP_ID}` : STATUS_LINE_ID}
           sx={{
             ...(hasData ? composerFilledSx : composerGhostSx),
-            ...ROW_BUTTON_SIZE,
-            // As wide as its longest name (`plot the new data`, mono), so a new name moves
-            // nothing beside it.
-            minWidth: { xs: 'calc(17ch + 18px)', sm: 'calc(17ch + 26px)' },
-            flex: 'none',
+            // From `sm` up as wide as its longest name (`plot the new data`, mono), so a new name
+            // moves nothing beside it; below `sm` a line of its own at the full width, in the
+            // same size, since it no longer shares the line with the box.
+            minWidth: 'calc(17ch + 26px)',
+            flex: { xs: '1 1 100%', sm: 'none' },
             ml: 'auto',
           }}
         >
