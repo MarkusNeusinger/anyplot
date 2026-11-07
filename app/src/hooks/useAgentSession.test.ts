@@ -24,8 +24,10 @@ import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
 import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
 import { nextUtcMidnight } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
+import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
+const kindsOf = (items: ChatItem[]) => items.map(item => item.kind);
 /**
  * The notice after the first typed message or a paste set the reply language: one short line,
  * and behind its ⓘ where it came from, that a plot keeps its own language, and the chip.
@@ -931,10 +933,12 @@ describe('useAgentSession: confirming the data (step 1)', () => {
       ]);
     await act(() => result.current.sendMessage('daily mean instead of hourly'));
 
-    // The user's turn and the reply, nothing else: the step line above the composer names the
-    // change (`confirmLoss`), with no notice right above it that says the same.
+    // The user's turn, the reply and the card at its new version, nothing else: the step line
+    // above the composer names the change (`confirmLoss`), with no notice right above it that
+    // says the same. The version before stays as a stub where the card stood.
     const added = result.current.state.items.slice(before);
-    expect(added.map(item => item.kind)).toEqual(['user', 'assistant']);
+    expect(kindsOf(added)).toEqual(['user', 'assistant', 'data']);
+    expect(result.current.state.items.filter(item => item.kind === 'notice')).toEqual([]);
     expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
   });
 });
@@ -977,7 +981,9 @@ describe('useAgentSession: copying the confirmed data (the admin fan-out)', () =
     expect(state.dataset?.upload).toBeUndefined();
     expect(state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
     // The card alone: no paste and no turn.
-    expect(state.items).toEqual([{ id: 1, kind: 'data' }]);
+    expect(state.items).toEqual([
+      { id: 1, kind: 'data', snapshot: expect.objectContaining({ n: 1, change: 'copy' }) },
+    ]);
     expect(state.parsing).toBe(false);
   });
 
@@ -1094,7 +1100,9 @@ describe('useAgentSession: replaying an upload (a server without the copy)', () 
     expect(result.current.state.dataConfirmed).toBe(true);
     expect(result.current.state.bindings).toEqual(BOUND);
     // The card alone: no turn.
-    expect(result.current.state.items).toEqual([{ id: 1, kind: 'data' }]);
+    expect(result.current.state.items).toEqual([
+      { id: 1, kind: 'data', snapshot: expect.objectContaining({ n: 1, change: 'paste' }) },
+    ]);
   });
 
   it('stops at the step that failed and says why', async () => {
@@ -2950,6 +2958,211 @@ describe('useAgentSession: library switch carry and plot memory', () => {
     expect(result.current.state.libraryBusy).toBe(false);
     expect(result.current.state.items).toEqual([]);
   });
+
+  it('adds an item for a switch, its decisions following the list while its offer stands', async () => {
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(() => result.current.createPlot());
+    await waitFor(() => expect(result.current.state.memory).not.toBeNull());
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(memoryReads()).toHaveLength(2));
+    const switches = () => result.current.state.items.filter(item => item.kind === 'switch');
+    expect(switches()).toEqual([
+      { id: 3, kind: 'switch', from: 'matplotlib', library: 'seaborn', decisions: 2 },
+    ]);
+    // A removal counts the switch's decisions down, as it does the plot button's offer.
+    await act(() => result.current.forgetMemory('m1'));
+    expect(switches()).toMatchObject([{ decisions: 1 }]);
+    // Once the carry shipped, the switch keeps what it took over.
+    await act(() => result.current.carryPlot());
+    expect(result.current.state.carryOffer).toBeNull();
+    await act(() => result.current.forgetMemory('m2'));
+    expect(switches()).toMatchObject([{ decisions: 1 }]);
+  });
+
+  it('adds a switch without an offer with no decisions', async () => {
+    const { result } = await withMemory([LINE], { carry: NO_OFFER });
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    expect(result.current.state.items).toEqual([
+      { id: 1, kind: 'switch', from: 'matplotlib', library: 'seaborn', decisions: null },
+    ]);
+  });
+
+  it("moves a question's mark to what the memory read after its turn found, never for a removal the user clicked", async () => {
+    let memory: ReturnType<typeof entry>[] = [];
+    const list = () => json(200, { entries: memory, max_entries: 30 });
+    const { result } = await withMemory([], {
+      extra: {
+        'GET /sessions/S1/memory': list,
+        'DELETE /sessions/S1/memory/m2': () => {
+          memory = [];
+          return list();
+        },
+      },
+    });
+    const outcomes = () =>
+      result.current.state.items.flatMap(item => (item.kind === 'user' ? [item.outcome] : []));
+    const ask = async (text: string, reads: number) => {
+      await act(() => result.current.sendMessage(text));
+      await waitFor(() => expect(memoryReads()).toHaveLength(reads));
+    };
+
+    await ask('what is on x?', 1);
+    expect(outcomes()).toEqual(['answer']);
+    // A wish kept for the first plot shows nothing in the stream, only in the list read after it.
+    memory = [LINE];
+    await ask('a reference line at 7, ok?', 2);
+    expect(outcomes()).toEqual(['answer', 'kept']);
+    // A decision the assistant forgot.
+    memory = [];
+    await ask('no line after all, ok?', 3);
+    expect(outcomes()).toEqual(['answer', 'kept', 'memory']);
+
+    // The list changes after a question by the switch's read and the user's own removal: the
+    // question stays one.
+    await ask('and the y axis?', 4);
+    memory = [LABEL];
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toEqual([LABEL]));
+    await act(() => result.current.forgetMemory('m2'));
+    expect(result.current.state.memory?.entries).toEqual([]);
+    expect(outcomes()).toEqual(['answer', 'kept', 'memory', 'answer']);
+  });
+});
+
+describe('useAgentSession: what a typed turn changed', () => {
+  const lastUser = (items: ChatItem[]) => [...items].reverse().find(item => item.kind === 'user');
+  /** A session whose turns answer with `events`; the summary of a paste as usual. */
+  async function turns(events: () => [string, unknown][]) {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = call =>
+      (call.body as { action?: string }).action === 'summarize_data'
+        ? summaryStream()
+        : sse(events());
+    return openSession(routes);
+  }
+
+  it.each<[string, [string, unknown][], string]>([
+    [
+      'a question',
+      [
+        ['message', { text: 'x is the hours.' }],
+        ['done', {}],
+      ],
+      'answer',
+    ],
+    [
+      'a data change',
+      [['done', { dataset: PREPARED, bindings: PREPARED.bindings, data_confirmed: false }]],
+      'data',
+    ],
+    [
+      'a plot',
+      [
+        ['plot', PLOT_OK],
+        ['done', {}],
+      ],
+      'plot',
+    ],
+    [
+      'a plot that failed',
+      [
+        ['plot', { ...PLOT_OK, status: 'failed', reason: 'render', version: null }],
+        ['done', {}],
+      ],
+      'plot',
+    ],
+    ['a switch', [['done', { switch: { library: 'seaborn', plot: true } }]], 'switch'],
+    [
+      'a language chosen',
+      [['done', { language: { language: 'de', source: 'chosen' } }]],
+      'language',
+    ],
+    [
+      'a language detected',
+      [['done', { language: { language: 'de', source: 'detected' } }]],
+      'answer',
+    ],
+  ])('marks the turn of %s once its done arrived', async (_, events, outcome) => {
+    const { result } = await turns(() => events);
+    await act(() => result.current.sendMessage('anything'));
+    expect(lastUser(result.current.state.items)).toEqual({
+      id: expect.any(Number),
+      kind: 'user',
+      text: 'anything',
+      outcome,
+    });
+  });
+
+  it('marks a binding change of the root as a data change, and bindings sent back unchanged as none', async () => {
+    let bindings = [
+      { role: 'x', column: 'Exam Score' },
+      { role: 'y', column: 'Study Hours' },
+    ];
+    const { result } = await turns(() => [['done', { bindings, data_confirmed: false }]]);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.sendMessage('swap the axes'));
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'data' });
+
+    bindings = [...bindings];
+    await act(() => result.current.sendMessage('which column is on x?'));
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
+  });
+
+  it('marks no turn that was refused, failed or stopped, and no page action', async () => {
+    let events: [string, unknown][] = [
+      ['refusal', { code: 'out_of_scope', text: 'Only plots.' }],
+      ['done', {}],
+    ];
+    const { result } = await turns(() => events);
+    await act(() => result.current.sendMessage('tell me a joke'));
+    expect(lastUser(result.current.state.items)).not.toHaveProperty('outcome');
+
+    events = [
+      ['error', { code: 'upstream', ref: 'r-1' }],
+      ['done', {}],
+    ];
+    await act(() => result.current.sendMessage('plot it'));
+    expect(lastUser(result.current.state.items)).not.toHaveProperty('outcome');
+
+    events = [
+      ['plot', PLOT_OK],
+      ['done', {}],
+    ];
+    await act(() => result.current.createPlot());
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'plot' });
+    expect(
+      result.current.state.items.find(
+        item => item.kind === 'action' && item.action === 'create_plot'
+      )
+    ).not.toHaveProperty('outcome');
+  });
+
+  it('marks no turn the user stopped, whatever its done brought', async () => {
+    const routes = baseRoutes();
+    const stream = liveSse([['ready', {}]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    routes['POST /sessions/S1/cancel'] = () => {
+      stream.push('message', { text: 'Half an answer.' });
+      stream.push('done', {});
+      stream.close();
+      return new Response(null, { status: 204 });
+    };
+    const { result } = await openSession(routes);
+    let turn: Promise<void> = Promise.resolve();
+    act(() => {
+      turn = result.current.sendMessage('what is on x?');
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    await act(() => result.current.stop());
+    await act(() => turn);
+    expect(lastUser(result.current.state.items)).not.toHaveProperty('outcome');
+  });
 });
 
 describe('useAgentSession: session language', () => {
@@ -3316,7 +3529,7 @@ describe('agentReducer', () => {
       missingRoles: [],
     });
     // The card, and no notice.
-    expect(state.items).toEqual([{ id: 1, kind: 'data' }]);
+    expect(kindsOf(state.items)).toEqual(['data']);
     expect(state.confirmLoss).toBeNull();
 
     const confirmed = agentReducer(state, { type: 'confirm_done' });
@@ -3332,7 +3545,7 @@ describe('agentReducer', () => {
     };
     let lost = agentReducer(confirmed, bindingsDone);
     expect(lost).toMatchObject({ dataConfirmed: false, confirmLoss: 'bindings' });
-    expect(lost.items).toEqual([{ id: 1, kind: 'data' }]);
+    expect(lost.items).toEqual(state.items);
     // Back and forth: the confirmation is gone already, and the reason stays.
     lost = agentReducer(lost, { ...bindingsDone, bindings: { x: 'Study Hours', y: 'Exam Score' } });
     expect(lost.confirmLoss).toBe('bindings');
@@ -3391,12 +3604,14 @@ describe('agentReducer', () => {
       sessionId: 'S1',
     };
     state = agentReducer(state, { type: 'parse_done', parsed, bytes: 10 });
-    // Data never confirmed has no loss to name, whatever changes it.
+    // Data never confirmed has no loss to name, whatever changes it: the new version and the
+    // stub of the one before, no notice.
     for (const next of [
       agentReducer(state, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
       agentReducer(state, { type: 'undo_done', parsed }),
     ]) {
-      expect(next).toMatchObject({ confirmLoss: null, items: [{ id: 1, kind: 'data' }] });
+      expect(next.confirmLoss).toBeNull();
+      expect(kindsOf(next.items)).toEqual(['data_stub', 'data']);
     }
 
     const lost = agentReducer(agentReducer(state, { type: 'confirm_done' }), {
@@ -3406,12 +3621,12 @@ describe('agentReducer', () => {
       missingRoles: [],
     });
     expect(lost.confirmLoss).toBe('bindings');
-    expect(lost.items).toEqual([{ id: 1, kind: 'data' }]);
+    expect(lost.items).toEqual(state.items);
 
     // A new paste is data nobody confirmed: its card names no loss.
     const pasted = agentReducer(lost, { type: 'parse_done', parsed, bytes: 12 });
     expect(pasted).toMatchObject({ dataConfirmed: false, confirmLoss: null });
-    expect(pasted.items).toEqual(lost.items);
+    expect(kindsOf(pasted.items)).toEqual(['data_stub', 'data']);
     // Its first binding setup says nothing either.
     const setUp = agentReducer(pasted, {
       type: 'bindings_done',
@@ -3419,15 +3634,16 @@ describe('agentReducer', () => {
       complete: true,
       missingRoles: [],
     });
-    expect(setUp).toMatchObject({ confirmLoss: null, items: lost.items });
+    expect(setUp).toMatchObject({ confirmLoss: null, items: pasted.items });
 
-    // A data change or an undo after the loss: the step line names the data, the thread as it was.
+    // A data change or an undo after the loss: the step line names the data, the thread holds
+    // the versions and no notice.
     for (const next of [
       agentReducer(lost, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
       agentReducer(lost, { type: 'undo_done', parsed }),
     ]) {
       expect(next).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
-      expect(next.items).toEqual(lost.items);
+      expect(kindsOf(next.items)).toEqual(['data_stub', 'data']);
     }
   });
 
@@ -3639,7 +3855,27 @@ describe('agentReducer: the card in the thread', () => {
     bytes: 26,
   };
 
-  it('puts the card after its paste, and a later paste leaves a stub of the card it replaces', () => {
+  /** What a data item's snapshot holds, beside its shape and rows. */
+  const version = (n: number, change: string, summary: string, more: object = {}) =>
+    expect.objectContaining({ n, change, summary, label: `data v${n} · ${summary}`, ...more });
+  const workbook = (sheet: string): ConvertedFile => ({
+    name: 'Bericht.xlsx',
+    base64: 'UEs=',
+    browserKind: 'spreadsheet',
+    kind: 'xlsx',
+    sheet,
+    sheets: ['2025', '2026'],
+    sheetCount: 2,
+    text: 'a,b\n1,2\n',
+  });
+  /** A typed turn and its reply after the items so far. */
+  const talk = (state: AgentSessionState, text: string) =>
+    agentReducer(agentReducer(state, { type: 'item', item: { kind: 'user', text } }), {
+      type: 'item',
+      item: { kind: 'assistant', text: 'Done.' },
+    });
+
+  it('puts the card after its paste, and a later paste freezes the card it replaces in place', () => {
     const first = agentReducer(ready, {
       type: 'parse_done',
       parsed,
@@ -3648,34 +3884,150 @@ describe('agentReducer: the card in the thread', () => {
     });
     expect(first.items).toEqual([
       { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
-      { id: 2, kind: 'data' },
+      { id: 2, kind: 'data', snapshot: version(1, 'paste', 'pasted') },
     ]);
 
     const second = agentReducer(first, {
       type: 'parse_done',
-      parsed: { ...parsed, profile: { ...profile, rows: 7 } },
+      parsed: { ...parsed, profile: { ...profile, rows: 7 }, file_name: 'sales.csv' },
       bytes: 20,
       chip: '▤ sales.csv · 8 lines · 120 B',
     });
-    // The stub keeps the shape of the data it showed: the paste before this one.
+    // The card turns into the stub of the data it showed, under its id: the paste before this
+    // one. The new paste numbers on (`data v2`), though the server's version is 1 again.
     expect(second.items).toEqual([
       { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
-      { id: 2, kind: 'data_stub', rows: DATASET.profile.rows, columns: 0 },
+      {
+        id: 2,
+        kind: 'data_stub',
+        rows: DATASET.profile.rows,
+        columns: 0,
+        snapshot: version(1, 'paste', 'pasted'),
+        card: 2,
+      },
       { id: 3, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
-      { id: 4, kind: 'data' },
+      {
+        id: 4,
+        kind: 'data',
+        snapshot: version(2, 'paste', 'sales.csv', { rows: 7, fileName: 'sales.csv' }),
+      },
     ]);
+    expect(second.dataset?.parsed.version).toBe(1);
+    expect(second.nextDataVersion).toBe(3);
   });
 
-  it('updates the card where it is for a change, an undo, .to_long() and the pickers', () => {
-    const pasted = agentReducer(ready, { type: 'parse_done', parsed, bytes: 10, chip: '▤ table' });
+  it('keeps what a version held in its snapshot: the rows, the profile, the file and the change lines', () => {
+    const pasted = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 10,
+      chip: '▤ table',
+    });
     const changed = agentReducer(pasted, {
+      type: 'data_prepared',
+      dataset: { ...(PREPARED as DatasetChanged), file_name: 'scores.csv' },
+    });
+    const [stub, card] = changed.items.filter(item => item.kind.startsWith('data'));
+    expect(stub).toMatchObject({
+      kind: 'data_stub',
+      snapshot: {
+        n: 1,
+        rows: 2,
+        columns: 3,
+        preview: DATASET.preview,
+        profile: DATASET.profile,
+        fileName: null,
+        sheet: null,
+        changes: [],
+      },
+    });
+    expect(card).toMatchObject({
+      kind: 'data',
+      snapshot: {
+        n: 2,
+        change: 'turn',
+        summary: 'changed',
+        label: 'data v2 · changed',
+        preview: PREPARED.preview,
+        fileName: 'scores.csv',
+        changes: PREPARED.changes,
+      },
+    });
+  });
+
+  it('moves the card to the end for a version a turn made, under its id, and leaves a stub where it stood', () => {
+    const pasted = agentReducer(ready, { type: 'parse_done', parsed, bytes: 10, chip: '▤ table' });
+    const asked = talk(pasted, 'read the hours as minutes');
+    const changed = agentReducer(asked, {
       type: 'data_prepared',
       dataset: PREPARED as DatasetChanged,
     });
-    const undone = agentReducer(changed, { type: 'undo_done', parsed });
-    // A table or a sheet read again parses without the attachment's line.
-    const reread = agentReducer(undone, { type: 'parse_done', parsed, bytes: 10 });
-    for (const next of [changed, undone, reread]) expect(next.items).toEqual(pasted.items);
+    // The card keeps its id, so it keeps its own state as it moves below the turn that changed it.
+    expect(changed.items).toEqual([
+      { id: 1, kind: 'paste', text: '▤ table' },
+      expect.objectContaining({
+        id: 5,
+        kind: 'data_stub',
+        card: 2,
+        snapshot: version(1, 'paste', 'pasted'),
+      }),
+      { id: 3, kind: 'user', text: 'read the hours as minutes' },
+      { id: 4, kind: 'assistant', text: 'Done.' },
+      { id: 2, kind: 'data', snapshot: version(2, 'turn', 'changed') },
+    ]);
+  });
+
+  it('keeps the card in place for a version of its own controls, the stub above: .undo(), .to_long(), the pickers', () => {
+    const pasted = agentReducer(ready, {
+      type: 'parse_done',
+      parsed,
+      bytes: 10,
+      chip: '▤ Bericht.xlsx',
+      file: workbook('2025'),
+    });
+    const after = talk(pasted, 'what is in it?');
+    const long = agentReducer(after, {
+      type: 'data_prepared',
+      dataset: PREPARED as DatasetChanged,
+      toLong: true,
+    });
+    const undone = agentReducer(long, { type: 'undo_done', parsed });
+    // The pickers parse without the attachment's line: another sheet, another table.
+    const sheet = agentReducer(undone, {
+      type: 'parse_done',
+      parsed,
+      bytes: 10,
+      file: workbook('2026'),
+    });
+    const table = agentReducer(sheet, {
+      type: 'parse_done',
+      parsed: { ...parsed, tables: ['a', 'b'], table: 2 },
+      bytes: 10,
+      file: workbook('2026'),
+    });
+    expect(kindsOf(table.items)).toEqual([
+      'paste',
+      'data_stub',
+      'data_stub',
+      'data_stub',
+      'data_stub',
+      'data',
+      'user',
+      'assistant',
+    ]);
+    // The card stays the same item at the same place below its stubs, oldest first.
+    expect(table.items[5]).toMatchObject({ id: 2, snapshot: version(5, 'table', 'table 2') });
+    expect(table.items.slice(1, 5).map(item => item.kind === 'data_stub' && item.snapshot)).toEqual(
+      [
+        version(1, 'paste', 'pasted', { sheet: '2025' }),
+        version(2, 'to_long', 'made long'),
+        version(3, 'undo', 'undone'),
+        version(4, 'sheet', 'sheet "2026"', { sheet: '2026' }),
+      ]
+    );
+    expect(
+      table.items.slice(1, 5).every(item => item.kind === 'data_stub' && item.card === 2)
+    ).toBe(true);
   });
 
   it('adds the card at the end for data that had none: example data, a formula, code', () => {
@@ -3685,6 +4037,17 @@ describe('agentReducer: the card in the thread', () => {
       dataset: PREPARED as DatasetChanged,
     });
     expect(kinds(generated)).toEqual(['user', 'data']);
+    expect(lastItem(generated.items)).toMatchObject({ snapshot: version(1, 'turn', 'generated') });
+
+    // `.example_data()` names its own: the version arrives while its turn still runs.
+    const example = agentReducer(agentReducer(ready, { type: 'run_start', kind: 'example_data' }), {
+      type: 'data_prepared',
+      dataset: PREPARED as DatasetChanged,
+    });
+    expect(lastItem(example.items)).toMatchObject({
+      kind: 'data',
+      snapshot: version(1, 'turn', 'example data'),
+    });
   });
 
   it('puts a table read from text at its paste; .use() turns it into the card, .discard() into a line', () => {
@@ -3710,9 +4073,16 @@ describe('agentReducer: the card in the thread', () => {
     expect(used.transcription).toBeNull();
     expect(used.items).toEqual([
       { id: 1, kind: 'paste', text: '▤ table' },
-      { id: 2, kind: 'data_stub', rows: DATASET.profile.rows, columns: 0 },
+      {
+        id: 2,
+        kind: 'data_stub',
+        rows: DATASET.profile.rows,
+        columns: 0,
+        snapshot: version(1, 'paste', 'pasted'),
+        card: 2,
+      },
       { id: 3, kind: 'paste', text: '▤ table · 2 lines · 30 B' },
-      { id: 4, kind: 'data' },
+      { id: 4, kind: 'data', snapshot: version(2, 'transcription', 'read from text', { rows: 2 }) },
     ]);
 
     const discarded = agentReducer(waiting, { type: 'transcription_clear' });
@@ -3990,6 +4360,90 @@ describe('useAgentSession: a cut stream', () => {
     routes['POST /sessions/S1/messages'] = summaryStream;
     await act(() => result.current.createPlot());
     expect(turnReads()).toHaveLength(readsBefore);
+  });
+
+  it('rebuilds the same items from turns read again after a cut as from turns never cut', async () => {
+    // A typed change of the data, cut after its reply; then a plot, cut before its plot.
+    const change: [string, unknown][] = [
+      ['ready', { v: 'anyplot/1', run_id: RUN }],
+      ['message', { text: 'The hours read as minutes now.' }],
+      [
+        'done',
+        { llm_calls: 2, dataset: PREPARED, bindings: PREPARED.bindings, data_confirmed: false },
+      ],
+    ];
+    const session = async (cut: boolean) => {
+      let rest: Response | null = null;
+      const routes = baseRoutes();
+      routes['POST /sessions/S1/messages'] = call => {
+        const body = call.body as { action?: string };
+        if (body.action === 'summarize_data') return summaryStream();
+        const [before, after, from] =
+          body.action === 'create_plot'
+            ? [TURN_START, TURN_REST, TURN_START.length + 1]
+            : [change.slice(0, 2), change.slice(2), 3];
+        if (!cut) return numberedSse([...before, ...after]);
+        rest = numberedSse(after, { from });
+        return numberedSse(before, { cut: true });
+      };
+      routes['GET /sessions/S1/turn'] = () => rest ?? json(404, { detail: 'not_found' });
+      const { result } = await openWithFastReads(routes);
+      await act(() =>
+        result.current.parseData('a,b\n1,2\n', false, undefined, undefined, {
+          chip: '▤ table',
+        })
+      );
+      await act(() => result.current.sendMessage('read the hours as minutes'));
+      await act(() => result.current.createPlot());
+      return result.current.state;
+    };
+    const whole = await session(false);
+    const resumed = await session(true);
+
+    expect(turnReads()).toHaveLength(2);
+    expect(resumed.items).toEqual(whole.items);
+    expect(resumed.nextItemId).toBe(whole.nextItemId);
+    expect(resumed.nextDataVersion).toBe(whole.nextDataVersion);
+    expect(kindsOf(resumed.items)).toEqual([
+      'paste',
+      'data_stub',
+      'action',
+      'assistant',
+      'user',
+      'assistant',
+      'data',
+      'action',
+      'plot',
+      'assistant',
+    ]);
+    expect(resumed.items[4]).toMatchObject({ kind: 'user', outcome: 'data' });
+  });
+
+  it('counts what a cut turn showed before the cut in its outcome, when a later read brings its done', async () => {
+    const routes = baseRoutes();
+    // A typed request whose plot arrived before the cut; every read of it again fails.
+    routes['POST /sessions/S1/messages'] = () =>
+      numberedSse([...TURN_START, TURN_REST[0]], { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.sendMessage('plot it with a log scale'));
+    expect(kindsOf(result.current.state.items)).toEqual(['user', 'plot', 'error']);
+    expect(result.current.state.items[0]).not.toHaveProperty('outcome');
+
+    // The next question reads the rest first: its `done` ends the cut turn, a plot turn.
+    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST.slice(1), { from: 5 });
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'x is the hours.' }],
+        ['done', {}],
+      ]);
+    await act(() => result.current.sendMessage('what is on x?'));
+    expect(result.current.state.items.filter(item => item.kind === 'user')).toMatchObject([
+      { text: 'plot it with a log scale', outcome: 'plot' },
+      { text: 'what is on x?', outcome: 'answer' },
+    ]);
   });
 
   it('marks the run as reconnecting while it reads, and clears it when the read starts', () => {

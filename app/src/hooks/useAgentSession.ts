@@ -64,6 +64,16 @@
  * paste clears it, a later data change or undo makes it a change of the data.
  * The reducer numbers the thread items itself (`nextItemId`).
  *
+ * Thread items beyond the talk: every data version gets an item with a
+ * snapshot of what it held (`DataSnapshot`), numbered per session
+ * (`nextDataVersion`, `data v3`), since the server's `version` starts over
+ * with every paste. The live card is the one `data` item; a version it no
+ * longer shows stays as a `data_stub` (`placeData` says where each goes). A
+ * library switch adds a `switch` item with the decisions the plot in the new
+ * library takes over, and a typed turn that reached its `done` carries what it
+ * changed (`TurnOutcome`). `threadModel.ts` reads chapters, folds and counts
+ * from these items.
+ *
  * Step 1 talks about the data. Every parse that stores a dataset (a table, or
  * a transcription's `.use()`) is followed at once by the turn
  * `{action: "summarize_data"}`, so the assistant's summary of the data is the
@@ -322,8 +332,58 @@ export interface PlotVersion {
   feedback?: FeedbackRecord;
 }
 
+/**
+ * What made a data version: a paste or a dropped file (`paste`, also the fan-out's replay of
+ * one), `.use()` of a table read from text (`transcription`), the table or the sheet picker, the
+ * assistant in a turn (`turn`: `prepare_data`, `generate_data`, `run_data_code`), `.to_long()`,
+ * `.undo()`, or the admin fan-out's copy.
+ */
+export type DataVersionChange =
+  'paste' | 'transcription' | 'table' | 'sheet' | 'turn' | 'to_long' | 'undo' | 'copy';
+
+/**
+ * One data version as the thread keeps it, taken when the version arrives: the live card's
+ * item carries it, and the stub the version leaves behind once a newer one replaces it keeps it,
+ * so an older version can show what it held without the server.
+ */
+export interface DataSnapshot {
+  /**
+   * The version's number in this session (`data v3`), counted by the reducer
+   * (`nextDataVersion`): the server's `version` starts over at 1 with every paste.
+   */
+  n: number;
+  change: DataVersionChange;
+  /** How the version came about, in a few words: `pasted`, `sales.csv`, `sheet "2026"`, `made long`. */
+  summary: string;
+  /** The version's name in the thread: `data v3 · made long`. */
+  label: string;
+  rows: number;
+  columns: number;
+  /** The workbook's sheet the version was read from; `null` for data no sheet holds. */
+  sheet: string | null;
+  /** The dropped file's name as the server screened it; `null` for pasted or computed data. */
+  fileName: string | null;
+  /** The assistant's change lines (`done.dataset.changes`); empty for every other version. */
+  changes: string[];
+  /** Up to 20 data rows (the header is `profile.columns[].name`). */
+  preview: string[][];
+  profile: DatasetProfile;
+}
+
+/**
+ * What a typed turn changed, from its `done`: the data (`data`: a new version, or the bindings),
+ * the plot (`plot`: the turn ran the plot pipeline, shipped or not), the library (`switch`), the
+ * session language the user asked for (`language`), the plot memory (`kept` when the turn added a
+ * decision, `memory` when it only removed some), or nothing (`answer`: it answered a question).
+ * The server's own word (`done.turn`) names `kept` and `memory` too; until it sends one, the page
+ * reads what the stream shows (`TurnRead`), and the memory read after the turn corrects an
+ * `answer` whose turn changed the memory (`memory_sync`).
+ */
+export type TurnOutcome = 'answer' | 'data' | 'plot' | 'kept' | 'switch' | 'language' | 'memory';
+
 export type ChatItem =
-  | { id: number; kind: 'user'; text: string }
+  /** `outcome`: what the turn changed, set once its `done` arrived; a turn that ended otherwise has none. */
+  | { id: number; kind: 'user'; text: string; outcome?: TurnOutcome }
   /** `label`: the button as it read when the user pressed it, which the thread shows for the action. */
   | { id: number; kind: 'action'; action: TurnAction; library: string; label?: string }
   | { id: number; kind: 'assistant'; text: string }
@@ -334,10 +394,30 @@ export type ChatItem =
   | { id: number; kind: 'plot_failed'; result: PlotResult }
   /** The attachment the user sent, as its chip named it (`▤ table · 4 lines · 46 B`). */
   | { id: number; kind: 'paste'; text: string }
-  /** Where the data card stands in the thread: right after the paste it came from. One at most. */
-  | { id: number; kind: 'data' }
-  /** A data card a later paste replaced: its shape as it was then, the new card below it. */
-  | { id: number; kind: 'data_stub'; rows: number; columns: number }
+  /**
+   * The live data card, at the latest data version (`placeData`). One at most. `snapshot`: the
+   * version it shows; the reducer always sets it, and only a thread built by hand lacks it.
+   */
+  | { id: number; kind: 'data'; snapshot?: DataSnapshot }
+  /**
+   * A data version a newer one replaced: its shape (`rows`, `columns`) and its snapshot as they
+   * were then. `card` is the id of the card item that showed the version; a stub that a paste or
+   * `.use()` froze in place is that item, and keeps its id.
+   */
+  | {
+      id: number;
+      kind: 'data_stub';
+      rows: number;
+      columns: number;
+      snapshot?: DataSnapshot;
+      card?: number;
+    }
+  /**
+   * A library switch, from the menu or the chat. `decisions`: what the plot in the new library
+   * takes over (`carryDecisions`), following the plot memory while the switch's offer stands;
+   * `null` when the switch offered no plot with them.
+   */
+  | { id: number; kind: 'switch'; from: string; library: string; decisions: number | null }
   /**
    * Where a table read from text waits for `.use()` or `.discard()`; `.use()` turns it into the
    * data card, `.discard()` into a notice.
@@ -451,8 +531,25 @@ export const RESUME_DELAYS_MS: readonly number[] = [1_000, 2_000, 4_000, 8_000];
 /** How a cut turn's reads ended, for `agent_turn_resumed{outcome}`. */
 type ResumeOutcome = 'resumed' | 'gone' | 'failed';
 
+/** What a turn's events showed it changed, for its outcome (`turnOutcome`). */
+interface TurnChanges {
+  /** A plot result arrived, shipped or not: the turn ran the plot pipeline. */
+  plotted: boolean;
+  /** The `done` carried a data version, or bindings other than the page's. */
+  dataChanged: boolean;
+  /** The `done` asked for a library switch. */
+  switched: boolean;
+  /** The `done` carried a language the user chose, other than the page's. */
+  languageChosen: boolean;
+  /**
+   * The server's own word on what the turn changed (`done.turn`, not sent yet): once it arrives
+   * it wins over what the stream showed, which cannot see a plot wish kept for the first plot.
+   */
+  serverOutcome: TurnOutcome | null;
+}
+
 /** What one turn's events said, gathered while the page reads them (`runTurn`). */
-interface TurnRead {
+interface TurnRead extends TurnChanges {
   /** The turn's `done` arrived. */
   finished: boolean;
   errorCode: string | null;
@@ -471,6 +568,55 @@ const freshRead = (): TurnRead => ({
   refusalCode: null,
   shipped: false,
   lastId: null,
+  plotted: false,
+  dataChanged: false,
+  switched: false,
+  languageChosen: false,
+  serverOutcome: null,
+});
+
+/** What a turn that reached its `done` changed, from what its events showed (`TurnChanges`). */
+function turnOutcome(changes: TurnChanges): TurnOutcome {
+  if (changes.serverOutcome) return changes.serverOutcome;
+  if (changes.dataChanged) return 'data';
+  if (changes.plotted) return 'plot';
+  if (changes.switched) return 'switch';
+  if (changes.languageChosen) return 'language';
+  return 'answer';
+}
+
+/**
+ * What a turn's `done` shows it changed, against the page's state before it (`before`): a data
+ * version, bindings other than the page's (the root's `set_bindings`), a switch the user asked
+ * for, or a language the user chose (`set_language`). A language the first typed message
+ * detected is no change the user asked for.
+ */
+function noteDone(
+  read: TurnRead,
+  done: Extract<AgentEvent, { type: 'done' }>,
+  before: AgentSessionState
+): void {
+  const bindings = done.bindings && toMap(done.bindings);
+  if (done.dataset || (bindings && before.dataset && !sameBindings(bindings, before.bindings))) {
+    read.dataChanged = true;
+  }
+  if (done.switch) read.switched = true;
+  const language = done.language;
+  if (
+    language?.source === 'chosen' &&
+    (before.plotLanguage.source !== 'chosen' || before.plotLanguage.language !== language.language)
+  ) {
+    read.languageChosen = true;
+  }
+}
+
+/** The part of a read a cut turn's later read starts from: what its events showed before the cut. */
+const changesOf = (read: TurnRead): TurnChanges => ({
+  plotted: read.plotted,
+  dataChanged: read.dataChanged,
+  switched: read.switched,
+  languageChosen: read.languageChosen,
+  serverOutcome: read.serverOutcome,
 });
 
 /**
@@ -500,6 +646,8 @@ interface CutTurn {
   mark: readonly unknown[];
   /** Its plot arrived before the cut: the same request again would make that plot a second time. */
   shipped: boolean;
+  /** What its events showed before the cut, which its outcome counts once its `done` arrives. */
+  changes: TurnChanges;
 }
 
 /** Resolves after `ms`, or at once when `signal` aborts. */
@@ -679,6 +827,11 @@ export interface AgentSessionState {
   items: ChatItem[];
   /** The id the next thread item gets; the reducer numbers the items. */
   nextItemId: number;
+  /**
+   * The number the next data version gets in this session (`DataSnapshot.n`): every paste, pick,
+   * change and undo counts one up, while the server's `version` starts over with every paste.
+   */
+  nextDataVersion: number;
   versions: Record<number, PlotVersion>;
   /** The last feedback case stored on the chat itself (version 0), for a session without a plot. */
   chatFeedback: FeedbackRecord | null;
@@ -720,8 +873,11 @@ type Action =
   | { type: 'confirm_lost' }
   /** A turn's `done` named the session's bindings and step state; `null` fields were absent. */
   | { type: 'server_sync'; bindings: BindingMap | null; dataConfirmed: boolean | null }
-  /** A turn's `done` carried the data version the assistant's `prepare_data` made. */
-  | { type: 'data_prepared'; dataset: DatasetChanged }
+  /**
+   * A turn's `done` carried the data version the assistant's `prepare_data` made, or `.to_long()`
+   * (`toLong`) made one from the card.
+   */
+  | { type: 'data_prepared'; dataset: DatasetChanged; toLong?: boolean }
   /** The admin fan-out's copy stored another session's confirmed data here, bound and confirmed. */
   | { type: 'data_copied'; dataset: DatasetCopied }
   | { type: 'to_long_start' }
@@ -739,8 +895,11 @@ type Action =
       carry: SwitchCarry | null;
     }
   | { type: 'library_failed'; failure: Failure }
-  /** The plot memory as the server listed it, or as a removal left it. */
-  | { type: 'memory_sync'; memory: PlotMemory }
+  /**
+   * The plot memory as the server listed it, or as a removal left it. `afterTurn`: the read that
+   * follows a turn's `done`, so a change of the list is that turn's.
+   */
+  | { type: 'memory_sync'; memory: PlotMemory; afterTurn?: boolean }
   | { type: 'memory_busy'; busy: boolean }
   | { type: 'sheet_busy'; busy: boolean }
   /** A turn's `done` asked for a switch (`chatSwitch`), or the page took it (`null`). */
@@ -770,6 +929,8 @@ type Action =
   | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
   | { type: 'run_stopping' }
   | { type: 'run_reconnecting'; on: boolean }
+  /** A turn reached its `done`: what it changed goes on its item, when the user typed it. */
+  | { type: 'turn_outcome'; outcome: TurnOutcome }
   | { type: 'run_end' }
   | { type: 'version_add'; version: PlotVersion }
   | { type: 'version_image'; number: number; theme: Theme; image: ThemeImage }
@@ -817,6 +978,7 @@ export function initialAgentState(library: string): AgentSessionState {
     languageBusy: false,
     items: [],
     nextItemId: 1,
+    nextDataVersion: 1,
     versions: {},
     chatFeedback: null,
     run: null,
@@ -999,18 +1161,24 @@ function appendItem(state: AgentSessionState, item: NewChatItem): AgentSessionSt
   };
 }
 
-/** The items with the live data card frozen into a stub of the data it showed (`before`). */
-function stubbedData(items: ChatItem[], before: DatasetState | null): ChatItem[] {
-  return items.map(item =>
-    item.kind === 'data'
-      ? {
-          id: item.id,
-          kind: 'data_stub',
-          rows: before?.parsed.profile.rows ?? 0,
-          columns: before?.parsed.profile.columns.length ?? 0,
-        }
-      : item
-  );
+/**
+ * The stub a data card leaves behind, under the id `id`: the shape of the data it showed
+ * (`before`) and its snapshot. A paste or `.use()` freezes the card itself (`id` is the card's);
+ * any other version splits a stub of a new id off the card, which goes on.
+ */
+function stubOf(
+  card: Extract<ChatItem, { kind: 'data' }>,
+  id: number,
+  before: DatasetState | null
+): ChatItem {
+  return {
+    id,
+    kind: 'data_stub',
+    rows: before?.parsed.profile.rows ?? 0,
+    columns: before?.parsed.profile.columns.length ?? 0,
+    ...(card.snapshot ? { snapshot: card.snapshot } : {}),
+    card: card.id,
+  };
 }
 
 /** The index of the latest item of `kind`, or -1. */
@@ -1021,33 +1189,176 @@ function lastIndexOf(items: ChatItem[], kind: ChatItem['kind']): number {
   return -1;
 }
 
+/** A copy of `items` with `item` at `index`. */
+function replaceAt(items: ChatItem[], index: number, item: ChatItem): ChatItem[] {
+  const copy = [...items];
+  copy[index] = item;
+  return copy;
+}
+
 /**
- * Where data that arrives stands in the thread (`next` is the state with it, `state` the one
- * before). A new paste (`paste`, the attachment's line) adds its item and a card of its own
- * after it, and the card it replaces stays as a stub of the data it showed. `.use()` of a table
- * read from text (`use`) turns that table's item into the card, at its place. Anything else (a
- * table or a sheet read again, a change the assistant made, an undo, `.to_long()`) keeps the
- * card where it is, and only data without one yet (example data, a formula, code, a fan-out's
- * copy) adds it at the end.
+ * The few words a data version's label carries: the file or `pasted` for a paste, the table or
+ * the sheet a picker read, what the assistant or a card's control did.
+ */
+function versionSummary(
+  change: DataVersionChange,
+  dataset: DatasetState,
+  state: AgentSessionState
+): string {
+  const { parsed } = dataset;
+  switch (change) {
+    case 'paste':
+      return parsed.file_name ?? 'pasted';
+    case 'transcription':
+      return 'read from text';
+    case 'table':
+      return typeof parsed.table === 'number' ? `table ${parsed.table}` : 'another table';
+    case 'sheet':
+      return dataset.file?.sheet ? `sheet "${dataset.file.sheet}"` : 'another sheet';
+    case 'turn':
+      // The turn still runs when its `done` brings the version: `.example_data()` named its own.
+      if (state.run?.kind === 'example_data') return 'example data';
+      return state.dataset ? 'changed' : 'generated';
+    case 'to_long':
+      return 'made long';
+    case 'undo':
+      return 'undone';
+    case 'copy':
+      return 'copied';
+  }
+}
+
+/** The snapshot of the data version `next` holds, numbered `n` in the session. */
+function snapshotOf(
+  next: AgentSessionState,
+  dataset: DatasetState,
+  change: DataVersionChange,
+  state: AgentSessionState
+): DataSnapshot {
+  const { parsed } = dataset;
+  const n = state.nextDataVersion;
+  const summary = versionSummary(change, dataset, state);
+  return {
+    n,
+    change,
+    summary,
+    label: `data v${n} · ${summary}`,
+    rows: parsed.profile.rows,
+    columns: parsed.profile.columns.length,
+    sheet: dataset.file?.sheet ?? null,
+    fileName: parsed.file_name ?? null,
+    changes: next.dataChange?.kind === 'changed' ? next.dataChange.changes : [],
+    preview: parsed.preview,
+    profile: parsed.profile,
+  };
+}
+
+/** The versions whose card moves to the thread's end: a turn's, and the fan-out's copy. */
+const MOVES_THE_CARD: ReadonlySet<DataVersionChange> = new Set(['turn', 'copy']);
+
+/**
+ * Where a new data version stands in the thread (`next` is the state with it, `state` the one
+ * before). Every version gets its item, and numbers itself in the session (`data vN`):
+ *
+ * - A paste (`chip`, the attachment's line): the card it replaces freezes in place into a stub
+ *   of the data it showed, and the paste's item and its own card follow at the end.
+ * - `.use()` of a table read from text: the card before it freezes the same way, and the table's
+ *   item turns into the card, at its place.
+ * - A version a turn made (and the fan-out's copy): a stub of the version before takes the
+ *   card's place, and the card goes on at the thread's end, under its id, so it keeps its own
+ *   state (notes, code) as it moves.
+ * - A version the card's own controls made (`.undo()`, `.to_long()`, the table and sheet
+ *   pickers): the stub goes above the card, which stays where it is, so nothing moves under the
+ *   focus.
+ * - Data without a card yet (example data, a formula, code, a copy) adds the card at the end.
  */
 function placeData(
   state: AgentSessionState,
   next: AgentSessionState,
-  how: { paste?: string; use?: boolean } = {}
+  change: DataVersionChange,
+  chip?: string
 ): AgentSessionState {
-  if (how.paste !== undefined) {
-    const stubbed = { ...next, items: stubbedData(next.items, state.dataset) };
-    return appendItem(appendItem(stubbed, { kind: 'paste', text: how.paste }), { kind: 'data' });
-  }
-  if (how.use) {
-    const waiting = lastIndexOf(next.items, 'transcription');
-    if (waiting >= 0) {
-      const items = stubbedData(next.items, state.dataset);
-      items[waiting] = { id: items[waiting].id, kind: 'data' };
-      return { ...next, items };
+  if (!next.dataset) return next;
+  const snapshot = snapshotOf(next, next.dataset, change, state);
+  const numbered = { ...next, nextDataVersion: state.nextDataVersion + 1 };
+  const items = numbered.items;
+  const live = lastIndexOf(items, 'data');
+  const card = live >= 0 ? (items[live] as Extract<ChatItem, { kind: 'data' }>) : null;
+  const waiting = change === 'transcription' ? lastIndexOf(items, 'transcription') : -1;
+  if (chip !== undefined || waiting >= 0) {
+    const frozen = card ? replaceAt(items, live, stubOf(card, card.id, state.dataset)) : items;
+    if (chip === undefined) {
+      const used: ChatItem = { id: frozen[waiting].id, kind: 'data', snapshot };
+      return { ...numbered, items: replaceAt(frozen, waiting, used) };
     }
+    const pasted = appendItem({ ...numbered, items: frozen }, { kind: 'paste', text: chip });
+    return appendItem(pasted, { kind: 'data', snapshot });
   }
-  return lastIndexOf(next.items, 'data') >= 0 ? next : appendItem(next, { kind: 'data' });
+  if (!card) return appendItem(numbered, { kind: 'data', snapshot });
+  const stub = stubOf(card, numbered.nextItemId, state.dataset);
+  const moved = { ...card, snapshot };
+  return {
+    ...numbered,
+    items: MOVES_THE_CARD.has(change)
+      ? [...items.slice(0, live), stub, ...items.slice(live + 1), moved]
+      : [...items.slice(0, live), stub, moved, ...items.slice(live + 1)],
+    nextItemId: numbered.nextItemId + 1,
+  };
+}
+
+/** Which data version a parse stored: a paste, `.use()`, or a picker's read of the same data again. */
+function parseChange(
+  state: AgentSessionState,
+  action: Extract<Action, { type: 'parse_done' }>
+): DataVersionChange {
+  if (action.chip !== undefined) return 'paste';
+  if (action.fromTranscription) return 'transcription';
+  // The fan-out's replay posts an upload into a session without data: the paste it came from.
+  if (!state.dataset) return 'paste';
+  const sheet = action.file?.sheet;
+  return sheet && sheet !== state.dataset.file?.sheet ? 'sheet' : 'table';
+}
+
+/** The latest turn's item, a typed message or an action, with its index; null without one. */
+function latestTurn(items: ChatItem[]): { index: number; item: ChatItem } | null {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    const item = items[index];
+    if (item.kind === 'user' || item.kind === 'action') return { index, item };
+  }
+  return null;
+}
+
+/**
+ * The memory read after a turn's `done` found another list than before: a turn read as an
+ * answer (nothing in its stream changed) did change the memory, a decision kept for the first
+ * plot (`keep_plot_request`) or one it forgot. The mark moves from `answer` to what it changed.
+ */
+function memoryOutcome(
+  items: ChatItem[],
+  before: PlotMemory | null,
+  after: PlotMemory
+): ChatItem[] {
+  const turn = latestTurn(items);
+  if (!turn || turn.item.kind !== 'user' || turn.item.outcome !== 'answer') return items;
+  const old = new Set((before?.entries ?? []).map(entry => entry.id));
+  const ids = after.entries.map(entry => entry.id);
+  if (ids.length === old.size && ids.every(id => old.has(id))) return items;
+  const outcome: TurnOutcome = ids.some(id => !old.has(id)) ? 'kept' : 'memory';
+  return replaceAt(items, turn.index, { ...turn.item, outcome });
+}
+
+/**
+ * The latest switch item, its count following the memory while its offer stands
+ * (`carryDecisions`): a removal from the list counts the switch's decisions down, as it does the
+ * plot button's.
+ */
+function switchDecisions(items: ChatItem[], next: AgentSessionState): ChatItem[] {
+  const offer = next.carryOffer;
+  const index = lastIndexOf(items, 'switch');
+  const item = index >= 0 ? items[index] : null;
+  if (!offer || item?.kind !== 'switch' || item.library !== offer.target.library) return items;
+  const decisions = carryDecisions(offer, next.memory);
+  return decisions === item.decisions ? items : replaceAt(items, index, { ...item, decisions });
 }
 
 /** The ladder of the language sources: the server only ever climbs it within a session. */
@@ -1163,7 +1474,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           // that drops a confirmation the user had given is named by `agentReducer`.
           confirmLoss: null,
         },
-        { paste: action.chip, use: action.fromTranscription }
+        parseChange(state, action),
+        action.chip
       );
     case 'parse_failed':
       return { ...state, parsing: false, datasetError: action.failure, transcription: null };
@@ -1244,27 +1556,32 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           state,
           { ...parsed, version },
           { kind: 'changed', changes, version: versionOf(version) }
-        )
+        ),
+        action.toLong ? 'to_long' : 'turn'
       );
     }
     case 'data_copied': {
       const { dataset } = action;
-      return placeData(state, {
-        ...state,
-        parsing: false,
-        // The copy is this session's version 1; no paste was made here, so there is no size to bucket.
-        dataset: { parsed: { ...dataset, version: versionOf(dataset.version) }, bytes: 0 },
-        dataChange: null,
-        undoError: null,
-        roles: dataset.roles ?? dataset.bindings.map(binding => bareRole(binding.role, false)),
-        bindings: toMap(dataset.bindings),
-        bindingsComplete: dataset.complete,
-        missingRoles: dataset.missing_roles,
-        bindingsError: null,
-        // The server confirmed the copy with the bindings the page session confirmed.
-        dataConfirmed: true,
-        confirmError: null,
-      });
+      return placeData(
+        state,
+        {
+          ...state,
+          parsing: false,
+          // The copy is this session's version 1; no paste was made here, so there is no size to bucket.
+          dataset: { parsed: { ...dataset, version: versionOf(dataset.version) }, bytes: 0 },
+          dataChange: null,
+          undoError: null,
+          roles: dataset.roles ?? dataset.bindings.map(binding => bareRole(binding.role, false)),
+          bindings: toMap(dataset.bindings),
+          bindingsComplete: dataset.complete,
+          missingRoles: dataset.missing_roles,
+          bindingsError: null,
+          // The server confirmed the copy with the bindings the page session confirmed.
+          dataConfirmed: true,
+          confirmError: null,
+        },
+        'copy'
+      );
     }
     case 'to_long_start':
       return { ...state, toLongBusy: true, toLongError: null };
@@ -1273,35 +1590,50 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'undo_start':
       return { ...state, undoBusy: true, undoError: null };
     case 'undo_done':
-      return withDataVersion(state, action.parsed, {
-        kind: 'undone',
-        version: versionOf(action.parsed.version),
-      });
+      return placeData(
+        state,
+        withDataVersion(state, action.parsed, {
+          kind: 'undone',
+          version: versionOf(action.parsed.version),
+        }),
+        'undo'
+      );
     case 'undo_failed':
       return { ...state, undoBusy: false, undoError: action.failure };
     case 'library_start':
       return { ...state, libraryBusy: true };
-    case 'library_done':
+    case 'library_done': {
       // The dataset, its bindings and their confirmation stay, as on the server. The answer's
       // offer replaces any earlier one: a switch without an offer ends it.
-      return {
-        ...state,
-        libraryBusy: false,
-        library: action.library,
-        eligibility: action.eligibility,
-        transcription: null,
-        carryOffer: action.carry?.offer
-          ? {
-              target: action.target,
-              decisions: action.carry.decisions,
-              memoryBacked: (state.memory?.entries.length ?? 0) > 0,
-            }
-          : null,
-      };
+      const carryOffer: CarryOffer | null = action.carry?.offer
+        ? {
+            target: action.target,
+            decisions: action.carry.decisions,
+            memoryBacked: (state.memory?.entries.length ?? 0) > 0,
+          }
+        : null;
+      // The switch is an item of its own, with what the plot in the new library takes over.
+      return appendItem(
+        {
+          ...state,
+          libraryBusy: false,
+          library: action.library,
+          eligibility: action.eligibility,
+          transcription: null,
+          carryOffer,
+        },
+        {
+          kind: 'switch',
+          from: state.library,
+          library: action.library,
+          decisions: carryOffer ? carryDecisions(carryOffer, state.memory) : null,
+        }
+      );
+    }
     case 'library_failed':
       return { ...state, libraryBusy: false };
-    case 'memory_sync':
-      return {
+    case 'memory_sync': {
+      const next = {
         ...state,
         memory: action.memory,
         // A list that arrives after the switch (its read was still in flight) backs the offer's count
@@ -1311,6 +1643,13 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
             ? { ...state.carryOffer, memoryBacked: true }
             : state.carryOffer,
       };
+      // Only the read after a turn's `done` speaks for that turn: a removal the user clicked
+      // changes the list too, and no turn of theirs.
+      const items = action.afterTurn
+        ? memoryOutcome(state.items, state.memory, action.memory)
+        : state.items;
+      return { ...next, items: switchDecisions(items, next) };
+    }
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
     case 'sheet_busy':
@@ -1412,6 +1751,14 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       return state.run ? { ...state, run: { ...state.run, stopping: true } } : state;
     case 'run_reconnecting':
       return state.run ? { ...state, run: { ...state.run, reconnecting: action.on } } : state;
+    case 'turn_outcome': {
+      // The turn's own item is the latest: no other turn starts before its `done`, and the late
+      // read of a cut turn adds none, so its outcome lands on the cut turn's item.
+      const turn = latestTurn(state.items);
+      if (turn?.item.kind !== 'user') return state;
+      const marked: ChatItem = { ...turn.item, outcome: action.outcome };
+      return { ...state, items: replaceAt(state.items, turn.index, marked) };
+    }
     case 'run_end':
       return { ...state, run: null };
     case 'version_add':
@@ -1800,7 +2147,7 @@ export function useAgentSession({
     safeDispatch({ type: 'to_long_start' });
     try {
       const dataset = await agentApi.datasetToLong(token, sid);
-      safeDispatch({ type: 'data_prepared', dataset });
+      safeDispatch({ type: 'data_prepared', dataset, toLong: true });
       trackEvent('agent_data_prepared', { changes: countBucket(dataset.changes.length) });
     } catch (err) {
       safeDispatch({ type: 'to_long_failed', failure: handleFailure(err) });
@@ -2089,20 +2436,26 @@ export function useAgentSession({
    * Read the plot memory again (`GET .../memory`). Best effort: a failure, or a
    * server without the route, leaves the list as it was, and an answer that a
    * newer read or a removal overtook is dropped. The fan-out's sessions show no
-   * list, so they read none.
+   * list, so they read none. `afterTurn`: the read after a turn's `done`, whose
+   * change of the list is that turn's (`memory_sync`).
    */
-  const refreshMemory = useCallback(async () => {
-    const sid = stateRef.current.sessionId;
-    if (!sid || openedForFanOut.current) return;
-    memorySeq.current += 1;
-    const seq = memorySeq.current;
-    try {
-      const memory = await agentApi.memory(token, sid);
-      if (seq === memorySeq.current) safeDispatch({ type: 'memory_sync', memory });
-    } catch {
-      /* best effort: the list stays as it was */
-    }
-  }, [token, safeDispatch]);
+  const refreshMemory = useCallback(
+    async (afterTurn = false) => {
+      const sid = stateRef.current.sessionId;
+      if (!sid || openedForFanOut.current) return;
+      memorySeq.current += 1;
+      const seq = memorySeq.current;
+      try {
+        const memory = await agentApi.memory(token, sid);
+        if (seq === memorySeq.current) {
+          safeDispatch({ type: 'memory_sync', memory, ...(afterTurn ? { afterTurn } : {}) });
+        }
+      } catch {
+        /* best effort: the list stays as it was */
+      }
+    },
+    [token, safeDispatch]
+  );
 
   /**
    * `.forget()` on a remembered decision (`DELETE .../memory/{id}`): the list
@@ -2307,6 +2660,9 @@ export function useAgentSession({
           if (raw.id) read.lastId = raw.id;
           const event = parseAgentEvent(raw);
           if (event) {
+            // What the turn changed is read against the state before the event: the reducer has
+            // not rendered the event's own changes into `stateRef` yet.
+            const before = stateRef.current;
             onEvent(event);
             if (event.type === 'error') read.errorCode = event.code;
             // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
@@ -2314,14 +2670,15 @@ export function useAgentSession({
               read.refused = true;
               read.refusalCode = event.code;
             }
-            if (
-              event.type === 'plot' &&
-              (event.result.status === 'ok' || event.result.status === 'needs_attention')
-            ) {
-              read.shipped = true;
+            if (event.type === 'plot') {
+              read.plotted = true;
+              if (event.result.status === 'ok' || event.result.status === 'needs_attention') {
+                read.shipped = true;
+              }
             }
             if (event.type === 'done') {
               read.finished = true;
+              noteDone(read, event, before);
               return 'done';
             }
           }
@@ -2438,11 +2795,16 @@ export function useAgentSession({
         // After `done`: a data change of the turn has named the loss already, and this changes nothing then.
         if (unconfirmedRef.current) safeDispatch({ type: 'confirm_lost' });
         unconfirmedRef.current = false;
+        // A typed turn that reached its `done` says what it changed; one that was refused, failed
+        // or stopped says so in the thread already.
+        if (turnEndRef.current === 'done') {
+          safeDispatch({ type: 'turn_outcome', outcome: turnOutcome(read) });
+        }
         safeDispatch({ type: 'run_end' });
       }
       // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
       // empties the list: after every `done` the list follows the server.
-      if (read.finished) void refreshMemory();
+      if (read.finished) void refreshMemory(true);
       return read;
     },
     [safeDispatch, addItem, handleFailure, refreshMemory]
@@ -2477,6 +2839,8 @@ export function useAgentSession({
           sameRequest(cut.body, body) && (cut.shipped || shipped);
         const late = await driveTurn(kind, async (controller, read) => {
           read.lastId = cut.lastId;
+          // Its outcome counts what came before the cut too.
+          Object.assign(read, cut.changes);
           const resumed = await reattach(sid, read, controller, [0]);
           // Nothing new starts then, so a read that failed says why the click did nothing.
           if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
@@ -2526,6 +2890,7 @@ export function useAgentSession({
             lastId: read.lastId,
             mark: sessionMark(stateRef.current),
             shipped: read.shipped,
+            changes: changesOf(read),
           };
         }
       });

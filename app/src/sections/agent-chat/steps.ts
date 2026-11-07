@@ -258,15 +258,42 @@ export function runLine(state: AgentSessionState): string | null {
 }
 
 /**
- * The thread and the progress timeline of a run, as the page shows them. While the timeline
- * stands below the thread, an item the run sends in (a reply, a refusal, a note) would land
- * above it and push it and the composer down: it waits, and the user's own message or action
- * stays in view. The run's result card (a plot, or the card of a run that failed) takes the
- * timeline's place, and the waiting items come with it; a run that ends without one shows them
- * as it ends.
+ * The thread's items as the page shows them until it renders a version per item: one card per
+ * paste, where its first version stood, showing the latest one (or, once a later paste replaced
+ * it, one stub of the last version it showed), and no line for a library switch. The reducer
+ * keeps an item per data version (`placeData`): the versions a card's own controls or a turn
+ * made fold back into the card they continued (`data_stub.card`). Returns `items` itself when
+ * there is nothing to fold.
+ */
+export function shownItems(items: ChatItem[]): ChatItem[] {
+  const lineOf = (item: ChatItem) =>
+    item.kind === 'data' ? item.id : item.kind === 'data_stub' ? (item.card ?? item.id) : null;
+  // The item that stands for a card's versions: the live card, or the stub a paste froze it into.
+  const heads = new Map<number, ChatItem>();
+  for (const item of items) if (lineOf(item) === item.id) heads.set(item.id, item);
+  const shown: ChatItem[] = [];
+  const placed = new Set<number>();
+  for (const item of items) {
+    const line = lineOf(item);
+    if (item.kind === 'switch' || (line !== null && placed.has(line))) continue;
+    if (line !== null) placed.add(line);
+    shown.push(line !== null ? (heads.get(line) ?? item) : item);
+  }
+  return shown.length === items.length && shown.every((item, index) => item === items[index])
+    ? items
+    : shown;
+}
+
+/**
+ * The thread and the progress timeline of a run, as the page shows them (`shownItems`). While
+ * the timeline stands below the thread, an item the run sends in (a reply, a refusal, a note)
+ * would land above it and push it and the composer down: it waits, and the user's own message
+ * or action stays in view. The run's result card (a plot, or the card of a run that failed)
+ * takes the timeline's place, and the waiting items come with it; a run that ends without one
+ * shows them as it ends.
  */
 export function runView(state: AgentSessionState): { items: ChatItem[]; timeline: boolean } {
-  const items = state.items;
+  const items = shownItems(state.items);
   if (!showsTimeline(state)) return { items, timeline: false };
   let ask = items.length - 1;
   while (ask >= 0 && items[ask].kind !== 'user' && items[ask].kind !== 'action') ask -= 1;
