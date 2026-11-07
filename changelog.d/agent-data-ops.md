@@ -24,3 +24,10 @@
   answers a fixed sentence in the session language that never sends the user
   to a spreadsheet, and counts the gap by its family in the `chat_turn`
   telemetry (`capability_gap`).
+
+### Changed
+
+- **The prep eval covers the new operations.** Ten cases on invented data,
+  one per persona need, and the Fahrenheit case now expects a `compute`. A
+  `compute` matches by the values it computes, whatever short names and form
+  the expression has. The first run matched 91 of 96 cases for $0.27.

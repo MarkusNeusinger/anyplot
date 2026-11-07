@@ -203,7 +203,8 @@ The operations:
   * `compute`: a new number column, appended last, from an `expression` over number
     columns, which `inputs` maps to short names (`{"l": "Länge l in m"}`). The expression
     language is `generate_data`'s, checked by its AST whitelist (`generate.parse_expression`)
-    before a cell is read, so one language serves both tools: numbers, the inputs, `pi`,
+    before a cell is read, so one language serves both tools: numbers, the inputs (an input
+    named like a constant, such as `e` for an export column, stands for its column), `pi`,
     `e` and `tau`, `+ - * / ** % //` (`//` and `%` for whole-number buckets such as a
     decade), and the functions `log log10 log2 exp sqrt abs` (logs, growth, roots), `sin
     cos tan asin acos atan atan2` (angles and directions, such as wind components), `sinh
@@ -274,6 +275,7 @@ Pydantic error of the operation models for the model (`tools/session.py` and
 import ast
 import calendar
 import io
+import keyword
 import math
 import re
 import unicodedata
@@ -302,7 +304,7 @@ from ..schemas import (
     ColumnName,
     NewName,
 )
-from .generate import CONSTANTS, Expr, GenerateError, VariableName, evaluate, parse_expression, source_text
+from .generate import FUNCTIONS, IDENTIFIER, Expr, GenerateError, evaluate, parse_expression, source_text
 from .months import month_number, month_year, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
@@ -680,6 +682,18 @@ Affix = Annotated[str, Field(min_length=1, max_length=MAX_LITERAL_CHARS), AfterV
 NewText = Annotated[str, Field(max_length=MAX_LITERAL_CHARS), AfterValidator(_clean_text)]
 
 
+def _input_name(name: str) -> str:
+    """A `compute` input is named in its expression, so it is no function name or keyword. A constant's name may be
+    one: `e` for an export column stands for that column, not for Euler's number, as the change line shows (the
+    prep eval of 2026-11-07: the root named `Einspeisung` `e` despite the prompt, and its call was refused)."""
+    if name in FUNCTIONS or keyword.iskeyword(name):
+        raise ValueError("an input is named like a function or a keyword; choose another name")
+    return name
+
+
+InputName = Annotated[str, Field(min_length=1, max_length=64, pattern=IDENTIFIER), AfterValidator(_input_name)]
+
+
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -907,13 +921,14 @@ class Compute(_Strict):
     `inputs` maps each short name the expression uses to its column, since a column name such as `Länge l in m`
     is no name an expression can hold (`{"l": "Länge l in m", "T": "Periode T in s"}`). The expression language
     is `generate_data`'s (`generate.parse_expression`): numbers, the inputs, the constants, `+ - * / ** % //`,
-    parentheses and its functions; no comparison and no other call.
+    parentheses and its functions; no comparison and no other call. An input named like a constant (`e`) stands for
+    its column (`InputName`).
     """
 
     op: Literal["compute"]
     name: NewName
     expression: Expr
-    inputs: dict[VariableName, ColumnName] = Field(min_length=1, max_length=MAX_INPUTS)
+    inputs: dict[InputName, ColumnName] = Field(min_length=1, max_length=MAX_INPUTS)
 
 
 class Diff(_Strict):
@@ -2224,7 +2239,7 @@ def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.Da
     missing = np.zeros(len(frame), dtype=bool)
     for column in columns:
         missing |= frame[column].isna().to_numpy()
-    whole = all(is_integer_dtype(frame[column].dtype) for column in columns) and _whole_tree(tree)
+    whole = all(is_integer_dtype(frame[column].dtype) for column in columns) and _whole_tree(tree, op.inputs)
     notice = ""
     if whole:
         values, divided, outside, rounded = _compute_whole(frame, op, tree, missing)
@@ -2248,22 +2263,22 @@ def _compute(frame: pd.DataFrame, op: Compute, carried: _Carried) -> tuple[pd.Da
     return result, _with_notice(change, _joined(empty, notice))
 
 
-def _whole_tree(node: ast.expr) -> bool:
-    """Whether every step of a checked tree keeps whole numbers whole: whole literals, the inputs, a sign, `+ - * //
-    %`, a power with a whole literal exponent of 0 or more, `abs`, `sign`, `min` and `max`."""
+def _whole_tree(node: ast.expr, inputs: Collection[str]) -> bool:
+    """Whether every step of a checked tree keeps whole numbers whole: whole literals, the `inputs`, a sign, `+ - * //
+    %`, a power with a whole literal exponent of 0 or more, `abs`, `sign`, `min` and `max`; a constant is none."""
     match node:
         case ast.Constant(value=int()):
             return True
         case ast.Name(id=name):
-            return name not in CONSTANTS
+            return name in inputs  # an input named like a constant stands for its column (`InputName`)
         case ast.UnaryOp(operand=operand):
-            return _whole_tree(operand)
+            return _whole_tree(operand, inputs)
         case ast.BinOp(left=left, op=ast.Pow(), right=ast.Constant(value=int() as exponent)):
-            return exponent >= 0 and _whole_tree(left)
+            return exponent >= 0 and _whole_tree(left, inputs)
         case ast.BinOp(left=left, op=operator, right=right):
-            return isinstance(operator, _WHOLE_OPERATORS) and _whole_tree(left) and _whole_tree(right)
+            return isinstance(operator, _WHOLE_OPERATORS) and _whole_tree(left, inputs) and _whole_tree(right, inputs)
         case ast.Call(func=ast.Name(id=name), args=args):
-            return name in _WHOLE_FUNCTIONS and all(_whole_tree(arg) for arg in args)
+            return name in _WHOLE_FUNCTIONS and all(_whole_tree(arg, inputs) for arg in args)
     return False
 
 

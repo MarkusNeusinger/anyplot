@@ -196,13 +196,23 @@ class TestCompute:
 
         assert failure(text, compute("k", "a + 1", a="c0"))[0] == "too_wide"
 
+    def test_an_input_named_like_a_constant_stands_for_its_column(self) -> None:
+        """The root named an export column `e` in the prep eval of 2026-11-07: the input wins, and the line says so."""
+        text = "PV,Export\n400,250\n500,350\n"
+        prepared = prepare(text, compute("Self", "(pv - e) / pv", pv="PV", e="Export"))
+        whole = prepare(text, compute("Rest", "pv - e", pv="PV", e="Export"))
+
+        assert cells(prepared, 2) == ["0.375", "0.3"]
+        assert prepared.changes == ["added column Self: (pv - e) / pv with pv = PV, e = Export"]
+        assert cells(whole, 2) == ["150", "150"] and dtypes(whole)["Rest"] == "integer"
+
     @pytest.mark.parametrize(
         "operation",
         [
             compute("g", "1"),
             compute("g", "l", **{"Länge": "Länge l in m"}),
             compute("g", "log * 2", log="Länge l in m"),
-            compute("g", "pi * 2", pi="Länge l in m"),
+            compute("g", "x and 2", **{"and": "Länge l in m"}),
             compute("g", "x" * 201, x="Länge l in m"),
             compute("g", "", x="Länge l in m"),
             compute("g ", "x", x="Länge l in m"),

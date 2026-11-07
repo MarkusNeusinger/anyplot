@@ -147,7 +147,8 @@ _GLUED = re.compile(r"(?<![\w.])(?P<number>[0-9]+(?:\.[0-9]*)?)(?![eE][+-]?[0-9]
 _WHITESPACE = re.compile(r"\s+")
 _TYPOGRAPHIC = str.maketrans({"−": "-", "×": "*", "·": "*", "⋅": "*"})
 """Operators a model or a user types as typography; each reads as its ASCII form."""
-_IDENTIFIER = r"^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+IDENTIFIER = r"^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+"""A name an expression can hold: a variable here, an input of `prepare`'s `compute`."""
 
 
 class GenerateError(Exception):
@@ -179,7 +180,7 @@ def _variable_name(name: str) -> str:
 
 
 Expr = Annotated[str, Field(min_length=1, max_length=MAX_EXPRESSION_CHARS)]
-VariableName = Annotated[str, Field(min_length=1, max_length=64, pattern=_IDENTIFIER), AfterValidator(_variable_name)]
+VariableName = Annotated[str, Field(min_length=1, max_length=64, pattern=IDENTIFIER), AfterValidator(_variable_name)]
 
 
 class _Strict(BaseModel):
