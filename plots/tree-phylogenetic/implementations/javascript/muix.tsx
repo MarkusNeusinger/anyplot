@@ -3,211 +3,241 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: a primate mitochondrial-DNA phylogeny (in-memory, deterministic).
-// Nested objects mirror a Newick tree — each node's `length` is its branch
-// length (substitutions per site) above its parent; leaves carry `name`. The
-// Human/Chimpanzee/Gorilla node carries a `clade` tag so its subtree can be
-// highlighted as a distinct lineage. --------------------------------------
-const HIGHLIGHT_CLADE = "homininae";
-const tree = {
-  length: 0,
-  children: [
-    {
-      length: 0.06,
-      clade: HIGHLIGHT_CLADE,
-      children: [
-        {
-          length: 0.03,
-          children: [
-            { name: "Human", length: 0.02 },
-            { name: "Chimpanzee", length: 0.021 },
-          ],
-        },
-        { name: "Gorilla", length: 0.04 },
-      ],
-    },
-    {
-      length: 0.02,
-      children: [
-        { name: "Orangutan", length: 0.05 },
-        {
-          length: 0.03,
-          children: [
-            { name: "Gibbon", length: 0.07 },
-            {
-              length: 0.04,
-              children: [
-                { name: "Rhesus Macaque", length: 0.09 },
-                {
-                  length: 0.05,
-                  children: [
-                    { name: "Marmoset", length: 0.15 },
-                    { name: "Lemur", length: 0.2 },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
+// Constants
+const DISTANCE_PAD = 0.03; // share of the longest root-to-tip distance added right of it
+const SLOT_PAD = 0.6; // in tip slots: room above the first and below the last tip
+const TITLE = "tree-phylogenetic · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+const LEGEND_H = 48;
 
-// --- Rectangular-cladogram layout: x is the cumulative branch length from
-// the root (evolutionary distance), y is an evenly spaced slot per leaf, and
-// each internal node sits at the mean y of its children. A horizontal branch
-// carries each child out to its own x; a vertical connector at the parent's x
-// joins the children's y range, giving the classic elbowed tree shape. Each
-// node inherits `clade` from its parent unless it declares its own. --------
-let nextLeafSlot = 0;
-const leaves = [];
-const branches = [];
+// Columns: set these to your data's column names
+const TAXON = "Taxon"; // role: species_names (tips carry the species, inner nodes an ancestor id)
+const PARENT = "Parent"; // role: newick_string (the tree structure, one parent per node)
+const BRANCH_LENGTH = "Branch length (substitutions per site)"; // role: branch_lengths
+const CLADE = "Clade"; // role: extra
 
-function layout(node, parentX, inheritedClade) {
-  const clade = node.clade ?? inheritedClade;
-  const x = parentX + node.length;
-  node.x = x;
-  if (!node.children) {
-    node.y = nextLeafSlot;
-    nextLeafSlot += 1;
-    leaves.push({ name: node.name, x, y: node.y, clade });
+// Data: replace this block with your own records, one object per row
+// Primate mitochondrial-DNA phylogeny, written as a Newick string and parsed
+// into one row per node: its parent and the length of the branch above it.
+const data = (() => {
+  const newick =
+    "(((((((Human:0.02,Chimpanzee:0.021):0.012,Gorilla:0.04):0.018,Orangutan:0.06):0.016,Gibbon:0.08):0.03,Rhesus Macaque:0.11):0.035,Marmoset:0.16):0.06,Lemur:0.24);";
+  const cladeOf = {
+    Human: "Apes",
+    Chimpanzee: "Apes",
+    Gorilla: "Apes",
+    Orangutan: "Apes",
+    Gibbon: "Apes",
+    "Rhesus Macaque": "Old World monkeys",
+    Marmoset: "New World monkeys",
+    Lemur: "Strepsirrhines",
+  };
+  const rows = [];
+  const addNode = (parent) => {
+    const row = { [TAXON]: `ancestor-${rows.length}`, [PARENT]: parent ? parent[TAXON] : null, [BRANCH_LENGTH]: null, [CLADE]: null };
+    rows.push(row);
+    return row;
+  };
+  const open = [];
+  let current = addNode(null);
+  for (const token of newick.match(/[(),;]|:[^(),;]+|[^(),;:]+/g)) {
+    if (token === "(") {
+      open.push(current);
+      current = addNode(current);
+    } else if (token === ",") {
+      current = addNode(open[open.length - 1]);
+    } else if (token === ")") {
+      current = open.pop();
+    } else if (token.startsWith(":")) {
+      current[BRANCH_LENGTH] = Number(token.slice(1));
+    } else if (token !== ";") {
+      const name = token.trim();
+      rows.forEach((r) => {
+        if (r[PARENT] === current[TAXON]) r[PARENT] = name;
+      });
+      current[TAXON] = name;
+      current[CLADE] = cladeOf[name] ?? null;
+    }
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const byId = new Map(data.map((d) => [d[TAXON], d]));
+const children = new Map(data.map((d) => [d[TAXON], []]));
+data.forEach((d) => {
+  if (d[PARENT] != null) children.get(d[PARENT])?.push(d[TAXON]);
+});
+
+// Depth-first order from the root(s): parents always come before their children
+const preorder = [];
+const stack = data.filter((d) => d[PARENT] == null).map((d) => d[TAXON]).reverse();
+while (stack.length > 0) {
+  const id = stack.pop();
+  preorder.push(id);
+  stack.push(...[...children.get(id)].reverse());
+}
+
+// x: cumulative branch length from the root, so every branch keeps its own length
+const distance = new Map();
+preorder.forEach((id) => {
+  const row = byId.get(id);
+  distance.set(id, row[PARENT] == null ? 0 : distance.get(row[PARENT]) + (row[BRANCH_LENGTH] ?? 0));
+});
+
+// y: one slot per tip in depth-first order; an inner node sits midway between
+// its first and last child. A node belongs to a clade when every tip below it does.
+const tips = preorder.filter((id) => children.get(id).length === 0);
+const slot = new Map(tips.map((id, i) => [id, i]));
+const nodeClade = new Map();
+[...preorder].reverse().forEach((id) => {
+  const kids = children.get(id);
+  if (kids.length === 0) {
+    nodeClade.set(id, byId.get(id)[CLADE] ?? null);
     return;
   }
-  node.children.forEach((child) => {
-    layout(child, x, clade);
-    branches.push({ x1: x, y1: child.y, x2: child.x, y2: child.y, clade: child.clade ?? clade });
-  });
-  const childYs = node.children.map((child) => child.y);
-  node.y = (Math.min(...childYs) + Math.max(...childYs)) / 2;
-  branches.push({ x1: x, y1: Math.min(...childYs), x2: x, y2: Math.max(...childYs), clade });
-}
-layout(tree, 0, undefined);
+  const kidSlots = kids.map((k) => slot.get(k));
+  slot.set(id, (Math.min(...kidSlots) + Math.max(...kidSlots)) / 2);
+  const kidClades = new Set(kids.map((k) => nodeClade.get(k)));
+  nodeClade.set(id, kidClades.size === 1 ? [...kidClades][0] : null);
+});
 
-const maxDistance = Math.max(...leaves.map((leaf) => leaf.x));
-const xDomainMax = maxDistance * 1.1;
-const leafCount = leaves.length;
+const clades = [...new Set(data.map((d) => d[CLADE]).filter((c) => c != null))];
+const cladeColor = new Map(clades.map((c, i) => [c, t.palette[i]]));
+// A branch spanning several clades (the backbone) stays in the neutral ink
+const branchColor = new Map(preorder.map((id) => [id, cladeColor.get(nodeClade.get(id)) ?? t.inkSoft]));
 
-const cladeLeaves = leaves.filter((leaf) => leaf.clade === HIGHLIGHT_CLADE);
-const otherLeaves = leaves.filter((leaf) => leaf.clade !== HIGHLIGHT_CLADE);
-const cladeOriginX = tree.children[0].x;
-const cladeLabelY = (Math.min(...cladeLeaves.map((l) => l.y)) + Math.max(...cladeLeaves.map((l) => l.y))) / 2;
+const tipDistances = tips.map((id) => distance.get(id));
+const maxDistance = Math.max(...tipDistances);
+const tipPoints = new Map(tips.map((id) => [id, { id, x: distance.get(id), y: slot.get(id) }]));
+const unassignedTips = tips.filter((id) => nodeClade.get(id) == null);
+const tipSeries = [
+  ...clades.map((c, i) => ({
+    type: "scatter",
+    id: `clade-${i}`,
+    label: c,
+    color: t.palette[i],
+    markerSize: 6,
+    data: tips.filter((id) => nodeClade.get(id) === c).map((id) => tipPoints.get(id)),
+  })),
+  ...(unassignedTips.length > 0
+    ? [{ type: "scatter", id: "unassigned", label: "No clade", color: t.inkSoft, markerSize: 6, data: unassignedTips.map((id) => tipPoints.get(id)) }]
+    : []),
+];
 
-const TITLE = "tree-phylogenetic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 64;
-// Square canvas gives 8 sparse leaf rows more vertical room per row than a
-// wide landscape frame would, so the short-branch rows read as a balanced
-// composition instead of mostly empty space.
-const MARGIN = { top: 24, right: 230, bottom: 90, left: 48 };
+const UNIT = BRANCH_LENGTH.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const SUBTITLE = `${tips.length} species, ${clades.length} clades · root-to-tip distance ${Math.min(...tipDistances).toFixed(3)}–${maxDistance.toFixed(3)} ${UNIT}`;
 
-// --- Custom overlay: branch lines, tip markers, leaf labels, and a clade
-// callout — all mapped through the chart's own linear scales so everything
-// stays pixel-aligned at any render size. ------------------------------------
-function BranchLayer() {
+// The community package has no tree component: a custom layer draws the
+// right-angled branches and tip labels in the container's linear scales.
+function PhyloBranches() {
   const xScale = useXScale();
   const yScale = useYScale();
+  const inner = preorder.filter((id) => children.get(id).length > 0);
+  const stems = preorder.filter((id) => byId.get(id)[PARENT] != null && distance.has(byId.get(id)[PARENT]));
 
   return (
-    <g>
-      {branches.map((b, i) => (
+    <g strokeLinecap="round">
+      {inner.map((id) => {
+        const kidSlots = children.get(id).map((k) => slot.get(k));
+        return (
+          <line
+            key={`join-${id}`}
+            x1={xScale(distance.get(id))}
+            x2={xScale(distance.get(id))}
+            y1={yScale(Math.min(...kidSlots))}
+            y2={yScale(Math.max(...kidSlots))}
+            stroke={branchColor.get(id)}
+            strokeWidth={3}
+          />
+        );
+      })}
+      {stems.map((id) => (
         <line
-          key={i}
-          x1={xScale(b.x1)}
-          y1={yScale(b.y1)}
-          x2={xScale(b.x2)}
-          y2={yScale(b.y2)}
-          stroke={b.clade === HIGHLIGHT_CLADE ? t.palette[2] : t.palette[0]}
-          strokeWidth={b.clade === HIGHLIGHT_CLADE ? 4 : 3}
-          strokeLinecap="round"
+          key={`stem-${id}`}
+          x1={xScale(distance.get(byId.get(id)[PARENT]))}
+          x2={xScale(distance.get(id))}
+          y1={yScale(slot.get(id))}
+          y2={yScale(slot.get(id))}
+          stroke={branchColor.get(id)}
+          strokeWidth={3}
         />
       ))}
-      {leaves.map((leaf) => (
+      {tips.map((id) => (
         <text
-          key={leaf.name}
-          x={xScale(leaf.x) + 16}
-          y={yScale(leaf.y)}
+          key={`label-${id}`}
+          x={xScale(distance.get(id)) + 14}
+          y={yScale(slot.get(id))}
           dominantBaseline="middle"
-          textAnchor="start"
-          fontSize={16}
+          fontSize={17}
           fill={t.ink}
         >
-          {leaf.name}
+          {id}
         </text>
       ))}
-      <text
-        x={xScale(cladeOriginX) - 10}
-        y={yScale(cladeLabelY)}
-        dominantBaseline="middle"
-        textAnchor="end"
-        fontSize={12}
-        fontStyle="italic"
-        fill={t.palette[2]}
-      >
-        African apes
-      </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
-      <div
-        style={{
-          height: TITLE_HEIGHT,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 22,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
-      <ChartContainer
+      <ChartsDataProvider
         width={width}
-        height={height - TITLE_HEIGHT}
-        margin={MARGIN}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
-        xAxis={[{ id: "distance", scaleType: "linear", min: 0, max: xDomainMax }]}
-        yAxis={[{ id: "leaf", scaleType: "linear", min: -0.6, max: leafCount - 0.4, reverse: true }]}
-        series={[
+        series={tipSeries}
+        margin={{ top: 24, right: 170, bottom: 8, left: 36 }}
+        xAxis={[
           {
-            type: "scatter",
-            id: "leaves",
-            data: otherLeaves.map((leaf, i) => ({ x: leaf.x, y: leaf.y, id: `leaf-${i}` })),
-            color: t.palette[0],
-            markerSize: 8,
-          },
-          {
-            type: "scatter",
-            id: "clade-leaves",
-            data: cladeLeaves.map((leaf, i) => ({ x: leaf.x, y: leaf.y, id: `clade-leaf-${i}` })),
-            color: t.palette[2],
-            markerSize: 8,
+            id: "distance",
+            scaleType: "linear",
+            min: 0,
+            max: maxDistance * (1 + DISTANCE_PAD),
+            tickNumber: 6,
+            label: BRANCH_LENGTH,
+            height: 72,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
+        yAxis={[
+          { id: "slot", scaleType: "linear", min: -SLOT_PAD, max: tips.length - 1 + SLOT_PAD, reverse: true, position: "none" },
+        ]}
       >
-        <BranchLayer />
-        <ScatterPlot />
-        <ChartsXAxis
-          axisId="distance"
-          label="Evolutionary distance (substitutions per site)"
-          labelStyle={{ fontSize: 16, fill: t.ink }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-        />
-      </ChartContainer>
+        <ChartsWrapper legendPosition={{ horizontal: "start", vertical: "top" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 15, color: t.ink, px: "36px", height: LEGEND_H, alignItems: "center", gap: 3 }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+            }}
+          >
+            <ChartsGrid vertical />
+            <PhyloBranches />
+            <ScatterPlot />
+            <ChartsXAxis axisId="distance" />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
