@@ -125,6 +125,16 @@ MADE_HEADING = (
 )
 """The session block's line over the `certain` conversions the server made on the summary turn (`paste_conversions.py`):
 the root names them in the summary, and never makes, repeats or drops them itself."""
+PASTED_LINE = (
+    "- Data: pasted just now, not summarized yet; the table came in as an attachment of the message box and is "
+    "stored, so get_dataset_profile reads it, and a typed message of this turn is the note sent with it, never data "
+    "you would have to read from the message"
+)
+"""The session block's line while the current dataset is a paste the root has not summarized (`SUMMARY_PENDING`).
+
+A persona test of 2026-11-06: after a re-paste with a note, the root answered root.md's rule for a table typed into
+the box ("I can't read data from the message itself") although the table had arrived as the attachment of that very
+turn. The line says where the table is, so the rule for typed tables never reads as this turn's."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -238,7 +248,7 @@ async def session_context(context: ReadonlyContext) -> str:
             # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule). For
             # every call of the turn: the reply after the root's own `prepare_data`, on a version that is no paste,
             # is still the summary, with the row count after the change (the prep eval's `no_row_count` misses).
-            lines.append("- Data: pasted just now, not summarized yet")
+            lines.append(PASTED_LINE)
         if ledger is not None and ledger.paste_context:
             # The note's turn: the paste's notes and file name, fenced with their preambles, for every call of the
             # turn.
