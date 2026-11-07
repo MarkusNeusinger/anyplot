@@ -46,6 +46,10 @@
   the same way under `shows`, without `texts` when the render reported none.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
   with a fixed code; the exception text never reaches the model.
+* The turn's record of the root's calls (`RequestLedger.tool_calls`): `before_tool_callback` notes each call with its
+  verdict, `after_tool_callback` what it did (`call_outcome`, read from the tool's own answer before the checks
+  above), a call the Budget plugin answered first as refused by `budget`. Closed names and codes only, never an
+  argument or a result: the `done` event's `turn` and the feedback case bundle read it.
 
 Every refusal is `{"status": "error", "code": <enum>}`. The plugin never raises.
 """
@@ -68,7 +72,7 @@ from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult, SwitchArgs
-from .ledger import argument_hash, attribution, ledger_for
+from .ledger import TOOL_ALLOWED, CallOutcome, RequestLedger, argument_hash, attribution, ledger_for
 
 
 logger = logging.getLogger(__name__)
@@ -241,6 +245,58 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
 }
 
 
+READ_TOOLS = frozenset({"get_dataset_profile", "get_spec_brief", "get_current_code", QUERY_TOOL})
+"""The root's tools that only read: an `ok` answer of one changes nothing."""
+EARLY_VERDICTS = frozenset({"budget", "internal"})
+"""The refusals of a call that a plugin before ToolSafety answered (the Budget plugin's daily pipeline runs, or its own
+failure); any other code there reads `other`."""
+
+
+def recorded_name(name: str) -> str:
+    """A tool's name as the turn's record keeps it: a root tool's, else `other`, since the model writes the name."""
+    return name if name in ARGUMENTS else "other"
+
+
+def call_key(tool_context: ToolContext, name: str) -> str:
+    """Which opened call an answer closes: ADK's function call id, else the tool's name (calls of one tool close in
+    order)."""
+    call_id = getattr(tool_context, "function_call_id", None)
+    return call_id if isinstance(call_id, str) and call_id else f"tool:{name}"
+
+
+def call_outcome(tool_name: str, result: Any) -> CallOutcome:
+    """What a root tool's own answer says it did (`ledger.CallOutcome`), read before ToolSafety checks or fences it.
+
+    A writer's `ok` is a stored change, as `empty_reply.stored_change` reads it: the data, the bindings, a language,
+    the plot memory, or a switch the page carries out. A reader's `ok` changes nothing, and so does a
+    `keep_plot_request` that kept nothing. `plot_pipeline` answers with its `PlotResult`.
+    """
+    if not isinstance(result, dict):
+        return "error"
+    status = result.get("status")
+    if tool_name == PIPELINE_TOOL:
+        if status in ("ok", "needs_attention"):
+            return "shipped"
+        if status == "failed":
+            return "failed"
+        if status == "not_ready":
+            if result.get("request_kept") is True:
+                return "kept"
+            return "unconfirmed" if result.get("reason") == "data_unconfirmed" else "not_ready"
+        return "error"
+    if status == "not_ready":
+        return "not_ready"
+    if status != "ok":
+        return "error"
+    if tool_name in READ_TOOLS:
+        return "ok"
+    if tool_name == "keep_plot_request":
+        return "kept" if result.get("request_kept") is True else "ok"
+    if tool_name == SWITCH_TOOL:
+        return "changed" if result.get("switch_requested") is True else "ok"
+    return "changed" if tool_name in ARGUMENTS else "error"
+
+
 def tool_error(code: ErrorCode) -> dict[str, Any]:
     return {"status": "error", "code": code}
 
@@ -395,6 +451,8 @@ class ToolSafetyPlugin(BasePlugin):
             attribution(
                 "tool", ledger, agent=agent, tool=tool.name, args=argument_hash(tool_args), verdict=verdict or "allowed"
             )
+            if agent == ROOT_AGENT:
+                self._open(ledger, tool_context, tool.name, verdict or TOOL_ALLOWED)
             if verdict is None:
                 # The usage telemetry's `tools` (`telemetry.TOOL_NAMES` keeps only the root's known tools).
                 ledger.tools.append(tool.name)
@@ -423,9 +481,35 @@ class ToolSafetyPlugin(BasePlugin):
             return "url_or_path_not_allowed"
         return None
 
+    @staticmethod
+    def _open(ledger: RequestLedger, tool_context: ToolContext, name: str, verdict: str) -> None:
+        """Note the root's call in the turn's record (`RequestLedger.tool_calls`); a failure here never refuses it."""
+        try:
+            ledger.open_call(call_key(tool_context, name), recorded_name(name), verdict)
+        except Exception as exc:
+            logger.warning("tool call record failed: %s", type(exc).__name__)
+
+    @staticmethod
+    def _close(tool: BaseTool, tool_context: ToolContext, result: Any) -> None:
+        """Note what the root's call did, from the tool's own answer (or the refusal that stood in for it), before
+        this plugin checks or fences it: a result refused for its size still stored what it stored."""
+        try:
+            if tool_context.agent_name != ROOT_AGENT:
+                return
+            code = result.get("code") if isinstance(result, dict) else None
+            ledger_for(tool_context.invocation_id).close_call(
+                call_key(tool_context, tool.name),
+                recorded_name(tool.name),
+                call_outcome(tool.name, result),
+                early_verdict=code if isinstance(code, str) and code in EARLY_VERDICTS else "other",
+            )
+        except Exception as exc:
+            logger.warning("tool call record failed: %s", type(exc).__name__)
+
     async def after_tool_callback(
         self, *, tool: BaseTool, tool_args: dict[str, Any], tool_context: ToolContext, result: dict[str, Any]
     ) -> dict[str, Any] | None:
+        self._close(tool, tool_context, result)
         try:
             if not isinstance(result, dict):
                 return tool_error("invalid_result")

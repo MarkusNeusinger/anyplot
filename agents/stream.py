@@ -8,12 +8,12 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `ready` | `v`, `run_id` | the start of the request; a turn starts at once, without the run queue |
 | `status` | `step: "queued"`, `position`, `waiting` | the run queue, mid-turn, while the turn's first sandbox run (`plot_pipeline` or `run_data_code`) waits for the slot: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included); a turn without a sandbox run never sends it |
 | `status` | `step: "started"` | the run queue, once, right after the last `queued` status, when the entry that waited holds its slot; the only end of the wait a turn without pipeline steps has before its reply. A turn that never waited, an expired or withdrawn wait, and a turn's second sandbox run send none |
-| `status` | `step`, `attempt`, and on `repairing` `outcome`, `findings`, `defects` | the pipeline's content-free `custom_metadata` progress events; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) and the rubric ids it repairs (`VQ-05`, closed codes) |
+| `status` | `step`, `attempt`, `max_attempts`, and on `repairing` `outcome`, `findings`, `defects` | the pipeline's content-free `custom_metadata` progress events; `max_attempts` is the run's round cap (`AGENT_MAX_ATTEMPTS`), so the page counts "try 2 of 3" from the server; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) and the rubric ids it repairs (`VQ-05`, closed codes) |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
-| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`: the step it ended in, whether its render is the one shipped, the rubric ids it passed on to the repair, and the closed ids of the gates its renders failed and of a crash, which the page does not show) |
+| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `memory`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `memory`, only with `version`, the plot memory the version stands on as entry ids, `{kept, added}` (the entries from before the run it kept, the ones it added; two empty lists for a session without memory), from the ledger (`shipped_memory`), set once the memory is settled with the version; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`: the step it ended in, whether its render is the one shipped, the rubric ids it passed on to the repair, and the closed ids of the gates its renders failed and of a crash, which the page does not show) |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched), `other_library` (this plot in another library or language: a fixed pointer to the catalogue, not counted toward closing by default), `unsupported_content`, `locked_out` (past the day's `attack` strikes) and `session_closed` (the session's third counted refusal) from the scope guard, `budget` from the budgets (`service_paused` when only the service's day budget is spent, for every user); the refusal one before the closing one ends with the fixed `close_warning` sentence; right after `ready`, before the scope judge: `locked_out`, `budget` for a user over the daily budget, `service_paused` for everyone else once the service's day budget is spent, `rate_limited` or `daily_limit` past the user's message limits, `session_closed` in a closed session |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `run_limit` (the user already has `AGENT_USER_MAX_RUNS` sandbox runs queued or running in other sessions; the turn ends the same way), `deadline`, `no_reply` (the root wrote no reply, also when asked once more: `plugins/empty_reply.py`) or `internal` |
-| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
+| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset`, and last `turn` (`TurnOutcome`: `answer`, `data`, `plot`, `switch`, `language`, `kept` or `memory`) after a turn that ended without an error or a refusal | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) and `turn` (`turn_outcome`, from the ledger's record of the root's tool calls) |
 
 The route numbers every event on its way out (`id: <run_id>.<n>`, `agents/turn_log.py`) and keeps the
 session's latest turn, which `GET /v1/sessions/{sid}/turn` reads to the end for a page that lost the stream.
@@ -38,15 +38,15 @@ the turn sent a plot, asked for a library switch or stored a change
 
 import json
 import re
-from typing import Any, get_args
+from typing import Any, Literal, get_args
 
 from google.adk.events.event import Event
 
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
 from agents.anyplot.plugins.empty_reply import NO_REPLY, carries_answer
-from agents.anyplot.plugins.ledger import RequestLedger
-from agents.anyplot.schemas import RoundOutcome
+from agents.anyplot.plugins.ledger import CallOutcome, RequestLedger
+from agents.anyplot.schemas import MEMORY_ENTRY_ID_PATTERN, RoundOutcome
 from agents.anyplot.telemetry import ends_with_question
 
 
@@ -82,6 +82,60 @@ ROUND_OUTCOMES = frozenset(get_args(RoundOutcome))
 RUBRIC_ID = re.compile(r"[A-Z]{2}-[0-9]{2}")
 """A rubric id a repairing status names (`schemas.RubricId`)."""
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
+MEMORY_ID = re.compile(MEMORY_ENTRY_ID_PATTERN)
+TurnOutcome = Literal["answer", "data", "plot", "switch", "language", "kept", "memory"]
+"""What a turn changed, the `done` event's `turn` (`turn_outcome`)."""
+TURN_ORDER: tuple[TurnOutcome, ...] = ("data", "plot", "switch", "language", "kept", "memory")
+"""The outcome of a turn that changed several things: the first of these it changed, the order the page reads its
+own stream in (`turnOutcome` in `app/src/hooks/useAgentSession.ts`), so the server's word and the page's agree
+wherever the stream shows the change. `kept` and `memory` come last: the page sees them in the memory it reads after
+the turn, and they only tell a turn that changed nothing visible from a question."""
+CALL_CHANGES: dict[tuple[str, CallOutcome], TurnOutcome] = {
+    ("prepare_data", "changed"): "data",
+    ("generate_data", "changed"): "data",
+    ("run_data_code", "changed"): "data",
+    ("set_bindings", "changed"): "data",
+    ("plot_pipeline", "shipped"): "plot",
+    ("plot_pipeline", "failed"): "plot",
+    ("plot_pipeline", "not_ready"): "plot",
+    ("plot_pipeline", "kept"): "kept",
+    ("keep_plot_request", "kept"): "kept",
+    ("switch_plot", "changed"): "switch",
+    ("set_language", "changed"): "language",
+    ("forget", "changed"): "memory",
+}
+"""What a root tool call changed, by its name and outcome (`ledger.ToolCall`); every other call changes nothing.
+
+A bindings change is a change of the data card, where the bindings stand. A `plot_pipeline` call that stopped
+`not_ready` for missing data or open roles is a plot turn, as the page shows it (a failed plot card); one refused for
+unconfirmed data (`unconfirmed`) shows no card and changes nothing, unless it kept the wish (`kept`)."""
+
+
+def turn_outcome(ledger: RequestLedger) -> TurnOutcome:
+    """What the turn changed (`TurnOutcome`), from the record of the root's tool calls (`RequestLedger.tool_calls`),
+    never from the reply: `answer` when no call changed anything (the readers, a refused or failed write), else the
+    first change in `TURN_ORDER`. The paste conversions of a summary turn (`conversions_made`) change the data without
+    a tool call."""
+    changes = {CALL_CHANGES.get((call.tool, call.outcome)) for call in ledger.tool_calls}
+    if ledger.conversions_made is not None:
+        changes.add("data")
+    return next((outcome for outcome in TURN_ORDER if outcome in changes), "answer")
+
+
+def plot_memory(memory: dict[str, list[str]] | None) -> dict[str, list[str]] | None:
+    """A shipped version's plot memory as the `plot` event carries it, `{kept, added}` (entry ids only), or None when
+    the server holds none for it: never two empty lists for a memory nobody read."""
+    if not isinstance(memory, dict):
+        return None
+    kept, added = memory.get("kept"), memory.get("added")
+    if not isinstance(kept, list) or not isinstance(added, list):
+        return None
+    return {"kept": _entry_ids(kept), "added": _entry_ids(added)}
+
+
+def _entry_ids(items: list[Any]) -> list[str]:
+    """Plot memory entry ids (`m3`), closed by their pattern: never an entry's text."""
+    return [item for item in items if isinstance(item, str) and MEMORY_ID.fullmatch(item)]
 
 
 def sse(event: str, data: dict[str, Any]) -> str:
@@ -126,6 +180,9 @@ class Translator:
         if isinstance(status, dict) and status.get("step") in STEPS:
             attempt = status.get("attempt")
             data: dict[str, Any] = {"step": status["step"], "attempt": attempt if isinstance(attempt, int) else 1}
+            cap = status.get("max_attempts")
+            if isinstance(cap, int) and not isinstance(cap, bool) and cap >= 1:
+                data["max_attempts"] = cap
             findings = status.get("findings")
             if status.get("outcome") in ROUND_OUTCOMES and isinstance(findings, int):
                 data.update(outcome=status["outcome"], findings=findings)
@@ -150,11 +207,13 @@ class Translator:
     def _plot(self, output: dict[str, Any]) -> dict[str, Any]:
         """The plot event: the allowlisted fields, the model-written lines sanitised to one plain line each.
 
-        `version` goes out only when the result was stored as a version.
+        `version` goes out only when the result was stored as a version, and `memory` (`plot_memory`) only with it.
         """
         data = {key: output[key] for key in PLOT_FIELDS if key in output}
         if not isinstance(data.get("version"), int):
             data.pop("version", None)
+        elif (memory := plot_memory(self.ledger.shipped_memory)) is not None:
+            data["memory"] = memory
         for key in MODEL_WRITTEN_FIELDS:
             if isinstance(data.get(key), list):
                 lines = (plain_line(item, spec_id=self.spec_id) for item in data[key] if isinstance(item, str))
@@ -201,6 +260,7 @@ class Translator:
         language: dict[str, Any] | None = None,
         suggestion: object = NO_SUGGESTION,
         switch: dict[str, Any] | None = None,
+        turn: TurnOutcome | None = None,
     ) -> str:
         """The closing event; with the session's bindings, confirmation state and a changed dataset when the route has them.
 
@@ -219,6 +279,8 @@ class Translator:
         language, which the turn may have changed, so the page's card always names what `.to_long()` applies.
         `switch` is `{library, plot}` after a turn whose root asked for a switch the user wanted in the chat
         (`switch_plot`, 2026-11-02): the page carries it out with the switch route and, with `plot`, the carry run.
+        `turn` is what the turn changed (`turn_outcome`), after a turn that ended without an error or a refusal; it
+        goes last, so the fields before it read as they did without it.
         """
         payload: dict[str, Any] = {
             "llm_calls": self.ledger.llm_calls,
@@ -236,4 +298,6 @@ class Translator:
             payload["suggestion"] = suggestion
         if switch is not None:
             payload["switch"] = switch
+        if turn is not None:
+            payload["turn"] = turn
         return sse("done", payload)

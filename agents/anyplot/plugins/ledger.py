@@ -111,6 +111,39 @@ class CallFacts:
     thoughts: int = 0
 
 
+CallOutcome = Literal[
+    "ok", "changed", "kept", "shipped", "failed", "not_ready", "unconfirmed", "error", "refused", "unfinished"
+]
+"""What one root tool call did, as ToolSafety reads it from the tool's own answer (`tool_safety.call_outcome`):
+
+* `ok`: it answered and changed nothing (a reader, or `keep_plot_request` that kept nothing);
+* `changed`: it stored a change in the session (the data, the bindings, a language, the plot memory) or asked the
+  page for a library switch;
+* `kept`: a first-plot wish kept for the next run (`keep_plot_request`, or a `plot_pipeline` that stopped
+  `not_ready` and kept the request);
+* `shipped`, `failed`: a `plot_pipeline` run that stored a version, or that ran and stored none;
+* `not_ready`: the session was not ready for it (no data, open roles), nothing kept; `unconfirmed`: a
+  `plot_pipeline` call refused for unconfirmed data, which runs no round and shows the page no plot card;
+* `error`: it answered an error or raised; `refused`: a guard refused it before it ran (`ToolCall.verdict`);
+* `unfinished`: it had not answered when the turn ended (a cancel, a deadline)."""
+TOOL_ALLOWED = "allowed"
+"""The verdict of a root tool call no guard refused."""
+
+
+@dataclass(frozen=True, slots=True)
+class ToolCall:
+    """One root tool call of the turn: its name, the guards' verdict and what it did, closed codes only.
+
+    `tool` is a root tool's name or `other` (a name the model made up); `verdict` is `allowed`, a ToolSafety
+    refusal code (`plot_as_confirmed`, `one_pipeline_per_turn`, ...) or the Budget plugin's `budget`; `outcome` is a
+    `CallOutcome`. Never an argument, a result or a word of the user: what the feedback case bundle and the turn's
+    outcome (`stream.turn_outcome`) read."""
+
+    tool: str
+    verdict: str = TOOL_ALLOWED
+    outcome: CallOutcome = "unfinished"
+
+
 def finish_name(value: Any) -> str | None:
     """A response's finish reason as its enum name (`MAX_TOKENS`), whether given as the enum or as text."""
     if value is None:
@@ -222,6 +255,18 @@ class RequestLedger:
     """Calls and tokens by agent name (`book_step`), and the judges' under `judge` (`book_judge`)."""
     tools: list[str] = field(default_factory=list)
     """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
+    tool_calls: list[ToolCall] = field(default_factory=list)
+    """Every root tool call of the turn in the order the root made them, refused ones too, each with the guards'
+    verdict and what it did (`ToolCall`), written by ToolSafety (`open_call`, `close_call`): the turn's `done.turn`
+    (`stream.turn_outcome`) and the feedback case bundle's record of the root's calls read it. `tools` stays the
+    allowed names alone, which the usage telemetry and EmptyReply read."""
+    open_calls: dict[str, list[int]] = field(default_factory=dict, repr=False)
+    """The `tool_calls` indexes still waiting for their answer, by ADK's function call id (the tool's name for a call
+    without one): parallel calls of one model answer close in any order. Never logged or sent."""
+    shipped_memory: dict[str, list[str]] | None = None
+    """The plot memory a shipped version stands on, `{kept, added}`: the ids of the entries from before the run that
+    it kept, and of the entries its own `remember` items added (`pipeline.memory_ids`), set once the memory is settled
+    with the version. The `plot` event carries it as `memory`; None for a run that stored no version."""
     prep_ops: list[str] = field(default_factory=list)
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     rebuilt_from: list[int] = field(default_factory=list)
@@ -287,6 +332,26 @@ class RequestLedger:
             step.output += output_tokens
         else:
             step.input += tokens  # no split reported: the plain total counts as input
+
+    def open_call(self, key: str, tool: str, verdict: str) -> None:
+        """Note a root tool call as the guards judged it; a refused one is closed already (`refused`)."""
+        self.tool_calls.append(ToolCall(tool, verdict, "unfinished" if verdict == TOOL_ALLOWED else "refused"))
+        self.open_calls.setdefault(key, []).append(len(self.tool_calls) - 1)
+
+    def close_call(self, key: str, tool: str, outcome: CallOutcome, *, early_verdict: str) -> None:
+        """Note what an opened call did; a refused call stays `refused`. A call no `open_call` noted was answered
+        before ToolSafety saw it (the Budget plugin's refusal of a pipeline run): it goes in as refused by
+        `early_verdict`."""
+        waiting = self.open_calls.get(key)
+        if not waiting:
+            self.tool_calls.append(ToolCall(tool, early_verdict, "refused"))
+            return
+        index = waiting.pop(0)
+        if not waiting:
+            del self.open_calls[key]
+        call = self.tool_calls[index]
+        if call.outcome == "unfinished":
+            self.tool_calls[index] = ToolCall(call.tool, call.verdict, outcome)
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:

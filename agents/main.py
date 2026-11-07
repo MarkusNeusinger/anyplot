@@ -318,7 +318,7 @@ from agents.renderer.wire import (
     MAX_CONVERT_INPUT_BYTES,
     MAX_SHEET_NAME_CHARS,
 )
-from agents.stream import MAX_DONE_ROLES, Translator
+from agents.stream import MAX_DONE_ROLES, Translator, turn_outcome
 from agents.turn_log import EVENT_ID_PATTERN, PING, TurnLog, logged, parse_event_id
 from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.spec_roles import MAP_SPECS, DataRole
@@ -2659,7 +2659,9 @@ async def post_message(
         # A switch the root asked for goes to the page only with a turn that ended well: after a failure the page
         # shows the error and the user asks again.
         switch = ledger.switch_request if failure is None else None
-        yield translator.done(**sync, switch=switch)
+        # What the turn changed, only for a turn that ended well: the page marks no refused or failed turn.
+        turn = turn_outcome(ledger) if failure is None and ledger.refusal is None else None
+        yield translator.done(**sync, switch=switch, turn=turn)
 
     return _turn_stream(stream(), log, BackgroundTask(runtime.finish, sid, run))
 

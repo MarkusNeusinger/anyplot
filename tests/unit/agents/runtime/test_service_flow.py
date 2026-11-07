@@ -1405,9 +1405,11 @@ async def test_failed_render_twice_is_a_failed_result(
         ],
     }
     # The repair round's first step says how the first round ended, for the page's progress grid; a render
-    # error names no rubric id.
+    # error names no rubric id. Every step names the run's round cap, the default two here.
     repairing = [data for name, data in events if name == "status" and data.get("step") == "repairing"]
-    assert repairing == [{"step": "repairing", "attempt": 2, "outcome": "render_failed", "findings": 1, "defects": []}]
+    assert repairing == [
+        {"step": "repairing", "attempt": 2, "max_attempts": 2, "outcome": "render_failed", "findings": 1, "defects": []}
+    ]
     assert len(backend.jobs) == 2
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert (result["stage"], result["stages"]) == ("render", ["render", "render"])
