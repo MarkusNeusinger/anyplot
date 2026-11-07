@@ -1,139 +1,136 @@
 // anyplot.ai
 // histogram-cumulative: Cumulative Histogram
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "histogram-cumulative · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
 
-// --- Data (in-memory, deterministic): call-center wait times before an agent
-// answers. Deterministic LCG so the sampled distribution is stable across
-// renders — the browser has no seeded Math.random().
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return function next() {
+// Constants
+const TARGET_BINS = 12; // about this many bins; the width is rounded to a 1-2-2.5-5 step
+const NICE_STEPS = [1, 2, 2.5, 5, 10];
+const PERCENT_MAX = 100; // a cumulative share ends at 100 %
+
+// Columns: set these to your data's column names
+const WAIT = "Wait Time Before Answer (min)"; // role: value
+
+// Data: replace this block with your own records, one object per observation
+// Call-centre wait times before an agent answers, 1,200 calls: a log-normal
+// draw where most callers wait a couple of minutes and a tail queues at peak load.
+const data = (() => {
+  let state = 42 >>> 0;
+  const rand = () => {
     state = (state * 1664525 + 1013904223) >>> 0;
     return state / 4294967296;
   };
-}
-const rand = makeLcg(42);
-function gaussianSample() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+  return Array.from({ length: 1200 }, () => {
+    const z = Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+    return { [WAIT]: Number(Math.min(12, Math.exp(Math.log(2.2) + 0.45 * z)).toFixed(2)) };
+  });
+})();
 
-// Log-normal draw: most callers wait only a couple of minutes, with a modest
-// tail of calls stuck in queue during peak load.
-const CALL_COUNT = 1200;
-const LOG_MU = Math.log(2.2);
-const LOG_SIGMA = 0.45;
-const waitMinutes = Array.from({ length: CALL_COUNT }, () => {
-  const raw = Math.exp(LOG_MU + LOG_SIGMA * gaussianSample());
-  return Math.min(12, raw);
-});
-
-// Bin into 1-minute buckets covering the observed range, then accumulate.
-const BIN_WIDTH = 1;
-const maxWait = Math.max(...waitMinutes);
-const binCount = Math.ceil(maxWait / BIN_WIDTH) + 1;
+// Plot: reads only data and the constants above
+const values = data.map((d) => d[WAIT]).filter((v) => v != null);
+const n = values.length;
+const minValue = Math.min(...values);
+const maxValue = Math.max(...values);
+const rawWidth = (maxValue - minValue) / TARGET_BINS;
+const magnitude = 10 ** Math.floor(Math.log10(rawWidth));
+const binWidth = NICE_STEPS.map((s) => s * magnitude).find((w) => w >= rawWidth);
+const binStart = Math.floor(minValue / binWidth) * binWidth;
+const binCount = Math.floor((maxValue - binStart) / binWidth) + 1;
+const edges = Array.from({ length: binCount + 1 }, (_, i) => Number((binStart + i * binWidth).toPrecision(12)));
+// Half-open bins [edge, edge + width): the maximum falls in the last one
 const counts = new Array(binCount).fill(0);
-waitMinutes.forEach((minutes) => {
-  const idx = Math.min(binCount - 1, Math.floor(minutes / BIN_WIDTH));
-  counts[idx] += 1;
-});
-
-// Running total up to each bin's right edge, expressed as a percentage of
-// all calls — the monotonically non-decreasing ogive.
-const binEdges = Array.from({ length: binCount + 1 }, (_, i) => i * BIN_WIDTH);
-const cumulativePct = [0];
+for (const v of values) counts[Math.floor((v - binStart) / binWidth)] += 1;
+// One level per bin at the running share up to its upper edge; the leading 0
+// anchors the first step at the lower edge of the first bin
+const cumulativeShare = [0];
 let running = 0;
-counts.forEach((count) => {
-  running += count;
-  cumulativePct.push((running / CALL_COUNT) * 100);
-});
+for (const c of counts) {
+  running += c;
+  cumulativeShare.push((running / n) * PERCENT_MAX);
+}
 
-// Median wait time, used as a reference-line focal point for the curve.
-const sortedWaits = [...waitMinutes].sort((a, b) => a - b);
-const medianWait = sortedWaits[Math.floor(sortedWaits.length / 2)];
+const sorted = [...values].sort((a, b) => a - b);
+const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+const unit = WAIT.match(/\(([^)]+)\)/)?.[1] ?? "";
+const unitSuffix = unit ? ` ${unit}` : "";
+const TITLE = "histogram-cumulative · javascript · muix · anyplot.ai";
+const SUBTITLE = `n = ${n.toLocaleString("en-US")} · bin width ${binWidth}${unitSuffix} · dashed line: median`;
+const SHARE_LABEL = "Cumulative share (%)";
+const HEADER_H = 76;
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
 
   return (
-    <div style={{ width, height }}>
-      <div
-        style={{
-          height: TITLE_HEIGHT,
-          lineHeight: `${TITLE_HEIGHT}px`,
-          textAlign: "center",
-          fontSize: 27,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
-      </div>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.5 }}>{SUBTITLE}</Typography>
+      </Box>
       <LineChart
         width={width}
-        height={chartHeight}
+        height={height - HEADER_H}
         skipAnimation
+        hideLegend
+        grid={{ horizontal: true }}
+        margin={{ top: 16, right: 40, bottom: 16, left: 24 }}
         series={[
           {
-            data: cumulativePct,
-            label: "Calls Answered",
+            id: "cumulative",
+            data: cumulativeShare,
+            label: SHARE_LABEL,
             color: t.palette[0],
-            curve: "stepAfter",
+            curve: "stepBefore",
             area: true,
             showMark: false,
-            valueFormatter: (v) => `${v.toFixed(1)}% of calls`,
+            valueFormatter: (v) => `${v.toFixed(1)} %`,
           },
         ]}
         xAxis={[
           {
-            data: binEdges,
+            data: edges,
             scaleType: "linear",
-            label: "Wait Time Before Answer (minutes)",
-            labelStyle: { fontSize: 16, fontWeight: 500 },
-            tickLabelStyle: { fontSize: 14 },
-            min: 0,
-            max: binEdges[binEdges.length - 1],
-            // Force whole-minute ticks (binEdges) instead of the auto-generated
-            // 0.5-minute increments, which crowd once scaled down for mobile.
-            tickInterval: binEdges,
+            min: edges[0],
+            max: edges[edges.length - 1],
+            tickInterval: edges,
+            valueFormatter: (v: number) => String(v),
+            height: 64,
+            label: WAIT,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Cumulative Calls Answered (%)",
-            labelStyle: { fontSize: 16, fontWeight: 500 },
-            tickLabelStyle: { fontSize: 14 },
             min: 0,
-            max: 100,
+            max: PERCENT_MAX,
+            width: 72,
+            label: SHARE_LABEL,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true }}
-        margin={{ left: 96, right: 32, top: 24, bottom: 76 }}
-        slotProps={{ legend: { hidden: true } }}
         sx={{
-          "& .MuiAreaElement-root": { fillOpacity: 0.18 },
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
+          "& .MuiLineChart-area": { fillOpacity: 0.18 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       >
         <ChartsReferenceLine
-          x={medianWait}
-          label={`Median: ${medianWait.toFixed(1)} min`}
-          labelAlign="end"
-          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4" }}
+          x={median}
+          label={`Median ${median.toFixed(1)}${unitSuffix}`}
+          labelAlign="start"
+          labelStyle={{ fontSize: 15, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeWidth: 1.5, strokeDasharray: "6 4" }}
         />
       </LineChart>
-    </div>
+    </Box>
   );
 }
