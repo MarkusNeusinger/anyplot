@@ -6,7 +6,8 @@ with `prepare_data`, which stores a new version, and then asked the user to `.un
 question must never change the data. `run_query` applies the same operations as
 `prepare_data` (`prepare.Operation`, the same closed vocabulary: no code, only a `compute`
 expression the whitelist checks, no row the model writes) to the canonical CSV of the current
-version and returns a small table: the
+version (or of the earlier version `from_version` names, since 2026-11-07: the pace per run after a weekly sum)
+and returns a small table: the
 first `limit` rows (at most `MAX_QUERY_ROWS`) of the result, in at most `MAX_QUERY_COLUMNS`
 columns (the ones named in `columns`, else the first ones), every cell clipped like the
 profile's (`parse.display_copy`). Nothing is stored and the bindings and the confirmation stay
@@ -26,7 +27,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..language import DEFAULT_LANGUAGE
-from ..schemas import ColumnName
+from ..schemas import ColumnName, FromVersion
 from .parse import ParsedDataset, display_copy
 from .prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations
 
@@ -46,6 +47,8 @@ class QueryArgs(BaseModel):
     operations: list[Operation] = Field(default_factory=list, max_length=MAX_OPERATIONS)
     columns: list[ColumnName] | None = Field(default=None, max_length=MAX_QUERY_COLUMNS)
     limit: int = Field(default=DEFAULT_QUERY_ROWS, ge=1, le=MAX_QUERY_ROWS)
+    from_version: FromVersion = "current"
+    """The version the question reads (`dataset_versions.resolve_version`): the current one by default."""
 
 
 @dataclass(frozen=True)

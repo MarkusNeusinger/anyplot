@@ -48,6 +48,8 @@ from .session_state import (
     DATASET_COPIED_FROM,
     DATASET_HISTORY,
     DATASET_ID,
+    DATASET_ORIGINAL,
+    DATASET_TOP,
     DATASET_VERSION,
     PENDING_CLEARED,
     CatalogueSnapshot,
@@ -122,13 +124,16 @@ class IngestedDataset:
         A request kept from a plot that stopped before the confirmation (`PENDING_REQUEST`) was
         written for the data it replaces, so it goes too: a title for the Swiss table must not
         land on the German one pasted after it. Pasted data is the session's own: it was not copied
-        from another session (`DATASET_COPIED_FROM`).
+        from another session (`DATASET_COPIED_FROM`). It is the original of every version made from it
+        (`DATASET_ORIGINAL`), and its numbers start again at 1 (`DATASET_TOP`).
         """
         return {
             DATASET_ID: self.dataset_id,
             BINDINGS: [binding.model_dump() for binding in self.bindings],
             DATASET_HISTORY: [],
             DATASET_VERSION: 1,
+            DATASET_ORIGINAL: self.dataset_id,
+            DATASET_TOP: 1,
             DATASET_COPIED_FROM: None,
             **PENDING_CLEARED,
         }

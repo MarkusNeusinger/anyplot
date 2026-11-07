@@ -4,16 +4,23 @@ The root learns the operations from its prompt, one line per operation under "St
 validates its calls against the Pydantic models in `data/prepare.py`. The two are written by hand, so this test makes
 any drift fail CI: a field or a `Literal` value added to a model and left out of its root.md line, or the reverse
 case of a renamed op. A nested model is checked in the line of the first operation that holds it (a condition in
-`drop_rows`, whose line the others refer to with "conditions as in drop_rows").
+`drop_rows`, whose line the others refer to with "conditions as in drop_rows"). The tool lines of `prepare_data` and
+`query_data` name every argument of the models ToolSafety checks them with, in the order of the tool's signature.
 """
 
+import inspect
 import typing
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import BaseModel
 
-from agents.anyplot.data.prepare import Operation
+from agents.anyplot.data.prepare import Operation, PrepareArgs
+from agents.anyplot.data.query import QueryArgs
+from agents.anyplot.schemas import FromVersion
+from agents.anyplot.tools.session import prepare_data, query_data
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -77,6 +84,41 @@ def test_every_model_has_its_line() -> None:
     documented = [line.split('"op": "', 1)[1].split('"', 1)[0] for line in PROMPT.splitlines() if '- `{"op": "' in line]
 
     assert sorted(documented) == sorted(ops)
+
+
+TOOL_ARGUMENTS: dict[str, tuple[type[BaseModel], Callable[..., Any]]] = {
+    "prepare_data": (PrepareArgs, prepare_data),
+    "query_data": (QueryArgs, query_data),
+}
+"""The data tools whose arguments ToolSafety validates with a model the tool shares, and the tool function."""
+
+
+def tool_line(name: str) -> str:
+    """The root.md line that documents the tool `name`: `- `<name>(<arguments>)`: ...`."""
+    lines = [line for line in PROMPT.splitlines() if line.startswith(f"- `{name}(")]
+    assert len(lines) == 1, f"root.md has {len(lines)} lines for the tool {name}"
+    return lines[0]
+
+
+@pytest.mark.parametrize("name", sorted(TOOL_ARGUMENTS))
+def test_the_tool_line_and_the_tool_name_every_argument_of_its_model(name: str) -> None:
+    """`from_version` was added to both tools (2026-11-07): the model ToolSafety checks, the tool's signature and the
+    root.md line move together (the line in the signature's order; the model may declare a field earlier that a check
+    of another reads)."""
+    model, tool = TOOL_ARGUMENTS[name]
+    signature = tool_line(name).split("`")[1]
+    documented = signature.removeprefix(f"{name}(").removesuffix(")").split(", ")
+    parameters = [parameter for parameter in inspect.signature(tool).parameters if parameter != "tool_context"]
+
+    assert documented == parameters
+    assert sorted(documented) == sorted(model.model_fields)
+
+
+def test_the_prepare_data_line_names_every_fixed_from_version() -> None:
+    fixed = [value for part in typing.get_args(FromVersion) for value in parts(part)[0]]
+
+    assert fixed == ["current", "original"]
+    assert all(f'`"{value}"`' in tool_line("prepare_data") for value in fixed)
 
 
 @pytest.mark.parametrize("model", MODELS, ids=op_name)

@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Station,Temperature (°C),Rainfall (mm),Wind (km/h)\nNorth Ridge,12.4,48,22\nLake Point,14.1,61,15\nHill Farm,11.8,39,27\nRiver Bend,15.3,72,12\nOld Mill,13.6,55,19\nGreen Gate,12.9,44,24\n",
+  "before_operations": [
+    [{"op": "drop_columns", "columns": ["Rainfall (mm)"]}]
+  ],
+  "message": "Actually I need the rainfall column again.",
+  "expected_operations": [],
+  "expected_from_version": "original",
+  "locale": "en",
+  "tags": ["from_version"]
+}

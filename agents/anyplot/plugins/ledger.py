@@ -224,6 +224,9 @@ class RequestLedger:
     """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
     prep_ops: list[str] = field(default_factory=list)
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
+    rebuilt_from: list[int] = field(default_factory=list)
+    """The numbers of the earlier versions this turn's `prepare_data` calls started from (`from_version`): a rebuild
+    changed the data also without an operation, which `prep_ops` would not show."""
     capability_gaps: list[str] = field(default_factory=list)
     """The families of the `unsupported` operations the root named in this turn: a data change no operation can make
     (closed: `telemetry.CAPABILITY_GAPS`), never a word of what the user asked."""

@@ -6,9 +6,9 @@ persisted: a restart or scale-to-zero empties the store, and the session then
 answers `session_expired`. Entries leave through `delete` (a replaced dataset),
 `delete_session` (the DELETE route) and `sweep` (the idle sweeper). The sweep
 counts idleness per session, not per entry: a session's datasets are its current
-version and the versions its undo history keeps (`dataset_versions.py`), and only
-the current one is read by the routes and the tools, so the history lives exactly as
-long as the current version does.
+version, the versions its undo history keeps and its original (`dataset_versions.py`),
+and mostly the current one is read by the routes and the tools, so the history lives
+exactly as long as the current version does.
 
 Every method is synchronous and never awaits, so a call runs to completion on the
 one asyncio loop that serves the app; there are no threads and no locks. Times
@@ -18,7 +18,7 @@ not wall-clock dates.
 
 import secrets
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -29,8 +29,9 @@ from .parse import ParsedDataset
 DEFAULT_MAX_BYTES = 256 * 1024 * 1024
 """The store's byte cap (64 MiB before 2026-10-14). A version is accounted at its canonical CSV and profile,
 and since the caps rose a canonical CSV may reach 4 MiB (`parse.MAX_CANONICAL_BYTES`): with the current
-version and five undo versions a session can take about 25 MiB at worst, so 256 MiB holds about ten such
-sessions, the same as the render store's cap, inside the service's 2 GiB (4 GiB before 2026-10-29)."""
+version, five undo versions and the original kept past them (`dataset_versions.py`) a session can take about
+30 MiB at worst, so 256 MiB holds about eight such sessions, the same as the render store's cap, inside the
+service's 2 GiB (4 GiB before 2026-10-29)."""
 
 
 class StoreFull(Exception):
@@ -71,6 +72,9 @@ class StoredDataset:
     (`main._screen_file_name`; `dataset_context.FILE_NAME_WITHHELD` when the screen refused it); None for text pasted or
     computed. Never a note: the root reads it fenced as data, a name and never a request. A change of the data
     carries it on, a computed table (`generate_data`, `run_data_code`) does not (`push_version`)."""
+    changes: list[str] = field(default_factory=list)
+    """The change lines of the step that made this version from an earlier one (`push_version`): the session block
+    lists them, fenced, so the root can tell which version to read or rebuild from; empty for a version 1."""
     dry_runs: dict[tuple[str, str], Any] = field(default_factory=dict, init=False, repr=False, compare=False)
     """The dry runs of converting a text column to numbers or dates (`conversions.py`), by column and type, each made
     once: the data under an id never changes. A copy (`replace`) starts without them."""
@@ -138,11 +142,12 @@ class DatasetStore:
         code: str | None = None,
         source: str | None = None,
         file_name: str | None = None,
+        changes: Sequence[str] = (),
     ) -> str:
-        """Store a parsed dataset (the code that computed it, where it comes from, the dropped file's name) for
-        `session_id` and return its new id; raises `StoreFull` past the cap."""
+        """Store a parsed dataset (the code that computed it, where it comes from, the dropped file's name, the change
+        lines that made it) for `session_id` and return its new id; raises `StoreFull` past the cap."""
         size = dataset_size(parsed) + sum(
-            len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source, file_name) if text
+            len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source, file_name, *changes) if text
         )
         self._room_for(size, session_id)
         dataset_id = self._new_id()
@@ -164,6 +169,7 @@ class DatasetStore:
             code=code,
             source=source,
             file_name=file_name,
+            changes=list(changes),
         )
         self._used_bytes += size
         return dataset_id
@@ -192,6 +198,7 @@ class DatasetStore:
             text_columns=list(stored.text_columns),
             preview=[list(row) for row in stored.preview],
             context_lines=list(stored.context_lines),
+            changes=list(stored.changes),
             created_at=now,
             last_used_at=now,
         )

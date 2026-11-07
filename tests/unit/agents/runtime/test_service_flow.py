@@ -3129,18 +3129,20 @@ async def test_the_dataset_history_keeps_the_last_five_versions(
 
     view = read_session(await _session_state(client, sid))
     assert view is not None and view.dataset_version == 7 and view.dataset_history == ids[1:6]
-    assert services.datasets.get(ids[0], sid) is None  # the paste left the store: six versions stay
-    assert len(services.datasets) == 6
+    # The paste left the history but stays in the store for `from_version` "original": seven versions stay.
+    assert services.datasets.get(ids[0], sid) is not None
+    assert len(services.datasets) == 7
     for expected in (6, 5, 4, 3, 2):
         undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
         assert undone.status_code == 200 and undone.json()["version"] == expected
+    # Undo as before: five steps, then nothing to undo; the original is no step of it.
     assert (await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)).status_code == 422
-    assert len(services.datasets) == 1
+    assert len(services.datasets) == 2
 
     data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
     pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
     assert pasted.status_code == 200 and pasted.json()["version"] == 1
-    assert len(services.datasets) == 1
+    assert len(services.datasets) == 1  # a new paste takes the old original with it
 
 
 async def test_prepare_data_refuses_without_a_dataset_during_a_run_and_bad_operations(

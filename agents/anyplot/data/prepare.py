@@ -297,7 +297,16 @@ from typing import Annotated, Any, Literal, Self
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_dtype, is_numeric_dtype
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from ..language import DEFAULT_LANGUAGE, canonical
 from ..schemas import (
@@ -308,6 +317,7 @@ from ..schemas import (
     MAX_ROWS,
     MAX_WARNINGS,
     ColumnName,
+    FromVersion,
     NewName,
 )
 from .generate import FUNCTIONS, IDENTIFIER, Expr, GenerateError, evaluate, parse_expression, source_text
@@ -1021,6 +1031,28 @@ Operation = Annotated[
     | Unsupported,
     Field(discriminator="op"),
 ]
+
+
+class PrepareArgs(BaseModel):
+    """The arguments of `prepare_data`, validated by ToolSafety and the tool alike: up to `MAX_OPERATIONS` operations
+    applied to the version `from_version` names (`dataset_versions.resolve_version`). None only for an earlier version
+    taken as it was ("go back to the original"): from the current one they would change nothing."""
+
+    model_config = ConfigDict(extra="forbid")
+    # Declared before `operations`, whose check reads it, so an empty list is refused under its own field's name.
+    from_version: FromVersion = "current"
+    operations: list[Operation] = Field(max_length=MAX_OPERATIONS)
+
+    @field_validator("operations")
+    @classmethod
+    def _changes_something(cls, operations: list[Operation], info: ValidationInfo) -> list[Operation]:
+        if not operations and info.data.get("from_version", "current") == "current":
+            raise ValueError(
+                f"operations holds 1 to {MAX_OPERATIONS} operations; it is empty only with a from_version that names "
+                "an earlier version"
+            )
+        return operations
+
 
 _ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows)
 """The operations after which a row of the frame is no longer the pasted row of the same place."""

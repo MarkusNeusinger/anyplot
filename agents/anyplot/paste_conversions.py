@@ -133,7 +133,15 @@ def make_conversions(
             row_numbers += prepared.row_numbers
             splits += prepared.splits
         version = push_version(
-            store, session_id, view, parsed, snapshot, converted=converted, row_numbers=row_numbers, splits=splits
+            store,
+            session_id,
+            view,
+            parsed,
+            snapshot,
+            converted=converted,
+            row_numbers=row_numbers,
+            splits=splits,
+            changes=changes,
         )
     except (PrepareError, ParseError, StoreFull) as exc:
         # A dry run said every cell reads, so a refusal here is a bug, and a full store a capacity limit: the turn

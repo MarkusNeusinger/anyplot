@@ -1,0 +1,14 @@
+{
+  "dataset_text": "Team,Points,Goals\nAsh Rovers,41,38\nBirch United,57,51\nCedar Town,33,29\nDune Athletic,62,58\nElm Wanderers,28,25\nFern City,49,44\nGlen Harriers,71,66\nHolm Rangers,36,31\nIvy Albion,54,47\nJuniper Park,22,19\nKestrel Vale,45,40\nLarch Borough,66,60\nMoss Dynamo,30,27\nNettle Forest,59,53\nOak Corinthians,25,23\nPine Villa,52,46\nQuarry Saints,39,34\nRush Celtic,68,63\nSedge Olympic,47,42\nThorn County,35,30\nUmber Wells,63,57\nVetch Harbour,27,24\nWillow Heath,43,39\nYarrow Mills,56,50\n",
+  "before_operations": [
+    [{"op": "sort", "column": "Points", "descending": true}, {"op": "keep_rows", "n": 10}]
+  ],
+  "message": "No, the first 20 after all.",
+  "expected_operations": [
+    {"op": "sort", "column": "Points", "descending": true},
+    {"op": "keep_rows", "n": 20}
+  ],
+  "expected_from_version": "original",
+  "locale": "en",
+  "tags": ["from_version", "keep_rows", "top_n"]
+}

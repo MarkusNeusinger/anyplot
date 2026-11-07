@@ -36,6 +36,8 @@ from agents.evals.prep import (
     describe,
     load_cases,
     run_cases,
+    score,
+    score_from_version,
     verdict_of,
 )
 from agents.main import Runtime
@@ -102,8 +104,12 @@ class TestFixtures:
         # 2026-11-07, ten cases for the operations of the persona tests of 2026-11-06 (`compute` four times, `diff`,
         # `rolling`, `blank`, the last value of several columns per month, several values into one class, and a
         # request to fill in values, which the root names as a gap); the hard unit conversion became a `compute`.
-        # And the owner's top N of that day: revenue computed, sorted and its top 3 kept (`keep_rows`).
-        assert len(cases) == 97
+        # And the owner's top N of that day: revenue computed, sorted and its top 3 kept (`keep_rows`). And three that
+        # start from the original after an earlier change (`before_operations`, `from_version`): the first 20 after a
+        # top 10, the pace per run after a weekly sum (a question), a dropped column back.
+        assert len(cases) == 100
+        rebuilt = [item for item in cases if item.before_operations]
+        assert len(rebuilt) == 3 and all(item.expected_from_version == "original" for item in rebuilt)
         assert [item.id for item in cases if "misrouted" in item.tags] == ["en-table-as-message"]
         notes = [item for item in cases if item.first_turn]
         assert len(notes) == 7 and {item.locale for item in notes} == {"de", "en"}
@@ -760,6 +766,80 @@ class TestRun:
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
+
+    def test_earlier_changes_come_first_and_the_version_a_turn_starts_from_is_scored(
+        self, services: Services, swap_models
+    ) -> None:
+        """A `before_operations` case: the server makes the earlier versions, the root rebuilds or reads from one."""
+        top2 = [{"op": "sort", "column": "Exam Score", "descending": True}, {"op": "keep_rows", "n": 2}]
+        top3 = [{"op": "sort", "column": "Exam Score", "descending": True}, {"op": "keep_rows", "n": 3}]
+        earlier = {"before_operations": [top2], "expected_from_version": "original"}
+        cases = [
+            case("v-001", "the first 3 after all", top3, **earlier),
+            case("v-002", "the first 3 after all", top3, **earlier),
+            case("v-003", "which hours had the lowest score?", [], **earlier),
+            case("v-004", "which hours had the lowest score?", [], **earlier),
+        ]
+        rebuild = {"operations": top3, "from_version": "original"}
+        root_turns = [
+            [{"call": "prepare_data", "args": rebuild}, {"text": "From your original table: kept the first 3."}],
+            # The right operations on the top 2: "kept all 2 rows", from the wrong version.
+            [{"call": "prepare_data", "args": {"operations": top3}}, {"text": "Kept the first 3."}],
+            [
+                {"call": "query_data", "args": {"operations": [], "from_version": "1"}},
+                {"text": "2 hours: 55 points, in your original table."},
+            ],
+            [{"call": "query_data", "args": {"operations": []}}, {"text": "I cannot see that any more."}],
+        ]
+        fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        in_scope = JudgeVerdict(verdict="in_scope", lang="en", input_tokens=500, output_tokens=20)
+        judge.script.extend([in_scope] * 4)
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, False, True, False]
+        assert [result.version_miss for result in results] == [False, True, False, True]
+        assert results[0].from_versions == ["prepare_data:original"]
+        assert results[2].from_versions == ["query_data:1"]
+        assert results[3].from_versions == ["query_data:current"]
+        block = fake.calls[0]["system"][-1]["text"]
+        assert "2 (current): sorted by Exam Score, descending; kept the first 2 of 4 rows" in block
+        assert score(cases, results)["summary"]["version_misses"] == 2
+
+    def test_earlier_changes_that_do_not_apply_are_a_setup_error(self) -> None:
+        bad = case("v-005", "go back", [], before_operations=[[GHOST]])
+
+        with pytest.raises(SetupError, match=r"v-005: before_operations\[0\] does not apply"):
+            check_cases([bad])
+        with pytest.raises(ValidationError, match="earlier changes come before a message"):
+            PrepCase(
+                id="v-006",
+                dataset_text=HOURS,
+                action="summarize_data",
+                expected_operations=[],
+                locale="en",
+                before_operations=[[RENAME]],
+            )
+
+    @pytest.mark.parametrize(
+        ("versions", "expected", "miss"),
+        [
+            (["prepare_data:original"], "original", False),
+            (["prepare_data:1"], "original", False),
+            (["query_data:current", "query_data:original"], "original", False),  # read twice, the second right
+            (["query_data:original", "prepare_data:current"], "original", True),  # then changed the current
+            ([], "original", True),
+            (["prepare_data:2"], 2, False),
+            (["prepare_data:original"], None, False),  # no expectation, no score
+        ],
+    )
+    def test_the_version_score(self, versions: list[str], expected: str | int | None, miss: bool) -> None:
+        result = CaseResult("v", [], [], match=True, from_versions=versions)
+
+        score_from_version(result, expected)
+
+        assert result.version_miss is miss and result.match is not miss
 
     def test_a_named_gap_is_the_roots_answer_and_no_failed_call(self, services: Services, swap_models) -> None:
         """`unsupported_operation` is what the root asked for: compared like an operation, never a failure."""
