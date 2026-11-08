@@ -470,11 +470,11 @@ the documented safe state.
 
 ## Security rules (Pro, since 2026-11-09)
 
-> **Status (2026-11-09):** the managed rules, the transform rule, and the
-> narrowed crawler block are live. Two steps are planned: switching Super Bot
-> Fight Mode's "definitely automated" group to Managed Challenge once the smoke
-> bypass exists, and a Managed Challenge for two ASNs once the nginx analytics
-> shield (#12860) is deployed.
+> **Status (2026-11-09):** the managed rules, the transform rule, and the smoke
+> bypass are live, and the crawler block rule is deleted, so no crawler is
+> blocked at the edge. A Managed Challenge for two ASNs is planned once the
+> nginx analytics shield (#12860) is deployed. Whether Super Bot Fight Mode
+> challenges "definitely automated" traffic is an open owner decision.
 
 On 2026-11-09 the `anyplot.ai` zone moved to the Cloudflare Pro plan, and the
 rules in this section were applied through the Cloudflare API with the scoped
@@ -539,18 +539,29 @@ spoof a user agent. Before the API relies on the header, measure two cases:
   it, because a Worker subrequest bypasses the zone's Transform Rules (see
   [The Worker](#the-worker)).
 
-### Rules kept from before the move
+### Custom rules
+
+The smoke bypass is the first rule of the custom ruleset.
+
+| Rule | ID | Action | Matches | State |
+|---|---|---|---|---|
+| Smoke bypass | `6a18892a4acf4461a38afe4e12ef6c00` | Skip, phase `http_request_sbfm` | the site hosts with the right `X-Smoke-Token` (see [The smoke bypass](#the-smoke-bypass)) | active since 2026-11-09 |
+| Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so API and MCP clients are never challenged | active |
+| Block public agent chat | `56aee2fcb6b547bb914a59bbc4da5e12` | Block | the public agent chat | disabled |
+
+The AI Crawl Control block rule is gone. On 2026-11-09 it was first narrowed
+to the two ByteDance crawlers, Bytespider and TikTokSpider, and then deleted
+when the owner decided that every crawler is welcome. Blocking returns only on
+evidence from the request logs. Until its own PR lands, `app/public/robots.txt`
+still declines Bytespider; the crawler policy is in
+[`docs/reference/seo.md`](../../docs/reference/seo.md#cloudflare-is-the-enforcement-layer).
+
+### Other rules kept from before the move
 
 | Rule | Kind | What it does | State |
 |---|---|---|---|
-| Skip Bot Fight Mode for api | custom rule, action Skip | for `http.host eq "api.anyplot.ai"`, skips the phase `http_request_sbfm`, so API and MCP clients are never challenged | active |
-| AI Crawl Control block | custom rule, action Block | blocks the two ByteDance crawlers, Bytespider and TikTokSpider; `app/public/robots.txt` already declines Bytespider on bandwidth | active; narrowed to these two on 2026-11-09 |
-| Block public agent chat | custom rule | when enabled, blocks the public agent chat | disabled |
 | Rate limit for `api.anyplot.ai` | rate limiting rule | 100 requests per 10 seconds per IP; `/health` is exempt | active |
 | Cache rule for `api.anyplot.ai` | cache rule | bypasses the cache by default | active |
-
-The crawler policy behind the block is in
-[`docs/reference/seo.md`](../../docs/reference/seo.md#cloudflare-is-the-enforcement-layer).
 
 ### Super Bot Fight Mode
 
@@ -559,49 +570,56 @@ automated". The "likely automated" group needs the Business plan or higher.
 
 | Setting | Value on 2026-11-09 |
 |---|---|
-| Definitely automated | Allow; planned to become Managed Challenge (steps below) |
+| Definitely automated | Allow |
 | Verified bots | Allow |
 | Static resource protection | Off |
 | JavaScript detections | On, carried over from the Bot Fight Mode era |
 | Optimize for WordPress | Off |
 
-To switch "definitely automated" to Managed Challenge:
+Switching "definitely automated" to Managed Challenge is an open owner
+decision. The recommendation is to stay on Allow while every crawler is
+welcome: verified bots are exempt either way, so a challenge would stop only
+unverified automation, and that includes self-hosted AI agents and agentic
+browsers that can't solve one. Revisit it at the Pro audit with the bot
+analysis data.
 
-1. Create the smoke bypass rule and add its value to the shared checkout's
-   `.env` as `SMOKE_TOKEN` (see [The smoke bypass](#the-smoke-bypass)).
+If you switch it, verify the switch:
+
+1. In the dashboard, set **Definitely automated** to **Managed Challenge**.
 2. Run the post-merge smoke with the token, following the recipe in
    `.claude/skills/open-pr/SKILL.md`, section 4. Every check must pass.
-3. In the dashboard, set **Definitely automated** to **Managed Challenge**.
-4. Run the smoke again with the token. Every check must pass.
-5. Run the smoke once without the token, which is the recipe's last command
+3. Run the smoke once without the token, which is the recipe's last command
    without its `SMOKE_TOKEN=` prefix. Every site page must come back as a
    `SKIP` line marked `challenged by Cloudflare`, and the run exits 2. That
    proves the bypass let the previous run through, not a gap in the rule.
-6. Update the table above with the new value and its date.
+4. Watch Security → Analytics → Events for challenges on normal pages. A
+   solved challenge is a browser, usually a human, so many unsolved ones on
+   `/`, `/plots`, or a spec page mean the switch is catching visitors.
+5. Update the table above with the new value and its date.
 
 ### AI policies
 
 Nothing is blocked through the AI policies: `ai_bots_protection`,
 `ai_training`, `ai_search`, `ai_user`, and every `ai_agents` entry are
 disabled, and the managed robots.txt is off, so Cloudflare serves the
-repository's `robots.txt` unchanged. The one crawler block is the custom rule
-in the table above.
+repository's `robots.txt` unchanged. With the crawler block rule deleted, no
+crawler is blocked at the edge.
 
 ### The smoke bypass
 
 `scripts/site-smoke.mjs`, the post-merge check that the site renders, loads
 the live site in headless Chromium, which Cloudflare classes as definitely
-automated. Once that group is challenged, every run would meet a challenge
+automated. If that group is ever challenged, every run would meet a challenge
 page instead of the site and check nothing; the script marks such a page as a
 `SKIP` line and exits 2. The bypass lets the smoke through:
 
-- **The rule.** The owner creates a WAF custom rule by hand, outside the
-  repository: a request to the site hosts that carries the header
-  `X-Smoke-Token` with the secret value skips the phase `http_request_sbfm`.
-  The expression, with the value filled in only in the dashboard:
+- **The rule.** Custom rule `6a18892a4acf4461a38afe4e12ef6c00`, first in the
+  custom ruleset, created on 2026-11-09: a request to the site hosts that
+  carries the header `X-Smoke-Token` with the secret value skips the phase
+  `http_request_sbfm`. Its expression, with the value left out here:
 
   ```text
-  (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"}) and any(http.request.headers["x-smoke-token"][*] eq "<the value>")
+  (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"} and http.request.headers["x-smoke-token"][0] eq "<secret>")
   ```
 
 - **What it skips.** Only the Super Bot Fight Mode phase. The managed rules and
@@ -640,6 +658,7 @@ this expression with a Managed Challenge. It is not applied as of 2026-11-09.
 - **Bot analysis.** The bot analysis in the same Security analytics shows how
   Cloudflare classes the traffic. Compare the definitely-automated share
   before and after the switch above.
-- **The smoke.** With the token, every check passes. Without it, once
-  "definitely automated" is challenged, the site pages come back as `SKIP`
-  lines marked `challenged by Cloudflare`.
+- **The smoke.** With the token, every check passes. Without it, every check
+  passes too while "definitely automated" stays on Allow; once that group is
+  challenged, the site pages come back as `SKIP` lines marked `challenged by
+  Cloudflare`.

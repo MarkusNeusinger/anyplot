@@ -392,10 +392,11 @@ SMOKE_TOKEN="$(grep -E '^SMOKE_TOKEN=' "$MAIN/.env" | cut -d= -f2-)" \
 ```
 
 The token is read from the shared checkout because a worktree may have no
-`.env`. Without it, Cloudflare's Super Bot Fight Mode challenges the headless
-run as definitely automated, and every page comes back as a challenge instead
-of the site (`infra/cloudflare/README.md`, "Security rules"). The value is
-never printed; don't echo it to check it.
+`.env`. Cloudflare classes the headless run as definitely automated; while
+Super Bot Fight Mode allows that group the token changes nothing, but once it
+challenges the group, a run without the token meets a challenge on every page
+instead of the site (`infra/cloudflare/README.md`, "Security rules"). Pass it
+on every run. The value is never printed; don't echo it to check it.
 
 It loads `/`, `/plots` and `/scatter-basic` in headless Chromium,
 checks `api.anyplot.ai/health`, and prints one `OK`, `FAIL`, or `SKIP`
@@ -419,10 +420,11 @@ rather than passed.
   so, then load `/` and a spec page with the Playwright MCP and read
   its console errors instead.
 - **Exit 2 with a `SKIP` line** marked `challenged by Cloudflare` means
-  Cloudflare answered that page with a challenge, so the site behind it
-  was never reached. Check that `SMOKE_TOKEN` is in the shared
-  checkout's `.env` and that the bypass rule still exists, then run the
-  smoke again; until it passes, report the check as unconfirmed.
+  challenged: run again with the token. It is not an incident and not a
+  pass, because Cloudflare answered that page with a challenge and the
+  site behind it was never reached. If the line says `SMOKE_TOKEN sent`,
+  check that the value in the shared checkout's `.env` matches the
+  bypass rule. Until a run passes, report the check as unconfirmed.
 
 **Finally, clean up without asking** (owner, 2026-10-22: a merge should
 take its branch with it). GitHub deletes the remote branch on merge

@@ -30,8 +30,8 @@
 // which honours it.
 //
 // SMOKE_TOKEN: Cloudflare classes headless Chromium as "definitely automated",
-// so once Super Bot Fight Mode challenges that group every page here would see
-// a challenge page instead of the site. A WAF skip rule lets a request through
+// so if Super Bot Fight Mode challenges that group, every page here sees a
+// challenge page instead of the site. A WAF skip rule lets a request through
 // that phase when it carries `X-Smoke-Token` with the right value
 // (infra/cloudflare/README.md, "Security rules"). The value lives only in the
 // dev box's .env and in that rule, never in the repository; the open-pr skill's
