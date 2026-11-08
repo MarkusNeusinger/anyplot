@@ -184,6 +184,8 @@ https://anyplot.ai in every library, and line-parametric's Chart.js legend is a 
 false refusal until shown otherwise."""
 BLOCKING = frozenset({"map-spec", "library-disabled", "syntax", "security", "no-theme", "savefig-target"})
 """The reason categories of `blocked` (`readiness.scan`); a clean or coupled file carries none of them."""
+URL_STRING = re.compile(r"""["'`](?:https?|ftp|wss?)://(?!www\.w3\.org/)""")
+"""A string that starts with a URL, the SVG, XLink and XHTML namespace URIs of `www.w3.org` excepted."""
 MUIX_7 = re.compile(r"^// Library: muix 7\.", re.MULTILINE)
 """The header line of a MUI X file written for MUI X 7."""
 MUIX_7_IMPORT = re.compile(
@@ -211,19 +213,23 @@ def test_catalogue_corpus() -> None:
     regeneration and the MUI X 9 pass rewrite hundreds of files, so the test holds rules instead of the counts of a
     day (1,617 files on 2026-10-30: 93 clean, 1,456 coupled, 68 blocked).
 
-    The rules: blocked are exactly the map specs a library has and `SECURITY_BLOCKED`; a clean file has the
+    The rules: blocked are exactly the map specs a library has and those of `SECURITY_BLOCKED` that still hold the
+    reason, a URL string among them; a clean file has the
     adaptable-code layout and no reason; a coupled file has one hint per reason, and the `data-block` hint exactly
     when its layout is incomplete, which a plain reading of the text confirms where it can; the `deprecated-api`
     hint appears only in a file written for MUI X 7, and in every one with an import MUI X 9 lacks (owner decision
     of 2026-10-30: such a file is coupled, never blocked for its version); and all three classes occur."""
     statuses: Counter[str] = Counter()
     blocked: dict[str, str] = {}
+    urls: set[str] = set()
     for path in JS_CATALOGUE_FILES:
         library, spec = js_library(path), path.parts[-4]
         text = path.read_text(encoding="utf-8")
         normalised = normalise(text, library=library)
         readiness = scan(normalised, spec_id=spec, enabled_libraries=ENABLED, library=library)
         name = f"{spec}/{library}"
+        if URL_STRING.search(normalised):
+            urls.add(name)
         categories = [reason.split(":", 1)[0] for reason in readiness.reasons]
         statuses[readiness.status] += 1
         assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints), name
@@ -243,12 +249,11 @@ def test_catalogue_corpus() -> None:
 
     assert sum(statuses.values()) == len(JS_CATALOGUE_FILES) and set(statuses) == {"clean", "coupled", "blocked"}
     maps = {f"{path.parts[-4]}/{js_library(path)}" for path in JS_CATALOGUE_FILES if path.parts[-4] in MAP_SPECS}
-    present = {f"{path.parts[-4]}/{js_library(path)}" for path in JS_CATALOGUE_FILES}
     assert {name for name, reason in blocked.items() if reason.startswith("map-spec:")} == maps
     others = {name: rule for name, rule in blocked.items() if name not in maps}
     assert others.items() <= SECURITY_BLOCKED.items(), others  # no other catalogue file is refused
-    # The validator still finds the encoded URL; a regenerated line-parametric legend may have become shorter.
-    assert {name for name in present if name.startswith("qrcode-basic/")} <= set(others)
+    # A regeneration may take a file off the list; one that still holds a URL string stays blocked for it.
+    assert urls - maps <= {name for name, rule in others.items() if rule == "url-literal"}, urls - maps
 
 
 def test_the_detection_stays_inside_the_core_boundary() -> None:

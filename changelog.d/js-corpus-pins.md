@@ -1,12 +1,15 @@
 ### Fixed
 
-- **The JavaScript catalogue tests hold rules, not the counts of one day.** Four corpus tests pinned the
+- **The JavaScript catalogue tests hold rules, not the counts of one day.** Five corpus tests pinned the
   catalogue as it stood on 2026-10-30 and 2026-10-31: the readiness split (93 clean MUI X files), the
   detected conventions (1,602 `t` tokens, 1,344 `// Data` markers), the normaliser's rewrites (893 directives
-  written out) and which eval specs' MUI X files are clean. Every MUI X 9 regeneration broke them. Main never
+  written out), the 8 files the SECURITY profile flags and which eval specs' MUI X files are clean. Every MUI X
+  9 regeneration broke them. Main never
   ran them, because a merge that changes only implementation files skips pytest, so every Python PR inherited
   the failure (#12647). The tests now check each file:
-  - the blocked files are exactly the map specs and the known SECURITY cases;
+  - the blocked files are exactly the map specs and the known SECURITY cases that still hold their reason;
+  - the SECURITY profile flags no file or rule beyond the known ones, and every URL string and every overlong
+    quoted string of the code is a finding;
   - a clean file has the adaptable-code layout, and the `data-block` hint appears exactly when that layout is
     incomplete;
   - `deprecated-api` appears only in MUI X 7 files, and in every file that imports `ChartContainer`;
