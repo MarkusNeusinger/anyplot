@@ -9,10 +9,11 @@ Run it from the repository root. In a worktree, name the main checkout's `.env` 
 
 Sources, any combination, each adding reasons to a pair:
 
-- `--votes`: the 👍/👎 per image from the production `feedback` table, one vote per visitor session (the rule of
-  `FeedbackRepository.reaction_counts`), split at the metadata's `updated`: votes before it were cast on an older
-  version, and count only while this version has drawn no more thumbs up than down. The query runs in a transaction PostgreSQL holds read-only and returns counts only; no message,
-  contact or session id leaves it.
+- `--votes`: the 👍/👎 per image from the production `feedback` table, split at the metadata's `updated`
+  (`core.plot_votes`): votes before it were cast on an older version, and count only while this version has drawn
+  no more thumbs up than down. On each side one vote counts per visitor session, the newest (the rule of
+  `FeedbackRepository.reaction_counts` with `since` and `before`). The query runs in a transaction PostgreSQL holds
+  read-only and returns reactions and times only; no message, contact or session id leaves it.
 - `--scores`: the stored review in `metadata/*.yaml`: no score, a score below `--below`, a total lowered by a score
   cap, spec-compliance or other technical items below their maximum, and defect lines the merge kept on such an item.
 - `--stale`: a stored `library_version` an API level behind the one `--ref` pins (`core.library_versions`, read from
@@ -102,6 +103,8 @@ class Reason:
 
 @dataclass
 class VoteCounts:
+    """A pair's counted votes: `up` and `down` on every version, the `*_since_update` part on the current one."""
+
     up: int = 0
     down: int = 0
     up_since_update: int = 0
@@ -306,42 +309,42 @@ async def read_only(session: AsyncSession) -> None:
         raise RuntimeError(f"the transaction is not read-only (transaction_read_only = {state})")
 
 
-async def vote_rows(session: AsyncSession) -> list[tuple[str, str, str | None, str, datetime]]:
-    """Every counted plot vote as `(spec, library, language, reaction, created_at)`: the newest row per visitor
-    session, spec and library, a row without a session counting once, as `FeedbackRepository.reaction_counts(spec,
-    library)` counts. The language stays out of the partition: library ids are unique across languages, and a row
-    without one (`aggregate_votes` gives it the library's) must not count a second time for the same session."""
+VoteRow = tuple[str, str, str | None, str, datetime, datetime | None]
+"""`(spec, library, language, reaction, created_at, newer_at)`: one plot vote, and when the same visitor session next
+voted on the same image (None: never again)."""
+
+
+async def vote_rows(session: AsyncSession) -> list[VoteRow]:
+    """Every plot vote as a `VoteRow`, so `aggregate_votes` can keep the newest row per visitor session on each side of
+    a pair's `updated`, as `FeedbackRepository.reaction_counts(spec, library, since=…)` and `(…, before=…)` count. A
+    row without a session is its own voter. `newer_at` stands in for the session id, which never leaves the query. The
+    language stays out of the partition: library ids are unique across languages, and a row without one
+    (`aggregate_votes` gives it the library's) must not count a second time for the same session."""
     from sqlalchemy import String, cast, func, select
 
     from core.database import Feedback
 
     voter = func.coalesce(Feedback.session_id, cast(Feedback.id, String))
-    ranked = (
+    result = await session.execute(
         select(
-            Feedback.spec_id.label("spec_id"),
-            Feedback.library_id.label("library_id"),
-            Feedback.language.label("language"),
-            Feedback.reaction.label("reaction"),
-            Feedback.created_at.label("created_at"),
-            func.row_number()
-            .over(
+            Feedback.spec_id,
+            Feedback.library_id,
+            Feedback.language,
+            Feedback.reaction,
+            Feedback.created_at,
+            # Newest first, so the previous row of the window is the voter's next newer vote on the image; the id
+            # breaks a tie of `created_at` the way `reaction_counts` does.
+            # `type_`: SQLAlchemy knows no return type for `lag`, and SQLite would hand back the timestamp as text.
+            func.lag(Feedback.created_at, type_=Feedback.created_at.type).over(
                 partition_by=(voter, Feedback.spec_id, Feedback.library_id),
                 order_by=(Feedback.created_at.desc(), Feedback.id.desc()),
-            )
-            .label("rank"),
-        )
-        .where(Feedback.reaction.in_(THUMBS), Feedback.spec_id.is_not(None), Feedback.library_id.is_not(None))
-        .subquery()
-    )
-    result = await session.execute(
-        select(ranked.c.spec_id, ranked.c.library_id, ranked.c.language, ranked.c.reaction, ranked.c.created_at).where(
-            ranked.c.rank == 1
-        )
+            ),
+        ).where(Feedback.reaction.in_(THUMBS), Feedback.spec_id.is_not(None), Feedback.library_id.is_not(None))
     )
     return [tuple(row) for row in result.all()]
 
 
-async def read_votes() -> list[tuple[str, str, str | None, str, datetime]]:
+async def read_votes() -> list[VoteRow]:
     from core.database import close_db, get_db_context
 
     try:
@@ -352,23 +355,27 @@ async def read_votes() -> list[tuple[str, str, str | None, str, datetime]]:
         await close_db()
 
 
-def aggregate_votes(
-    rows: Iterable[tuple[str, str, str | None, str, datetime]], updated: dict[Pair, datetime | None]
-) -> dict[Pair, VoteCounts]:
-    """Count the votes per pair, and separately those cast since the pair's `updated` (`created_at` is naive UTC).
-    A vote without a language belongs to its library's language; a vote on a pair the catalogue lacks is dropped."""
+def aggregate_votes(rows: Iterable[VoteRow], updated: dict[Pair, datetime | None]) -> dict[Pair, VoteCounts]:
+    """Count the votes per pair, and separately those on the version that began at the pair's `updated`
+    (`core.plot_votes`). On each side a session's newest vote counts: on the current version a row no newer one
+    follows, on the earlier ones a row whose next newer one, if any, is on the current version. A vote without a
+    language belongs to its library's language; a vote on a pair the catalogue lacks is dropped."""
+    from core.plot_votes import on_current_version
+
     counts: dict[Pair, VoteCounts] = {}
-    for spec, library, language, reaction, created in rows:
+    for spec, library, language, reaction, created, newer in rows:
         language = language or catalogue.library_language(library)
         if language is None:
             continue
         pair = Pair(spec, language, library)
         if pair not in updated:
             continue
-        count = counts.setdefault(pair, VoteCounts())
         since = updated[pair]
-        cast_at = created if created.tzinfo else created.replace(tzinfo=UTC)
-        fresh = since is None or cast_at >= since
+        fresh = on_current_version(created, since)
+        newest_on_its_side = newer is None or (not fresh and on_current_version(newer, since))
+        if not newest_on_its_side:
+            continue
+        count = counts.setdefault(pair, VoteCounts())
         if reaction == "thumbs_up":
             count.up += 1
             count.up_since_update += fresh
@@ -503,7 +510,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if args.votes:
-        counts = aggregate_votes(asyncio.run(read_votes()), updated)
+        # The version boundary is `updated` alone, as `impls.updated` is for the API: without one, the pair has a
+        # single version and every vote is on it. `created` stays the fallback of the render and age checks only.
+        version_start = {pair: catalogue.parse_time(c.metadata.get("updated")) for pair, c in candidates.items()}
+        counts = aggregate_votes(asyncio.run(read_votes()), version_start)
         for pair, count in counts.items():
             candidates[pair].votes = count
             candidates[pair].reasons += vote_reasons(count, min_down=args.min_down)

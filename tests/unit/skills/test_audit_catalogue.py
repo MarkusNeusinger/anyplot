@@ -296,11 +296,11 @@ def test_votes_split_at_the_last_update(mods) -> None:
     pair = Pair.parse("scatter-basic/muix")
     before, after = datetime(2026, 11, 1), datetime(2026, 11, 8, 6)  # naive UTC, as the table stores them
     rows = [
-        ("scatter-basic", "muix", "javascript", "thumbs_down", before),
-        ("scatter-basic", "muix", None, "thumbs_down", after),  # no language: the library's
-        ("scatter-basic", "muix", "javascript", "thumbs_up", before),
-        ("scatter-basic", "muix", "javascript", "thumbs_down", after),
-        ("gone-spec", "muix", "javascript", "thumbs_down", after),  # not in the catalogue
+        ("scatter-basic", "muix", "javascript", "thumbs_down", before, None),
+        ("scatter-basic", "muix", None, "thumbs_down", after, None),  # no language: the library's
+        ("scatter-basic", "muix", "javascript", "thumbs_up", before, None),
+        ("scatter-basic", "muix", "javascript", "thumbs_down", after, None),
+        ("gone-spec", "muix", "javascript", "thumbs_down", after, None),  # not in the catalogue
     ]
 
     counts = sc.aggregate_votes(rows, {pair: UPDATED})
@@ -311,6 +311,51 @@ def test_votes_split_at_the_last_update(mods) -> None:
     assert sc.vote_reasons(counts[pair], min_down=3) == []
     assert sc.vote_reasons(sc.VoteCounts(up=2, down=2), min_down=1) == []
     assert sc.vote_reasons(None, min_down=1) == []
+
+
+def test_a_session_counts_once_on_each_side_of_the_update(mods) -> None:
+    """A visitor who rated an older version may rate the new one: each vote counts on its own version, and of two
+    votes on the same side only the newer one."""
+    sc, Pair = mods["select_candidates"], mods["catalogue"].Pair
+    pair = Pair.parse("scatter-basic/muix")
+    older, old, new = datetime(2026, 10, 30), datetime(2026, 11, 1), datetime(2026, 11, 8, 6)
+    later = new + timedelta(minutes=1)
+    rows = [
+        # one session: two votes on older versions, then one on this version
+        ("scatter-basic", "muix", "javascript", "thumbs_up", older, old),
+        ("scatter-basic", "muix", "javascript", "thumbs_down", old, new),
+        ("scatter-basic", "muix", "javascript", "thumbs_up", new, None),
+        # another session voted twice on this version (rows from before the guard)
+        ("scatter-basic", "muix", "javascript", "thumbs_up", new, later),
+        ("scatter-basic", "muix", "javascript", "thumbs_down", later, None),
+    ]
+
+    assert sc.aggregate_votes(rows, {pair: UPDATED})[pair] == sc.VoteCounts(
+        up=1, down=2, up_since_update=1, down_since_update=1
+    )
+    # without an `updated` there is one version, and each session's newest vote alone counts
+    assert sc.aggregate_votes(rows, {pair: None})[pair] == sc.VoteCounts(
+        up=1, down=1, up_since_update=1, down_since_update=1
+    )
+
+
+def test_a_pair_without_updated_has_one_version_for_the_votes(mods, repo: Path, tmp_path: Path, monkeypatch) -> None:
+    """The vote boundary is `updated` alone, as the API's `impls.updated`: `created` is no version start, so a vote
+    on a pair without `updated` is on its one version."""
+    sc = mods["select_candidates"]
+    _commit(repo, {"plots/a-spec/metadata/javascript/muix.yaml": "created: '2026-11-01T00:00:00Z'\n"}, "pair")
+
+    async def votes():
+        return [("a-spec", "muix", "javascript", "thumbs_down", datetime(2026, 10, 1), None)]
+
+    monkeypatch.setattr(sc, "use_database_url", lambda env: True)
+    monkeypatch.setattr(sc, "read_votes", votes)
+    out = tmp_path / "round" / "candidates.json"
+
+    assert sc.main(["--out", str(out), "--votes", "--repo", str(repo), "--ref", "HEAD"]) == 0
+    (candidate,) = json.loads(out.read_text(encoding="utf-8"))["candidates"]
+    assert candidate["votes"] == {"up": 0, "down": 1, "up_since_update": 0, "down_since_update": 1}
+    assert [reason["code"] for reason in candidate["reasons"]] == ["thumbs_down"]
 
 
 def test_old_version_votes_count_only_while_this_version_draws_no_net_thumbs_up(mods) -> None:
@@ -402,17 +447,62 @@ async def test_the_vote_query_counts_as_the_repository_does(mods, test_session) 
     test_session.add_all(rows)
     await test_session.commit()
 
-    votes = await mods["select_candidates"].vote_rows(test_session)
+    sc, Pair = mods["select_candidates"], mods["catalogue"].Pair
+    votes = await sc.vote_rows(test_session)
     repository = FeedbackRepository(test_session)
-    for library in ("muix", "d3"):
-        mine = [v[3] for v in votes if v[1] == library]
+    pairs = {library: Pair.parse(f"a-spec/{library}") for library in ("muix", "d3")}
+    counts = sc.aggregate_votes(votes, dict.fromkeys(pairs.values()))
+    for library, pair in pairs.items():
         theirs = await repository.reaction_counts("a-spec", library)
-        assert {"thumbs_up": mine.count("thumbs_up"), "thumbs_down": mine.count("thumbs_down")} == theirs
-    assert all(len(vote) == 5 for vote in votes)  # spec, library, language, reaction, time: no session id
+        assert {"thumbs_up": counts[pair].up, "thumbs_down": counts[pair].down} == theirs
+    # spec, library, language, reaction, time and the next newer time: no session id
+    assert all(len(vote) == 6 and isinstance(vote[5], datetime | None) for vote in votes)
     # s1's newest d3 row has no language: it replaces the older thumbs up, and still lands on the JavaScript pair
-    pair = mods["catalogue"].Pair.parse("a-spec/d3")
-    counts = mods["select_candidates"].aggregate_votes(votes, {pair: None})
-    assert counts[pair] == mods["select_candidates"].VoteCounts(up=0, down=1, up_since_update=0, down_since_update=1)
+    assert counts[pairs["d3"]] == sc.VoteCounts(up=0, down=1, up_since_update=0, down_since_update=1)
+
+
+async def test_the_split_at_the_update_counts_as_the_repository_does(mods, test_session) -> None:
+    """Each side of the update counts the newest vote per session, as `reaction_counts(since=…)` and `(before=…)` do: a
+    session that rated the old version and the new one counts on both, a repeat on one side once, and a vote cast in
+    the second the version began is on it."""
+    sc, Pair = mods["select_candidates"], mods["catalogue"].Pair
+    start = datetime(2026, 11, 8, 12, 0, 0)  # naive UTC, as `impls.updated` stores it
+    plan = [
+        ("s1", "thumbs_down", -120, "javascript"),
+        ("s1", "thumbs_up", -60, "javascript"),  # replaces s1's older vote on the old version
+        ("s1", "thumbs_down", 60, "javascript"),  # s1 rates the new version too
+        ("s2", "thumbs_up", -60, "javascript"),  # the old version only
+        ("s3", "thumbs_down", 0, "javascript"),  # in the second the version began: on it
+        ("s3", "thumbs_up", 120, "javascript"),  # a repeat from before the guard: the newest counts
+        (None, "thumbs_down", -180, "javascript"),
+        (None, "thumbs_down", 180, "javascript"),
+        ("s4", "thumbs_up", 60, None),  # no language: still the JavaScript pair
+    ]
+    test_session.add_all(
+        Feedback(
+            reaction=reaction,
+            spec_id="a-spec",
+            library_id="muix",
+            language=language,
+            session_id=session,
+            created_at=start + timedelta(minutes=minutes),
+        )
+        for session, reaction, minutes, language in plan
+    )
+    await test_session.commit()
+
+    pair = Pair.parse("a-spec/muix")
+    count = sc.aggregate_votes(await sc.vote_rows(test_session), {pair: start.replace(tzinfo=UTC)})[pair]
+    repository = FeedbackRepository(test_session)
+    current = await repository.reaction_counts("a-spec", "muix", since=start)
+    earlier = await repository.reaction_counts("a-spec", "muix", before=start)
+
+    assert current == {"thumbs_up": 2, "thumbs_down": 2}
+    assert earlier == {"thumbs_up": 2, "thumbs_down": 1}
+    assert {"thumbs_up": count.up_since_update, "thumbs_down": count.down_since_update} == current
+    assert {"thumbs_up": count.up - count.up_since_update, "thumbs_down": count.down - count.down_since_update} == (
+        earlier
+    )
 
 
 def test_ranked_and_the_universe(mods) -> None:

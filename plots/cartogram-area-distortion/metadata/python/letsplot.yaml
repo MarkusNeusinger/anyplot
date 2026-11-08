@@ -2,193 +2,167 @@ library: letsplot
 language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:22:00Z'
-updated: '2026-06-08T04:15:05Z'
-generated_by: claude-sonnet
-workflow_run: 27114700284
+updated: '2026-11-08T22:52:38Z'
+generated_by: claude-opus-5-5
+adopted_from: 3913fe7bca0dffdd0ef81faab95d3275557f3cbf (3913fe7bca0dffdd0ef81faab95d3275557f3cbf)
+workflow_run: 42527767373
 issue: 4671
-language_version: 3.13.13
-library_version: 4.10.1
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Multi-layer geographic composition (coastline + country outlines + bubble cartogram)
-    provides rich spatial context
-  - Three-tier label hierarchy (bold large, medium, small by population threshold)
-    guides the eye to major countries first
-  - Highlighted 'small but wealthy' nations via bold borders + star markers + annotation
-    creates clear focal story
-  - 'Perfect Imprint palette compliance: sequential imprint_seq gradient (#009E73
-    → #4467A3) and theme-adaptive chrome tokens throughout both renders'
-  - Dual encoding (bubble size = population, fill color = GDP per capita) with fully
-    labeled legends and descriptive subtitle
-  - Fully deterministic data — hardcoded realistic European statistics make the plot
-    perfectly reproducible
-  - Layer_tooltips() used idiomatically for the interactive HTML export alongside
-    the PNG output
+  - 'Bubble area is truly proportional to population: scale_size_area maps sqrt(population)
+    to marker diameter with zero at zero, and the 5/20/40/80 M size legend matches
+    the drawn bubbles'
+  - Simplified country outlines with shared border vertices give the undistorted geography
+    behind the Dorling circles, so the swollen DE/FR/UK/IT and the shrunken Nordic
+    countries read against their real footprints
+  - Imprint sequential green-to-blue gradient for GDP per capita with a titled colorbar
+    plus a titled size legend, both on elevated theme-adaptive legend boxes
+  - Abbreviation text color is chosen per bubble by WCAG contrast against its fill,
+    and the labels come in three size tiers (in-bubble bold for large countries, beside
+    the bubble for the smallest), legible in both themes
+  - layer_tooltips with a country title and population / GDP lines adds real inspection
+    value in the HTML output
   weaknesses:
-  - 'Bubble/Dorling cartogram approximation rather than true contiguous cartogram:
-    the spec describes area-distorted polygons that preserve adjacency, but the implementation
-    uses proportional circles overlaid on geographic outlines. True contiguous cartogram
-    requires polygon-level distortion algorithms.'
-  - Central European cluster (NL, BE, AT, HU, CZ) has crowded overlapping labels and
-    bubbles — small countries are hard to distinguish individually; consider nudging
-    label offsets or using geom_label with repulsion
-  - 'SC-02 gap: contiguity of regions is not preserved after ''distortion'' as the
-    spec specifies — bubbles can visually overlap/separate from their outline footprints,
-    breaking the adjacency requirement'
-  - Stars (shape=8) placed at lat+1.8° are correct in concept but appear very close
-    to the surrounding bubble text labels in crowded areas (DK, NL), occasionally
-    creating minor visual noise
+  - 'SC-01 (both): an unrequested highlight layer — a ★ above every country with population
+    < 15 M and GDP/capita > 50 K, a matching ''★ = small but wealthy'' subtitle segment
+    and a floating ''Small nations, highest wealth'' callout in the North Sea — adds
+    a derived threshold encoding and an annotation the spec does not ask for → remove
+    the stars, the callout and the subtitle segment. Likely cause: the df_stars geom_text,
+    the callout geom_text at (-9, 61.5) and the subtitle text.'
+  - 'Suggestion: a contiguous cartogram is the spec''s preferred form; the Dorling
+    circles are accepted, but distorted polygons would keep the shared borders the
+    Notes prefer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white
-      Chrome: Title "European Population Cartogram · cartogram-area-distortion · python · letsplot · anyplot.ai" rendered in dark INK (#1A1A17) at auto-scaled size 12px; subtitle "Bubble size = population | Color = GDP per capita | ★ = small but wealthy" in INK_MUTED; all chrome clearly readable against the light background. No axis ticks or labels (hidden, appropriate for a geographic plot). Legend titles "GDP/capita (USD K)" and "Population (M)" in dark text on elevated background (#FFFDF6).
-      Data: Bubbles range from small (IE, PT, DK ≈ 5M) to large (DE, UK, FR). Sequential imprint_seq gradient (green #009E73 → blue #4467A3) encodes GDP per capita — low-income countries (RO, HU, GR) appear green; high-income (IE, CH, NO) appear teal-blue. Stars (★) mark highlighted small-but-wealthy nations above their labels. Country border outlines (faint muted paths) and simplified coastline polygon provide geographic context. Three-tier label hierarchy visible: bold large text for DE/UK/FR/IT/ES, medium for PL/RO/SE, small for minor countries.
-      Legibility verdict: PASS — all text readable; central European cluster (NL/BE/AT/HU/CZ) is crowded but labels remain distinguishable; no text clipped at canvas edges.
+      Background: warm off-white #FAF8F1 across plot and panel; legend boxes on a slightly lighter elevated surface with a thin soft-ink frame.
+      Chrome: bold near-black title "European Population Cartogram · cartogram-area-distortion · python · letsplot · anyplot.ai" at the top left (~78 % of the width, unclipped), muted-grey subtitle "Bubble size = population | Color = GDP per capita | ★ = small but wealthy"; no axes (map). Right side: "GDP/capita (USD K)" colorbar (20–100) and "Population (M)" size legend with grey circles for 5/20/40/80. All text readable.
+      Data: 20 European countries as Dorling circles at (roughly) their centroids over thin grey simplified country outlines. DE, FR, UK, IT, ES, PL are large circles with big bold dark abbreviations; NL has light text; smaller countries (IE, NO, SE, FI, DK, BE, CH, AT, CZ, HU, PT, GR) are small circles labelled in bold ink to their right; RO mid-sized with bold dark text. Fill runs Imprint green #009E73 (RO, PL, GR, HU) through teal to blue #4467A3 (IE, CH, NO). Black stars sit above 8 small wealthy countries; an italic grey callout "Small nations, highest wealth" floats at upper left. No circles overlap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black
-      Chrome: Title, subtitle, and legend text rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) tokens — all clearly visible against the dark background. Legend background uses elevated dark surface (#242420). Country border outlines rendered in INK_MUTED (#A8A79F) — subtle but visible.
-      Data: Bubble fill colors identical to light render — same imprint_seq gradient green-to-blue, confirming data palette is theme-invariant. Stars visible in light color above highlighted nations. Country abbreviation labels rendered in light text, visible on the near-black background.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements use theme-adaptive light tokens; the near-black background correctly uses #1A1A17 not pure black; data colors are identical to the light render as required.
+      Background: warm near-black #1A1A17; legend boxes on the darker elevated surface #242420.
+      Chrome: title in light ink, subtitle, legend titles and tick labels in light greys — all clearly readable, no dark-on-dark text. Country outlines in grey remain visible. Size-legend circles flip to a light grey and stay visible.
+      Data: bubble fills are identical to the light render (same green-to-blue gradient); in-bubble abbreviations keep the contrast-chosen colors (dark on teal/green, light on NL) and stay readable; beside-bubble labels and stars flip to light ink.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: dynamic title scaling formula, three-tier
-          label hierarchy (12/9/8 mm), subtitle size=10, legend sizes 9-10. All readable
-          in both themes. Minor: title is compact at size=12 due to 90-char string
-          with descriptive prefix, acceptable tradeoff.'
+        comment: Explicit sizes; title, subtitle, legends and all abbreviations readable
+          in both themes, in-bubble label color chosen by contrast
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding in the NL/BE/AT/HU/CZ cluster — small bubbles and
-          labels are close together. Stars above highlighted countries occasionally
-          sit near neighboring labels. Main content (UK, DE, FR, IT, ES, PL) fully
-          readable.
+        comment: No text collisions; circles do not overlap; beside-bubble labels
+          clear of neighbours
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bubble size scale [8,26] at scale=4 gives [32,104]px range — prominent
-          for 20 data points. Alpha 0.82–0.95 appropriate. Very small countries (IE,
-          PT, BE) have bubbles that are visible but small. Stars clearly visible above
-          highlighted nations.
+        comment: Circles, outlines and legend glyphs visible on both backgrounds;
+          size-legend circles match the bubbles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential imprint_seq gradient (green→blue) is CVD-safe. Size encoding
-          adds redundancy beyond hue. Stars add redundant encoding for highlighted
-          nations. No red-green sole distinction.
+        comment: Green-to-blue ramp with lightness change, no red-green signal; size
+          carries the main variable
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas 3200×1800 (landscape) correct. Map fills the canvas well.
-          Legends positioned right. Some empty space in upper-left corner (used for
-          annotation). No text clipped at canvas edges.
+        comment: 3200x1800, map fills the panel, legends stacked on the right, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels hidden (appropriate for geographic plot). Title is descriptive
-          with spec-id format. Subtitle provides complete encoding legend. Legend
-          titles include units (USD K, M).
+        comment: Map without axes (N/A); legend titles carry units (USD K, M)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') is imprint_seq
-          — correct for single-polarity continuous data. Light background #FAF8F1,
-          dark background #1A1A17. All chrome tokens theme-adaptive. Data colors identical
-          across both renders.'
+        comment: 'imprint_seq #009E73 -> #4467A3 for continuous GDP; #FAF8F1 / #1A1A17
+          backgrounds; both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design clearly above defaults: intentional three-tier label
-          hierarchy, highlighted nations with bold strokes + stars, dual encoding
-          with descriptive legends, multi-layer geographic context. Not quite FiveThirtyEight
-          publication level but thoughtfully composed.'
+        comment: Three-tier label typography (12 pt bold in large bubbles, 7 pt in
+          medium, beside-bubble for smallest) with per-bubble contrast-chosen text
+          color
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid and all axis chrome removed (appropriate for map). Subtle alpha
-          on borders (0.35–0.5). Legend background uses elevated surface token. Clean
-          minimal theme. Some room for improvement in legend styling and border refinement.
+        comment: Reference outlines kept faint (alpha 0.5, 0.35 width) so circles
+          dominate; thin page-colored bubble rims
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear focal story: small-but-wealthy nations highlighted via bold
-          borders + stars + annotation. Subtitle explains all encodings. Visual hierarchy
-          through bubble size + color creates dual narrative. Viewer is guided but
-          story requires reading the subtitle annotation.'
+        comment: Default; the star highlight and callout are unrequested additions
+          and earn no credit
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Implements a Dorling/bubble cartogram (proportional symbol map) rather
-          than a true contiguous cartogram where polygon shapes are distorted. The
-          spec describes contiguous cartograms preserving adjacency and region shape.
-          Geographic outlines are shown for reference as recommended. Reasonable approximation
-          given letsplot's limitations for true contiguous distortion.
+        comment: Accepted non-contiguous Dorling cartogram, but an unrequested star
+          highlight + callout layer (defect line)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Present: region identification (abbreviations), size proportional
-          to data value, color scale for secondary variable, labels on major regions,
-          legends for both encodings, reference map (country outlines). Missing: true
-          contiguous adjacency preservation after distortion.'
+        comment: Area proportional to value, original outlines, color scale for a
+          secondary variable, abbreviations on major regions, legends for area and
+          color — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Population → bubble area (scale_size range=[8,26]). GDP per capita
-          → fill color (imprint_seq gradient). Geographic position approximately preserved.
-          All 20 countries visible with correct relative sizing.
+        comment: Circles near true positions (cartogram permits moved coordinates),
+          area ∝ population, all regions in frame
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''European Population Cartogram · cartogram-area-distortion
-          · python · letsplot · anyplot.ai'' — correct prefixed format. Legend labels
-          descriptive with units. Subtitle explains all three encodings.'
+        comment: Descriptive prefix + mandated title format; reader-facing legend
+          titles
     data_quality:
       score: 15
       max: 15
@@ -198,26 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: '20 countries covering full range: large+rich (SE, NO, CH), large+poor
-          (PL, RO), small+rich (NL, BE, IE), small+poor (GR, HU). Population range
-          5M–83M. GDP range 15K–100K. Full coverage of cartogram storytelling potential.'
+        comment: Large countries swell, geographically large but sparse ones (NO,
+          SE, FI) shrink — the distortion is clearly shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real European countries with plausible economic data. Non-controversial
-          geographic/economic topic. Ireland's high GDP per capita (100K) is factually
-          accurate due to nominal GDP calculation. Switzerland's high value (92K)
-          is also accurate.
+        comment: European population and GDP per capita — neutral and real-world
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values approximately correct (Germany 83M, UK 67M, Romania
-          19M, etc.). GDP per capita values plausible and internally consistent. The
-          relative ordering of countries by both metrics is realistic.
+        comment: 'Checked: DE 83.2 M, FR 67.8 M, IT 59.0 M, ES 47.4 M, PL 37.7 M plausible;
+          GDP/capita IE 100, CH 92, NO 89, RO 15 K plausible'
     code_quality:
       score: 10
       max: 10
@@ -227,73 +196,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: Imports → Theme tokens → Data → Plot layers
-          → Save. No classes or functions.'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data hardcoded as Python dictionaries.
-          No random number generation needed.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (getenv), pd (DataFrame), all lets_plot imports
-          verified against usage in code.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Dynamic title size formula is a smart non-obvious
-          touch. Three-tier label hierarchy via data filtering is elegant. layer_tooltips()
-          is appropriate (letsplot is interactive). Border polygon construction loop
-          is justified.
+        comment: Long outline strings are necessary data (no geo package available);
+          contrast computation is vectorised and short
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4, 3200×1800) and plot-{THEME}.html.
-          Current letsplot API. Correct ANYPLOT_THEME env var pattern.
+        comment: Saves plot-{THEME}.png at scale=4 and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expertly uses ggplot2-style grammar: aes() mappings, scale_* functions,
-          coord_cartesian, theme customization, labs, ggsize, ggsave with scale. Multi-layer
-          composition (geom_polygon + geom_path + geom_point + geom_text) is idiomatic
-          letsplot.'
+        comment: scale_size_area for true area scaling, guide_legend(override_aes=...),
+          scale_color_identity for per-row text color
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: layer_tooltips() is a feature unique to letsplot for interactive
-          HTML export. HTML export alongside PNG is distinctive. The interactive tooltip
-          configuration (title, line items) shows library mastery. Multi-layer grammar-of-graphics
-          approach is more common to ggplot2-style libraries.
+        comment: lets-plot layer_tooltips with title and formatted lines for the HTML
+          view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-08T22:49:34Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
+  - colorbar
   - annotations
+  - custom-legend
+  - html-export
+  - hover-tooltips
   patterns:
-  - iteration-over-groups
+  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
-  - custom-colormap
   - edge-highlighting
