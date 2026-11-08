@@ -18,4 +18,4 @@
   through a re-render from `main`, and spec causes through a spec issue that
   is filed only on the owner's OK. `verify_merged.py` then checks every merged
   pair on the live site: the code on `main` against the fix, the metadata,
-  the database row, both renders and the API.
+  the database row, both renders and the API. (#12825)
