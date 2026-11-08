@@ -7,3 +7,4 @@
   event carries `memory: {kept, added}`, the plot memory entry ids it stands on, and every pipeline step's `status`
   carries `max_attempts`. The page can then tell a question from a turn that only kept a wish for the first plot,
   label a version `kept 3`, and say "try 2 of 3" from the server's numbers; an older page ignores all three.
+  (#12607)
