@@ -1,7 +1,7 @@
 // anyplot.ai
 // kagi-basic: Basic Kagi Chart
 // Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
