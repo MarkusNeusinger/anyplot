@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: contour-basic
 created: '2026-06-25T03:56:01Z'
-updated: '2026-11-08T22:17:30Z'
+updated: '2026-11-08T22:22:56Z'
 generated_by: claude-opus-5-5
 adopted_from: c068cb93c786cb497786be1328c2a9436c8d59b9 (c068cb93c786cb497786be1328c2a9436c8d59b9)
 workflow_run: 42529146516
@@ -13,57 +13,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Filled bands and isolines come from one refined field: Catmull-Rom refinement
-    of the 70x70 grid plus marching squares gives smooth closed rings around both
-    peaks and basins, lines that run cleanly to the plot edge, and the saddle region
-    near the center resolved without crossings'
-  - imprint_div from t.div is centered on zero for the two-signed peaks surface (red
-    basins, blue peaks, near-neutral flat ground), and the data colors are identical
-    in both renders while the chrome flips
-  - Levels are evenly stepped at a round step of 1 computed from the field's range,
-    so tightly packed rings on the steep peak at (0, 1.6) and the basin at (0.2, -1.6)
-    read as steep change and the wide spacing elsewhere as flat ground
-  - The color bar is drawn as the same discrete bands as the plot, with a tick at
-    every isoline level and the quantity 'Surface height f(x, y)' as its title, so
-    color and lines read on one scale
-  - 'Idiomatic Chart.js extension: the band fill and color bar are plugins on the
-    beforeDatasetsDraw/afterDraw hooks, each isoline is a scatter dataset with showLine
-    and null gaps between segments, and pointHitRadius gives a per-level tooltip in
-    the HTML view; animation is off and the mount-node contract is followed'
+  - Filled bands and isolines come from the same Catmull-Rom-refined grid (marching
+    squares for the lines, bilinear sampling for the per-pixel band fill), so every
+    band edge sits exactly on its isoline and all curves are smooth, closed or run
+    to the plot edge, with no stair-stepping
+  - imprint_div is centered on zero for the two-signed elevation anomaly (red basins,
+    blue peaks, the theme-adaptive midpoint for flat ground), and the same palette
+    is identical in both themes
+  - Evenly stepped levels at a round step of 1 m are computed from the data range,
+    and the color bar repeats the exact bands with a tick at every isoline level and
+    the quantity 'Elevation anomaly (m)' as its title
+  - 'Idiomatic Chart.js extension: scatter datasets with showLine and null breaks
+    for isoline segments, a beforeDatasetsDraw plugin for the fill and an afterDraw
+    plugin for the color bar, scale.getValueForPixel for pixel-to-data mapping, and
+    axis borders lifted above the fill with border.z'
+  - Per-isoline tooltips ('Elevation anomaly (m) = 3') in the HTML view; animation
+    disabled, mount-node contract respected
+  - 'The data shows every aspect of the plot type: two peaks, two basins, a saddle
+    region, closed rings and lines cut off at the plot edge on a 70 x 70 grid'
   weaknesses:
-  - 'VQ-06, DQ-02 (both): the axes read ''x coordinate'' and ''y coordinate'' and
-    the color bar ''Surface height f(x, y)'', generic labels without units on an abstract
-    test surface → name the quantity and unit of a concrete scenario for the same
-    field (for example ''Easting (km)'', ''Northing (km)'', ''Elevation anomaly (m)''
-    or a comparable physical surface). Likely cause: the X, Y and Z column constants.'
-  - 'CQ-01 (code): the plot zone declares helper functions `refineRows()` (lines 49-64)
-    and `fractionalIndex()` (lines 145-155), against the no-functions KISS structure
-    → write the refinement and the index lookup inline in the plot zone, or as arrow
-    expressions used where they are needed. Likely cause: the refinement factored
-    into a reusable helper.'
-  - 'Suggestion: labelling a few key levels on their own isolines (the Notes allow
-    it when practical) would let the reader read values without the color bar.'
-  - 'Suggestion: the two thin end bands of the color bar (above 8 and below -6) could
-    be clamped to the outermost levels so every color-bar segment has the full step
-    height.'
+  - 'Suggestion: inline value labels on a few key levels (for example 0, ±4, 8) would
+    let the reader read the field without consulting the color bar; the Notes allow
+    them when practical.'
+  - 'Suggestion: in the dark render the bands between -1 and +1 sit very close to
+    the plot-area midpoint color; a slightly stronger isoline alpha would separate
+    the near-zero contours more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white page around #FAF8F1; the plot area is filled edge to edge by the contour bands, whose near-zero band is a pale neutral close to the page tone.
-      Chrome: bold title "contour-basic · javascript · chartjs · anyplot.ai" centered above the plot, about 40 % of the width; axis titles "x coordinate" / "y coordinate" in dark ink; ticks -3..3 on both axes in a softer dark ink; color bar on the right with ticks -6..8 at every isoline level and the rotated title "Surface height f(x, y)". All text readable, no overlap, nothing clipped.
-      Data: the MATLAB-style peaks surface on [-3, 3]^2 as filled bands in imprint_div (red #AE3030 side for negative basins, blue #4467A3 side for positive peaks, near-neutral around zero) with thin semi-transparent ink isolines every 1 unit. A tall peak near (0, 1.6) shows ~8 tight closed rings, a deep basin near (0.2, -1.6) ~7 rings, a smaller peak at (1.3, 0), a small basin at (-1.4, 0.2), a lobe at (-0.4, -0.6), a tiny negative pocket near (0.3, 0.3) and the zero contour running to the left, right and bottom edges. Curves are smooth with no stair-stepping and never cross. No categorical series, so the #009E73 first-series rule does not apply.
+      Background: warm off-white #FAF8F1 page; the plot area is filled by the imprint_div midpoint (pale neutral) for near-zero elevation.
+      Chrome: bold title "contour-basic · javascript · chartjs · anyplot.ai" centered at top, axis titles "Easting (km)" and "Northing (km)", tick labels -3..3 on both axes, color-bar ticks -6..8 and the rotated color-bar title "Elevation anomaly (m)" — all dark ink, all readable. No grid (the fill covers the plot area); left and bottom axis lines drawn above the fill.
+      Data: square 2400x2400 filled contour plot of the "peaks" surface, 14 levels at 1 m step. Blue rings for the main peak (top center, ~8 m), a secondary blue lobe right and a small blue lobe lower-center; red rings for the deep basin at lower center (~-6.5 m) and a basin at left; thin translucent dark isolines over the bands, smooth and non-crossing, closing on themselves or running to the edge. Color bar on the right with matching discrete bands. Diverging imprint_div red–mid–blue centered on 0.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black page around #1A1A17; the near-zero band is a dark neutral close to the page tone.
-      Chrome: title, axis titles and color-bar title in light ink; tick labels in a lighter soft grey; axis lines and the color-bar frame in light soft ink. No dark-on-dark text anywhere; everything readable.
-      Data: the same field and the same red/blue band colors at the extremes as in the light render; the div midpoint is the theme-adaptive token, so the low-magnitude bands sit dark near the page. Isolines flip to light ink at 50 % alpha and stay clearly visible on every band. The red and blue extremes are identical to the light render.
+      Background: warm near-black #1A1A17 page; plot area filled by the dark imprint_div midpoint.
+      Chrome: title, axis titles, tick labels and color-bar labels in light ink, all readable; no dark-on-dark text.
+      Data: same geometry and the same red and blue anchor colors as the light render (only the theme-adaptive midpoint flips, as t.div specifies); isolines switch to translucent light ink and stay visible. Near-zero bands sit close to the background but remain distinguishable by their isolines.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -71,51 +63,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 22, axis titles 16, ticks 14, color-bar
-          text 14/16 CSS px); readable in both themes, balanced x/y
+        comment: Explicit sizes (title 22 bold, axis titles 16, ticks 14, color-bar
+          title 16, ticks 14); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; color-bar ticks evenly spaced
+        comment: No text collisions; color-bar labels clear of the bar and its title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1.25 px isolines at 50 % ink alpha visible over every band in both
-          themes; color-bar bands match the plot fills
+        comment: Isolines at 1.25 px translucent ink visible over the fills in both
+          themes; bands clearly stepped
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging ramp with lightness steps, CVD-safe; isolines
-          add a non-hue cue
+        comment: Red-blue diverging ramp is CVD-safe; lightness steps carry the order
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, plot fills most of it, color bar adjacent, balanced
-          margins, nothing clipped
+        comment: Canvas gate passed (2400x2400 square); balanced plot area and color
+          bar, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '''x coordinate'' / ''y coordinate'' are generic and carry no units
-          (defect line)'
+        passed: true
+        comment: Easting (km), Northing (km), Elevation anomaly (m) — descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'imprint_div from t.div centered on zero for a two-signed field;
-          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
+          correct #FAF8F1 / #1A1A17 backgrounds; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -123,25 +114,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: hairline isolines in translucent ink that sit quietly
-          over the fills, a stepped color bar built from the same bands with a tick
-          per level'
+        comment: Translucent ink isolines over discrete bands give a refined cartographic
+          look beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid deliberately off because the fills cover the plot, axis borders
-          drawn above the bands, color bar framed and aligned to the plot area, round
-          level step chosen from the data range
+        comment: Color bar drawn as the exact discrete bands with a tick at every
+          isoline level; axis borders lifted above the fill; grid dropped because
+          the fill covers the area
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: 'Data choice: a surface with two strong extremes, secondary lobes,
-          a saddle and a tiny pocket, so near-neutral flat ground lets the peak and
-          the basin carry the focus'
+        comment: Data displayed clearly; the zero-centered diverging map is what the
+          spec asks for, no further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -151,31 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled contour with isolines and color bar; no extra layers, markers
-          or reference lines
+        comment: Filled contour with isolines; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap, color bar naming the quantity, lines plus fills,
-          smooth contours; level labels are optional ('when practical' / 'when drawn')
+        comment: Colorbar, lines + fills, evenly stepped levels, smooth non-crossing
+          curves, diverging map centered on 0; level labels are optional and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y on their axes over the full grid range; fills and lines come
-          from the same refined field
+        comment: x/y span the full grid -3..3; isolines and band edges coincide
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; no legend needed (legend off), color
-          bar titled
+        comment: Mandated title format; color bar titled with the quantity; legend
+          N/A
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -183,60 +170,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Peaks, basins, a saddle, steep and flat regions, closed rings and
-          lines running to the edge
+        comment: Peaks, basins, saddle, closed rings, edge-running lines, crowded
+          and sparse spacing
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: The mathematical test surface the spec offers as an example, but
-          its labels are abstract (defect line)
+        passed: true
+        comment: Terrain elevation anomaly over a 6 km x 6 km survey area; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: color bar spans about -6.5 to 8.1, the known range of the
-          peaks function; maximum near (0, 1.6), minimum near (0.2, -1.6) as the formula
-          gives'
+        comment: -6.5..8 m anomaly over ±3 km is sensible; no Check values in the
+          spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Helper functions refineRows() and fractionalIndex() declared in the
-          plot zone (defect line)
+        passed: true
+        comment: Linear script; only small arrow helpers and the Chart.js plugin objects
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic closed-form data
+        comment: Deterministic analytic surface
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the Chart global and tokens
+        comment: No imports; globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Chart.js has no contour or interpolation helper, so the written-out
-          refinement and marching squares are allowed; no dead code
+        comment: Refinement, marching squares and band fill are written out, which
+          the Chart.js Computation line allows (no contour helper exists)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract, responsive, maintainAspectRatio false, animation
-          false; Chart.js 4 API
+        comment: 'Mount-node contract, animation: false, Chart.js 4 API'
     library_mastery:
       score: 7
       max: 10
@@ -246,21 +229,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Chart.js's plugin hooks (beforeDatasetsDraw, afterDraw) for
-          fills and color bar, scale getValueForPixel, and scatter datasets with showLine
-          and null-separated segments
+        comment: Scatter + showLine with null breaks for segments, linear scales with
+          data-driven limits, border.z, tooltip callbacks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Chart.js-specific: inline plugin objects, border z ordering above
-          datasets, tension routing through the bezier path, per-level tooltip via
-          pointHitRadius'
-  verdict: REJECTED
+        comment: Plugin hooks (beforeDatasetsDraw, afterDraw), scale.getValueForPixel
+          and currentDevicePixelRatio for a device-pixel band fill
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d315357327
-  rendered_at: '2026-11-08T22:14:32Z'
+  rendered_at: '2026-11-08T22:20:00Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -271,10 +252,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - interpolation
-  - binning
   styling:
-  - custom-colormap
   - alpha-blending
