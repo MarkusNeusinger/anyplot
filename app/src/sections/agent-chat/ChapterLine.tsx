@@ -33,8 +33,17 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { type Chapter, questionDomId } from 'src/sections/agent-chat/threadModel';
 
-/** The rule on either side of the line's words. */
-const rule = { content: '""', flex: '1 1 0', minWidth: 16, borderTop: '1px solid var(--rule)' };
+/**
+ * The rule on either side of the line's words, at the height of their first row: half the line's
+ * height down, so a line whose counts wrap (a phone) keeps its rules beside the heading.
+ */
+const rule = {
+  content: '""',
+  flex: '1 1 0',
+  minWidth: 16,
+  mt: '0.8em',
+  borderTop: '1px solid var(--rule)',
+};
 
 /** The highlight timers by target, so a second jump to the same bubble restarts its flash. */
 const flashes = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
@@ -123,7 +132,7 @@ export function ChapterLine({
         color: 'var(--ink-soft)',
         lineHeight: 1.6,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 1.25,
         minWidth: 0,
         '&::before': rule,

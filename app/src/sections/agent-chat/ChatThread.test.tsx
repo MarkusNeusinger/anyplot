@@ -1193,7 +1193,7 @@ describe('ChatThread: questions and remembered decisions', () => {
     render(thread(ready(items, { memory: MEMORY }), decisionsProps()));
     const [, plot] = screen.getAllByTestId('chapter-line');
     const toggle = within(plot).getByRole('button', { name: '2 decisions remembered' });
-    expect(plot).toHaveTextContent('# plot·2 decisions remembered▾');
+    expect(plot).toHaveTextContent('# plot·2 decisions ▾');
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     const list = screen.getByTestId('plot-memory');
     expect(plot.nextElementSibling).toBe(list);

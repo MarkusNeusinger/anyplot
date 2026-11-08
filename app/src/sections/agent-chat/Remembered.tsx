@@ -47,12 +47,7 @@ import {
   REMEMBERED_FULL,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
-import {
-  actionButtonSx,
-  chapterControlSx,
-  smallText,
-  visuallyHiddenSx,
-} from 'src/sections/agent-chat/styles';
+import { actionButtonSx, chapterControlSx, smallText } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
 
 /** Whether the memory is full: no room for one more decision. */
@@ -109,16 +104,14 @@ export function RememberedCount({
         data-testid="decisions-toggle"
         aria-expanded={open}
         aria-controls={listId}
+        // The words on screen first, then what they count (WCAG 2.5.3); the arrow is the state,
+        // which `aria-expanded` says.
+        aria-label={`${countOf(count, 'decision')} remembered`}
         onClick={onToggle}
         sx={{ ...chapterControlSx, color: 'var(--ink)' }}
       >
-        {countOf(count, 'decision')}{' '}
-        <Box component="span" sx={visuallyHiddenSx}>
-          remembered
-        </Box>
-        <Box component="span" aria-hidden sx={{ ml: 0.75 }}>
-          {open ? '▴' : '▾'}
-        </Box>
+        {countOf(count, 'decision')}
+        <span aria-hidden>{open ? ' ▴' : ' ▾'}</span>
       </Box>
       {isFull(memory) && (
         <Box component="span" sx={{ ml: 1 }}>

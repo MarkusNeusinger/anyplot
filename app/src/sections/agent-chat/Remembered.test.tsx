@@ -127,7 +127,7 @@ describe('Remembered', () => {
         {...props({ memory: { entries: [LINE, LABEL], max_entries: 2, written: true } })}
       />
     );
-    expect(screen.getByTestId('line')).toHaveTextContent('# plot2 decisions remembered▴·full');
+    expect(screen.getByTestId('line')).toHaveTextContent('# plot2 decisions ▴·full');
     // What to do about it heads the details behind the ⓘ at the list's end.
     await user.click(screen.getByRole('button', { name: 'About the remembered decisions' }));
     const details = within(screen.getByRole('dialog', { name: 'About the remembered decisions' }));
