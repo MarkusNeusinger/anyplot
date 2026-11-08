@@ -188,7 +188,14 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ horizontal: "end", vertical: "top" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 16, color: t.ink, pr: 7 }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 16,
+              color: t.ink,
+              pr: 7,
+              '& [data-series="observations"] .MuiChartsLegend-mark': { opacity: POINT_OPACITY },
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiScatterChart-marker": { fillOpacity: POINT_OPACITY },
