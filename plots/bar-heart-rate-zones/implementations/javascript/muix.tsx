@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const TITLE = "60-Minute Tempo Run · bar-heart-rate-zones · javascript · muix · anyplot.ai";
+const TITLE = "Tempo Run · bar-heart-rate-zones · javascript · muix · anyplot.ai";
 const TITLE_H = 84;
 const PAD_SHARE = 0.12; // headroom above the tallest bar for its duration label
 // The style guide's muted anchor (not among the tokens) for the grey recovery zone
