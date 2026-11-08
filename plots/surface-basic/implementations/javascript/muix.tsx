@@ -2,6 +2,7 @@
 // surface-basic: Basic 3D Surface Plot
 // Library: muix 9.17.0 | JavaScript 22.23.4
 // Quality: 86/100 | Updated: 2026-11-08
+import { useMemo, useRef, useState } from "react";
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
@@ -13,7 +14,11 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const VIEW_ANGLE = (25 * Math.PI) / 180; // tilt of the ground plane's axes below the horizontal
+const DEG = Math.PI / 180;
+const VIEW_ANGLE = 25 * DEG; // initial tilt of the ground plane's axes below the horizontal
+const AZIMUTH = 45 * DEG; // initial turn of the ground about the vertical axis
+const TILT_RANGE = [10 * DEG, 60 * DEG]; // dragging keeps the tilt inside this range
+const DRAG_SPEED = 0.4 * DEG; // rotation per dragged pixel
 const HEIGHT_SHARE = 0.5; // full z range drawn as this share of the ground's side
 const TICK_COUNT = 6; // about this many ticks per axis
 const TICK_PX = 7; // tick mark length (px)
@@ -36,10 +41,8 @@ const z = y.map((yv) => x.map((xv) => Number((420 + 80 * Math.sin((xv - 6) / 2) 
 
 // Plot: reads only the grid and the constants above
 // The ground is the unit square (gx along x, gy along y), the height gz runs 0 to
-// HEIGHT_SHARE; an oblique projection maps (gx, gy, gz) to the plane, with the
-// x = min, y = min corner at the back and the x = max, y = max corner in front
-const COS = Math.cos(VIEW_ANGLE);
-const SIN = Math.sin(VIEW_ANGLE);
+// HEIGHT_SHARE; the ground turns by the azimuth about its centre and an oblique
+// projection maps (gx, gy, gz) to the plane, with depth b growing towards the viewer
 const xMin = Math.min(...x);
 const xMax = Math.max(...x);
 const yMin = Math.min(...y);
@@ -48,25 +51,7 @@ const zMin = Math.min(...z.flat());
 const zMax = Math.max(...z.flat());
 const gxOf = x.map((v) => (v - xMin) / (xMax - xMin));
 const gyOf = y.map((v) => (v - yMin) / (yMax - yMin));
-const vertices = z.map((row, r) =>
-  row.map((v, c) => ({
-    px: (gxOf[c] - gyOf[r]) * COS,
-    py: ((v - zMin) / (zMax - zMin)) * HEIGHT_SHARE - (gxOf[c] + gyOf[r]) * SIN,
-  })),
-);
-
-// One quad per grid cell, colored by its mean height and painted back to front
-const quads = vertices
-  .slice(0, -1)
-  .flatMap((row, r) =>
-    row.slice(0, -1).map((_, c) => ({
-      id: `${r}-${c}`,
-      depth: gxOf[c] + gyOf[r],
-      corners: [vertices[r][c], vertices[r][c + 1], vertices[r + 1][c + 1], vertices[r + 1][c]],
-      height: (z[r][c] + z[r][c + 1] + z[r + 1][c + 1] + z[r + 1][c]) / 4,
-    })),
-  )
-  .sort((a, b) => a.depth - b.depth);
+const gzOf = (v: number) => ((v - zMin) / (zMax - zMin)) * HEIGHT_SHARE;
 
 // Round tick values inside each axis' extent
 const [xTicks, yTicks, zTicks] = [
@@ -82,59 +67,126 @@ const [xTicks, yTicks, zTicks] = [
   return Array.from({ length: last - first + 1 }, (_, i) => Number(((first + i) * step).toFixed(10)));
 });
 
-// Frame anchors in ground coordinates: base corners, ticks on the two front edges and the
-// z axis at the left corner, and the axis titles
-const anchors = [
-  ...[
+type Point = { px: number; py: number };
+
+function buildScene(azimuth: number, tilt: number) {
+  const cosA = Math.cos(azimuth);
+  const sinA = Math.sin(azimuth);
+  const across = Math.SQRT2 * Math.cos(VIEW_ANGLE);
+  const deep = Math.SQRT2 * Math.sin(tilt);
+  const lift = Math.cos(tilt) / Math.cos(VIEW_ANGLE);
+  const depthOf = (gx: number, gy: number) => (gx - 0.5) * sinA + (gy - 0.5) * cosA;
+  const project = (gx: number, gy: number, gz: number): Point => ({
+    px: across * ((gx - 0.5) * cosA - (gy - 0.5) * sinA),
+    py: gz * lift - deep * depthOf(gx, gy),
+  });
+  // screen direction (y down) of a ground vector, used to push tick labels outwards
+  const outward = (dx: number, dy: number) => {
+    const ux = across * (dx * cosA - dy * sinA);
+    const uy = deep * (dx * sinA + dy * cosA);
+    const len = Math.hypot(ux, uy) || 1;
+    return { ux: ux / len, uy: uy / len };
+  };
+
+  const vertices = z.map((row, r) => row.map((v, c) => project(gxOf[c], gyOf[r], gzOf(v))));
+  // One quad per grid cell, colored by its mean height and painted back to front
+  const quads = vertices
+    .slice(0, -1)
+    .flatMap((row, r) =>
+      row.slice(0, -1).map((_, c) => ({
+        id: `${r}-${c}`,
+        depth: depthOf((gxOf[c] + gxOf[c + 1]) / 2, (gyOf[r] + gyOf[r + 1]) / 2),
+        corners: [vertices[r][c], vertices[r][c + 1], vertices[r + 1][c + 1], vertices[r + 1][c]],
+        height: (z[r][c] + z[r][c + 1] + z[r + 1][c + 1] + z[r + 1][c]) / 4,
+      })),
+    )
+    .sort((a, b) => a.depth - b.depth);
+
+  // The x ticks sit on the nearer of the two y edges, the y ticks on the nearer x edge,
+  // and the z axis rises from the leftmost base corner
+  const xEdgeGy = cosA >= 0 ? 1 : 0;
+  const yEdgeGx = sinA >= 0 ? 1 : 0;
+  const xOut = outward(0, xEdgeGy ? 1 : -1);
+  const yOut = outward(yEdgeGx ? 1 : -1, 0);
+  const corners = [
     [0, 0],
     [1, 0],
     [1, 1],
     [0, 1],
-  ].map(([gx, gy], i) => ({ kind: "base", key: `base-${i}`, value: 0, g: [gx, gy, 0] })),
-  ...xTicks.map((v) => ({ kind: "x", key: `x-${v}`, value: v, g: [(v - xMin) / (xMax - xMin), 1, 0] })),
-  ...yTicks.map((v) => ({ kind: "y", key: `y-${v}`, value: v, g: [1, (v - yMin) / (yMax - yMin), 0] })),
-  ...zTicks.map((v) => ({ kind: "z", key: `z-${v}`, value: v, g: [0, 1, ((v - zMin) / (zMax - zMin)) * HEIGHT_SHARE] })),
-  { kind: "zTop", key: "z-top", value: 0, g: [0, 1, HEIGHT_SHARE] },
-  { kind: "xTitle", key: "x-title", value: 0, g: [0.5, 1, 0] },
-  { kind: "yTitle", key: "y-title", value: 0, g: [1, 0.5, 0] },
-].map((a) => ({ ...a, px: (a.g[0] - a.g[1]) * COS, py: a.g[2] - (a.g[0] + a.g[1]) * SIN }));
-const base = anchors.filter((a) => a.kind === "base");
-const xTickAnchors = anchors.filter((a) => a.kind === "x");
-const yTickAnchors = anchors.filter((a) => a.kind === "y");
-const zTickAnchors = anchors.filter((a) => a.kind === "z");
-const zTop = anchors.find((a) => a.kind === "zTop")!;
-const xTitle = anchors.find((a) => a.kind === "xTitle")!;
-const yTitle = anchors.find((a) => a.kind === "yTitle")!;
+  ];
+  const base = corners.map(([gx, gy]) => project(gx, gy, 0));
+  const [zGx, zGy] = [...corners].sort(
+    ([ax, ay], [bx, by]) => project(ax, ay, 0).px - project(bx, by, 0).px || depthOf(bx, by) - depthOf(ax, ay),
+  )[0];
 
-const allPoints = [...vertices.flat(), ...anchors];
-const pxLo = Math.min(...allPoints.map((p) => p.px));
-const pxHi = Math.max(...allPoints.map((p) => p.px));
-const pyLo = Math.min(...allPoints.map((p) => p.py));
-const pyHi = Math.max(...allPoints.map((p) => p.py));
+  const frame = {
+    base,
+    xEdge: [project(0, xEdgeGy, 0), project(1, xEdgeGy, 0)],
+    yEdge: [project(yEdgeGx, 0, 0), project(yEdgeGx, 1, 0)],
+    zBase: project(zGx, zGy, 0),
+    zTop: project(zGx, zGy, HEIGHT_SHARE),
+    xTicks: xTicks.map((v) => ({ value: v, ...project((v - xMin) / (xMax - xMin), xEdgeGy, 0) })),
+    yTicks: yTicks.map((v) => ({ value: v, ...project(yEdgeGx, (v - yMin) / (yMax - yMin), 0) })),
+    zTicks: zTicks.map((v) => ({ value: v, ...project(zGx, zGy, gzOf(v)) })),
+    xTitle: project(0.5, xEdgeGy, 0),
+    yTitle: project(yEdgeGx, 0.5, 0),
+    xOut,
+    yOut,
+  };
+
+  const allPoints = [...vertices.flat(), ...base, frame.zTop];
+  const bounds = {
+    pxLo: Math.min(...allPoints.map((p) => p.px)),
+    pxHi: Math.max(...allPoints.map((p) => p.px)),
+    pyLo: Math.min(...allPoints.map((p) => p.py)),
+    pyHi: Math.max(...allPoints.map((p) => p.py)),
+  };
+  return { quads, frame, bounds };
+}
+
+type Scene = ReturnType<typeof buildScene>;
+const initialScene = buildScene(AZIMUTH, VIEW_ANGLE);
+
 const tickFormat = (v: number) => Number(v.toFixed(2)).toString();
+const anchorOf = (u: number) => (u > 0.2 ? "start" : u < -0.2 ? "end" : "middle");
+const baselineOf = (u: number) => (u > 0.2 ? "hanging" : u < -0.2 ? "auto" : "central");
 
 const TITLE = "surface-basic · javascript · muix · anyplot.ai";
 const SUBTITLE = `${x.length} × ${y.length} grid · ${Z_NAME} from ${tickFormat(zMin)} to ${tickFormat(zMax)}`;
 const textSx = { fontSize: 14, fill: t.inkSoft };
 const titleText = { fontSize: 16, fontWeight: 600, fill: t.ink };
 
-function SurfaceLayer() {
+function SurfaceLayer({ scene }: { scene: Scene }) {
   const xScale = useXScale("iso-x");
   const yScale = useYScale("iso-y");
   const colorOf = useZColorScale("height");
+  const { quads, frame } = scene;
+  const sx = (p: Point) => xScale(p.px) ?? 0;
+  const sy = (p: Point) => yScale(p.py) ?? 0;
+  const edge = ([a, b]: Point[]) => <line x1={sx(a)} y1={sy(a)} x2={sx(b)} y2={sy(b)} />;
+  const groundTicks = (ticks: (Point & { value: number })[], out: { ux: number; uy: number }, prefix: string) =>
+    ticks.map((a) => (
+      <g key={`${prefix}-${a.value}`}>
+        <line x1={sx(a)} y1={sy(a)} x2={sx(a) + TICK_PX * out.ux} y2={sy(a) + TICK_PX * out.uy} stroke={t.inkSoft} strokeWidth={1.5} />
+        <text
+          x={sx(a) + TICK_LABEL_PX * out.ux}
+          y={sy(a) + TICK_LABEL_PX * out.uy}
+          textAnchor={anchorOf(out.ux)}
+          dominantBaseline={baselineOf(out.uy)}
+          {...textSx}
+        >
+          {tickFormat(a.value)}
+        </text>
+      </g>
+    ));
 
   return (
     <g>
-      <polygon
-        points={base.map((p) => `${xScale(p.px)},${yScale(p.py)}`).join(" ")}
-        fill="none"
-        stroke={t.grid}
-        strokeWidth={1.5}
-      />
+      <polygon points={frame.base.map((p) => `${sx(p)},${sy(p)}`).join(" ")} fill="none" stroke={t.grid} strokeWidth={1.5} />
       {quads.map((q) => (
         <polygon
           key={q.id}
-          points={q.corners.map((p) => `${xScale(p.px)},${yScale(p.py)}`).join(" ")}
+          points={q.corners.map((p) => `${sx(p)},${sy(p)}`).join(" ")}
           fill={colorOf?.(q.height) ?? t.seq[0]}
           stroke={t.pageBg}
           strokeOpacity={0.35}
@@ -142,67 +194,39 @@ function SurfaceLayer() {
         />
       ))}
       <g stroke={t.inkSoft} strokeWidth={1.5}>
-        <line x1={xScale(base[3].px)} y1={yScale(base[3].py)} x2={xScale(base[2].px)} y2={yScale(base[2].py)} />
-        <line x1={xScale(base[1].px)} y1={yScale(base[1].py)} x2={xScale(base[2].px)} y2={yScale(base[2].py)} />
-        <line x1={xScale(base[3].px)} y1={yScale(base[3].py)} x2={xScale(zTop.px)} y2={yScale(zTop.py)} />
+        {edge(frame.xEdge)}
+        {edge(frame.yEdge)}
+        {edge([frame.zBase, frame.zTop])}
       </g>
-      {xTickAnchors.map((a) => (
-        <g key={a.key}>
-          <line
-            x1={xScale(a.px)}
-            y1={yScale(a.py)}
-            x2={xScale(a.px) - TICK_PX * COS}
-            y2={yScale(a.py) + TICK_PX * SIN}
-            stroke={t.inkSoft}
-            strokeWidth={1.5}
-          />
-          <text
-            x={xScale(a.px) - TICK_LABEL_PX * COS}
-            y={yScale(a.py) + TICK_LABEL_PX * SIN}
-            textAnchor="end"
-            dominantBaseline="hanging"
-            {...textSx}
-          >
+      {groundTicks(frame.xTicks, frame.xOut, "x")}
+      {groundTicks(frame.yTicks, frame.yOut, "y")}
+      {frame.zTicks.map((a) => (
+        <g key={`z-${a.value}`}>
+          <line x1={sx(a)} y1={sy(a)} x2={sx(a) - TICK_PX} y2={sy(a)} stroke={t.inkSoft} strokeWidth={1.5} />
+          <text x={sx(a) - TICK_LABEL_PX} y={sy(a)} textAnchor="end" dominantBaseline="central" {...textSx}>
             {tickFormat(a.value)}
           </text>
         </g>
       ))}
-      {yTickAnchors.map((a) => (
-        <g key={a.key}>
-          <line
-            x1={xScale(a.px)}
-            y1={yScale(a.py)}
-            x2={xScale(a.px) + TICK_PX * COS}
-            y2={yScale(a.py) + TICK_PX * SIN}
-            stroke={t.inkSoft}
-            strokeWidth={1.5}
-          />
-          <text
-            x={xScale(a.px) + TICK_LABEL_PX * COS}
-            y={yScale(a.py) + TICK_LABEL_PX * SIN}
-            textAnchor="start"
-            dominantBaseline="hanging"
-            {...textSx}
-          >
-            {tickFormat(a.value)}
-          </text>
-        </g>
-      ))}
-      {zTickAnchors.map((a) => (
-        <g key={a.key}>
-          <line x1={xScale(a.px)} y1={yScale(a.py)} x2={xScale(a.px) - TICK_PX} y2={yScale(a.py)} stroke={t.inkSoft} strokeWidth={1.5} />
-          <text x={xScale(a.px) - TICK_LABEL_PX} y={yScale(a.py)} textAnchor="end" dominantBaseline="central" {...textSx}>
-            {tickFormat(a.value)}
-          </text>
-        </g>
-      ))}
-      <text x={xScale(xTitle.px) - AXIS_TITLE_PX * COS} y={yScale(xTitle.py) + AXIS_TITLE_PX * SIN} textAnchor="end" dominantBaseline="hanging" {...titleText}>
+      <text
+        x={sx(frame.xTitle) + AXIS_TITLE_PX * frame.xOut.ux}
+        y={sy(frame.xTitle) + AXIS_TITLE_PX * frame.xOut.uy}
+        textAnchor={anchorOf(frame.xOut.ux)}
+        dominantBaseline={baselineOf(frame.xOut.uy)}
+        {...titleText}
+      >
         {X_NAME}
       </text>
-      <text x={xScale(yTitle.px) + AXIS_TITLE_PX * COS} y={yScale(yTitle.py) + AXIS_TITLE_PX * SIN} textAnchor="start" dominantBaseline="hanging" {...titleText}>
+      <text
+        x={sx(frame.yTitle) + AXIS_TITLE_PX * frame.yOut.ux}
+        y={sy(frame.yTitle) + AXIS_TITLE_PX * frame.yOut.uy}
+        textAnchor={anchorOf(frame.yOut.ux)}
+        dominantBaseline={baselineOf(frame.yOut.uy)}
+        {...titleText}
+      >
         {Y_NAME}
       </text>
-      <text x={xScale(zTop.px)} y={yScale(zTop.py) - 18} textAnchor="middle" {...titleText}>
+      <text x={sx(frame.zTop)} y={sy(frame.zTop) - 18} textAnchor="middle" {...titleText}>
         {Z_NAME}
       </text>
     </g>
@@ -211,19 +235,44 @@ function SurfaceLayer() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
+  // dragging the surface turns it (horizontal drag) and tilts it (vertical drag)
+  const [view, setView] = useState({ azimuth: AZIMUTH, tilt: VIEW_ANGLE });
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const scene = useMemo(() => buildScene(view.azimuth, view.tilt), [view]);
+
   const chartW = width - LEGEND_W;
   const chartH = height - HEADER_H;
-  // equal px per unit on both axes keeps the projection's angles true; the chart takes
-  // only the width the surface needs, so the colour bar sits right beside it
-  const k = Math.min(
-    (chartW - MARGIN.left - MARGIN.right) / (pxHi - pxLo),
-    (chartH - MARGIN.top - MARGIN.bottom) / (pyHi - pyLo),
-  );
-  const drawW = k * (pxHi - pxLo);
+  const fit = ({ pxLo, pxHi, pyLo, pyHi }: Scene["bounds"]) =>
+    Math.min((chartW - MARGIN.left - MARGIN.right) / (pxHi - pxLo), (chartH - MARGIN.top - MARGIN.bottom) / (pyHi - pyLo));
+  // the opening view fixes the layout: equal px per unit on both axes keeps the
+  // projection's angles true, and the chart takes only the width the surface needs,
+  // so the colour bar sits right beside it; a turned view shrinks to fit, never grows
+  const k0 = fit(initialScene.bounds);
+  const drawW = k0 * (initialScene.bounds.pxHi - initialScene.bounds.pxLo);
   const drawH = chartH - MARGIN.top - MARGIN.bottom;
   const plotW = drawW + MARGIN.left + MARGIN.right;
+  const { pxLo, pxHi, pyLo, pyHi } = scene.bounds;
+  const k = Math.min(k0, drawW / (pxHi - pxLo), drawH / (pyHi - pyLo));
   const pxMid = (pxLo + pxHi) / 2;
   const pyMid = (pyLo + pyHi) / 2;
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    drag.current = { x: e.clientX, y: e.clientY };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    const dx = e.clientX - drag.current.x;
+    const dy = e.clientY - drag.current.y;
+    drag.current = { x: e.clientX, y: e.clientY };
+    setView((v) => ({
+      azimuth: v.azimuth - dx * DRAG_SPEED,
+      tilt: Math.min(TILT_RANGE[1], Math.max(TILT_RANGE[0], v.tilt + dy * DRAG_SPEED)),
+    }));
+  };
+  const onPointerUp = () => {
+    drag.current = null;
+  };
 
   return (
     <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -255,9 +304,17 @@ export default function Chart() {
               sx={{ flex: 1, color: t.inkSoft, fontSize: 14 }}
             />
           </Box>
-          <ChartsSurface>
-            <SurfaceLayer />
-          </ChartsSurface>
+          <Box
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            sx={{ gridArea: "chart", cursor: "grab", touchAction: "none", "&:active": { cursor: "grabbing" } }}
+          >
+            <ChartsSurface>
+              <SurfaceLayer scene={scene} />
+            </ChartsSurface>
+          </Box>
         </ChartsWrapper>
       </ChartsDataProvider>
     </Box>
