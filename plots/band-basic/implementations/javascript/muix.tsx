@@ -3,157 +3,134 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: 30-day temperature forecast with widening uncertainty -----------
-// A short-range weather forecast: the further out the prediction, the wider
-// the 90% confidence band around the forecast temperature — the growing
-// uncertainty is the story, no annotations needed to make the point.
-function lcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const TITLE = "band-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 44;
+const BAND_OPACITY = 0.28;
+const BAND_COLOR = t.palette[0];
+const CENTER_COLOR = t.palette[2]; // a second hue, so the central line contrasts with the band fill
+
+// Columns: set these to your data's column names
+const DAY = "Forecast day"; // role: x
+const LOWER = "Lower bound (°C)"; // role: y_lower
+const UPPER = "Upper bound (°C)"; // role: y_upper
+const CENTER = "Forecast temperature (°C)"; // role: y_center
+const BAND_NAME = "90% confidence band"; // what the lower and upper bounds describe
+
+// Data: replace this block with your own records, one object per row
+// 30-day temperature forecast: the further out the prediction, the wider the
+// interval around it. Seeded LCG, since the browser has no seeded RNG.
+const data = (() => {
+  let state = 42;
+  const random = () => {
     state = (state * 1103515245 + 12345) % 2147483648;
     return state / 2147483648;
   };
-}
-const random = lcg(42);
+  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  const temps = days.map((day) => {
+    const seasonalDrift = 16 + 5 * Math.sin((day / 30) * Math.PI * 0.9);
+    return Math.round((seasonalDrift + day * 0.1 + (random() - 0.5) * 0.9) * 10) / 10;
+  });
+  const lowers = temps.map((v, i) => Math.round((v - (0.6 + days[i] * 0.13 + random() * 0.3)) * 10) / 10);
+  const uppers = temps.map((v, i) => Math.round((v + (0.6 + days[i] * 0.13 + random() * 0.3)) * 10) / 10);
+  return days.map((day, i) => ({ [DAY]: day, [LOWER]: lowers[i], [UPPER]: uppers[i], [CENTER]: temps[i] }));
+})();
 
-const forecastDays = Array.from({ length: 30 }, (_, i) => i + 1);
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[DAY] - b[DAY]);
+const xs = rows.map((d) => d[DAY]);
 
-const forecastTemp = forecastDays.map((day) => {
-  const seasonalDrift = 16 + 5 * Math.sin((day / 30) * Math.PI * 0.9);
-  const warmingTrend = day * 0.1;
-  const noise = (random() - 0.5) * 0.9;
-  return Math.round((seasonalDrift + warmingTrend + noise) * 10) / 10;
-});
+// The band is two stacked series: an invisible one at the lower bound and a filled
+// one adding the band's width, so the fill spans exactly lower to upper
+const lowerEdge = rows.map((d) => (d[LOWER] == null || d[UPPER] == null ? null : d[LOWER]));
+const bandWidth = rows.map((d) => (d[LOWER] == null || d[UPPER] == null ? null : d[UPPER] - d[LOWER]));
+const widths = bandWidth.filter((v) => v != null);
 
-const lowerBound = forecastTemp.map((value, i) => {
-  const halfWidth = 0.6 + forecastDays[i] * 0.13 + random() * 0.3;
-  return Math.round((value - halfWidth) * 10) / 10;
-});
+const UNIT = CENTER.match(/\(([^)]+)\)/)?.[1] ?? "";
+const SUBTITLE = `${rows.length} points, ${DAY.toLowerCase()} ${xs[0]}–${xs[xs.length - 1]} · shaded: ${BAND_NAME}, width ${Math.min(...widths).toFixed(1)}–${Math.max(...widths).toFixed(1)} ${UNIT}`.trim();
 
-const upperBound = forecastTemp.map((value, i) => {
-  const halfWidth = 0.6 + forecastDays[i] * 0.13 + random() * 0.3;
-  return Math.round((value + halfWidth) * 10) / 10;
-});
-
-// Stacked-area trick: an invisible "lower" series carries the offset, and
-// "band" (the visible fill) is stacked on top of it with only its own width
-// (upper - lower) — the rendered area then spans exactly [lower, upper].
-const bandWidth = upperBound.map((value, i) => Math.round((value - lowerBound[i]) * 10) / 10);
-
-// --- Title + legend chrome ---------------------------------------------------
-// The built-in <ChartsLegend> anchors to the SVG's own total height rather
-// than reserving extra space for itself, so it gets clipped at the canvas
-// edge instead of pushing the plot up — a hand-rolled legend row in normal
-// flex flow (like arc-basic/muix.tsx) guarantees it fits.
-const TITLE = "Forecast Uncertainty · band-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 22;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 42;
-const LEGEND_H = 34;
-
-function Legend() {
-  return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "22px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-        <span
-          style={{
-            width: "18px",
-            height: "14px",
-            backgroundColor: t.palette[0],
-            opacity: 0.28,
-            display: "inline-block",
-          }}
-        />
-        <span style={{ fontSize: "14px", color: t.inkSoft }}>90% confidence band</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-        <span style={{ width: "18px", height: "3px", backgroundColor: t.palette[2], display: "inline-block" }} />
-        <span style={{ fontSize: "14px", color: t.inkSoft }}>Forecast temperature</span>
-      </div>
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_H - LEGEND_H;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
-      <div style={{ paddingLeft: "80px" }}>
-        <div
-          style={{
-            height: `${TITLE_H}px`,
-            lineHeight: `${TITLE_H}px`,
-            fontSize: `${titleFontSize}px`,
-            fontWeight: 500,
-            color: t.ink,
-          }}
-        >
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
           {TITLE}
-        </div>
-        <Legend />
-      </div>
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
+        </Typography>
+      </Box>
       <LineChart
         width={width}
-        height={chartHeight}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
+        hideLegend
         grid={{ horizontal: true }}
         xAxis={[
           {
-            data: forecastDays,
+            data: xs,
             scaleType: "linear",
-            label: "Forecast Day",
-            labelStyle: { fontSize: 16 },
-            tickLabelStyle: { fontSize: 14 },
+            min: xs[0],
+            max: xs[xs.length - 1],
+            label: DAY,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Temperature (°C)",
-            labelStyle: { fontSize: 16 },
-            tickLabelStyle: { fontSize: 14 },
+            label: CENTER,
+            width: 76,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         series={[
-          {
-            id: "lower",
-            data: lowerBound,
-            stack: "band",
-            showMark: false,
-            color: t.pageBg,
-            curve: "natural",
-          },
+          { id: "lower", data: lowerEdge, label: LOWER, stack: "band", showMark: false, color: BAND_COLOR, curve: "monotoneX" },
           {
             id: "band",
             data: bandWidth,
+            label: BAND_NAME,
             stack: "band",
             area: true,
             showMark: false,
-            color: t.palette[0],
-            curve: "natural",
+            color: BAND_COLOR,
+            curve: "monotoneX",
+            valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) =>
+              v == null ? "" : `${rows[dataIndex][LOWER]} – ${rows[dataIndex][UPPER]}`,
           },
-          {
-            id: "center",
-            data: forecastTemp,
-            showMark: false,
-            color: t.palette[2],
-            curve: "natural",
-          },
+          { id: "center", data: rows.map((d) => d[CENTER]), label: CENTER, showMark: false, color: CENTER_COLOR, curve: "monotoneX" },
         ]}
-        margin={{ top: 20, right: 40, bottom: 70, left: 80 }}
+        margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
         sx={{
-          "& .MuiLineElement-series-lower": { display: "none" },
-          "& .MuiAreaElement-series-band": { fill: t.palette[0], fillOpacity: 0.28 },
-          "& .MuiLineElement-series-band": { stroke: "none" },
-          "& .MuiLineElement-series-center": { strokeWidth: 3 },
+          '& .MuiLineChart-line[data-series="lower"]': { display: "none" },
+          '& .MuiLineChart-line[data-series="band"]': { display: "none" },
+          '& .MuiLineChart-area[data-series="band"]': { fillOpacity: BAND_OPACITY, filter: "none" },
+          '& .MuiLineChart-line[data-series="center"]': { strokeWidth: 3 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       />
-    </div>
+      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "36px" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Box sx={{ width: 28, height: 16, bgcolor: BAND_COLOR, opacity: BAND_OPACITY, borderRadius: "3px" }} />
+          <Typography sx={{ fontSize: 15, color: t.ink }}>{BAND_NAME}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Box sx={{ width: 28, height: 3, bgcolor: CENTER_COLOR }} />
+          <Typography sx={{ fontSize: 15, color: t.ink }}>{CENTER}</Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 }
