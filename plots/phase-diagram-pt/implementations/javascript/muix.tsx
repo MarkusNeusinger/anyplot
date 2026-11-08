@@ -45,18 +45,19 @@ const TT = TRIPLE_POINT[TEMPERATURE];
 const PT = TRIPLE_POINT[PRESSURE];
 const TC = CRITICAL_POINT[TEMPERATURE];
 const PC = CRITICAL_POINT[PRESSURE];
-const melting = Array.from({ length: 36 }, (_, i) => {
-  const p = 10 ** (Math.log10(PT) + (i * (Math.log10(ICE_IH_LIMIT) - Math.log10(PT))) / 35);
+const N_CURVE = 60; // samples per boundary curve
+const melting = Array.from({ length: N_CURVE }, (_, i) => {
+  const p = 10 ** (Math.log10(PT) + (i * (Math.log10(ICE_IH_LIMIT) - Math.log10(PT))) / (N_CURVE - 1));
   return { [BOUNDARY]: "Solid–liquid (melting)", [TEMPERATURE]: TT * (1 + (p - PT) / -395.2e6) ** (1 / 9), [PRESSURE]: p };
 });
-const vaporization = Array.from({ length: 41 }, (_, i) => {
-  const temp = TT + (i * (TC - TT)) / 40;
+const vaporization = Array.from({ length: N_CURVE }, (_, i) => {
+  const temp = TT + (i * (TC - TT)) / (N_CURVE - 1);
   const tau = Math.max(0, 1 - temp / TC); // never below 0, where the fractional powers are undefined
   const lnRatio = (TC / temp) * WAGNER_PRUSS.reduce((sum, [a, e]) => sum + a * tau ** e, 0);
   return { [BOUNDARY]: "Liquid–gas (vaporization)", [TEMPERATURE]: temp, [PRESSURE]: PC * Math.exp(lnRatio) };
 });
-const sublimation = Array.from({ length: 30 }, (_, i) => {
-  const temp = 200 + (i * (TT - 200)) / 29;
+const sublimation = Array.from({ length: N_CURVE }, (_, i) => {
+  const temp = 200 + (i * (TT - 200)) / (N_CURVE - 1);
   return { [BOUNDARY]: "Solid–gas (sublimation)", [TEMPERATURE]: temp, [PRESSURE]: PT * Math.exp((-51000 / GAS_CONSTANT) * (1 / temp - 1 / TT)) };
 });
 const data = [...melting, ...vaporization, ...sublimation];
@@ -82,14 +83,12 @@ const tUnit = (TEMPERATURE.match(/\(([^)]+)\)/) ?? ["", ""])[1];
 const pUnit = (PRESSURE.match(/\(([^)]+)\)/) ?? ["", ""])[1];
 
 // Region label anchors from the two points and the axis extents (log midpoints in pressure)
-const tt = TRIPLE_POINT[TEMPERATURE];
-const tc = CRITICAL_POINT[TEMPERATURE];
-const logPt = Math.log10(TRIPLE_POINT[PRESSURE]);
-const logPc = Math.log10(CRITICAL_POINT[PRESSURE]);
+const logPt = Math.log10(PT);
+const logPc = Math.log10(PC);
 const regionAnchors = [
-  { text: PHASE_LABELS.solid, t: (xMin + tt) / 2, p: 10 ** ((logPt + logMax) / 2) },
-  { text: PHASE_LABELS.liquid, t: (tt + tc) / 2, p: 10 ** ((logPc + logMax) / 2) },
-  { text: PHASE_LABELS.gas, t: (tt + tc) / 2, p: 10 ** ((logMin + logPt) / 2) },
+  { text: PHASE_LABELS.solid, t: (xMin + TT) / 2, p: 10 ** ((logPt + logMax) / 2) },
+  { text: PHASE_LABELS.liquid, t: (TT + TC) / 2, p: 10 ** ((logPc + logMax) / 2) },
+  { text: PHASE_LABELS.gas, t: (TT + TC) / 2, p: 10 ** ((logMin + logPt) / 2) },
 ];
 
 const TITLE = "Water · phase-diagram-pt · javascript · muix · anyplot.ai";
