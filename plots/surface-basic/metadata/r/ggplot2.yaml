@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: surface-basic
 created: '2026-09-10T01:03:13Z'
-updated: '2026-11-08T20:48:44Z'
+updated: '2026-11-08T20:55:35Z'
 generated_by: claude-opus
 workflow_run: 42521391770
 issue: 1013
@@ -12,46 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - 'A correct painter''s-algorithm mesh: 44x44 geom_polygon quads, sorted farthest
-    first, give one continuous surface over the 45x45 grid with no holes, tears or
-    gaps, and the front slopes correctly occlude the floor and the back panes.'
-  - 'Color follows height through imprint_seq (scale_fill_gradient from #009E73 to
-    #4467A3) with limits and breaks shared with the z ticks, so the color bar ''Height
-    (z)'' and the z axis read the same 0.0 to 1.0 scale.'
-  - The oblique view (elevation 30°, azimuth -35°) shows the dominant peak, the smaller
-    secondary peak and the saddle between them together; no peak hides the other.
+  - A 45x45 bimodal Gaussian surface drawn entirely in ggplot2 as one depth-sorted
+    geom_polygon per grid cell; the painter's ordering is correct, so the surface
+    reads as one continuous sheet without holes, tears or wrongly overlapping facets
+    in either render
   - A projected 3D axis box with x, y and z ticks in data units, a faint pane grid
-    only on the floor and the two back walls, and axis titles rotated along their
-    edges, all drawn from the INK/INK_SOFT tokens, so it reads cleanly in both themes.
-  - Mesh lines are thin (0.07 mm) and translucent, so they show the curvature without
-    hiding the fill color in either theme.
-  - 'The basic variant stays a single surface: no contours, projected walls, markers
-    on peaks or reference planes.'
+    on the floor and back walls, and axis titles rotated along their edges gives a
+    proper oblique view that shows both peaks and the saddle between them
+  - 'Fill follows height through the imprint_seq two-stop gradient (#009E73 to #4467A3)
+    with a matching ''Height (z)'' color bar whose breaks equal the z-axis ticks,
+    so color and height tell the same story'
+  - 'All chrome is threaded through the theme tokens: page background, INK and INK_SOFT
+    text, the mesh outline and the ELEVATED_BG legend box flip correctly between light
+    and dark while the data colors stay identical'
+  - Mesh lines are thin and translucent (linewidth 0.07, alpha 0.45), so they trace
+    the curvature without hiding the color
   weaknesses:
-  - 'CQ-01 (code): the script defines two helper functions, `project()` (line 49)
-    and `seg3d()` (line 101), against the Imports → Data → Plot → Save structure without
-    functions → inline the projection as vectorized expressions on the grid and tick
-    vectors. Likely cause: the projection and segment construction were wrapped in
-    reusable helpers.'
-  - 'Suggestion: the subtitle calls the view an ''Isometric projection'', but at elevation
-    30° and azimuth -35° it is an oblique orthographic projection; ''Orthographic
-    projection'' would describe it accurately.'
-  - 'Suggestion: the nested for loop that builds the quads (lines 67–79) could be
-    vectorized with index vectors over the grid, which would shorten the mesh construction.'
+  - 'DQ-02 (both): the axes are labelled only ''X'', ''Y'' and ''Z (height)'' while
+    the code comment describes a yield surface from two process settings, so the render
+    reads as an abstract function → name the two inputs and the output after that
+    scenario (for example ''Temperature (°C)'', ''Pressure (bar)'', ''Yield''), with
+    matching tick ranges. Likely cause: the title labels c("X", "Y", "Z (height)")
+    in text_df and the fill-scale name.'
+  - 'Suggestion: the subtitle says ''Isometric projection'', but elevation 30° and
+    azimuth -35° is a general orthographic view; ''Orthographic view'' would be exact.'
+  - 'Suggestion: the 44x44 quad loop with a list of lists plus bind_rows could be
+    built vectorised from index grids (expand.grid over i and j), which would shorten
+    the mesh block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas; the color-bar box uses the elevated #FFFDF6 fill with a thin INK_SOFT border.
-      Chrome: title "surface-basic · r · ggplot2 · anyplot.ai" in dark ink at the top left (about 40 % of the width), a grey subtitle "Isometric projection · elevation 30° · azimuth -35°", z tick labels 0.0–1.0 on the front-left vertical axis, x ticks -4 to 4 along the front-left floor edge, y ticks -4 to 4 along the front-right floor edge, axis titles "X" and "Y" rotated along their edges and "Z (height)" rotated vertically. All dark text, all readable. The back panes carry a faint grid at the tick values.
-      Data: one continuous surface over the grid, colored from brand green #009E73 at z = 0 to blue #4467A3 at z ≈ 1, with thin translucent dark mesh lines. A dominant peak sits at the back right (around x = y = 1.5) and a smaller one at the front left (around x = y = -2), with a saddle between them. Color bar "Height (z)" 0.0–1.0 on the right.
+      Background: warm off-white #FAF8F1 across the whole canvas; the legend box uses the slightly lighter elevated surface.
+      Chrome: title "surface-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, grey subtitle "Isometric projection · elevation 30° · azimuth -35°". A projected 3D axis box: z axis on the left with ticks 0.0–1.0 and rotated title "Z (height)", x axis along the front-left floor edge (-4…4, title "X" rotated along the edge), y axis along the front-right floor edge (-4…4, title "Y"). Faint grid on the two back walls, thin grey box edges. All text dark on light and clearly readable; no overlap, nothing clipped.
+      Data: a continuous 45x45 surface with a dominant peak (z≈1.0) toward the back right and a smaller peak (z≈0.6) at front left, flat low regions in brand green #009E73 rising to blue #4467A3 at the summit; thin dark translucent mesh lines trace the curvature. Color bar "Height (z)" 0.0–1.0 on the right in a framed box.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; the color-bar box uses #242420 with a light border.
-      Chrome: title in light ink #F0EFE8, subtitle, tick labels and axis lines in light grey #B8B7B0, axis titles light; the pane grid and edges are subtle light lines. No dark-on-dark text anywhere.
-      Data: the same green-to-blue fill as the light render (data colors identical); the mesh lines are now light and translucent, so the surface looks slightly lighter but the color still reads. Brand green is clearly visible on the dark surface.
+      Background: warm near-black #1A1A17; legend box on the #242420 elevated surface.
+      Chrome: title and axis titles in light ink, tick labels and subtitle in light grey #B8B7B0, box edges and wall grid in light translucent grey. No dark-on-dark text anywhere; all text readable.
+      Data: identical green→blue surface fill and identical geometry to the light render; only the mesh outline flips to light translucent grey. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,76 +64,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 12 pt, axis titles 3.5 mm, ticks 2.8 mm, legend
-          8/10 pt); all text readable in both themes
+        comment: Title 12 pt, axis titles 3.5 mm (~10 pt), ticks 2.8 mm (~8 pt) per
+          the ggplot2 sizing; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with the surface; tick labels
-          sit clear of the axis box
+        comment: Tick labels, axis titles and the color bar are all clear of each
+          other and of the surface
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dense 45x45 mesh with thin translucent edges; color bar visible in
-          both themes
+        comment: Surface, mesh, axis box and color bar visible in both themes; mesh
+          light enough not to hide color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp, CVD-safe, redundant with height
+        comment: Height is double-encoded by elevation and fill; green-to-blue ramp
+          is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; the axis box fills the canvas well, nothing cut off, balanced
-          axis titles
+        comment: 3200x1800 canvas, surface fills the plot area, legend balanced on
+          the right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X, Y and 'Z (height)' fit an abstract mathematical surface; color
-          bar names the quantity
+        comment: All three axes titled; the spec asks for x, y, z labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 → #4467A3); backgrounds #FAF8F1 / #1A1A17;
-          data colors identical across themes'
+        comment: 'imprint_seq #009E73 to #4467A3 for continuous height; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Beyond baseline: a projected 3D axis box with back-pane grid, axis
-          titles rotated along their edges, a clear INK/INK_SOFT hierarchy with a
-          view-parameter subtitle'
+        passed: true
+        comment: 'Beyond baseline: a projected axis box with pane grid on the back
+          walls, axis titles rotated along their edges, title/subtitle hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: 'Beyond baseline: pane grid only on the floor and the back walls
-          at the tick values, outward ticks, a 0.07 mm translucent mesh, elevated
-          color-bar box'
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: 'Layering chosen for this chart: back panes behind the surface, front
+          axes and outward ticks on top, mesh at alpha 0.45'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: The bimodal surface (dominant and secondary optimum with a saddle)
-          gives a focal peak and a readable hierarchy
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -142,31 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A single 3D surface; no contours, markers, reference planes or second
-          surface
+        comment: A single 3D surface with a color bar; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth colormap, x/y/z axes labeled with ticks, color bar naming
-          the quantity, oblique view, smooth grid; all 'A good version shows:' bullets
-          met
+        comment: 'Smooth colormap, x/y/z labels, color bar, oblique view showing peaks
+          and valley, 45x45 smooth grid, light mesh: all characteristic bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each grid point projected at its (x, y, z); z axis 0–1 covers max(Z)
-          ≈ 1.0
+        comment: Each quad sits at its grid z values; z ticks span the full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; color bar title 'Height (z)'
+        comment: Title in the mandated format; color bar titled 'Height (z)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -174,55 +169,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Peaks, a valley and a saddle on a 45x45 grid, inside the 30–50 range
+        comment: Two peaks of different height and a saddle show the full range of
+          surface features
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Gaussian response surface, a use case the spec lists; neutral
+        comment: Neutral, but the labels X/Y/Z read as an abstract function although
+          the code describes a yield surface (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'No check values; checked: max of the two Gaussians ≈ 1.0 at (1.5,
-          1.5) matches the z axis and the color-bar top'
+        comment: z in 0-1.0, grid -4..4; no Check values in the spec; peak z≈1.0 matches
+          the color bar top
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Two helper functions, project() and seg3d() (defect line)
+        passed: true
+        comment: Linear script, no named functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; set.seed(42)
+        comment: Deterministic analytic surface; set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr (bind_rows) and ragg all used
+        comment: ggplot2, dplyr, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No available call projects a 3D surface in ggplot2; the hand projection
-          is necessary
+        comment: The projection has no available call that reproduces it; complexity
+          matches the task
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png to plot-{THEME}.png at 8x4.5 in, 400 dpi
+        comment: ggsave to plot-{THEME}.png via ragg; current ggplot2 4 API (linewidth)
     library_mastery:
       score: 4
       max: 10
@@ -231,32 +228,33 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct layered geom_polygon/geom_segment/geom_text with a group
-          aesthetic and coord_fixed(clip = 'off'), but mostly manual geometry
+        passed: true
+        comment: Grammar layers (geom_polygon with group, geom_segment, geom_text,
+          coord_fixed) at the default; the projection itself is hand math
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage; nothing distinctive to ggplot2 beyond what the library
-          prompt mandates
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-195cdba0ef
-  rendered_at: '2026-11-08T20:45:53Z'
+  rendered_at: '2026-11-08T20:52:27Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - 3d-projection
-  - manual-ticks
+  - colorbar
   - layer-composition
+  - manual-ticks
+  - patches
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - custom-colormap
   - minimal-chrome
+  - alpha-blending
+  - grid-styling
