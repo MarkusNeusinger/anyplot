@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-map-geographic
 created: '2026-09-02T06:08:50Z'
-updated: '2026-11-08T05:05:56Z'
+updated: '2026-11-08T05:14:56Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42449132817
@@ -13,48 +13,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Composes the map from ChartsDataProvider + ChartsSurface and draws the land outlines
-    in a custom Basemap layer through the useXScale/useYScale hooks, so the basemap
-    shares the scatter's exact coordinate system
-  - Depth is encoded through a zAxis colorMap on the imprint_seq stops and magnitude
-    through a zAxis sizeMap, with a native ContinuousColorLegend; both legends name
-    their variable
-  - Size-legend glyphs reuse the markers' fill, alpha and page-coloured edge and are
-    computed from the same linear size map, so they match the data marks in both themes
-  - Markers at 0.82 opacity with a page-coloured outline keep stacked epicentres in
-    the Andes and Japan clusters distinguishable; the grey basemap stays quieter than
-    the points on both backgrounds
-  - Every point sits at its generated latitude/longitude (antimeridian wrap only);
-    degree-formatted graticule ticks (60°W, 30°S) and a per-point tooltip naming zone,
-    magnitude and depth in the HTML
-  - Plausible M5.0+ epicentres along real subduction and collision zones, with deep
-    events (up to ~590 km) only in the Andes, Tonga and Indonesia arcs
+  - Composes the chart from MUI X's ChartsDataProvider / ChartsSurface API and draws
+    the land basemap as a custom SVG layer through the useXScale/useYScale hooks,
+    so the outlines share the exact scales of the scatter markers
+  - Uses zAxis colorMap (depth, Imprint sequential green → blue from t.seq) and zAxis
+    sizeMap (magnitude, linear 4–16 px), the library-native way to drive the color
+    and size channels, with a native ContinuousColorLegend for depth
+  - The size legend circles copy the markers' fill (the middle of the depth ramp),
+    fill opacity and page-colored outline, so the key matches the marks in both themes
+  - The basemap is kept quiet (land filled with the grid token, a soft ink outline
+    at 45 % opacity), so the green and blue epicentres stand out in both themes
+  - The map keeps a true 2:1 equirectangular aspect with degree-formatted graticule
+    ticks (60° / 30°), and longitudes are wrapped correctly across the antimeridian
+    (Tonga points at the left edge)
+  - 'Earthquake scenario with M5.0–7.7 magnitudes and 6–591 km depths: deep blue slabs
+    under the Andes and Tonga against shallow green Anatolia and Himalaya events read
+    immediately'
+  - Native tooltip valueFormatter shows zone, magnitude and depth for every point
+    in the HTML view
   weaknesses:
-  - 'SC-02 (both): the basemap is five rough continent polygons with no Japan, Indonesia/Philippines,
-    New Zealand, Greenland, UK or Antarctica, so the Japan-Kuril and Indonesia-Philippines
-    epicentres sit in open water and the Andes outline misses the coast its points
-    follow → a basemap whose coastlines carry the island arcs the data sits on (finer
-    land rings including the main islands). Likely cause: LAND_OUTLINES holds only
-    ~15-35 vertices per continent and no islands.'
-  - 'Suggestion: a Robinson or Natural Earth projection (projecting lon/lat to x/y
-    before plotting) would reduce the high-latitude stretch of the plate carrée world
-    map.'
-  - 'Suggestion: intermediate ticks on the depth colour bar (e.g. 100, 300, 500 km)
-    would make individual depths easier to read off than the 6 and 591 endpoints alone.'
+  - 'DQ-02 (both): the zone named "Cascadia-Mexico coast" has no epicentre north of
+    about 39°N (Cascadia lies at about 40–50°N), and several of its points fall in
+    the open Pacific at about 10–15°N, 118°W, about 15° west of the Middle America
+    trench → put this zone''s points along the real margin (Cascadia at about 40–49°N,
+    124–128°W; Mexican trench at about 14–19°N, 92–105°W), or rename the zone. Likely
+    cause: one zone centred at (-112, 24) with spreadLat 15 and spreadLon 9 in the
+    zones list.'
+  - 'Suggestion: the Notes name Natural Earth or Robinson for world maps; a short
+    Robinson or Natural Earth forward transform applied to both the outlines and the
+    points would cut the high-latitude stretching of the plate carrée.'
+  - 'Suggestion: the meanLatitude cosine correction is always 1 for the full-globe
+    extent; it only matters if WORLD is narrowed to a region.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold dark title "scatter-map-geographic · javascript · muix · anyplot.ai" with a soft-ink subtitle (80 epicentres · colour: Depth (km) · size: Magnitude (Mw) · equirectangular projection); degree ticks 180°W–180°E and 90°S–90°N, axis titles "Longitude"/"Latitude", subtle grid graticule, dashed Equator and Prime meridian lines with small labels; bottom legend band with a "Depth (km)" colour bar (6–591) and a "Magnitude (Mw)" size legend (5.0, 6.3, 7.7). All text readable.
-      Data: 80 circles over grey continent polygons, coloured along the imprint_seq ramp from brand green #009E73 (shallow) to blue (deep), sized by magnitude, white page-coloured edges, slight transparency. Clusters at Aleutians, Mexico coast, Andes, Anatolia, Himalaya, Japan, Indonesia, Tonga.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: bold dark title "scatter-map-geographic · javascript · muix · anyplot.ai" with a gray subtitle "80 epicentres · colour: Depth (km) · size: Magnitude (Mw) · equirectangular projection"; the axis titles Longitude / Latitude and the degree ticks 180°W…180°E and 90°S…90°N are in dark ink; the subtle gray graticule sits at 60°/30°; the dashed Equator and Prime meridian lines carry small labels. All readable.
+      Data: 80 circles on a light-gray land basemap with soft outlines, clustered along the Aleutians, the Mexican coast, the Andes, Japan, Indonesia-Philippines, Tonga, Anatolia and the Himalaya. Color runs from brand green #009E73 (shallow) to blue #4467A3 (deep: the Andes and Tonga), size 4–16 px by magnitude, alpha 0.82 with page-colored outlines. Bottom legend band: the Depth (km) color bar 6–591, and the Magnitude (Mw) size key 5.0 / 6.3 / 7.7 with circles matching the markers.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, ticks, axis titles and legend text in light ink, grid and dashed reference lines lighter grey; no dark-on-dark text. Land polygons in a dark grey fill with a soft outline.
-      Data: identical green→blue colours and sizes as the light render; marker edges flip to the dark page colour. Brand green clearly visible.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: the title, subtitle, axis titles, tick labels, legend titles and the reference-line labels all render in light ink; the graticule is a subtle dark gray; no dark-on-dark text anywhere.
+      Data: marker colors identical to the light render (green → blue depth ramp); the land fill flips to a dark-gray grid token with a lighter outline and stays quieter than the points; marker outlines take the dark page color. The legend glyphs are visible and match the marks.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,51 +69,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, ticks 14 px, axis titles 16 px; readable in both themes
-          and in the thumbnail
+        comment: Title 22 px, subtitle 15 px, ticks 14 px, axis and legend titles
+          16 px; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; marker overlap in clusters handled with alpha
-          and edges
+        comment: No text collisions; overlapping markers in the Japan and Andes clusters
+          stay distinguishable through alpha 0.82 and page-colored outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 80 points at 4-16 px radius with alpha 0.82; legend glyphs visible
-          and matching marks in both themes
+        comment: 80 points at 4–16 px radius suit the density; the size-legend glyphs
+          match the markers in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp plus size; no red-green signal
+        comment: Green→blue ramp is CVD-safe and has good contrast against the land
+          fill in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, map centred with correct aspect, legends in a balanced
-          bottom band, nothing clipped
+        comment: 3200×1800; the 2:1 map fills the width with balanced margins; the
+          legend band is centered; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude/Longitude with degree-formatted ticks; legends carry units
-          (km, Mw)
+        comment: Longitude/Latitude with degree-formatted N/S/E/W ticks; the legend
+          titles carry units (km, Mw)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous colour from imprint_seq stops; correct backgrounds; data
-          colours identical across themes
+        comment: 'Continuous depth uses imprint_seq (t.seq #009E73→#4467A3); backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -118,24 +122,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Explanatory subtitle naming both encodings and the projection, hand-composed
-          legend band with titled colour bar and size glyphs
+        comment: 'Raised one: the title/subtitle hierarchy, where the subtitle states
+          the encodings and the projection, and a custom legend band that pairs the
+          color bar with a matching size key'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Basemap fill and outline kept quieter than the points; degree-hemisphere
-          tick formatting; graticule at 60°/30° chosen for a world map
+        comment: 'Raised two: an aspect-true map frame computed from the extent, a
+          basemap toned down with the grid fill and a 45 % outline, and a graticule
+          density (60°/30°) chosen for a world map'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Depth colour separates the deep slabs (Andes, Tonga) from shallow
-          collision zones; subtitle frames the reading
+        comment: 'Raised one: the depth ramp makes the deep subduction slabs (Andes,
+          Tonga, blue) contrast with the shallow collision zones (Anatolia, Himalaya,
+          green)'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,26 +153,28 @@ review:
         comment: Geographic scatter on a basemap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colour and size legends, alpha, contrast present; basemap too coarse
-          - missing island arcs leave Japan/Indonesia points in open water (defect
-          line). Zoom/pan is Pro-only in MUI X, not deducted
+        comment: Basemap of coastlines; color bar and size legend, each naming its
+          variable; transparency; points contrast against the basemap. Zoom/pan is
+          MUI X Pro-only and out of scope for the community package
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their lon/lat, full world extent shown, no displacement
+        comment: Points at their lon/lat with no jitter; the antimeridian wrap is
+          correct; the axes cover the whole globe
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; both legends name their variable with units
+        comment: Mandated title format; the legend titles 'Depth (km)' and 'Magnitude
+          (Mw)' read for a person
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -173,20 +182,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering, colour and size encodings, overlap and empty regions
+        comment: Shows clustering, empty map stretches, and the color and size channels
+          together
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: M5.0+ earthquakes along named real seismic zones; neutral
+        comment: Plausible, neutral earthquake scenario, but the 'Cascadia-Mexico
+          coast' zone has no Cascadia points and several open-ocean points far from
+          the trench (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: magnitudes 5.0-7.7 Mw, depths 6-591 km with deep events
-          only in subduction zones, lat/lon within range'
+        comment: 'Checked: magnitudes 5.0–7.7 Mw, depths 6–591 km (deep events only
+          in the Andes/Tonga/Indonesia zones), coordinates within ±180/±90'
     code_quality:
       score: 10
       max: 10
@@ -196,7 +208,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data/plot zones; Basemap subcomponent needed for the scale hooks
+        comment: Constants → data → plot; the Basemap component exists only because
+          the scale hooks need a child of the provider
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,21 +221,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All ten imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; size legend radii derived from the same linear
-          map
+        comment: Appropriate complexity; the zAxis maps do the encoding; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsDataProvider/ChartsWrapper
-          composition
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          v9 community API
     library_mastery:
       score: 7
       max: 10
@@ -232,27 +244,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API (ChartsDataProvider, ChartsSurface, ChartsXAxis/YAxis,
-          ScatterPlot) with zAxis colorMap/sizeMap
+        comment: 'Raised one: v9 composition (ChartsDataProvider + ChartsWrapper +
+          ChartsSurface) with zAxis colorMap/sizeMap instead of per-point colors'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks for a custom basemap layer, zAxis sizeMap,
-          ContinuousColorLegend, series valueFormatter tooltips
-  verdict: REJECTED
+        comment: 'Raised two: a custom SVG basemap layer through useXScale/useYScale,
+          a zAxis sizeMap, and ContinuousColorLegend bound to the z axis'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:02:58Z'
+  rendered_at: '2026-11-08T05:11:39Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - custom-legend
+  - colorbar
   - layer-composition
+  - manual-ticks
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
@@ -260,3 +272,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome
