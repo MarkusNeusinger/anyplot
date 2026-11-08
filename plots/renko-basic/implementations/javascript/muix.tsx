@@ -30,7 +30,7 @@ const CLOSE = "Close (USD)"; // role: close
 
 // Data: replace this block with your own records, one object per row
 // Daily closes of a fictional solar-energy stock through four regimes (uptrend, consolidation,
-// downtrend, recovery), 241 days from 2 Jan 2024, from a fixed-seed LCG
+// downtrend, recovery), 241 trading days (weekdays) from 2 Jan 2024, from a fixed-seed LCG
 const data = (() => {
   let seed = 42;
   const rand = () => {
@@ -39,9 +39,12 @@ const data = (() => {
   };
   const drifts = [...Array(60).fill(0.34), ...Array(50).fill(0), ...Array(70).fill(-0.3), ...Array(60).fill(0.26)];
   const rows = [{ [DATE]: new Date(2024, 0, 2), [CLOSE]: 64 }];
-  drifts.forEach((drift, i) => {
+  const day = new Date(2024, 0, 2);
+  drifts.forEach((drift) => {
+    do day.setDate(day.getDate() + 1);
+    while (day.getDay() === 0 || day.getDay() === 6);
     const prev = rows[rows.length - 1][CLOSE];
-    rows.push({ [DATE]: new Date(2024, 0, 3 + i), [CLOSE]: Math.max(prev + drift + (rand() - 0.5) * 1.6, 5) });
+    rows.push({ [DATE]: new Date(day), [CLOSE]: Math.max(prev + drift + (rand() - 0.5) * 1.6, 5) });
   });
   return rows.map((r) => ({ ...r, [CLOSE]: Math.round(r[CLOSE] * 100) / 100 }));
 })();
