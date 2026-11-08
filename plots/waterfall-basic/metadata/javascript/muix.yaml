@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: waterfall-basic
 created: '2026-08-04T11:46:44Z'
-updated: '2026-11-08T07:51:03Z'
+updated: '2026-11-08T07:55:57Z'
 generated_by: claude-opus-5-5
 adopted_from: df2a505f15f5afaa3dbb1dd16e206c8df83a7568 (df2a505f15f5afaa3dbb1dd16e206c8df83a7568)
 workflow_run: 42460151871
@@ -13,40 +13,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Floating bars built idiomatically from one MUI X stack: a transparent base series
-    lifts each change to the previous running total'
-  - Dashed connectors drawn in data coordinates through the useXScale/useYScale hooks,
-    sitting exactly at the shared running total
-  - Running-total label on every bar with ink chosen per fill luminance, readable
-    on green, red and blue in both themes
-  - 'Semantic Imprint colors: gains #009E73, losses matte red #AE3030, totals Imprint
-    blue; chrome threads theme tokens so both renders are clean'
-  - Closing total is computed from the start plus all changes, so the bridge always
-    closes
-  - Native MUI X tooltips in the HTML output for each bar
+  - 'Idiomatic MUI X waterfall: a transparent stacked base series lifts each change
+    bar to the previous running total inside one stack'
+  - Connectors drawn with useXScale/useYScale in data coordinates, so they meet the
+    bar edges exactly at the shared running total in both themes
+  - Running total label on every bar, with label ink chosen per fill by relative luminance
+    so it stays readable on green, red and blue
+  - Closing balance computed from the start plus all changes (143K checks out), so
+    the bridge always closes
+  - 'Semantic Imprint roles: green gains, matte red losses, blue totals; chrome threaded
+    from ANYPLOT_TOKENS and readable in light and dark'
+  - Tooltips and hover highlighting remain available in the interactive HTML
   weaknesses:
-  - 'CQ-04 (code): the legend is hand-built as an HTML block of divs and spans (the
-    LEGEND_H band and the ROLE_COLORS map loop above ChartsContainer, about 10 lines)
-    although MUI X ships a native legend → render <ChartsLegend /> inside ChartsDataProvider/ChartsWrapper
-    with the series labels already set (the transparent base series has no label and
-    stays out). Likely cause: the composed ChartsContainer without the ChartsDataProvider/ChartsWrapper
-    wrapper the native legend needs.'
-  - 'Suggestion: show each change''s signed delta (e.g. +85K, −18K) beside its running-total
-    label, as the Notes allow.'
+  - 'Suggestion: give the invisible ''base'' series an explicit valueFormatter returning
+    null (or hide it from the tooltip) so the interactive HTML tooltip does not list
+    an unlabelled base segment.'
+  - 'Suggestion: place each change bar''s running-total label at the bar end the next
+    connector leaves from, so the label sits on the line the reader follows.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold near-black title "waterfall-basic · javascript · muix · anyplot.ai" centered at top, softer grey subtitle "5 changes from Opening Balance to Closing Balance · bar labels: running total", HTML legend (Increase green, Decrease red, Total blue). Y axis "Cash (USD)" with ticks 0–260K in 20K steps, subtle horizontal grid; x axis with seven step names. All readable.
-      Data: blue Opening Balance bar 0→120K, green Product Sales 120K→205K and Service Revenue 205K→247K (#009E73), matte red Refunds 247K→229K, Operating Costs 229K→164K, Taxes 164K→143K, blue Closing Balance 0→143K. Grey dashed connectors join each bar top/bottom to the next at the running total. Bold running-total labels centered in each bar (dark ink on green, light ink on red/blue).
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold dark title "waterfall-basic · javascript · muix · anyplot.ai" centered at top, a muted subtitle "5 changes from Opening Balance to Closing Balance · bar labels: running total", a horizontal legend (Increase / Decrease / Total) below it; y axis "Cash (USD)" with ticks 0 to 260K in 20K steps, x axis with seven step names (Opening Balance ... Closing Balance). Subtle horizontal grid. All text dark on light and readable.
+      Data: blue Opening Balance bar 0-120K, green floating bars Product Sales (to 205K) and Service Revenue (to 247K), matte red floating bars Refunds (to 229K), Operating Costs (to 164K), Taxes (to 143K), blue Closing Balance bar 0-143K. Dashed grey connectors link each bar end to the next bar's start. Bold running-total labels inside every bar (dark ink on green, light ink on red and blue). First series green is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink, subtitle and tick labels in light grey, axis line and grid flip to light/subtle; legend text light. No dark-on-dark text anywhere.
-      Data: bar colors identical to the light render (green, matte red, blue); connectors switch to light-grey dashes and stay visible; bar labels keep the same per-fill ink.
+      Chrome: title, subtitle, legend, axis label and tick labels flip to light ink and are all clearly readable; grid lines subtle dark grey; no dark-on-dark text.
+      Data: bar colors identical to the light render (green, matte red, blue); dashed connectors in light soft ink stay visible; in-bar labels keep the same ink per fill and stay readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,53 +55,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 15-16, bar labels 16 bold) in CSS
-          px; all text readable in both themes; bar-label ink picked per fill luminance
+        comment: Explicit sizes (title 22 px, ticks 15-16 px, bold 16 px bar labels);
+          every element readable in both themes, label ink picked per fill by luminance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; running-total labels sit inside their bars, clear
-          of the dashed connectors
+        comment: Bar labels sit inside their bars and clear of the connectors; no
+          text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wide bars, visible dashed connectors in inkSoft, legend swatches
-          match the bar fills in both themes
+        comment: Seven wide bars, dashed connectors visible on both surfaces, legend
+          swatches match the bar fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green/red/blue are CVD-separated; direction is also encoded
-          by bar movement and the legend
+        comment: Green/red pair is backed by direction and the legend; blue totals
+          add a third hue; labels high-contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas (gate passed); balanced margins, nothing clipped,
-          title ~30% width
+        comment: 3200x1800, canvas gate passed; plot fills the canvas, balanced axis
+          text, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y axis 'Cash (USD)' with unit; x categories are descriptive step
-          names
+        comment: Y axis 'Cash (USD)' with units; categorical x axis self-describing
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception: gains #009E73, losses matte red #AE3030, totals
-          Imprint blue; backgrounds #FAF8F1 / #1A1A17; data colors identical across
-          themes'
+        comment: 'Increase = #009E73, decrease = Imprint matte red, totals = Imprint
+          blue (semantic roles); #FAF8F1 / #1A1A17 backgrounds, data colors identical
+          across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -112,23 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised: a two-level title block (bold title, softer subtitle explaining
-          the bar labels) and luminance-chosen label ink per fill, beyond the style-guide
-          baseline'
+        comment: Title/subtitle hierarchy in an HTML header, bold in-bar labels with
+          luminance-chosen ink, small rounded corners
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised: centered in-bar labels, slightly rounded bar corners and
-          thin dashed connectors that read as guides rather than data'
+        comment: Connectors drawn as soft dashed lines exactly bar-edge to bar-edge,
+          0.35 category gap tuned for the seven steps
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: 'Default: the bridge is displayed as the spec prescribes; no hierarchy
-          chosen beyond the Notes'
+        comment: Subtitle states the step count and that labels are running totals,
+          guiding the reading of the floating bars
     spec_compliance:
       score: 15
       max: 15
@@ -138,23 +133,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct basic waterfall: one start total, five floating changes,
-          one end total; no subtotals, reference lines or callouts'
+        comment: 'Basic waterfall: start total, five floating changes, end total;
+          no subtotals, reference lines or callouts'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gain/loss colors, connectors, distinct total color, running-total
-          label on every bar, totals first and last - all Notes and 'A good version
-          shows' bullets met
+        comment: Semantic colors, connectors, distinct totals color, running total
+          label on every bar - all Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each floating bar starts at the previous running total; y axis from
-          0 covers all values
+        comment: Each floating bar starts at the previous running total; axis from
+          0 shows all data
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -171,23 +165,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both increases and decreases, small (Refunds) and large (Product
-          Sales) changes, end total differs from start
+        comment: Both increases and decreases, changes of differing size, net rise
+          from start to end
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral quarterly cash bridge with plausible line items
+        comment: Quarterly cash bridge with sales, service revenue, refunds, operating
+          costs, taxes - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked running totals 120K→205K→247K→229K→164K→143K in the render
-          and the code; closing 143K = 120K+85K+42K−18K−65K−21K, computed not placed
+        comment: 'Checked: 120+85+42-18-65-21 = 143K, the closing bar is computed
+          and reads 143K on the axis; intermediate totals 205/247/229/164/143K match'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,8 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Module-level data and prep; the Connectors component exists only
-          because the scale hooks need a component
+        comment: Linear module-level data prep; the only extra component is the hook-based
+          Connectors layer React requires
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,17 +206,18 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hand-built HTML legend replaces the native ChartsLegend (defect line)
+        passed: true
+        comment: Appropriate complexity; no fake UI, no hand-rolled replacement for
+          an available call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, v9 ChartsContainer API, skipAnimation
-          set; harness writes PNG + HTML
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 composition API
     library_mastery:
       score: 7
       max: 10
@@ -231,24 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised: composed ChartsContainer with BarPlot/ChartsGrid/axes and
-          a shared stack id with a transparent base series for the floating bars'
+        comment: Composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface)
+          with a transparent stacked base series - the idiomatic MUI X waterfall
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Raised: useXScale/useYScale hooks drive a custom SVG connector layer
-          in data coordinates; per-item barLabel callback and slotProps.barLabel styling
-          per series'
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks drive a custom SVG connector layer in data
+          coordinates; per-series barLabel and slotProps.barLabel callbacks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T07:48:11Z'
+  rendered_at: '2026-11-08T07:53:21Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
   - annotations
   - hover-tooltips
@@ -256,5 +250,4 @@ impl_tags:
   patterns: []
   dataprep:
   - cumulative-sum
-  styling:
-  - publication-ready
+  styling: []

@@ -1,7 +1,7 @@
 // anyplot.ai
 // waterfall-basic: Basic Waterfall Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 86/100 | Updated: 2026-11-08
+// Quality: 88/100 | Updated: 2026-11-08
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
