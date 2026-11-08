@@ -2,113 +2,105 @@ library: muix
 language: javascript
 specification_id: titration-curve
 created: '2026-06-24T11:49:20Z'
-updated: '2026-06-24T12:13:44Z'
-generated_by: claude-sonnet
-workflow_run: 28095919830
+updated: '2026-11-08T06:36:08Z'
+generated_by: claude-opus-5-5
+adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
+workflow_run: 42455140944
 issue: 4407
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Custom BufferZone component using MUI X's useDrawingArea + useXScale hooks — idiomatic
-    library extension pattern demonstrating genuine library mastery
-  - 'All spec-required features implemented: S-curve sigmoid, derivative dpH/dV overlay
-    on right Y-axis, buffer zone shading, equivalence point annotation with dashed
-    reference line'
-  - Scientifically accurate pH computation for strong acid/base titration; central-difference
-    derivative correctly spikes at equivalence point (pH 7, 25 mL)
-  - Complete theme-adaptive styling via ANYPLOT_TOKENS throughout all chart elements;
-    no hard-coded hex color values
-  - Deterministic, self-contained data generation from mathematical formulas with
-    no external dependencies or RNG
+  - Data comes from the exact charge balance [H+] − [OH−] = excess acid with Kw =
+    1e-14, so pH 1.00 at 0 mL, the 3.30 → 10.70 jump across 24.75–25.25 mL and pH
+    12.52 at 50 mL all come out of the computation and are not placed by hand
+  - The equivalence point is located as the maximum of the central-difference dpH/dV,
+    and the native ChartsReferenceLine draws the dashed line and its label at exactly
+    that reading (25.00 mL, pH 7.00), passing through the steepest part of the curve
+  - 'Dual y axes in idiomatic MUI X v9: the series bind through yAxisId, the right
+    axis takes position: ''right'' with its own label ''dpH/dV (per mL)'' and 25 %
+    headroom above the spike, and the y axis spans the full 0–14 pH scale'
+  - 'The derivative is visually subordinate: a 2 px lavender line with a 0.15-opacity
+    area fill under the 3.5 px brand-green pH curve, styled through the v9 data-series
+    selectors'
+  - Theme tokens are threaded through every chrome element (title, subtitle, axis
+    and tick labels, grid, reference line), so both renders read cleanly; the HTML
+    output keeps MUI X's native hover tooltip
   weaknesses:
-  - 'Right Y-axis (dpH/dV scale) tick labels and axis label ''dpH/dV (mL⁻¹)'' are
-    not clearly visible in either render — the legend at position {vertical:''top'',
-    horizontal:''right''} conflicts with the 120px right margin reserved for the secondary
-    axis. Fix: increase margin.right to 180–200px and/or change legend position to
-    {vertical:''bottom'', horizontal:''right''} to give the right axis labels unobstructed
-    space.'
-  - Buffer zone shading at fillOpacity=0.1 (10%) is very subtle — nearly invisible
-    at thumbnail size in the light render. Increase to fillOpacity=0.18–0.22 for better
-    readability without overwhelming the main sigmoid curve.
-  - Annotation label 'Equivalence Point — 25 mL, pH 7' with labelAlign='start' extends
-    rightward from the dashed line at the top of the chart, potentially competing
-    visually with the legend. Consider labelAlign='end' (left of line) or repositioning
-    to avoid the crowded top-right area.
+  - 'Suggestion: end the right axis on a round tick (for example 20) so its top meets
+    the frame like the left pH axis does, instead of stopping at the unlabelled 18.5'
+  - 'Suggestion: the 22 px title fills about 30 % of the width; a slightly larger
+    title would give the header more presence over the subtitle'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct cream surface, not pure white
-      Chrome: Title "titration-curve · javascript · muix · anyplot.ai" in dark ink (fontSize=22) at top, ~60-65% width — readable. Left Y-axis label "pH" visible and readable. X-axis label "Volume of NaOH added (mL)" clearly readable. Tick labels (0-14 on Y, 0-50 on X) in inkSoft color — all readable. Legend top-right shows "pH" and "dpH/dV" labels readable. Right Y-axis tick labels and "dpH/dV (mL⁻¹)" label appear obscured/absent due to legend positioning conflict with right margin area.
-      Data: Brand green (#009E73) S-shaped sigmoid curve for pH — clearly visible as primary series. Lavender (#C475FD) narrow spike at x=25 for dpH/dV derivative — visible but narrow. Semi-transparent blue buffer zone shading (±4 mL around equivalence, 10% opacity) — very subtle. Area fill under derivative curve (15% opacity). Dashed vertical reference line at x=25 with annotation text.
-      Legibility verdict: PASS (primary axis fully readable; right axis labels potentially obscured by legend)
+      Background: warm off-white #FAF8F1 cream across the whole canvas, not pure white.
+      Chrome: bold dark title "titration-curve · javascript · muix · anyplot.ai" top left, with a soft-ink subtitle "201 readings, 0–50 mL of titrant · equivalence at the dpH/dV maximum" below it; left axis "pH" with ticks 0–14 in steps of 2; x axis "Volume of NaOH added (mL)" with ticks 0–50 in steps of 5; right axis "dpH/dV (per mL)" with ticks 0–18; subtle horizontal grid; legend (pH, dpH/dV (per mL)) at top right. All text is dark on cream and readable.
+      Data: brand-green #009E73 pH curve rises gently from pH 1.0 to about 3.3, jumps almost vertically at 25 mL, then flattens toward 12.5 at 50 mL. A lavender #C475FD derivative line with a faint fill is flat near 0 and spikes to about 14.8 at 25 mL. A dark dashed vertical line at 25 mL carries the label "Equivalence point · 25.00 mL, pH 7.00" in clear space near the top.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark surface, not pure black
-      Chrome: Title readable in light ink against dark background. Left Y-axis "pH" label readable. X-axis label readable. Tick labels appear as light-colored text on dark background — all readable. No dark-on-dark failures observed. Legend readable top-right.
-      Data: Data colors identical to light render — brand green (#009E73) pH sigmoid and lavender (#C475FD) dpH/dV spike are unchanged. Buffer zone appears as slightly darker-blue region against the dark background. Reference line and annotation text visible.
-      Legibility verdict: PASS (both themes legible; same right axis visibility concern as light render)
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles, tick labels, legend and reference-line label all flip to light ink and are clearly readable. No dark-on-dark text. The grid lines are subtle but visible, and the dashed equivalence line is light grey.
+      Data: the same #009E73 green pH curve and #C475FD lavender derivative as in the light render, identical in position and color; only the derivative's translucent fill reads darker over the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Primary axis labels, tick labels, title and annotation readable in
-          both themes. Right Y-axis dpH/dV tick labels appear obscured by legend positioning
-          conflict with right margin.
+        comment: Fonts set explicitly (ticks 15 px, axis titles 16 px, title 22 px
+          in CSS space); all text readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No major text-data collisions. Annotation 'Equivalence Point — 25
-          mL, pH 7' extends into chart area near top but above main data. Legend and
-          annotation compete in top-right area.
+        comment: Equivalence label sits in clear space above the pH curve; the derivative
+          spike crossing the near-vertical jump stays legible (permitted by the spec)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Brand green pH curve prominent. Lavender dpH/dV spike narrow but
-          visible. Buffer zone at 10% opacity very subtle. Area fill 15% opacity appropriately
-          subtle.
+        comment: 201 dense readings drawn as lines without markers; legend line glyphs
+          are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1 and 2 used. CVD-safe combination.
+        comment: Green vs lavender is CVD-safe, and the two series also differ in
+          line width
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, generous margins
-          (30/90/90/120). Title proportion appropriate.
+        comment: 3200×1800 canvas; balanced axes and bands, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Volume of NaOH added (mL)'' with units. Y-left: ''pH''.
-          Y-right: ''dpH/dV (mL⁻¹)'' with correct units. Title matches required format.'
+        comment: '''Volume of NaOH added (mL)'', ''pH'' and ''dpH/dV (per mL)'' are
+          descriptive and carry units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 brand green. Second series = #C475FD lavender
-          (palette[1]). Backgrounds #FAF8F1 light / #1A1A17 dark correct. Data colors
-          identical between themes.'
+        comment: 'First series #009E73, second series Imprint position 2 #C475FD;
+          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -118,25 +110,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: custom BufferZone SVG component with hooks, mathematical
-          pH/derivative data, dual Y-axis, area fill, ChartsReferenceLine annotation.
-          Above generic defaults but not exceptional.'
+        comment: Deliberate title/subtitle hierarchy (600 weight ink vs soft-ink 15
+          px subtitle) with a consistent type scale
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid styled via sx (stroke, opacity), axis lines use inkSoft token,
-          area fill and buffer zone use appropriate opacity. Reasonably clean but
-          dual-axis complexity adds visual weight.
+        comment: Derivative headroom constant keeps the spike clear of the frame,
+          and the reference label is placed in the empty upper band; horizontal-only
+          grid
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Equivalence point is clear focal point via dashed line and annotation.
-          Derivative spike reinforces story. Dual-axis complexity reduces immediate
-          readability for general viewers.
+        comment: The subtitle states how the equivalence point was found (dpH/dV maximum),
+          and the line weights put the pH curve first and the derivative second
     spec_compliance:
       score: 15
       max: 15
@@ -146,30 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct titration curve (S-shaped sigmoid pH vs. volume). LineChart
-          appropriate for continuous data.
+        comment: S-shaped titration curve with the optional derivative overlay on
+          a secondary axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equivalence point dashed line, text annotation with volume+pH, dpH/dV
-          derivative on secondary Y-axis, buffer zone shading, realistic HCl/NaOH
-          data — all present.
+        comment: Dashed equivalence line with volume and pH annotation, derivative
+          on its own labelled right axis peaking at 25 mL, y axis 0–14, axis labels
+          as specified; no buffer shade (strong acid/strong base)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: volume 0-50 mL, Y-left: pH 0-14, Y-right: dpH/dV. All correct.
-          pH realistic (starts ~1, equivalence at 7, asymptotes to ~12.5).'
+        comment: Marks at their computed values; monotoneX interpolation does not
+          overshoot across the jump
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'titration-curve · javascript · muix · anyplot.ai' matches
-          required format. Legend labels 'pH' and 'dpH/dV' correctly identify series.
+        comment: Title matches the mandated format; legend entries 'pH' and 'dpH/dV
+          (per mL)' read for people
     data_quality:
       score: 15
       max: 15
@@ -179,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows pH sigmoid, derivative spike, equivalence point, buffer zone,
-          dual axes, reference annotation.
+        comment: Shows the gentle pre-equivalence slope, the near-vertical jump, the
+          post-equivalence plateau and the derivative peak
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 25 mL 0.1M HCl + 0.1M NaOH — realistic strong acid/base titration.
-          No controversial content.
+        comment: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH, a standard teaching-lab
+          system
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: pH 0-14 full scale, volume 0-50 mL (2x equivalence), 201 points,
-          mathematically correct derivative.
+        comment: 'Checked: equivalence at 25.00 mL and pH 7.00 (spec value pH 7),
+          initial pH 1.00, final pH 12.52 at 50 mL, derivative peak about 14.8 per
+          mL; each one follows from the charge-balance computation'
     code_quality:
       score: 10
       max: 10
@@ -204,34 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Two minimal structures: phAt() function (data generation) and BufferZone
-          component (requires hooks). No unnecessary abstractions.'
+        comment: 'Linear module: constants, a data block, derived arrays, and one
+          default-exported component'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data from deterministic mathematical formulas, no RNG.
+        comment: Fully deterministic analytic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports are used: LineChart, ChartsReferenceLine, useDrawingArea,
-          useXScale, Box, Typography.'
+        comment: LineChart, ChartsReferenceLine, Box and Typography are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layout, no fake UI elements, proper MUI X patterns throughout.
+        comment: Compact central-difference derivative and argmax; nothing that a
+          library call would replace
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness generates plot-light.png/dark.png and interactive HTML. Current
-          MUI X community API used.
+        comment: Default-export component with skipAnimation, sized to ANYPLOT_SIZE
+          minus the title and legend bands; current v9 API
     library_mastery:
       score: 7
       max: 10
@@ -241,25 +232,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'High-level LineChart API, ChartsReferenceLine, slotProps for legend,
-          skipAnimation, ANYPLOT_SIZE/TOKENS. Minor: legend position conflicts with
-          right axis.'
+        comment: v9 multi-axis config with yAxisId, axis width/height bands, slotProps.legend,
+          and data-series CSS selectors
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: useDrawingArea + useXScale hooks for custom SVG overlay (distinctively
-          MUI X), ChartsReferenceLine, dual yAxisId mapping, area series, sx prop
-          for fine-grained chart element styling.
+        comment: Native ChartsReferenceLine composed as a LineChart child with labelAlign/spacing,
+          and MUI Typography for the header
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:33:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
-  - html-export
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []

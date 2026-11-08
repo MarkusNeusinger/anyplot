@@ -1,189 +1,148 @@
 // anyplot.ai
 // frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
+const BIN_COUNT = 18; // shared bins across the pooled range of every group
+const X_PAD_SHARE = 0.015; // x padding beyond the closing vertices, as a share of their span
+const FREQUENCY_LABEL = "Frequency (count per bin)";
 const TITLE = "frequency-polygon-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
+const TITLE_H = 84;
 
-// --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
-function lcg(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
-  };
-}
+// Columns: set these to your data's column names
+const REACTION_TIME = "Reaction time (ms)"; // role: values
+const CONDITION = "Condition"; // role: group
 
-function randomNormal(rand, mean, stdDev) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * stdDev;
-}
-
-// Draw from a mixture of normals: each call picks a component by weight,
-// then samples from it. Used for the sleep-deprived condition to model
-// occasional attentional lapses (microsleeps) on top of normal responses,
-// producing a right-skewed / mildly bimodal shape.
-function randomMixture(rand, components) {
-  const pick = rand();
-  let cumulative = 0;
-  for (const component of components) {
-    cumulative += component.weight;
-    if (pick <= cumulative) {
-      return randomNormal(rand, component.mean, component.stdDev);
-    }
-  }
-  const last = components[components.length - 1];
-  return randomNormal(rand, last.mean, last.stdDev);
-}
-
-// Simple visual-stimulus reaction times (ms) across three experimental
-// conditions in a psychology lab study.
-const SAMPLE_SIZE = 300;
-const CONDITIONS = [
-  { label: "Control", seed: 11, components: [{ weight: 1, mean: 320, stdDev: 40 }] },
-  { label: "Caffeine", seed: 23, components: [{ weight: 1, mean: 280, stdDev: 35 }] },
-  {
-    // Mostly normal responses, plus a lapse-trial subgroup (microsleeps)
-    // that pulls the tail out to the right and creates a second mode.
-    label: "Sleep-deprived",
-    seed: 37,
-    components: [
-      { weight: 0.68, mean: 350, stdDev: 35 },
-      { weight: 0.32, mean: 475, stdDev: 45 },
-    ],
-  },
-];
-const samplesByCondition = CONDITIONS.map((condition) => {
-  const rand = lcg(condition.seed);
-  return Array.from({ length: SAMPLE_SIZE }, () =>
-    Math.max(150, randomMixture(rand, condition.components)),
-  );
-});
-const meanByCondition = samplesByCondition.map(
-  (samples) => samples.reduce((sum, value) => sum + value, 0) / samples.length,
-);
-
-// Shared bin edges across all conditions so the polygons stay comparable.
-const allTimes = samplesByCondition.flat();
-const dataMin = Math.min(...allTimes);
-const dataMax = Math.max(...allTimes);
-const BIN_COUNT = 18;
-const binWidth = (dataMax - dataMin) / BIN_COUNT;
-const binEdges = Array.from({ length: BIN_COUNT + 1 }, (_, i) => dataMin + i * binWidth);
-const binMidpoints = Array.from(
-  { length: BIN_COUNT },
-  (_, i) => (binEdges[i] + binEdges[i + 1]) / 2,
-);
-
-function histogram(samples) {
-  const counts = new Array(BIN_COUNT).fill(0);
-  samples.forEach((value) => {
-    const index = Math.min(BIN_COUNT - 1, Math.floor((value - dataMin) / binWidth));
-    counts[Math.max(0, index)] += 1;
+// Data: replace this block with your own records, one object per row
+// Simple visual-stimulus reaction times, 300 trials per condition in a psychology lab study;
+// the sleep-deprived condition mixes in attentional lapses (microsleeps) that pull out a second mode.
+const data = (() => {
+  const conditions = [
+    { label: "Control", seed: 11, components: [{ weight: 1, mean: 320, sd: 40 }] },
+    { label: "Caffeine", seed: 23, components: [{ weight: 1, mean: 280, sd: 35 }] },
+    {
+      label: "Sleep-deprived",
+      seed: 37,
+      components: [
+        { weight: 0.68, mean: 350, sd: 35 },
+        { weight: 0.32, mean: 475, sd: 45 },
+      ],
+    },
+  ];
+  return conditions.flatMap((condition) => {
+    let state = condition.seed;
+    const rand = () => {
+      state = (state * 1664525 + 1013904223) % 4294967296;
+      return state / 4294967296;
+    };
+    return Array.from({ length: 300 }, () => {
+      const pick = rand();
+      let cumulative = 0;
+      const component =
+        condition.components.find((c) => (cumulative += c.weight) >= pick) ??
+        condition.components[condition.components.length - 1];
+      const u1 = Math.max(rand(), 1e-9);
+      const u2 = rand();
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      return { [CONDITION]: condition.label, [REACTION_TIME]: Math.max(150, component.mean + z * component.sd) };
+    });
   });
+})();
+
+// Plot: reads only data and the constants above
+const observations = data.filter((d) => Number.isFinite(d[REACTION_TIME]));
+const conditions = [...new Set(observations.map((d) => d[CONDITION]))];
+
+// Bin edges shared by every group, so the vertices of all polygons sit at the same x positions
+const valueMin = Math.min(...observations.map((d) => d[REACTION_TIME]));
+const valueMax = Math.max(...observations.map((d) => d[REACTION_TIME]));
+const binWidth = (valueMax - valueMin) / BIN_COUNT;
+
+// One vertex per bin midpoint, plus one empty bin at each end so every polygon closes on zero
+const midpoints = Array.from({ length: BIN_COUNT + 2 }, (_, i) => valueMin + (i - 0.5) * binWidth);
+const frequencies = conditions.map((condition) => {
+  const counts = new Array(BIN_COUNT + 2).fill(0);
+  observations
+    .filter((d) => d[CONDITION] === condition)
+    .forEach((d) => {
+      counts[1 + Math.min(BIN_COUNT - 1, Math.floor((d[REACTION_TIME] - valueMin) / binWidth))] += 1;
+    });
   return counts;
-}
-const countsByCondition = samplesByCondition.map(histogram);
+});
 
-// Extend each polygon one bin-width past the outer midpoints at zero so the
-// outline closes at the baseline instead of hanging in mid-air.
-const reactionTimes = [
-  binMidpoints[0] - binWidth,
-  ...binMidpoints,
-  binMidpoints[BIN_COUNT - 1] + binWidth,
-];
-const frequenciesByCondition = countsByCondition.map((counts) => [0, ...counts, 0]);
+const unit = REACTION_TIME.match(/\(([^)]+)\)/)?.[1] ?? "";
+const subtitle = `n = ${observations.length} across ${conditions.length} groups · ${BIN_COUNT} shared bins of ${binWidth.toFixed(1)} ${unit}`;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
-
   return (
-    <Box sx={{ width, height, bgcolor: t.pageBg }}>
-      <Box
-        sx={{
-          height: TITLE_HEIGHT,
-          display: "flex",
-          alignItems: "center",
-          px: "40px",
-        }}
-      >
-        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1 }}>
-          {TITLE}
-        </Typography>
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", px: "40px", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
       </Box>
       <LineChart
         width={width}
-        height={chartHeight}
+        height={height - TITLE_H - 48}
         skipAnimation
-        colors={t.palette.slice(0, CONDITIONS.length)}
         grid={{ horizontal: true }}
+        margin={{ top: 16, right: 48, bottom: 8, left: 24 }}
         xAxis={[
           {
-            data: reactionTimes,
+            data: midpoints,
             scaleType: "linear",
-            label: "Reaction Time (ms)",
-            valueFormatter: (v) => Math.round(v).toString(),
-            disableTicks: true,
+            min: midpoints[0] - X_PAD_SHARE * (midpoints[midpoints.length - 1] - midpoints[0]),
+            max: midpoints[midpoints.length - 1] + X_PAD_SHARE * (midpoints[midpoints.length - 1] - midpoints[0]),
+            label: REACTION_TIME,
+            height: 68,
+            tickNumber: 10,
+            valueFormatter: (v: number) => v.toFixed(0),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             min: 0,
-            label: "Frequency",
-            disableTicks: true,
+            label: FREQUENCY_LABEL,
+            width: 84,
+            tickNumber: 8,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        series={CONDITIONS.map((condition, index) => ({
-          id: condition.label,
-          data: frequenciesByCondition[index],
-          label: condition.label,
+        series={conditions.map((condition, i) => ({
+          id: `condition-${i}`,
+          data: frequencies[i],
+          label: condition,
+          color: t.palette[i],
           curve: "linear",
           area: true,
           showMark: true,
+          shape: "circle",
         }))}
-        margin={{ top: 24, bottom: 100, left: 90, right: 40 }}
-        sx={{
-          "& .MuiAreaElement-root": { fillOpacity: 0.14 },
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiMarkElement-root": { strokeWidth: 2, r: 3.5 },
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiChartsAxis-line": { stroke: t.grid },
-          "& .MuiChartsLegend-label": { fontSize: "15px" },
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 0.75 },
-          "& .MuiChartsReferenceLine-line": { strokeDasharray: "4 4", strokeWidth: 1.5 },
-          "& .MuiChartsReferenceLine-label": { fontSize: "11px" },
-        }}
         slotProps={{
           legend: {
-            position: { vertical: "bottom", horizontal: "middle" },
-            itemMarkWidth: 20,
-            itemMarkHeight: 4,
-            padding: { top: 20 },
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 15, color: t.inkSoft, mt: "8px" },
           },
         }}
-      >
-        {CONDITIONS.map((condition, index) => (
-          <ChartsReferenceLine
-            key={condition.label}
-            x={meanByCondition[index]}
-            lineStyle={{ stroke: t.palette[index] }}
-            labelStyle={{ fill: t.palette[index] }}
-            label={`${condition.label} mean`}
-            labelAlign="start"
-          />
-        ))}
-      </LineChart>
+        sx={{
+          "& .MuiLineChart-area": { fillOpacity: 0.14 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiLineChart-mark": { strokeWidth: 2 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      />
     </Box>
   );
 }

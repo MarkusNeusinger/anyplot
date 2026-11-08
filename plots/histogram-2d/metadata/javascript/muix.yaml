@@ -2,110 +2,104 @@ library: muix
 language: javascript
 specification_id: histogram-2d
 created: '2026-09-05T04:02:13Z'
-updated: '2026-09-05T04:16:39Z'
-generated_by: claude-sonnet
-workflow_run: 33943109958
+updated: '2026-11-08T07:16:01Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42439400992
 issue: 2012
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Colorbar is now centered under the chart with a consistent length (62%) and both
-    endpoint labels use the matching "N points" format, resolving the unbalanced-gutter
-    and inconsistent-label issues from Attempt 1
-  - 'Genuine binning implementation: raw points are aggregated into per-cell counts
-    on a 26x18 grid before rendering, not a disguised scatter plot'
-  - Custom rectangular marker via the documented `slots.scatter` override correctly
-    draws bin cells sized from the affine xScale/yScale geometry
-  - Continuous Imprint sequential palette (tokens.seq[0] -> tokens.seq[1]) is applied
-    correctly and is pixel-identical between light and dark renders; only chrome flips
-  - Canvas is exactly 3200x1800 with no clipped text in either render, and the title
-    follows the mandated `{Descriptive Title} · {spec-id} · {language} · {library}
-    · anyplot.ai` convention
-  - Deterministic seeded data generation (mulberry32, seed 42) produces a realistic,
-    neutral bivariate-correlated dataset (correlated daily stock returns)
+  - Composes the chart from ChartsDataProvider, ChartsWrapper and ChartsSurface, with
+    a custom mark layer that reads useXScale, useYScale and useZColorScale, so the
+    bins sit exactly in data coordinates and use the library's own z-axis color map.
+  - The zAxis continuous colorMap uses the Imprint imprint_seq stops on log counts
+    and is paired with the native ContinuousColorLegend. The color bar labels its
+    ends in back-transformed counts (1 and 196) and has a title naming the log scale.
+  - The bins tile a regular grid with no gaps. Bin strokes match their fills, so no
+    seams show, and empty fringe bins show the page in both themes.
+  - 'The data is realistic: 8,000 seeded, correlated daily fund returns (rho = 0.65,
+    sample r = 0.64), with volatilities that fit the domain.'
+  - Theme tokens drive all the chrome. Both renders are fully legible, and the data
+    colors are identical in both.
   weaknesses:
-  - Overall aesthetic is still fairly plain beyond the palette and disabled gridlines
-    — the heatmap cells have no edge treatment or additional refinement to lift Design
-    Excellence
-  - No clear visual focal-point device beyond the color gradient itself (e.g. no annotation
-    calling out the correlation direction or density peak)
-  - The optional marginal 1D histograms mentioned in the spec notes are still not
-    included
-  - Library Mastery is mostly the continuous color-mapped z-axis plus the custom scatter
-    slot; no further distinctive MUI X features (e.g. tooltip customization, axis
-    formatting) are demonstrated
+  - 'SC-04 (both): the title reads "Correlated Fund Returns ·histogram-2d · …". It
+    is missing the space after the first separator → "Correlated Fund Returns · histogram-2d
+    · javascript · muix · anyplot.ai". Likely cause: the TITLE string literal.'
+  - 'Suggestion: one or two intermediate count ticks on the log color bar (for example
+    10 and 50) would make the mid-range colors easier to read.'
+  - 'Suggestion: optional marginal histograms on the top and right edges would add
+    univariate context.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Correlated Stock Returns · histogram-2d · javascript · muix · anyplot.ai" renders in dark ink, centered and fully visible above the plot. Axis titles "Stock A Daily Return (%)" / "Stock B Daily Return (%)" and tick labels render in dark/soft-dark ink, all clearly legible against the light background. The colorbar legend beneath the chart is now centered ("0 points" ... "196 points"), both labels sharing the same "N points" format.
-      Data: Rectangular density bins form an elongated diagonal cloud (positive correlation between the two series), colored from Imprint brand green (low count) through teal to darker blue at the density peak near the center. First/only data channel correctly starts from the Imprint sequential green.
+      Background: warm off-white #FAF8F1
+      Chrome: bold dark title "Correlated Fund Returns ·histogram-2d · javascript · muix · anyplot.ai" with a muted subtitle (n = 8,000 · 26 × 18 bins · Pearson r = 0.64). Axis titles carry units (%), tick labels in soft ink, L-shaped axes, no grid. A horizontal color bar at the bottom center is titled "Points per bin (log scale)" with end labels 1 and 196. All text is readable.
+      Data: a 26x18 grid of rectangular bins with no gaps, from brand green #009E73 (low count) to blue #4467A3 (196 points) in the core of the tilted elliptical cloud. Empty bins are blank.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis chrome now render in light ink, fully legible against the dark surface — no dark-on-dark failures observed. The centered colorbar and its "0 points"/"196 points" labels remain legible in light ink.
-      Data: Bin colors and geometry are pixel-identical to the light render (same green-to-blue gradient, same cell shapes/positions), confirming only chrome flipped between themes.
+      Background: warm near-black #1A1A17
+      Chrome: title, subtitle, axis titles, ticks and color-bar labels render in light ink. No text is dark on dark.
+      Data: bin colors and color-bar gradient are identical to the light render. Low-count green bins stand out clearly from the page.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at explicit font sizes (title ~20px,
-          axis labels 18px, ticks/legend 14px)
+        comment: Font sizes are set explicitly (title 22 px, ticks 14 px, axis titles
+          16 px) and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axes, legend, or data
+        comment: No text collides with text or with the bins
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Aggregated bin cells avoid overplotting that raw 8000-point scatter
-          would cause
+        comment: Bins are clearly visible. Low-count green bins stand out from both
+          pages
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential Imprint scale with adequate lightness+hue contrast, not
-          a sole-hue encoding
+        comment: The green-to-blue sequential ramp is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Fixed from Attempt 1: colorbar is now centered with 62% length,
-          no unbalanced gutter; canvas exactly 3200x1800, nothing clipped'
+        comment: Balanced layout. The color bar is centered under the axis title,
+          nothing is cut off, and the canvas is 3200x1800
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (%), mandated title format
+        comment: Descriptive axis titles with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used for continuous density color, identical across themes;
-          backgrounds correct in both renders
+        comment: imprint_seq stops via t.seq, theme-correct backgrounds
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -113,23 +107,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clever custom rect-slot marker, but modest polish beyond the palette
+        comment: A title/subtitle hierarchy (weight 600 ink over a muted stats line)
+          and a titled color bar centered under the plot
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Gridlines deliberately disabled and margins are clean, but little
-          further refinement (e.g. cell edges)
+        comment: Bin strokes match their fills so no hairline seams show. Empty bins
+          show the page and the plot has no grid
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Diagonal correlation band and density peak give a natural focal point,
-          but no additional emphasis device
+        comment: The log color scale is a Notes suggestion. No hierarchy goes beyond
+          the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,115 +132,115 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D histogram heatmap with rectangular bins
+        comment: A 2D histogram heatmap on a regular rectangular grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, perceptually-appropriate Imprint sequential colormap,
-          bins parameter controls resolution
+        comment: Has the color bar, a perceptually uniform sequential map, a log scale
+          and a bin count that fits the sample. Marginals are optional and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, axes cover full data range
+        comment: Axes span the full data range and bins sit at their data coordinates
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title matches mandated pattern; legend clearly labels the count scale
+        passed: false
+        comment: The title is missing the space after the first separator (defect
+          line)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers density, clustering, and correlation; optional marginal histograms
-          omitted
+        comment: Shows the tilted core, the density gradient and the sparse tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Correlated daily stock returns with plausible volatility magnitudes,
-          neutral domain
+        comment: Correlated daily returns of a tech fund and a semiconductor fund,
+          neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8000 points, ~-5% to +5.5% return range, 26x18 bin resolution all
-          sensible
+        comment: Volatilities of 1.4/1.6 % give a ±5–7 % range over 8,000 days. The
+          sample r of 0.64 matches the generated 0.65
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: A few helper functions (mulberry32, gaussian, HistogramCell) are
-          all justified by the custom-marker requirement
+        comment: Linear script plus the custom-mark component the composition API
+          requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded mulberry32 RNG, fully deterministic
+        comment: Seeded mulberry32 PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used (Box, Typography, ScatterChart, ContinuousColorLegend)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a binned heatmap with custom marks; no
-          fake UI
+        comment: The binning is hand-written because no available call computes it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Sized to window.ANYPLOT_SIZE, skipAnimation set, harness mount-node
-          contract respected
+        comment: Default-exported Chart, current v9 API, skipAnimation set
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses the documented slots.scatter override and zAxis continuous colorMap
-          idiomatically
+        passed: false
+        comment: Composition API with the scale hooks for a custom mark layer
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Continuous color-mapped z-axis and ContinuousColorLegend used well,
-          but nothing further distinctive
+        comment: Uses the zAxis continuous colorMap with useZColorScale and the native
+          ContinuousColorLegend with custom min/max label formatters
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T07:13:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - binning
   styling:
-  - custom-colormap
+  - minimal-chrome
