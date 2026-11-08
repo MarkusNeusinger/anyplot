@@ -978,7 +978,8 @@ class TestRun:
         root_turns = [
             [prepare(*SALES_CHAIN), reply],
             [prepare(SALES_SUM, SALES_SORT), reply],  # the notes column without its drop
-            [prepare(no_total), prepare(SALES_SUM), prepare(SALES_SORT), reply],  # three calls, one dropping nothing
+            # Two calls, the turn's cap, and an operation that drops nothing.
+            [prepare(no_total, SALES_SUM), prepare(SALES_SORT), reply],
             [prepare(SALES_SUM, {"op": "sort", "column": "Sales"}), reply],  # the weakest first
             [prepare(SALES_SUM, SALES_SORT), reply],
             [prepare(*SALES_CHAIN), reply],

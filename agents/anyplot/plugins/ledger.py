@@ -119,8 +119,9 @@ CallOutcome = Literal[
 * `ok`: it answered and changed nothing (a reader, or `keep_plot_request` that kept nothing);
 * `changed`: it stored a change in the session (the data, the bindings, a language, the plot memory) or asked the
   page for a library switch;
-* `kept`: a first-plot wish kept for the next run (`keep_plot_request`, or a `plot_pipeline` that stopped on
-  unconfirmed data and kept the request);
+* `kept`: a first-plot wish kept for the next run (`keep_plot_request`, a `plot_pipeline` that stopped on
+  unconfirmed data and kept the request, or one ToolSafety refused before the run and whose request it kept:
+  `data_changed_this_turn`, `summary_turn`);
 * `shipped`, `failed`: a `plot_pipeline` run that stored a version, or that ran and stored none;
 * `not_ready`: the session was not ready for it (no data, open roles), which for `plot_pipeline` the page shows as a
   failed plot card, a wish it kept or not; `unconfirmed`: a `plot_pipeline` call refused for unconfirmed data that
@@ -135,8 +136,13 @@ GuardVerdict = Literal[
     "plot_as_confirmed",
     "one_pipeline_per_turn",
     "switch_requested",
+    "data_changed_this_turn",
+    "summary_turn",
     "plot_already_run",
     "too_many_data_runs",
+    "too_many_prepare_calls",
+    "too_many_generate_calls",
+    "too_many_query_calls",
     "budget",
     "internal",
     "unknown",
@@ -201,7 +207,6 @@ class RequestLedger:
     judge_tokens: int = 0
     budget_tokens: int = 0
     """The model calls' and the judge's cost-weighted tokens (`BUDGET_WEIGHTS`): what the request budget counts."""
-    pipeline_calls: int = 0
     pipeline_active: bool = False
     plot_shipped: bool = False
     """A plot shipped in this invocation: the Budget plugin exempts the root's next call once, without tools."""
@@ -222,7 +227,8 @@ class RequestLedger:
     language detection and the stored user turn see only what the user typed. They were judged at the paste."""
     summary_turn: bool = False
     """The `/messages` route's turn is the summary of a paste not summarized yet (the summary action, or the note sent
-    with the paste): the root's before-agent callback makes the paste's `certain` conversions (`paste_conversions.py`).
+    with the paste): the root's before-agent callback makes the paste's `certain` conversions (`paste_conversions.py`),
+    and ToolSafety refuses the turn's `plot_pipeline` before the run while the data is unconfirmed (`summary_turn`).
     False without a route (`adk web`)."""
     paste_note: bool = False
     """The turn's typed text is the note sent with a paste not summarized yet: words about the data that came with it,
@@ -241,8 +247,6 @@ class RequestLedger:
     last_calls: dict[str, CallFacts] = field(default_factory=dict)
     dataset_changes: list[str] = field(default_factory=list)
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
-    data_code_calls: int = 0
-    """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
     example_data: bool = False
     """A `run_data_code` call of this invocation stored example data the user asked for (`source_language` `example`):
     the `chat_turn` line's `kind` is `example`."""
@@ -254,10 +258,6 @@ class RequestLedger:
     empty_reasked: bool = False
     """The empty-reply plugin asked the root again for a final reply without text: at most once per turn
     (`plugins/empty_reply.py`)."""
-    state_changed: bool = False
-    """A root tool of this invocation stored a change in the session (data, bindings, a language, a kept plot request,
-    the plot memory), as its own `ok` result says (`empty_reply.stored_change`): the turn's `done` carries it, so an
-    empty reply after it is no lost turn (`empty_reply.carries_answer`)."""
     reply_shortened: bool = False
     """The output guard asked the root for a shorter reply in this invocation: at most once per turn
     (`ScopeGuardPlugin._guard_reply`)."""
@@ -279,7 +279,8 @@ class RequestLedger:
     steps: dict[str, StepUsage] = field(default_factory=dict)
     """Calls and tokens by agent name (`book_step`), and the judges' under `judge` (`book_judge`)."""
     tools: list[str] = field(default_factory=list)
-    """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
+    """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`): the one
+    count the turn's caps and bounds read (`calls_of`), so a refused call never counts against them."""
     tool_calls: list[ToolCall] = field(default_factory=list)
     """Every root tool call of the turn in the order the guards saw them, refused ones too, each with the guards'
     verdict and what it did (`ToolCall`), written by ToolSafety and, for a pipeline run it refuses first, the Budget
@@ -326,14 +327,15 @@ class RequestLedger:
     plot_action: bool = False
     """The turn is one of the page's plot buttons (`create_plot` or `carry_plot`, which the admin fan-out's `.plot_all()`
     also sends in each library's session): the click confirmed the data and the bindings as shown, so the turn plots
-    them as they are and ToolSafety refuses every tool that would change something (`PLOT_ACTION_TOOLS`)."""
+    them as they are and ToolSafety refuses every tool that would change something (`PLOT_ACTION_TOOLS`); the session
+    block says to call `plot_pipeline` with no arguments (`agent.PLOT_ACTION_LINE`)."""
     user_words: str | None = None
     """The user's own text for the turn, set by the `/messages` route: the typed message and the notes pasted with
     the session's data; empty for an action on data without notes. A text the plot is checked for must stand in it
     (`pipeline.in_users_words`); None (a caller without a page turn) checks nothing."""
     kept_note: Any = None
-    """The `PipelineArgs` of the first-plot note this turn kept (`keep_plot_request`, or a run that stopped
-    `not_ready`): after the turn the note is held for the bindings and data the turn ends with (`_settle_kept_note`
+    """The `PipelineArgs` of the first-plot note this turn kept (`keep_plot_request`, a run that stopped `not_ready`,
+    or a `plot_pipeline` call ToolSafety refused before the run, `pipeline.stop_not_ready`): after the turn the note is held for the bindings and data the turn ends with (`_settle_kept_note`
     in `agents/main.py`), so the turn's own `set_bindings` or `prepare_data` never voids it."""
 
     def book_step(self, agent: str, *, model: str | None, usage: dict[str, int], cached: int) -> None:
@@ -358,10 +360,15 @@ class RequestLedger:
         else:
             step.input += tokens  # no split reported: the plain total counts as input
 
-    def open_call(self, key: str, tool: str, verdict: str) -> None:
-        """Note a root tool call as the guards judged it; a refused one is closed already (`refused`)."""
+    def calls_of(self, tool: str) -> int:
+        """How many calls of `tool` ToolSafety allowed in this turn (`tools`): what every per-turn cap counts."""
+        return self.tools.count(tool)
+
+    def open_call(self, key: str, tool: str, verdict: str, *, refused: CallOutcome = "refused") -> None:
+        """Note a root tool call as the guards judged it; a refused one is closed already, `refused` or what the
+        refusal itself did (a `plot_pipeline` refused before the run that kept the request: `kept`)."""
         closed = guard_verdict(verdict)
-        self.tool_calls.append(ToolCall(tool, closed, "unfinished" if closed == TOOL_ALLOWED else "refused"))
+        self.tool_calls.append(ToolCall(tool, closed, "unfinished" if closed == TOOL_ALLOWED else refused))
         self.open_calls.setdefault(key, []).append(len(self.tool_calls) - 1)
 
     def close_call(self, key: str, tool: str, outcome: CallOutcome, *, early_verdict: str) -> None:

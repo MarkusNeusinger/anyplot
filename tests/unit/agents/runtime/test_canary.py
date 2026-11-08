@@ -53,6 +53,10 @@ async def test_no_content_in_logs(
         assert (
             await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
         ).status_code == 200
+        # Confirmed, so the message is no summary turn (which refuses the plot before the run) and the run goes
+        # through the adapter, the render and the review with the canaries in the request and the cells.
+        confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+        assert confirmed.status_code == 200, confirmed.text
         response = await client.post(
             f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": f"Please plot it {MESSAGE_CANARY}"}
         )

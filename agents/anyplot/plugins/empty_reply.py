@@ -11,8 +11,8 @@ translator sends no such error. This plugin checks it in code:
 * While the turn has not asked yet (`ledger.empty_reasked`) and the request budget allows a call, it asks the root
   model once more: the same request (`ledger.root_request`, which ReplyLanguage keeps) with `RETRY_LINE` after it.
   The request keeps its tools only while the turn has run none (`ledger.tools` empty): an empty first reply may still
-  need to read the data, while after a tool a second call of a tool that stores something (`prepare_data`,
-  `set_bindings`, none of them capped per turn) would apply it twice. The answer takes the empty response's place in
+  need to read the data, while after a tool a second call of a tool that stores something (`prepare_data` within its
+  per-turn cap, `set_bindings`, which has none) would apply it twice. The answer takes the empty response's place in
   place (its content, finish reason, error, usage, model version and turn flag) and is never returned, so
   ShippedReply and ReplyLanguage, which follow, check it as any reply: a returned response would end the plugin chain
   before them. An answer that calls a tool goes on in ADK's flow: the tool runs and the root is called again. The
@@ -24,8 +24,9 @@ translator sends no such error. This plugin checks it in code:
   `no_request`, `budget`, and `check_failed` when the check itself failed on a response that is still empty).
 * A turn that already carries its answer (`carries_answer`) never fails this way: a shipped plot is on the page, the
   page carries out a requested library switch, and a change a tool stored in the session (data, bindings, a language,
-  a kept plot request, a forgotten memory entry; `ledger.state_changed`, which `after_tool_callback` sets from the
-  tool's own result) reaches the page with the turn's `done`. Sending the message again would apply such a change a
+  a kept plot request, a forgotten memory entry; `stored_in_turn`, from the record of the turn's calls, which
+  ToolSafety writes from each tool's own answer, also one whose result it then refused) reaches the page with the
+  turn's `done`. Sending the message again would apply such a change a
   second time. Its empty closing reply is asked for again all the same, and stays empty without an error (verdict
   `empty_kept`).
 * The retry line is a `user` turn of its own after the request's last one, which may be the user's message or the
@@ -42,14 +43,11 @@ the response as it was and, when that response is still empty, fails the turn as
 """
 
 import logging
-from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.adk.plugins.base_plugin import BasePlugin
-from google.adk.tools.base_tool import BaseTool
-from google.adk.tools.tool_context import ToolContext
 from google.genai import types
 
 from ..services import get_services
@@ -71,7 +69,12 @@ STATE_TOOLS = frozenset(
     {"prepare_data", "generate_data", "run_data_code", "set_bindings", "set_language", "keep_plot_request", "forget"}
 )
 """The root's tools that store a change in the session when they answer `ok`: the data, the bindings, the language,
-a kept plot request, the plot memory. `switch_plot` asks the page for a switch (`ledger.switch_request`) instead."""
+a kept plot request, the plot memory. `switch_plot` asks the page for a switch (`ledger.switch_request`) instead. A
+`plot_pipeline` call that kept the first plot's request (a `not_ready` run, a refusal before the run) is none of them:
+such a turn's answer is its reply, which a summary turn owes, so an empty one still ends as `no_reply` unless the
+page got the `plot` event (`stream.Translator.plot_sent`)."""
+STORED_OUTCOMES = frozenset({"changed", "kept"})
+"""The outcomes of a call of `STATE_TOOLS` that stored something (`ledger.CallOutcome`): a change, a kept request."""
 
 
 def is_empty(response: LlmResponse) -> bool:
@@ -82,16 +85,16 @@ def is_empty(response: LlmResponse) -> bool:
     return reply_text(response) is None
 
 
-def stored_change(tool_name: str, result: Any) -> bool:
-    """Whether a root tool's result says it stored a change in the session; a kept request only when it was kept."""
-    if tool_name not in STATE_TOOLS or not isinstance(result, dict) or result.get("status") != "ok":
-        return False
-    return tool_name != "keep_plot_request" or result.get("request_kept") is True
+def stored_in_turn(ledger: RequestLedger) -> bool:
+    """Whether a root tool of the turn stored a change in the session, as the record of its calls says
+    (`RequestLedger.tool_calls`, read from each tool's own answer): also when ToolSafety then refused the result for
+    its keys or its size, since the change was stored all the same and reaches the page with the turn's `done`."""
+    return any(call.tool in STATE_TOOLS and call.outcome in STORED_OUTCOMES for call in ledger.tool_calls)
 
 
 def carries_answer(ledger: RequestLedger) -> bool:
     """Whether the turn gave the user something besides a reply: a shipped plot, a switch, a stored change."""
-    return ledger.shipped_in_turn or ledger.switch_request is not None or ledger.state_changed
+    return ledger.shipped_in_turn or ledger.switch_request is not None or stored_in_turn(ledger)
 
 
 def take_place(response: LlmResponse, answer: LlmResponse) -> None:
@@ -110,21 +113,6 @@ class EmptyReplyPlugin(BasePlugin):
 
     def __init__(self, name: str = "anyplot_empty_reply") -> None:
         super().__init__(name=name)
-
-    async def after_tool_callback(
-        self, *, tool: BaseTool, tool_args: dict[str, Any], tool_context: ToolContext, result: dict[str, Any]
-    ) -> dict[str, Any] | None:
-        """Notes a change a root tool stored (`ledger.state_changed`); never edits the result.
-
-        After ToolSafety, which returns a result only when it refuses or rewrites one: a refused result ends the
-        plugin chain before this hook, and stored nothing the turn could have sent.
-        """
-        try:
-            if tool_context.agent_name == ROOT_AGENT and stored_change(tool.name, result):
-                ledger_for(tool_context.invocation_id).state_changed = True
-        except Exception as exc:
-            logger.warning("empty reply tool note failed: %s", type(exc).__name__)
-        return None
 
     async def after_model_callback(
         self, *, callback_context: CallbackContext, llm_response: LlmResponse

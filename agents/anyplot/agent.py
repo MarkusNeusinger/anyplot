@@ -156,6 +156,13 @@ REPEATED_KEY_LINE = (
 (`fidelity.repeated_key`, owner decision of 2026-11-08): role names and counts only, the columns stay in the fenced
 warnings. Persona round of 2026-11-06: 27 measurements over 9 lengths became 9 averaged points in the plot code,
 without a count, while the confirmed data still held 27 rows."""
+PLOT_ACTION_LINE = (
+    "- This turn: the user's action to create the plot from the data and the bindings as confirmed; call "
+    "plot_pipeline with no arguments"
+)
+"""The session block's line on the turns of the two plot actions (`RequestLedger.plot_action`: `create_plot`,
+`carry_plot`, also in each session of the admin fan-out), which root.md's rule for those turns no longer opens with:
+the server adds the remembered decisions, and the turn may only read and plot (`tool_safety.PLOT_ACTION_TOOLS`)."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -295,6 +302,9 @@ async def session_context(context: ReadonlyContext) -> str:
                 "- Data: not confirmed yet; the user's plot button by the message box confirms it as shown"
                 " and starts the plot"
             )
+    turn = CURRENT_LEDGER.get()
+    if turn is not None and turn.plot_action:
+        lines.append(PLOT_ACTION_LINE)
     versions = [version for version in services.versions.all(session_id) if version.target == view.target]
     if versions:
         latest = versions[-1]

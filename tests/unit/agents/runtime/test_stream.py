@@ -14,7 +14,7 @@ from agents.anyplot.data.store import StoredDataset
 from agents.anyplot.dataset_versions import dataset_payload
 from agents.anyplot.language import MAX_LANGUAGE_CHARS
 from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
-from agents.anyplot.plugins.ledger import RequestLedger
+from agents.anyplot.plugins.ledger import RequestLedger, ToolCall
 from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CHARS
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
@@ -408,11 +408,17 @@ class TestReplies:
         after_plot = Translator(RequestLedger(request_id="r"), "run", spec_id="scatter-basic")
         after_plot.translate(Event(author="plot_pipeline", output={"status": "ok", "attempts": 1, "artifacts": []}))
 
-        after_change = Translator(RequestLedger(request_id="r", state_changed=True), "run", spec_id="scatter-basic")
+        changed = RequestLedger(request_id="r", tool_calls=[ToolCall("prepare_data", outcome="changed")])
+        after_change = Translator(changed, "run", spec_id="scatter-basic")
+        # A plot run refused before the run keeps the request but sends no `plot`: the reply is the turn's answer.
+        refused = RequestLedger(
+            request_id="r", tool_calls=[ToolCall("plot_pipeline", verdict="summary_turn", outcome="kept")]
+        )
+        after_refusal = Translator(refused, "run", spec_id="scatter-basic")
 
-        for translator in (empty, after_plot, after_change):
+        for translator in (empty, after_plot, after_change, after_refusal):
             assert translator.translate(text_event("anyplot", "https://example.org [[spec:bar-basic]]")) == []
-        assert empty.ledger.error == "no_reply"
+        assert empty.ledger.error == "no_reply" and after_refusal.ledger.error == "no_reply"
         assert after_plot.ledger.error is None and after_change.ledger.error is None  # the plot, the stored change
 
     def test_a_short_reply_without_the_plot_stays(self, translator: Translator) -> None:

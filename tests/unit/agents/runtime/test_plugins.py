@@ -52,7 +52,14 @@ from agents.anyplot.plugins.scope_guard import (
     session_turns,
     withheld_text,
 )
-from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
+from agents.anyplot.plugins.tool_safety import (
+    CAP_MESSAGE,
+    RESULT_KEYS,
+    ToolSafetyPlugin,
+    has_url_or_path,
+    result_limit,
+    result_size,
+)
 from agents.anyplot.policy import DATA_PREAMBLE, fence, refusal
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile, PlotResult
 from agents.anyplot.services import KeptRefusal, RefusalStore, Services, set_services
@@ -818,7 +825,7 @@ class TestOutputGuard:
         self, ledger: RequestLedger, caplog: pytest.LogCaptureFixture
     ) -> None:
         """The plot is already on the page; a scope refusal after it would read as a false refusal."""
-        ledger.pipeline_calls = 1
+        ledger.tools.append("plot_pipeline")
         context = FakeContext(session=FakeSession(state={SPEC_ID: "bar-basic"}))
         text = "Done, see [[spec:bar-basic]]. " + LONG_DESCRIPTION
 
@@ -853,7 +860,7 @@ class TestOutputGuard:
         assert ledger.refusal is None
 
     async def test_a_long_reply_after_a_pipeline_run_stays_cut_for_the_next_turn(self, ledger: RequestLedger) -> None:
-        ledger.pipeline_calls = 1
+        ledger.tools.append("plot_pipeline")
 
         replaced = await ScopeGuardPlugin().on_event_callback(
             invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
@@ -1163,7 +1170,7 @@ class TestBudget:
         invalid = await plugin.before_tool_callback(tool=tool, tool_args={"spec_id": "x"}, tool_context=FakeContext())
         assert invalid is None and services.usage.user_runs("adm_1") == 0  # ToolSafety refuses it; not a run
         first = await plugin.before_tool_callback(tool=tool, tool_args={}, tool_context=FakeContext())
-        ledger.pipeline_calls = 0  # a new request
+        ledger.tools.clear()  # a new request: ToolSafety's count of the turn's allowed calls starts again
         second = await plugin.before_tool_callback(tool=tool, tool_args={}, tool_context=FakeContext())
 
         assert first is None and second == {"status": "error", "code": "budget"}
@@ -1178,6 +1185,11 @@ class TestToolSafety:
         return await ToolSafetyPlugin().before_tool_callback(
             tool=FakeTool(name), tool_args=args, tool_context=FakeContext(agent_name=agent)
         )
+
+    async def first_of_turn(self, ledger: RequestLedger, name: str, args: dict) -> dict | None:
+        """`check` as the turn's first call, so the per-turn caps stay out of a test of the arguments."""
+        ledger.tools.clear()
+        return await self.check(name, args)
 
     async def test_allowlist_per_agent(self, ledger: RequestLedger) -> None:
         assert await self.check("get_spec_brief", {}) is None
@@ -1264,7 +1276,8 @@ class TestToolSafety:
         """`{"test": "gt", "value": 100}` is how the model writes a numeric comparison (one live eval miss)."""
         for value in (100, 100.0, -3):
             condition = {"column": "score", "test": "gt", "value": value}
-            assert await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [condition]}]}) is None
+            operations = {"operations": [{"op": "drop_rows", "where": [condition]}]}
+            assert await self.first_of_turn(ledger, "prepare_data", operations) is None
         boolean = {"column": "flag", "test": "eq", "value": True}
         refused = await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [boolean]}]})
         assert refused is not None and refused["code"] == "invalid_arguments"
@@ -1276,18 +1289,18 @@ class TestToolSafety:
         link = "https://jana-novak.de/finanzen"
         value = {"op": "drop_rows", "where": [{"column": "Payee", "test": "contains", "value": link}]}
         name = {"op": "rename", "column": "Payee", "name": link}
-        assert await self.check("prepare_data", {"operations": [value, name]}) is None
+        assert await self.first_of_turn(ledger, "prepare_data", {"operations": [value, name]}) is None
         # A `classify` label becomes a cell, like a value the user's own table holds.
         rule = {"where": [{"column": "Payee", "test": "contains", "value": "novak"}], "label": link}
         labelled = {"op": "classify", "name": "Site", "rules": [rule], "otherwise": link}
-        assert await self.check("prepare_data", {"operations": [labelled]}) is None
+        assert await self.first_of_turn(ledger, "prepare_data", {"operations": [labelled]}) is None
         # The literals of the text operations are compared with the cells or written into them: data too.
         texts = [
             {"op": "strip", "column": "Site", "prefix": "https://", "name": "Domain"},
             {"op": "split", "column": "Site", "separator": "https://", "names": [link, "Path"]},
             {"op": "replace", "column": "Site", "old": "www.", "new": link, "name": "Clean"},
         ]
-        assert await self.check("prepare_data", {"operations": texts}) is None
+        assert await self.first_of_turn(ledger, "prepare_data", {"operations": texts}) is None
 
         for operation in (
             {"op": "classify", "name": "Site", "rules": [{**rule, "where": [{"column": link, "test": "is_missing"}]}]},
@@ -1430,6 +1443,7 @@ class TestToolSafety:
         assert await self.check("plot_pipeline", {"change_request": "again"}) == {
             "status": "error",
             "code": "one_pipeline_per_turn",
+            "message": CAP_MESSAGE.format(tool="plot_pipeline", calls=1),
         }
 
     async def test_result_keys_and_size(self, ledger: RequestLedger) -> None:

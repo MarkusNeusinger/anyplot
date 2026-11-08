@@ -18,7 +18,13 @@ from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dataset_versions import push_version
 from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.plugins.ledger import RequestLedger, ledger_for
-from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CALLS, MAX_DATA_CODE_CHARS, ToolSafetyPlugin, result_limit
+from agents.anyplot.plugins.tool_safety import (
+    CAP_MESSAGE,
+    MAX_DATA_CODE_CALLS,
+    MAX_DATA_CODE_CHARS,
+    ToolSafetyPlugin,
+    result_limit,
+)
 from agents.anyplot.render.backends.fake import FIXTURE_CSV, FakeBackend
 from agents.anyplot.render.contract import DataJob, DataOutput, DataRunUnsupported, RendererUnavailable
 from agents.anyplot.render.harness import DATA_EXIT
@@ -418,7 +424,11 @@ class TestToolSafety:
             CURRENT_LEDGER.reset(token)
 
         assert verdicts[:MAX_DATA_CODE_CALLS] == [None] * MAX_DATA_CODE_CALLS
-        assert verdicts[-1] == {"status": "error", "code": "too_many_data_runs"}
+        assert verdicts[-1] == {
+            "status": "error",
+            "code": "too_many_data_runs",
+            "message": CAP_MESSAGE.format(tool="run_data_code", calls=MAX_DATA_CODE_CALLS),
+        }
 
     async def test_result_keys_and_cap(self) -> None:
         plugin = ToolSafetyPlugin()
