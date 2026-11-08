@@ -143,7 +143,7 @@ impl-review.yml
        |-- Meet Threshold --> [ai-approved] --> impl-merge.yml
        |                                        |-- Refuses a PR that changes a dependency file
        |                                        |-- Squash merge
-       |                                        |-- Promotes GCS: staging --> production
+       |                                        |-- Promotes GCS: staging --> production (fails loudly on missing renders)
        |                                        |-- Triggers sync-postgres.yml
        |
        |-- Below Threshold --> [ai-rejected] --> impl-repair.yml (max 4 attempts)
@@ -173,6 +173,22 @@ Python implementations follow the Data block convention of [Adaptable catalogue 
 | `impl-review.yml` | Add carried quality score label | On a review-free adapt merge, labels the PR with the stored score that carries over. |
 
 `impl-merge.yml` promotes only the `plot-*` files from staging, so `adapt/` never reaches production; its cleanup removes `adapt/` with the rest of staging.
+
+#### Promotion to production
+
+`impl-merge.yml` promotes the renders after the squash merge, in the step "Promote GCS images to production". It lists the `plot-*` objects at the top of `staging/{spec}/{language}/{library}/`, copies them to `plots/{spec}/{language}/{library}/`, and deletes the staging folder only after the copy succeeded. The notice `Promoted images to production: N file(s)` names how many files it copied. The bucket uses uniform bucket-level access, so its IAM policy makes every object public and the step sets no object ACLs.
+
+Because the code is already on `main` at that point, a promotion that can't finish fails the job instead of passing with stale renders:
+
+| Case | What the step does | What fixes it |
+|---|---|---|
+| Staging lacks `plot-light.png` or `plot-dark.png`, and the PR changed a file under `plots/{spec}/implementations/` (an unreadable file list counts as changed) | Fails with `failure=missing`, promotes nothing, deletes nothing | A new render of the merged code: `gh workflow run impl-generate.yml -f specification_id={spec} -f library={library} -f source_ref=main`, which re-renders the file from `main` in [adopt mode](#adopt-implementations-from-a-branch) and takes it through review and merge. R and Julia have no adopt render, so their pair takes `-f regen_gate=false` instead. |
+| GCS can't be listed, or the copy fails, three times | Fails with `failure=transfer` and keeps staging | `gh workflow run impl-merge.yml -f pr_number={pr}`. For a merged PR, the run validates against `main` and repeats the promotion and the bookkeeping. |
+| Staging lacks a theme render, but the PR changed no implementation file | Passes with a notice: production's renders still match the code | Nothing |
+
+On a failure, the step "Report a failed promotion" comments the command on the merged PR and writes it to the run summary. For adopt mode, the command passes the merged metadata's `generated_by` as `source_model` when it's a valid model name, so the author survives the re-render. The steps after the promotion don't run: the spec issue gets no `impl:{library}:done` label and no "Complete" comment for a pair whose images are wrong. The database sync still runs, because the push to `main` starts it.
+
+No label marks the pair for the watchdog. Its generation rescues scan open spec issues only, a regeneration's spec issue is usually closed, and the rescue they dispatch is a gated regeneration, which can keep the live code with its stale renders.
 
 ### Dependency pins and library versions
 
