@@ -20,11 +20,12 @@ const TITLE_H = 84;
 const LEGEND_H = 44;
 
 // Columns: set these to your data's column names
-const Y_TRUE = "Confirmed fraud"; // role: y_true
-const Y_SCORE = "Model fraud score"; // role: y_score
+const CONFIRMED_FRAUD = "Confirmed fraud after review"; // role: y_true
+const FRAUD_SCORE = "Model fraud score"; // role: y_score
 
 // Data: replace this block with your own records, one object per row
-// 3000 card transactions: a latent risk drives fraud (about 15 % confirmed), the model score sees it with noise
+// 3000 card transactions that rule checks flagged for manual review: a latent risk drives fraud (about 15 %
+// of the flagged transactions are confirmed by the reviewers), the model score sees that risk with noise
 const data = (() => {
   let state = 42;
   const rand = () => {
@@ -40,16 +41,16 @@ const data = (() => {
     const risk = gaussian();
     const fraudProbability = 1 / (1 + Math.exp(-(1.4 * risk - 2.3)));
     const fraud = rand() < fraudProbability ? 1 : 0;
-    return { [Y_TRUE]: fraud, [Y_SCORE]: Math.round((risk + gaussian() * 0.9) * 10000) / 10000 };
+    return { [CONFIRMED_FRAUD]: fraud, [FRAUD_SCORE]: Math.round((risk + gaussian() * 0.9) * 10000) / 10000 };
   });
 })();
 
 // Plot: reads only data and the constants above
 const ranked = data
-  .filter((d) => Number.isFinite(d[Y_SCORE]) && (d[Y_TRUE] === 0 || d[Y_TRUE] === 1))
-  .sort((a, b) => b[Y_SCORE] - a[Y_SCORE]);
+  .filter((d) => Number.isFinite(d[FRAUD_SCORE]) && (d[CONFIRMED_FRAUD] === 0 || d[CONFIRMED_FRAUD] === 1))
+  .sort((a, b) => b[FRAUD_SCORE] - a[FRAUD_SCORE]);
 const n = ranked.length;
-const positives = ranked.reduce((sum, d) => sum + d[Y_TRUE], 0);
+const positives = ranked.reduce((sum, d) => sum + d[CONFIRMED_FRAUD], 0);
 const positiveRate = positives / n;
 
 // One computed point per targeted sample, starting at the origin
@@ -57,14 +58,14 @@ const targeted = [0];
 const captured = [0];
 let runningPositives = 0;
 ranked.forEach((d, i) => {
-  runningPositives += d[Y_TRUE];
+  runningPositives += d[CONFIRMED_FRAUD];
   targeted.push(((i + 1) / n) * FULL);
   captured.push((runningPositives / positives) * FULL);
 });
 const perfect = targeted.map((x) => Math.min(FULL, x / positiveRate));
 const random = targeted.map((x) => x);
 
-const subtitle = `n = ${n} · positive rate ${(positiveRate * FULL).toFixed(1)} % (${Y_TRUE} = 1) · ranked by ${Y_SCORE}, highest first`;
+const subtitle = `n = ${n} · positive rate ${(positiveRate * FULL).toFixed(1)} % (${CONFIRMED_FRAUD} = 1) · ranked by ${FRAUD_SCORE}, highest first`;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -110,7 +111,7 @@ export default function Chart() {
           {
             id: "model",
             data: captured,
-            label: Y_SCORE,
+            label: FRAUD_SCORE,
             color: t.palette[0],
             curve: "linear",
             area: true,
