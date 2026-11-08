@@ -3,13 +3,15 @@
 // Library: muix 7.29.1 | JavaScript 22.23.3
 // Quality: 87/100 | Updated: 2026-10-09
 import { LineChart } from "@mui/x-charts/LineChart";
-import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const X_PAD_SHARE = 0.04; // share of the log maturity range added on both sides so the end markers stay whole
 const Y_PAD_SHARE = 0.12; // share of the yield range added below and above the curves
+const SPREAD_UNIT = "pp"; // yields are in percent, so a difference between two of them is in percentage points
+const SPAN_FILL_OPACITY = 0.2;
 
 // Columns: set these to your data's column names
 const MATURITY = "Maturity"; // role: maturity
@@ -19,6 +21,7 @@ const DATE = "Curve date"; // role: date
 
 // Data: replace this block with your own records, one object per row
 // Approximate U.S. Treasury par yields on three dates: the early-1990s recovery, the dot-com peak, pre-crisis 2007.
+// The 1M maturity was not issued before 2001 and the 20Y was not quoted in mid-1993; those cells are estimates.
 const data = (() => {
   const maturities = [
     ["1M", 0.083], ["3M", 0.25], ["6M", 0.5], ["1Y", 1], ["2Y", 2], ["3Y", 3],
@@ -40,35 +43,40 @@ const dates = [...new Set(data.map((d) => d[DATE]))];
 const maturityYears = [...new Set(data.map((d) => d[MATURITY_YEARS]))].sort((a, b) => a - b);
 const labelByYears = new Map(data.map((d) => [d[MATURITY_YEARS], d[MATURITY]]));
 
-// Shape of each curve by rule: inverted when its shortest maturity yields more than its longest,
-// humped when an interior maturity tops the long end, normal otherwise
+// Inverted span of each curve, by rule: from its highest yield to the lowest yield at a longer maturity,
+// when that one is lower. The curve is inverted when the span starts at its shortest maturity,
+// inverted beyond a maturity when the span starts further out, and normal when it has no span.
 const curves = dates.map((date, i) => {
-  const rows = data.filter((d) => d[DATE] === date).sort((a, b) => a[MATURITY_YEARS] - b[MATURITY_YEARS]);
+  const rows = data
+    .filter((d) => d[DATE] === date && d[YIELD] != null)
+    .sort((a, b) => a[MATURITY_YEARS] - b[MATURITY_YEARS]);
   const ys = rows.map((d) => d[YIELD]);
-  const shape = ys[0] > ys[ys.length - 1] ? "inverted" : Math.max(...ys.slice(1, -1)) > ys[ys.length - 1] ? "humped" : "normal";
+  const peak = ys.indexOf(Math.max(...ys));
+  const after = ys.slice(peak + 1);
+  const low = Math.min(...after);
+  const span = after.length > 0 && low < ys[peak] ? rows.slice(peak, peak + 2 + after.lastIndexOf(low)) : null;
+  const shape = span == null ? "normal" : peak === 0 ? "inverted" : `inverted beyond ${rows[peak][MATURITY]}`;
   return {
     id: `curve-${i}`,
     label: `${date} · ${shape}`,
     color: t.palette[i],
-    rows,
-    ys,
-    shape,
+    span,
     values: maturityYears.map((m) => rows.find((d) => d[MATURITY_YEARS] === m)?.[YIELD] ?? null),
   };
 });
 
-// Inversion region of an inverted curve: from its shortest maturity down to its trough
+// Each inverted span is shaded between the curve and the level of its starting yield, in the curve's colour,
+// and labelled with the spread from its first maturity to its trough
 const inversions = curves
-  .filter((c) => c.shape === "inverted")
+  .filter((c) => c.span != null)
   .map((c) => {
-    const trough = c.ys.lastIndexOf(Math.min(...c.ys));
-    const first = c.rows[0];
-    const lastRow = c.rows[c.rows.length - 1];
+    const first = c.span[0];
+    const trough = c.span[c.span.length - 1];
     return {
       id: c.id,
-      from: first[MATURITY_YEARS],
-      to: c.rows[trough][MATURITY_YEARS],
-      text: `Inversion on ${c.rows[0][DATE]}: ${first[MATURITY]} at ${first[YIELD]}${unit} above ${lastRow[MATURITY]} at ${lastRow[YIELD]}${unit}`,
+      color: c.color,
+      rows: c.span,
+      text: `${first[DATE]}: ${first[MATURITY]} ${first[YIELD].toFixed(2)}${unit} above ${trough[MATURITY]} ${trough[YIELD].toFixed(2)}${unit}, spread ${(trough[YIELD] - first[YIELD]).toFixed(2).replace("-", "−")} ${SPREAD_UNIT}`,
     };
   });
 
@@ -83,33 +91,43 @@ const SUBTITLE = `${curves.length} curves × ${maturityYears.length} maturities,
 const HEADER_H = 80;
 const LEGEND_H = 44;
 
-function InversionBands() {
-  const xScale = useXScale();
-  const { top, height } = useDrawingArea();
+// The shaded inverted spans and their labels, in data coordinates. A label starts above the span's
+// first point and runs towards the side of the drawing area with more room.
+function InversionSpans() {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  const { left, width } = useDrawingArea();
   return (
     <g pointerEvents="none">
-      {inversions.map((band, i) => (
-        <g key={band.id}>
-          <rect
-            x={xScale(band.from)}
-            y={top}
-            width={xScale(band.to) - xScale(band.from)}
-            height={height}
-            fill={t.inkSoft}
-            fillOpacity={0.1}
-          />
-          <text
-            x={(xScale(band.from) + xScale(band.to)) / 2}
-            y={top + 26 + i * 22}
-            textAnchor="middle"
-            fontSize={15}
-            fontWeight={500}
-            fill={t.ink}
-          >
-            {band.text}
-          </text>
-        </g>
-      ))}
+      {inversions.map((span) => {
+        const pts = span.rows.map((d) => [xScale(d[MATURITY_YEARS]), yScale(d[YIELD])]);
+        const [x0, y0] = pts[0];
+        const xEnd = pts[pts.length - 1][0];
+        const toRight = x0 < left + width / 2;
+        return (
+          <g key={span.id}>
+            <polygon
+              points={[...pts, [xEnd, y0]].map((p) => p.join(",")).join(" ")}
+              fill={span.color}
+              fillOpacity={SPAN_FILL_OPACITY}
+            />
+            <line x1={x0} y1={y0} x2={xEnd} y2={y0} stroke={span.color} strokeWidth={1.5} strokeDasharray="5 4" />
+            <text
+              x={x0 + (toRight ? -4 : 4)}
+              y={y0 - 16}
+              textAnchor={toRight ? "start" : "end"}
+              fontSize={15}
+              fontWeight={600}
+              fill={t.ink}
+              stroke={t.pageBg}
+              strokeWidth={4}
+              paintOrder="stroke"
+            >
+              {span.text}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
@@ -178,7 +196,7 @@ export default function Chart() {
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
-        <InversionBands />
+        <InversionSpans />
       </LineChart>
     </div>
   );
