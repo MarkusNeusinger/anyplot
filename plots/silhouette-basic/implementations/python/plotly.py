@@ -4,113 +4,126 @@ Library: plotly 6.7.0 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-05-10
 """
 
+import os
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from sklearn.cluster import KMeans
 from sklearn.datasets import load_iris
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_samples
 
 
-# Data - load iris dataset and perform clustering
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette: all eight positions, one per cluster in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+SAMPLE = "Flower"  # role: samples
+CLUSTER = "Cluster"  # role: cluster_labels
+SILHOUETTE = "Silhouette coefficient"  # role: silhouette_values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("clustered.csv")
+# The 150 iris flowers (four measurements in cm), clustered by k-means into three groups
 iris = load_iris()
-X = iris.data
-n_clusters = 3
+labels = KMeans(n_clusters=3, random_state=42, n_init=10).fit_predict(iris.data)
+df = pd.DataFrame(
+    {
+        SAMPLE: [f"Iris {number}" for number in range(1, len(labels) + 1)],
+        CLUSTER: labels,
+        SILHOUETTE: silhouette_samples(iris.data, labels),
+    }
+)
 
-# Perform K-means clustering
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-cluster_labels = kmeans.fit_predict(X)
+# Plot: reads only df and the constants above; a sample with a missing value has no bar to draw
+samples = df.dropna(subset=[CLUSTER, SILHOUETTE])
+overall_mean = samples[SILHOUETTE].mean()
+gap = max(2, len(samples) // 15)
 
-# Compute silhouette scores
-silhouette_vals = silhouette_samples(X, cluster_labels)
-silhouette_avg = silhouette_score(X, cluster_labels)
-
-# Colors for clusters (Python blue, Python yellow, and a colorblind-safe third color)
-colors = ["#306998", "#FFD43B", "#E84A5F"]
-
-# Create figure
 fig = go.Figure()
-
-y_lower = 10
-cluster_info = []
-
-for i in range(n_clusters):
-    # Get silhouette values for this cluster
-    cluster_silhouette_vals = silhouette_vals[cluster_labels == i]
-    cluster_silhouette_vals.sort()
-
-    cluster_size = cluster_silhouette_vals.shape[0]
-    y_upper = y_lower + cluster_size
-    cluster_avg = np.mean(cluster_silhouette_vals)
-
-    # Create y positions for bars
-    y_positions = np.arange(y_lower, y_upper)
-
-    # Add horizontal bars for each sample
+block_centres, block_labels = [], []
+block_start = 0
+for i, (cluster, block) in enumerate(samples.sort_values([CLUSTER, SILHOUETTE]).groupby(CLUSTER, sort=True)):
+    rows = block_start + np.arange(len(block))
     fig.add_trace(
         go.Bar(
-            x=cluster_silhouette_vals,
-            y=y_positions,
+            x=block[SILHOUETTE],
+            y=rows,
+            width=1,
             orientation="h",
-            marker=dict(color=colors[i], line=dict(width=0)),
-            name=f"Cluster {i} (avg: {cluster_avg:.2f})",
-            hovertemplate=f"Cluster {i}<br>Silhouette: %{{x:.3f}}<extra></extra>",
+            marker={"color": IMPRINT_PALETTE[i], "line": {"width": 0}},
+            name=f"{CLUSTER} {cluster}",
+            customdata=block[SAMPLE],
+            hovertemplate="%{customdata}: %{x:.3f}<extra>%{fullData.name}</extra>",
         )
     )
+    block_centres.append(rows.mean())
+    block_labels.append(f"{CLUSTER} {cluster} · avg {block[SILHOUETTE].mean():.2f}")
+    block_start += len(block) + gap
 
-    # Store cluster info for annotation
-    cluster_info.append({"y_center": y_lower + 0.5 * cluster_size, "avg": cluster_avg, "cluster": i})
-
-    y_lower = y_upper + 10  # Gap between clusters
-
-# Add vertical line for average silhouette score
-fig.add_vline(
-    x=silhouette_avg,
-    line=dict(color="red", width=3, dash="dash"),
-    annotation_text=f"Average: {silhouette_avg:.3f}",
-    annotation_position="top",
-    annotation_font=dict(size=20, color="red"),
+# Mean silhouette over all samples, labelled above the plot so no bar sits under the text
+fig.add_vline(x=overall_mean, line={"color": INK, "width": 2, "dash": "dash"})
+fig.add_annotation(
+    x=overall_mean,
+    y=1,
+    yref="paper",
+    yanchor="bottom",
+    yshift=4,
+    text=f"Average silhouette {overall_mean:.2f}",
+    showarrow=False,
+    font={"size": 10, "color": INK},
 )
 
-# Add vertical line at 0
-fig.add_vline(x=0, line=dict(color="gray", width=2))
+# Bars run from zero; the axis spans every score, zero and the mean line, padded on both sides
+lowest = min(samples[SILHOUETTE].min(), 0)
+highest = max(samples[SILHOUETTE].max(), overall_mean)
+pad = 0.04 * (highest - lowest)
 
-# Update layout
+# Style
 fig.update_layout(
-    title=dict(text="silhouette-basic \u00b7 plotly \u00b7 pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Silhouette Coefficient", font=dict(size=24)),
-        tickfont=dict(size=18),
-        range=[-0.2, 1.0],
-        showgrid=True,
-        gridcolor="rgba(0,0,0,0.1)",
-        zeroline=True,
-        zerolinecolor="gray",
-        zerolinewidth=2,
-    ),
-    yaxis=dict(
-        title=dict(text="Samples (grouped by cluster)", font=dict(size=24)),
-        tickfont=dict(size=18),
-        showticklabels=False,
-    ),
-    legend=dict(font=dict(size=20), x=0.98, xanchor="right", y=0.98, yanchor="top"),
-    template="plotly_white",
-    margin=dict(l=100, r=100, t=120, b=100),
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 150, "r": 40, "t": 80, "b": 60},
+    title={"text": "silhouette-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     bargap=0,
-    showlegend=True,
+    showlegend=False,
+    xaxis={
+        "title": {"text": SILHOUETTE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "range": [lowest - pad, highest + pad],
+        "showgrid": True,
+        "gridcolor": GRID,
+        "zeroline": True,
+        "zerolinecolor": INK_SOFT,
+        "zerolinewidth": 1,
+        "showline": True,
+        "linecolor": INK_SOFT,
+        "ticks": "",
+    },
+    yaxis={
+        "title": {"text": "Samples, sorted within each cluster", "font": {"size": 12, "color": INK}},
+        "tickmode": "array",
+        "tickvals": block_centres,
+        "ticktext": block_labels,
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "range": [-gap / 2, block_start - gap / 2],
+        "showgrid": False,
+        "zeroline": False,
+        "showline": False,
+        "ticks": "",
+    },
 )
 
-# Add cluster annotations on y-axis
-for info in cluster_info:
-    fig.add_annotation(
-        x=-0.18,
-        y=info["y_center"],
-        text=f"Cluster {info['cluster']}",
-        showarrow=False,
-        font=dict(size=18),
-        xanchor="center",
-    )
-
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
