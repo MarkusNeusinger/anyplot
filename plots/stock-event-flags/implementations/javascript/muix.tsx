@@ -1,7 +1,7 @@
 // anyplot.ai
 // stock-event-flags: Stock Chart with Event Flags
 // Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-08-26
+// Quality: pending | Created: 2026-08-26
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
