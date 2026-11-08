@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: area-mountain-panorama
 created: '2026-08-20T10:48:12Z'
-updated: '2026-11-08T00:48:14Z'
+updated: '2026-11-08T00:53:38Z'
 generated_by: claude-opus-5-5
 adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
 workflow_run: 42431059299
@@ -13,55 +13,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Ridgeline built from per-summit control points (asymmetric flank widths, varied
-    col depths) roughened by seeded midpoint displacement: sharp triangular apexes,
-    deep saddles and small notches read as alpine rock, never as bell bumps'
-  - All 16 Wallis summits sit exactly at their listed elevations with a dot at the
-    apex and a thin leader line to a two-line name/elevation label
-  - Label shelf count is computed from estimated label widths so the staggered labels
-    never collide; ticks and grid stop at the highest summit to keep the label sky
-    clean
-  - Matterhorn reads as the anchor through a larger ink-outlined apex marker, a heavier
-    leader line and a bolder, larger label
-  - 'Idiomatic MUI X composition: area series with baseline ''min'', a custom SVG
-    overlay via useXScale/useYScale/useDrawingArea inside LineChart, and data-series
-    sx selectors to drop MUI''s area brightening filter'
-  - Theme tokens threaded through every element; both renders fully legible with identical
-    data colors
+  - The ridgeline is built from per-summit control points (col, apex, col) with varied
+    flank widths and saddle drops, then roughened by span-scaled midpoint displacement,
+    so apexes stay sharp and exactly at each peak's bearing and elevation while saddles
+    pick up notches — a piecewise-linear alpine silhouette, not bell curves
+  - 'Summit labels sit on computed shelves: the shelf count grows until labels sharing
+    a shelf clear each other by 16 px, giving two clean staggered rows for 16 peaks
+    with no text collisions and thin leader lines dropping to each apex dot'
+  - Matterhorn anchor is set apart through label weight (17 px / 800), a thicker ink
+    leader line and a larger ringed apex marker, readable as the focal summit in both
+    themes
+  - Custom SVG overlay composed as a LineChart child via MUI X hooks (useXScale, useYScale,
+    useDrawingArea), plus per-series sx selectors (data-series) that keep the silhouette
+    fill solid and drop the haze outline — idiomatic MUI X composition
+  - Y ticks and grid stop at the highest summit so the label sky stays clean, and
+    grid lines run behind the silhouette; both themes thread ink/inkSoft/grid tokens
+    correctly
+  - 'Optional layered depth: a lower, offset background ridge in translucent inkSoft
+    rises behind the front ridge''s saddles'
+  - Seeded mulberry32 makes the procedural skyline fully deterministic; all 16 elevations
+    match the spec's example list
   weaknesses:
-  - 'SC-02 (both): the silhouette below the front ridgeline is filled in the bright
-    brand green #009E73, not the dark solid color the Notes and the second ''A good
-    version shows:'' bullet ask for, so it reads as a green area chart rather than
-    a dusk silhouette → a dark solid fill (e.g. the ink token or a deep shade) with
-    the lighter haze ridge behind it. Likely cause: the ridge series color t.palette[0]
-    with fillOpacity 1.'
-  - 'VQ-05 (both): LABEL_HEADROOM_SHARE = 0.5 reserves half the elevation span above
-    the highest summit, leaving roughly 250-300 px of empty sky between the lower
-    label shelf and the summits, so the panorama sits in the lower 60 % of the canvas
-    → about 0.25-0.3 of the span (−0.2), enough for the two shelves. Likely cause:
-    LABEL_HEADROOM_SHARE.'
-  - 'Suggestion: an optional dusk sky gradient behind the silhouette would add the
-    photographic mood the Notes allow.'
-  - 'Suggestion: compass bearings (W, SW, S …) along the x axis would help orientation;
-    the Notes leave them optional.'
+  - 'Suggestion: the dark-theme silhouette (#009E73 darkened to 32 %) sits close to
+    the #1A1A17 page and relies on the green outline to separate; a slightly lighter
+    shade would make the filled mass stand out on its own.'
+  - 'Suggestion: the summits follow the spec''s listing order rather than their real
+    bearing sweep from Gornergrat (Dom/Täschhorn north, Breithorn–Liskamm south, Matterhorn
+    southwest); ordering them geographically would make the panorama usable for summit
+    identification.'
+  - 'Suggestion: the skyline drops to the 2,650 m valley floor at both edges, leaving
+    the lower half of the plot as solid fill; tapering less would let the ridgeline
+    fill more of the upper portion.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title "area-mountain-panorama · javascript · muix · anyplot.ai" bold dark ink top-left with subtitle "16 named summits · 148° field of view · highest: Monte Rosa, 4,634 m"; y axis "Elevation (m)" with ticks 2,750–4,500 in steps of 250, subtle horizontal grid stopping at 4,500; x axis hidden. All text readable.
-      Data: front ridge filled solid brand green #009E73 from the valley floor to a jagged skyline of 16 triangular summits with deep cols and notches; a lighter translucent grey background ridge peeks out behind the saddles. Each summit carries a small green apex dot and a thin grey leader up to a two-line label (bold name, elevation in m) on two staggered shelves at the top; Matterhorn has a larger ink-outlined dot, heavier black leader and larger bold label. A wide empty sky band separates the label shelves from the summits.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "area-mountain-panorama · javascript · muix · anyplot.ai" bold dark ink top-left (~39 % width), subtitle "16 named summits · 148° field of view · highest: Monte Rosa, 4,634 m" in inkSoft; y-axis "Elevation (m)" with ticks 2,600–4,600 every 200 m in readable dark grey; x axis hidden (permitted); subtle horizontal grid visible in the sky only. All text readable.
+      Data: deep dark-green solid silhouette outlined by a 2.5 px brand-green #009E73 ridge line; jagged piecewise-linear skyline with sharp apexes, asymmetric flanks and notched saddles; light grey translucent background ridge behind the saddles; 16 green apex dots with thin grey leader lines up to two staggered label shelves (bold name above, elevation in m below); Matterhorn has a larger ringed dot, thicker dark leader and larger bold label. No label overlaps.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, subtitle, labels and ticks in light ink; grid subtle; no dark-on-dark text.
-      Data: identical green #009E73 silhouette and apex dots; the haze ridge renders as a muted dark grey behind the saddles; leaders light grey, Matterhorn leader white with a white-outlined dot.
+      Chrome: title, subtitle, axis label and tick labels in light ink / light inkSoft, all clearly readable; no dark-on-dark text; grid subtle but visible above the ridge.
+      Data: identical colors — same dark-green silhouette and #009E73 ridge line and apex dots; background ridge appears as a mid-grey translucent layer; Matterhorn leader line flips to light ink. Silhouette fill is close to the page tone but the bright green outline separates it clearly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -69,72 +69,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, labels 15/14 px, ticks 15 px, anchor 17 px; all readable
-          in both themes
+        comment: Explicit sizes (title 22 px, labels 15/17 px, ticks 15 px, axis label
+          16 px); readable in both themes and at thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Two computed label shelves; no label collides with another label
-          or a leader line
+        comment: Computed label shelves keep all 16 labels clear; leader lines pass
+          between neighbouring labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Apex dots, leader lines and the haze ridge visible on both backgrounds
+        comment: Ridge line 2.5 px, apex dots visible on both backgrounds, anchor
+          marker larger
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green silhouette plus neutral grey haze; no red-green signal
+        comment: Single-hue green on neutral page, high-contrast outline; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Excess empty sky between label shelves and summits (defect line)
+        passed: true
+        comment: 3200x1800, wide panoramic layout, label sky above the ridge, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Elevation (m)'' with unit; x axis hidden as allowed'
+        comment: '''Elevation (m)'' with unit; x axis hidden as the spec permits'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series, neutral ink-soft haze, #FAF8F1 / #1A1A17 backgrounds'
+        comment: 'Brand green #009E73 for the ridge, a darkened shade of it for the
+          silhouette, chrome tokens for haze/grid; correct #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Typographic hierarchy beyond baseline: bold name over regular elevation,
-          weight/size contrast for the anchor, informative subtitle'
+        passed: true
+        comment: 'Raised: deliberate type hierarchy (bold names over soft elevations,
+          anchor 17 px/800 with a ringed marker) and a dusk silhouette derived from
+          the brand green with a bright rim line'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Width-aware label shelves, ticks/grid stopped at the highest summit,
-          haze outline suppressed; headroom overly generous
+        passed: true
+        comment: 'Raised: ticks and grid end at the highest summit so the label sky
+          stays clean, grid hidden behind the silhouette, haze outline suppressed,
+          shelf count computed from label widths'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Subtitle calls out the highest summit and field of view alongside
-          the anchored Matterhorn
+        passed: true
+        comment: 'Raised by one: the subtitle names field of view and the highest
+          summit, a second focal cue beside the Notes-required Matterhorn emphasis'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,29 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled panorama silhouette with labeled peaks; optional background
-          ridge
+        comment: Filled panorama silhouette with labeled summits; the background ridge
+          is the optional layered depth the Notes allow
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Jagged skyline, leaders, two-line labels, stagger, y in m, focal
-          anchor all present; fill is bright green, not dark (defect line)
+        passed: true
+        comment: Jagged piecewise-linear skyline, dark solid fill, thin leader lines,
+          name-over-elevation labels, staggered shelves, y in metres with raised lower
+          bound, prominent anchor — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Apexes at listed bearings/elevations; displacement only between control
-          points
+        comment: Apex control points are exactly the peak bearing/elevation; midpoint
+          displacement only adds intermediate points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend hidden, not needed for a single silhouette
-          with a decorative haze layer
+        comment: Title in mandated format; legend hidden, N/A (labels on the marks)
     data_quality:
       score: 15
       max: 15
@@ -174,20 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 16 peaks, asymmetric flanks, deep cols, notches, clustered labels
+        comment: 16 named summits, cols and sub-peaks, asymmetric flanks, layered
+          background ridge
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Wallis panorama from Gornergrat, neutral
+        comment: Real Wallis 4000-m peaks from Gornergrat, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: all 16 elevations match the spec list (e.g. Matterhorn
-          4478, Monte Rosa 4634); 148° field of view matches xMin/xMax'
+        comment: 'Checked: all 16 label elevations match the spec list (e.g. Matterhorn
+          4,478 m, Monte Rosa 4,634 m) and sit on the y axis at those values; no Check
+          values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -197,7 +205,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data block, plot block, one overlay component required for hooks
+        comment: Constants → data block → plot; PeakLabels is the MUI X child-component
+          pattern needed for hooks, not a helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,13 +224,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the generator and label layout
+        comment: No fake UI; midpoint displacement has no library equivalent
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          v9 API
     library_mastery:
       score: 7
       max: 10
@@ -230,29 +240,31 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: LineChart area series with baseline 'min', linear curves, axis config
-          with width/tickInterval/valueFormatter
+        passed: true
+        comment: 'Raised: LineChart area series with baseline ''min'', tickInterval,
+          valueFormatter, axis width band, sx selectors keyed on data-series'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Custom SVG overlay composed inside the chart via useXScale/useYScale/useDrawingArea
-          hooks; data-series sx selectors
-  verdict: REJECTED
+        passed: true
+        comment: 'Raised: custom SVG layer composed inside the chart with useXScale/useYScale/useDrawingArea
+          hooks'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T00:45:19Z'
+  rendered_at: '2026-11-08T00:50:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
