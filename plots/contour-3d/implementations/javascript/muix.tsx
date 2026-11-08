@@ -3,396 +3,458 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 82/100 | Created: 2026-09-10
 
-// Community @mui/x-charts has no 3D/surface primitive. The elevation surface
-// is built as a genuinely data-driven ScatterChart: every grid point is a
-// real scatter datum (x, y, z) wired through a `zAxis` piecewise colorMap,
-// and a custom `slots.scatter` renderer (same pattern used by
-// heatmap-correlation) reads the library's own xScale/yScale/colorGetter to
-// draw the elevation bands, contour isolines, and a sparse sample-point
-// overlay whose marker colors come straight from that colorGetter -- not a
-// second hand-rolled palette. The spec's "project contours onto the base
-// plane" note is honored with a dashed, offset duplicate of the isolines
-// painted on top of the bands (clipped to the axes, no edge bleed) -- a
-// legible reference layer, not a near-duplicate of the solid ones.
-
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { PiecewiseColorLegend } from "@mui/x-charts/ChartsLegend";
-import { ChartsText } from "@mui/x-charts/ChartsText";
+import { useRef, useState } from "react";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { useDrawingArea, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
-// --- Grid: deterministic chemical-process yield response surface -----------
-const GRID_N = 34;
-const TEMP_MIN = 150, TEMP_MAX = 250;
-const PRESSURE_MIN = 10, PRESSURE_MAX = 50;
+// Constants
+const DEG = Math.PI / 180;
+const AZIMUTH_DEG = 40; // opening turn of the base plane about the vertical axis
+const ELEVATION_DEG = 30; // opening view angle above the base plane
+const ELEVATION_RANGE = [8, 75]; // dragging keeps the elevation inside this range, in degrees
+const DRAG_DEG_PER_PX = 0.4; // rotation per dragged pixel
+const BOX = [1, 1, 0.62]; // half-extents of the drawn box along x, y and z
+const LEVEL_COUNT = 10; // at most about this many contour intervals over the z range
+const TICK_COUNT = 6; // about this many ticks per axis
+const NICE_STEPS = [1, 2, 2.5, 5, 10]; // round step multipliers per power of ten
+const FLOOR_SHARE = 0.25; // gap between the lowest surface point and the base plane, as a share of the z range
+const SURFACE_ALPHA = 0.5; // opacity of the surface sheet, so what lies behind it shows faded
+const TICK_PX = 8; // tick mark length
+const TICK_LABEL_PX = 16; // gap between an axis and its tick labels
+const AXIS_TITLE_PX = 58; // gap between an axis and its title
+const TITLE = "contour-3d · javascript · muix · anyplot.ai";
+const HEADER_H = 84;
+const LEGEND_W = 200;
+const MARGIN = { top: 24, right: 64, bottom: 92, left: 120 };
 
-const temps = Array.from(
-  { length: GRID_N },
-  (_, i) => TEMP_MIN + (i / (GRID_N - 1)) * (TEMP_MAX - TEMP_MIN),
-);
-const pressures = Array.from(
-  { length: GRID_N },
-  (_, j) => PRESSURE_MIN + (j / (GRID_N - 1)) * (PRESSURE_MAX - PRESSURE_MIN),
-);
+// Columns: set these to your data's column names
+const TEMPERATURE = "Temperature (°C)"; // role: x
+const PRESSURE = "Pressure (bar)"; // role: y
+const YIELD = "Yield (%)"; // role: z
 
-// Second-order response-surface model (classic RSM form: intercept + linear +
-// quadratic + interaction terms) with a mild ripple so contour bands aren't
-// perfectly elliptical -- gives the surface a visible saddle/critical-point
-// region, matching the spec's "optimization landscape with critical points".
-function yieldAt(temp, pressure) {
-  const u = (temp - 200) / 50;
-  const v = (pressure - 30) / 20;
-  return 90 - 15 * u * u - 20 * v * v + 8 * u * v + 3 * Math.sin(3 * u) * Math.cos(2 * v);
-}
-
-// zGrid[j][i] = yield at (temps[i], pressures[j])
-const zGrid = pressures.map((p) => temps.map((temp) => yieldAt(temp, p)));
-const allZ = zGrid.flat();
-const zMin = Math.min(...allZ);
-const zMax = Math.max(...allZ);
-
-// Locate the global optimum -- a real, computed "critical point" (spec:
-// "optimization landscapes with critical points") to annotate on the surface.
-let optimum = { i: 0, j: 0, z: -Infinity };
-for (let j = 0; j < GRID_N; j += 1) {
-  for (let i = 0; i < GRID_N; i += 1) {
-    if (zGrid[j][i] > optimum.z) optimum = { i, j, z: zGrid[j][i] };
-  }
-}
-
-// --- Real @mui/x-charts scatter series: every grid point is genuine data ---
-// (feeds the ScatterChart's own zAxis colorMap / colorGetter pipeline below,
-// not just a styling prop -- the library resolves per-point color from this.)
-const points = [];
-for (let j = 0; j < GRID_N; j += 1) {
-  for (let i = 0; i < GRID_N; i += 1) {
-    points.push({ id: `${i}-${j}`, x: temps[i], y: pressures[j], z: zGrid[j][i] });
-  }
-}
-
-// --- Imprint sequential colormap (single-polarity data: t.seq = [green, blue]) -
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function lerpChannel(a, b, ratio) {
-  return Math.round(a + (b - a) * ratio);
-}
-function imprintSeqInterpolator(stops) {
-  const [lo, hi] = stops.map(hexToRgb);
-  return (position) => {
-    const [r, g, b] = [0, 1, 2].map((c) => lerpChannel(lo[c], hi[c], position));
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-}
-const seqColor = imprintSeqInterpolator(t.seq);
-
-const NUM_BANDS = 8;
-const bandThresholds = Array.from(
-  { length: NUM_BANDS - 1 },
-  (_, k) => zMin + ((k + 1) / NUM_BANDS) * (zMax - zMin),
-);
-const bandColors = Array.from({ length: NUM_BANDS }, (_, k) => seqColor(k / (NUM_BANDS - 1)));
-
-// --- Marching-triangles filled-contour geometry ------------------------------
-// Each grid cell is split into 4 triangles around its centroid so every
-// super-level-set boundary resolves without the marching-squares saddle
-// ambiguity; painting bands low-to-high (painter's algorithm) then produces
-// correct filled bands regardless of how many disjoint regions a level has.
-function buildTriangles() {
-  const tris = [];
-  for (let j = 0; j < GRID_N - 1; j += 1) {
-    for (let i = 0; i < GRID_N - 1; i += 1) {
-      const sw = { x: temps[i], y: pressures[j], z: zGrid[j][i] };
-      const se = { x: temps[i + 1], y: pressures[j], z: zGrid[j][i + 1] };
-      const ne = { x: temps[i + 1], y: pressures[j + 1], z: zGrid[j + 1][i + 1] };
-      const nw = { x: temps[i], y: pressures[j + 1], z: zGrid[j + 1][i] };
-      const center = {
-        x: (sw.x + se.x) / 2,
-        y: (sw.y + nw.y) / 2,
-        z: (sw.z + se.z + ne.z + nw.z) / 4,
-      };
-      tris.push([sw, se, center], [se, ne, center], [ne, nw, center], [nw, sw, center]);
+// Data: replace this block with your own records, one object per grid point
+// Chemical-process yield over reactor temperature and pressure on a 34 × 34 grid: a second-order
+// response-surface model (linear, quadratic and interaction terms) with a mild ripple, so the
+// optimum sits off the centre of the design space and the level curves are not plain ellipses.
+const data = (() => {
+  const rows = [];
+  for (let i = 0; i < 34; i += 1) {
+    for (let j = 0; j < 34; j += 1) {
+      const temperature = 150 + (100 * i) / 33;
+      const pressure = 10 + (40 * j) / 33;
+      const u = (temperature - 200) / 50;
+      const v = (pressure - 30) / 20;
+      const yieldPct = 90 - 15 * u * u - 20 * v * v + 8 * u * v + 3 * Math.sin(3 * u) * Math.cos(2 * v);
+      rows.push({
+        [TEMPERATURE]: Math.round(temperature * 100) / 100,
+        [PRESSURE]: Math.round(pressure * 100) / 100,
+        [YIELD]: Math.round(yieldPct * 100) / 100,
+      });
     }
   }
-  return tris;
-}
-const triangles = buildTriangles();
+  return rows;
+})();
 
-// Filled sub-polygon(s) of one triangle lying at/above `threshold`, plus the
-// interpolated edge (if any) that traces the exact level curve through it.
-function triangleFill(a, b, c, threshold) {
-  const inA = a.z >= threshold, inB = b.z >= threshold, inC = c.z >= threshold;
-  const nIn = (inA ? 1 : 0) + (inB ? 1 : 0) + (inC ? 1 : 0);
-  const cross = (p, q) => {
-    const ratio = (threshold - p.z) / (q.z - p.z);
-    return { x: p.x + ratio * (q.x - p.x), y: p.y + ratio * (q.y - p.y) };
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => [TEMPERATURE, PRESSURE, YIELD].every((c) => Number.isFinite(d[c])));
+const xs = [...new Set(rows.map((d) => d[TEMPERATURE]))].sort((a, b) => a - b);
+const ys = [...new Set(rows.map((d) => d[PRESSURE]))].sort((a, b) => a - b);
+const zAt = new Map(rows.map((d) => [`${d[TEMPERATURE]}|${d[PRESSURE]}`, d[YIELD]]));
+// grid[j][i] is the height at xs[i], ys[j]; a missing grid point stays null and its cells are skipped
+const grid = ys.map((y) => xs.map((x) => zAt.get(`${x}|${y}`) ?? null));
+const zLo = Math.min(...rows.map((d) => d[YIELD]));
+const zHi = Math.max(...rows.map((d) => d[YIELD]));
+const peak = rows.reduce((best, d) => (d[YIELD] > best[YIELD] ? d : best), rows[0]);
+
+// Contour levels: the multiples of a round step that lie strictly inside the z range
+const levelRaw = (zHi - zLo) / LEVEL_COUNT;
+const levelMagnitude = 10 ** Math.floor(Math.log10(levelRaw));
+const levelStep = NICE_STEPS.map((m) => m * levelMagnitude).find((s) => s >= levelRaw);
+const firstLevel = Math.floor(zLo / levelStep) + 1;
+const levels = Array.from({ length: Math.ceil(zHi / levelStep) - firstLevel }, (_, k) =>
+  Number(((firstLevel + k) * levelStep).toFixed(10)),
+);
+
+// Box extents per axis: the grid's x and y range, and z from the base plane, set below the
+// lowest point, to the highest point; round ticks inside each extent
+const axes = [
+  { name: TEMPERATURE, lo: xs[0], hi: xs[xs.length - 1] },
+  { name: PRESSURE, lo: ys[0], hi: ys[ys.length - 1] },
+  { name: YIELD, lo: zLo - FLOOR_SHARE * (zHi - zLo), hi: zHi },
+].map((axis) => {
+  const raw = (axis.hi - axis.lo) / TICK_COUNT;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const step = NICE_STEPS.map((m) => m * magnitude).find((s) => s >= raw);
+  const first = Math.ceil(axis.lo / step - 1e-9);
+  const last = Math.floor(axis.hi / step + 1e-9);
+  return { ...axis, ticks: Array.from({ length: last - first + 1 }, (_, k) => Number(((first + k) * step).toFixed(10))) };
+});
+
+// Surface cells and level curves by marching triangles: each grid cell splits into four triangles
+// around its centre, which settles the saddle cases; a level crossing a triangle leaves one segment
+const cells = [];
+const contours = levels.map((level) => ({ level, segments: [] }));
+for (let j = 0; j < ys.length - 1; j += 1) {
+  for (let i = 0; i < xs.length - 1; i += 1) {
+    const corners = [
+      [i, j],
+      [i + 1, j],
+      [i + 1, j + 1],
+      [i, j + 1],
+    ].map(([a, b]) => ({ x: xs[a], y: ys[b], z: grid[b][a] }));
+    if (corners.some((p) => p.z == null)) continue;
+    cells.push(corners);
+    const center = {
+      x: (xs[i] + xs[i + 1]) / 2,
+      y: (ys[j] + ys[j + 1]) / 2,
+      z: corners.reduce((s, p) => s + p.z, 0) / 4,
+    };
+    contours.forEach(({ level, segments }) => {
+      corners.forEach((p, m) => {
+        const triangle = [p, corners[(m + 1) % 4], center];
+        const cuts = [];
+        triangle.forEach((a, n) => {
+          const b = triangle[(n + 1) % 3];
+          if ((a.z >= level) !== (b.z >= level)) {
+            const r = (level - a.z) / (b.z - a.z);
+            cuts.push({ x: a.x + r * (b.x - a.x), y: a.y + r * (b.y - a.y) });
+          }
+        });
+        if (cuts.length === 2) segments.push(cuts);
+      });
+    });
+  }
+}
+// The outer edge of the grid, drawn as the rim of the surface sheet
+const rim = [
+  ...xs.map((_, i) => [i, 0]),
+  ...ys.map((_, j) => [xs.length - 1, j]),
+  ...xs.map((_, i) => [xs.length - 1 - i, ys.length - 1]),
+  ...ys.map((_, j) => [0, ys.length - 1 - j]),
+].map(([i, j]) => ({ x: xs[i], y: ys[j], z: grid[j][i] }));
+
+// The opening view fixes the layout: the chart takes the width the box needs at that view, so the
+// colour bar sits beside it; a turned view shrinks to fit the same area
+const openAz = AZIMUTH_DEG * DEG;
+const openEl = ELEVATION_DEG * DEG;
+const boxAspect =
+  (BOX[0] * Math.abs(Math.cos(openAz)) + BOX[1] * Math.abs(Math.sin(openAz))) /
+  ((BOX[0] * Math.abs(Math.sin(openAz)) + BOX[1] * Math.abs(Math.cos(openAz))) * Math.sin(openEl) + BOX[2] * Math.cos(openEl));
+
+const SUBTITLE = `${xs.length} × ${ys.length} grid · ${levels.length} level curves every ${levelStep} from ${levels[0]} to ${levels[levels.length - 1]}, lifted to their height and projected onto the base plane`;
+
+// The community package has no 3D chart: this layer turns the box, the surface sheet and the
+// level curves into screen coordinates for the current view, with one scale for both screen axes,
+// and colours every curve through the z axis colour map that the colour bar shows.
+function ContourLayer({ azimuth, elevation }: { azimuth: number; elevation: number }) {
+  const { left, top, width, height } = useDrawingArea();
+  const colorOf = useZColorScale("level");
+  const ca = Math.cos(azimuth);
+  const sa = Math.sin(azimuth);
+  const ce = Math.cos(elevation);
+  const se = Math.sin(elevation);
+  // A data point in box coordinates (-1 to 1 per axis), then seen from the view: screen x,
+  // screen y (up) and depth (away from the viewer)
+  const view = (x: number, y: number, z: number) => {
+    const [bx, by, bz] = [x, y, z].map((v, k) => ((2 * (v - axes[k].lo)) / (axes[k].hi - axes[k].lo) - 1) * BOX[k]);
+    const ahead = bx * sa + by * ca;
+    return [bx * ca - by * sa, ahead * se + bz * ce, ahead * ce - bz * se];
   };
 
-  if (nIn === 0) return { polys: [], cut: null };
-  if (nIn === 3) return { polys: [[a, b, c]], cut: null };
-
-  if (nIn === 1) {
-    if (inA) { const ab = cross(a, b), ca = cross(c, a); return { polys: [[a, ab, ca]], cut: [ab, ca] }; }
-    if (inB) { const ab = cross(a, b), bc = cross(b, c); return { polys: [[b, bc, ab]], cut: [bc, ab] }; }
-    const ca = cross(c, a), bc = cross(b, c);
-    return { polys: [[c, ca, bc]], cut: [ca, bc] };
-  }
-
-  // nIn === 2 (exactly one vertex out)
-  if (!inC) { const bc = cross(b, c), ca = cross(c, a); return { polys: [[a, b, bc, ca]], cut: [ca, bc] }; }
-  if (!inA) { const ca = cross(c, a), ab = cross(a, b); return { polys: [[b, c, ca, ab]], cut: [ab, ca] }; }
-  const ab = cross(a, b), bc = cross(b, c);
-  return { polys: [[c, a, ab, bc]], cut: [bc, ab] };
-}
-
-// Bands k=1..NUM_BANDS-1 are computed from the triangulation; band k=0 is the
-// full domain rect (everything is above zMin), painted first as the base layer.
-const bandGeometry = [];
-const isolineGeometry = [];
-for (let k = 1; k < NUM_BANDS; k += 1) {
-  const threshold = bandThresholds[k - 1];
-  const polys = [];
-  const segments = [];
-  for (const tri of triangles) {
-    const { polys: p, cut } = triangleFill(tri[0], tri[1], tri[2], threshold);
-    if (p.length) polys.push(...p);
-    if (cut) segments.push(cut);
-  }
-  bandGeometry.push(polys);
-  isolineGeometry.push(segments);
-}
-
-// Sparse sample-point overlay (every 4th grid line -> ~9x9 points): a real
-// subset of `points` above, drawn through the library's own `colorGetter` so
-// the markers' colors come from the ScatterChart's zAxis colorMap, not a
-// second hand-rolled color computation.
-const SAMPLE_STEP = 4;
-const sampleIndices = [];
-for (let j = 0; j < GRID_N; j += SAMPLE_STEP) {
-  for (let i = 0; i < GRID_N; i += SAMPLE_STEP) {
-    sampleIndices.push(j * GRID_N + i);
-  }
-}
-
-// --- Custom `slots.scatter` renderer: bands + isolines + sample points, all -
-// mapped through the ScatterChart's own xScale/yScale, colored through its
-// own colorGetter -- this IS the library's scatter slot, not a bolt-on layer.
-const SHADOW_OFFSET = 30;
-
-function ContourSurfaceRenderer(props) {
-  const { series, xScale, yScale, colorGetter } = props;
-  const toSVG = (x, y) => [xScale(x), yScale(y)];
-
-  const polysToPath = (polys, dx = 0, dy = 0) =>
-    polys
-      .map((poly) => {
-        const pts = poly.map((p) => toSVG(p.x, p.y));
-        const head = `M ${(pts[0][0] + dx).toFixed(1)},${(pts[0][1] + dy).toFixed(1)}`;
-        const tail = pts
-          .slice(1)
-          .map(([px, py]) => `L ${(px + dx).toFixed(1)},${(py + dy).toFixed(1)}`)
-          .join(" ");
-        return `${head} ${tail} Z`;
-      })
-      .join(" ");
-
-  const segmentsToPath = (segments, dx = 0, dy = 0) =>
+  const [xLo, xHi] = [axes[0].lo, axes[0].hi];
+  const [yLo, yHi] = [axes[1].lo, axes[1].hi];
+  const [zBase, zTop] = [axes[2].lo, axes[2].hi];
+  const baseCorners = [
+    [xLo, yLo],
+    [xHi, yLo],
+    [xHi, yHi],
+    [xLo, yHi],
+  ].map(([x, y]) => ({ x, y, bottom: view(x, y, zBase), top: view(x, y, zTop) }));
+  const frame = baseCorners.flatMap((c) => [c.bottom, c.top]);
+  const sxLo = Math.min(...frame.map((p) => p[0]));
+  const sxHi = Math.max(...frame.map((p) => p[0]));
+  const syLo = Math.min(...frame.map((p) => p[1]));
+  const syHi = Math.max(...frame.map((p) => p[1]));
+  const k = Math.min(width / (sxHi - sxLo), height / (syHi - syLo));
+  const ox = left + width / 2 - ((sxLo + sxHi) / 2) * k;
+  const oy = top + height / 2 + ((syLo + syHi) / 2) * k;
+  const px = (p: number[]) => ({ x: ox + p[0] * k, y: oy - p[1] * k });
+  const pts = (ps: number[][]) => ps.map((p) => `${px(p).x.toFixed(1)},${px(p).y.toFixed(1)}`).join(" ");
+  // One level's segments as a path at height z
+  const segPath = (segments: { x: number; y: number }[][], z: number) =>
     segments
-      .map(([p0, p1]) => {
-        const [x0, y0] = toSVG(p0.x, p0.y);
-        const [x1, y1] = toSVG(p1.x, p1.y);
-        return `M ${(x0 + dx).toFixed(1)},${(y0 + dy).toFixed(1)} L ${(x1 + dx).toFixed(1)},${(y1 + dy).toFixed(1)}`;
+      .map(([from, to]) => {
+        const a = px(view(from.x, from.y, z));
+        const b = px(view(to.x, to.y, z));
+        return `M${a.x.toFixed(1)},${a.y.toFixed(1)}L${b.x.toFixed(1)},${b.y.toFixed(1)}`;
       })
-      .join(" ");
+      .join("");
 
-  const [rx0, ry0] = toSVG(TEMP_MIN, PRESSURE_MIN);
-  const [rx1, ry1] = toSVG(TEMP_MAX, PRESSURE_MAX);
-  const baseRectPath = (dx = 0, dy = 0) =>
-    `M ${(rx0 + dx).toFixed(1)},${(ry0 + dy).toFixed(1)} L ${(rx1 + dx).toFixed(1)},${(ry0 + dy).toFixed(1)} L ${(rx1 + dx).toFixed(1)},${(ry1 + dy).toFixed(1)} L ${(rx0 + dx).toFixed(1)},${(ry1 + dy).toFixed(1)} Z`;
+  // The base corner nearest the viewer joins the x and y axes; the two back walls meet at the
+  // farthest corner; the z axis rises at the leftmost of the two side corners
+  const byDepth = [...baseCorners].sort((p, q) => p.bottom[2] - q.bottom[2]);
+  const near = byDepth[0];
+  const far = byDepth[3];
+  const [leftSide, rightSide] = [byDepth[1], byDepth[2]].sort((p, q) => p.bottom[0] - q.bottom[0]);
+  const floorMid = px(view((xLo + xHi) / 2, (yLo + yHi) / 2, zBase));
 
-  const [ox, oy] = toSVG(temps[optimum.i], pressures[optimum.j]);
+  // Outward unit vector on screen for an axis drawn from a to b, turned away from the floor centre
+  const outward = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    const flip = ((a.x + b.x) / 2 - floorMid.x) * (a.y - b.y) + ((a.y + b.y) / 2 - floorMid.y) * (b.x - a.x) < 0 ? -1 : 1;
+    return { ux: (flip * (a.y - b.y)) / len, uy: (flip * (b.x - a.x)) / len };
+  };
+  const anchor = (u: number) => (u > 0.3 ? "start" : u < -0.3 ? "end" : "middle");
+  const baseline = (u: number) => (u > 0.3 ? "hanging" : u < -0.3 ? "auto" : "central");
 
-  // Clip the offset shadow layer to the plot's own rectangle so the
-  // down-right offset never bleeds into the margin past the axes.
-  const clipX = Math.min(rx0, rx1);
-  const clipY = Math.min(ry0, ry1);
-  const clipW = Math.abs(rx1 - rx0);
-  const clipH = Math.abs(ry1 - ry0);
+  const groundArms = [
+    { axis: axes[0], at: (v: number) => view(v, near.y, zBase), from: view(xLo, near.y, zBase), to: view(xHi, near.y, zBase) },
+    { axis: axes[1], at: (v: number) => view(near.x, v, zBase), from: view(near.x, yLo, zBase), to: view(near.x, yHi, zBase) },
+  ].map((arm) => {
+    const a = px(arm.from);
+    const b = px(arm.to);
+    const out = outward(a, b);
+    let angle = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+    if (angle > 90) angle -= 180;
+    if (angle < -90) angle += 180;
+    const mid = { x: (a.x + b.x) / 2 + out.ux * AXIS_TITLE_PX, y: (a.y + b.y) / 2 + out.uy * AXIS_TITLE_PX };
+    return { ...arm, a, b, out, angle, mid, ticks: arm.axis.ticks.map((v) => ({ v, p: px(arm.at(v)) })) };
+  });
+  const zFoot = px(leftSide.bottom);
+  const zHead = px(leftSide.top);
+  const zTicks = axes[2].ticks.map((v) => ({ v, p: px(view(leftSide.x, leftSide.y, v)) }));
+  const zTitle = { x: zFoot.x - AXIS_TITLE_PX, y: (zFoot.y + zHead.y) / 2 };
+
+  const peakTop = px(view(peak[TEMPERATURE], peak[PRESSURE], peak[YIELD]));
+  const peakFoot = px(view(peak[TEMPERATURE], peak[PRESSURE], zBase));
 
   return (
     <g>
-      <clipPath id="contour-3d-plot-clip">
-        <rect x={clipX} y={clipY} width={clipW} height={clipH} />
-      </clipPath>
-
-      {/* On-surface elevation bands, viewed from directly above */}
-      <path d={baseRectPath()} fill={bandColors[0]} stroke={bandColors[0]} strokeWidth={0.75} />
-      {bandGeometry.map((polys, idx) => (
-        <path
-          key={`band-${idx}`}
-          d={polysToPath(polys)}
-          fill={bandColors[idx + 1]}
-          stroke={bandColors[idx + 1]}
-          strokeWidth={0.75}
-        />
+      {/* Base plane and the two back walls, with grid lines at the ticks */}
+      <polygon points={pts(baseCorners.map((c) => c.bottom))} fill={t.elevatedBg} stroke={t.grid} strokeWidth={1.2} />
+      {[leftSide, rightSide].map((side) => (
+        <g key={`wall-${side.x}-${side.y}`}>
+          <polygon points={pts([side.bottom, far.bottom, far.top, side.top])} fill={t.elevatedBg} stroke={t.grid} strokeWidth={1.2} />
+          {axes[2].ticks.map((v) => (
+            <polyline key={v} points={pts([view(side.x, side.y, v), view(far.x, far.y, v)])} stroke={t.grid} strokeWidth={1} fill="none" />
+          ))}
+        </g>
+      ))}
+      {axes[0].ticks.map((v) => (
+        <polyline key={`gx-${v}`} points={pts([view(v, yLo, zBase), view(v, yHi, zBase)])} stroke={t.grid} strokeWidth={1} fill="none" />
+      ))}
+      {axes[1].ticks.map((v) => (
+        <polyline key={`gy-${v}`} points={pts([view(xLo, v, zBase), view(xHi, v, zBase)])} stroke={t.grid} strokeWidth={1} fill="none" />
       ))}
 
-      {/* Contours projected onto the base plane: the fully opaque bands above
-          tile the whole domain, so a filled shadow would never show through --
-          instead this offset+dashed duplicate of the isolines is painted on
-          TOP of the bands (still clipped to the axes, no edge bleed), reading
-          as a clearly separate reference layer rather than a near-duplicate. */}
-      <g clipPath="url(#contour-3d-plot-clip)" opacity={0.75}>
-        {isolineGeometry.map((segments, idx) => (
-          <path
-            key={`shadow-iso-${idx}`}
-            d={segmentsToPath(segments, SHADOW_OFFSET, SHADOW_OFFSET)}
-            stroke={t.inkSoft}
-            strokeWidth={1.6}
-            strokeDasharray="9 6"
-            fill="none"
-          />
-        ))}
-      </g>
-
-      {/* Sparse sample points -- real scatter data, colored via the chart's
-          own colorGetter (zAxis piecewise colorMap), not a second palette. */}
-      {sampleIndices.map((idx) => {
-        const p = series.data[idx];
-        const [px, py] = toSVG(p.x, p.y);
-        return (
-          <circle
-            key={`sample-${p.id}`}
-            cx={px}
-            cy={py}
-            r={4}
-            fill={colorGetter ? colorGetter(idx) : t.ink}
-            stroke={t.pageBg}
-            strokeWidth={1.5}
-          />
-        );
-      })}
-
-      {/* Solid contour lines on the surface itself */}
-      {isolineGeometry.map((segments, idx) => (
+      {/* Level curves projected onto the base plane, at the same levels and colours */}
+      {contours.map(({ level, segments }) => (
         <path
-          key={`iso-${idx}`}
-          d={segmentsToPath(segments)}
-          stroke={t.ink}
-          strokeOpacity={0.6}
-          strokeWidth={1.5}
+          key={`floor-${level}`}
+          d={segPath(segments, zBase)}
+          stroke={colorOf(level)}
+          strokeWidth={1.6}
+          strokeLinecap="round"
           fill="none"
         />
       ))}
 
-      {/* Critical point: the computed global optimum, a genuine data callout */}
-      <circle cx={ox} cy={oy} r={6} fill="none" stroke={t.ink} strokeWidth={2} />
-      <circle cx={ox} cy={oy} r={2} fill={t.ink} />
+      {/* Drop line from the highest grid point to the base plane, under the surface sheet */}
+      <line x1={peakFoot.x} y1={peakFoot.y} x2={peakTop.x} y2={peakTop.y} stroke={t.inkSoft} strokeWidth={1.5} strokeDasharray="5 4" />
+      <circle cx={peakFoot.x} cy={peakFoot.y} r={4} fill={t.inkSoft} />
+
+      {/* Translucent surface sheet: what lies below it shows through, faded */}
+      {cells.map((corners, idx) => (
+        <polygon
+          key={idx}
+          points={pts(corners.map((c) => view(c.x, c.y, c.z)))}
+          fill={t.elevatedBg}
+          fillOpacity={SURFACE_ALPHA}
+          stroke={t.grid}
+          strokeWidth={0.8}
+        />
+      ))}
+
+      <path
+        d={rim
+          .map((p, m) => {
+            if (p.z == null) return "";
+            const q = px(view(p.x, p.y, p.z));
+            return `${m === 0 || rim[m - 1].z == null ? "M" : "L"}${q.x.toFixed(1)},${q.y.toFixed(1)}`;
+          })
+          .join("")}
+        stroke={t.inkSoft}
+        strokeWidth={1.2}
+        strokeLinejoin="round"
+        fill="none"
+      />
+
+      {/* Level curves lifted to their height */}
+      {contours.map(({ level, segments }) => (
+        <path
+          key={`lifted-${level}`}
+          d={segPath(segments, level)}
+          stroke={colorOf(level)}
+          strokeWidth={2.8}
+          strokeLinecap="round"
+          fill="none"
+        />
+      ))}
+
+      {/* Axes on the edges that face the viewer */}
+      {groundArms.map((arm) => (
+        <g key={arm.axis.name}>
+          <line x1={arm.a.x} y1={arm.a.y} x2={arm.b.x} y2={arm.b.y} stroke={t.inkSoft} strokeWidth={1.5} />
+          {arm.ticks.map(({ v, p }) => (
+            <g key={v}>
+              <line x1={p.x} y1={p.y} x2={p.x + arm.out.ux * TICK_PX} y2={p.y + arm.out.uy * TICK_PX} stroke={t.inkSoft} strokeWidth={1.5} />
+              <text
+                x={p.x + arm.out.ux * TICK_LABEL_PX}
+                y={p.y + arm.out.uy * TICK_LABEL_PX}
+                textAnchor={anchor(arm.out.ux)}
+                dominantBaseline={baseline(arm.out.uy)}
+                fontSize={14}
+                fill={t.inkSoft}
+              >
+                {v}
+              </text>
+            </g>
+          ))}
+          <text
+            x={arm.mid.x}
+            y={arm.mid.y}
+            transform={`rotate(${arm.angle.toFixed(1)} ${arm.mid.x.toFixed(1)} ${arm.mid.y.toFixed(1)})`}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={16}
+            fontWeight={600}
+            fill={t.ink}
+          >
+            {arm.axis.name}
+          </text>
+        </g>
+      ))}
+      <line x1={zFoot.x} y1={zFoot.y} x2={zHead.x} y2={zHead.y} stroke={t.inkSoft} strokeWidth={1.5} />
+      {zTicks.map(({ v, p }) => (
+        <g key={v}>
+          <line x1={p.x} y1={p.y} x2={p.x - TICK_PX} y2={p.y} stroke={t.inkSoft} strokeWidth={1.5} />
+          <text x={p.x - TICK_LABEL_PX} y={p.y} textAnchor="end" dominantBaseline="central" fontSize={14} fill={t.inkSoft}>
+            {v}
+          </text>
+        </g>
+      ))}
       <text
-        x={ox}
-        y={oy - 12}
+        x={zTitle.x}
+        y={zTitle.y}
+        transform={`rotate(-90 ${zTitle.x.toFixed(1)} ${zTitle.y.toFixed(1)})`}
         textAnchor="middle"
-        fontSize={13}
+        dominantBaseline="central"
+        fontSize={16}
         fontWeight={600}
         fill={t.ink}
-        fontFamily="inherit"
       >
-        {`Optimum ${optimum.z.toFixed(1)}%`}
+        {YIELD}
+      </text>
+
+      {/* The highest grid point */}
+      <circle cx={peakTop.x} cy={peakTop.y} r={6} fill={t.ink} stroke={t.pageBg} strokeWidth={2} />
+      <text
+        x={peakTop.x + 14}
+        y={peakTop.y - 20}
+        fontSize={15}
+        fontWeight={600}
+        fill={t.ink}
+        stroke={t.pageBg}
+        strokeWidth={4}
+        paintOrder="stroke"
+      >
+        {`Maximum ${peak[YIELD]}`}
       </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
-const TITLE = "contour-3d · javascript · muix · anyplot.ai";
-const MARGIN = { top: 120, right: 190, bottom: 90, left: 105 };
-
-// PiecewiseColorLegend anchors flush against the literal SVG width, ignoring
-// MARGIN.right entirely (its `position: "right"` offset is `svgWidth -
-// legendWidth`) -- so the whole right-side cluster (legend + its rotated axis
-// title) is wrapped in this leftward shift to keep swatches off the true edge.
-const RIGHT_EDGE_INSET = 46;
-
-function bandLabel({ min, max }) {
-  if (min === null) return `< ${Math.round(max)}`;
-  if (max === null) return `> ${Math.round(min)}`;
-  return `${Math.round(min)}–${Math.round(max)}`;
-}
-
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  // Dragging turns the surface (horizontal drag) and tilts it (vertical drag)
+  const [viewDeg, setViewDeg] = useState({ azimuth: AZIMUTH_DEG, elevation: ELEVATION_DEG });
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const chartH = height - HEADER_H;
+  const chartW = Math.min(width - LEGEND_W, MARGIN.left + MARGIN.right + (chartH - MARGIN.top - MARGIN.bottom) * boxAspect);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    drag.current = { x: e.clientX, y: e.clientY };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    const dx = e.clientX - drag.current.x;
+    const dy = e.clientY - drag.current.y;
+    drag.current = { x: e.clientX, y: e.clientY };
+    setViewDeg((v) => ({
+      azimuth: v.azimuth - dx * DRAG_DEG_PER_PX,
+      elevation: Math.min(ELEVATION_RANGE[1], Math.max(ELEVATION_RANGE[0], v.elevation + dy * DRAG_DEG_PER_PX)),
+    }));
+  };
+  const onPointerUp = () => {
+    drag.current = null;
+  };
+
   return (
-    <ScatterChart
-      width={SIZE.width}
-      height={SIZE.height}
-      margin={MARGIN}
-      skipAnimation
-      disableVoronoi
-      series={[
-        {
-          id: "yield-surface",
-          type: "scatter",
-          data: points,
-          label: "Yield (%)",
-          zAxisId: "yield",
-        },
-      ]}
-      xAxis={[
-        {
-          scaleType: "linear",
-          min: TEMP_MIN,
-          max: TEMP_MAX,
-          label: "Temperature (°C)",
-          labelStyle: { fontSize: 15, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: PRESSURE_MIN,
-          max: PRESSURE_MAX,
-          label: "Pressure (bar)",
-          labelStyle: { fontSize: 15, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          slotProps: { axisLabel: { x: -58 } },
-        },
-      ]}
-      zAxis={[
-        {
-          id: "yield",
-          colorMap: {
-            type: "piecewise",
-            thresholds: bandThresholds,
-            colors: bandColors,
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ height: HEADER_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
+        width={chartW}
+        height={chartH}
+        series={[]}
+        skipAnimation
+        margin={MARGIN}
+        zAxis={[
+          {
+            id: "level",
+            min: levels[0],
+            max: levels[levels.length - 1],
+            colorMap: { type: "continuous", min: levels[0], max: levels[levels.length - 1], color: [t.seq[0], t.seq[1]] },
           },
-        },
-      ]}
-      slots={{ scatter: ContourSurfaceRenderer }}
-      slotProps={{ legend: { hidden: true } }}
-    >
-      <g transform={`translate(${-RIGHT_EDGE_INSET}, 0)`}>
-        <PiecewiseColorLegend
-          axisId="yield"
-          position={{ horizontal: "right", vertical: "middle" }}
-          direction="column"
-          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-          labelFormatter={bandLabel}
-        />
-        <ChartsText
-          text="Yield (%)"
-          x={SIZE.width - 40}
-          y={MARGIN.top - 24}
-          style={{ fontSize: 14, fontWeight: 500, fill: t.ink, textAnchor: "middle" }}
-        />
-      </g>
-      <ChartsText
-        text={TITLE}
-        x={SIZE.width / 2}
-        y={50}
-        style={{ fontSize: 22, fontWeight: 500, fill: t.ink, textAnchor: "middle" }}
-      />
-    </ScatterChart>
+        ]}
+      >
+        <ChartsWrapper
+          legendPosition={{ vertical: "middle", horizontal: "end" }}
+          legendDirection="vertical"
+          sx={{ width: chartW + LEGEND_W, height: chartH }}
+        >
+          <div style={{ gridArea: "legend", width: LEGEND_W, height: chartH * 0.6, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: t.ink, marginBottom: 12 }}>{YIELD}</div>
+            <ContinuousColorLegend
+              axisDirection="z"
+              axisId="level"
+              direction="vertical"
+              thickness={18}
+              labelPosition="end"
+              sx={{ flex: 1, fontSize: 14, color: t.inkSoft }}
+            />
+          </div>
+          <div
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            style={{ gridArea: "chart", cursor: "grab", touchAction: "none" }}
+          >
+            <ChartsSurface>
+              <ContourLayer azimuth={viewDeg.azimuth * DEG} elevation={viewDeg.elevation * DEG} />
+            </ChartsSurface>
+          </div>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
