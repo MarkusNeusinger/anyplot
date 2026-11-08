@@ -1,7 +1,7 @@
 // anyplot.ai
 // donut-nested: Nested Donut Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-08-18
+// Quality: pending | Created: 2026-08-18
 //# anyplot-orientation: square
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useDrawingArea } from "@mui/x-charts/hooks";
