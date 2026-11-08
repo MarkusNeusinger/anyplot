@@ -9,9 +9,12 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-// imprint_div's midpoint is the page colour, so a stripe at exactly zero would
-// vanish into the page: every stripe keeps at least this share of its pole's tint.
-const MIN_INTENSITY = 0.15;
+// imprint_div's midpoint is the page colour, so a stripe near zero would vanish
+// into the page: every stripe starts at this share of its pole's tint and the
+// anomaly's size adds the rest. A zero anomaly is neither warm nor cold and takes
+// half this share of the neutral ink, which sits farther from the page than either
+// pole, so it stays as pale as the palest warm and cold stripes.
+const MIN_INTENSITY = 0.2;
 const BAND_WIDTH_SHARE = 0.94; // stripe band width as a share of the canvas width
 const BAND_ASPECT = 3.1; // stripe band width : height
 
@@ -43,13 +46,13 @@ const data = (() => {
 const rows = [...data].sort((a, b) => a[YEAR] - b[YEAR]);
 // Symmetric limits: the larger of the coldest and the warmest anomaly sets both poles
 const maxAbsAnomaly = Math.max(...rows.map((d) => Math.abs(d[ANOMALY] ?? 0)));
-const [coldRgb, midRgb, warmRgb] = [t.div[2], t.div[1], t.div[0]].map((hex) =>
+const [coldRgb, midRgb, warmRgb, neutralRgb] = [t.div[2], t.div[1], t.div[0], t.inkSoft].map((hex) =>
   [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)),
 );
 const stripeColors = rows.map((d) => {
   const fraction = d[ANOMALY] / maxAbsAnomaly;
-  const share = Math.max(MIN_INTENSITY, Math.abs(fraction));
-  const pole = fraction < 0 ? coldRgb : warmRgb;
+  const share = fraction === 0 ? MIN_INTENSITY / 2 : MIN_INTENSITY + (1 - MIN_INTENSITY) * Math.abs(fraction);
+  const pole = fraction < 0 ? coldRgb : fraction > 0 ? warmRgb : neutralRgb;
   const [r, g, b] = midRgb.map((c, k) => Math.round(c + (pole[k] - c) * share));
   return `rgb(${r}, ${g}, ${b})`;
 });
