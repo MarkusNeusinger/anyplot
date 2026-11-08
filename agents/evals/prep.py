@@ -1045,7 +1045,7 @@ class CaseRunner:
         if view is None or not view.dataset_id:
             return None
         kept = kept_versions(get_services().datasets, sid, view)
-        return resolve_version(kept, view, "current" if from_version is None else from_version).stored.as_parsed()
+        return resolve_version(kept, "current" if from_version is None else from_version).stored.as_parsed()
 
     @staticmethod
     def _expected_table(
