@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-timeseries-rolling: Time Series with Rolling Average Overlay
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;
