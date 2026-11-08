@@ -70,13 +70,9 @@ const yLow = Math.min(...values);
 const yHigh = Math.max(...values);
 const yRange = yHigh - yLow;
 
-// One tick at the start of every month the series spans
-const monthTicks: Date[] = [];
-const monthCursor = new Date(dates[0].getFullYear(), dates[0].getMonth() + (dates[0].getDate() > 1 ? 1 : 0), 1);
-while (monthCursor <= dates[n - 1]) {
-  monthTicks.push(new Date(monthCursor));
-  monthCursor.setMonth(monthCursor.getMonth() + 1);
-}
+// One tick on the first day of every month; a time axis applies tickInterval's
+// filter-function form only on ordinal scales, so the filter runs on the dates here
+const monthTicks = dates.filter((d) => d.getDate() === 1);
 
 const monthFormat = new Intl.DateTimeFormat("en-US", { month: "short" });
 const fullFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
