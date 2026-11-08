@@ -47,8 +47,9 @@ temperature = np.array([25, 20, 15, 5, -15, -28, -45, -52, -58, -62, -55])
 dewpoint = np.array([18, 15, 12, -2, -22, -38, -55, -60, -65, -70, -65])
 
 # Plot: y = log10(1000 / p), so pressure falls upward on a log scale; x = T + SKEW * y skews the
-# isotherms 45° to the right on this canvas
-SKEW = 35
+# isotherms to the right. They rise at 45° when one log-p decade spans as many pixels as SKEW °C:
+# this canvas's plot box is 2906 x 1360 px for 90 °C by one decade, so SKEW = 90 * 1360 / 2906 ≈ 42
+SKEW = 42
 X_LO, X_HI = -50, 40
 P_BOTTOM, P_TOP = 1000.0, 100.0
 lp_top = np.log10(P_BOTTOM / P_TOP)
