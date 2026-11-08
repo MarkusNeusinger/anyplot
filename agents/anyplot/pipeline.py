@@ -90,7 +90,9 @@ first among them: R reads integers beyond ±2^53 as the nearest double and Julia
 timestamp to the millisecond, and the note names each column with its count (owner rule
 of 2026-10-15, no silent loss). Owner
 decision of 2026-10-29: the note goes into "what changed", not into the residual notes,
-so it leaves the status as it is (`ok` stays `ok`). Each version keeps the change
+so it leaves the status as it is (`ok` stays `ok`). The server's line for the rows a bound
+mark has no value for follows it, with the count per role (`fidelity.left_out_line`, owner
+decision of 2026-11-08: the plot draws every row, and one it cannot draw is counted). Each version keeps the change
 requests it carries out (`CodeVersion.requests`); a change of it hands them to every
 adapter call (adaptation, retry, proofread, repair) and to the reviewer as
 `user_requests`, the user's standing decisions, which the prompts say to keep and never
@@ -145,7 +147,8 @@ from core.defects import DEFECT_RE, KNOWN_IDS
 from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, REWRITE_LITERAL_FACTOR
-from .data.bindings import check_bindings
+from .data.bindings import check_bindings, valid_bindings
+from .data.fidelity import left_out_line
 from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
@@ -552,6 +555,10 @@ class Run:
     loader_codes: list[str] = field(default_factory=list)
     """The kinds of cells behind `loader_notes` (`loader_codes`), for the usage telemetry: never the notes, which name
     columns and counts."""
+    row_notes: list[str] = field(default_factory=list)
+    """The server's line for the rows a bound mark has no value for, with the count per role (`fidelity.left_out_line`,
+    owner decision of 2026-11-08: the plot draws every row, and a row it cannot draw is announced with its count):
+    in `changes` right after `loader_notes`, never a residual note, so the status stays as the render earns it."""
     data_json: str | None = None
     """The run's table as typed JSON for a runtime whose code reads no `data.csv` (`RuntimeAdapter.data_json`:
     JavaScript), built once per run; every render job of the run and the shipped version carry it."""
@@ -1472,10 +1479,11 @@ def finish(run: Run) -> PlotResult:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
     # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
-    # loader's notes come first, so the cap never drops them (owner decision of 2026-10-29: "what changed").
-    loader = run.loader_notes[:MAX_CHANGES]
-    adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(loader))
-    changes = [change[:MAX_CHANGE_CHARS] for change in [*loader, *adapted]]
+    # server's notes come first, the loader's and then the rows without a value to draw, so the cap never drops them
+    # (owner decisions of 2026-10-29, "what changed", and 2026-11-08, every row the plot cannot draw counted).
+    server = [*run.loader_notes[: MAX_CHANGES - len(run.row_notes)], *run.row_notes]
+    adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(server))
+    changes = [change[:MAX_CHANGE_CHARS] for change in [*server, *adapted]]
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),
@@ -2033,6 +2041,10 @@ async def _attempts(
     kinds = column_kinds_of(dataset)
     run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
     run.loader_codes = loader_codes(runtime, kinds)
+    roles = view.snapshot.roles()
+    held = valid_bindings(view.bindings, roles, dataset.profile)
+    left_out = left_out_line(held, view.spec_id, roles, dataset.profile.rows)
+    run.row_notes = [left_out] if left_out is not None else []
     try:
         run.data_json = runtime.data_json(dataset.csv, kinds)
     except ValueError:

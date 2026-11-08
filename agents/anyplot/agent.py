@@ -3,7 +3,8 @@
 * `root_agent` ("anyplot") is the only agent that talks to the user. Its policy is the
   constant `static_instruction` (`policy.root_instruction`), never templated; the
   session block `session_context` adds only server-validated values (spec id,
-  library, the session language and its source, dataset and binding status, the
+  library, the session language and its source, dataset and binding status (with a
+  key of the marks that the rows repeat, by role names and counts, `fidelity.py`), the
   versions of the data that `prepare_data` and `query_data` can start from (their change
   lines fenced, since they name the user's columns), the
   conversions that would fill a required role left open (`data/conversions.py`, their
@@ -147,6 +148,14 @@ PASTED_LINE = (
 A persona test of 2026-11-06: after a re-paste with a note, the root answered root.md's rule for a table typed into
 the box ("I can't read data from the message itself") although the table had arrived as the attachment of that very
 turn. The line says where the table is, so the rule for typed tables never reads as this turn's."""
+REPEATED_KEY_LINE = (
+    "- Repeated key: {fact}, and the plot draws one value per {per}; the line below names the columns, and the "
+    "offer is the counted aggregate (see 'Step 1: the data')"
+)
+"""The session block's line while the bound key of a spec that draws one value per key repeats in the rows
+(`fidelity.repeated_key`, owner decision of 2026-11-08): role names and counts only, the columns stay in the fenced
+warnings. Persona round of 2026-11-06: 27 measurements over 9 lengths became 9 averaged points in the plot code,
+without a count, while the confirmed data still held 27 rows."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -229,12 +238,16 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(
                 f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid{BINDINGS_HINT}"
             )
-        if check.warnings:
+        fit = check.fit_warnings
+        if fit:
             # The lines name the user's columns, so they stand inside a data fence.
-            lines.append(
-                f"- Binding warnings: {len(check.warnings)}, roles bound to a column that does not fit them as it is"
-            )
-            lines.append(fence("user_data", "\n".join(check.warnings)))
+            lines.append(f"- Binding warnings: {len(fit)}, roles bound to a column that does not fit them as it is")
+            lines.append(fence("user_data", "\n".join(fit)))
+        if check.repeated_key is not None:
+            # A fact of the rows, not of the binding: its own line, its warning with the column names fenced below.
+            repeated = check.repeated_key
+            lines.append(REPEATED_KEY_LINE.format(fact=repeated.fact(), per=repeated.per()))
+            lines.append(fence("user_data", repeated.line()))
         ledger = CURRENT_LEDGER.get()
         made = read_conversions_made(context.state)
         made_now = ledger is not None and made is not None and ledger.conversions_made == made.dataset_id

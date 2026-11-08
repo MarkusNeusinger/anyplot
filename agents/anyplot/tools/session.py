@@ -305,7 +305,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         "missing_roles": check.missing_roles,
         "data_confirmed": bool(confirmed and confirmed.data_confirmed),
     }
-    if check.warnings:  # valid, but a role that needs values of 0 or more got negative ones; they name columns
+    if check.warnings:  # valid, but a column that misfits its role, or a key the rows repeat; they name columns
         telemetry.note_binding_warnings(tool_context.session.id, check.warnings)  # closed codes for `chat_turn`
         result["warnings"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.warnings, ensure_ascii=False))
     return result

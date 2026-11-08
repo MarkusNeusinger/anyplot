@@ -719,9 +719,13 @@ family such as `y` binds its members `y1`, `y2`, and so on, never its bare
 name. `PUT /sessions/{sid}/bindings` replaces the whole set and answers
 `{bindings, complete, missing_roles, warnings}`: the stored bindings, whether
 every required role has a column, the required roles that still have none, a
-family by its name, and one line per `non_negative` role bound to a column
-with a negative value or left open because every fitting column has one (a
-warning, never a refusal). A refused set answers
+family by its name, and the warnings: one line per `non_negative` role bound
+to a column with a negative value or left open because every fitting column
+has one, and, for a plot that draws one value per key (a bar per category, a
+point per x), one line when the bound key columns repeat in the rows, with
+the counts, such as `x: column 'Length' holds 9 values in 27 rows; the plot
+draws one value per x, so rows with the same x need an aggregate first`. A
+warning is never a refusal. A refused set answers
 `{"detail": "invalid", "ref": "<request id>", "errors": [...]}` with at most
 20 of the binding check's lines, such as
 `role 'y' takes numbered members such as 'y1'`.
