@@ -5,7 +5,7 @@
   detected conventions (1,602 `t` tokens, 1,344 `// Data` markers), the normaliser's rewrites (893 directives
   written out) and which eval specs' MUI X files are clean. Every MUI X 9 regeneration broke them. Main never
   ran them, because a merge that changes only implementation files skips pytest, so every Python PR inherited
-  the failure. The tests now check each file:
+  the failure (#12647). The tests now check each file:
   - the blocked files are exactly the map specs and the known SECURITY cases;
   - a clean file has the adaptable-code layout, and the `data-block` hint appears exactly when that layout is
     incomplete;
