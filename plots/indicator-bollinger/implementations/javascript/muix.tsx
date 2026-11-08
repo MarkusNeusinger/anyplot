@@ -114,6 +114,8 @@ const squeezeNote =
 
 const TITLE = "indicator-bollinger · javascript · muix · anyplot.ai";
 const SUBTITLE = `${n} periods, ${fullFormat.format(dates[0])} – ${fullFormat.format(dates[n - 1])}${squeezeNote}`;
+// The y axis carries the close, the SMA and both bands, so it is titled as the price axis
+const PRICE_AXIS = "MRDN price (USD)";
 const HEADER_H = 84;
 const LEGEND_H = 44;
 const BAND_COLOR = t.palette[2];
@@ -214,7 +216,7 @@ export default function Chart() {
             min: yLow - yPad,
             max: yHigh + yPad,
             width: 84,
-            label: CLOSE,
+            label: PRICE_AXIS,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
