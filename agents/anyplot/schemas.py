@@ -43,6 +43,7 @@ from pydantic import (
     model_validator,
 )
 
+from core.library_names import resolve_library
 from core.spec_roles import ROLE_PATTERN
 
 from .language import DEFAULT_LANGUAGE, LANGUAGE_PATTERN
@@ -446,6 +447,14 @@ class SwitchArgs(_ServerContract):
     library: str = Field(pattern=r"^[a-z0-9]{1,32}$")
     plot: bool = True
     spec_id: str | None = Field(default=None, pattern=r"^[a-z0-9-]{1,100}$")
+
+    @field_validator("library", mode="before")
+    @classmethod
+    def _library_id(cls, value: Any) -> Any:
+        """A library the model names in a common form (`D3.js`, `chart js`, `MUI X`) is that library's id, through the
+        names table the scope guard reads the user's message with (`core.library_names`); anything else is checked as
+        it was written."""
+        return (resolve_library(value) or value) if isinstance(value, str) else value
 
 
 class Edit(_ModelOutput):

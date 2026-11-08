@@ -215,7 +215,8 @@ class RequestLedger:
     the reviewed render before a repair; empty for an ordinary call."""
     lang: str = "en"
     """The ISO 639-1 code of the fixed refusals: the session language's (`language.refusal_lang`) until the
-    scope judge answers, then the language the judged message is written in."""
+    scope judge answers, then `scope_guard.refusal_language`: still the session language once it is recorded or
+    chosen, else the language the judged message is written in."""
     paste_context: str | None = None
     """The fenced notes and file name of an unsummarized paste, set by the `/messages` route for the note typed with
     it: the root's session block carries them for the whole turn (`agent.session_context`), so the scope judge, the

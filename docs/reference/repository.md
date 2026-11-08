@@ -85,6 +85,7 @@ anyplot/
 │   ├── constants.py                   # Library metadata, constants
 │   ├── defects.py                     # Review feedback grammar (defect lines)
 │   ├── images.py                      # Image processing utilities
+│   ├── library_names.py               # The names people write for a library (d3, chart js, mui x)
 │   ├── perturbation.py                # Perturbed tables for the smoke run
 │   ├── render_identity.py             # Pixel difference between two renders
 │   ├── smoke_run.py                   # Perturbation smoke run, render pair, generator self-check
@@ -524,6 +525,7 @@ plt.savefig('plot.png', dpi=300)
 - `canvas.py` - Canvas gate (3200×1800 or 2400×2400 within ±16 px, the VQ-05 defect line) and the PNG auto-reject checks AR-04 and AR-07; `python -m core.canvas <png>` runs the gate
 - `defects.py` - Review feedback grammar: defect and suggestion lines, the criterion IDs, spec characteristics, and `format_defect`; `automation/scripts/regen_gate.py` keeps a parity-tested copy
 - `spec_roles.py` - Data roles from a spec's `## Data` bullets, the data shape (table, matrix, network, generated, excluded) and the color-driving role; shared by the agent and the adaptability checker
+- `library_names.py` - The names people write for each catalogue library (any case, with or without `.js` or `.jl`, any separator, the short forms such as `ggplot` and `mui x`) and for the tools outside the catalogue; the agent chat's scope guard and its `switch_plot` tool read library names through it
 - `adaptability.py` - Adaptability checker for Python implementations ([Adaptable catalogue code](../concepts/adaptable-code.md)): the record, the CQ-01 defect lines, and the block and constant substitution; `python -m core.adaptability report plots/` prints the catalogue baseline
 - `adaptability_mirror.py` - Builds `automation/scripts/adaptability_check.py`, the checker as one standard-library file; `uv run python -m core.adaptability_mirror` after a change to `adaptability.py` or `spec_roles.py`
 - `perturbation.py` - The perturbation smoke run's tables (renamed, more and fewer categories, one group, fewer and more rows, scaled values, a missing value in the loader's dtypes) and the source to run on each

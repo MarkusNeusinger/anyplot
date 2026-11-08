@@ -21,9 +21,18 @@
   refusal, `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, and `other_library` (this plot in another library or
   language) with the fixed `other_library` answer, a pointer to the catalogue, each in
-  the language the judge names (`policy.refusal`: English, German, French, Spanish,
-  Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English for every
-  other language); the run ends there, at the first turn;
+  the session language once the first in-scope message recorded it or the user chose it,
+  and before that in the language the judge names, unless it answered `en` for fewer
+  than three words (`refusal_language`; `policy.refusal`: English, German, French,
+  Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English
+  for every other language); the run ends there, at the first turn;
+* an `other_library` verdict for a message that names only libraries the assistant
+  adapts here, in any common form (`d3`, `chart js`, `mui x`, `Makie.jl`, one table in
+  `core/library_names.py`), goes on as `in_scope`, with a `served_library_in_scope`
+  attribution line after the judge's (`served_library_request`): the judge refused
+  "erstell das bitte mal in d3" and "d3.js" and let only "D3.js" through (live session
+  of 2026-11-08). A message that also names an unserved catalogue library or a tool
+  outside the catalogue keeps the judge's verdict, and no other verdict is lifted;
 * the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is judged
   as notes that came with a table: a `<pasted_table>` block before the message names the
   spec's title and the table's column names on one bounded line, never a cell
@@ -57,7 +66,8 @@
   is set: a later message never changes it, a choice (`chosen`) never yields to it, a
   refused message never sets it, and an `en` verdict counts only for a message of at
   least three words, because the judge also answers `en` for a message without a clear
-  language (`sin x` keeps the default, and the next typed message is judged again). A
+  language (`sin x` keeps the default, and the next typed message is judged again; the
+  same rule keeps such a message's refusal in the session language). A
   language derived from the pasted data (source `pasted`) counts as unset here: the
   first typed message's language replaces it. The write is a content-free state event appended after the judge's line and the refusal
   branch; it never raises, so a failed write is one `language_write_failed` line and the
@@ -105,9 +115,9 @@ The plugin never raises: an internal failure of the input side is a
 
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
@@ -116,13 +126,15 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
-from ..language import DEFAULT_LANGUAGE
+from core.library_names import named_tools
+
+from ..language import DEFAULT_LANGUAGE, refusal_lang
 from ..language_detect import mismatch
 from ..models import JudgeUnavailable, JudgeVerdict
 from ..output_guard import MAX_MESSAGE_CHARS, reply_length, reply_too_long, sanitize
 from ..policy import fence, fixed_replies, refusal, refusals, scope_rubric
 from ..services import KeptRefusal, get_services
-from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
+from ..session_state import LANGUAGE, LANGUAGE_SOURCE, SPEC_ID, language_delta
 from ..settings import get_settings
 from .budget import book_response
 from .ledger import RequestLedger, attribution, budget_allows, day_refusal, finish_name, judge_budget_tokens, ledger_for
@@ -331,6 +343,41 @@ def judge_input(message_text: str, context: str, earlier: Sequence[str] = (), ta
     return "\n".join(parts)
 
 
+def served_library_request(text: str, served: Sequence[str]) -> bool:
+    """Whether a message names libraries the assistant adapts here, in any common form, and nothing outside them.
+
+    The judge read "erstell das bitte mal in d3" and "d3.js" as `other_library` and only "D3.js", the display name its
+    rubric lists, as a library it adapts (live session of 2026-11-08). The names come from one table
+    (`core.library_names`): any case, `.js`, `.jl` and the separators left open, the well-known short forms. A message
+    that also names a catalogue library not served here, or a tool outside the catalogue ("port this D3 plot to
+    Vega-Lite"), stays the judge's, and so does one that names no library ("chart", "do it anyway").
+    """
+    named = named_tools(text)
+    return bool(named.libraries) and named.libraries <= set(served) and not named.outside
+
+
+ESTABLISHED_LANGUAGE_SOURCES = frozenset({"detected", "chosen"})
+"""The session language's sources the fixed replies after the judge follow whatever language a message is in."""
+
+
+def refusal_language(state: Mapping[str, Any], judged: str, text: str) -> str:
+    """The language of the fixed replies after the judge: the session language, or the judged message's.
+
+    A session language the first in-scope message recorded or the user chose (`ESTABLISHED_LANGUAGE_SOURCES`) is the
+    language of every reply, the root's and the fixed ones, as a later message never changes it: in the live session
+    of 2026-11-08 a German session got its `other_library` refusal for "d3.js" in English, the judge's answer for a
+    message without a clear language. Before that (the source `default` or `pasted`), the message's language, unless
+    the judge answered `en` for fewer than `MIN_ENGLISH_DETECTION_WORDS` words, the same rule that keeps such a
+    message from recording the session language.
+    """
+    session = refusal_lang(str(state.get(LANGUAGE) or DEFAULT_LANGUAGE))
+    if state.get(LANGUAGE_SOURCE) in ESTABLISHED_LANGUAGE_SOURCES:
+        return session
+    if judged == DEFAULT_LANGUAGE and len(text.split()) < MIN_ENGLISH_DETECTION_WORDS:
+        return session
+    return judged
+
+
 def _replaced(event: Event, text: str) -> Event:
     """The root's final reply event with `text` in place of its reply, as the output guard stores and sends it.
 
@@ -391,7 +438,7 @@ class ScopeGuardPlugin(BasePlugin):
         ledger.book_judge(verdict.input_tokens, verdict.output_tokens, verdict.tokens)
         ledger.budget_tokens += weighted
         services.usage.add_tokens(user, weighted)
-        ledger.lang = verdict.lang
+        ledger.lang = refusal_language(invocation_context.session.state, verdict.lang, text)
         strikes = services.usage.add_strike(user, text) if verdict.verdict == "attack" else None
         attribution(
             "scope_guard",
@@ -403,6 +450,11 @@ class ScopeGuardPlugin(BasePlugin):
             judge_output=verdict.output_tokens,
             **({"strikes": strikes} if strikes is not None else {}),
         )
+        if verdict.verdict == "other_library" and served_library_request(text, settings.libraries):
+            # A library the user may switch to, written in another form than the rubric's display name: the judge's
+            # verdict had it been spelled that way. Only `other_library` is lifted; an attack stays one.
+            attribution("scope_guard", ledger, verdict="served_library_in_scope")
+            verdict = verdict.model_copy(update={"verdict": "in_scope"})
         if verdict.verdict in PASTE_NOTE_PASSES and ledger.paste_note and ledger.paste_table:
             # The note came with the data it is about: the root reads it beside the table. A statistic's name in it
             # reads as a request for figures, a question about the table as general advice; an attack stays refused.
@@ -422,18 +474,18 @@ class ScopeGuardPlugin(BasePlugin):
                 )
             code = refusal_code(verdict.verdict)
             shown = code
-            text_out = refusal(code, verdict.lang)
+            text_out = refusal(code, ledger.lang)
             counted = counted_codes(settings.other_library_counts)
             if code in counted:
                 count = scope_refusals(invocation_context.session.events, counted) + 1
                 if count >= settings.session_refusals:
                     shown = SESSION_CLOSED  # the route refuses every later turn of the session before the judge
-                    text_out = refusal(SESSION_CLOSED, verdict.lang)
+                    text_out = refusal(SESSION_CLOSED, ledger.lang)
                     attribution("scope_guard", ledger, verdict=SESSION_CLOSED, refusals=count)
                 elif settings.session_close_warning and count == settings.session_refusals - 1:
                     # The live test of 2026-10-14 closed a session without warning: the refusal before the closing
                     # one says so, in a fixed suffix of the same language.
-                    text_out = f"{text_out} {refusal(CLOSE_WARNING, verdict.lang)}"
+                    text_out = f"{text_out} {refusal(CLOSE_WARNING, ledger.lang)}"
                     attribution("scope_guard", ledger, verdict=CLOSE_WARNING, refusals=count)
             ledger.refuse(shown, text_out)
             return _withheld(code)
