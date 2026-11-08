@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: shap-waterfall
 created: '2026-09-09T07:52:26Z'
-updated: '2026-11-08T05:26:32Z'
+updated: '2026-11-08T05:31:35Z'
 generated_by: claude-opus-5-5
 adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
 workflow_run: 42450523683
@@ -13,38 +13,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Correct cumulative chain: 14 segments from the base value 0.550 down to 0.135,
-    each starting where its neighbour ends, with dashed connectors tracing the flow'
-  - Stacked horizontal BarChart with a transparent offset series is the native MUI
-    X route to a floating waterfall; native ChartsReferenceLine marks the base value
-  - Custom SVG layer composed inside BarChart through useXScale/useYScale places value
-    labels on each segment's free side with page-colour halos, readable even for the
-    0.006 sliver
-  - 'Semantic red #AE3030 / blue #4467A3 from the Imprint palette, identical in both
-    themes, with theme tokens on all chrome'
+  - 'The waterfall is built idiomatically from a stacked BarChart: a transparent ''offset''
+    series carries each segment to where its neighbour ends, and a null valueFormatter
+    keeps that helper out of the HTML tooltip'
+  - A custom SVG layer reads the chart's own scales through useXScale/useYScale to
+    draw dashed connectors between segment ends and signed value labels with a page-colored
+    halo, so every value stays readable where the prediction reference line crosses
+    it (+0.025, -0.012) and on the 0.006 sliver
+  - 'Both reference values are labeled at their end of the chain: ChartsReferenceLine
+    marks the base value above the top row, and the prediction label sits on the last
+    row on the side its value label leaves free; the prediction line in ink against
+    the base line in inkSoft sets a quiet hierarchy'
+  - 'The chain is computed, not typed: 0.550 + the 14 SHAP values lands exactly on
+    0.135, features are sorted by |SHAP| with the largest at the top, and red #AE3030
+    / blue #4467A3 follow the semantic up/down convention in both themes'
+  - A plausible credit-scoring scenario whose alternating signs and slivers make the
+    chain double back, exercising the plot type fully
   weaknesses:
-  - 'LM-01 (code): the transparent ''offset'' series is a stacking helper but stays
-    a normal series, so the HTML axis tooltip lists an unlabeled offset value next
-    to each SHAP contribution → hide it from the tooltip (valueFormatter: () => null
-    on the offset series). Likely cause: series id ''offset'' without a valueFormatter.'
-  - 'Suggestion: the 0.02-step x ticks (29 labels) are dense; a 0.05 step would calm
-    the axis.'
-  - 'Suggestion: the prediction reference line runs through the ''+0.025'' and ''−0.012''
-    labels; the halos keep them readable, but the line could stop at the last row.'
+  - 'Suggestion: the vertical grid at every 0.02 draws about 29 lines; a coarser tick
+    interval (0.05) would quiet the background behind the segments.'
+  - 'Suggestion: the subtitle repeats the base and prediction values that the two
+    reference annotations already show; it could carry the model context (credit-scoring
+    default risk) instead.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: bold title "shap-waterfall · javascript · muix · anyplot.ai", soft-ink subtitle "Base value 0.550 → Predicted default probability 0.135 · 14 features ordered by |SHAP value|, largest at the top"; 14 feature names on the y axis (Credit score at top to Existing loan count at bottom); x axis 0.04–0.60 in 0.02 steps titled "Predicted default probability (base value + cumulative SHAP)"; subtle vertical grid; legend at the bottom. All dark text, all readable.
-      Data: horizontal floating segments in blue #4467A3 (negative) and matte red #AE3030 (positive) chain from the dashed base-value line at 0.550 (labelled "Base value 0.550" top right) down to the dashed prediction line at 0.135, where the bold label "Predicted default probability 0.135" sits beside the last bar. Bold signed value labels (−0.140 … −0.006, +0.025, +0.020, +0.015, +0.008) beside every segment; thin dashed connectors between rows. No brand green: semantic red/blue as the spec asks.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: centered bold title "shap-waterfall · javascript · muix · anyplot.ai" with a soft-ink subtitle "Base value 0.550 → Predicted default probability 0.135 · 14 features ordered by |SHAP value|, largest at the top"; 14 feature names on the y axis in dark ink (Credit score at the top, Existing loan count at the bottom); x ticks 0.04–0.60 every 0.02; x title "Predicted default probability (base value + cumulative SHAP)"; legend at the bottom "Pushes the prediction up" (red) / "Pushes the prediction down" (blue). Subtle vertical gridlines. All text readable.
+      Data: horizontal waterfall segments chained from the dashed base line at 0.550 (labeled "Base value 0.550" above the top row) down to the dashed prediction line at 0.135 (labeled "Predicted default probability 0.135" beside the last row). Blue #4467A3 segments for negative contributions (-0.140 … -0.006), red #AE3030 for positive ones (+0.025, +0.020, +0.015, +0.008); the chain doubles back where signs alternate. Thin dashed connectors join segment ends; bold signed value labels sit at each segment's end with a page-colored halo, readable where the prediction line crosses them.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, feature names, ticks, axis title, base-value label and legend all flip to light ink; reference lines and connectors light dashed; grid dim but visible. No dark-on-dark text.
-      Data: identical red and blue segments and positions as the light render; value labels in light ink with dark halos.
+      Chrome: title, subtitle, feature names, ticks, axis title and legend all flip to light ink; gridlines dim grey; no dark-on-dark text anywhere.
+      Data: identical segment colors (#AE3030 red, #4467A3 blue), identical geometry, labels and reference lines (now light dashed); value-label halos use the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,51 +60,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, ticks 14 px, labels 15-16 px; all readable in both themes,
-          ink tokens on both backgrounds
+        comment: Explicit sizes (title 22, ticks 14-15, axis title 16, value labels
+          14 bold); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels carry a page-colour halo where the dashed prediction
-          line passes them; no text collisions
+        comment: No text collisions; the prediction line passes behind +0.025 and
+          -0.012 but the page-colored halo keeps both fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 14 segments visible, slivers (+0.008, -0.006) still readable;
-          legend swatches match bar colours
+        comment: Segments, connectors and legend swatches visible in both themes;
+          the 0.006 sliver still visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Matte red vs blue differ in hue and lightness; direction also encoded
-          by label sign
+        comment: Matte red vs blue differ strongly in lightness and hue, CVD-safe;
+          sign also carried by the +/- labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axis bands, nothing cut off
+        comment: 3200x1800; balanced margins, y band sized to the longest feature
+          name, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x axis 'Predicted default probability (base value + cumulative SHAP)';
-          feature names readable
+        comment: Descriptive x title with its meaning; feature names readable
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception: red #AE3030 for up, blue #4467A3 for down, as
-          the spec asks; backgrounds #FAF8F1/#1A1A17'
+        comment: 'Semantic exception: up = Imprint red #AE3030, down = Imprint blue
+          #4467A3, as the spec asks; theme-correct backgrounds'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -108,22 +112,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear hierarchy: bold title, soft-ink subtitle summarising the base-to-prediction
-          story, bold value labels with page-colour halos'
+        comment: 'Typographic hierarchy beyond the baseline: bold title, soft-ink
+          subtitle, bold value labels with halos'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Value labels placed on the side each segment leaves free; prediction
-          label placed at the chain's end on the free side; thin dashed connectors
+        comment: Value-label halos and the prediction label placed on the free side
+          of the last row; grid density left at the default fine step
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle states the net movement 0.550 -> 0.135; legend phrased as
-          'Pushes the prediction up/down'
+        comment: Prediction line in full ink against the base line in inkSoft and
+          a subtitle stating the base → prediction journey give the reader an entry
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -139,21 +144,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Ordered by |SHAP| largest on top, red/blue, base and prediction reference
-          lines with labels, value per segment, connectors, horizontal layout with
-          names on y
+        comment: '|SHAP| ordering largest on top, unbroken cumulative chain, red/blue
+          by sign, labeled base and prediction at their chain ends, values beside
+          every segment, horizontal layout, connector lines — all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each segment starts where the previous ends; chain lands on 0.135
+        comment: Segments start where their neighbour ends; chain ends exactly at
+          0.135
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend entries are reader text
+        comment: Mandated title; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -163,21 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Positive and negative contributions, a long tail of slivers, a chain
-          that doubles back
+        comment: Both signs, doubling back where signs alternate, slivers down to
+          0.006
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit-scoring default probability with plausible features
+        comment: Credit-scoring default probability for one applicant, neutral and
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: SHAP values sum to -0.415, 0.550 - 0.415 = 0.135 matches
-          the stated prediction; final bar ends on 0.135 in the render'
+        comment: 'Checked: 0.550 + sum of the 14 SHAP values (-0.415) = 0.135, matching
+          the stated prediction and the rendered chain end; values plausible for a
+          probability'
     code_quality:
       score: 10
       max: 10
@@ -187,8 +195,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> chain -> component; the ChainLayer component is needed
-          for the scale hooks
+        comment: Flat module; the one extra component (ChainLayer) is needed to call
+          the MUI scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,19 +208,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All three imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity; stacking does the offset arithmetic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE; v9 API
+        comment: Default export, skipAnimation, v9 API, sized from ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -222,19 +230,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Stacked horizontal BarChart with a transparent offset series, native
-          ChartsReferenceLine; offset series not hidden from the tooltip (defect line)
+        comment: Stacked transparent offset series for the waterfall, ChartsReferenceLine
+          for the reference values, axis bands sized per the v9 rules
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG layer composed inside BarChart via useXScale/useYScale
-          hooks for connectors and labels
-  verdict: REJECTED
+        comment: Composition with useXScale/useYScale for a custom SVG layer inside
+          BarChart; null valueFormatter hides the helper series from the tooltip
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:23:46Z'
+  rendered_at: '2026-11-08T05:28:36Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -242,9 +250,8 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
+  - grid-styling
