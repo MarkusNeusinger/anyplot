@@ -3,197 +3,164 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 86/100 | Created: 2026-09-02
 
-import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Basquin power-law fit, anchored between a low-cycle point and the knee
-// where the curve levels off at the endurance limit: S = C * N^b -----------
-const N1 = 1e3;
-const S1 = 700; // MPa, low-cycle anchor
-const N_KNEE = 1e6; // cycles — transition from finite life to infinite life
-const ENDURANCE_LIMIT = 380; // MPa — safe stress below which failure won't occur
-const ULTIMATE_STRENGTH = 760; // MPa
-const YIELD_STRENGTH = 620; // MPa
+// Constants
+const LCF_HCF_BOUNDARY = 1e4; // cycles: the conventional divide between low-cycle and high-cycle fatigue
+const LIMIT_LINES = [
+  { key: "ultimateStrength", name: "Ultimate strength", dash: "12 6" },
+  { key: "yieldStrength", name: "Yield strength", dash: "6 5" },
+  { key: "enduranceLimit", name: "Endurance limit", dash: "2 5" },
+];
+const REGION_NAMES = ["Low-cycle fatigue", "High-cycle fatigue", "Infinite life"];
+const SPECIMEN_LABEL = "Test specimens";
+const FIT_LABEL = "Basquin fit";
+const X_PAD_SHARE = 0.06; // share of the log cycle span added left of the data
+const PLATEAU_SHARE = 0.25; // share of the log cycle span shown past the knee, so the endurance plateau reads
+const Y_PAD_SHARE = 0.08; // share of the log stress span added above and below
+const Y_TICK_TARGET = 5;
+const FIT_POINTS = 80;
+const SUPERSCRIPT = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
 
-const B_EXP = Math.log(ENDURANCE_LIMIT / S1) / Math.log(N_KNEE / N1);
-const C_COEF = S1 * Math.pow(N1, -B_EXP);
-const basquinStress = (n) =>
-  n <= N_KNEE ? C_COEF * Math.pow(n, B_EXP) : ENDURANCE_LIMIT;
-const basquinCycles = (s) => Math.pow(s / C_COEF, 1 / B_EXP);
+// Columns: set these to your data's column names
+const CYCLES = "Cycles to failure, N"; // role: cycles
+const STRESS = "Stress amplitude (MPa)"; // role: stress
 
-// --- Fitted curve: dense log-spaced grid from low-cycle fatigue through the
-// knee into the infinite-life region -----------------------------------------
-const X_MIN = 500;
-const X_MAX = 1e7;
-const GRID_N = 60;
-const logMin = Math.log10(X_MIN);
-const logMax = Math.log10(X_MAX);
-const fitCycles = Array.from({ length: GRID_N }, (_, i) =>
-  Math.pow(10, logMin + (i / (GRID_N - 1)) * (logMax - logMin)),
+// Data: replace this block with your own records, one object per row
+// Material properties of the tested steel, in the stress unit of the records
+const material = { ultimateStrength: 760, yieldStrength: 620, enduranceLimit: 380 };
+// Constant-amplitude coupon tests: three specimens per stress level, their lives
+// scattered around a Basquin curve that reaches the endurance limit at 10⁶ cycles
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const exponent = Math.log(material.enduranceLimit / 700) / Math.log(1e6 / 1e3);
+  const coefficient = 700 * Math.pow(1e3, -exponent);
+  return [700, 650, 600, 550, 500, 450, 420, 400].flatMap((stress) =>
+    Array.from({ length: 3 }, () => ({
+      [CYCLES]: Math.round(Math.pow(stress / coefficient, 1 / exponent) * Math.pow(10, (rand() - 0.5) * 0.3)),
+      [STRESS]: stress,
+    })),
+  );
+})();
+
+// Plot: reads only data and the constants above
+const stressUnit = /\(([^)]+)\)/.exec(STRESS)?.[1] ?? "";
+const enduranceLimit = material.enduranceLimit;
+
+// Basquin fit S = A · N^b, least squares in log-log space over the finite-life specimens
+const finite = data.filter((d) => d[STRESS] > enduranceLimit);
+const logN = finite.map((d) => Math.log10(d[CYCLES]));
+const logS = finite.map((d) => Math.log10(d[STRESS]));
+const meanLogN = logN.reduce((a, b) => a + b, 0) / logN.length;
+const meanLogS = logS.reduce((a, b) => a + b, 0) / logS.length;
+const sxx = logN.reduce((acc, x) => acc + (x - meanLogN) ** 2, 0);
+const sxy = logN.reduce((acc, x, i) => acc + (x - meanLogN) * (logS[i] - meanLogS), 0);
+const basquinExponent = sxy / sxx;
+const basquinLogA = meanLogS - basquinExponent * meanLogN;
+const ssRes = logN.reduce((acc, x, i) => acc + (logS[i] - (basquinLogA + basquinExponent * x)) ** 2, 0);
+const ssTot = logS.reduce((acc, y) => acc + (y - meanLogS) ** 2, 0);
+const rSquared = 1 - ssRes / ssTot;
+const logKnee = (Math.log10(enduranceLimit) - basquinLogA) / basquinExponent;
+
+// Axis extents in log space: the data, the knee and every limit line inside the drawing area
+const allLogN = data.map((d) => Math.log10(d[CYCLES]));
+const logNLo = Math.min(...allLogN);
+const logNHi = Math.max(...allLogN, logKnee);
+const logNSpan = logNHi - logNLo;
+const xMin = 10 ** (logNLo - logNSpan * X_PAD_SHARE);
+const xMax = 10 ** (logNHi + logNSpan * PLATEAU_SHARE);
+const stressValues = [...data.map((d) => d[STRESS]), ...LIMIT_LINES.map((l) => material[l.key])];
+const logSLo = Math.log10(Math.min(...stressValues));
+const logSHi = Math.log10(Math.max(...stressValues));
+const logSPad = (logSHi - logSLo) * Y_PAD_SHARE;
+const yMin = 10 ** (logSLo - logSPad);
+const yMax = 10 ** (logSHi + logSPad);
+
+const cycleTicks = Array.from(
+  { length: Math.floor(Math.log10(xMax)) - Math.ceil(Math.log10(xMin)) + 1 },
+  (_, i) => 10 ** (Math.ceil(Math.log10(xMin)) + i),
 );
-const fitStress = fitCycles.map(basquinStress);
+const rawStep = (yMax - yMin) / Y_TICK_TARGET;
+const stepMagnitude = 10 ** Math.floor(Math.log10(rawStep));
+const stressStep = [1, 2, 5, 10].map((m) => m * stepMagnitude).find((s) => s >= rawStep);
+const stressTicks = Array.from(
+  { length: Math.floor(yMax / stressStep) - Math.ceil(yMin / stressStep) + 1 },
+  (_, i) => (Math.ceil(yMin / stressStep) + i) * stressStep,
+);
 
-// --- Test specimens: fixed stress per level, scatter in life (cycles) — the
-// standard convention for fatigue coupon testing ----------------------------
-let seed = 42;
-function rng() {
-  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
+// Fit curve on a log-spaced grid: the Basquin line from the left edge down to the knee, where it
+// meets the endurance limit; the limit's reference line carries the plateau beyond
+const fitCycles = [
+  ...Array.from({ length: FIT_POINTS }, (_, i) =>
+    10 ** (Math.log10(xMin) + (i / (FIT_POINTS - 1)) * (Math.log10(xMax) - Math.log10(xMin))),
+  ).filter((n) => Math.log10(n) < logKnee),
+  10 ** logKnee,
+];
+const fitStress = fitCycles.map((n) => 10 ** (basquinLogA + basquinExponent * Math.log10(n)));
 
-const STRESS_LEVELS = [700, 650, 600, 550, 500, 450, 420, 400];
-const SPECIMENS_PER_LEVEL = 3;
-const specimens = [];
-STRESS_LEVELS.forEach((stress, levelIdx) => {
-  const baseCycles = basquinCycles(stress);
-  for (let k = 0; k < SPECIMENS_PER_LEVEL; k++) {
-    const jitter = Math.pow(10, (rng() - 0.5) * 0.3);
-    specimens.push({
-      id: `L${levelIdx}-${k}`,
-      x: Math.round(baseCycles * jitter),
-      y: stress,
-    });
-  }
-});
+// Fatigue regions along the cycle axis, clipped to the axis extent
+const regionEdges = [xMin, Math.min(Math.max(LCF_HCF_BOUNDARY, xMin), xMax), Math.min(10 ** logKnee, xMax), xMax];
+const regions = REGION_NAMES.map((name, i) => ({ name, from: regionEdges[i], to: regionEdges[i + 1] })).filter(
+  (r) => r.to > r.from,
+);
 
-// --- Axis formatting ---------------------------------------------------------
-const SUPERSCRIPT = {
-  "0": "⁰",
-  "1": "¹",
-  "2": "²",
-  "3": "³",
-  "4": "⁴",
-  "5": "⁵",
-  "6": "⁶",
-  "7": "⁷",
-  "8": "⁸",
-  "9": "⁹",
-};
-const fmtCycles = (n) => {
-  const exp = Math.round(Math.log10(n));
-  return `10${String(exp)
-    .split("")
-    .map((d) => SUPERSCRIPT[d])
-    .join("")}`;
-};
-const CYCLE_TICKS = [1e3, 1e4, 1e5, 1e6, 1e7];
-const STRESS_TICKS = [400, 500, 600, 700, 800];
+const specimens = data.map((d, i) => ({ id: `specimen-${i}`, x: d[CYCLES], y: d[STRESS] }));
+const levelCount = new Set(data.map((d) => d[STRESS])).size;
+const kneeExponent = [...String(Math.floor(logKnee))].map((digit) => SUPERSCRIPT[Number(digit)]).join("");
 
 const TITLE = "sn-curve-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `n = ${data.length} · ${levelCount} stress levels · ${FIT_LABEL} S = ${Math.round(
+  10 ** basquinLogA,
+)} · N^${basquinExponent.toFixed(3).replace("-", "−")} (R² = ${rSquared.toFixed(2)}) · knee at N = ${(
+  10 ** (logKnee - Math.floor(logKnee))
+).toFixed(1)} × 10${kneeExponent}`;
+const HEADER_H = 80;
+const LEGEND_H = 40;
+const X_AXIS_H = 64;
+const REGION_BAND_H = 52;
 
-// --- Fatigue life regions, called out in the spec notes: low-cycle (plastic),
-// high-cycle (elastic), and infinite-life (below the endurance limit) ---------
-const LOW_HIGH_BOUNDARY = 1e4; // conventional low-cycle / high-cycle divide
-const REGIONS = [
-  { label: "LOW-CYCLE FATIGUE", xMin: X_MIN, xMax: LOW_HIGH_BOUNDARY },
-  { label: "HIGH-CYCLE FATIGUE", xMin: LOW_HIGH_BOUNDARY, xMax: N_KNEE },
-  { label: "INFINITE LIFE", xMin: N_KNEE, xMax: X_MAX },
-];
-
-// Translucent band below the endurance limit — the "safe for infinite life"
-// stress range — plus a thicker, amber-colored endurance-limit stroke so it
-// stays visually distinct from the purple fit line where the two coincide.
-function SafeZoneBand() {
-  const { left, top, width, height } = useDrawingArea();
-  const yScale = useYScale("stress") as ((v: number) => number) | undefined;
-  if (!yScale) return null;
-  const yTop = yScale(ENDURANCE_LIMIT);
-  const yBottom = top + height;
+function FatigueRegions() {
+  const xScale = useXScale("cycles");
+  const { top, height } = useDrawingArea();
+  const lineY = top + height + X_AXIS_H + 14;
   return (
-    <g>
-      <rect
-        x={left}
-        y={yTop}
-        width={width}
-        height={Math.max(yBottom - yTop, 1)}
-        fill={t.palette[0]}
-        opacity={0.07}
-      />
-      <text
-        x={left + width - 10}
-        y={yTop + (yBottom - yTop) / 2}
-        textAnchor="end"
-        dominantBaseline="middle"
-        fontSize={11}
-        fontStyle="italic"
-        fill={t.inkSoft}
-        opacity={0.75}
-      >
-        Safe zone — infinite life below endurance limit
-      </text>
-    </g>
-  );
-}
-
-// Region labels + boundary ticks placed under the x-axis, calling out the
-// three fatigue regions described in the spec (low-cycle / high-cycle /
-// infinite-life) so the story reads without parsing the reference-line labels.
-function FatigueRegionLabels() {
-  const { left, top, width, height } = useDrawingArea();
-  const xScale = useXScale("cycles") as ((v: number) => number) | undefined;
-  if (!xScale) return null;
-  const lineY = top + height + 62;
-  const textY = lineY + 15;
-  return (
-    <g>
-      {REGIONS.map((r) => {
-        const x0 = xScale(Math.max(r.xMin, X_MIN));
-        const x1 = xScale(Math.min(r.xMax, X_MAX));
-        const xMid = (x0 + x1) / 2;
+    <g stroke={t.inkSoft} strokeWidth={1.2}>
+      {regions.map((r) => {
+        const x0 = xScale(r.from) + 4;
+        const x1 = xScale(r.to) - 4;
         return (
-          <React.Fragment key={r.label}>
-            <line
-              x1={x0 + 4}
-              y1={lineY}
-              x2={x1 - 4}
-              y2={lineY}
-              stroke={t.inkSoft}
-              strokeWidth={1}
-              opacity={0.35}
-            />
-            <line
-              x1={x0 + 4}
-              y1={lineY - 4}
-              x2={x0 + 4}
-              y2={lineY + 4}
-              stroke={t.inkSoft}
-              strokeWidth={1}
-              opacity={0.35}
-            />
-            <line
-              x1={x1 - 4}
-              y1={lineY - 4}
-              x2={x1 - 4}
-              y2={lineY + 4}
-              stroke={t.inkSoft}
-              strokeWidth={1}
-              opacity={0.35}
-            />
+          <g key={r.name}>
+            <line x1={x0} y1={lineY} x2={x1} y2={lineY} />
+            <line x1={x0} y1={lineY - 5} x2={x0} y2={lineY + 5} />
+            <line x1={x1} y1={lineY - 5} x2={x1} y2={lineY + 5} />
             <text
-              x={xMid}
-              y={textY}
+              x={(x0 + x1) / 2}
+              y={lineY + 24}
               textAnchor="middle"
-              fontSize={11}
-              letterSpacing={0.6}
+              fontSize={14}
+              stroke="none"
               fill={t.inkSoft}
-              opacity={0.85}
             >
-              {r.label}
+              {r.name}
             </text>
-          </React.Fragment>
+          </g>
         );
       })}
     </g>
@@ -202,39 +169,26 @@ function FatigueRegionLabels() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_H = 56;
-  const chartH = height - TITLE_H;
-
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        background: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography
-        sx={{
-          fontSize: "22px",
-          fontWeight: 500,
-          color: t.ink,
-          textAlign: "center",
-          pt: "14px",
-          pb: "6px",
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 8,
         }}
       >
-        {TITLE}
-      </Typography>
-      <ChartContainer
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
         width={width}
-        height={chartH}
-        margin={{ top: 28, right: 48, bottom: 132, left: 108 }}
-        sx={{
-          ".MuiLineElement-series-fit": { strokeWidth: 3.5 },
-          "& circle": { stroke: t.pageBg, strokeWidth: 2 },
-        }}
+        height={height - HEADER_H - LEGEND_H}
+        margin={{ top: 12, right: 48, bottom: REGION_BAND_H, left: 24 }}
+        skipAnimation
         series={[
           {
             type: "scatter",
@@ -243,8 +197,8 @@ export default function Chart() {
             yAxisId: "stress",
             data: specimens,
             color: t.palette[0],
-            markerSize: 11,
-            label: "Test Specimens",
+            markerSize: 9,
+            label: SPECIMEN_LABEL,
           },
           {
             type: "line",
@@ -254,8 +208,8 @@ export default function Chart() {
             data: fitStress,
             color: t.palette[1],
             showMark: false,
-            curve: "monotoneX",
-            label: "Basquin Fit (Power-Law)",
+            curve: "linear",
+            label: FIT_LABEL,
           },
         ]}
         xAxis={[
@@ -263,12 +217,14 @@ export default function Chart() {
             id: "cycles",
             scaleType: "log",
             data: fitCycles,
-            min: X_MIN,
-            max: X_MAX,
-            label: "Cycles to Failure, N",
-            valueFormatter: fmtCycles,
-            tickInterval: CYCLE_TICKS,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            min: xMin,
+            max: xMax,
+            tickInterval: cycleTicks,
+            valueFormatter: (n) =>
+              `10${[...String(Math.round(Math.log10(n)))].map((digit) => SUPERSCRIPT[Number(digit)]).join("")}`,
+            label: CYCLES,
+            height: X_AXIS_H,
+            tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
@@ -276,75 +232,46 @@ export default function Chart() {
           {
             id: "stress",
             scaleType: "log",
-            min: 340,
-            max: 820,
-            label: "Stress Amplitude (MPa)",
-            tickInterval: STRESS_TICKS,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            min: yMin,
+            max: yMax,
+            tickInterval: stressTicks,
+            label: STRESS,
+            width: 84,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
       >
-        <ChartsGrid horizontal />
-        <SafeZoneBand />
-        <LinePlot skipAnimation />
-        <ScatterPlot skipAnimation />
-        <ChartsReferenceLine
-          y={ULTIMATE_STRENGTH}
-          axisId="stress"
-          label={`Ultimate Strength = ${ULTIMATE_STRENGTH} MPa`}
-          labelAlign="start"
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-          lineStyle={{
-            stroke: t.amber,
-            strokeDasharray: "2 4",
-            strokeWidth: 1.5,
-            opacity: 0.85,
-          }}
-        />
-        <ChartsReferenceLine
-          y={YIELD_STRENGTH}
-          axisId="stress"
-          label={`Yield Strength = ${YIELD_STRENGTH} MPa`}
-          labelAlign="start"
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-          lineStyle={{
-            stroke: t.amber,
-            strokeDasharray: "6 4",
-            strokeWidth: 1.5,
-            opacity: 0.85,
-          }}
-        />
-        <ChartsReferenceLine
-          y={ENDURANCE_LIMIT}
-          axisId="stress"
-          label={`Endurance Limit = ${ENDURANCE_LIMIT} MPa`}
-          labelAlign="start"
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-          lineStyle={{
-            stroke: t.amber,
-            strokeDasharray: "3 5",
-            strokeWidth: 5,
-            opacity: 0.85,
-          }}
-        />
-        <ChartsXAxis axisId="cycles" />
-        <ChartsYAxis axisId="stress" />
-        <ChartsLegend
-          position={{ vertical: "top", horizontal: "right" }}
-          slotProps={{
-            legend: {
-              itemMarkWidth: 16,
-              itemMarkHeight: 16,
-              markGap: 8,
-              itemGap: 24,
-              labelStyle: { fontSize: 14, fill: t.ink },
-            },
-          }}
-        />
-        <ChartsTooltip trigger="item" />
-        <FatigueRegionLabels />
-      </ChartContainer>
-    </Box>
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "end" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 15, color: t.ink, pr: 6 }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiLineChart-line": { strokeWidth: 3 },
+              "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1.5 },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
+            }}
+          >
+            <ChartsGrid horizontal />
+            <LinePlot skipAnimation />
+            {LIMIT_LINES.map((l) => (
+              <ChartsReferenceLine
+                key={l.key}
+                y={material[l.key]}
+                axisId="stress"
+                label={`${l.name} · ${material[l.key]} ${stressUnit}`}
+                labelAlign="end"
+                labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
+                lineStyle={{ stroke: t.inkSoft, strokeDasharray: l.dash, strokeWidth: 1.5 }}
+              />
+            ))}
+            <ScatterPlot />
+            <ChartsXAxis axisId="cycles" />
+            <ChartsYAxis axisId="stress" />
+            <FatigueRegions />
+          </ChartsSurface>
+          <ChartsTooltip trigger="item" />
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
