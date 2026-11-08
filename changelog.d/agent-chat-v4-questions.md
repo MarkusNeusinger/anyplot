@@ -10,14 +10,14 @@
   over the server's `answer`, a wish kept for the first plot never reads as a
   question, and the memory read after the turn still vetoes. The note typed
   with an attachment is never one: its reply summarizes the data that just
-  came.
+  came. (#12826)
 - **A plot card counts the remembered decisions it kept.** Its label reads
   `plot v4 · seaborn · kept 3` in place of the request, and the open card's
   first line names them, `kept: y = 7 line · x label · new: log scale on y`
   (only `new: …` on a phone), from the ids the server sends with each version
   (`plot.memory`). The texts stay with the version, so a later `.forget()`
   never rewrites an older card, and a version whose memory the server did not
-  name shows no `kept` at all, never `kept 0`.
+  name shows no `kept` at all, never `kept 0`. (#12826)
 
 ### Changed
 
@@ -26,4 +26,4 @@
   each with `.forget()`, then `.forget_all()` and the ⓘ, as the v4 design
   draws it; the `# remembered` heading with `.hide()` and `.show()` is gone.
   The list moves with its open state and the focus when a newer plot chapter
-  opens, and a removal is still announced outside the thread's log.
+  opens, and a removal is still announced outside the thread's log. (#12826)
