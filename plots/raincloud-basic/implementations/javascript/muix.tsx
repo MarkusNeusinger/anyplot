@@ -29,7 +29,8 @@ const REACTION_TIME = "Reaction time (ms)"; // role: value
 
 // Data: replace this block with your own records, one object per row
 // Simple reaction times in a four-arm drug trial, 70 participants per arm; the 50 mg arm
-// splits into fast responders and non-responders. Fixed-seed LCG with Box-Muller normals.
+// splits into fast responders (55 %, around 340 ms) and non-responders (around 490 ms).
+// Fixed-seed LCG with Box-Muller normals.
 const data = (() => {
   let seed = 42;
   const uniform = () => {
@@ -43,7 +44,7 @@ const data = (() => {
     ...Array.from({ length: 70 }, () => ({ [ARM]: "25 mg dose", [REACTION_TIME]: 445 + 48 * normal() })),
     ...Array.from({ length: 70 }, () => ({
       [ARM]: "50 mg dose",
-      [REACTION_TIME]: uniform() < 0.55 ? 360 + 35 * normal() : 470 + 40 * normal(),
+      [REACTION_TIME]: uniform() < 0.55 ? 340 + 28 * normal() : 490 + 32 * normal(),
     })),
   ].map((d) => ({ ...d, [REACTION_TIME]: Math.round(d[REACTION_TIME]) }));
 })();
@@ -51,10 +52,13 @@ const data = (() => {
 // Plot: reads only data and the constants above
 const rows = data.filter((d) => Number.isFinite(d[REACTION_TIME]));
 const arms = [...new Set(rows.map((d) => d[ARM]))];
+// The arms are ordered dose levels, so their colour runs along the sequential ramp in order of
+// first appearance instead of taking unrelated palette hues
+const seqRgb = t.seq.map((hex) => [16, 8, 0].map((shift) => (parseInt(hex.slice(1), 16) >> shift) & 255));
 // Per arm: linear-interpolated quartiles, Tukey whiskers, and a Gaussian KDE with Silverman's
 // bandwidth over the values widened by three bandwidths, scaled to its own peak so each cloud
 // shows shape rather than group size
-const groups = arms.map((arm) => {
+const groups = arms.map((arm, i) => {
   const values = rows.filter((d) => d[ARM] === arm).map((d) => d[REACTION_TIME]);
   const sorted = [...values].sort((a, b) => a - b);
   const [q1, median, q3] = [0.25, 0.5, 0.75].map((q) => {
@@ -78,7 +82,9 @@ const groups = arms.map((arm) => {
   const first = density.findIndex((v) => v >= CLOUD_CUTOFF);
   const last = density.length - 1 - [...density].reverse().findIndex((v) => v >= CLOUD_CUTOFF);
   const cloud = grid.slice(first, last + 1).map((x, k) => [x, density[first + k]]);
-  return { arm, values, q1, median, q3, whiskerLow, whiskerHigh, cloud };
+  const share = arms.length > 1 ? i / (arms.length - 1) : 0;
+  const rgb = seqRgb[0].map((c, k) => Math.round(c + (seqRgb[1][k] - c) * share));
+  return { arm, values, q1, median, q3, whiskerLow, whiskerHigh, cloud, color: `rgb(${rgb.join(", ")})` };
 });
 
 // The value axis covers every cloud and every raindrop
@@ -96,8 +102,8 @@ function RaincloudLayer() {
 
   return (
     <g>
-      {groups.map((g, i) => {
-        const color = t.palette[i];
+      {groups.map((g) => {
+        const color = g.color;
         const base = yScale(g.arm) + halfBand;
         const cloud = g.cloud.map(([x, density]) => `${xScale(x)},${base - density * halfBand * CLOUD_SHARE}`);
         return (
