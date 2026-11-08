@@ -258,7 +258,7 @@ const HEADER_H = 76;
 const V_MARGIN = 26;
 const labelHalo = { stroke: t.pageBg, strokeWidth: 4, paintOrder: "stroke" as const, strokeLinejoin: "round" as const };
 // A constellation name takes the shift from its centroid (px), nearest first, whose box
-// clears every star and every name placed before it; names never overlap each other
+// clears every star, every stick line and every name placed before it; names never overlap each other
 const NAME_STEP_PX = 10;
 const NAME_REACH_STEPS = 6;
 const NAME_CHAR_PX = 7.2; // average glyph width of the 14 px italic names
@@ -271,6 +271,32 @@ for (let i = -NAME_REACH_STEPS; i <= NAME_REACH_STEPS; i += 1) {
   }
 }
 nameShifts.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy));
+
+type Box = { x0: number; x1: number; y0: number; y1: number };
+// Liang–Barsky clip: does the segment p→q pass through the box?
+function segmentHitsBox(px: number, py: number, qx: number, qy: number, box: Box) {
+  const dx = qx - px;
+  const dy = qy - py;
+  let lo = 0;
+  let hi = 1;
+  const edgesPQ = [
+    [-dx, px - box.x0],
+    [dx, box.x1 - px],
+    [-dy, py - box.y0],
+    [dy, box.y1 - py],
+  ];
+  for (const [p, q] of edgesPQ) {
+    if (p === 0) {
+      if (q < 0) return false;
+    } else {
+      const r = q / p;
+      if (p < 0) lo = Math.max(lo, r);
+      else hi = Math.min(hi, r);
+      if (lo > hi) return false;
+    }
+  }
+  return true;
+}
 
 // Declination circles, hour spokes, the rim and the constellation stick figures
 function SkyGrid() {
@@ -343,7 +369,8 @@ function SkyLabels() {
     y: ys(s.y),
     reach: (magAxis.sizeScale(s.sizeValue) as number) + NAME_STAR_GAP_PX,
   }));
-  const placedBoxes: { x0: number; x1: number; y0: number; y1: number }[] = [];
+  const stickPx = sticks.map(([a, b]) => [xs(a.x), ys(a.y), xs(b.x), ys(b.y)]);
+  const placedBoxes: Box[] = [];
   const names = centroids.map((c) => {
     const halfW = (c.name.length * NAME_CHAR_PX) / 2;
     const candidates = nameShifts.map(({ dx, dy }) => {
@@ -353,12 +380,14 @@ function SkyLabels() {
       const starHits = starDots.filter(
         (p) => p.x > box.x0 - p.reach && p.x < box.x1 + p.reach && p.y > box.y0 - p.reach && p.y < box.y1 + p.reach,
       ).length;
+      const stickHits = stickPx.filter(([ax, ay, bx, by]) => segmentHitsBox(ax, ay, bx, by, box)).length;
+      const hits = starHits + stickHits;
       const nameHit = placedBoxes.some((b) => b.x0 < box.x1 && b.x1 > box.x0 && b.y0 < box.y1 && b.y1 > box.y0);
-      return { cx, cy, box, starHits, nameHit };
+      return { cx, cy, box, hits, nameHit };
     });
     const free = candidates.filter((cand) => !cand.nameHit);
     const pool = free.length > 0 ? free : candidates;
-    const best = pool.find((cand) => cand.starHits === 0) ?? pool.reduce((a, b) => (b.starHits < a.starHits ? b : a));
+    const best = pool.find((cand) => cand.hits === 0) ?? pool.reduce((a, b) => (b.hits < a.hits ? b : a));
     placedBoxes.push(best.box);
     return { con: c.con, name: c.name, x: best.cx, y: best.cy };
   });
