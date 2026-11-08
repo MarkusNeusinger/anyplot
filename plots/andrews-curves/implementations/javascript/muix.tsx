@@ -113,7 +113,7 @@ export default function Chart() {
             max: T_MAX,
             tickInterval: T_TICKS,
             valueFormatter: (v: number, ctx: { location: string }) =>
-              ctx.location === "tick" ? (T_TICK_LABELS[T_TICKS.indexOf(v)] ?? v.toFixed(2)) : `t = ${v.toFixed(2)}`,
+              ctx.location === "tick" ? T_TICK_LABELS[T_TICKS.indexOf(v)] : `t = ${v.toFixed(2)}`,
             label: X_LABEL,
             height: 64,
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
