@@ -11,7 +11,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const DAY_MS = 86400000;
-const TICK_DAYS = 14; // one date tick every two weeks from the first start
+const TICK_TARGET = 7; // about this many date ticks across the schedule, at a whole-week step
 const X_PAD_SHARE = 0.02; // time padding on both sides, as a share of the schedule span
 const DATE_LABEL = "Date";
 const TITLE = "gantt-basic · javascript · muix · anyplot.ai";
@@ -51,9 +51,10 @@ const phases = [...new Set(tasks.map((d) => d.phase))];
 const firstStart = Math.min(...tasks.map((d) => d.start));
 const lastEnd = Math.max(...tasks.map((d) => d.end));
 const xPad = (lastEnd - firstStart) * X_PAD_SHARE;
+const tickStep = 7 * DAY_MS * Math.max(1, Math.round((lastEnd - firstStart) / TICK_TARGET / (7 * DAY_MS)));
 const ticks = Array.from(
-  { length: Math.floor((lastEnd - firstStart) / (TICK_DAYS * DAY_MS)) + 1 },
-  (_, i) => firstStart + i * TICK_DAYS * DAY_MS,
+  { length: Math.floor((lastEnd - firstStart) / tickStep) + 1 },
+  (_, i) => firstStart + i * tickStep,
 );
 const asOf = Date.parse(AS_OF);
 const showAsOf = asOf >= firstStart && asOf <= lastEnd;
