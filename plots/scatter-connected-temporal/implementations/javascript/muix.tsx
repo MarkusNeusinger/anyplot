@@ -22,7 +22,9 @@ const PERIOD = 10; // years per colour step along the path (decades)
 const PERIOD_SHAPES = ["circle", "square", "triangle", "diamond", "star", "wye", "cross"] as const;
 const LABEL_GAP = 12; // px between a marker and its time label
 const LABEL_DIRECTIONS = 8; // candidate label positions around each labelled point
+const MARKER_ROOM = 34; // px a label keeps from any other point's marker
 const ARROW_LENGTH = 22; // px
+const ARROW_HEAD = 17; // px, large enough to stand out from the 2.5 px line
 
 // Columns: set these to your data's column names
 const YEAR = "Year"; // role: time
@@ -138,11 +140,19 @@ function TemporalLayer() {
           }),
         ),
       );
+      // A label beside another point's marker reads as belonging to it, so markers need more room than lines
+      const markerRoom = Math.min(
+        ...samples.flatMap(([sx, sy]) =>
+          pts
+            .filter((_, j) => j !== i)
+            .flatMap(([px, py]) => [-7, 0, 7].map((dy) => Math.hypot(sx - px, sy + dy - py) - MARKER_ROOM)),
+        ),
+      );
       const clash = placed.some((p) => {
         const pLeft = p.anchor === "start" ? p.x : p.anchor === "end" ? p.x - p.w : p.x - p.w / 2;
         return left < pLeft + p.w && pLeft < left + w && Math.abs(p.y - y) < 18;
       });
-      return { x, y, w, anchor, room: clash ? -Infinity : pathRoom };
+      return { x, y, w, anchor, room: clash ? -Infinity : Math.min(pathRoom, markerRoom) };
     });
     placed.push(options.reduce((best, o) => (o.room > best.room ? o : best)));
   });
@@ -157,8 +167,8 @@ function TemporalLayer() {
             viewBox="0 0 10 10"
             refX={10}
             refY={5}
-            markerWidth={12}
-            markerHeight={12}
+            markerWidth={ARROW_HEAD}
+            markerHeight={ARROW_HEAD}
             markerUnits="userSpaceOnUse"
             orient="auto"
           >
