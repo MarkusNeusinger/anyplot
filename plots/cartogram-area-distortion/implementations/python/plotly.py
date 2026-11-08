@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-08
@@ -303,7 +303,7 @@ sizes = np.sqrt(population / population.max()) * max_marker_size
 
 # Canvas and margins (layout px); the Dorling layout below needs the map's pixel scale
 width, height = 800, 450
-margin = {"l": 20, "r": 100, "t": 70, "b": 60}
+margin = {"l": 0, "r": 60, "t": 45, "b": 40}
 
 # Dorling layout: start each lower-48 bubble at its state's position on the Albers USA map
 # and push overlapping bubbles apart, with a weak pull back towards the true position.
@@ -395,8 +395,8 @@ fig.add_trace(
             "size": sizes,
             "color": log_density,
             "colorscale": imprint_seq,
-            "cmin": np.log10(5),
-            "cmax": np.log10(6000),
+            "cmin": log_density.min(),
+            "cmax": log_density.max(),
             "colorbar": {
                 "title": {
                     "text": "Population Density<br>(per sq mi)",
@@ -407,7 +407,7 @@ fig.add_trace(
                 "ticktext": ["10", "50", "100", "500", "1k", "5k"],
                 "len": 0.55,
                 "thickness": 20,
-                "x": 0.94,
+                "x": 0.89,
                 "outlinewidth": 0,
                 "bgcolor": ELEVATED_BG,
                 "tickcolor": INK_SOFT,
@@ -444,7 +444,7 @@ fig.update_layout(
         "font": {"size": title_fontsize, "family": "Arial", "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
+        "y": 0.95,
     },
     geo={
         "scope": "usa",
@@ -480,7 +480,7 @@ fig.update_layout(
             "text": insight_text,
             "xref": "paper",
             "yref": "paper",
-            "x": 1.145,
+            "x": 1.079,
             "y": 0.19,
             "xanchor": "right",
             "yanchor": "top",
