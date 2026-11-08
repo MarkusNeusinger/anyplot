@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Updated: 2026-06-10
+// Quality: pending | Updated: 2026-06-10
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
