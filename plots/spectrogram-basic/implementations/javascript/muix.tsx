@@ -51,6 +51,7 @@ const frameStep = HOP / sampleRate;
 
 // Short-time Fourier transform: Hann-windowed frames, one-sided magnitude in dB
 const hann = Array.from({ length: WINDOW }, (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (WINDOW - 1)));
+const windowSum = hann.reduce((acc, w) => acc + w, 0); // coherent gain: a full-scale sine then reads 0 dB
 const cosTable = Array.from({ length: WINDOW }, (_, i) => Math.cos((2 * Math.PI * i) / WINDOW));
 const sinTable = Array.from({ length: WINDOW }, (_, i) => Math.sin((2 * Math.PI * i) / WINDOW));
 const frameCount = Math.floor((signal.length - WINDOW) / HOP) + 1;
@@ -64,7 +65,7 @@ const power = Array.from({ length: frameCount }, (_, f) => {
       re += frame[n] * cosTable[idx];
       im -= frame[n] * sinTable[idx];
     }
-    return 20 * Math.log10((2 / WINDOW) * Math.hypot(re, im) + 1e-9);
+    return 20 * Math.log10((2 / windowSum) * Math.hypot(re, im) + 1e-9);
   });
 });
 const maxDb = Math.max(...power.map((col) => Math.max(...col)));
