@@ -138,7 +138,16 @@ export default function Chart() {
           legend: {
             direction: "horizontal",
             position: { vertical: "top", horizontal: "end" },
-            sx: { fontSize: 16, color: t.ink, columnGap: 3, pr: 5, "& .MuiChartsLegend-mark": { width: 24, height: 24 } },
+            sx: {
+              fontSize: 16,
+              color: t.ink,
+              columnGap: 3,
+              pr: 5,
+              "& .MuiChartsLegend-mark": { width: 24, height: 24 },
+              // Legend glyphs drawn like the series: the cumulative mark filled, the per-component line dashed
+              '& .MuiChartsLegend-item[data-series="cumulative"] .MuiChartsLegend-mark path:last-of-type': { fill: t.palette[0] },
+              '& .MuiChartsLegend-item[data-series="individual"] .MuiChartsLegend-mark path:first-of-type': { strokeDasharray: "4 3" },
+            },
           },
         }}
         sx={{
