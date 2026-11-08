@@ -1,17 +1,15 @@
 // anyplot.ai
 // barcode-code128: Code 128 Barcode
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-01
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
-// --- Code 128 Subset B encoder (real ISO/IEC 15417 tables, not a mockup) ----
-// BARS[v] is the real 11-module (13 for STOP) bar/space pattern for symbol
-// value v, encoded as a string of 1s (bar) and 0s (space) — the canonical
-// Code 128 symbol table. Index 103/104/105 are Start A/B/C, 106 is Stop.
-const BARS = [
+// Constants
+// Code 128 symbol patterns (ISO/IEC 15417): PATTERNS[v] is the 11-module bar (1) /
+// space (0) pattern of symbol value v; 103-105 are Start A/B/C, 106 is the 13-module Stop.
+const PATTERNS = [
   11011001100, 11001101100, 11001100110, 10010011000, 10010001100, 10001001100, 10011001000, 10011000100,
   10001100100, 11001001000, 11001000100, 11000100100, 10110011100, 10011011100, 10011001110, 10111001100,
   10011101100, 10011100110, 11001110010, 11001011100, 11001001110, 11011100100, 11001110100, 11101101110,
@@ -29,99 +27,102 @@ const BARS = [
 ];
 const START_B = 104;
 const STOP = 106;
-const QUIET_ZONE_MODULES = 10; // ANSI/ISO minimum quiet zone: 10x module width
+const CHECK_MODULUS = 103;
+const SUBSET_B_OFFSET = 32; // a Subset B symbol value is the ASCII code minus 32
+const QUIET_ZONE_MODULES = 10; // ISO/IEC 15417 minimum quiet zone on each side
+// A barcode keeps dark bars on a light ground in both themes so it still scans
+const LABEL_BG = "#FAF8F1";
+const BAR_INK = "#1A1A17";
+const MAX_SYMBOL_SHARE = 0.86; // widest share of the canvas the symbol may take
+const BAR_HEIGHT_SHARE = 0.5; // bar height as a share of the canvas height
 
-// Shipping-label content (Subset B: full ASCII 32-126, no subset switching needed).
-const CONTENT = "SHIP-2024-ABC123";
+// Data: replace this block with your own parameters
+const CONTENT = "SHIP-2024-ABC123"; // role: content
 
-const dataValues = Array.from(CONTENT, (ch) => ch.charCodeAt(0) - 32);
-const checksum = dataValues.reduce((sum, v, i) => sum + v * (i + 1), START_B) % 103;
-const symbolValues = [START_B, ...dataValues, checksum, STOP];
+// Plot: reads only the parameters and the constants above
+const dataValues = Array.from(CONTENT, (ch) => ch.charCodeAt(0) - SUBSET_B_OFFSET);
+const checkValue = dataValues.reduce((sum, v, i) => sum + v * (i + 1), START_B) % CHECK_MODULUS;
+const symbolValues = [START_B, ...dataValues, checkValue, STOP];
+const quietZone = "0".repeat(QUIET_ZONE_MODULES);
+const bits = quietZone + symbolValues.map((v) => String(PATTERNS[v])).join("") + quietZone;
+const totalModules = bits.length;
 
-const moduleBits = symbolValues.map((v) => String(BARS[v])).join("");
-const fullBits = "0".repeat(QUIET_ZONE_MODULES) + moduleBits + "0".repeat(QUIET_ZONE_MODULES);
-const TOTAL_MODULES = fullBits.length;
-
-// Run-length encode into bar/space segments — each becomes one stacked series
-// so the chart draws the exact variable-width pattern, not an approximation.
-const segments = [];
-for (let i = 0; i < fullBits.length; ) {
+// Run-length segments: each bar or space becomes one stacked series, so every
+// width is a whole number of modules exactly as the encoding gives it
+const segments: { modules: number; isBar: boolean }[] = [];
+for (let i = 0; i < bits.length; ) {
   let j = i;
-  while (j < fullBits.length && fullBits[j] === fullBits[i]) j++;
-  segments.push({ width: j - i, isBar: fullBits[i] === "1" });
+  while (j < bits.length && bits[j] === bits[i]) j += 1;
+  segments.push({ modules: j - i, isBar: bits[i] === "1" });
   i = j;
 }
 
-// --- Title chrome ------------------------------------------------------------
+const { width, height } = window.ANYPLOT_SIZE;
+// Whole pixels per module keep every bar edge sharp
+const modulePx = Math.floor((width * MAX_SYMBOL_SHARE) / totalModules);
+const symbolWidth = modulePx * totalModules;
+const barHeight = Math.round(height * BAR_HEIGHT_SHARE);
+
 const TITLE = "barcode-code128 · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 22;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
+const caption = `Code 128 Subset B · ${CONTENT.length} data characters · check value ${checkValue} · ${totalModules} modules incl. ${QUIET_ZONE_MODULES}-module quiet zones`;
 
-// --- Layout constants (CSS px within the mount's coordinate space) ---------
-const PADDING = 60;
-const TITLE_H = 50;
-const LABEL_H = 56;
-const CAPTION_H = 28;
-const GAP = 24;
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const chartHeight = SIZE.height - PADDING * 2 - TITLE_H - LABEL_H - CAPTION_H - GAP;
-  const chartWidth = SIZE.width - PADDING * 2;
-
   return (
     <div
       style={{
-        width: SIZE.width,
-        height: SIZE.height,
-        padding: PADDING,
-        boxSizing: "border-box",
+        width,
+        height,
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 28,
+        background: t.pageBg,
       }}
     >
-      <div style={{ height: TITLE_H, fontSize: titleFontSize, fontWeight: 500, color: t.ink }}>{TITLE}</div>
-      <div style={{ height: GAP }} />
-      <BarChart
-        width={chartWidth}
-        height={chartHeight}
-        layout="horizontal"
-        series={segments.map((seg) => ({
-          data: [seg.width],
-          stack: "barcode",
-          // Bars behave like structural ink (a rendered glyph), not a
-          // categorical series, so they take the theme-adaptive ink token
-          // rather than the brand-green Imprint position — the module
-          // widths themselves stay geometrically exact to real Code 128,
-          // so the pattern would still scan if printed true black-on-white.
-          color: seg.isBar ? t.ink : "transparent",
-        }))}
-        xAxis={[{ scaleType: "linear", min: 0, max: TOTAL_MODULES }]}
-        yAxis={[{ scaleType: "band", data: ["code128"], categoryGapRatio: 0 }]}
-        margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
-        bottomAxis={null}
-        leftAxis={null}
-        slotProps={{ legend: { hidden: true } }}
-        tooltip={{ trigger: "none" }}
-        skipAnimation
-      />
-      <div style={{ height: GAP }} />
+      <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
       <div
         style={{
-          height: LABEL_H,
-          textAlign: "center",
-          fontFamily: "'Courier New', monospace",
-          fontSize: 26,
-          letterSpacing: "0.35em",
-          color: t.ink,
+          background: LABEL_BG,
+          border: `1px solid ${t.grid}`,
+          borderRadius: 6,
+          padding: "40px 0 28px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        {CONTENT}
+        <BarChart
+          width={symbolWidth}
+          height={barHeight}
+          layout="horizontal"
+          skipAnimation
+          hideLegend
+          margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+          xAxis={[{ scaleType: "linear", min: 0, max: totalModules, position: "none" }]}
+          yAxis={[{ scaleType: "band", data: [CONTENT], categoryGapRatio: 0, position: "none" }]}
+          series={segments.map((seg, i) => ({
+            id: `segment-${i}`,
+            data: [seg.modules],
+            stack: "symbol",
+            color: seg.isBar ? BAR_INK : "transparent",
+          }))}
+          slotProps={{ tooltip: { trigger: "none" } }}
+        />
+        <div
+          style={{
+            marginTop: 22,
+            fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+            fontSize: 30,
+            letterSpacing: "0.35em",
+            paddingLeft: "0.35em", // balances the spacing after the last character
+            color: BAR_INK,
+          }}
+        >
+          {CONTENT}
+        </div>
       </div>
-      <div style={{ height: CAPTION_H, textAlign: "center", fontSize: 14, color: t.inkSoft }}>
-        Code 128 · Subset B (full ASCII, ANSI/ISO quiet zones)
-      </div>
+      <div style={{ fontSize: 16, color: t.inkSoft }}>{caption}</div>
     </div>
   );
 }
