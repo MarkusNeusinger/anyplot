@@ -875,10 +875,16 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     example = language == "example"
     change = EXAMPLE_DATA_CHANGE if example else DATA_CODE_CHANGE
     changes = [f"{change}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    # The queue, the run and the judge suspended this call: a data call of the same turn may have stored a version
+    # meanwhile, so the table goes on top of the session as it is now, under the number after that one
+    # (`SessionView.next_version`), never on the view read before the run, which would number it twice.
+    current = _view(tool_context)
+    if current is None:
+        return _error("session_not_open")
     try:
         delta, number = _store_generated(
             tool_context.session.id,
-            view,
+            current,
             parsed,
             code=prepared,
             source=code_source(prepared, language),

@@ -222,7 +222,13 @@ class SessionView:
     @property
     def next_version(self) -> int:
         """The number the session's next stored dataset version gets: one above every number it gave (`DATASET_TOP`),
-        and so above the current one."""
+        and so above the current one.
+
+        It comes from the view, so it holds only while nothing stores a version between the view's read and the
+        delta's write, as the history the delta writes does. Every writer keeps that: the data routes (undo,
+        `.to_long()`, copy) read and write with no suspension between them (`InMemorySessionService.get_session` and
+        `append_event` never yield), and a paste or a turn, which do suspend, exclude every other writer of the
+        session while they run (`main._active`)."""
         return max(self.dataset_top, self.dataset_version if self.dataset_id else 0) + 1
 
     @property
