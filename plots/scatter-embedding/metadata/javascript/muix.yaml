@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-embedding
 created: '2026-08-11T09:16:18Z'
-updated: '2026-11-08T05:00:15Z'
+updated: '2026-11-08T05:04:59Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42448740318
@@ -13,52 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Uses the v9 composition API idiomatically: ChartsDataProvider + ChartsWrapper
-    + ChartsSurface with ChartsXAxis/ChartsYAxis/ScatterPlot, the HTML ChartsLegend
-    outside the SVG, and a custom SVG layer (CentroidLabels) placed through the useXScale/useYScale
-    hooks so the centroid labels sit exactly at the data-space centroids'
-  - 'Eight cell types in Imprint order (T cells in #009E73 first), each neighbouring
-    group distinguishable in both themes, with identical data colours across light
-    and dark'
-  - 580 points of unequal group size and compactness at their generated coordinates
-    (no jitter), markerSize 5 with fillOpacity 0.62 so dense cores read darker
-  - Subtitle names the algorithm and its key parameter (UMAP, n_neighbors = 15) plus
-    n and group count, in a clear title/subtitle hierarchy
-  - Tick labels, ticks and axis lines removed as the spec asks; only the descriptive
-    'UMAP dimension 1/2' axis titles remain
-  - Centroid label pills outlined in each cluster's colour tie the labels to the legend
-    and stay legible on the points in both themes
-  - Deterministic LCG + Box-Muller data generation, skipAnimation set, chart sized
-    to window.ANYPLOT_SIZE; native MUI X tooltips/highlighting in the HTML output
+  - Composes the chart from MUI X v9 building blocks (ChartsDataProvider, ChartsWrapper,
+    ChartsLegend, ChartsSurface, ScatterPlot) and adds the centroid-label layer as
+    a custom SVG child that reads the chart's own scales through useXScale/useYScale,
+    so the labels sit exactly on the computed centroids
+  - Centroid labels (an option the Notes offer) are drawn as chips outlined in each
+    cluster's color with a page-colored text halo, legible against the points in both
+    themes and matching the legend
+  - 'Imprint palette in canonical order with T cells on #009E73; data colors identical
+    in both renders, chrome flips cleanly via theme tokens'
+  - Embedding axes carry no ticks, tick labels or axis lines, as the spec asks, while
+    the axis titles still name the dimensions
+  - Subtitle names the algorithm and parameter (UMAP, n_neighbors = 15) plus n and
+    the group count
+  - Eight simulated PBMC cell types of different size and spread, with a few points
+    stranded across neighboring groups, a plausible single-cell scenario
+  - Marker opacity set through the v9 class selector .MuiScatterChart-marker; skipAnimation
+    set; deterministic LCG data
   weaknesses:
-  - 'VQ-02 (both): the near-opaque centroid label boxes (fillOpacity 0.88, about 120×28
-    px) sit on the densest part of each cluster and hide its core points, most visibly
-    on the small Platelets cluster, where the box covers most of the dense centre,
-    and on Dendritic cells → let the core show through (box fill opacity around 0.6
-    or a text halo instead of a filled box). Likely cause: the <rect> in CentroidLabels
-    with fill t.elevatedBg and fillOpacity 0.88.'
-  - 'Suggestion: the legend sits about 150 px clear of the Neutrophils cluster with
-    a wide empty band; a narrower LEGEND_WIDTH would give the embedding more width.'
-  - 'Suggestion: a slightly larger title (about 24–26 px) would give the header more
-    weight against the 16 px subtitle.'
+  - 'Suggestion: the legend sits about 150 px right of the outermost points; tightening
+    LEGEND_WIDTH or the right margin would let the point cloud use a little more width.'
+  - 'Suggestion: the centroid chip width is estimated from LABEL_CHAR_WIDTH; measuring
+    the rendered text would make the chips fit labels exactly if a user swaps in longer
+    cluster names.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
-      Chrome: bold dark title "scatter-embedding · javascript · muix · anyplot.ai" centred at top, grey subtitle "UMAP (n_neighbors = 15) · n = 580 · coloured by cell type (8 groups)"; axis titles "UMAP dimension 1" (bottom) and "UMAP dimension 2" (left, rotated) in soft ink; no ticks, tick labels, axis lines or grid; vertical legend at the right with eight coloured dots and dark labels. All readable.
-      Data: 580 semi-transparent dots in eight clusters of differing size and spread — T cells #009E73 (first series), B cells lilac, Monocytes blue, NK cells ochre, Dendritic cells red, Platelets cyan, Erythrocytes plum, Neutrophils olive. Each cluster has a rounded label pill at its centroid, outlined in the cluster colour, dark bold text on a near-opaque light fill; the pills hide some core points (most visibly Platelets).
+      Chrome: bold dark title "scatter-embedding · javascript · muix · anyplot.ai" centered at the top, grey subtitle "UMAP (n_neighbors = 15) · n = 580 · coloured by cell type (8 groups)"; axis titles "UMAP dimension 1" (bottom) and "UMAP dimension 2" (rotated, left) in soft ink; no ticks, tick labels, axis lines or grid. Vertical legend on the right with eight circle swatches and dark labels. All text readable.
+      Data: 580 semi-transparent circles in eight clusters — T cells #009E73 (first series), B cells purple, Monocytes blue, NK cells ochre, Dendritic cells red, Platelets cyan, Erythrocytes magenta, Neutrophils olive. Each cluster carries a centroid chip outlined in its color with bold dark text. Clusters differ in size and spread; T cells and Erythrocytes touch, with a few stray points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink, subtitle and axis titles in light soft ink, legend labels light — no dark-on-dark text anywhere.
-      Data: identical cluster colours and positions to the light render; dots slightly dimmer due to alpha over the dark page but all groups distinct, brand green T cells clearly visible. Centroid pills switch to a dark elevated fill with light text, still outlined in cluster colours.
+      Chrome: title in light ink, subtitle and axis titles in light soft grey, legend labels light; no dark-on-dark text anywhere.
+      Data: same eight colors in the same order as the light render (only chrome flipped); centroid chip text is light with a dark halo and reads clearly over the points.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,47 +61,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, subtitle/axis/legend 16, labels 15 px);
-          readable in both themes
+        comment: Explicit sizes (title 22, subtitle/axis/legend 16, centroid labels
+          15 px CSS); all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions, but the near-opaque centroid label boxes hide
-          cluster cores, notably Platelets (defect line)
+        comment: No text collisions; centroid chips sit on their clusters as the spec's
+          characteristic bullet permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: markerSize 5 with 0.62 opacity suits 580 points; legend dots visible
-          in both themes
+        comment: Moderate markers with 0.62 opacity suit 580 points; legend swatches
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, neighbouring clusters distinct; centroid labels
-          add a non-colour cue
+        comment: Imprint palette, neighboring clusters distinct; direct centroid labels
+          back up color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced plot area, nothing clipped
+        comment: 3200x1800, balanced axis titles, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: UMAP dimension 1/2 — unitless as appropriate
+        comment: UMAP dimension 1/2 — unitless by nature
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint order, theme-correct backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, correct backgrounds
+          in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -116,22 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle hierarchy in an HTML header, centroid pills outlined
-          in the cluster colour matching the legend
+        comment: 'Considered hierarchy: bold title, soft-ink subtitle carrying n and
+          group count, cluster-colored outlined chips with halo text'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Axis lines and ticks dropped entirely, extent padded 5% from the
-          data, legend vertically centred with its own band
+        comment: Axis lines and ticks removed, padded extent, text halo keeps labels
+          legible over points
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle carries n and group count beyond the required method note;
-          labels make clusters readable without the legend
+        comment: Direct centroid labels let the reader identify groups without the
+          legend lookup
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 2D embedding scatter coloured by class
+        comment: 2D embedding scatter colored by label
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Legend, alpha, moderate size, method subtitle, no tick labels, optional
-          centroid labels on their clusters
+        comment: Legend, alpha, moderate size, algorithm subtitle, no tick labels;
+          optional centroid labels on their own clusters
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their coordinates, no jitter; all points within the padded
-          domain
+        comment: Marks at data values, no jitter; extent padded from data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels are readable cell-type names
+        comment: Correct title format; legend entries are readable cell-type names
     data_quality:
       score: 15
       max: 15
@@ -171,21 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Eight groups of unequal size and density, a few stray points between
-          groups
+        comment: Eight groups of unequal size/density, some near-contact and stray
+          points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Single-cell RNA-seq blood cell types — plausible and neutral
+        comment: Simulated scRNA-seq blood cell types, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n = 580 within 500–5000; UMAP-like coordinate range; no Check values
-          in the spec
+        comment: 580 points within 500–5000; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -195,7 +189,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the required default component plus one hook-using layer component
+        comment: Default-export component plus one child component, required for the
+          scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,14 +208,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 composition API; harness writes
-          plot-{theme}.png/html
+        comment: Default export, skipAnimation, current v9 composition API
     library_mastery:
       score: 7
       max: 10
@@ -230,19 +224,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composed chart via ChartsDataProvider/ChartsWrapper/ChartsSurface,
-          axis config disableLine/disableTicks, marker styling via .MuiScatterChart-marker
+        comment: v9 composition (ChartsDataProvider/ChartsWrapper/ChartsSurface) with
+          axis configs and class-selector styling
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG layer positioned with useXScale/useYScale inside ChartsSurface;
-          HTML ChartsLegend in ChartsWrapper
-  verdict: REJECTED
+        comment: Custom SVG overlay driven by useXScale/useYScale inside the chart
+          surface
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T04:57:26Z'
+  rendered_at: '2026-11-08T05:02:23Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -255,5 +249,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
