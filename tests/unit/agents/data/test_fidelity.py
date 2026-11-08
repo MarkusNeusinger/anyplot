@@ -189,6 +189,36 @@ class TestRepeatedKey:
 
         assert check.repeated_key is None
 
+    def test_a_mark_that_needs_every_price_counts_the_gaps_of_each(self) -> None:
+        """A candle needs open, high, low and close: a second row of a date that lacks its close draws no second
+        candle, so the repeat is no certain one. With all four prices it is."""
+        roles = roles_of("candlestick-basic")
+        bindings = bind(date="Day", open="O", high="H", low="L", close="C")
+        partial = profile_of("Day,O,H,L,C\n2026-01-01,1,3,0.5,2\n2026-01-01,1,3,0.5,\n2026-01-02,2,4,1.5,3\n")
+        complete = profile_of("Day,O,H,L,C\n2026-01-01,1,3,0.5,2\n2026-01-01,1,3,0.5,2.5\n2026-01-02,2,4,1.5,3\n")
+
+        assert check_bindings(bindings, roles, partial).repeated_key is None
+        assert check_bindings(bindings, roles, complete).repeated_key is not None
+
+    def test_each_series_of_a_wide_table_needs_only_its_own_column(self) -> None:
+        """Two series that take turns down the rows (A on one, B on the next, the same x) draw one point per x
+        each; the same rows with both filled draw two."""
+        roles = roles_of("line-styled")
+        bindings = bind(x="Step", y_1="A", y_2="B")
+        turns = profile_of("Step,A,B\n1,3,\n1,,4\n2,5,\n2,,6\n")
+        filled = profile_of("Step,A,B\n1,3,7\n1,2,4\n2,5,8\n2,1,6\n")
+
+        assert check_bindings(bindings, roles, turns).repeated_key is None
+        assert check_bindings(bindings, roles, filled).repeated_key is not None
+
+    def test_an_optional_measure_never_hides_a_repeat(self) -> None:
+        roles = roles_of("bar-feature-importance")
+        profile = profile_of("Feature,Importance,Std\nage,0.4,\nage,0.3,\nzip,0.2,0.1\n")
+
+        check = check_bindings(bind(feature="Feature", importance="Importance", std="Std"), roles, profile)
+
+        assert check.repeated_key is not None and check.repeated_key.roles == ("feature",)
+
     def test_a_column_on_two_roles_counts_once(self) -> None:
         """One column may serve several roles (owner decision of 2026-11-04): the key's column as a label as well
         never doubles the keys it can make."""

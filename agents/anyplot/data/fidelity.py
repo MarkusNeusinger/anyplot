@@ -33,10 +33,13 @@ The rule for a key, decided with this module:
   a group, a colour, a role without kinds), since such a role may split the marks into series; a computed role is
   never part of it, and a column on several roles counts once. The rest of the bound roles are the measures.
 * Which count. The profile knows each column's distinct values and empty cells, not their combinations, so the check
-  fires only when a repeat is certain: the keys the columns can make are at most the product of their distinct
-  values (a splitting column's empty cells one more group), and the rows that need a mark are at least the rows
-  minus the empty key cells, minus the empty cells of the fullest measure. More such rows than keys means that rows
-  share one. A key that repeats only inside one series of a split stays unwarned: the profile cannot tell it.
+  fires only when a repeat of drawn marks is certain: the keys the columns can make are at most the product of
+  their distinct values (a splitting column's empty cells one more group), and the rows that draw a mark are at
+  least the rows minus the empty cells of the key columns and of every required single measure (a candle needs all
+  four prices), minus those of the fullest member of a required family (one series of a wide table needs only its
+  own column). An optional measure and a value written in one row only count for nothing. More such rows than
+  keys means that marks share one. A key that repeats only inside one series of a split stays unwarned: the
+  profile cannot tell it.
 
 The rule for rows without a value, decided with this module: a bound role counts when it is required (a family
 member counts by its family), not computed, and a key or a role that takes numbers or dates, the roles that place a
@@ -245,7 +248,8 @@ def repeated_key(held: Sequence[Held], rows: int) -> RepeatedKey | None:
     """
     keys: list[tuple[str, ColumnProfile]] = []
     splits: list[tuple[str, ColumnProfile]] = []
-    measures: list[ColumnProfile] = []
+    singles: dict[str, ColumnProfile] = {}  # the required single measures, which one mark may need together
+    members: dict[str, ColumnProfile] = {}  # the members of required families, each a series of its own
     seen: set[str] = set()
     for name, role, column in held:
         if role.computed:
@@ -255,17 +259,21 @@ def repeated_key(held: Sequence[Held], rows: int) -> RepeatedKey | None:
         elif not role.kinds or set(role.kinds) & SPLIT_KINDS:
             target = splits
         else:
-            if column.name not in seen:
-                measures.append(column)
+            # An optional measure (an error bar) never decides whether a mark is drawn, and neither does a value
+            # written in one row only (a base value, a limit).
+            if role.required and rows - column.missing > 1:
+                (members if role.variadic else singles)[column.name] = column
             continue
         if column.name not in seen:
             target.append((name, column))
         seen.add(column.name)
     if not keys:
         return None
-    measures = [column for column in measures if column.name not in seen]
     keyed = rows - sum(column.missing for _, column in keys)
-    drawn = keyed - min((column.missing for column in measures), default=0)
+    # Rows with a key, every required single measure and the fullest family member: at least this many, whatever
+    # rows the empty cells fall on (a candle needs all four prices, one series of a wide table only its own column).
+    without = sum(column.missing for name, column in singles.items() if name not in seen)
+    drawn = keyed - without - min((column.missing for name, column in members.items() if name not in seen), default=0)
     combinations = math.prod(column.unique for _, column in keys) * math.prod(
         column.unique + (1 if column.missing else 0) for _, column in splits
     )

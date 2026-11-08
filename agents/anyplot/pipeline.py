@@ -1481,7 +1481,7 @@ def finish(run: Run) -> PlotResult:
     # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
     # server's notes come first, the loader's and then the rows without a value to draw, so the cap never drops them
     # (owner decisions of 2026-10-29, "what changed", and 2026-11-08, every row the plot cannot draw counted).
-    server = [*run.loader_notes, *run.row_notes][:MAX_CHANGES]
+    server = [*run.loader_notes[: MAX_CHANGES - len(run.row_notes)], *run.row_notes]
     adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(server))
     changes = [change[:MAX_CHANGE_CHARS] for change in [*server, *adapted]]
     return PlotResult(
