@@ -139,7 +139,7 @@ const SUBTITLE = `${rows.length.toLocaleString("en-US")} samples at ${Math.round
 )} Hz · ${N_MELS} mel bands up to ${Math.round(sampleRate / 2).toLocaleString("en-US")} Hz · FFT ${N_FFT}, hop ${HOP} (${(
   frameStep * 1000
 ).toFixed(0)} ms per frame)`;
-const HEADER_H = 80;
+const HEADER_H = 92;
 const BAR_W = 22;
 const BAR_GAP = 24;
 
@@ -187,7 +187,7 @@ function Colorbar() {
             x={x + BAR_W + 10}
             y={top + (-db / DYNAMIC_RANGE_DB) * height}
             dominantBaseline="middle"
-            fontSize={14}
+            fontSize={18}
             fill={t.inkSoft}
           >
             {db === 0 ? "0" : `−${-db}`}
@@ -195,12 +195,12 @@ function Colorbar() {
         </g>
       ))}
       <text
-        x={x + BAR_W + 62}
+        x={x + BAR_W + 74}
         y={top + height / 2}
         textAnchor="middle"
-        fontSize={16}
+        fontSize={20}
         fill={t.ink}
-        transform={`rotate(90, ${x + BAR_W + 62}, ${top + height / 2})`}
+        transform={`rotate(90, ${x + BAR_W + 74}, ${top + height / 2})`}
       >
         {POWER_LABEL}
       </text>
@@ -222,13 +222,13 @@ export default function Chart() {
           gap: 8,
         }}
       >
-        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
-        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+        <div style={{ fontSize: 26, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 18, color: t.inkSoft }}>{SUBTITLE}</div>
       </div>
       <ChartsContainer
         width={width}
         height={height - HEADER_H}
-        margin={{ top: 12, right: 140, bottom: 12, left: 24 }}
+        margin={{ top: 12, right: 156, bottom: 12, left: 24 }}
         skipAnimation
         series={[]}
         xAxis={[
@@ -237,11 +237,11 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             label: TIME,
-            height: 62,
+            height: 70,
             tickNumber: 12,
             valueFormatter: (v) => v.toFixed(1),
-            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 18, fill: t.inkSoft },
+            labelStyle: { fontSize: 20, fill: t.ink },
           },
         ]}
         yAxis={[
@@ -252,9 +252,9 @@ export default function Chart() {
             tickInterval: melTicks,
             valueFormatter: (mel) => Math.round(700 * (10 ** (mel / 2595) - 1)).toLocaleString("en-US"),
             label: FREQUENCY_LABEL,
-            width: 92,
-            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
+            width: 108,
+            tickLabelStyle: { fontSize: 18, fill: t.inkSoft },
+            labelStyle: { fontSize: 20, fill: t.ink },
           },
         ]}
       >
