@@ -275,7 +275,8 @@ const latCenter = (latMin + latMax) / 2;
 const maxValue = Math.max(...data.map((d) => d[POPULATION]));
 const bubbleRadius = (share: number) => Math.max(MIN_RADIUS, MAX_RADIUS * Math.sqrt(share));
 
-// One series per category in order of first appearance; larger bubbles first so smaller ones draw on top
+// One series per category in order of first appearance; within each region larger bubbles come first so
+// smaller ones draw on top (series draw in order, so a later region's bubble can cover an earlier one's)
 const regions = [...new Set(data.map((d) => d[REGION]))];
 const series = regions.map((region, i) => ({
   type: "scatter" as const,
@@ -402,8 +403,8 @@ export default function Chart() {
                   cy={sizeRefRadii[i] + 1}
                   r={sizeRefRadii[i]}
                   fill={t.inkSoft}
-                  fillOpacity={0.3}
-                  stroke={t.inkSoft}
+                  fillOpacity={BUBBLE_OPACITY}
+                  stroke={t.pageBg}
                   strokeWidth={1.2}
                 />
               </svg>
