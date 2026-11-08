@@ -9,7 +9,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const SILVERMAN = 0.9; // robust rule of thumb: bandwidth = 0.9 · min(sd, IQR / 1.34) · n^(-1/5)
-const KDE_CUT = 3; // the curve extends this many bandwidths past the outermost observations
+const KDE_CUT = 2; // the curve extends this many bandwidths past the outermost observations
 const GRID_POINTS = 240;
 const RUG_LEN = 26; // px, one tick per observation at the foot of the curve
 const RUG_OPACITY = 0.7;
