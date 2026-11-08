@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: ice-basic
 created: '2026-08-17T23:10:33Z'
-updated: '2026-11-08T07:26:21Z'
+updated: '2026-11-08T07:31:48Z'
 generated_by: claude-opus-5-5
 adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
 workflow_run: 42440225525
@@ -13,51 +13,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - One MUI X line series per house (70 × 55 grid values) at 30 % alpha baked into
-    the series colour, so dense stretches read darker and the legend swatches match
-    the lines
-  - 'The partial dependence line is computed from the curves themselves (mean at each
-    grid value), drawn last at 4 px in the ink token, and stands out from every ICE
-    line in both themes: near-black on cream, near-white on dark'
-  - 'The optional colour by a second feature is used well: the pre-1960 houses flatten
-    and turn down at large floor areas while newer houses keep rising, so the heterogeneity
-    ICE exists to show is visible at a glance'
-  - 'Axis bands sized explicitly (x height 64, y width 84), a tight linear x domain
-    at the grid ends, k-formatted price ticks and thousands-separated square footage:
-    no truncated tick labels'
-  - 'Native MUI X idioms: data-series CSS selectors for the PDP stroke, labelMarkType
-    line legend marks, item tooltips in the HTML output, skipAnimation'
+  - Per-series styling through MUI X's data-series selector ('& .MuiLineChart-line[data-series="pdp"]')
+    makes the partial dependence line 4 px and opaque while the 70 ICE curves stay
+    1.5 px at 0.5 stroke opacity, so dense stretches read darker and the swatches
+    in the legend keep full colour
+  - Partial dependence line drawn in the theme ink token (near-black on light, near-white
+    on dark), last in the series list so it sits on top, and distinct from both segment
+    colours in both themes
+  - 'The color by year built, which the Notes allow, uses two ordered steps of the
+    Imprint sequential ramp in natural order (oldest first) and brings out a believable
+    subgroup: pre-1960 houses with diminishing returns that bend away from the average'
+  - Axis bands sized explicitly (x height 64, y width 84) with en-US thousands formatting
+    and a 'k' formatter on prices, so no tick label is truncated
+  - 'Library-native tooltip (trigger: item) gives per-curve inspection in the HTML
+    output; skipAnimation is set and the chart is sized from window.ANYPLOT_SIZE'
   weaknesses:
-  - 'VQ-07 (both): ''Year built'' is an ordered age band (Before 1960 < 1960 or later)
-    but takes the categorical positions 1 and 2 (#009E73 green, #C475FD lavender),
-    which present it as unordered groups → two ordered steps of one Imprint ramp (imprint_seq,
-    older → newer). Likely cause: color `t.palette[segments.indexOf(c.segment)]` instead
-    of steps between t.seq[0] and t.seq[1].'
-  - 'VQ-03 (dark): the ''Before 1960'' legend swatch, brand green at the 30 % series
-    alpha (#009E734D), is barely visible against #1A1A17, and the green ICE lines
-    are faint against it → a legend glyph at full opacity, or a higher line alpha
-    (about 45 %, +15 points) on the dark render. Likely cause: ICE_ALPHA_HEX = "4D"
-    baked into the series colour that the legend mark reuses.'
-  - 'Suggestion: a rug of observed square-footage values along the x axis, which the
-    Notes allow, would show where the grid is backed by data.'
+  - 'Suggestion: in the dark render the 0.5-opacity curves, especially the pre-1960
+    greens, sit fairly dim against #1A1A17; a slightly higher stroke opacity in the
+    dark theme would lift them without losing the density effect.'
+  - 'Suggestion: the subtitle repeats what the legend already says (''bold line: partial
+    dependence''); dropping that clause would tighten the header.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure white.
-      Chrome: title "House Price Predictions · ice-basic · javascript · muix · anyplot.ai" bold dark ink centred (~43 % of width), soft-ink subtitle "70 ICE curves × 55 grid values · coloured by year built · bold line: partial dependence"; top-right horizontal legend (Year built: Before 1960 / Year built: 1960 or later / Partial dependence (mean of all curves)); y axis "Predicted Price (USD)" 150k–800k, x axis "Square Footage (sq ft)" 1,000–3,800; subtle horizontal grid only. All text readable.
-      Data: 70 translucent ICE lines — brand green #009E73 for pre-1960 houses (flattening/bending down past ~2,800 sq ft), lavender #C475FD for newer houses (steadily rising to 450k–780k); overlap blends darker; a bold near-black partial dependence line runs from ~208k to ~558k on top of them.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "House Price Predictions · ice-basic · javascript · muix · anyplot.ai" centered (~43% width), grey subtitle "70 ICE curves × 55 grid values · coloured by year built · bold line: partial dependence"; horizontal legend top-right (green "Year built: Before 1960", blue "Year built: 1960 or later", black "Partial dependence (mean of all curves)"); y axis "Predicted Price (USD)" 150k–800k, x axis "Square Footage (sq ft)" 1,000–3,800; subtle horizontal grid lines. All text dark and readable, nothing clipped.
+      Data: 70 thin semi-transparent ICE lines — about a quarter green (pre-1960, concave, flattening near 300k–470k) and the rest Imprint blue (near-linear, fanning to 450k–780k); overlap reads darker in the bulk. Bold opaque black partial dependence line from ~208k to ~558k runs through the middle of the bundle.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, no pure black.
-      Chrome: title, subtitle, legend text, axis titles and ticks all flip to light ink; grid lines subtle grey. No dark-on-dark text.
-      Data: identical green and lavender line colours and alpha as the light render; the partial dependence line flips to near-white ink and stands out clearly. The green pre-1960 lines and especially their 30 %-alpha legend swatch are faint against the dark page.
-      Legibility verdict: PASS (text); legend swatch for "Before 1960" weak
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend text, axis titles and tick labels all flip to light ink and are clearly readable; grid lines subtle grey; no dark-on-dark text.
+      Data: the same green and blue segment colors as in the light render (only chrome flips); the translucent curves read somewhat dimmer on the dark surface but stay visible; the partial dependence line flips to near-white ink and stands out strongly. Brand green visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,46 +58,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis titles 16 px, ticks 14 px, legend 15 px; readable
-          in both themes and at thumbnail size
+        comment: Explicit font sizes (title 22, subtitle 15, axis titles 16, ticks
+          14, legend 15 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; heavy line overplotting is permitted by the spec
+        comment: No text collisions; line overplotting is expected per the spec and
+          handled with translucency
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines fine for 70 curves; 'Before 1960' legend swatch at 30 % alpha
-          nearly vanishes on the dark page (defect line)
+        comment: 1.5 px lines at 0.5 opacity suit 70 curves; legend swatches full
+          colour and thick in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-safe; PDP in full-contrast ink
+        comment: Green vs blue segment colours are CVD-distinguishable; PDP in ink
+          contrasts with both
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axis bands, nothing clipped
+        comment: 3200x1800, balanced margins, title ~43% width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units
+        comment: Square Footage (sq ft), Predicted Price (USD)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Backgrounds and chrome correct; ordered age band coloured with categorical
-          positions instead of an Imprint ramp (defect line)
+        passed: true
+        comment: 'Ordered year-built levels in steps of the Imprint sequential ramp,
+          oldest first; backgrounds #FAF8F1 / #1A1A17; colours identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -114,22 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle hierarchy with the subtitle explaining the encoding
-          (counts, colour, bold line); thickened legend line glyphs
+        comment: Title/subtitle hierarchy with a subtitle stating curve and grid counts,
+          thickened legend line swatches
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid, tight x domain at the grid ends, legend right-aligned
-          with the plot edge
+        comment: Legend aligned to the plot's right edge above the chart, opacity
+          on line paths only so swatches stay solid
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Data built so the pre-1960 subgroup diverges below the PDP, making
-          the hidden heterogeneity the focal contrast
+        comment: Data built so the pre-1960 subgroup bends away from the average,
+          a heterogeneity the colour makes visible
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ICE lines + PDP; colour by a second feature is an option the Notes
-          offer; no extra layers
+        comment: ICE lines + PDP; colour by a second feature is a Notes option; no
+          extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Low-alpha lines, bold opaque PDP on top, colour legend naming the
-          feature, PDP distinct from line colours
+        comment: Low-alpha individual lines, bold opaque PDP on top, legend naming
+          the second feature, PDP distinct from line colours
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = square footage, y = prediction, all data in range, no displacement
+        comment: Feature on x, prediction on y, full range shown; PDP computed as
+          grid-wise mean
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with descriptive prefix; one legend entry per
-          segment plus PDP
+        comment: Prefixed mandated title; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -170,20 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Heterogeneous slopes, crossings, curvature and a divergent subgroup
+        comment: Heterogeneous effects, crossing lines, PDP vs individuals all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House-price model vs square footage, neutral and plausible
+        comment: House-price model by square footage and year built, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 900–3,800 sq ft, ~$145/sq ft, prices 160k–780k; PDP checked as the
-          computed mean (no Check values in spec)
+        comment: 70 obs x 55 grid points within spec range; ~$145/sq ft, 165k-780k
+          prices plausible; PDP computed from the curves, not placed
     code_quality:
       score: 10
       max: 10
@@ -193,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data block, plot prep, one default-exported component
+        comment: Linear script plus the required component; only small inline helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,13 +206,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Short PDP mean computation; no fake UI
+        comment: Mean and colour interpolation are short and allowed by the library's
+          Computation line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness contract, skipAnimation, v9 API
+        comment: Default-exported component, skipAnimation, v9 API, sized from ANYPLOT_SIZE
     library_mastery:
       score: 6
       max: 10
@@ -227,29 +223,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Per-series config with showMark/labelMarkType, data-series CSS selectors,
-          axis valueFormatters, sized axis bands
+        comment: Series config with showMark/labelMarkType, axis valueFormatter, slotProps
+          legend styling, sx class selectors
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Item-trigger tooltips in HTML and styled MUI legend line marks via
-          slotProps.legend.sx
-  verdict: REJECTED
+        comment: Per-series styling via the data-series attribute selector; item-trigger
+          tooltip
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T02:52:19Z'
+  rendered_at: '2026-11-08T07:29:00Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - aggregation
   styling:
   - alpha-blending
-  - grid-styling
+  - minimal-chrome
