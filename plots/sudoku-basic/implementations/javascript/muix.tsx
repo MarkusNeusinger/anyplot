@@ -1,16 +1,25 @@
 // anyplot.ai
 // sudoku-basic: Basic Sudoku Grid
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-25
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
-
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Classic Sudoku puzzle — 0 = empty cell
-const PUZZLE = [
+// Constants
+const EMPTY = 0; // the value that marks a cell without a given
+const THIN = 1; // cell line width (px)
+const THICK = 4; // box border width (px)
+const DIGIT_SHARE = 0.56; // digit height as a share of the cell side
+const HEADER_H = 96;
+const PAD = 40;
+
+// Data: the puzzle's givens row by row from the top, 0 marks an empty cell
+const GRID = [
   [5, 3, 0, 0, 7, 0, 0, 0, 0],
   [6, 0, 0, 1, 9, 5, 0, 0, 0],
   [0, 9, 8, 0, 0, 0, 0, 6, 0],
@@ -20,108 +29,82 @@ const PUZZLE = [
   [0, 6, 0, 0, 0, 0, 2, 8, 0],
   [0, 0, 0, 4, 1, 9, 0, 0, 5],
   [0, 0, 0, 0, 8, 0, 0, 7, 9],
+]; // role: grid
+
+// Plot: reads only the grid and the constants above
+const N = GRID.length;
+const BOX = Math.round(Math.sqrt(N)); // a 9×9 grid splits into 3×3 boxes
+const indices = Array.from({ length: N }, (_, i) => i);
+const givens = GRID.flatMap((row, r) =>
+  row.flatMap((value, c) => (value === EMPTY ? [] : [{ id: `${r}-${c}`, r, c, value }])),
+);
+const boundaries = Array.from({ length: N + 1 }, (_, i) => i);
+// thin cell lines first, so the thick box borders paint over them where they meet
+const lineLayers = [
+  { id: "cells", at: boundaries.filter((i) => i % BOX !== 0), width: THIN, stroke: t.inkSoft },
+  { id: "boxes", at: boundaries.filter((i) => i % BOX === 0), width: THICK, stroke: t.ink },
 ];
 
-export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
+const TITLE = "sudoku-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${N} × ${N} grid in ${BOX} × ${BOX} boxes · ${givens.length} givens · ${N * N - givens.length} empty cells`;
 
-  const titleH = 70;
-  const pad = 50;
-  const gridSize = Math.min(W - 2 * pad, H - titleH - 2 * pad);
-  const cell = gridSize / 9;
-  const gx = (W - gridSize) / 2;
-  const gy = titleH + (H - titleH - gridSize) / 2;
-
-  const THIN = 0.7;
-  const THICK = 3;
-
-  // Inner cell division lines (thin)
-  const thinLines = [];
-  for (let i = 1; i <= 8; i++) {
-    if (i % 3 === 0) continue;
-    thinLines.push(
-      <line key={`v${i}`} x1={i * cell} y1={0} x2={i * cell} y2={gridSize}
-        stroke={t.inkSoft} strokeWidth={THIN} />,
-      <line key={`h${i}`} x1={0} y1={i * cell} x2={gridSize} y2={i * cell}
-        stroke={t.inkSoft} strokeWidth={THIN} />
-    );
-  }
-
-  // 3×3 box boundary lines (thick)
-  const thickLines = [];
-  for (let i = 0; i <= 9; i += 3) {
-    thickLines.push(
-      <line key={`bv${i}`} x1={i * cell} y1={0} x2={i * cell} y2={gridSize}
-        stroke={t.ink} strokeWidth={THICK} />,
-      <line key={`bh${i}`} x1={0} y1={i * cell} x2={gridSize} y2={i * cell}
-        stroke={t.ink} strokeWidth={THICK} />
-    );
-  }
-
-  // Given numbers centered in their cells
-  const numbers = PUZZLE.flatMap((row, r) =>
-    row.map((val, c) => {
-      if (val === 0) return null;
-      return (
-        <text key={`n${r}${c}`}
-          x={c * cell + cell / 2} y={r * cell + cell / 2}
-          textAnchor="middle" dominantBaseline="central"
-          fontSize={cell * 0.52}
-          fontFamily='"Helvetica Neue", Helvetica, Arial, sans-serif'
-          fontWeight="700"
-          fill={t.ink}
-        >
-          {val}
-        </text>
-      );
-    })
-  ).filter(Boolean);
+function GridLayer() {
+  const xScale = useXScale("col");
+  const yScale = useYScale("row");
+  const { left, top, width, height } = useDrawingArea();
+  const cell = xScale.bandwidth();
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        width: W,
-        height: H,
-        bgcolor: t.pageBg,
-        overflow: "hidden",
-      }}
-    >
-      {/* MUI Typography for theme-aware title */}
-      <Typography
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: titleH,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 22,
-          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-          color: t.ink,
-          lineHeight: 1,
-          m: 0,
-          p: 0,
-        }}
-      >
-        sudoku-basic · javascript · muix · anyplot.ai
-      </Typography>
+    <g>
+      {lineLayers.map((layer) => (
+        <g key={layer.id} stroke={layer.stroke} strokeWidth={layer.width} strokeLinecap="square">
+          {layer.at.map((i) => (
+            <g key={i}>
+              <line x1={left + i * cell} y1={top} x2={left + i * cell} y2={top + height} />
+              <line x1={left} y1={top + i * cell} x2={left + width} y2={top + i * cell} />
+            </g>
+          ))}
+        </g>
+      ))}
+      {givens.map((g) => (
+        <text
+          key={g.id}
+          x={(xScale(g.c) ?? 0) + cell / 2}
+          y={(yScale(g.r) ?? 0) + cell / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={cell * DIGIT_SHARE}
+          fontWeight={600}
+          fill={t.ink}
+        >
+          {g.value}
+        </text>
+      ))}
+    </g>
+  );
+}
 
-      {/* SVG grid rendered via MUI Box component bridge */}
-      <Box
-        component="svg"
-        sx={{ position: "absolute", top: gy, left: gx, display: "block" }}
-        width={gridSize}
-        height={gridSize}
-      >
-        <rect width={gridSize} height={gridSize} fill={t.pageBg} />
-        {thinLines}
-        {thickLines}
-        {numbers}
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const side = Math.min(width, height - HEADER_H);
+
+  return (
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{SUBTITLE}</Typography>
       </Box>
+      <ChartsContainer
+        width={side}
+        height={side}
+        margin={{ top: PAD, right: PAD, bottom: PAD, left: PAD }}
+        skipAnimation
+        series={[]}
+        xAxis={[{ id: "col", scaleType: "band", data: indices, categoryGapRatio: 0, position: "none" }]}
+        yAxis={[{ id: "row", scaleType: "band", data: indices, categoryGapRatio: 0, position: "none" }]}
+      >
+        <GridLayer />
+      </ChartsContainer>
     </Box>
   );
 }
