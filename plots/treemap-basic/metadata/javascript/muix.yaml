@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: treemap-basic
 created: '2026-08-24T11:24:38Z'
-updated: '2026-11-08T06:42:26Z'
+updated: '2026-11-08T06:46:51Z'
 generated_by: claude-opus-5-5
 adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
 workflow_run: 42455557843
@@ -13,48 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Squarified layout (Bruls, Huizing & van Wijk) written out for both levels keeps
-    every tile compact; the largest tile (Platform Infra) and the smallest (Training)
-    both read as blocks rather than slivers
-  - 'Two-level hierarchy told apart through nesting depth and shading: each department
-    gets a full-strength Imprint header band carrying its name and total, and its
-    cost-center tiles take a 30 % lighter tint of the same hue'
-  - Label ink is chosen per fill by relative luminance, so dark text on lavender/ochre/cyan
-    and light text on the blue and red header bands stay readable in both themes
-  - Borders are drawn in the page color with a wider 3 px gutter between departments
-    than the 2 px seam between cost centers, so the hierarchy boundaries flip correctly
-    with the theme
-  - Composes a custom SVG layer inside ChartsContainer through the useXScale/useYScale
-    hooks, the community-package route to a chart type MUI X does not ship; native
-    <title> tooltips add exact value and share in the HTML output
+  - Squarified layout (Bruls, Huizing & van Wijk) gives compact, near-square tiles
+    that tile the full plot area, with each area proportional to its budget value
+  - 'Two-level hierarchy is shown both ways the Notes allow: each department sits
+    in one block under a header band in the full Imprint hue that carries its total,
+    and its cost-center tiles use a lighter shade of the same hue'
+  - 'Hierarchy boundaries come out clearly: 3 px page-colored gutters between departments
+    and 2 px page-colored strokes between cost centers, and both stay visible as subtle
+    borders in both themes'
+  - Label ink follows each fill's luminance, so every header and tile label reads
+    clearly against its fill in both themes, and the fit checks drop labels only where
+    they would not fit
+  - Imprint palette applied in canonical order, with slot 5 (the matte-red semantic
+    anchor) skipped for ordinary categories as the style guide asks; data colors are
+    identical across themes
+  - 'Idiomatic MUI X v9 composition: a custom SVG layer inside ChartsContainer draws
+    through useXScale/useYScale px-unit scales, with skipAnimation and native <title>
+    tooltips for the HTML view'
   weaknesses:
-  - 'VQ-07 (both): Operations, an ordinary department, takes matte red #AE3030 by
-    ordinal position 5, the slot the style guide reserves for bad/loss/error roles
-    → skip slot 5 for a non-semantic sixth category and use cyan #2ABCCD for Operations
-    and rose #954477 for Customer Success. Likely cause: shades built from t.palette[i]
-    with i running straight through 0..5.'
-  - 'Suggestion: the cost-center labels at 15 px blur in the 400 px thumbnail; a 16–17
-    px label would hold up better on mobile.'
-  - 'Suggestion: the subtitle could show each department''s share of the total rather
-    than only the grand total.'
+  - 'Suggestion: show each tile''s share of the total (for example ''820 · 13%'')
+    next to its value to make the part-to-whole reading even faster.'
+  - 'Suggestion: at the 400 px thumbnail the 14-15 px tile labels become very small;
+    slightly larger labels on the biggest tiles would hold up better at thumbnail
+    size.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure white.
-      Chrome: bold title "treemap-basic · javascript · muix · anyplot.ai" top left in dark ink, a soft-ink subtitle "20 cost center tiles in 6 department blocks · area ∝ Budget (USD thousand), 6,230 in total". No axes or grid, as the spec requires. All text readable.
-      Data: six department blocks tile the area: Engineering (#009E73 header, 1,880) as a tall left column, Sales (lavender, 1,180) and Marketing (blue, 960) stacked in the middle, R&D (ochre, 880) top right, Operations (matte red, 740) and Customer Success (cyan, 590) bottom right. Each block has a full-strength header band with name and total, and its cost-center tiles below in a lighter tint, each labelled with name and value (all 20 tiles labelled). Page-colored borders separate tiles, with wider gutters between departments.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: dark title "treemap-basic · javascript · muix · anyplot.ai" at top-left, with a soft-ink subtitle below it ("20 cost center tiles in 6 department blocks · area ∝ Budget (USD thousand), 6,230 in total"). No axes or grid. All text is readable.
+      Data: six department blocks: Engineering in brand green #009E73 (largest, left), Sales in purple, R&D in ochre, Marketing in blue, Operations in cyan, and Customer Success in rose. Each block has a full-hue header band with "Name · total" and lighter-shade cost-center tiles with name and value labels. Page-colored gutters and strokes separate the blocks and tiles. All 20 tiles are labeled.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title in light ink, subtitle in soft light ink, both clearly readable; no dark-on-dark text.
-      Data: identical fills and layout to the light render; only the borders/gutters flip to the dark page color, which reads as clean dark seams. Tile label ink is luminance-chosen per fill and identical to light; header text on blue and red bands is light, on the others dark; all readable. Brand green header clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink and subtitle in light soft ink, both clearly readable. No dark-on-dark text anywhere.
+      Data: fills identical to the light render. Borders and gutters now take the dark page color and read as subtle dark separators. Tile labels keep fill-contrast ink (dark on the light shades; white on the darker blue and rose headers), all readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,14 +61,14 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, labels 15 px, headers 15 px bold; all readable in both
-          themes, ink adapted per fill
+        comment: Title 22 px, labels 15 px, values 14 px CSS (x2 native); every label
+          readable in both themes thanks to fill-luminance ink
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Every label sits inside its own tile; no collisions
+        comment: No text collisions; labels sit inside their tiles
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -82,29 +81,27 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Categories distinguished by hue plus labels; luminance-based text
-          contrast
+        comment: Every category is named in text as well as by hue; label contrast
+          is adapted per fill
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Treemap fills the canvas with even margins; title smaller than 50
-          % width, which is no deduction
+        comment: Treemap fills the canvas with balanced margins; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design; subtitle names the value and its unit (USD thousand)
+        comment: N/A for axes (layout-positioned); subtitle names the value with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Imprint palette in canonical order with #009E73 first and correct
-          backgrounds, but Operations takes the reserved semantic red slot 5 by ordinal
-          (defect line)'
+        passed: true
+        comment: Imprint order with brand green first and red slot skipped; correct
+          backgrounds; identical data colors across themes
     design_excellence:
       score: 12
       max: 20
@@ -113,23 +110,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Header bands carrying name and total in bold, luminance-chosen label
-          ink, explanatory subtitle: typographic hierarchy beyond the baseline'
+        passed: true
+        comment: 'Typographic hierarchy beyond baseline: bold header bands with totals,
+          medium-weight tile names, lighter values'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Two border widths (3 px gutter between departments, 2 px seams within),
-          consistent 8 px label inset, top-left aligned labels
+        passed: true
+        comment: Wider gutters between departments than strokes within, consistent
+          8 px label insets, and labels that are shown only where they fit
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Department totals in the header bands give a two-level reading order
-          (department size first, then cost centers)
+        passed: true
+        comment: Department totals in header bands and the grand total in the subtitle
+          set a two-level reading order
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic nested treemap; no unasked layers
+        comment: Basic nested treemap; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct color per category, labels on rectangles, subtle borders,
-          hierarchy via nesting depth and shading; all good-version bullets met
+        comment: 'Distinct category colors, labels on larger tiles, subtle borders,
+          and hierarchy through nesting and shading: every Notes and ''A good version
+          shows'' bullet is met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Areas proportional to values; layout-positioned type
+        comment: Areas proportional to values; the position comes from the layout
+          (exempt)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; no legend needed since every block
-          is labelled directly
+        comment: Title format correct; no legend needed because the headers name the
+          categories (N/A)
     data_quality:
       score: 15
       max: 15
@@ -169,21 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two-level hierarchy with dominant and small tiles shows the full
-          part-to-whole range
+        comment: Two-level hierarchy with dominant, mid and small tiles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Company budget by department and cost center, plausible and neutral
+        comment: Plausible, neutral company budget by department and cost center
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '20 items in the 5-50 range; budgets 110-820 USD thousand, totals
-          checked: 1,880/1,180/960/880/740/590 = 6,230 match the data'
+        comment: Budgets of 110–820 USD thousand per cost center are sensible; the
+          6,230 total checks against the data; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -193,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level data and layout; the only function besides Chart is the
-          React component the hooks require
+        comment: Flat script; the only function is the Treemap component, which the
+          scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Deterministic, hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartsContainer and the two scale hooks, all used
+        comment: ChartsContainer and the hooks are both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Squarify written out because no available package computes it; compact
+        comment: Squarified layout must be written out because the community package
+          has no treemap; concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          v9 composition API
+        comment: Default-export component, harness mount, skipAnimation, v9 API
     library_mastery:
       score: 6
       max: 10
@@ -228,29 +226,33 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Uses ChartsContainer composition with px-unit axes and useXScale/useYScale
-          hooks, the documented route for custom layers
+        passed: true
+        comment: ChartsContainer composition with px-unit linear axes hidden via position
+          'none' and a custom layer through useXScale/useYScale
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Custom chart layer via MUI X's composition hooks inside a container
-  verdict: REJECTED
+        comment: Uses MUI X's composition API (custom child layer reading container
+          scales) to build a chart type the library lacks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T06:39:39Z'
+  rendered_at: '2026-11-08T06:44:19Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - patches
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
+  - publication-ready
   - minimal-chrome
   - edge-highlighting
