@@ -620,6 +620,10 @@ class TestTable:
             "values differ: 'v' in 2 rows"
         )
         assert prep.result_table(parse_dataset("k,v\na,1.5\nb,\nc,2\n")).rows == (("a", "1.5"), ("b", None), ("c", "2"))
+        # `nan` equals nothing as a float, so it compares as its text and sorts as text.
+        nan = cells(columns, dtypes, ("a", "nan", "0.1"), ("b", "0", None))
+        assert prep.table_difference(nan, nan) is None and prep.table_difference(nan, nan, any_order=True) is None
+        assert prep.table_difference(nan, want) == "values differ: 'v' in 1 row"
 
     def test_rows_compare_in_order_unless_the_case_leaves_it_open(self) -> None:
         want = table_of(SALES_CHAIN)
@@ -922,6 +926,8 @@ class TestRun:
         assert results[4].found == results[4].expected and results[4].failed_calls == 1
         # `check_cases` would refuse that case; run without it, the case says why it has no table to compare.
         assert results[4].table_miss == "the expected operations do not apply to the stored data: unknown_column"
+        assert ", 1 failed data call" in prep.table(cases, results)
+        assert score(cases, results)["misses"][-1]["failed_calls"] == 1
         assert results[0].found == canonical_operations([RENAME], ".") and results[0].llm_calls == 2
         assert results[0].tool_calls == ["prepare_data"] and results[0].cost_usd > 0
         assert results[1].refusal == "out_of_scope" and results[1].tool_calls == [] and results[1].llm_calls == 0

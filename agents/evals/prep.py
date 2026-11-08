@@ -632,10 +632,13 @@ def table_difference(found: ResultTable | None, expected: ResultTable | None, *,
 
 
 def _number(cell: str) -> float | None:
+    """A number cell's value; None for text, and for `nan`, which equals nothing and has no place in a sort, so it
+    compares as its text (`data.csv` writes a missing number as an empty cell, never as `nan`)."""
     try:
-        return float(cell)
+        value = float(cell)
     except ValueError:
         return None
+    return None if math.isnan(value) else value
 
 
 def _same_cell(have: str | None, want: str | None, *, number: bool) -> bool:
@@ -1068,7 +1071,12 @@ class CaseRunner:
 
     async def _current_table(self, user: str, sid: str) -> tuple[ResultTable | None, str]:
         """The table of the session's current data version after the turn, as the tools stored it, and the session
-        language they applied the operations in; no table for a session without data."""
+        language they applied the operations in; no table for a session without data.
+
+        The language is read after the turn, because the scope guard detects it from the message before the root's
+        first tool call; the language before the turn would name a `date_number` column wrongly for every message that
+        sets it. A root that changes the language with `set_language` after its data call in the same turn leaves a
+        column named in the earlier language, which then shows as a column miss."""
         from agents.anyplot.language import DEFAULT_LANGUAGE
         from agents.anyplot.services import get_services
         from agents.anyplot.session_state import read_session
@@ -1404,6 +1412,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "found": result.found,
             "ops_exact": result.ops_exact,
             "table_miss": result.table_miss,
+            "failed_calls": result.failed_calls,
             "refusal": result.refusal,
             "instruction_talk": result.instruction_talk,
             "conversion_skipped": result.conversion_skipped,
@@ -1474,6 +1483,9 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
             outcome = "match" if result.match else "miss (instruction talk)" if result.instruction_talk else "miss"
             if result.match and result.ops_exact is False:
                 outcome += " (other operations, same table)"
+            # Before the table's difference, which may run past the cell's 60 characters.
+            if result.failed_calls and not result.match:
+                outcome += f", {result.failed_calls} failed data {'call' if result.failed_calls == 1 else 'calls'}"
             if result.table_miss:
                 outcome += f": {result.table_miss}"
             if result.version_miss:
