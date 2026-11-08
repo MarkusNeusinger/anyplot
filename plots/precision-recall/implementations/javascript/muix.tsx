@@ -19,8 +19,9 @@ const IS_FRAUD = "Fraud (1 = yes)"; // role: y_true
 const SCORES = ["Gradient boosting", "Logistic regression"]; // role: y_scores
 
 // Data: replace this block with your own records, one object per row
-// 600 card transactions (about 6 % fraud) scored by two classifiers, predict_proba()-style
-// outputs from a fixed-seed LCG with Box-Muller normals mapped through a sigmoid
+// 600 card transactions (a 6 % fraud draw that yields 24 positives, 4 %, in this sample) scored
+// by two classifiers, predict_proba()-style outputs from a fixed-seed LCG with Box-Muller
+// normals mapped through a sigmoid
 let lcgState = 42 >>> 0;
 const draws = Array.from({ length: 600 * 5 }, () => {
   lcgState = (Math.imul(lcgState, 1664525) + 1013904223) >>> 0;
