@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 energy-level-atomic: Atomic Energy Level Diagram
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 88/100 | Updated: 2026-11-08
@@ -6,6 +6,7 @@ Quality: 88/100 | Updated: 2026-11-08
 
 import os
 
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -17,60 +18,117 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+# Imprint palette in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+HC_EV_NM = 1239.84  # photon wavelength in nm = HC_EV_NM / photon energy in eV
+IONIZATION_EV = 0.0  # energies are measured from the ionization limit
 # Spectral regions in wavelength order, one Imprint hue each: blue on the short-wave side,
 # green in the middle of the visible band, matte red on the long-wave side
-REGIONS = {
-    "Lyman series · ultraviolet": "#4467A3",
-    "Balmer series · visible": "#009E73",
-    "Paschen series · infrared": "#AE3030",
-}
-
-# Data — Hydrogen atom spectral series
-# Evenly-spaced visual y positions (nonlinear scale for converging upper levels)
-visual_y = {1: 1.0, 2: 2.5, 3: 4.0, 4: 5.5, 5: 7.0, 6: 8.5}
-energy_ev = {1: -13.60, 2: -3.40, 3: -1.51, 4: -0.85, 5: -0.54, 6: -0.38}
-ionization_y = 10.0
-
-# (upper level, lower level, label, x position, region)
-transitions = [
-    (2, 1, "Ly-α 122 nm", 2.0, "Lyman series · ultraviolet"),
-    (3, 1, "Ly-β 103 nm", 2.7, "Lyman series · ultraviolet"),
-    (4, 1, "Ly-γ 97 nm", 3.4, "Lyman series · ultraviolet"),
-    (3, 2, "Hα 656 nm", 4.5, "Balmer series · visible"),
-    (4, 2, "Hβ 486 nm", 5.2, "Balmer series · visible"),
-    (5, 2, "Hγ 434 nm", 5.9, "Balmer series · visible"),
-    (6, 2, "Hδ 410 nm", 6.6, "Balmer series · visible"),
-    (4, 3, "Pa-α 1875 nm", 7.6, "Paschen series · infrared"),
-    (5, 3, "Pa-β 1282 nm", 8.35, "Paschen series · infrared"),
-    (6, 3, "Pa-γ 1094 nm", 9.1, "Paschen series · infrared"),
+REGIONS = [
+    ("ultraviolet", 400, IMPRINT_PALETTE[2]),
+    ("visible", 700, IMPRINT_PALETTE[0]),
+    ("infrared", float("inf"), IMPRINT_PALETTE[4]),
 ]
 
-level_x_start = 1.0
-level_x_end = 9.5
+# Columns: set these to your table's column names, one row per transition
+LEVEL = "Level"  # role: level
+ENERGY = "Energy (eV)"  # role: energy
+LOWER_LEVEL = "Lower level"  # role: extra
+LOWER_ENERGY = "Lower energy (eV)"  # role: extra
+SERIES = "Series"  # role: transitions
+LINE = "Line"  # role: extra
+
+# Data: hydrogen emission lines, E(n) = −13.6 / n² eV; replace with e.g. df = pd.read_csv("lines.csv")
+lines = [
+    ("Lyman", "Ly-α", 2, 1),
+    ("Lyman", "Ly-β", 3, 1),
+    ("Lyman", "Ly-γ", 4, 1),
+    ("Balmer", "Hα", 3, 2),
+    ("Balmer", "Hβ", 4, 2),
+    ("Balmer", "Hγ", 5, 2),
+    ("Balmer", "Hδ", 6, 2),
+    ("Paschen", "Pa-α", 4, 3),
+    ("Paschen", "Pa-β", 5, 3),
+    ("Paschen", "Pa-γ", 6, 3),
+]
+df = pd.DataFrame(
+    {
+        SERIES: [s for s, *_ in lines],
+        LINE: [name for _, name, *_ in lines],
+        LEVEL: [f"n={upper}" for *_, upper, _ in lines],
+        ENERGY: [-13.6 / upper**2 for *_, upper, _ in lines],
+        LOWER_LEVEL: [f"n={lower}" for *_, lower in lines],
+        LOWER_ENERGY: [-13.6 / lower**2 for *_, lower in lines],
+    }
+)
 
 # Plot: each emission transition is a stem plus a filled arrowhead pointing down onto its lower level
+drawn = df.dropna(subset=[ENERGY, LOWER_ENERGY]).reset_index(drop=True)
+levels_table = (
+    pd.concat(
+        [
+            drawn[[LEVEL, ENERGY]].set_axis(["level", "energy"], axis=1),
+            drawn[[LOWER_LEVEL, LOWER_ENERGY]].set_axis(["level", "energy"], axis=1),
+        ]
+    )
+    .drop_duplicates("level")
+    .sort_values("energy")
+)
+
+# Nonlinear axis: levels evenly spaced by rank, so the converging upper levels stay apart
+LEVEL_STEP = 1.5
+visual_y = {level: 1.0 + LEVEL_STEP * i for i, level in enumerate(levels_table["level"])}
+energy_of = dict(zip(levels_table["level"], levels_table["energy"], strict=True))
+ionization_y = 1.0 + LEVEL_STEP * len(visual_y)
+
+# Schematic x: one column per series, arrows evenly spaced inside it
+COLUMN_STEP, SERIES_GAP = 0.85, 0.3
+series_names = drawn[SERIES].astype(str)
+steps = COLUMN_STEP + SERIES_GAP * (series_names != series_names.shift())
+steps.iloc[0] = 0
+drawn["x"] = 1.8 + steps.cumsum()
+level_x_start, level_x_end = 1.0, drawn["x"].max() + 0.4
+
+region_bins = [0, *(upper_nm for _, upper_nm, _ in REGIONS)]
+region_names = [name for name, *_ in REGIONS]
+region_color = {name: color for name, _, color in REGIONS}
+drawn["wavelength"] = HC_EV_NM / (drawn[ENERGY] - drawn[LOWER_ENERGY]).abs()
+drawn["region"] = pd.cut(drawn["wavelength"], region_bins, labels=region_names).astype(str)
+drawn["color"] = drawn["region"].map(region_color)
+
 HEAD_W, HEAD_H = 0.09, 0.42  # arrowhead half-width (x units) and length (y units), about 46 x 52 px
-LABEL_FS = 36
+LABEL_FS = 44
 
 levels = []
 for y in visual_y.values():
-    levels +=[(level_x_start, y), (level_x_end, y), None]
+    levels += [(level_x_start, y), (level_x_end, y), None]
 
-stems = {region: [] for region in REGIONS}
+stem_colors = list(dict.fromkeys(drawn["color"]))
+stems = {color: [] for color in stem_colors}
 heads = []
 wavelength_labels = []
-for upper, lower, label, x, region in transitions:
-    tip = visual_y[lower]
-    stems[region] += [(x, visual_y[upper]), (x, tip + HEAD_H), None]
+for upper, lower, name, x, wavelength, color in zip(
+    drawn[LEVEL], drawn[LOWER_LEVEL], drawn[LINE], drawn["x"], drawn["wavelength"], drawn["color"], strict=True
+):
+    start_y, tip = visual_y[upper], visual_y[lower]
+    # The arrow runs from the first level to the second: down for emission, up for absorption
+    base = tip + (HEAD_H if start_y >= tip else -HEAD_H)
+    stems[color] += [(x, start_y), (x, base), None]
     # Closed triangle, first point repeated last, so pygal's fill closes it on itself
-    heads.append((region, [(x - HEAD_W, tip + HEAD_H), (x, tip), (x + HEAD_W, tip + HEAD_H), (x - HEAD_W, tip + HEAD_H)]))
-    wavelength_labels.append({"value": (x, visual_y[upper] + 0.32), "label": label})
+    heads.append((color, [(x - HEAD_W, base), (x, tip), (x + HEAD_W, base), (x - HEAD_W, base)]))
+    wavelength_labels.append({"value": (x, max(start_y, tip) + 0.32), "label": f"{name} {wavelength:.0f} nm"})
 
-region_labels = {}
-for region in REGIONS:
-    xs = [x for *_, x, r in transitions if r == region]
-    region_labels[region] = [{"value": ((min(xs) + max(xs)) / 2, ionization_y + 0.55), "label": region}]
+# Each series header takes the spectral region most of its lines fall in
+series_headers = []
+for series, group in drawn.groupby(SERIES, sort=False):
+    region = group["region"].mode().iloc[0]
+    color = region_color[region]
+    middle = (group["x"].min() + group["x"].max()) / 2
+    series_headers.append((color, [{"value": (middle, ionization_y + 0.55), "label": f"{series} series · {region}"}]))
 
+n_headers = len(series_headers)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -78,14 +136,14 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=(
-        *REGIONS.values(),  # region headers
+        *(color for color, _ in series_headers),  # series headers
         INK,  # wavelength labels
         INK_MUTED,  # level lines
         INK,  # ionization limit
-        *REGIONS.values(),  # stems
-        *(REGIONS[region] for region, _ in heads),
+        *stem_colors,  # stems
+        *(color for color, _ in heads),
     ),
-    value_colors=(*REGIONS.values(), INK_SOFT),
+    value_colors=(*(color for color, _ in series_headers), INK_SOFT),
     opacity=1,
     opacity_hover=1,
     stroke_opacity=1,
@@ -101,42 +159,48 @@ custom_style = Style(
     tooltip_font_size=34,
 )
 
+# Series indices follow the add order below: headers, wavelength labels, levels, ionization, stems, heads
+header_labels = ", ".join(f".serie-{i} text.label" for i in range(n_headers))
+level_lines = f".serie-{n_headers + 1} .line, .serie-{n_headers + 2} .line"
+first_head = n_headers + 3 + len(stem_colors)
 # pygal closes a fill down to the axis; with no stroke only the triangle itself shows
-head_lines = ", ".join(f".serie-{9 + i} .line" for i in range(len(heads)))
+head_lines = ", ".join(f".serie-{first_head + i} .line" for i in range(len(heads)))
 chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
     title="Hydrogen Atom · energy-level-atomic · python · pygal · anyplot.ai",
-    y_title="Energy (eV, levels evenly spaced)",
+    y_title=f"{ENERGY}, levels evenly spaced",
     show_legend=False,
     show_x_guides=False,
     show_y_guides=False,
     show_x_labels=False,
     margin=50,
     spacing=30,
-    range=(0.4, 11),
-    xrange=(0.6, 9.8),
+    range=(0.4, ionization_y + 1.0),
+    xrange=(level_x_start - 0.4, level_x_end + 0.3),
     print_labels=True,
     print_values=False,
     css=(
         "file://style.css",
         "file://graph.css",
         "inline:.text-overlay text.label { text-anchor: middle; }",
-        "inline:.serie-0 text.label, .serie-1 text.label, .serie-2 text.label { font-size: 42px !important; font-weight: bold; }",
-        "inline:.serie-4 .line, .serie-5 .line { stroke-width: 3px !important; }",
+        f"inline:{header_labels} {{ font-size: 42px !important; font-weight: bold; }}",
+        f"inline:{level_lines} {{ stroke-width: 3px !important; }}",
         f"inline:{head_lines} {{ stroke-width: 0 !important; }}",
         "inline:.plot_title { font-weight: bold; }",
     ),
 )
 
 # Y-axis labels showing quantum numbers and actual energy values
-chart.y_labels = [{"label": f"n={n}:  {energy_ev[n]:.2f} eV".replace("-", "−"), "value": y} for n, y in visual_y.items()]
-chart.y_labels += [{"label": "Ionization:  0.00 eV", "value": ionization_y}]
+chart.y_labels = [
+    {"label": f"{level}:  {energy_of[level]:.2f} eV".replace("-", "−"), "value": y} for level, y in visual_y.items()
+]
+chart.y_labels += [{"label": f"Ionization:  {IONIZATION_EV:.2f} eV", "value": ionization_y}]
 
 # Labels first, so their indices are fixed for the css above; text is always drawn above the marks
-for region in REGIONS:
-    chart.add(None, region_labels[region], stroke=False, dots_size=0)
+for _, header in series_headers:
+    chart.add(None, header, stroke=False, dots_size=0)
 chart.add(None, wavelength_labels, stroke=False, dots_size=0)
 chart.add(None, levels, show_dots=False, allow_interruptions=True)
 chart.add(
@@ -145,8 +209,8 @@ chart.add(
     show_dots=False,
     stroke_style={"dasharray": "18, 10"},
 )
-for region in REGIONS:
-    chart.add(None, stems[region], show_dots=False, allow_interruptions=True)
+for color in stem_colors:
+    chart.add(None, stems[color], show_dots=False, allow_interruptions=True)
 for _, points in heads:
     chart.add(None, points, fill=True, show_dots=False)
 
