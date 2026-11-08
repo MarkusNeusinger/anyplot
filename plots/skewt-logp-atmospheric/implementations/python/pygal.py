@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-08
@@ -13,6 +13,7 @@ _this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _this_dir]
 
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
@@ -33,32 +34,50 @@ DRY_COLOR = "rgba(189,130,51,0.65)"  # ochre #BD8233
 MOIST_COLOR = "rgba(68,103,163,0.60)" if THEME == "light" else "rgba(68,103,163,0.95)"  # blue #4467A3
 MIXING_COLOR = "rgba(196,117,253,0.85)"  # lavender #C475FD
 
-# Physical constants
+# Constants
 LV = 2.501e6  # Latent heat of vaporization (J/kg)
 RD = 287.05  # Gas constant for dry air (J/kg/K)
 RV = 461.5  # Gas constant for water vapor (J/kg/K)
 CP = 1004.0  # Specific heat of dry air (J/kg/K)
 G = 9.81  # Gravity (m/s^2)
 KAPPA = RD / CP
-
-# Data — realistic mid-latitude atmospheric sounding
-pressure = np.array([1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100])
-temperature = np.array([25, 20, 15, 5, -15, -28, -45, -52, -58, -62, -55])
-dewpoint = np.array([18, 15, 12, -2, -22, -38, -55, -60, -65, -70, -65])
-
-# Plot: y = log10(1000 / p), so pressure falls upward on a log scale; x = T + SKEW * y skews the
-# isotherms to the right. They rise at 45° when one log-p decade spans as many pixels as SKEW °C:
-# this canvas's plot box is 2906 x 1360 px for 90 °C by one decade, so SKEW = 90 * 1360 / 2906 ≈ 42
+# The diagram frame: y = log10(1000 / p), so pressure falls upward on a log scale; x = T + SKEW * y
+# skews the isotherms to the right. They rise at 45° when one log-p decade spans as many pixels as
+# SKEW °C: this canvas's plot box is 2906 x 1360 px for 90 °C by one decade, so SKEW = 90 * 1360 / 2906 ≈ 42
 SKEW = 42
 X_LO, X_HI = -50, 40
 P_BOTTOM, P_TOP = 1000.0, 100.0
+MANDATORY_LEVELS = (1000, 850, 700, 500, 400, 300, 200, 150, 100)  # hPa, the conventional isobar ticks
+MIXING_RATIOS = (1, 2, 4, 8, 16)  # g/kg
+
+# Columns: set these to your table's column names
+PRESSURE = "Pressure (hPa)"  # role: pressure
+TEMPERATURE = "Temperature (°C)"  # role: temperature
+DEWPOINT = "Dewpoint (°C)"  # role: dewpoint
+
+# Data: replace this block with your own sounding, for example df = pd.read_csv("sounding.csv")
+# A realistic mid-latitude summer radiosonde sounding
+df = pd.DataFrame(
+    {
+        PRESSURE: [1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100],
+        TEMPERATURE: [25, 20, 15, 5, -15, -28, -45, -52, -58, -62, -55],
+        DEWPOINT: [18, 15, 12, -2, -22, -38, -55, -60, -65, -70, -65],
+    }
+)
+
+# Plot: reads only df and the constants above
 lp_top = np.log10(P_BOTTOM / P_TOP)
 p_grid = np.geomspace(P_BOTTOM, P_TOP, 181)
 lp_grid = np.log10(P_BOTTOM / p_grid)
 
-log_p = np.log10(P_BOTTOM / pressure)
-temp_points = list(zip(temperature + SKEW * log_p, log_p, strict=True))
-dew_points = list(zip(dewpoint + SKEW * log_p, log_p, strict=True))
+sounding = df.sort_values(PRESSURE, ascending=False)
+log_p = np.log10(P_BOTTOM / sounding[PRESSURE].to_numpy(dtype=float))
+profiles = {}
+for column in (TEMPERATURE, DEWPOINT):
+    values = sounding[column].to_numpy(dtype=float)
+    profiles[column] = [
+        None if np.isnan(v + lp) else (float(v + SKEW * lp), float(lp)) for v, lp in zip(values, log_p, strict=True)
+    ]
 
 # Isotherms every 10 °C: straight lines, clipped to the plot box where they enter and leave it
 isotherms = []
@@ -82,7 +101,6 @@ for p_now, p_next in zip(p_grid[:-1], p_grid[1:], strict=True):
 moist = np.array(moist)
 
 # Saturation mixing ratio lines (g/kg), drawn in the lower troposphere where they are conventional
-MIXING_RATIOS = (1, 2, 4, 8, 16)
 mixing_p = p_grid[p_grid >= 400]
 vapour = np.array(MIXING_RATIOS)[None, :] * mixing_p[:, None] / (622 + np.array(MIXING_RATIOS)[None, :])
 mixing = 243.5 * np.log(vapour / 6.112) / (17.67 - np.log(vapour / 6.112))
@@ -99,11 +117,26 @@ for name, temps, lps in (
         points += [(xi, li) if X_LO <= xi <= X_HI else None for xi, li in zip(x, lps, strict=True)] + [None]
     families[name] = points
 
-# Mixing-ratio values printed at the top end of each line
-mixing_labels = [
-    {"value": (column[-1] + SKEW * lp_grid[len(mixing_p) - 1], lp_grid[len(mixing_p) - 1] + 0.05), "label": f"{r:g}"}
-    for column, r in zip(mixing.T, MIXING_RATIOS, strict=True)
-]
+# Mixing-ratio values printed beside the upper part of each line, at the spot farthest from the
+# moist adiabats and the profiles (in plot-box pixels, 2906 x 1360) so no line runs through a label
+PX_X, PX_Y = 2906 / (X_HI - X_LO), 1360 / lp_top
+LABEL_DX = 0.6  # the label's centre sits about 25 px right of its anchor point
+obstacles = [np.column_stack([(moist + SKEW * lp_grid[:, None]).ravel(), np.repeat(lp_grid, moist.shape[1])])]
+for points in profiles.values():
+    xs, lps = np.array([p for p in points if p is not None]).T
+    dense_lp = np.linspace(lps.min(), lps.max(), 400)
+    obstacles.append(np.column_stack([np.interp(dense_lp, lps, xs), dense_lp]))
+obstacles = np.vstack(obstacles)
+label_lps = lp_grid[: len(mixing_p)][-25:]
+mixing_labels = []
+for column, r in zip(mixing.T, MIXING_RATIOS, strict=True):
+    anchors = np.column_stack([column[-25:] + SKEW * label_lps + LABEL_DX, label_lps])
+    gap = np.hypot(
+        (anchors[:, None, 0] + LABEL_DX - obstacles[None, :, 0]) * PX_X,
+        (anchors[:, None, 1] - obstacles[None, :, 1]) * PX_Y,
+    ).min(axis=1)
+    x_best, lp_best = anchors[np.argmax(gap)]
+    mixing_labels.append({"value": (float(x_best), float(lp_best)), "label": f"{r:g}"})
 
 LABEL_FS = 34
 custom_style = Style(
@@ -139,7 +172,7 @@ chart = pygal.XY(
     style=custom_style,
     title="skewt-logp-atmospheric · python · pygal · anyplot.ai",
     x_title="Temperature at 1000 hPa (°C) — isotherms run diagonally at 45°",
-    y_title="Pressure (hPa)",
+    y_title=PRESSURE,
     show_x_guides=False,  # the skewed isotherms are the temperature grid
     show_y_guides=True,
     show_legend=True,
@@ -165,18 +198,14 @@ chart = pygal.XY(
     ),
 )
 chart.x_labels = list(range(X_LO, X_HI + 1, 10))
-chart.y_labels = [{"value": float(np.log10(P_BOTTOM / p)), "label": str(p)} for p in (1000, 850, 700, 500, 400, 300, 200, 150, 100)]
+chart.y_labels = [{"value": float(np.log10(P_BOTTOM / p)), "label": str(p)} for p in MANDATORY_LEVELS]
 
 # Labels first and reference families next, so the two profiles are drawn on top of everything
 chart.add(None, mixing_labels, stroke=False, dots_size=0)
 chart.add("Isotherms (every 10 °C)", isotherms, show_dots=False, allow_interruptions=True)
 chart.add("Dry adiabats (θ every 10 K)", families["dry"], show_dots=False, allow_interruptions=True)
 chart.add(
-    "Moist adiabats",
-    families["moist"],
-    show_dots=False,
-    allow_interruptions=True,
-    stroke_style={"dasharray": "16, 10"},
+    "Moist adiabats", families["moist"], show_dots=False, allow_interruptions=True, stroke_style={"dasharray": "16, 10"}
 )
 chart.add(
     "Mixing ratio (g/kg)",
@@ -185,10 +214,17 @@ chart.add(
     allow_interruptions=True,
     stroke_style={"dasharray": "4, 8", "linecap": "round"},
 )
-chart.add("Temperature", temp_points, dots_size=9, formatter=lambda p: f"{p[0] - SKEW * p[1]:.0f} °C")
 chart.add(
-    "Dewpoint",
-    dew_points,
+    TEMPERATURE,
+    profiles[TEMPERATURE],
+    allow_interruptions=True,
+    dots_size=9,
+    formatter=lambda p: f"{p[0] - SKEW * p[1]:.0f} °C",
+)
+chart.add(
+    DEWPOINT,
+    profiles[DEWPOINT],
+    allow_interruptions=True,
     dots_size=9,
     stroke_style={"dasharray": "26, 14"},
     formatter=lambda p: f"{p[0] - SKEW * p[1]:.0f} °C",
