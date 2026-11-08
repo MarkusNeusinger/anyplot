@@ -2,232 +2,240 @@ library: plotnine
 language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:21:03Z'
-updated: '2026-06-08T04:07:13Z'
-generated_by: claude-sonnet
-workflow_run: 27114535624
+updated: '2026-11-08T22:21:25Z'
+generated_by: claude-opus-5-5
+adopted_from: 80cc23a4023f1824be79d6b5bd3b05f196979715 (80cc23a4023f1824be79d6b5bd3b05f196979715)
+workflow_run: 42528917518
 issue: 4671
-language_version: 3.13.13
-library_version: 0.15.5
+language_version: 3.14.10
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Creative hexagonal cartogram construction using plotnine polygon layers — builds
-    area-distorted hexagons from scratch with sqrt(pop/median_pop) radius scaling
-  - 'Dual encoding: polygon area encodes population, fill color encodes urbanization
-    rate — clear visual hierarchy shows Nigeria dominance immediately'
-  - Reference dashed outlines (alpha=0.45) elegantly show original territory size,
-    enabling distortion comparison at a glance
-  - 'Both renders pass theme-readability check — dark mode uses correct #1A1A17 background
-    with fully adaptive chrome (title, labels, legend all light-colored)'
-  - 'Correct imprint_seq gradient (#009E73 → #4467A3) for single-polarity continuous
-    data with guide_colorbar(nbin=100) for smooth rendering'
+  - 'Dashed reference hexagons, scaled so both sets cover the same total, sit over
+    each cartogram hexagon. You can read each country''s distortion directly: Algeria
+    shrinks inside its land-area outline and Nigeria swells far past it, and the caption
+    turns this into a density reading (57 people per km², which matches the data).'
+  - A reference map inset shows a coarse Africa coastline with hexagons at the true
+    centroids, sized by land area and filled with the same urbanization colors, so
+    the undistorted geography sits beside the cartogram.
+  - imprint_seq is built natively with scale_fill_gradient(low='#009E73', high='#4467A3')
+    and guide_colorbar(nbin=100), and the legend has a reader-facing title.
+  - 'Theme tokens reach every element: label chips on ELEVATED_BG, INK outlines that
+    flip to light in the dark render, and title, subtitle and caption all left-aligned
+    to the plot edge.'
+  - The data is real and checkable. Populations, areas and urbanization rates for
+    16 African countries are plausible (Nigeria 220M / 924k km², Algeria 2382k km²
+    / 75 %, Niger 17 % urban).
+  - The vertices come from one cross merge over the seven hexagon angles, with no
+    loops or helper functions.
   weaknesses:
-  - Bottom annotation text (size=3.1mm ≈ 8.8pt italic) is small enough to be borderline
-    at mobile scale (~400px) — consider increasing to 3.5mm
-  - Country abbreviation label size=3.3mm is acceptable but on the small side for
-    the smallest hexagons (ZM, ML, NE at 20-23M pop); could be raised to 3.8mm
-  - 'CQ-01: hex_poly() helper function technically violates KISS — could be inlined
-    as a list comprehension or numpy vectorized call'
-  - Geographic schematic layout leaves some empty canvas in upper-left corner area;
-    tightening coord_fixed xlim slightly could improve canvas utilization
+  - 'SC-02 (both): the spec asks for neighbors kept close, but the hexagons sit on
+    a loose grid. Wide empty gaps open between neighbors, for example Cameroon–Kenya
+    at about 1.5 hexagon widths and Niger–Sudan at about 1 width, and an empty band
+    lies between NG/CM and the right column, so the layout reads as scattered tiles
+    rather than a compact map → tighten the grid so neighbors nearly touch without
+    overlapping (about −30 % spacing). Likely cause: the grid_x/grid_y coordinates
+    in COUNTRIES are spaced wider than the hexagon radii (BASE_R = 1.6).'
+  - 'VQ-01 (both): the inset caption ''Undistorted map: area ∝ land area'' is set
+    at 6.5 pt italic in INK_SOFT, the smallest text on the canvas, and blurs at the
+    400 px thumbnail → about 8 pt (+1.5 pt). Likely cause: annotate(..., size=6.5).'
+  - 'Suggestion: a small hexagon size key (for example 50M and 200M) next to the colorbar
+    would make the area encoding readable without the subtitle.'
+  - 'Suggestion: the inset could be a little larger now that the right column below
+    the legend is empty.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Bold title "cartogram-area-distortion · python · plotnine · anyplot.ai" in dark ink at ~70% plot width. Subtitle in smaller dark-soft ink spanning ~75% width. Bottom-left annotation "Larger polygon = larger population" and bottom-right "Color = % urban population (2024)" in small italic INK_MUTED. All text readable against light background.
-      Data: 16 hexagonal polygons in teal-to-blue gradient (imprint_seq #009E73 → #4467A3). Nigeria (NG) is largest (220M), Ethiopia (ET) and Egypt (EG) next. Zambia (ZM), Mali (ML) smallest. Dashed reference outlines show original equal-size territory borders. Country abbreviation labels as small rounded boxes (INK text on ELEVATED_BG fill).
-      Colorbar: Right-side vertical colorbar labeled "Urbanization Rate (%)", tick labels 20-70 visible.
-      Legibility verdict: PASS — all primary text (title, subtitle, legend) clearly readable. Annotations and country labels small but legible at full resolution.
+      Background: warm off-white #FAF8F1 across canvas and panel; the inset box and the label chips use the slightly lighter elevated surface.
+      Chrome: bold dark title "cartogram-area-distortion · python · plotnine · anyplot.ai" top-left (about 80 % of width), two gray subtitle lines, a two-line gray caption at the bottom, and a boxed colorbar "Urbanization Rate (%)" on the right (ticks 20–70). No axes or grid. All text readable.
+      Data: 16 pointy-top hexagons on a schematic Africa grid, each with a bold abbreviation chip (MA, DZ, EG, ML, NE, SD, ET, NG, GH, CM, KE, CD, TZ, AO, ZM, MZ). The fill runs on imprint_seq from green #009E73 (Niger, rural) to blue #4467A3 (Algeria, urban), with dark outlines. Dashed hexagons show land area: DZ, SD, ML and NE sit inside large dashed outlines, while NG, EG and ET extend far past theirs. The lower-left inset shows the Africa coastline with small hexagons at the true centroids, under the italic caption "Undistorted map: area ∝ land area".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and subtitle in light cream/off-white (#F0EFE8 INK equivalent) — clearly readable against dark background. No dark-on-dark failures found. Country abbreviation labels show light text on dark elevated background (#242420 fill). Colorbar tick labels light-colored.
-      Data: Hexagon fill colors identical to light render — same teal-to-blue gradient positions (imprint palette data colors are theme-independent). Country sizes unchanged. Reference dashed outlines still visible against dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements correctly adapt to dark theme.
+      Background: warm near-black #1A1A17; the inset box, legend box and label chips use the elevated #242420.
+      Chrome: title in light ink, subtitle, caption and tick labels in light gray, all clearly readable; no dark-on-dark text.
+      Data: hexagon fills identical to the light render (same green-to-blue ramp); outlines and dashed outlines flip to light ink and stay visible; the inset coastline is drawn in light gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All major font sizes explicitly set; title/subtitle/legend readable
-          in both themes. Bottom annotation text (3.1mm) and country labels (3.3mm)
-          are borderline small at mobile scale.
+        comment: Font sizes set explicitly; everything is readable in both themes,
+          but the 6.5 pt inset caption blurs at thumbnail size (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Hexagons on schematic grid maintain separation.
-          Minor proximity between NG/GH hexagons.
+        comment: No text collisions; the chips sit inside their hexagons and the hexagons
+          do not overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All hexagons clearly visible with distinct gradient colors. Smallest
-          countries (ZM 20M) are small but discernible. Reference outlines subtle
-          but visible.
+        comment: Hexagons, dashed outlines and inset marks are visible in both themes;
+          the colorbar is clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe. Country abbreviation labels
-          provide text redundancy beyond color.
+        comment: Single-hue-shift green-to-blue ramp, CVD-safe; area carries the main
+          encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correct (3200x1800). Canvas gate passed. Plot fills ~65-70%
-          of canvas; some empty space in upper-left due to geographic distribution
-          — inherent to the schematic layout.
+        comment: 2400×2400 square canvas; balanced layout; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (appropriate for cartogram). Subtitle and annotations
-          provide clear encoding explanation. Title format correct.
+        comment: 'N/A: a map with no axes; subtitle and legend titles are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') = correct
-          imprint_seq. Background #FAF8F1 (light) / #1A1A17 (dark). All chrome theme-adaptive
-          in both renders.'
+        comment: 'imprint_seq (#009E73 → #4467A3) for continuous urbanization; correct
+          theme backgrounds'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: custom hexagon construction, dual encoding, reference
-          outlines. Not publication-ready due to schematic grid appearance vs. geographic
-          authenticity.'
+        comment: 'Beyond baseline: a deliberate title/subtitle/caption hierarchy,
+          all left-aligned to the plot edge, elevated label chips, and a framed inset
+          with an italic caption'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border, grid, axis spines all removed. Legend well-styled.
-          Subtle dashed outlines. Some unused corner space.
+        comment: 'Beyond baseline: axes and grid dropped as fits a map, reference
+          outlines drawn dashed on top so they read inside and outside the fill, and
+          line weights graded between main map and inset'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Nigeria's dominance immediately apparent. Visual hierarchy from size
-          guides viewer. Reference outlines help understand distortion. Annotations
-          explain encoding.
+        comment: Same-total scaling of the dashed outlines makes fill vs outline read
+          as denser or sparser than the group average, which the caption spells out;
+          NG vs DZ becomes the focal contrast
     spec_compliance:
       score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct concept: area distortion by data value. Schematic hexagon
-          approach is appropriate for plotnine (no native geo support). Adjacency/contiguous
-          borders not shown — inherent library limitation.'
+        comment: Non-contiguous Demers-style cartogram (hexagon tiles), which the
+          Notes accept
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Area ∝ population, color scale (urbanization), reference outlines,
-          country labels, colorbar legend — all present.
+        comment: Original-area outlines plus a reference inset, a color scale for
+          a secondary variable, a legend and abbreviations are all present; the 'neighbors
+          kept close' property is only partly met because the grid gaps are wide (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Area correctly mapped to population (r ∝ sqrt(pop/median)). Color
-          correctly mapped to urbanization. Geographic positions approximately preserved.
+        comment: Hexagon area ∝ population via r ∝ sqrt(pop); the inset sits at the
+          true centroids
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''cartogram-area-distortion · python · plotnine · anyplot.ai''
-          ✓. Colorbar: ''Urbanization Rate (%)'' ✓.'
+        comment: Title format correct; colorbar titled 'Urbanization Rate (%)'; the
+          subtitle states what area represents
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows area distortion, color secondary encoding, reference outlines,
-          labels, wide population range (20M-220M). No inset reference map.
+        comment: Shows both shrinking large sparse countries (DZ, SD, ML, NE) and
+          swelling dense ones (NG, ET, EG)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real 16 African countries with plausible 2024 population and urbanization
-          data. Neutral geographic topic.
+        comment: Real African country populations, areas and urbanization rates; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population 20M-220M and urbanization 17-75% are realistic for the
-          selected African countries.
+        comment: 'Checked: areas for DZ 2382, CD 2345, EG 1001, NG 924 (thousand km²)
+          match the real values; the caption''s 57 people/km² follows from 1001M /
+          17,639k km² = 56.7'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Defines one helper function hex_poly() — technically violates KISS
-          but it's small and necessary.
+        comment: Linear imports → data → plot → save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random elements.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports are used. No extra packages.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, no over-engineering, no fake interactivity.
+        comment: The cross merge builds all vertices in one step; the sys.path guard
+          is exempt
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dimensions (width=8, height=4.5,
-          dpi=400).
+        comment: Saves plot-{THEME}.png at dpi=400 with the current API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -235,28 +243,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses geom_polygon, geom_path, geom_label, annotate, scale_fill_gradient,
-          guide_colorbar, coord_fixed all correctly via plotnine's grammar-of-graphics
-          layer system.
+        comment: Layered grammar with per-layer data and inherit_aes=False, group
+          aesthetics for polygons, and coord_fixed with explicit limits and expand=False
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: coord_fixed for geographic proportions, guide_colorbar(nbin=100)
-          for smooth gradient, geom_label with styled fills, and building custom geographic
-          shapes through plotnine's polygon grammar are all library-specific approaches.
+        passed: false
+        comment: Generic ggplot-grammar usage; nothing beyond what the library prompt
+          mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-08T22:18:22Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - layer-composition
+  - patches
   patterns:
-  - iteration-over-groups
-  dataprep: []
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
   styling:
-  - minimal-chrome
+  - publication-ready
   - alpha-blending
-  - custom-colormap
+  - minimal-chrome
