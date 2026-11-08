@@ -35,10 +35,10 @@ const data = (() => {
     return seed / 4294967296;
   };
   const groups = [
-    { name: "Control", mean: 46, std: 12 },
-    { name: "Drug A", mean: 30, std: 10 },
-    { name: "Drug B", mean: 19, std: 7 },
-    { name: "Drug C", mean: 11, std: 5 },
+    { name: "Placebo", mean: 46, std: 12 },
+    { name: "Paracetamol 1 g", mean: 30, std: 10 },
+    { name: "Ibuprofen 400 mg", mean: 19, std: 7 },
+    { name: "Naproxen 500 mg", mean: 11, std: 5 },
   ];
   return groups.flatMap((g) =>
     Array.from({ length: 42 }, () => {
