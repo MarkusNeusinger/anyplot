@@ -184,15 +184,15 @@ not only `anyplot.ai`. See [Agent usage telemetry](agent-telemetry.md).
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `search` | `query`, `category` | FilterBar.tsx | User searches and selects value |
-| `search_no_results` | `query` | FilterBar.tsx | Search query returns no results (debounced 200ms) |
+| `search` | `query`, `category` | FilterBar/FilterSearch.tsx | User searches and selects value |
+| `search_no_results` | `query` | FilterBar/FilterSearch.tsx | Search query returns no results inside the active filters (debounced 200ms). `query` is the text as typed, before the search drops generic words. It also fires when the dropdown offers `.search_all()`, because the same query finds matches without the filters. |
 
 ### Feature usage
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts | User triggers random filter |
-| `filter_remove` | `category`, `value` | useFilterState.ts | User removes a filter |
+| `filter_remove` | `category`, `value` | useFilterState.ts | User removes a filter. `.search_all()` in the filter search sends one per filter it removes. |
 | `grid_resize` | `size` | ToolbarActions.tsx | User toggles between normal/compact view |
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
 | `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |

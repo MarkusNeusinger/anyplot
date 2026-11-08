@@ -35,6 +35,7 @@ const callbacks = {
   onClose: vi.fn(),
   onCategorySelect: vi.fn(),
   onValueSelect: vi.fn(),
+  onSearchAll: vi.fn(),
   onBack: vi.fn(),
 };
 
@@ -51,6 +52,7 @@ function renderMenu(overrides: Partial<FilterMenuProps> = {}) {
       selectedCategory={null}
       hasQuery={false}
       searchResults={[]}
+      hiddenMatchCount={0}
       dropdownItems={categoryItems}
       highlightedIndex={-1}
       {...callbacks}
@@ -118,5 +120,35 @@ describe('FilterMenu', () => {
   it('shows the empty state when a query has no results', () => {
     renderMenu({ hasQuery: true, searchResults: [], dropdownItems: [] });
     expect(screen.getByLabelText('No matches')).toBeInTheDocument();
+    expect(screen.queryByText('.search_all()')).not.toBeInTheDocument();
+  });
+
+  it('offers .search_all() when the filters hide the matches', () => {
+    renderMenu({
+      hasQuery: true,
+      searchResults: [],
+      hiddenMatchCount: 3,
+      dropdownItems: [{ type: 'search_all' }],
+      highlightedIndex: 0,
+    });
+    expect(screen.getByLabelText('No matches')).toBeInTheDocument();
+    expect(screen.getByText('3 matches without the filters')).toBeInTheDocument();
+    const offer = screen.getByRole('menuitem', {
+      name: 'Search all plots: 3 matches without the filters',
+    });
+    expect(offer).toHaveClass('Mui-selected');
+
+    fireEvent.click(offer);
+    expect(callbacks.onSearchAll).toHaveBeenCalled();
+  });
+
+  it('uses the singular for one hidden match', () => {
+    renderMenu({
+      hasQuery: true,
+      searchResults: [],
+      hiddenMatchCount: 1,
+      dropdownItems: [{ type: 'search_all' }],
+    });
+    expect(screen.getByText('1 match without the filters')).toBeInTheDocument();
   });
 });

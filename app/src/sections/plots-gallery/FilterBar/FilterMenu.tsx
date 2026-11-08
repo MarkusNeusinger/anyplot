@@ -10,9 +10,14 @@ import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
 import { FILTER_CATEGORIES, FILTER_LABELS, FILTER_TOOLTIPS } from 'src/types';
 import { getAvailableValues, type SearchResult } from 'src/utils';
 
-/** A keyboard-navigable entry of the dropdown: a category or a concrete value. */
+/**
+ * A keyboard-navigable entry of the dropdown: a category, a concrete value, or
+ * the `.search_all()` offer of an empty search inside the filters.
+ */
 export type DropdownItem =
-  { type: 'category'; category: FilterCategory } | ({ type: 'value' } & SearchResult);
+  | { type: 'category'; category: FilterCategory }
+  | ({ type: 'value' } & SearchResult)
+  | { type: 'search_all' };
 
 export interface FilterMenuProps {
   anchorEl: HTMLElement | null;
@@ -23,11 +28,13 @@ export interface FilterMenuProps {
   selectedCategory: FilterCategory | null;
   hasQuery: boolean;
   searchResults: SearchResult[];
+  hiddenMatchCount: number; // Hits the same search finds in all plots, when the filters leave none
   dropdownItems: DropdownItem[]; // Visible items, for keyboard-highlight mapping
   highlightedIndex: number;
   onClose: () => void;
   onCategorySelect: (category: FilterCategory) => void;
   onValueSelect: (category: FilterCategory, value: string) => void;
+  onSearchAll: () => void; // Drop the filters, keep the query
   onBack: () => void; // Back from a selected category to the category list
 }
 
@@ -44,11 +51,13 @@ export function FilterMenu({
   selectedCategory,
   hasQuery,
   searchResults,
+  hiddenMatchCount,
   dropdownItems,
   highlightedIndex,
   onClose,
   onCategorySelect,
   onValueSelect,
+  onSearchAll,
   onBack,
 }: FilterMenuProps) {
   return (
@@ -228,6 +237,7 @@ export function FilterMenu({
                 });
                 return items;
               } else {
+                const matches = `${hiddenMatchCount} ${hiddenMatchCount === 1 ? 'match' : 'matches'}`;
                 return [
                   <MenuItem key="no-results" disabled>
                     <Typography
@@ -242,6 +252,39 @@ export function FilterMenu({
                       <span className="subj">results</span>.empty()
                     </Typography>
                   </MenuItem>,
+                  ...(hiddenMatchCount > 0
+                    ? [
+                        <Divider key="search-all-divider" sx={{ my: 0.5 }} />,
+                        <MenuItem
+                          key="search-all"
+                          onClick={onSearchAll}
+                          selected={highlightedIndex === 0}
+                          aria-label={`Search all plots: ${matches} without the filters`}
+                          sx={{ fontFamily: typography.mono }}
+                        >
+                          <ListItemText
+                            primary=".search_all()"
+                            secondary={`${matches} without the filters`}
+                            slotProps={{
+                              primary: {
+                                sx: {
+                                  fontFamily: typography.mono,
+                                  fontSize: fontSize.base,
+                                  color: 'var(--ink)',
+                                },
+                              },
+                              secondary: {
+                                sx: {
+                                  fontFamily: typography.mono,
+                                  fontSize: fontSize.xs,
+                                  color: semanticColors.mutedText,
+                                },
+                              },
+                            }}
+                          />
+                        </MenuItem>,
+                      ]
+                    : []),
                 ];
               }
             })(),
