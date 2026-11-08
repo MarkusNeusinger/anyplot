@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-timeseries
 created: '2026-09-05T08:33:04Z'
-updated: '2026-11-08T08:22:32Z'
+updated: '2026-11-08T08:27:06Z'
 generated_by: claude-opus-5-5
 adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
 workflow_run: 42443387111
@@ -13,47 +13,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'True time axis (scaleType: "time") with 168 hourly readings at their own timestamps,
-    ticks at regular 12-hour calendar intervals'
-  - 'Span-adaptive tick formatting: a valueFormatter keyed on context.location shows
-    HH:MM on ticks and a full weekday/date/time string in the HTML tooltip'
-  - 'Two-tier date axis built with the useXScale/useDrawingArea hooks: bold weekday/date
-    labels centred under each day give the week context the hour ticks lack'
-  - Y axis padded 10 % around the data range rather than forced to zero, so the diurnal
-    swing and the gradual warm-up fill the plot
-  - Subtitle summarises count, date range and value range in the inkSoft token; theme
-    tokens threaded through every text and line so both renders are clean
-  - Null-safe series (present filter, null-aware formatter) so explicit gaps would
-    break the line instead of bridging
+  - 'Two-tier date axis: 12-hour time ticks (00:00 / 12:00) on a true `scaleType:
+    "time"` axis with a bold weekday+date row beneath, built as a custom SVG child
+    of LineChart via the `useXScale` and `useDrawingArea` hooks, so day labels and
+    dashed midnight separators sit at exact scale positions'
+  - Span-adaptive tick format (times of day up to 14 days, month/day up to two years,
+    years beyond) chosen from the data span, matching the spec's intelligent-formatting
+    note
+  - Location-aware `valueFormatter` (`context.location === "tick"`) keeps ticks terse
+    while the HTML tooltip shows the full weekday, date and time, and the series formatter
+    appends the unit parsed from the column name
+  - Theme tokens threaded through every chrome element (ink, inkSoft, grid); both
+    renders read cleanly and the brand-green line is identical across themes
+  - Y domain derived from the data with 10 % padding, not forced to zero, so the diurnal
+    cycle and the gentle warm-up fill the plot
+  - Subtitle summarises reading count, date range and value range computed from the
+    data, giving a clear title hierarchy
+  - Deterministic LCG data in the six-zone adaptable layout with role constants; linear
+    curve avoids spline overshoot
   weaknesses:
-  - 'VQ-02 (both): the dashed day-separator lines are drawn on top of the x-axis tick
-    row and strike through the colon of every "00:00" tick label (6 labels) → stop
-    the separator at the axis line and resume below the tick labels, or draw it behind
-    the tick text. Likely cause: DayRow''s <line> runs continuously from y1={top}
-    to y2={bottom + 62} and is rendered as a LineChart child after the axis, so it
-    paints over the tick text.'
-  - 'Suggestion: the x-axis title "Timestamp" is the column name; "Time (local)" would
-    tell the reader more.'
-  - 'Suggestion: the gap of about 45 px between the day-label row and the x-axis title
-    could be narrowed by reducing X_AXIS_H, giving the plot area a little more height.'
+  - 'Suggestion: the x-axis band (X_AXIS_H = 112) leaves about 40 px of empty space
+    between the day-label row and the "Timestamp" axis title; a slightly shorter band
+    would tighten the bottom of the chart.'
+  - 'Suggestion: a lighter or thinner stroke for the dashed midnight separators would
+    let them read as structure rather than doubling the 00:00 grid lines they sit
+    on.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold dark title "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai" (~50 % width) with a muted subtitle "168 readings · Jun 3, 2024 to Jun 9, 2024 · 52.6 to 73.8 °F"; y axis "Air temperature (°F)" with ticks 52–74; x axis "Timestamp" with 00:00/12:00 ticks and a bold day row (Mon, Jun 3 … Sun, Jun 9); subtle grey grid on both axes; dashed day separators at midnight, which cross the "00:00" tick labels. All text readable.
-      Data: one #009E73 line, 3 px, no markers, showing seven diurnal cycles with a gradual warm-up.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold dark title "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai" top-left (~57 % width) with a soft-ink subtitle "168 readings · Jun 3, 2024 to Jun 9, 2024 · 52.6 to 73.8 °F"; y axis "Air temperature (°F)" rotated with ticks 52–74 every 2; x axis ticks 00:00 / 12:00 every 12 h, a bold row of day labels "Mon, Jun 3" … "Sun, Jun 9" centred under each day, dashed midnight separators broken at the tick row, axis title "Timestamp". Subtle grid on both axes. All text readable, no overlap, nothing clipped.
+      Data: one 3 px brand-green (#009E73) line over 168 hourly readings, linear segments, a clear diurnal cycle with a warm-up from ~69 °F to ~74 °F peaks; no markers, no legend (single series).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, ticks, axis titles and day labels all flip to light ink; grid and dashed separators subtle but visible; no dark-on-dark text. Same separator strike-through on "00:00" labels.
-      Data: identical #009E73 line, same shape.
+      Chrome: title, subtitle, axis titles, tick labels and day labels flip to light ink and are all clearly readable; grid and dashed separators are subtle light-grey lines, visible but subordinate. No dark-on-dark text.
+      Data: the same #009E73 line, identical to the light render; only chrome changed.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -61,15 +63,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, ticks 15 px, axis titles 16 px, day labels 15 px bold;
-          all readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks/day labels 15); readable
+          in both themes and at thumbnail scale
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Dashed day separators strike through every "00:00" tick label (defect
-          line)
+        passed: true
+        comment: Ticks, day row and separators never collide; separators break at
+          the tick row
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -81,28 +83,29 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Single green series with strong contrast on both surfaces
+        comment: Single green line with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, title ~50 % width, balanced axis titles, nothing overflows
+        comment: 3200x1800; balanced axis labels, plot fills the canvas, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y axis 'Air temperature (°F)' with unit; x 'Timestamp' readable
+        comment: '"Air temperature (°F)" with unit; "Timestamp" on the date axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Series #009E73 via palette[0]; #FAF8F1 / #1A1A17 backgrounds; chrome
-          flips correctly'
+        comment: 'Series is t.palette[0] #009E73; backgrounds #FAF8F1 / #1A1A17; chrome
+          from tokens'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -110,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: typographic hierarchy of bold day labels over soft
-          hour ticks, and a muted summary subtitle aligned with the plot'
+        comment: Title/subtitle hierarchy with data-derived summary line and bold
+          day labels over soft-ink time ticks
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Beyond baseline: 12-hour grid density chosen for a week of hourly
-          data, day boundaries marked by lighter dashed separators, header indented
-          to the plot''s left edge'
+        comment: Two-tier date axis; dashed midnight separators deliberately broken
+          at the tick row; 12-hour grid density chosen for a one-week span
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Data shown cleanly; no focal emphasis chosen on the warming trend
+        comment: Day framing makes each diurnal cycle a unit, so the day-over-day
+          warm-up reads at a glance; subtitle states the range
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single time-series line on a true date axis
+        comment: Single time-series line on a true time axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Span-adaptive format (hours plus day row for a week), regular calendar
-          ticks, grid on both axes, null-aware line, y not forced to zero
+        comment: Span-adaptive date formatting, regular 12 h calendar ticks without
+          rotation (no collision), grid on both axes, y not forced to zero; no missing
+          values in the data so the gap bullet does not apply (nulls would render
+          as gaps)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Linear curve, points at their timestamps, axes cover all data
+        comment: Each reading at its own timestamp; linear curve, no overshoot; full
+          range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: '''Rooftop Sensor Temperature · line-timeseries · javascript · muix
-          · anyplot.ai''; legend hidden for single series (N/A)'
+        comment: Descriptive prefix + mandated format; legend N/A for a single series
     data_quality:
       score: 15
       max: 15
@@ -165,21 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Diurnal cycle, warm-up trend and noise across a week; no missing
-          values marked, so the conditional break requirement does not apply
+        comment: Hourly-scale week shows the intelligent time-of-day formatting plus
+          day grouping, cyclic pattern, trend and noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Rooftop air-temperature sensor, hourly, June 2024: plausible and
-          neutral'
+        comment: Rooftop sensor air temperature, a spec example domain; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 52.6–73.8 °F is plausible for June; no Check values in the spec
+        comment: 52.6–73.8 °F is plausible for early June; 168 points within 30–500;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -189,33 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Constants → data → plot; DayRow is the MUI X composition idiom for
-          a hook-driven overlay
+        comment: Linear module-level flow; the DayRow component exists because the
+          scale hooks require a component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart and two hooks, all used
+        comment: LineChart, useXScale, useDrawingArea all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity; no available call replaced
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 API (hideLegend, axis
-          height/width, tickLabelStyle)
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 API (hideLegend,
+          axis height/width, MuiLineChart-line class)
     library_mastery:
       score: 7
       max: 10
@@ -225,32 +230,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Beyond mandate: scaleType ''time'' with Date data, valueFormatter
-          using context.location to split tick and tooltip formats, series valueFormatter'
+        comment: scaleType time axis, tickNumber, location-aware valueFormatter, sx
+          class targeting, composition via children
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Beyond mandate: useXScale/useDrawingArea hooks to compose a custom
-          SVG day row inside LineChart; tooltip formatting for the HTML view'
-  verdict: REJECTED
+        comment: Custom SVG layer drawn with useXScale/useDrawingArea inside LineChart;
+          tooltip-specific formatting via the formatter context
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T03:37:27Z'
+  rendered_at: '2026-11-08T08:24:27Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-tick-formatting
-  - date-axis
+  - layer-composition
   - hover-tooltips
   - html-export
-  - custom-overlay
   patterns:
   - data-generation
-  - columnar-data
+  - columns-as-constants
   dataprep:
   - time-series
   styling:
-  - grid-styling
+  - theme-tokens
   - minimal-chrome
