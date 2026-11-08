@@ -36,13 +36,13 @@ const BASE_VALUE = "Net present value (USD)"; // role: base_value
 // high scenario while every other one stays at the base case
 const data = [
   { [PARAMETER]: "Revenue Growth Rate", [LOW_VALUE]: 1750000, [HIGH_VALUE]: 3150000, [BASE_VALUE]: 2400000 },
-  { [PARAMETER]: "Discount Rate", [LOW_VALUE]: 1900000, [HIGH_VALUE]: 3000000, [BASE_VALUE]: 2400000 },
+  { [PARAMETER]: "Discount Rate", [LOW_VALUE]: 3000000, [HIGH_VALUE]: 1900000, [BASE_VALUE]: 2400000 },
   { [PARAMETER]: "Terminal Growth Rate", [LOW_VALUE]: 2050000, [HIGH_VALUE]: 2900000, [BASE_VALUE]: 2400000 },
   { [PARAMETER]: "Operating Margin", [LOW_VALUE]: 2000000, [HIGH_VALUE]: 2750000, [BASE_VALUE]: 2400000 },
   { [PARAMETER]: "Exit Multiple", [LOW_VALUE]: 2100000, [HIGH_VALUE]: 2700000, [BASE_VALUE]: 2400000 },
   { [PARAMETER]: "Capital Expenditure", [LOW_VALUE]: 2650000, [HIGH_VALUE]: 2150000, [BASE_VALUE]: 2400000 },
   { [PARAMETER]: "Tax Rate", [LOW_VALUE]: 2550000, [HIGH_VALUE]: 2200000, [BASE_VALUE]: 2400000 },
-  { [PARAMETER]: "Working Capital Change", [LOW_VALUE]: 2300000, [HIGH_VALUE]: 2500000, [BASE_VALUE]: 2400000 },
+  { [PARAMETER]: "Working Capital Change", [LOW_VALUE]: 2500000, [HIGH_VALUE]: 2300000, [BASE_VALUE]: 2400000 },
 ];
 
 // Plot: reads only data and the constants above
