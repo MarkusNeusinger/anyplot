@@ -48,38 +48,45 @@ const LEAD_V6 = "V6"; // role: lead_V6
 
 // Data: replace this block with your own records, one object per row (one row per sample, voltages in mV)
 // Synthetic normal sinus rhythm at 75 bpm, 10 s at 1000 Hz: every P-QRS-T complex is a sum of Gaussian
-// deflections, and per-lead gains and polarity give each lead its morphology (aVR inverted, V1 rS, V4-V6 tall R)
+// deflections, and per-lead gains give I, II and V1-V6 their morphology (V1 rS, V4-V6 tall R); the other limb
+// leads follow from I and II by Einthoven's and Goldberger's equations, so aVR comes out inverted
 const data = (() => {
   const fs = 1000;
   const seconds = 10;
   const period = 0.8;
   const profile = [
-    [LEAD_I, { p: 1.0, r: 0.75, s: 0.25, t: 0.9, flip: 1 }],
-    [LEAD_II, { p: 1.2, r: 1.05, s: 0.3, t: 1.1, flip: 1 }],
-    [LEAD_III, { p: 0.7, r: 0.55, s: 0.35, t: 0.55, flip: 1 }],
-    [LEAD_AVR, { p: 1.0, r: 0.6, s: 0.2, t: 0.9, flip: -1 }],
-    [LEAD_AVL, { p: 0.6, r: 0.5, s: 0.3, t: 0.5, flip: 1 }],
-    [LEAD_AVF, { p: 0.9, r: 0.8, s: 0.25, t: 0.8, flip: 1 }],
-    [LEAD_V1, { p: 0.7, r: 0.3, s: 1.0, t: -0.5, flip: 1 }],
-    [LEAD_V2, { p: 0.8, r: 0.55, s: 1.35, t: 0.5, flip: 1 }],
-    [LEAD_V3, { p: 0.8, r: 0.95, s: 0.95, t: 0.85, flip: 1 }],
-    [LEAD_V4, { p: 0.85, r: 1.45, s: 0.5, t: 1.0, flip: 1 }],
-    [LEAD_V5, { p: 0.9, r: 1.4, s: 0.25, t: 1.0, flip: 1 }],
-    [LEAD_V6, { p: 0.9, r: 1.1, s: 0.15, t: 0.9, flip: 1 }],
+    [LEAD_I, { p: 1.0, r: 0.75, s: 0.25, t: 0.9 }],
+    [LEAD_II, { p: 1.2, r: 1.05, s: 0.3, t: 1.1 }],
+    [LEAD_V1, { p: 0.7, r: 0.3, s: 1.0, t: -0.5 }],
+    [LEAD_V2, { p: 0.8, r: 0.55, s: 1.35, t: 0.5 }],
+    [LEAD_V3, { p: 0.8, r: 0.95, s: 0.95, t: 0.85 }],
+    [LEAD_V4, { p: 0.85, r: 1.45, s: 0.5, t: 1.0 }],
+    [LEAD_V5, { p: 0.9, r: 1.4, s: 0.25, t: 1.0 }],
+    [LEAD_V6, { p: 0.9, r: 1.1, s: 0.15, t: 0.9 }],
   ];
+  const round = (mv) => Math.round(mv * 1000) / 1000;
   return Array.from({ length: fs * seconds }, (_, i) => {
     const time = i / fs;
     const tb = time % period;
     const wave = (c, a, w) => a * Math.exp(-((tb - c) ** 2) / (2 * w * w));
-    const row = { [TIME]: time };
+    const mv = {};
     profile.forEach(([lead, g]) => {
-      const mv =
+      mv[lead] =
         wave(0.18, 0.13 * g.p, 0.022) + // P wave
         wave(0.355, -0.09, 0.011) + // Q
         wave(0.39, 1.0 * g.r, 0.011) + // R
         wave(0.42, -0.28 * g.s, 0.013) + // S
         wave(0.585, 0.3 * g.t, 0.042); // T wave
-      row[lead] = Math.round(g.flip * mv * 1000) / 1000;
+    });
+    const i1 = mv[LEAD_I];
+    const i2 = mv[LEAD_II];
+    mv[LEAD_III] = i2 - i1;
+    mv[LEAD_AVR] = -(i1 + i2) / 2;
+    mv[LEAD_AVL] = i1 - i2 / 2;
+    mv[LEAD_AVF] = i2 - i1 / 2;
+    const row = { [TIME]: time };
+    Object.entries(mv).forEach(([lead, v]) => {
+      row[lead] = round(v);
     });
     return row;
   });
