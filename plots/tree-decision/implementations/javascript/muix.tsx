@@ -17,6 +17,8 @@ const DEPTH_PAD_RIGHT = 0.7; // in depth steps: room right of the deepest termin
 const SLOT_PAD = 0.6; // in leaf slots: room above the first and below the last leaf
 const NODE_R = 18; // half the side of a node mark, px
 const EDGE_FONT = 15; // branch label size, px
+const QUESTION_FONT = 16; // question label size, px
+const QUESTION_GAP = 12; // px between a question's baseline and the steepest edge under it
 const TITLE = "tree-decision · javascript · muix · anyplot.ai";
 const TITLE_H = 76;
 const LEGEND_H = 44;
@@ -110,12 +112,12 @@ bottomUp.forEach((id) => {
 
 const maxDepth = Math.max(...depth.values());
 const slotCount = Math.max(...slot.values());
-const formatValue = (v) => Math.round(v).toLocaleString("en-US");
+const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const nodeTypes = [...new Set(data.map((d) => d[NODE_TYPE]))];
 const typeColor = { [DECISION]: t.palette[0], [CHANCE]: t.palette[1] };
 const PAYOFF_UNIT = PAYOFF.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
 const terminalCount = data.filter((d) => children.get(d[NODE_ID]).length === 0).length;
-const SUBTITLE = `${data.length} nodes, ${terminalCount} terminal payoffs · payoffs and EMV in ${PAYOFF_UNIT}, rolled back from the terminals · root EMV ${formatValue(emv.get(roots[0]))}`;
+const SUBTITLE = `${data.length} nodes, ${terminalCount} terminal payoffs · payoffs and EMV in ${PAYOFF_UNIT}, rolled back from the terminals · root EMV ${fmt.format(emv.get(roots[0]))}`;
 
 // The community package has no tree component: a custom layer draws edges,
 // labels and node marks in the container's linear scales (depth by leaf slot).
@@ -182,6 +184,19 @@ function DecisionTree() {
         const cy = yScale(slot.get(id));
         const type = d[NODE_TYPE];
         const isLeaf = children.get(id).length === 0;
+        // The question sits above its node, raised until it clears every edge
+        // that leaves the node upward within the label's half width.
+        const questionHalfW = String(d[QUESTION] ?? "").length * QUESTION_FONT * 0.3;
+        const edgeRise = Math.max(
+          0,
+          ...[d[PARENT_ID], ...children.get(id)]
+            .filter((n) => n != null && byId.has(n))
+            .map((n) => {
+              const ny = yScale(slot.get(n));
+              return ny < cy ? (questionHalfW * (cy - ny)) / Math.max(1, Math.abs(xScale(depth.get(n)) - cx)) : 0;
+            }),
+        );
+        const questionY = cy - Math.max(NODE_R + 14, edgeRise + QUESTION_GAP);
         return (
           <g key={`node-${id}`}>
             <g opacity={pruned.has(id) ? 0.55 : 1}>
@@ -199,18 +214,18 @@ function DecisionTree() {
               )}
             </g>
             {!isLeaf && d[QUESTION] != null && (
-              <text x={cx} y={cy - NODE_R - 14} fontSize={16} fontWeight={600} fill={t.ink} textAnchor="middle">
+              <text x={cx} y={questionY} fontSize={QUESTION_FONT} fontWeight={600} fill={t.ink} textAnchor="middle">
                 {d[QUESTION]}
               </text>
             )}
             {!isLeaf && (
               <text x={cx} y={cy + NODE_R + 24} fontSize={15} fontWeight={600} fill={t.inkSoft} textAnchor="middle">
-                EMV {formatValue(emv.get(id))}
+                EMV {fmt.format(emv.get(id))}
               </text>
             )}
             {isLeaf && (
               <text x={cx + NODE_R + 12} y={cy} fontSize={16} fontWeight={600} fill={pruned.has(id) ? t.inkSoft : t.ink} dominantBaseline="middle">
-                {formatValue(d[PAYOFF])}
+                {fmt.format(d[PAYOFF])}
               </text>
             )}
           </g>
