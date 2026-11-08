@@ -14,6 +14,7 @@ const X_PAD = 0.12; // share of the largest |fold change| added on both sides
 const Y_PAD = 0.08; // share of the largest -log10 p-value added above it
 const Y_FLOOR_PAD = 0.02; // share of the axis height left below zero, so points at p = 1 clear the axis line
 const X_TICKS = 10; // tick count hint for the fold-change axis
+const MARKER_SIZE = 7; // one size for every gene: colour and alpha alone carry the status
 // Status colors follow the omics convention the spec names (Semantic exception
 // in the style guide): up-regulated matte red, down-regulated blue, the rest a
 // translucent neutral gray. Hex alpha suffixes give the points transparency.
@@ -31,7 +32,8 @@ const NEG_LOG10_P = "−log₁₀(p-value)"; // role: neg_log10_pvalue
 // Data: replace this block with your own records, one object per row
 // RNA-seq differential expression, treatment vs. control across 350 genes.
 // Genes with a larger effect tend to carry stronger evidence (the volcano
-// funnel), with enough noise that the thresholds still have to classify.
+// funnel), with enough noise that the thresholds still have to classify; a
+// draw at or below zero evidence is redrawn, so every p-value stays under 1.
 const data = (() => {
   let seed = 42;
   const rand = () => {
@@ -41,8 +43,8 @@ const data = (() => {
   const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
   return Array.from({ length: 350 }, () => {
     const log2FoldChange = gaussian() * 1.4;
-    const noise = gaussian() * 0.8;
-    const negLog10P = Math.max(0.01, Math.abs(log2FoldChange) * 1.6 + noise + rand() * 0.6);
+    let negLog10P = 0;
+    while (negLog10P <= 0) negLog10P = Math.abs(log2FoldChange) * 1.6 + gaussian() * 0.8 + rand() * 0.6;
     return { [LOG2_FC]: Number(log2FoldChange.toFixed(3)), [NEG_LOG10_P]: Number(negLog10P.toFixed(3)) };
   });
 })();
@@ -116,9 +118,9 @@ export default function Chart() {
           },
         ]}
         series={[
-          { id: "not-significant", label: "Not significant", data: notSignificant, markerSize: 6, color: NS_COLOR },
-          { id: "down", label: "Down-regulated", data: downRegulated, markerSize: 8, color: DOWN_COLOR },
-          { id: "up", label: "Up-regulated", data: upRegulated, markerSize: 8, color: UP_COLOR },
+          { id: "not-significant", label: "Not significant", data: notSignificant, markerSize: MARKER_SIZE, color: NS_COLOR },
+          { id: "down", label: "Down-regulated", data: downRegulated, markerSize: MARKER_SIZE, color: DOWN_COLOR },
+          { id: "up", label: "Up-regulated", data: upRegulated, markerSize: MARKER_SIZE, color: UP_COLOR },
         ]}
         sx={{
           "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 0.5 },
