@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-08
@@ -14,6 +14,7 @@ if _script_dir in sys.path:
     sys.path.remove(_script_dir)
 
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
@@ -39,16 +40,38 @@ BANDS = [
 ]
 AXIS_TOP = -10
 
-# Data — noise-induced sensorineural hearing loss with a bilateral 4 kHz notch
-frequencies = [125, 250, 500, 1000, 2000, 4000, 8000]
-freq_labels = ["125", "250", "500", "1k", "2k", "4k", "8k"]
-threshold_right = [10, 15, 20, 20, 25, 65, 55]
-threshold_left = [15, 20, 25, 25, 35, 55, 50]
+# Columns: set these to your table's column names
+FREQUENCY = "Frequency (Hz)"  # role: frequency
+THRESHOLD_RIGHT = "Right ear (dB HL)"  # role: threshold_right
+THRESHOLD_LEFT = "Left ear (dB HL)"  # role: threshold_left
+
+# Data: noise-induced sensorineural hearing loss with a bilateral 4 kHz notch; replace with your own table
+df = pd.DataFrame(
+    {
+        FREQUENCY: [125, 250, 500, 1000, 2000, 4000, 8000],
+        THRESHOLD_RIGHT: [10, 15, 20, 20, 25, 65, 55],
+        THRESHOLD_LEFT: [15, 20, 25, 25, 35, 55, 50],
+    }
+)
 
 # Plot: frequency on a log2 axis, so the octave ticks are evenly spaced
+df = df.dropna(subset=[FREQUENCY]).sort_values(FREQUENCY)
+frequencies = df[FREQUENCY].to_numpy(dtype=float)
 octave = np.log2(frequencies)
+freq_labels = [f"{f / 1000:g}k" if f >= 1000 else f"{f:g}" for f in frequencies]
+right = df[[FREQUENCY, THRESHOLD_RIGHT]].dropna()
+left = df[[FREQUENCY, THRESHOLD_LEFT]].dropna()
+right_points = list(
+    zip(np.log2(right[FREQUENCY].to_numpy(dtype=float)).tolist(), right[THRESHOLD_RIGHT].tolist(), strict=True)
+)
+left_points = list(
+    zip(np.log2(left[FREQUENCY].to_numpy(dtype=float)).tolist(), left[THRESHOLD_LEFT].tolist(), strict=True)
+)
+
 x_lo, x_hi = octave.min() - 0.3, octave.max() + 0.3
-y_lo, y_hi = AXIS_TOP, BANDS[-1][1]
+levels = df[[THRESHOLD_RIGHT, THRESHOLD_LEFT]].to_numpy(dtype=float)
+y_lo = int(min(AXIS_TOP, 10 * np.floor(np.nanmin(levels) / 10)))
+y_hi = int(max(BANDS[-1][1], 10 * np.ceil(np.nanmax(levels) / 10)))
 # pygal pads the plot box by 2% of each range; fills and grid run to the padded edges
 pad_x, pad_y = 0.02 * (x_hi - x_lo), 0.02 * (y_hi - y_lo)
 
@@ -56,18 +79,20 @@ pad_x, pad_y = 0.02 * (x_hi - x_lo), 0.02 * (y_hi - y_lo)
 seq_start = np.frombuffer(bytes.fromhex("009E73"), dtype=np.uint8).astype(float)
 seq_end = np.frombuffer(bytes.fromhex("4467A3"), dtype=np.uint8).astype(float)
 page = np.frombuffer(bytes.fromhex(PAGE_BG[1:]), dtype=np.uint8).astype(float)
-depth = (0.10, 0.32) if THEME == "light" else (0.14, 0.44)  # a dark page needs more tint per step
+# A dark page needs a stronger first tint and larger steps to tell adjacent bands apart
+depth = (0.10, 0.32) if THEME == "light" else (0.20, 0.46)
 band_fills = []
 for i in range(len(BANDS)):
     step = i / (len(BANDS) - 1)
-    tint = page + (depth[0] + depth[1] * step) * ((1 - step) * seq_start + step * seq_end - page)
+    strength = depth[0] + depth[1] * (step if THEME == "light" else np.sqrt(step))
+    tint = page + strength * ((1 - step) * seq_start + step * seq_end - page)
     band_fills.append("#" + "".join(f"{round(c):02X}" for c in tint))
 
 # Cross (X) glyphs as two strokes each; the plot area is about square, so this keeps them square
 half_w = 0.07
 half_h = half_w * (y_hi - y_lo) / (x_hi - x_lo)
 crosses = []
-for x, y in zip(octave, threshold_left, strict=True):
+for x, y in left_points:
     crosses += [(x - half_w, y - half_h), (x + half_w, y + half_h), None]
     crosses += [(x - half_w, y + half_h), (x + half_w, y - half_h), None]
 
@@ -128,7 +153,7 @@ chart = pygal.XY(
     height=2400,
     style=custom_style,
     title="audiogram-clinical · python · pygal · anyplot.ai",
-    x_title="Frequency (Hz)",
+    x_title=FREQUENCY,
     y_title="Hearing Level (dB HL)",
     show_legend=False,
     show_x_guides=False,
@@ -150,7 +175,7 @@ chart = pygal.XY(
         "inline:.plot_title { font-weight: bold; }",
     ),
 )
-chart.x_labels = [{"value": x, "label": label} for x, label in zip(octave, freq_labels, strict=True)]
+chart.x_labels = [{"value": x, "label": label} for x, label in zip(octave.tolist(), freq_labels, strict=True)]
 chart.y_labels = list(range(y_lo, y_hi + 1, 10))
 
 # Labels first (their css indices are fixed above); text is always drawn above the marks
@@ -158,11 +183,11 @@ chart.add("Band names", band_labels, stroke=False, dots_size=0)
 chart.add("Key", key_labels, stroke=False, dots_size=0)
 # Each band fills from its lower edge up to the top of the axis; deepest first, so each later band covers the rest
 for name, upper in BANDS[::-1]:
-    edge = y_hi + pad_y if upper == y_hi else upper
+    edge = y_hi + pad_y if upper == BANDS[-1][1] else upper
     chart.add(name, [(x_lo - pad_x, edge), (x_hi + pad_x, edge)], fill=True, show_dots=False)
 chart.add("Grid", grid, show_dots=False, allow_interruptions=True)
-chart.add("Right ear", list(zip(octave, threshold_right, strict=True)), dots_size=16)
-chart.add("Left ear", list(zip(octave, threshold_left, strict=True)), show_dots=False, stroke_style={"dasharray": "22, 12"})
+chart.add("Right ear", right_points, dots_size=16)
+chart.add("Left ear", left_points, show_dots=False, stroke_style={"dasharray": "22, 12"})
 chart.add("Left ear (X)", crosses, show_dots=False, allow_interruptions=True)
 chart.add("Key O", key_o, stroke=False, dots_size=16)
 chart.add("Key X", key_x_glyph, show_dots=False, allow_interruptions=True)
