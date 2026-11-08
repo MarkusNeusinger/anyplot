@@ -13,7 +13,11 @@ const t = window.ANYPLOT_TOKENS;
 // winding corridors with few branch points (harder), a low one many short branches (easier).
 // The carve is a spanning tree either way, so there is exactly one route between any two cells.
 const DIFFICULTY_BIAS = { easy: 0.15, medium: 0.55, hard: 0.85 };
-const EXTENT = 1.28; // half-width of the square view in outer-wall radii, leaving room for the entry marker
+const MAZE_R = 1.04; // outer-wall radius plus its stroke, in outer-wall radii
+const LABEL_R = 1.15; // radius of the START label anchor, just past the entry arrow
+const LABEL_W = 70; // px width reserved for the START label
+const LABEL_H = 26; // px height reserved for the START label
+const GAP = 16; // px kept free around the drawing
 const WALL_W = 3.5; // interior wall stroke in px
 const OUTER_WALL_W = 5.5; // the outer boundary is drawn heavier
 const GOAL_INK = "#1A1A17"; // the ink with the stronger contrast on the brand green goal disc
@@ -105,10 +109,27 @@ for (let s = 0; s < SECTORS; s += 1) {
   if (s !== entrySector) walls.push({ arc: true, r: 1, a0: -Math.PI / 2 + s * STEP, width: OUTER_WALL_W });
 }
 const entryAngle = -Math.PI / 2 + (entrySector + 0.5) * STEP;
+const labelAnchor = Math.cos(entryAngle) > 0.3 ? "start" : Math.cos(entryAngle) < -0.3 ? "end" : "middle";
+
+// Largest px-per-unit that fits the maze and the START label on one axis: the label sits at unit
+// coordinate c and extends `before` px towards the negative side and `after` px towards the positive one
+const fitUnit = (avail: number, c: number, before: number, after: number) =>
+  Math.min(
+    avail / (2 * MAZE_R),
+    MAZE_R + c > 0 ? (avail - after) / (MAZE_R + c) : Infinity,
+    MAZE_R - c > 0 ? (avail - before) / (MAZE_R - c) : Infinity,
+  );
+// View range on one axis: the content bounds at this scale, centred in the available span
+const viewRange = (avail: number, unit: number, c: number, before: number, after: number) => {
+  const lo = Math.min(-MAZE_R, c - before / unit);
+  const hi = Math.max(MAZE_R, c + after / unit);
+  const min = lo - (avail / unit - (hi - lo)) / 2;
+  return { min, max: min + avail / unit };
+};
 
 const TITLE = "maze-circular · javascript · muix · anyplot.ai";
-const SUBTITLE = `${RINGS} rings × ${SECTORS} sectors · ${DIFFICULTY} difficulty · seed ${SEED} · one route of ${routeCells} cells from the entry to the goal`;
-const HEADER_H = 80;
+const SUBTITLE = `${RINGS} rings × ${SECTORS} sectors · ${DIFFICULTY} difficulty · seed ${SEED} · one ${routeCells}-cell route from START to GOAL`;
+const HEADER_H = 92;
 
 function Maze() {
   const xScale = useXScale();
@@ -121,8 +142,7 @@ function Maze() {
   const [leftX, leftY] = at(1.11, entryAngle - STEP * 0.07);
   const [rightX, rightY] = at(1.11, entryAngle + STEP * 0.07);
   // The label continues outward past the arrow, anchored away from the circle on whichever side the entry lies
-  const [labelX, labelY] = at(1.15, entryAngle);
-  const labelAnchor = Math.cos(entryAngle) > 0.3 ? "start" : Math.cos(entryAngle) < -0.3 ? "end" : "middle";
+  const [labelX, labelY] = at(LABEL_R, entryAngle);
   return (
     <g>
       {walls.map((w, i) => {
@@ -132,11 +152,11 @@ function Maze() {
         return <path key={i} d={d} fill="none" stroke={t.ink} strokeWidth={w.width} strokeLinecap="round" />;
       })}
       <path d={`M ${tipX} ${tipY} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`} fill={t.palette[0]} />
-      <text x={labelX} y={labelY} fontSize={18} fontWeight={700} fill={t.ink} textAnchor={labelAnchor} dominantBaseline="middle">
+      <text x={labelX} y={labelY} fontSize={20} fontWeight={700} fill={t.ink} textAnchor={labelAnchor} dominantBaseline="middle">
         START
       </text>
       <circle cx={cx} cy={cy} r={HUB_R * unit * 0.62} fill={t.palette[0]} />
-      <text x={cx} y={cy} fontSize={14} fontWeight={700} fill={GOAL_INK} textAnchor="middle" dominantBaseline="central">
+      <text x={cx} y={cy} fontSize={18} fontWeight={700} fill={GOAL_INK} textAnchor="middle" dominantBaseline="central">
         GOAL
       </text>
     </g>
@@ -146,24 +166,31 @@ function Maze() {
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const bodyH = height - HEADER_H;
-  // Equal px per unit on both axes: the drawing area is the largest centred square
-  const side = Math.min(width, bodyH) - 24;
-  const margin = { left: (width - side) / 2, right: (width - side) / 2, top: (bodyH - side) / 2, bottom: (bodyH - side) / 2 };
+  const availW = width - 2 * GAP;
+  const availH = bodyH - 2 * GAP;
+  // Only the side holding the START label gets extra room; one px-per-unit on both axes keeps the circle round
+  const lx = LABEL_R * Math.cos(entryAngle);
+  const ly = LABEL_R * Math.sin(entryAngle);
+  const left = labelAnchor === "end" ? LABEL_W : labelAnchor === "middle" ? LABEL_W / 2 : 0;
+  const right = labelAnchor === "start" ? LABEL_W : labelAnchor === "middle" ? LABEL_W / 2 : 0;
+  const unit = Math.min(fitUnit(availW, lx, left, right), fitUnit(availH, ly, LABEL_H / 2, LABEL_H / 2));
+  const xRange = viewRange(availW, unit, lx, left, right);
+  const yRange = viewRange(availH, unit, ly, LABEL_H / 2, LABEL_H / 2);
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column" }}>
-      <div style={{ height: HEADER_H, padding: "16px 40px 0 40px", boxSizing: "border-box", textAlign: "center" }}>
-        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
-        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      <div style={{ height: HEADER_H, padding: "18px 40px 0 40px", boxSizing: "border-box", textAlign: "center" }}>
+        <div style={{ fontSize: 26, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 18, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
       </div>
       <ChartsContainer
         width={width}
         height={bodyH}
         series={[]}
         skipAnimation
-        margin={margin}
-        xAxis={[{ id: "x", scaleType: "linear", min: -EXTENT, max: EXTENT, position: "none" }]}
-        yAxis={[{ id: "y", scaleType: "linear", min: -EXTENT, max: EXTENT, reverse: true, position: "none" }]}
+        margin={{ left: GAP, right: GAP, top: GAP, bottom: GAP }}
+        xAxis={[{ id: "x", scaleType: "linear", ...xRange, position: "none" }]}
+        yAxis={[{ id: "y", scaleType: "linear", ...yRange, reverse: true, position: "none" }]}
       >
         <Maze />
       </ChartsContainer>
