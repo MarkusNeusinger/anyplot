@@ -1,207 +1,150 @@
 // anyplot.ai
 // ice-basic: Individual Conditional Expectation (ICE) Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-17
-//# anyplot-orientation: landscape
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-// GradientBoostingRegressor-style house-price model: one ICE curve per house
-// shows how the predicted price responds to square footage for that specific
-// house, holding its other features fixed. A minority "luxury" subgroup
-// exhibits diminishing returns at large square footage (a feature
-// interaction the averaged PDP line alone would hide).
-function mulberry32(seed) {
-  return function rng() {
+// Constants
+// Individual curves stay translucent so dense stretches read darker; the alpha
+// (30 %) is baked into the colour so the legend swatches match the lines
+const ICE_ALPHA_HEX = "4D";
+
+// Columns: set these to your data's column names
+const HOUSE = "House ID"; // role: observation_id
+const SQFT = "Square Footage (sq ft)"; // role: feature_value
+const PRICE = "Predicted Price (USD)"; // role: prediction
+const SEGMENT = "Year built"; // role: extra
+
+// Data: replace this block with your own records, one object per observation and grid value
+// ICE curves of a gradient-boosting house-price model: for each of 70 houses the
+// predicted price over 55 square-footage values, every other feature held fixed.
+// About a quarter of the houses, built before 1960, show diminishing returns:
+// in older stock, extra floor space adds less and less to the predicted price.
+const data = (() => {
+  let seed = 42;
+  const rng = () => {
     seed |= 0;
     seed = (seed + 0x6d2b79f5) | 0;
     let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
     x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
-}
+  const gaussian = (mean: number, sd: number) =>
+    mean + sd * Math.sqrt(-2 * Math.log(Math.max(rng(), 1e-9))) * Math.cos(2 * Math.PI * rng());
+  const gridCount = 55;
+  const sqftMin = 900;
+  const sqftMax = 3800;
+  const rows = [];
+  for (let house = 1; house <= 70; house += 1) {
+    const basePrice = gaussian(210000, 22000);
+    const pricePerSqft = gaussian(145, 22);
+    const older = rng() < 0.25;
+    const curvature = older ? gaussian(-0.028, 0.006) : gaussian(-0.003, 0.004);
+    for (let i = 0; i < gridCount; i += 1) {
+      const sqft = sqftMin + (i * (sqftMax - sqftMin)) / (gridCount - 1);
+      const delta = sqft - sqftMin;
+      rows.push({
+        [HOUSE]: house,
+        [SQFT]: Math.round(sqft),
+        [PRICE]: Math.round(basePrice + pricePerSqft * delta + curvature * delta * delta),
+        [SEGMENT]: older ? "Before 1960" : "1960 or later",
+      });
+    }
+  }
+  return rows;
+})();
 
-function gaussian(rng, mean, std) {
-  const u1 = Math.max(rng(), 1e-9);
-  const u2 = rng();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * std;
-}
-
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-const rng = mulberry32(42);
-const N_OBSERVATIONS = 70;
-const N_GRID_POINTS = 55;
-const SQFT_MIN = 900;
-const SQFT_MAX = 3800;
-
-const featureGrid = Array.from(
-  { length: N_GRID_POINTS },
-  (_, i) => SQFT_MIN + (i * (SQFT_MAX - SQFT_MIN)) / (N_GRID_POINTS - 1),
-);
-
-const iceCurves = Array.from({ length: N_OBSERVATIONS }, (_, houseId) => {
-  const basePrice = gaussian(rng, 210000, 22000);
-  const pricePerSqft = gaussian(rng, 145, 22);
-  const isLuxurySubgroup = rng() < 0.25;
-  const curvature = isLuxurySubgroup
-    ? gaussian(rng, -0.028, 0.006)
-    : gaussian(rng, -0.003, 0.004);
-
-  const predictions = featureGrid.map((sqft) => {
-    const delta = sqft - SQFT_MIN;
-    return basePrice + pricePerSqft * delta + curvature * delta * delta;
-  });
-
-  return { houseId, isLuxurySubgroup, predictions };
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[SQFT] != null && d[PRICE] != null);
+const grid = [...new Set(rows.map((d) => d[SQFT]))].sort((a, b) => a - b);
+const segments = [...new Set(rows.map((d) => d[SEGMENT]))];
+const curves = [...new Set(rows.map((d) => d[HOUSE]))].map((id) => {
+  const own = rows.filter((d) => d[HOUSE] === id);
+  const byX = new Map(own.map((d) => [d[SQFT], d[PRICE]]));
+  return { id, segment: own[0][SEGMENT], data: grid.map((x) => byX.get(x) ?? null) };
 });
-
-const partialDependence = featureGrid.map((_, gridIndex) => {
-  const sum = iceCurves.reduce((acc, curve) => acc + curve.predictions[gridIndex], 0);
-  return sum / iceCurves.length;
+// Partial dependence: the mean prediction over all observations at each grid value
+const partialDependence = grid.map((_, k) => {
+  const at = curves.map((c) => c.data[k]).filter((v) => v != null);
+  return at.reduce((s, v) => s + v, 0) / at.length;
 });
+// One legend entry per segment: only the segment's first curve carries the label
+const labelled = new Set(segments.map((s) => curves.find((c) => c.segment === s).id));
 
-// Color-code the ~25% luxury subgroup (ochre) against the standard majority
-// (brand green) so the diminishing-returns interaction is visible directly
-// from line color, not only inferable from where curves happen to diverge.
-const STANDARD_COLOR = hexToRgba(t.palette[0], 0.18);
-const LUXURY_COLOR = hexToRgba(t.palette[3], 0.35);
-// Sorted standard-before-luxury so series[0] stays brand green, matching the
-// style guide's "first series is always #009E73" rule.
-const orderedCurves = [
-  ...iceCurves.filter((curve) => !curve.isLuxurySubgroup),
-  ...iceCurves.filter((curve) => curve.isLuxurySubgroup),
-];
-const firstStandardIndex = orderedCurves.findIndex((curve) => !curve.isLuxurySubgroup);
-const firstLuxuryIndex = orderedCurves.findIndex((curve) => curve.isLuxurySubgroup);
-// Reference-line x position: where the luxury subgroup's diminishing-returns
-// curvature starts to visibly pull away from the standard trend.
-const DIVERGENCE_SQFT = SQFT_MIN + 0.7 * (SQFT_MAX - SQFT_MIN);
-
-// --- Title (mandated format, fontsize scaled to length) ---------------------
 const TITLE = "House Price Predictions · ice-basic · javascript · muix · anyplot.ai";
-// Base of 32 (vs. the generic 22px JS-library default) because this title is
-// rendered in a plain flex div, not SVG-measured MUI X chrome — the plain-div
-// layout reads visually smaller at the same fontsize than the library's own
-// title component, so it needs a larger base to hit the expected ~70-85% of
-// canvas width.
-const TITLE_FONT_SIZE = Math.round(32 * Math.min(1, 67 / TITLE.length));
-const TITLE_ROW_HEIGHT = 56;
-const FONT_FAMILY = "Roboto, Helvetica, Arial, sans-serif";
-const AXIS_LABEL_FONT_SIZE = 16;
-// MUI X positions the native yAxis label at a fixed offset from the axis
-// line, not from the (variable-width) tick label text, so a wide tick label
-// like "$800k" collides with it. Render the y-axis title ourselves in a
-// dedicated column instead.
-const Y_LABEL_COLUMN_WIDTH = 32;
+const SUBTITLE = `${curves.length} ICE curves × ${grid.length} grid values · coloured by ${SEGMENT.toLowerCase()} · bold line: partial dependence`;
+const PDP_LABEL = "Partial dependence (mean of all curves)";
+const HEADER_H = 76;
+const LEGEND_H = 44;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
-  const chartHeight = window.ANYPLOT_SIZE.height - TITLE_ROW_HEIGHT;
-  const chartWidth = window.ANYPLOT_SIZE.width - Y_LABEL_COLUMN_WIDTH;
-
-  const series = [
-    ...orderedCurves.map((curve, index) => ({
-      id: `house-${curve.houseId}`,
-      data: curve.predictions,
-      color: curve.isLuxurySubgroup ? LUXURY_COLOR : STANDARD_COLOR,
-      showMark: false,
-      // Only the first curve of each subgroup carries a legend label — the
-      // other ~68 stay unlabeled so the legend shows 3 entries, not 70.
-      ...(index === firstStandardIndex ? { label: "Standard homes" } : {}),
-      ...(index === firstLuxuryIndex ? { label: "Luxury subgroup (diminishing returns)" } : {}),
-    })),
-    {
-      id: "pdp",
-      data: partialDependence,
-      color: t.ink,
-      label: "Average prediction (PDP)",
-      showMark: false,
-    },
-  ];
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div style={{ width: window.ANYPLOT_SIZE.width, height: window.ANYPLOT_SIZE.height }}>
-      <div
-        style={{
-          height: TITLE_ROW_HEIGHT,
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: 8,
-          fontSize: TITLE_FONT_SIZE,
-          fontWeight: 500,
-          color: t.ink,
-          fontFamily: FONT_FAMILY,
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.5 }}>{SUBTITLE}</Typography>
+      </Box>
+      <LineChart
+        width={width}
+        height={height - HEADER_H - LEGEND_H}
+        skipAnimation
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: 40, bottom: 16, left: 24 }}
+        // Individual curves first, the partial dependence line last so it draws on top
+        series={[
+          ...curves.map((c) => ({
+            id: `obs-${c.id}`,
+            data: c.data,
+            color: `${t.palette[segments.indexOf(c.segment)]}${ICE_ALPHA_HEX}`,
+            showMark: false,
+            labelMarkType: "line",
+            label: labelled.has(c.id) ? `${SEGMENT}: ${c.segment}` : undefined,
+          })),
+          { id: "pdp", data: partialDependence, color: t.ink, label: PDP_LABEL, showMark: false, labelMarkType: "line" },
+        ]}
+        xAxis={[
+          {
+            data: grid,
+            scaleType: "linear",
+            min: grid[0],
+            max: grid[grid.length - 1],
+            tickNumber: 12,
+            height: 64,
+            label: SQFT,
+            valueFormatter: (v: number) => v.toLocaleString("en-US"),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            width: 84,
+            label: PRICE,
+            valueFormatter: (v: number) => `${(v / 1000).toFixed(0)}k`,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 15, color: t.ink, pr: "40px", gap: "24px", "& .MuiChartsLegend-mark.MuiChartsLabelMark-line": { width: 30, height: 10, "& path": { strokeWidth: 6 } } },
+          },
+          tooltip: { trigger: "item" },
         }}
-      >
-        {TITLE}
-      </div>
-      <div style={{ display: "flex", width: window.ANYPLOT_SIZE.width, height: chartHeight }}>
-        <div
-          style={{
-            width: Y_LABEL_COLUMN_WIDTH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              transform: "rotate(-90deg)",
-              whiteSpace: "nowrap",
-              color: t.ink,
-              fontSize: AXIS_LABEL_FONT_SIZE,
-              fontFamily: FONT_FAMILY,
-            }}
-          >
-            Predicted Price ($)
-          </span>
-        </div>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          series={series}
-          skipAnimation
-          xAxis={[
-            {
-              data: featureGrid,
-              scaleType: "linear",
-              label: "Square Footage (sq ft)",
-              labelStyle: { fontSize: AXIS_LABEL_FONT_SIZE },
-            },
-          ]}
-          yAxis={[
-            {
-              valueFormatter: (price) => `$${Math.round(price / 1000)}k`,
-            },
-          ]}
-          grid={{ horizontal: true }}
-          tooltip={{ trigger: "item" }}
-          margin={{ top: 30, right: 30, bottom: 55, left: 70 }}
-          sx={{
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-            "& .MuiLineElement-series-pdp": { strokeWidth: 3.5 },
-          }}
-        >
-          <ChartsReferenceLine
-            x={DIVERGENCE_SQFT}
-            label="Luxury subgroup diverges →"
-            labelAlign="start"
-            labelStyle={{ fill: t.inkSoft, fontSize: 14, fontFamily: FONT_FAMILY }}
-            lineStyle={{ stroke: t.palette[3], strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          />
-        </LineChart>
-      </div>
-    </div>
+        sx={{
+          "& .MuiLineChart-line": { strokeWidth: 1.5 },
+          '& .MuiLineChart-line[data-series="pdp"]': { strokeWidth: 4 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      />
+    </Box>
   );
 }
