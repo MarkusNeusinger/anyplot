@@ -24,16 +24,18 @@
  * the assistant computes; while the session has no data, `.example_data()` in
  * the highlighted line above the message box asks it for a made-up table to try the plot),
  * read the assistant's summary of it in the next
- * turn, fix it in plain words if needed (each change updates the card in
- * place, with `.undo()`), check the preview and the role bindings, and press
+ * turn, fix it in plain words if needed (each change is a new version: the card moves below the
+ * turn, and the version before folds to its label, `▸ data v1 · pasted · 2 rows × 2 cols`), check
+ * the preview and the role bindings, and press
  * `.create_plot() →` at the composer's end, which takes the data and the bindings
  * as shown (it confirms them on the server first, the end of step 1) and starts
  * the plot (step 2): with an empty box the plot as it is, with text the text
  * goes as a turn and the assistant makes the first plot with that change. The
- * card collapses into a pinned header at the top of the thread with that click,
- * `.show()` opens it again, and any change to the data takes the page back to
- * step 1 with the card open; the header then stays as `! check again` and leads
- * back to the card, and the thread names what dropped the confirmation. Once the
+ * thread reads in chapters (`# data`, `# plot`, `threadModel.ts`), and the live data card stays
+ * open in both steps (the v4 design; the pinned header with `.show()` and `.hide()` went
+ * 2026-11-07): a change to the data after a plot opens a new `# data` chapter with the card
+ * (after the request that made it, before its reply, or at the thread's end for a version of the
+ * card's own controls), and the status line names what dropped the confirmation. Once the
  * library has a plot, the same button reads `.update_plot() →` and sends the
  * box's text, a change in plain words on the latest version (as Enter does), and
  * `.start_over()` at the end of the status line makes a new plot from the
@@ -138,6 +140,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
+import GlobalStyles from '@mui/material/GlobalStyles';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
@@ -189,7 +192,6 @@ import {
   LEAVE_TEXT,
   VIEW_SWITCH_TEXT,
 } from 'src/sections/agent-chat/messages';
-import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
@@ -204,9 +206,8 @@ import {
   showsTimeline,
   statusLine,
 } from 'src/sections/agent-chat/steps';
-import { bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
+import { bodyTextSx, labelSx, MASTHEAD_CLEARANCE, smallText } from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
-import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/adminAuth';
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
@@ -591,8 +592,6 @@ function AgentChat({
     if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
-  // The data card in the thread and the pinned header above it share where the card is in view.
-  const dataView = useDataCardView(state);
   // The first reply after a card follows the user into view only while they are at the composer.
   const followReply = useCallback(() => !!tailRef.current?.contains(document.activeElement), []);
 
@@ -701,8 +700,7 @@ function AgentChat({
   // While a run's timeline stands below the thread, what the run sends into the thread waits
   // for its plot, which takes the timeline's place (`runView`).
   const view = runView(state);
-  // The folded list is the same for the same items (`shownItems`), so the thread's state changes
-  // only with the session's.
+  // The session's own state while nothing waits, so the thread's state changes only with it.
   const threadState = useMemo(
     () => (view.items === state.items ? state : { ...state, items: view.items }),
     [state, view.items]
@@ -1120,6 +1118,9 @@ function AgentChat({
     <>
       <title>{`agent · ${title ?? specId} | anyplot.ai`}</title>
       <NoIndex />
+      {/* The focus, a jump to a chapter and the card the focus follows land below the site's
+          sticky masthead, never under it (WCAG 2.4.11; `MASTHEAD_CLEARANCE`). */}
+      <GlobalStyles styles={{ html: { scrollPaddingTop: MASTHEAD_CLEARANCE } }} />
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box
         sx={{
@@ -1143,10 +1144,6 @@ function AgentChat({
             notOpen
           ) : (
             <>
-              {/* Once the data was confirmed, the header that leads to its card. A sibling of the
-              thread, so it sticks over all of it; the card stands in the thread after its paste. */}
-              <PinnedHeader state={state} view={dataView} />
-
               <ChatThread
                 state={threadState}
                 specId={specId}
@@ -1165,11 +1162,11 @@ function AgentChat({
                     bullets={reference?.data}
                   />
                 }
-                renderData={part => (
+                renderData={(part, version) => (
                   <DataPanel
                     state={state}
-                    view={dataView}
                     part={part}
+                    version={version}
                     onParse={(text, source, table, file) =>
                       void session.parseData(text, false, source, table, { file })
                     }
@@ -1186,7 +1183,6 @@ function AgentChat({
                     onToLong={() => void session.toLongData()}
                     // Not while the fan-out's panel is open: its sessions copy this session's data.
                     locked={!!fanOut}
-                    plotAction={plotAction}
                     onLoadData={session.fetchDataCsv}
                     // A look at the session's data, not at a result: version 0.
                     onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}

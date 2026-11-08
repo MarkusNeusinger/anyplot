@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type AgentSessionState,
   type ChatItem,
+  type DataSnapshot,
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
@@ -86,6 +87,15 @@ describe('runView', () => {
     // Above the timeline it pushed the timeline and the composer down mid-run.
     const state = { ...running(plotRun), items: [ask, note] };
     expect(runView(state)).toEqual({ items: [ask], timeline: true });
+  });
+
+  it('never holds a data version back: the live card would unmount', () => {
+    // A version under a running timeline (none arrives there today) keeps the card in the
+    // thread, and the stub it left; only the talk waits.
+    const stub = { id: 4, kind: 'data_stub', rows: 2, columns: 2, card: 5 } as const;
+    const live = { id: 5, kind: 'data' } as const;
+    const state = { ...running(plotRun), items: [ask, note, stub, live] };
+    expect(runView(state)).toEqual({ items: [ask, stub, live], timeline: true });
   });
 
   it("lets the run's result card take the timeline's place, with the held items", () => {
@@ -302,8 +312,14 @@ describe('statusLine', () => {
     expect(statusLine(confirmed, { ...options, lockedLibraries: 15 }).text).toBe(
       'step 2 of 2 · plot the table as it is in all 15 libraries at once · turn all off to chat'
     );
+    // The confirmed data by the number its card carries (`data v3`), never the server's version,
+    // which starts over with every paste; a thread built without snapshots names no number.
     expect(statusLine({ ...confirmed, versions: plotted }, options).text).toBe(
-      'step 2 of 2 · data fits · 2 rows · 0 columns · version 3'
+      'step 2 of 2 · data fits · 2 rows · 0 columns'
+    );
+    const card = { id: 7, kind: 'data' as const, snapshot: { n: 3 } as DataSnapshot };
+    expect(statusLine({ ...confirmed, versions: plotted, items: [card] }, options).text).toBe(
+      'step 2 of 2 · data v3 fits · 2 rows · 0 columns'
     );
   });
 

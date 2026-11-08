@@ -941,11 +941,11 @@ describe('useAgentSession: confirming the data (step 1)', () => {
       ]);
     await act(() => result.current.sendMessage('daily mean instead of hourly'));
 
-    // The user's turn, the reply and the card at its new version, nothing else: the step line
-    // above the composer names the change (`confirmLoss`), with no notice right above it that
+    // The user's turn, the card at its new version and the reply after it, nothing else: the step
+    // line above the composer names the change (`confirmLoss`), with no notice right above it that
     // says the same. The version before stays as a stub where the card stood.
     const added = result.current.state.items.slice(before);
-    expect(kindsOf(added)).toEqual(['user', 'assistant', 'data']);
+    expect(kindsOf(added)).toEqual(['user', 'data', 'assistant']);
     expect(result.current.state.items.filter(item => item.kind === 'notice')).toEqual([]);
     expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
   });
@@ -4143,14 +4143,15 @@ describe('agentReducer: the card in the thread', () => {
     });
   });
 
-  it('moves the card to the end for a version a turn made, under its id, and leaves a stub where it stood', () => {
+  it("puts a turn's version right after the turn's message, before its reply, and a stub where the card stood", () => {
     const pasted = agentReducer(ready, { type: 'parse_done', parsed, bytes: 10, chip: '▤ table' });
     const asked = talk(pasted, 'read the hours as minutes');
     const changed = agentReducer(asked, {
       type: 'data_prepared',
       dataset: PREPARED as DatasetChanged,
     });
-    // The card keeps its id, so it keeps its own state as it moves below the turn that changed it.
+    // The card keeps its id, so it keeps its own state as it moves; it stands before the reply,
+    // which streamed in before the turn's `done` brought the version, as a plot card does.
     expect(changed.items).toEqual([
       { id: 1, kind: 'paste', text: '▤ table' },
       expect.objectContaining({
@@ -4160,12 +4161,26 @@ describe('agentReducer: the card in the thread', () => {
         snapshot: version(1, 'paste', 'pasted'),
       }),
       { id: 3, kind: 'user', text: 'read the hours as minutes' },
-      { id: 4, kind: 'assistant', text: 'Done.' },
       { id: 2, kind: 'data', snapshot: version(2, 'turn', 'changed') },
+      { id: 4, kind: 'assistant', text: 'Done.' },
     ]);
+    // A second version of the same turn keeps the card in that turn, after the new stub.
+    const again = agentReducer(changed, {
+      type: 'data_prepared',
+      dataset: { ...(PREPARED as DatasetChanged), version: 3 },
+    });
+    expect(kindsOf(again.items)).toEqual([
+      'paste',
+      'data_stub',
+      'user',
+      'data_stub',
+      'data',
+      'assistant',
+    ]);
+    expect(again.items[4]).toMatchObject({ id: 2, snapshot: { n: 3 } });
   });
 
-  it('keeps the card in place for a version of its own controls, the stub above: .undo(), .to_long(), the pickers', () => {
+  it('moves the card to the end for every version of its own controls, each stub under its summary', () => {
     const pasted = agentReducer(ready, {
       type: 'parse_done',
       parsed,
@@ -4173,49 +4188,48 @@ describe('agentReducer: the card in the thread', () => {
       chip: '▤ Bericht.xlsx',
       file: workbook('2025'),
     });
-    const after = talk(pasted, 'what is in it?');
-    const long = agentReducer(after, {
+    const summarized = talk(pasted, 'what is in it?');
+    // The pickers parse without the attachment's line: another sheet, another table. Each is
+    // followed by its own summary, as the page asks for one after every stored parse.
+    const sheet = talk(
+      agentReducer(summarized, { type: 'parse_done', parsed, bytes: 10, file: workbook('2026') }),
+      'and this one?'
+    );
+    const long = agentReducer(sheet, {
       type: 'data_prepared',
       dataset: PREPARED as DatasetChanged,
       toLong: true,
     });
     const undone = agentReducer(long, { type: 'undo_done', parsed });
-    // The pickers parse without the attachment's line: another sheet, another table.
-    const sheet = agentReducer(undone, {
-      type: 'parse_done',
-      parsed,
-      bytes: 10,
-      file: workbook('2026'),
-    });
-    const table = agentReducer(sheet, {
+    const table = agentReducer(undone, {
       type: 'parse_done',
       parsed: { ...parsed, tables: ['a', 'b'], table: 2 },
       bytes: 10,
-      file: workbook('2026'),
     });
+    // Before any plot, the same rule as after one: the earlier version stays where the card
+    // stood, under its own talk, and the card goes on at the end, the same item.
     expect(kindsOf(table.items)).toEqual([
       'paste',
       'data_stub',
+      'user',
+      'assistant',
       'data_stub',
+      'user',
+      'assistant',
       'data_stub',
       'data_stub',
       'data',
-      'user',
-      'assistant',
     ]);
-    // The card stays the same item at the same place below its stubs, oldest first.
-    expect(table.items[5]).toMatchObject({ id: 2, snapshot: version(5, 'table', 'table 2') });
-    expect(table.items.slice(1, 5).map(item => item.kind === 'data_stub' && item.snapshot)).toEqual(
-      [
-        version(1, 'paste', 'pasted', { sheet: '2025' }),
-        version(2, 'to_long', 'made long'),
-        version(3, 'undo', 'undone'),
-        version(4, 'sheet', 'sheet "2026"', { sheet: '2026' }),
-      ]
-    );
+    expect(table.items[9]).toMatchObject({ id: 2, snapshot: version(5, 'table', 'table 2') });
     expect(
-      table.items.slice(1, 5).every(item => item.kind === 'data_stub' && item.card === 2)
-    ).toBe(true);
+      table.items.filter(item => item.kind === 'data_stub').map(item => item.snapshot)
+    ).toEqual([
+      version(1, 'paste', 'pasted', { sheet: '2025' }),
+      version(2, 'sheet', 'sheet "2026"', { sheet: '2026' }),
+      version(3, 'to_long', 'made long'),
+      version(4, 'undo', 'undone'),
+    ]);
+    expect(table.items.every(item => item.kind !== 'data_stub' || item.card === 2)).toBe(true);
   });
 
   it("moves the card below a plot for a version of its own controls, as a turn's version does", () => {
@@ -4271,13 +4285,19 @@ describe('agentReducer: the card in the thread', () => {
     }
   });
 
-  it('adds the card at the end for data that had none: example data, a formula, code', () => {
+  it('adds the card after its turn for data that had none: example data, a formula, code', () => {
     const turn = appendTurn(ready);
     const generated = agentReducer(turn, {
       type: 'data_prepared',
       dataset: PREPARED as DatasetChanged,
     });
     expect(kinds(generated)).toEqual(['user', 'data']);
+    // With the reply in already, the card stands before it, after the turn's message.
+    const replied = agentReducer(
+      agentReducer(turn, { type: 'item', item: { kind: 'assistant', text: 'Computed.' } }),
+      { type: 'data_prepared', dataset: PREPARED as DatasetChanged }
+    );
+    expect(kinds(replied)).toEqual(['user', 'data', 'assistant']);
     expect(lastItem(generated.items)).toMatchObject({ snapshot: version(1, 'turn', 'generated') });
 
     // `.example_data()` names its own: the version arrives while its turn still runs.
@@ -4651,8 +4671,8 @@ describe('useAgentSession: a cut stream', () => {
       'action',
       'assistant',
       'user',
-      'assistant',
       'data',
+      'assistant',
       'action',
       'plot',
       'assistant',

@@ -26,6 +26,7 @@ import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { longSuggestion, type tableChoice } from 'src/lib/agent';
 import { bindingHint, bindingRows, boundRoles } from 'src/sections/agent-chat/bindings';
+import { fileSource } from 'src/sections/agent-chat/cardLabels';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   BindingsBlock,
@@ -41,6 +42,7 @@ import {
 } from 'src/sections/agent-chat/dataCardParts';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
+import { liveDataVersion } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,
@@ -54,9 +56,6 @@ import { colors } from 'src/theme';
 
 /** The dropdowns' block, which `.change()` controls; the thread has one live data card. */
 const BINDINGS_EDITOR_ID = 'agent-bindings-editor';
-
-/** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
-const FILE_NAME_WITHHELD = '(name withheld)';
 
 // The full view's chunk holds the Data Grid: it loads when the user first opens the view (or points at the button).
 const loadDataView = () => import('src/sections/agent-chat/DataView');
@@ -210,10 +209,7 @@ export function DataCard(props: DataCardProps) {
             {dataset.parsed.file_name && (
               <Box component="span" data-testid="data-file-name" sx={{ overflowWrap: 'anywhere' }}>
                 {' '}
-                ·{' '}
-                {dataset.parsed.file_name === FILE_NAME_WITHHELD
-                  ? 'from a file, name withheld by the content check'
-                  : `from "${dataset.parsed.file_name}"`}
+                · {fileSource(dataset.parsed.file_name)}
               </Box>
             )}
           </Box>
@@ -380,7 +376,7 @@ export function DataCard(props: DataCardProps) {
             >
               <DataView
                 profile={dataset.parsed.profile}
-                version={dataset.parsed.version ?? 1}
+                version={liveDataVersion(state) ?? dataset.parsed.version ?? 1}
                 load={onLoadData}
                 onShown={onDataViewShown}
                 onClose={() => {

@@ -2,98 +2,99 @@ library: pygal
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:24:03Z'
-updated: '2026-04-29T15:37:07Z'
+updated: '2026-11-07T23:40:58Z'
 generated_by: claude-sonnet
-workflow_run: 25117320301
+workflow_run: 42425909795
 issue: 653
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance and data quality: correct chart type, exact title format,
-    physically plausible seasonal temperature data'
-  - Correct Okabe-Ito palette with proper theme-adaptive chrome in both light and
-    dark renders — no dark-on-dark failures
-  - Includes HTML export alongside PNG, leveraging pygal's interactive output capability
-  - Clean, linear code structure with explicit font sizing for the large canvas
+  - Daily website-traffic scenario with weekly weekend dips, noise and gradual growth
+    wiggles like real data (C3) while staying a single clean line
+  - pygal's major/minor label system (x_labels_major every 7th day, show_minor_x_labels=False)
+    keeps 70 date labels readable with one label per week
+  - Y range set from the data (floor(min)-2 to ceil(max)+2) spans the values without
+    forcing zero (C5)
+  - 'All chrome threaded through the Style object from theme tokens; both renders
+    theme-correct with #009E73 data'
+  - Native interactive HTML output with per-point tooltips alongside the PNG
   weaknesses:
-  - 'Design Excellence is the main gap (10/20): the output looks like a well-configured
-    library default; adding visual hierarchy (peak annotation, area-fill accent, or
-    highlighted data point) would push DE-03 higher'
-  - Dots size (8px in SVG units) is slightly small relative to the 4800x2700 canvas
-    — increasing to 12-15 would improve VQ-03
-  - DE-02 could be improved by exploring legend-box styling or reducing whitespace
-    at the top of the plot area
+  - 'Suggestion: the y-guides in the dark render are very faint against #1A1A17; a
+    slightly lighter guide tone would make them easier to follow'
+  - 'Suggestion: date tick labels could drop the leading zero (''Mar 3'' instead of
+    ''Mar 03'') for a cleaner axis'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, not pure white
-      Chrome: Title "line-basic · pygal · anyplot.ai" in dark ink (readable); Y-axis "Temperature (°C)" rotated vertically (readable); X-axis "Month" below tick labels (readable); month abbreviations and y-tick numerals clearly visible; small legend "Average Temperature" at bottom-left (readable)
-      Data: Single series in brand green #009E73; area below line filled with same green; small dots visible at each data point; horizontal y-guide lines subtle and visible
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'line-basic · python · pygal · anyplot.ai' in dark ink at the top centre (about 50% of width); y-axis title 'Daily visitors (thousands)' rotated on the left, x-axis title 'Date' below; y ticks 18-36 in steps of 2, x ticks one per week (Mar 03 ... May 05); dotted horizontal y-guides subtle but visible; all text readable
+      Data: one #009E73 line through 70 daily points with small green dots; weekly dips and an upward trend from about 24k to 34k; no legend (single series)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, not pure black
-      Chrome: Title, axis labels, tick labels all rendered in near-white (#F0EFE8 range) — clearly readable against dark surface; no dark-on-dark failures detected
-      Data: Line and fill remain in brand green #009E73 — identical to light render (only chrome flipped); area fill visible as dark green against near-black background
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, axis titles and tick labels in light ink (#F0EFE8 / #A8A79F), all clearly readable; no dark-on-dark text; y-guides present but very faint
+      Data: identical #009E73 line and dots as the light render; only chrome flipped
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set and well-scaled (title=72, labels=48, major=42,
-          legend=42); all text readable in both themes; legend text slightly small
+        comment: Explicit sizes (title 66, axis titles 48, ticks 40) on the 3200x1800
+          canvas; all text readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; 12 monthly labels well-spaced
+        comment: Weekly major x labels are well spaced; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line (stroke=5) and filled area prominent; dots (size=8) slightly
-          small for 4800x2700 canvas
+        comment: '70 points: 4 px line with small dots (dots_size=5) — the line still
+          reads as a line, dots visible in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series Okabe-Ito green; good contrast in both themes; CVD-safe
+        comment: Single brand-green series with strong contrast on both surfaces;
+          no color-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, fills ~70% of canvas; minor whitespace
-          at top of plot area
+        comment: 3200x1800 canvas; title about 50% of width; balanced axis titles;
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: Temperature (°C) with units; X: Month — both descriptive'
+        comment: '''Date'' and ''Daily visitors (thousands)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          INK tokens in both renders'
+        comment: 'Series in #009E73 via the full Imprint palette; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -101,22 +102,23 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured pygal output with correct palette and custom theming;
-          area-fill adds visual weight but overall look is a configured library default
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit font
+          sizes — nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Good choice to show y-guides only; legend at bottom reduces overlap;
-          limited refinement headroom in pygal vs. matplotlib
+        comment: 'Beyond baseline: x labels thinned to one major label per week (x_labels_major
+          every 7th day, minor labels hidden), a tick density chosen for 70 daily
+          points; y-guides only'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Seasonal bell-curve forms natural narrative; filled area amplifies
-          summer peak; no explicit emphasis devices (annotation, peak label)
+        passed: false
+        comment: Data displayed; weekly dips and growth come from the data, no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.Line() — correct chart type
+        comment: pygal.Line with a single series and no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single clean line, axis labels, y-axis grid lines, optional dots
-          present
+        comment: Single line, both axis labels, y grid lines, optional dots; C1, C3,
+          C5, C6 met (no missing values, so C4 does not apply)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on X, Temperature (°C) on Y; all 12 points visible
+        comment: Date on x in order, visitors on y; y range 17-37 spans all values
+          without forcing zero; straight segments, no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-basic · pygal · anyplot.ai' exact format; legend 'Average
-          Temperature' matches series
+        comment: Title 'line-basic · python · pygal · anyplot.ai'; legend hidden for
+          the single series (permitted by C2)
     data_quality:
       score: 15
       max: 15
@@ -156,21 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clear trend over ordered sequence with realistic seasonal variability
+        comment: Trend, weekly seasonality and noise over an ordered daily sequence
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly average temperatures for a temperate climate; neutral, real-world
-          scenario
+        comment: 'Daily website visitors over 10 weeks: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 2.3–22.1°C follow a physically plausible seasonal cycle for
-          a mid-latitude European city
+        comment: 19.6-34.6 thousand visitors/day with weekend dips of about 3.5k —
+          sensible for a mid-size site; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -180,36 +182,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → style → plot → save; no functions
-          or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded (deterministic); no randomness
+        comment: np.random.default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, pygal, Style — all used
+        comment: os, numpy, pandas, pygal, Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path manipulation is documented env necessity; otherwise clean
-          and idiomatic
+        comment: Appropriate complexity; data built with vectorised numpy/pandas
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for pygal
-          interactive library
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,20 +217,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Style object, chart.add(), x_labels, render_to_png(), render()
-          — all idiomatic pygal patterns
+        comment: Style object for all theme tokens, chart.add with plain lists, x_labels
+          with x_labels_major/show_minor_x_labels — pygal's own major/minor label
+          idiom
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: HTML export (interactive JS chart) is distinctively pygal; Style
-          object for full theming; area-fill is pygal's default Line behavior
+        passed: false
+        comment: pygal's major/minor x-label system (x_labels_major, show_minor_x_labels)
+          to thin 70 date labels; native interactive HTML with tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-07T23:37:08Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

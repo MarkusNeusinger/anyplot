@@ -1239,6 +1239,18 @@ function versionSummary(
   }
 }
 
+/**
+ * The number a new data version carries on the page (`DataSnapshot.n`, the `3` of `data v3`): the
+ * one place it comes from. Every label, the status line and the full view read it through the
+ * snapshot. Until the server numbers versions once per session (backend PR B4c, owner decision
+ * of 2026-11-07), the reducer counts them itself (`nextDataVersion`), since the server's `version`
+ * starts over with every paste and goes back on `.undo()`; B4c switches this function to the
+ * server's number.
+ */
+function dataVersionNumber(state: AgentSessionState): number {
+  return state.nextDataVersion;
+}
+
 /** The snapshot of the data version `next` holds, numbered `n` in the session. */
 function snapshotOf(
   next: AgentSessionState,
@@ -1247,7 +1259,7 @@ function snapshotOf(
   state: AgentSessionState
 ): DataSnapshot {
   const { parsed } = dataset;
-  const n = state.nextDataVersion;
+  const n = dataVersionNumber(state);
   const summary = versionSummary(change, dataset, state);
   return {
     n,
@@ -1264,26 +1276,29 @@ function snapshotOf(
   };
 }
 
-/** The versions whose card moves to the thread's end: a turn's, and the fan-out's copy. */
-const MOVES_THE_CARD: ReadonlySet<DataVersionChange> = new Set(['turn', 'copy']);
-
 /**
  * Where a new data version stands in the thread (`next` is the state with it, `state` the one
- * before). Every version gets its item, and numbers itself in the session (`data vN`):
+ * before). Every version gets its item, numbered by `dataVersionNumber` (`data vN`), and the
+ * thread reads in time order (owner, 2026-11-07):
  *
  * - A paste (`chip`, the attachment's line): the card it replaces freezes in place into a stub
  *   of the data it showed, and the paste's item and its own card follow at the end.
  * - `.use()` of a table read from text: the card before it freezes the same way, and the table's
  *   item turns into the card, at its place.
- * - A version a turn made (and the fan-out's copy): a stub of the version before takes the
- *   card's place, and the card goes on at the thread's end, under its id, so it keeps its own
- *   state (notes, code) as it moves.
+ * - A version a turn made: a stub of the version before takes the card's place, and the card goes
+ *   on directly after that turn's message or action, before the reply to it, as a plot card
+ *   stands before its reply. The version arrives with the turn's `done`, after the reply streamed
+ *   in, so the card lands above text the user may be reading; the thread holds that text still
+ *   (`HoldReadingPosition.tsx`). A second version of the same turn stays after its
+ *   stub.
  * - A version the card's own controls made (`.undo()`, `.to_long()`, the table and sheet
- *   pickers): the stub goes above the card, which stays where it is, so nothing moves under the
- *   focus. Once a plot (or a failed plot's card) stands below the card, though, the version is
- *   new data after a plot, and moves the card to the end as a turn's does: the current data
- *   stays in the latest chapter, and the chat's scroll and focus follow the move.
- * - Data without a card yet (example data, a formula, code, a copy) adds the card at the end.
+ *   pickers), before or after a plot, and the fan-out's copy: the stub stays where the card
+ *   stood, under the summary of its own version, and the card goes on at the thread's end, where
+ *   a picker's summary follows it. The focus follows the card (`useFollowFocus.ts`).
+ * - Data without a card yet: after the turn that made it (example data, a formula, code), else at
+ *   the end (a copy).
+ *
+ * The card moves under its id, so it keeps its own state (notes, code) as it moves.
  */
 function placeData(
   state: AgentSessionState,
@@ -1307,18 +1322,26 @@ function placeData(
     const pasted = appendItem({ ...numbered, items: frozen }, { kind: 'paste', text: chip });
     return appendItem(pasted, { kind: 'data', snapshot });
   }
-  if (!card) return appendItem(numbered, { kind: 'data', snapshot });
+  // A turn's version goes directly after the turn's own item; any other at the end.
+  const turn = change === 'turn' ? latestTurn(items) : null;
+  if (!card) {
+    if (!turn) return appendItem(numbered, { kind: 'data', snapshot });
+    const added: ChatItem = { id: numbered.nextItemId, kind: 'data', snapshot };
+    return {
+      ...numbered,
+      items: [...items.slice(0, turn.index + 1), added, ...items.slice(turn.index + 1)],
+      nextItemId: numbered.nextItemId + 1,
+    };
+  }
   const stub = stubOf(card, numbered.nextItemId, state.dataset);
   const moved = { ...card, snapshot };
-  const plotBelow = items
-    .slice(live + 1)
-    .some(item => item.kind === 'plot' || item.kind === 'plot_failed');
+  // The stub where the card stood; the card after the turn's item when the turn came after the
+  // card, after its own stub when the card already stands in that turn, else at the end.
+  const rest = replaceAt(items, live, stub);
+  const at = !turn ? rest.length : turn.index > live ? turn.index + 1 : live + 1;
   return {
     ...numbered,
-    items:
-      MOVES_THE_CARD.has(change) || plotBelow
-        ? [...items.slice(0, live), stub, ...items.slice(live + 1), moved]
-        : [...items.slice(0, live), stub, moved, ...items.slice(live + 1)],
+    items: [...rest.slice(0, at), moved, ...rest.slice(at)],
     nextItemId: numbered.nextItemId + 1,
   };
 }

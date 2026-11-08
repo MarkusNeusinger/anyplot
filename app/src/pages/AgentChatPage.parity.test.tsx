@@ -90,6 +90,17 @@ const PLOT = {
   residual_defects: [],
   version: 1,
 };
+/** The message that asks for a change of the data: its `done` carries the next version. */
+const DATA_REQUEST = 'read score as a share';
+const PREPARED = {
+  ...DATASET,
+  preview: [
+    ['1.5', '0.52'],
+    ['2.0', '0.58'],
+  ],
+  changes: ['score: 2 cells divided by 100'],
+  version: 2,
+};
 
 /**
  * The spec's roles as the open names them for the start item's chips: a role of two kinds, a
@@ -186,6 +197,16 @@ function stubFetch() {
         return json(200, { bindings, complete: missing.length === 0, missing_roles: missing });
       }
       if (sub === '/dataset/confirm') return json(200, { confirmed: true, rows: 2, columns: 2 });
+      if (sub === '/dataset/undo' && method === 'POST') return json(200, DATASET);
+      // The library menu's switch: the plot there may take the two decisions along.
+      if (sub === '/library' && method === 'POST') {
+        return json(200, {
+          session_id: 'S1',
+          eligibility: { eligible: true, status: 'clean', reasons: [] },
+          target: { spec_id: 'scatter-basic', library: 'seaborn' },
+          carry: { decisions: 2, newer: 2, target_has_plot: false, from_plot: true, offer: true },
+        });
+      }
       if (sub === '/messages') {
         const body = JSON.parse(String(init.body)) as { action?: string; text?: string };
         if (body.text === EXPIRING) return json(404, { detail: 'session_expired', ref: 'r-gone' });
@@ -193,6 +214,20 @@ function stubFetch() {
           return sse([
             ['message', { text: SUMMARY }],
             ['done', { llm_calls: 1 }],
+          ]);
+        }
+        if (body.text === DATA_REQUEST) {
+          return sse([
+            ['message', { text: 'Score is a share now.' }],
+            [
+              'done',
+              {
+                llm_calls: 2,
+                bindings: PREPARED.bindings,
+                data_confirmed: false,
+                dataset: PREPARED,
+              },
+            ],
           ]);
         }
         plots += 1;
@@ -243,6 +278,15 @@ async function plotOnce() {
   await waitFor(() => expect(create).toBeEnabled());
   fireEvent.click(create);
   expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+  await turnEnded();
+}
+
+/** Send a message from the box with Enter, and wait until its reply is in and its turn ended. */
+async function send(text: string, reply: string) {
+  const box = screen.getByLabelText('Message');
+  fireEvent.change(box, { target: { value: text } });
+  fireEvent.keyDown(box, { key: 'Enter' });
+  expect(await screen.findByText(reply)).toBeInTheDocument();
   await turnEnded();
 }
 
@@ -344,6 +388,69 @@ const STATES: Record<string, State> = {
       expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
       await turnEnded();
       await screen.findByRole('button', { name: 'Plot v1, matplotlib, first plot' });
+    },
+  },
+  // The chapters after a data request below the plot: the card in a new `# data` chapter at the
+  // end, the version before folded where the card stood, and opened read-only.
+  'with a folded data version open': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      await send(DATA_REQUEST, 'Score is a share now.');
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Data v1, pasted, 2 rows by 2 columns' })
+      );
+      await screen.findByTestId('folded-data-source');
+    },
+  },
+  // `.undo()` on the card above the plot: its version moves the card to the end as a new data
+  // chapter, and the focus follows it.
+  'with a control version after a plot': {
+    open: 'ok',
+    reach: async () => {
+      await pasteTable();
+      await send(DATA_REQUEST, 'Score is a share now.');
+      const create = screen.getByRole('button', { name: 'Create plot' });
+      await waitFor(() => expect(create).not.toHaveAttribute('aria-disabled'));
+      fireEvent.click(create);
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      await turnEnded();
+      const undo = screen.getByRole('button', { name: '.undo()' });
+      undo.focus();
+      fireEvent.click(undo);
+      await screen.findByText('# undone · back to the version before');
+      await waitFor(() => expect(screen.getByTestId('data-card-label')).toHaveFocus());
+    },
+  },
+  // Before any plot, the same rule: a data request puts the card before its reply, and `.undo()`
+  // then moves it to the end, each earlier version folded under its own talk.
+  'with a control version before any plot': {
+    open: 'ok',
+    reach: async () => {
+      await pasteTable();
+      await send(DATA_REQUEST, 'Score is a share now.');
+      const undo = screen.getByRole('button', { name: '.undo()' });
+      undo.focus();
+      fireEvent.click(undo);
+      await screen.findByText('# undone · back to the version before');
+      await waitFor(() => expect(screen.getByTestId('data-card-label')).toHaveFocus());
+      expect(screen.getAllByTestId('data-stub')).toHaveLength(2);
+    },
+  },
+  // A library switch after a plot: a line of its own, which names the decisions the plot there
+  // keeps.
+  'with a library switch line': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      fireEvent.click(screen.getByTestId('library-chip'));
+      const menu = await screen.findByRole('dialog', { name: 'Library of the plot' });
+      const seaborn = await within(menu).findByRole('button', { name: 'seaborn' });
+      await waitFor(() => expect(seaborn).toBeEnabled());
+      fireEvent.click(seaborn);
+      expect(await screen.findByTestId('switch-line')).toHaveTextContent(
+        '· plotting in seaborn from here, 2 decisions kept'
+      );
     },
   },
   // The feedback form unfolded: its data box and the consent line under it.
@@ -531,8 +638,11 @@ async function pageFor(who: Who, state: string): Promise<string> {
     if (who === 'as visitor') {
       expect(calls.filter(path => path.startsWith('/debug/'))).toEqual(['/debug/agent/status']);
     }
-    // The fan-out is off: the only other allowed difference does not apply here.
-    if (door) expect(screen.getByTestId('library-chip')).toHaveTextContent(/^matplotlib ▾$/);
+    // The fan-out is off: the only other allowed difference does not apply here. The chip names
+    // one library, the one the session switched to included, never `all`.
+    if (door) {
+      expect(screen.getByTestId('library-chip')).toHaveTextContent(/^(matplotlib|seaborn) ▾$/);
+    }
     expect(
       within(document.body).queryByRole('button', { name: 'Plot in all libraries' })
     ).not.toBeInTheDocument();

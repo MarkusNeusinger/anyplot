@@ -1,8 +1,11 @@
+import { useState } from 'react';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   type AgentSessionState,
   type ChatItem,
+  type DataSnapshot,
   initialAgentState,
   type PlotVersion,
   type RunState,
@@ -175,12 +178,17 @@ describe('ChatThread', () => {
       ],
     });
     const log = screen.getByRole('log');
+    // The chapters follow the turns: the summary is about the data, the plot buttons about the
+    // plot, and example data about the data again.
     expect([...log.children].map(child => child.textContent)).toEqual([
+      '# data',
       '12 rows and 3 columns.',
+      '# plot',
       '❯.create_plot()# seaborn',
       '❯.start_over()# seaborn',
       '❯.create_plot()# plotly',
       '❯plot in plotly with your decisions',
+      '# data',
       '❯.example_data()',
     ]);
     expect(screen.queryByText(/summarize_data|carry_plot/)).not.toBeInTheDocument();
@@ -430,6 +438,18 @@ describe('ChatThread data items', () => {
   const renderData = (part: 'data' | 'transcription') => (
     <div data-testid={`rendered-${part}`}>{part} card</div>
   );
+  /**
+   * The items after a turn's data version, as the reducer places it: a stub where the card
+   * stood, the card right after the turn's message (the fourth item), before its reply.
+   */
+  const moved = (before: ChatItem[]): ChatItem[] => [
+    before[0],
+    { id: 6, kind: 'data_stub', rows: 4, columns: 2, card: 2 },
+    before[2],
+    before[3],
+    { id: 2, kind: 'data' },
+    before[4],
+  ];
 
   function renderItems(
     state: AgentSessionState,
@@ -477,6 +497,7 @@ describe('ChatThread data items', () => {
     );
     expect([...log.children].map(child => child.textContent)).toEqual([
       'You came from Basic Scatter Plot.',
+      '# data',
       '❯▤ table · 3 lines · 46 B',
       'data card',
       '2 rows and 2 columns.',
@@ -487,6 +508,7 @@ describe('ChatThread data items', () => {
     renderItems(
       ready([
         { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
+        // A stub a hand-built thread gives no snapshot: a quiet line of its shape.
         { id: 2, kind: 'data_stub', rows: 1203, columns: 4 },
         { id: 3, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
         { id: 4, kind: 'assistant', text: '1,203 rows and 4 columns.' },
@@ -499,15 +521,314 @@ describe('ChatThread data items', () => {
       ])
     );
     const log = screen.getByRole('log');
-    // Neither summary action shows: the stub is the card it followed, and a notice is no turn.
+    // Neither summary action shows, and a notice is no turn: one data chapter.
     expect([...log.children].map(child => child.textContent)).toEqual([
+      '# data',
       '❯▤ table · 3 lines · 46 B',
-      '# earlier data · 1,203 rows · 4 columns · replaced below',
+      'data · 1,203 rows × 4 cols',
       '1,203 rows and 4 columns.',
       '❯▤ sales.csv · 8 lines · 120 B',
       'data card',
       '# reply language: en',
       '7 rows and 3 columns.',
+    ]);
+  });
+
+  it('folds an older data version to its label, which opens it read-only', async () => {
+    const snapshot: DataSnapshot = {
+      n: 2,
+      change: 'sheet',
+      summary: 'sheet "2026"',
+      label: 'data v2 · sheet "2026"',
+      rows: 12,
+      columns: 2,
+      sheet: '2026',
+      fileName: 'Bericht.xlsx',
+      changes: ['dropped 1 row where Region = Total'],
+      preview: [['North', '4210']],
+      profile: {
+        rows: 12,
+        columns: [
+          { name: 'Region', dtype: 'text', missing: 0, unique: 12 },
+          { name: 'Q1', dtype: 'integer', missing: 0, unique: 12 },
+        ],
+        source_format: 'csv',
+        decimal: '.',
+        warnings: [],
+      },
+    };
+    renderItems(
+      ready([
+        { id: 1, kind: 'paste', text: '▤ Bericht.xlsx' },
+        { id: 3, kind: 'data_stub', rows: 12, columns: 2, snapshot, card: 2 },
+        { id: 2, kind: 'data' },
+      ])
+    );
+    const toggle = screen.getByRole('button', {
+      name: 'Data v2, sheet "2026", 12 rows by 2 columns',
+    });
+    expect(toggle).toHaveTextContent(/^▸data v2 · sheet "2026" · 12 rows × 2 cols$/);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    const stub = screen.getByTestId('data-stub');
+    expect(within(stub).queryByRole('table')).not.toBeInTheDocument();
+
+    await userEvent.click(toggle);
+    // The same button, open: what the version held, from its snapshot, and nothing to press.
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveFocus();
+    expect(within(stub).getByTestId('folded-data-changes')).toHaveTextContent(
+      '# changeddropped 1 row where Region = Total'
+    );
+    expect(within(stub).getByTestId('folded-data-source')).toHaveTextContent(
+      'read as csv · from "Bericht.xlsx" · sheet "2026"'
+    );
+    expect(within(stub).getByRole('columnheader', { name: /^Q1/ })).toHaveTextContent(
+      'Q1 · number'
+    );
+    expect(within(stub).getByRole('cell', { name: '4210' })).toBeInTheDocument();
+    expect(within(stub).getAllByRole('button')).toEqual([toggle]);
+    expect(within(stub).queryByRole('combobox')).not.toBeInTheDocument();
+
+    await userEvent.click(toggle);
+    expect(within(stub).queryByRole('table')).not.toBeInTheDocument();
+    // Each version is a card of its own, named as a plot card is.
+    expect(screen.getByRole('article', { name: 'Data version 2' })).toBe(stub);
+  });
+
+  it('says a file name the content check withheld as withheld, as the live card does', async () => {
+    const withheld = {
+      n: 1,
+      change: 'paste',
+      summary: 'pasted',
+      label: 'data v1 · pasted',
+      rows: 1,
+      columns: 1,
+      sheet: null,
+      fileName: '(name withheld)',
+      changes: [],
+      preview: [['1']],
+      profile: {
+        rows: 1,
+        columns: [{ name: 'a', dtype: 'integer', missing: 0, unique: 1 }],
+        source_format: 'csv',
+        decimal: '.',
+        warnings: [],
+      },
+    } satisfies DataSnapshot;
+    renderItems(
+      ready([
+        { id: 1, kind: 'data_stub', rows: 1, columns: 1, snapshot: withheld, card: 2 },
+        { id: 2, kind: 'data' },
+      ])
+    );
+    await userEvent.click(screen.getByTestId('data-stub-label'));
+    expect(screen.getByTestId('folded-data-source')).toHaveTextContent(
+      /^read as csv · from a file, name withheld by the content check$/
+    );
+  });
+
+  it('opens a chapter where the step changes, and a library switch is a line of its own', () => {
+    renderItems(
+      ready([
+        { id: 1, kind: 'paste', text: '▤ table' },
+        { id: 2, kind: 'data' },
+        { id: 3, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+        { id: 4, kind: 'assistant', text: 'Plot 1.' },
+        { id: 5, kind: 'switch', from: 'matplotlib', library: 'seaborn', decisions: 3 },
+        {
+          id: 6,
+          kind: 'action',
+          action: 'carry_plot',
+          library: 'seaborn',
+          label: '.update_plot() →',
+        },
+        { id: 7, kind: 'switch', from: 'seaborn', library: 'plotly', decisions: null },
+        { id: 8, kind: 'switch', from: 'plotly', library: 'bokeh', decisions: 1 },
+        { id: 9, kind: 'user', text: 'only 2026, please' },
+        { id: 10, kind: 'assistant', text: 'Kept 2026.' },
+      ])
+    );
+    const log = screen.getByRole('log');
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      '# data',
+      '❯▤ table',
+      'data card',
+      '# plot',
+      '❯.create_plot()# matplotlib',
+      'Plot 1.',
+      '· plotting in seaborn from here, 3 decisions kept',
+      '❯.update_plot() →# seaborn',
+      // A switch without an offer names no count, never "0 decisions".
+      '· plotting in plotly from here',
+      '· plotting in bokeh from here, 1 decision kept',
+      // A question changes no step: it stays in the plot chapter.
+      '❯only 2026, please',
+      'Kept 2026.',
+    ]);
+    // The chapter lines are headings, the comment mark not read out.
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map(heading => heading.textContent)
+    ).toEqual(['# data', '# plot']);
+    expect(within(screen.getAllByRole('heading')[0]).getByText('#')).toHaveAttribute('aria-hidden');
+  });
+
+  it('keeps a reply its element when the card moves below it, so the log reads it once', () => {
+    const thread = (items: ChatItem[]) => (
+      <ChatThread
+        state={ready(items)}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={renderData}
+      />
+    );
+    const before: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'assistant', text: '4 rows.' },
+      { id: 4, kind: 'user', text: 'only 2026' },
+      { id: 5, kind: 'assistant', text: 'Kept 2026.' },
+    ];
+    const { rerender } = render(thread(before));
+    const summary = screen.getByText('4 rows.');
+    expect(screen.getByTestId('first-reply')).toContainElement(summary);
+    // The turn's version moves the card in front of the turn's reply: the summary is no first
+    // reply now, and stays the same node; the turn's reply is the first one.
+    rerender(thread(moved(before)));
+    expect(screen.getByText('4 rows.')).toBe(summary);
+    expect(screen.getByTestId('first-reply')).toHaveTextContent('Kept 2026.');
+  });
+
+  it('holds the reply still when the card lands above it, unless it stands below the window', async () => {
+    const thread = (items: ChatItem[]) => (
+      <ChatThread
+        state={ready(items)}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={renderData}
+      />
+    );
+    const before: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'assistant', text: '4 rows.' },
+      { id: 4, kind: 'user', text: 'only 2026' },
+      { id: 5, kind: 'assistant', text: 'Kept 2026.' },
+    ];
+    // jsdom lays nothing out: the turn's reply stands at `top`, 240 px lower once the card is in
+    // front of it.
+    let top = 600;
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element
+    ) {
+      const reply = this.getAttribute('data-reply') === '5';
+      const below = this.previousElementSibling?.getAttribute('data-testid') === 'rendered-data';
+      return { top: reply ? top + (below ? 240 : 0) : 0 } as DOMRect;
+    });
+    // An earlier test's frame may still hold the anchoring: let it run first.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const page = document.documentElement.style.overflowAnchor;
+    let during = '';
+    const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {
+      during = document.documentElement.style.overflowAnchor;
+    });
+    const frame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callback(0);
+      return 0;
+    });
+    try {
+      const { rerender, unmount } = render(thread(before));
+      rerender(thread(moved(before)));
+      // The page scrolls by the distance the reply moved, with the browser's anchoring off for
+      // that commit and back to the page's own value after it.
+      expect(scrollBy).toHaveBeenCalledWith({ top: 240, behavior: 'instant' });
+      expect(during).toBe('none');
+      expect(document.documentElement.style.overflowAnchor).toBe(page);
+      unmount();
+
+      // A reply below the window's bottom edge is not being read: it lands where it lands.
+      top = window.innerHeight + 10;
+      scrollBy.mockClear();
+      const again = render(thread(before));
+      again.rerender(thread(moved(before)));
+      expect(scrollBy).not.toHaveBeenCalled();
+    } finally {
+      rect.mockRestore();
+      scrollBy.mockRestore();
+      frame.mockRestore();
+    }
+  });
+
+  it('keeps the live card mounted with its own state when a version moves it into a new chapter', async () => {
+    function Card() {
+      const [open, setOpen] = useState(false);
+      return (
+        <button type="button" data-testid="card-notes" onClick={() => setOpen(true)}>
+          {open ? 'notes open' : 'notes closed'}
+        </button>
+      );
+    }
+    const thread = (items: ChatItem[]) => (
+      <ChatThread
+        state={ready(items)}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={part => (part === 'data' ? <Card /> : null)}
+      />
+    );
+    const before: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      {
+        id: 4,
+        kind: 'plot_failed',
+        result: {
+          status: 'failed',
+          reason: null,
+          attempts: 2,
+          artifacts: [],
+          changes: [],
+          residual_defects: [],
+          version: null,
+        },
+      },
+    ];
+    const { rerender } = render(thread(before));
+    const card = screen.getByTestId('card-notes');
+    await userEvent.click(card);
+    expect(card).toHaveTextContent('notes open');
+    // `.undo()` after the plot: the stub stays where the card stood, the card goes on below the
+    // plot as a new data chapter, the same node with the notes it had open.
+    rerender(
+      thread([
+        before[0],
+        { id: 5, kind: 'data_stub', rows: 2, columns: 2, card: 2 },
+        before[2],
+        before[3],
+        { id: 2, kind: 'data' },
+      ])
+    );
+    expect(screen.getByTestId('card-notes')).toBe(card);
+    expect(card).toHaveTextContent('notes open');
+    const log = screen.getByRole('log');
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      '# data',
+      '❯▤ table',
+      'data · 2 rows × 2 cols',
+      '# plot',
+      '❯.create_plot()# matplotlib',
+      'plot · failedno plot this time',
+      '# data',
+      'notes open',
     ]);
   });
 
@@ -532,6 +853,7 @@ describe('ChatThread data items', () => {
     renderItems(waiting);
     const log = screen.getByRole('log');
     expect([...log.children].map(child => child.textContent)).toEqual([
+      '# data',
       // An older table read from text that a new paste dropped; only the latest one waits.
       '# table read from text · not used',
       'transcription card',
