@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: area-mountain-panorama
 created: '2026-06-30T22:26:39Z'
-updated: '2026-11-08T23:12:46Z'
+updated: '2026-11-08T23:27:59Z'
 generated_by: claude-opus
 workflow_run: 42532962716
 issue: 5365
@@ -12,111 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Ridgeline built as the maximum of asymmetric tent functions (lines 82-88) gives
-    sharp triangular apexes with linear flanks and deep saddles, so each of the 16
-    summits is individually recognizable, never bell-shaped bumps
-  - 'Every apex sits exactly at its listed angle and elevation: the jitter is damped
-    within 3° of each summit and the summit sample is restored afterwards (lines 91-102)'
-  - Three-level label staggering (4640/4870/5100 m, Matterhorn at 5250 m) keeps all
-    16 two-line name/elevation labels collision-free even in the dense Rimpfischhorn–Monte
-    Rosa cluster
-  - Theme chrome consolidated into one Makie Theme object applied via with_theme,
-    and a layout-row Label subtitle with rowgap! — idiomatic Makie layout
-  - 'Both themes fully theme-correct: off-white/near-black page, theme-adapted sky
-    and silhouette colors, brand-green summit markers identical in both renders'
+  - The ridgeline is the maximum over asymmetric tent functions with damped random
+    jitter. That gives sharp triangular apexes, linear flanks of different steepness
+    and small rocky notches, never bell-shaped bumps.
+  - 'All 16 listed Wallis summits sit exactly at their elevations: the summit sample
+    is reset after the jitter. Each has a thin leader line and a name-over-elevation
+    label on three staggered levels, and no label collides with another or with a
+    leader.'
+  - 'The Matterhorn reads as the focal point: a larger outlined marker, a brand-green
+    leader and a bold 18 pt label. It is also the narrowest horn, isolated by deep
+    notches, with a Hörnli shoulder on its right flank.'
+  - A composite Makie Theme applied with with_theme carries all the theme-adaptive
+    chrome. A Label in its own GridLayout row adds the subtitle above the axis.
+  - The x axis is labelled as a clockwise compass sweep from Gornergrat (SE → S →
+    W → N → E) with the ticks hidden, as the Notes allow. The subtitle states that
+    the horizontal spacing is schematic.
   weaknesses:
-  - 'SC-02 (both): the Matterhorn, the anchor summit, does not read as the focal point
-    — it is drawn with the same symmetric tent shape and fill as its neighbours and
-    is lower than Dom, Täschhorn, Liskamm and Monte Rosa beside it; only a 14 px vs
-    8 px marker and a higher label set it apart → give the anchor summit visual prominence
-    the eye lands on first (e.g. its characteristic steep asymmetric horn profile
-    with a much steeper flank and a deeper saddle on both sides, or a stronger marker/label
-    weight). Likely cause: PEAKS entry (88.0, 4478.0, "Matterhorn", 8.0, 6.5) and
-    ms = 14 being the only emphasis.'
-  - 'VQ-01 (both): the 16 peak labels and the tick labels are set at fontsize 12 (24
-    px on the 3200 px canvas) and blur to unreadability at the 400 px thumbnail, though
-    the peak names are the chart''s primary information → about 14–15 for the peak
-    labels (+2 to +3). Likely cause: text!(...; fontsize = 12) and xticklabelsize/yticklabelsize
-    = 12.'
-  - 'DQ-02 (both): the x axis is titled "Bearing (°)" and the subtitle names a Gornergrat
-    vantage, but the bearings are invented — the Matterhorn sits at 88° (east) whereas
-    from Gornergrat it lies to the west-southwest, and Breithorn is placed between
-    Strahlhorn and Castor instead of next to the Matterhorn → either use plausible
-    bearings and order from that vantage (Monte Rosa/Liskamm east, Breithorn/Matterhorn
-    west, Mischabel north) or relabel the axis as a generic horizontal position. Likely
-    cause: the angle_deg column of PEAKS.'
-  - 'Suggestion: the uniform ±15 m white-noise jitter reads as a fine saw-tooth fuzz
-    on every flank; a coarser midpoint-displacement pass (as the code comment claims)
-    would give fewer, larger rocky notches.'
-  - 'Suggestion: an optional lighter background ridge fading toward the sky would
-    add the photographic depth the Notes allow.'
+  - 'SC-02 (dark): the silhouette is filled in mid slate #5A6E8C, which is lighter
+    than the night sky #0D1825, so the mountains read as a light shape on a dark sky
+    instead of the dark solid silhouette the characteristic bullet asks for → keep
+    the fill dark (near-black, for example #0B0F14) and lift the sky instead (for
+    example a dusk navy around #2A3D5C) so the silhouette still stands out by at least
+    3:1. Likely cause: the dark-theme branches of the MTN_FILL and SKY_BG constants.'
+  - 'Suggestion: the tent floor at BASELINE leaves short perfectly flat stretches
+    at 2780 m (left of the Matterhorn and at the left edge); a little jitter or a
+    slightly raised valley floor there would keep the whole outline rocky.'
+  - 'Suggestion: move the peak data into the library prompt''s Data block (column
+    constants plus a DataFrame) and derive xlims and ylims from it, so a user can
+    swap in their own panorama.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white page (#FAF8F1) around a light sky-blue (#B8D8EF) axis panel that serves as the sky.
-      Chrome: bold title "Wallis Peaks Panorama · area-mountain-panorama · julia · makie · anyplot.ai" (~40% width), small grey subtitle above it ("Swiss Alps · Wallis Region · Gornergrat Vantage · 3100 m"), y axis "Elevation (m)" 2500–5000, x axis "Bearing (°)" 0–180; left/bottom spines only, no grid. All text dark and readable.
-      Data: a near-black (#262623) filled silhouette of 16 sharp triangular summits plus three unnamed sub-peaks, serrated flanks, deep saddles (lowest ~2790 m at 95°). Brand-green #009E73 dot on each named apex (Matterhorn larger with page-colored outline), thin grey leader lines up to two-line labels (name / "NNNN m") staggered at three heights, Matterhorn's label highest. No label collisions.
+      Background: warm off-white #FAF8F1 figure surface; the axis panel carries a light-blue sky (#B8D8EF), as the spec's optional sky background allows.
+      Chrome: the bold title "Wallis Peaks Panorama · area-mountain-panorama · julia · makie · anyplot.ai" fills about 40 % of the width, with a small grey subtitle above it. The y axis "Elevation (m)" has ticks from 2500 to 5000. The x label reads "Clockwise sweep from Gornergrat: SE → S → W → N → E" with the x ticks hidden. Only the left and bottom spines are drawn, with no grid. All text is dark and readable.
+      Data: a near-black (#262623) jagged silhouette of 16 triangular summits plus unnamed sub-peaks fills the area from the ridgeline down. Brand-green #009E73 summit dots sit at each apex, with thin grey leader lines up to labels (name / "NNNN m") on three staggered heights. The Matterhorn has a larger outlined dot, a green leader and a bold, larger label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black page (#1A1A17) around a deep night-blue (#0D1825) sky panel.
-      Chrome: title, subtitle, axis titles and tick labels in light ink; no dark-on-dark text anywhere.
-      Data: silhouette lifted to slate blue-grey (#5A6E8C) so it stands out against the night sky; summit markers in the same #009E73 green as the light render; leader lines in light grey; labels light and readable. Geometry identical to the light render.
+      Background: warm near-black #1A1A17 figure surface; the axis panel has a deep navy night sky (#0D1825).
+      Chrome: the title, subtitle, axis title, tick labels and peak labels are all light (#F0EFE8 / #B8B7B0) and readable. There is no dark-on-dark text.
+      Data: the same ridgeline is filled in mid slate #5A6E8C, which is lighter than the sky, so the silhouette reads as a light shape. The green summit dots and the Matterhorn leader are identical to the light render; the other leaders flip to light grey.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; peak and tick labels
-          at fontsize 12 blur in the thumbnail (defect line)
+        comment: Explicit sizes (title scaled to its length, 14 pt axes, 15/18 pt
+          peak labels); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Three-level staggering keeps all 16 labels and leader lines apart
+        comment: Three-level stagger keeps all 16 labels and leaders clear, including
+          the tight Dom/Täschhorn pair
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Silhouette, summit markers and leader lines clearly visible in both
-          themes
+        comment: Summit dots and leaders visible on both skies; silhouette contrasts
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast silhouette vs sky; no red-green signal
+        comment: Light/dark contrast carries the shape; green is a sole accent, no
+          red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, canvas gate passed; wide panoramic layout, nothing clipped
+        comment: 3200x1800; panorama fills the axis, label band above the peaks, no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Elevation (m) and Bearing (°) with units
+        comment: '''Elevation (m)'' and a descriptive compass-sweep x label'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Summit markers #009E73; page backgrounds #FAF8F1 / #1A1A17; sky
-          panel is the spec-allowed sky layer'
+        comment: 'Brand #009E73 for markers; page #FAF8F1 / #1A1A17 surfaces; theme-correct
+          chrome; sky panel is a spec-permitted element'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -124,22 +117,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-specific sky/silhouette pairing (day sky vs night sky with
-          lifted slate silhouette) and a quiet subtitle hierarchy beyond the baseline
+        comment: Theme-specific sky and silhouette tones, subtitle/title hierarchy,
+          bold anchor label
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Leader lines stop short of labels for breathing room; gridless sky
-          panel chosen for this chart
+        comment: Label levels aligned in three clean rows, x ticks dropped for a cleaner
+          horizon, tight subtitle row gap
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Matterhorn emphasis is what the Notes prescribe; no further hierarchy
-          chosen
+        comment: Matterhorn emphasised through marker, green leader and isolated narrow
+          horn shape with Hörnli shoulder
     spec_compliance:
       score: 14
       max: 15
@@ -149,29 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled panorama silhouette with labeled peaks
+        comment: Filled panorama silhouette with labelled peaks
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Jagged tents, dark fill, leader lines, name/elevation labels, staggering,
-          y lower bound all present; anchor summit does not read as the focal point
-          (defect line)
+        comment: 'All Notes bullets met except the dark theme fill: lighter than the
+          sky instead of a dark silhouette (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Apexes at exact listed angle/elevation; markers at data values
+        comment: Every apex at its listed elevation; y lower bound 2450 m
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Descriptive prefix + mandated title; no legend needed (N/A)
+        comment: Correct title with descriptive prefix; legend N/A
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -179,22 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 16 listed peaks, sub-peaks, cols, asymmetric flanks, clustered
-          labels
+        comment: Jagged ridges, asymmetric flanks, deep saddles, clustered peaks with
+          stagger, sub-peaks
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Real Wallis peaks with correct elevations, but bearings from the
-          named Gornergrat vantage are invented (defect line)
+        comment: Real Wallis panorama from Gornergrat, in real clockwise order
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: all 16 summit elevations match the spec example values
-          (e.g. Matterhorn 4478, Monte Rosa 4634); y range 2450-5350 m sensible'
+        comment: 'Checked: all 16 summit elevations match the spec''s example values
+          (for example Matterhorn 4478, Dufourspitze 4634)'
     code_quality:
       score: 10
       max: 10
@@ -204,7 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,46 +213,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Compact tent-max comprehension; no written-out algorithm an available
-          call computes
+        comment: Compact tent-max comprehension; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2), Makie 0.24 API
+        comment: Saves plot-$(THEME).png at px_per_unit=2; Makie 0.24 API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Reusable Theme object applied with with_theme, poly! with Point2f
-          polygon
+        comment: Idiomatic poly!/lines!/scatter!/text! on Axis; but the library prompt's
+          column-constant + DataFrame Data block is not followed
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: GridLayout subtitle Label row with rowgap! and theme-scoped Axis
-          defaults
-  verdict: REJECTED
+        passed: false
+        comment: Composite Theme with with_theme and a GridLayout Label row with rowgap!
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-6a80b7f705
-  rendered_at: '2026-11-08T23:09:48Z'
+  rendered_at: '2026-11-08T23:25:15Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
-  - patches
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
+  - edge-highlighting
