@@ -9,4 +9,4 @@
   diagnostic `ops_exact`, and it still decides a case that expects no data call, a `run_data_code` case, a
   `refuse` case and a case with `strict_operations: true`. A miss names what differs (`table_miss`, columns at
   most, never a cell), `check_cases` refuses an expectation that leaves its table as it is, and a unit test runs
-  every table-scored fixture with a root that makes exactly its operations.
+  every table-scored fixture with a root that makes exactly its operations. (#12617)
