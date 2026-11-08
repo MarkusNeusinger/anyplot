@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: cartogram-area-distortion
 created: '2026-06-08T04:02:52Z'
-updated: '2026-11-08T20:34:50Z'
+updated: '2026-11-08T20:41:27Z'
 generated_by: claude-sonnet
 adopted_from: main (473023d4fa28ccfd1f6a8ce6f718720f5313a7e0)
 workflow_run: 42520522276
@@ -13,129 +13,132 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/d3/plot-dark.html
-quality_score: 76
+quality_score: 82
 review:
   strengths:
-  - 'Dorling cartogram built idiomatically with d3.forceSimulation + forceCollide
-    anchored to geoAlbersUsa-projected centroids: circles do not overlap and keep
-    rough geographic position (NY/PA/NJ cluster, CA west, TX south)'
-  - d3.geoAlbersUsa().fitExtent composite projection places Alaska and Hawaii in their
-    conventional positions in both the cartogram and the inset
-  - Circle area via d3.scaleSqrt so area is proportional to population, with a dashed
-    nested-size legend (1M/10M/30M) and a gradient color legend
-  - Real, plausible 2023 population and 2022 GDP figures for all 50 states plus D.C.
-  - 'All chrome threaded through ANYPLOT_TOKENS: text readable in both themes, labels
-    use pageBg for contrast on the fills'
+  - 'Dorling cartogram built the d3 way: d3.forceSimulation with forceX/forceY anchors
+    and forceCollide on geoAlbersUsa-projected centroids, so the circles never overlap
+    and keep their rough geographic position (Pacific Northwest top left, NY/PA/NJ
+    cluster top right, AK and HI in their conventional insets)'
+  - 'Circle area really is proportional to population: d3.scaleSqrt on radius, and
+    the nested dashed size legend (1M, 10M, 30M) uses the same rScale, so the legend
+    matches the map'
+  - 'Theme tokens reach every chrome element: the title, subtitle, legend titles and
+    color-axis ticks read cleanly on #FAF8F1 and #1A1A17, the circle labels switch
+    to page-colored text, and the pageBg circle strokes separate neighbors in both
+    themes'
+  - Real, neutral data (2023 state populations, 2022 GDP per capita) for all 50 states
+    plus D.C., with a subtitle that says what area and color encode
   weaknesses:
-  - 'VQ-02, VQ-05, SC-02 (both): the geographic reference inset (bottom right) is
-    drawn over the Florida circle and hides most of it plus its ''FL'' label, one
-    of the five largest regions → keep the inset clear of every data circle (e.g.
-    move it to the empty lower-left area near AK/HI or into the right legend column).
-    Likely cause: insetX = iw - insetW - 4, insetY = ih - insetH - 4 placed without
-    regard to the projected FL position.'
-  - 'VQ-04, DQ-01 (both): the GDP-per-capita color scale is stretched to D.C.''s ~$235k
-    outlier, so 50 of 51 circles fall in the bottom third of the ramp and read as
-    almost the same green; the secondary encoding carries little visible information
-    → clamp or use a quantile/log domain (e.g. domain to the 95th percentile with
-    D.C. clamped) so the states spread across the Imprint sequential ramp. Likely
-    cause: colorScale domain [min, max] of gdpPerCapita.'
-  - 'VQ-01 (both): abbreviations on the smallest circles (WY, VT, AK, HI, DC, RI)
-    render at the 9 px floor and blur in the 400 px thumbnail → about 11 px floor
-    (+2 px), or leave the smallest unlabeled as the spec allows. Likely cause: Math.max(9,
-    …) in the abbr font-size.'
-  - 'CQ-01 (code): the file does not follow the data-block zones of the d3 prompt
-    (role constants, one // Data block ending in const data, plot code reading d[CONST]),
-    and comments carry revision provenance (''threshold lowered to 8px'', ''moved
-    to y=96'') → restructure into the constants/data/plot zones and make comments
-    explain why. Likely cause: states array with hard-coded keys and edit-history
-    comments.'
-  - 'Suggestion: draw the undistorted state outlines faintly behind the circles instead
-    of an equal-dot inset, which would also free the corner.'
+  - 'VQ-02, VQ-05 (both): the ''Geographic reference (equal-size dots)'' inset box
+    sits on top of the Florida circle, cutting the FL circle in half and hiding most
+    of its ''FL'' label → keep the reference inset out of the map area entirely (e.g.
+    in the right legend column below the size legend). Likely cause: the inset placed
+    at the bottom right of the inner plot area. Note for the pipeline: the PNG and
+    HTML in plot_images/ come from the code before commit a285c8eaf (the HTML still
+    holds the ''Geographic reference inset (bottom-right of inner plot)'' block);
+    the current source already moves the inset to an ''Actual geography'' column,
+    so these findings may describe a stale render, and the render step needs checking.'
+  - 'SC-02 (both): the D.C. outlier ($234.8k) stretches the GDP-per-capita color domain
+    so that 49 of 51 circles land in nearly the same teal and the secondary-variable
+    color scale tells the states apart only for D.C. and NY/CA → a clamped or quantile-limited
+    domain (top stop near the 95th percentile, with the clamp noted in the legend)
+    so the states'' range of about $50k–$100k spans the ramp. Likely cause: colorScale
+    domain set to d3.extent of all values.'
+  - 'Suggestion: the western states spread far apart with wide empty gaps (MT, WY,
+    ND, SD); a slightly larger maxR or a weaker attract strength would pack neighbors
+    closer, as the characteristic section asks.'
+  - 'Suggestion: a faint outline of the US (geoAlbersUsa path of a states or nation
+    boundary) behind the inset dots would make the reference geography easier to read
+    than dots alone.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct.
-      Chrome: dark title "US Population Cartogram · cartogram-area-distortion · javascript · d3 · anyplot.ai" centered at top; soft-ink subtitle explaining circle area = population and color = GDP per capita; right column with "GDP / capita" gradient legend ($50k–$200k) and "Population" dashed nested-circle size legend (1M/10M/30M). All readable.
-      Data: Dorling cartogram of 50 states + D.C. as non-overlapping circles at approximate geographic positions (CA, TX, FL, NY largest), off-white bold abbreviations inside; nearly all circles in the green (#009E73) end of the Imprint sequential ramp, NY/CA/WA slightly teal, D.C. blue. A bordered inset at bottom right shows equal-size dots in geographic position, but it is drawn over the Florida circle, hiding most of it and its "FL" label. Smallest labels (WY, VT, AK, HI) are tiny.
-      Legibility verdict: PASS (except the FL label hidden by the inset)
+      Background: warm off-white, around #FAF8F1.
+      Chrome: centered bold title "US Population Cartogram · cartogram-area-distortion · javascript · d3 · anyplot.ai" in dark ink (about 43 % of the width); left-aligned subtitle "Circle area ∝ population (2023, millions) · Color = GDP per capita (USD, 2022)" in soft ink. Right column: a "GDP / capita" vertical gradient legend ($50k to $200k ticks, top near $235k), and a "Population" size legend of nested dashed circles labelled 1M, 10M and 30M. Everything is readable.
+      Data: 51 Dorling circles at geoAlbersUsa positions, each with page-colored bold abbreviations (CA, TX, FL, NY largest; WY, VT and RI smallest). Almost every circle renders in the same teal from #009E73 to a slightly bluer teal (CA, NY, WA, MA a bit bluer); only DC is clearly blue. A bottom-right inset box "Geographic reference (equal-size dots)" on an elevated surface shows equal-size dots at the true positions. It sits on top of the FL circle, hiding half of it and most of its "FL" label.
+      Legibility verdict: PASS (all chrome readable; the FL label is hidden by the inset, which is an overlap, not a theme failure)
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct.
-      Chrome: title, subtitle, legend titles and tick labels in light ink, all readable; dashed size-legend circles light grey; no dark-on-dark text.
-      Data: circle colors identical to the light render; abbreviations switch to the dark page color, still legible on the green fills. Same inset overlap on FL.
-      Legibility verdict: PASS (except the FL label hidden by the inset)
+      Background: warm near-black, around #1A1A17.
+      Chrome: title, subtitle, legend titles, gradient ticks and size-legend labels all switch to light ink and are clearly readable. No dark-on-dark text; the dashed size circles are light gray and visible.
+      Data: circle colors are identical to the light render. Circle labels are now dark (#1A1A17) on teal and stay readable. The inset box takes a slightly elevated dark surface and again covers the FL circle and its label.
+      Legibility verdict: PASS (same FL overlap as in the light render)
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Title/legend readable in both themes; smallest abbreviations at 9
-          px blur in thumbnail (defect line)
+        passed: true
+        comment: All chrome readable in both themes; major-region labels 13-18 px
+          bold; smallest labels sit on regions the spec lets stay unlabeled
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: Reference inset covers the FL circle and its label (defect line)
+        comment: The reference inset box covers the FL circle and hides most of its
+          label (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles clearly visible with page-colored outlines; legend glyphs
-          visible in both themes
+        comment: Circles, dashed size-legend circles and inset dots visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Color ramp compressed by D.C. outlier; states nearly indistinguishable
-          by color (defect line)
+        passed: true
+        comment: Green-to-blue sequential ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: false
-        comment: Inset overlaps data area at bottom right (defect line)
+        comment: The inset intrudes into the map area over FL (defect line); otherwise
+          balanced with a right legend column
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A axes; subtitle states the area and color encodings with units
+        comment: The subtitle states both encodings with units and years
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential ramp via t.seq, correct backgrounds, identical
-          data colors in both themes
+        comment: Continuous color from imprint_seq (t.seq); backgrounds correct in
+          both themes
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Style-guide baseline, nothing beyond it
+        comment: 'Clear hierarchy: bold title, soft-ink subtitle stating the encodings,
+          bold legend titles; labels scaled to the circle radius'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Baseline; inset placement collides with data
+        comment: pageBg circle strokes separate touching neighbors; nested dashed
+          size legend with leader lines
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        comment: Data displayed; the flat color ramp leaves no secondary story
     spec_compliance:
       score: 14
       max: 15
@@ -145,87 +148,88 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Dorling circle cartogram, an accepted non-contiguous form
+        comment: Dorling cartogram, the non-contiguous form the Notes accept
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: false
-        comment: Inset, color scale, legends, abbreviations present; FL abbreviation
-          hidden by the inset (defect line)
+        comment: Reference inset, size + color legends and abbreviations present;
+          the color scale barely separates the states because D.C. stretches the domain
+          (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Area ∝ population via scaleSqrt; collision layout is inherent to
-          Dorling (layout-positioned)
+        comment: Area ∝ population via scaleSqrt; collision layout is the Dorling
+          type itself (layout-positioned, and the spec expects moved regions)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with descriptive prefix; legends titled for
-          a reader
+        comment: Descriptive prefix + mandated title; legend titles read 'GDP / capita'
+          and 'Population'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Size encoding well shown; color encoding shows almost no variation
-          (defect line)
+        passed: true
+        comment: Size variation from 0.58M to 39M plus a secondary variable shows
+          every aspect of the type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US state population and GDP, neutral
+        comment: Real 2023 state populations and 2022 GDP per capita; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked CA 39.0M, TX 30.1M, FL 22.6M, NY 19.8M populations and CA
-          $3.89T GDP: realistic'
+        comment: Checked CA 39.0M, TX ~30.5M, WY 0.58M, DC $234.8k against known values;
+          plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: No functions, but data-block zones of the d3 prompt not followed;
-          provenance comments (defect line)
+        passed: true
+        comment: Linear script; only a tiny legendTitle arrow helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data, deterministic simulation ticks
+        comment: Deterministic data and a fixed-tick force simulation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global
+        comment: No imports; uses the d3 global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Library calls for projection, collision and legend axis
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract, D3 7 API, no animation
+        comment: 'Renders into #container with ANYPLOT_SIZE; no animation; current
+          d3 v7 API'
     library_mastery:
       score: 7
       max: 10
@@ -235,28 +239,31 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: Idiomatic join, scaleSqrt, geoAlbersUsa().fitExtent on a FeatureCollection
+        comment: Data joins with selection.join, scaleSqrt, d3.axisRight reused for
+          the color legend
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: d3-force simulation with forceX/forceY/forceCollide run headless
-          via sim.tick(), composite AlbersUsa projection
-  verdict: REJECTED
+        comment: d3.geoAlbersUsa composite projection with fitExtent, and forceSimulation
+          + forceCollide for the Dorling layout
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-53e2d5557c
   rendered_at: '2026-11-08T20:32:26Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - colorbar
-  - inset
+  - force-layout
+  - custom-legend
+  - inset-plot
+  - geographic-projection
   patterns:
-  - data-generation
-  - iteration-over-groups
+  - explicit-data
+  - columns-to-constants
   dataprep:
-  - normalization
+  - percentile-clamping
   styling:
+  - theme-tokens
   - minimal-chrome
