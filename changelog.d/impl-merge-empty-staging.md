@@ -13,3 +13,4 @@
   regeneration for R and Julia, or a re-dispatch of `impl-merge.yml`
   when only the transfer failed. The step no longer sets object ACLs,
   which the bucket's uniform bucket-level access rejects on every call.
+  (#12819)
