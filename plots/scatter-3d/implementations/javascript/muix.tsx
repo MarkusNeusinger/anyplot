@@ -70,7 +70,7 @@ const [xAxisInfo, yAxisInfo, zAxisInfo] = [X, Y, Z].map((column) => {
   const hi = Math.max(...values);
   const raw = (hi - lo) / TICK_TARGET;
   const magnitude = 10 ** Math.floor(Math.log10(raw));
-  const step = (NICE_STEPS.find((s) => s * magnitude >= raw) ?? 10) * magnitude;
+  const step = NICE_STEPS.find((s) => s * magnitude >= raw) * magnitude;
   const start = Math.floor(lo / step) * step;
   const end = Math.ceil(hi / step) * step;
   const ticks = Array.from({ length: Math.round((end - start) / step) + 1 }, (_, k) => Number((start + k * step).toFixed(6)));
@@ -106,10 +106,12 @@ const axisEdges = [
   [[0, 0, 1], [0, 1, 1]],
 ].map((ends) => ends.map(([u, v, w]) => PROJ.map(([a, b, c]) => a * u + b * v + c * w)));
 
-// Tick labels just outside the three outer edges, axis titles further out and turned along them
+// Tick labels just outside the three outer edges, axis titles further out and turned along them.
+// Two corners are shared: x starts where y does and z ends where x does, so the x start and the
+// z end stay unlabelled and each corner label belongs to one axis only
 const tickLabels = [
-  ...xTicks.map(({ v, at }) => ({ text: `${v}`, box: [at, -LABEL_OUT, 1 + LABEL_OUT], anchor: "end" })),
-  ...zTicks.map(({ v, at }) => ({ text: `${v}`, box: [1 + LABEL_OUT, -LABEL_OUT, at], anchor: "start" })),
+  ...xTicks.filter(({ at }) => at > 0).map(({ v, at }) => ({ text: `${v}`, box: [at, -LABEL_OUT, 1 + LABEL_OUT], anchor: "end" })),
+  ...zTicks.filter(({ at }) => at < 1).map(({ v, at }) => ({ text: `${v}`, box: [1 + LABEL_OUT, -LABEL_OUT, at], anchor: "start" })),
   ...yTicks.map(({ v, at }) => ({ text: `${v}`, box: [-LABEL_OUT / 2, at, 1 + LABEL_OUT / 2], anchor: "end" })),
 ].map((label) => ({ ...label, at: PROJ.map(([a, b, c]) => a * label.box[0] + b * label.box[1] + c * label.box[2]) }));
 const groundDeg = (GROUND_ANGLE * 180) / Math.PI;
@@ -142,6 +144,11 @@ const series = MARKER_SIZES.map((markerSize, tier) => ({
 const energies = data.map((d) => d[ENERGY]);
 const energyMin = Math.min(...energies);
 const energyMax = Math.max(...energies);
+// The size glyphs take the middle of the energy ramp at the markers' alpha, so they match the marks
+const midRamp = `rgb(${[1, 3, 5]
+  .map((i) => (parseInt(t.seq[0].slice(i, i + 2), 16) + parseInt(t.seq[1].slice(i, i + 2), 16)) / 2)
+  .join(", ")})`;
+const markerAlpha = parseInt(MARKER_ALPHA_HEX, 16) / 255;
 
 // Chart units per px are equal on both screen axes, so the box keeps its shape
 const TITLE = "scatter-3d · javascript · muix · anyplot.ai";
@@ -285,8 +292,8 @@ export default function Chart() {
                       width: MARKER_SIZES[tier] * 2,
                       height: MARKER_SIZES[tier] * 2,
                       borderRadius: "50%",
-                      background: t.inkSoft,
-                      opacity: 0.6,
+                      background: midRamp,
+                      opacity: markerAlpha,
                     }}
                   />
                 </span>
