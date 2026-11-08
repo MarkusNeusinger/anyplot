@@ -323,6 +323,27 @@ class TestCreateResponsiveVariants:
         assert actual_files == expected_files
         assert len(results) == 7
 
+    @pytest.mark.parametrize(
+        ("stem", "surface"), [("plot-light", (0xFA, 0xF8, 0xF1)), ("plot-dark", (0x1A, 0x1A, 0x17))]
+    )
+    def test_transparent_pixels_take_the_theme_surface(self, tmp_path: Path, stem: str, surface: tuple) -> None:
+        """A transparent margin must not turn black in the variants: it takes the theme's card surface."""
+        img_path = tmp_path / f"{stem}.png"
+        img = Image.new("RGBA", (2000, 1000), (0, 0, 0, 0))
+        img.paste((0, 158, 115, 255), (800, 0, 1200, 1000))
+        img.save(img_path)
+
+        create_responsive_variants(img_path, tmp_path / "variants", optimize=False)
+
+        for name in (f"{stem}_800.png", f"{stem}_800.webp"):
+            with Image.open(tmp_path / "variants" / name) as out:
+                rgb = out.convert("RGB")
+                corner = rgb.getpixel((5, 5))
+                # Lossy WebP shifts a near-grey a few levels (chroma subsampling); black would be 26 levels off.
+                assert all(abs(a - b) <= 4 for a, b in zip(corner, surface, strict=True)), (name, corner)
+                center = rgb.getpixel((400, 200))
+                assert abs(center[1] - 158) <= 4, (name, center)
+
     def test_correct_dimensions(self, tmp_path: Path) -> None:
         """Resized variants should have correct width and maintained aspect ratio."""
         img_path = tmp_path / "plot.png"
