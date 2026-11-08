@@ -22,7 +22,7 @@ const Y_AXIS_W = 80;
 
 // Columns: set these to your data's column names
 const DEPARTMENT = "Department"; // role: category
-const SCORE = "Performance score"; // role: value
+const SCORE = "Performance score (0–100)"; // role: value
 
 // Data: replace this block with your own records, one object per row
 // Quarterly performance review scores of 40 employees in each of four departments
