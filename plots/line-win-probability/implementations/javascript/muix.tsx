@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-win-probability: Win Probability Chart
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 92/100 | Created: 2026-06-21
+// Quality: pending | Created: 2026-06-21
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
