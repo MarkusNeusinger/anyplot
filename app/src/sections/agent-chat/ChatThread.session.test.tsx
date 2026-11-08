@@ -369,7 +369,8 @@ describe('ChatThread: the data versions of a long session', () => {
     const steps = new Map(replay().map(({ name, state }) => [name, state]));
     const end = render(thread(steps.get('a formula over it')!));
     expect(rows(end.container)).toEqual([
-      '# data',
+      // The question about the data counts on its chapter's line, which jumps to it.
+      '# data·1 question',
       `❯${PASTE}`,
       // The card's own controls before the first plot, as after one (owner, 2026-11-07): the
       // card went on at the end each time, and every version stays folded with its own summary
@@ -379,8 +380,9 @@ describe('ChatThread: the data versions of a long session', () => {
       '▸ data v2 · sheet "2026" · 12 rows × 5 cols',
       'Sheet 2026: 12 rows.',
       '▸ data v3 · made long · 48 rows × 3 cols',
-      '❯what is in Region?',
-      'Four regions.',
+      // A question: its mark, the bubble's hidden word, and the label its reply starts with.
+      '?Question: ❯what is in Region?',
+      '? answer · nothing changedanswer, nothing changedFour regions.',
       '# plot',
       '❯.create_plot() →# matplotlib',
       '▸ plot v1 · matplotlib · first plot',

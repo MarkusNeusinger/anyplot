@@ -8,8 +8,21 @@
  * the fixed refusal under a plain label (its code behind the label's ⓘ), errors with their code
  * and request id, a library switch as a line of its own that names the decisions the plot in the
  * new library keeps, and a result card per plot version, its label on its border naming what it
- * answered (`plotSummaries`). A lost confirmation adds nothing here: the status line at the chat
- * frame's foot names it.
+ * answered (`plotSummaries`), the open card naming the remembered decisions it kept and added. A
+ * lost confirmation adds nothing here: the status line at the chat frame's foot names it.
+ *
+ * Questions (the v4 mock): a typed turn that changed nothing (`isQuestion` in `threadModel.ts`)
+ * gets a small round `?` at its bubble's left, which a screen reader skips, and its bubble starts
+ * with a hidden "Question:"; its reply has no card and starts with `? answer · nothing changed`.
+ * Both come once the turn's `done` and the memory read after it settled that, a moment after the
+ * reply's text, inside the elements already there: the polite log reads them as they come and
+ * nothing remounts. Each bubble carries an id and takes the focus from code (`tabIndex` -1), for
+ * the jump from its chapter line's count (`ChapterLine`).
+ *
+ * The remembered decisions stand on the chapter line that holds them (`decisionsAt`): its `3
+ * decisions ▾` unfolds the list (`Remembered`) as the row right after the line, a row of the same
+ * flat list, so a newer chapter's line takes it over without remounting it. Its removals are
+ * announced outside the log, by the page.
  *
  * Versions: the live data card at the latest data version stays open in both steps, its label
  * `data v3 · made long · 48 rows × 4 cols`; every older data version folds to that label (`▸ data
@@ -41,7 +54,7 @@
  * composer (`followReply`): a tall card would leave it below the fold.
  */
 
-import { type ReactNode, useEffect, useMemo, useRef } from 'react';
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -60,13 +73,17 @@ import { FoldedData } from 'src/sections/agent-chat/FoldedData';
 import { HoldReadingPosition, REPLY_ATTRIBUTE } from 'src/sections/agent-chat/HoldReadingPosition';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import {
+  ANSWER_LABEL,
+  ANSWER_LABEL_SPOKEN,
   ERROR_TEXT,
   localClock,
   PLOT_FAILED_TEXT,
+  QUESTION_WORD,
   RECONNECTING_TEXT,
   refusalLabel,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
+import { Remembered, RememberedCount } from 'src/sections/agent-chat/Remembered';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { awaitsReply, type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import {
@@ -74,11 +91,14 @@ import {
   CHAT_SECTION_GAP,
   CHAT_TEXT_MAX,
   inlineCodeSx,
+  jumpTargetSx,
   labelSx,
+  smallText,
   readableSx as textSx,
   THREAD_GAP,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
-import { plotSummaries, threadModel } from 'src/sections/agent-chat/threadModel';
+import { plotSummaries, questionDomId, threadModel } from 'src/sections/agent-chat/threadModel';
 import { colors, fontSize, typography } from 'src/theme';
 
 /** A passage of a reply in backticks, on one line: code, a column or a button the reply names. */
@@ -142,25 +162,65 @@ interface ChatThreadProps {
   followReply?: () => boolean;
   /** The thread's first item, before every turn: the start item (`StartItem`). */
   start?: ReactNode;
+  /**
+   * The remembered decisions' removals (`Remembered`), on the chapter line that holds them;
+   * without it the thread shows no decisions.
+   */
+  decisions?: ThreadDecisions;
+}
+
+/** What the remembered decisions' list needs from the page (`RememberedProps`). */
+export interface ThreadDecisions {
+  /** Something is in flight: the server would refuse a removal. */
+  disabled: boolean;
+  onForget: (entryId: string) => Promise<void>;
+  onForgetAll?: () => Promise<void>;
+  /** Where the focus goes once the last decision is gone. */
+  fallbackFocusRef?: React.RefObject<HTMLElement | null>;
+  /** Say what a removal did, in the page's status region outside the thread's log. */
+  onAnnounce: (text: string) => void;
 }
 
 /** The kinds of item that answer a turn: the first of them after the live card is its reply. */
 const REPLY_KINDS: ReadonlySet<ChatItem['kind']> = new Set(['assistant', 'refusal', 'error']);
+
+/** Where a user's turn stands: on the right, no wider than a readable line. */
+const promptPlaceSx = {
+  alignSelf: 'flex-end',
+  maxWidth: { xs: '100%', sm: `min(85%, ${CHAT_TEXT_MAX})` },
+} as const;
+
+/** The bubble of a user's turn. */
+const bubbleSx = {
+  ...bodyTextSx,
+  bgcolor: 'var(--bg-elevated)',
+  border: '1px solid var(--rule)',
+  borderRadius: 2,
+  px: 1.5,
+  py: 1,
+} as const;
 
 /**
  * The user's turns, on the right; like every text item of the thread (`textSx`), no wider than
  * a readable line since the column grows up to 1360 px (2026-11-02). The result cards take the
  * full width.
  */
-const promptSx = {
-  ...bodyTextSx,
-  alignSelf: 'flex-end',
-  maxWidth: { xs: '100%', sm: `min(85%, ${CHAT_TEXT_MAX})` },
-  bgcolor: 'var(--bg-elevated)',
+const promptSx = { ...bubbleSx, ...promptPlaceSx } as const;
+
+/** A question's mark, a small round `?` at its bubble's left (the v4 mock); a screen reader skips it. */
+const questionMarkSx = {
+  flex: 'none',
+  width: 20,
+  height: 20,
+  borderRadius: '50%',
   border: '1px solid var(--rule)',
-  borderRadius: 2,
-  px: 1.5,
-  py: 1,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: typography.mono,
+  fontSize: smallText,
+  lineHeight: 1,
+  color: 'var(--ink-soft)',
 } as const;
 
 function Item({
@@ -169,6 +229,8 @@ function Item({
   latestVersion,
   waiting,
   summaries,
+  question,
+  answer,
 }: {
   item: ChatItem;
   props: ChatThreadProps;
@@ -177,6 +239,10 @@ function Item({
   waiting: boolean;
   /** What each plot version answered, for its card's label (`plotSummaries`). */
   summaries: ReadonlyMap<number, string | null>;
+  /** This typed turn is a question (`isQuestion`): its bubble carries the `?` mark. */
+  question: boolean;
+  /** This reply answers a question (`ThreadModel.answers`): it starts with the answer label. */
+  answer: boolean;
 }) {
   switch (item.kind) {
     case 'paste':
@@ -210,12 +276,34 @@ function Item({
         <Box sx={{ ...labelSx, ...textSx }}># table read from text · not used</Box>
       );
     case 'user':
+      // The row and the bubble stay the same elements when the turn turns out a question: its
+      // mark comes in beside the bubble, and the bubble, a jump's target, starts with the word.
       return (
-        <Box sx={promptSx}>
-          <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
-            ❯
+        <Box
+          data-testid="user-turn"
+          sx={{ ...promptPlaceSx, display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}
+        >
+          {question && (
+            <Box component="span" aria-hidden data-testid="question-mark" sx={questionMarkSx}>
+              ?
+            </Box>
+          )}
+          <Box
+            id={questionDomId(item.id)}
+            tabIndex={-1}
+            sx={{ ...bubbleSx, ...jumpTargetSx, minWidth: 0 }}
+          >
+            {/* Read with the bubble, never announced as it comes: the reply's label says it. */}
+            {question && (
+              <Box component="span" aria-live="off" sx={visuallyHiddenSx}>
+                {`${QUESTION_WORD} `}
+              </Box>
+            )}
+            <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
+              ❯
+            </Box>
+            {item.text}
           </Box>
-          {item.text}
         </Box>
       );
     case 'action':
@@ -237,8 +325,23 @@ function Item({
         </Box>
       );
     case 'assistant':
+      // A question's reply has no card: it starts with the label that says the turn changed
+      // nothing, which comes in once the turn's `done` (and its memory read) said so, inside the
+      // same element, so the polite log reads the label alone: the mark is hidden, the bubble's
+      // word and the chapter's count are no live text (`aria-live="off"`).
       return (
         <Box sx={{ ...bodyTextSx, ...textSx, borderLeft: '2px solid var(--rule)', pl: 1.5 }}>
+          {answer && (
+            <Box
+              data-testid="answer-label"
+              sx={{ ...labelSx, display: 'block', lineHeight: 1.6, whiteSpace: 'normal' }}
+            >
+              <span aria-hidden>{`? ${ANSWER_LABEL}`}</span>
+              <Box component="span" sx={visuallyHiddenSx}>
+                {ANSWER_LABEL_SPOKEN}
+              </Box>
+            </Box>
+          )}
           <ReplyText text={item.text} />
         </Box>
       );
@@ -354,7 +457,24 @@ export function ChatThread(props: ChatThreadProps) {
     () => plotSummaries(items, version => versions[version]?.library),
     [items, versions]
   );
-  const { rows } = useMemo(() => threadModel(items), [items]);
+  const { memoryTurn, memory } = props.state;
+  const { rows, chapters, answers, decisionsAt } = useMemo(
+    () => threadModel(items, memoryTurn),
+    [items, memoryTurn]
+  );
+  const questions = useMemo(
+    () => new Set(chapters.flatMap(chapter => chapter.questions)),
+    [chapters]
+  );
+  // The remembered decisions: folded by default, and folded again once the memory is empty, so
+  // the next decision starts as the first did. The thread holds the state, since the line that
+  // shows it changes with the chapters.
+  const [decisionsOpen, setDecisionsOpen] = useState(false);
+  const decisionCount = memory?.entries.length ?? 0;
+  if (decisionsOpen && decisionCount === 0) setDecisionsOpen(false);
+  const decisionsId = useId();
+  const decisionsHandoffRef = useRef(false);
+  const { decisions } = props;
   const pending = pendingReply(props.state);
   // Below a run's card no timeline follows: the line stands where the reply will, which takes
   // its place without a jump.
@@ -389,14 +509,50 @@ export function ChatThread(props: ChatThreadProps) {
           keeps its state instead of mounting it anew. The hold keeps a reply still when the card
           lands above it, and adds no element. */}
       <HoldReadingPosition items={items} log={logRef}>
-        {rows.map(row => {
+        {rows.flatMap((row): ReactNode[] => {
           if (row.kind === 'chapter') {
-            return <ChapterLine key={`chapter-${row.chapter.index}`} chapter={row.chapter} />;
+            const holds = !!decisions && row.chapter.index === decisionsAt;
+            const line = (
+              <ChapterLine
+                key={`chapter-${row.chapter.index}`}
+                chapter={row.chapter}
+                // No count while the memory is empty or unknown: never "0 decisions".
+                decisions={
+                  holds && decisionCount > 0 ? (
+                    <RememberedCount
+                      memory={memory}
+                      open={decisionsOpen}
+                      listId={decisionsId}
+                      onToggle={() => setDecisionsOpen(open => !open)}
+                      handoffRef={decisionsHandoffRef}
+                    />
+                  ) : undefined
+                }
+              />
+            );
+            if (!holds) return [line];
+            // The list right after the line that holds it, as one keyed row of the same flat list:
+            // a newer chapter's line takes it over and React moves its node, with its state, and
+            // gives a focus inside it back after the move.
+            return [
+              line,
+              <Remembered
+                key="remembered"
+                memory={memory}
+                id={decisionsId}
+                open={decisionsOpen}
+                disabled={decisions.disabled}
+                onForget={decisions.onForget}
+                onForgetAll={decisions.onForgetAll}
+                fallbackFocusRef={decisions.fallbackFocusRef}
+                onAnnounce={decisions.onAnnounce}
+              />,
+            ];
           }
           const { item } = row;
           // The page's summary turn has no button: its card says what was sent, and the summary
           // follows.
-          if (item.kind === 'action' && item.action === 'summarize_data') return null;
+          if (item.kind === 'action' && item.action === 'summarize_data') return [];
           const node = (
             <Item
               key={item.id}
@@ -405,14 +561,16 @@ export function ChatThread(props: ChatThreadProps) {
               latestVersion={latestVersion}
               waiting={item.id === waitingId}
               summaries={summaries}
+              question={questions.has(item.id)}
+              answer={answers.has(item.id)}
             />
           );
           // Every reply stands in the same wrapper, the first reply after the live card with the
           // ref that brings it into view: a reply that stops being the first one (the card moved
           // below it) keeps its element, so the polite log never reads it out a second time.
-          if (!REPLY_KINDS.has(item.kind)) return node;
+          if (!REPLY_KINDS.has(item.kind)) return [node];
           const first = item.id === replyId;
-          return (
+          return [
             <Box
               key={item.id}
               ref={first ? replyRef : undefined}
@@ -421,8 +579,8 @@ export function ChatThread(props: ChatThreadProps) {
               sx={{ minWidth: 0 }}
             >
               {node}
-            </Box>
-          );
+            </Box>,
+          ];
         })}
       </HoldReadingPosition>
       {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The

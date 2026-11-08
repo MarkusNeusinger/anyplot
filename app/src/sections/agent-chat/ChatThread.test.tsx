@@ -73,9 +73,11 @@ describe('ChatThread', () => {
     ]) {
       expect(getComputedStyle(element).maxWidth).toMatch(/^\d+(\.\d+)?(px|ch)$/);
     }
-    expect(getComputedStyle(screen.getByText('make the markers bigger')).alignSelf).toBe(
-      'flex-end'
-    );
+    // The row the bubble stands in, which also holds a question's mark beside it.
+    const turn = screen.getByText('make the markers bigger').parentElement!;
+    expect(turn).toHaveAttribute('data-testid', 'user-turn');
+    expect(getComputedStyle(turn).alignSelf).toBe('flex-end');
+    expect(getComputedStyle(turn).maxWidth).toMatch(/\S/);
   });
 
   it('reads a plot refused for an open role as a step to take', () => {
@@ -974,5 +976,325 @@ describe('ChatThread plot cards', () => {
     expect(screen.getAllByRole('img').map(image => image.getAttribute('alt'))).toEqual([
       'Adapted plot, version 2, light theme',
     ]);
+  });
+
+  it('labels a version that kept decisions by its request, the first plot as first plot, never kept 0', () => {
+    const decided = (number: number, kept: string[]): PlotVersion => ({
+      ...version(number),
+      decisions: {
+        kept: kept.map((text, index) => ({ id: `m${index + 1}`, text })),
+        added: [],
+      },
+    });
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      versions: { 1: decided(1, []), 2: decided(2, ['title in German']), 3: version(3) },
+      items: [
+        { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+        { id: 2, kind: 'plot', version: 1 },
+        { id: 3, kind: 'user', text: 'log scale on y' },
+        { id: 4, kind: 'plot', version: 2 },
+        { id: 5, kind: 'user', text: 'bigger markers' },
+        { id: 6, kind: 'plot', version: 3 },
+      ],
+    });
+    // What the version kept is the open card's line, never the label's: a folded version still
+    // says what it answered, kept decisions or not, and whether the server named its memory.
+    expect(screen.getByRole('button', { name: 'Plot v1, matplotlib, first plot' })).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Plot v2, matplotlib, log scale on y' })
+    ).toHaveTextContent(/^▸plot v2 · matplotlib · log scale on y$/);
+    expect(
+      screen.getByRole('button', { name: 'Plot v3, matplotlib, bigger markers' })
+    ).toBeVisible();
+    expect(document.body).not.toHaveTextContent(/kept \d/);
+  });
+});
+
+describe('ChatThread: questions and remembered decisions', () => {
+  const ready = (items: ChatItem[], extra: Partial<AgentSessionState> = {}): AgentSessionState => ({
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+    items,
+    ...extra,
+  });
+  const entry = (id: string, text: string) => ({
+    id,
+    kind: 'other',
+    target: null,
+    text,
+    expect: null,
+    turn: 2,
+  });
+  const MEMORY = {
+    entries: [entry('m1', 'reference line at y = 7'), entry('m2', 'title in German')],
+    max_entries: 30,
+    written: true,
+  };
+  const log = () => screen.getByRole('log');
+  /**
+   * The log's text as its polite live region reads an addition: without what a screen reader
+   * skips (`aria-hidden`) and without what is no live text in it (`aria-live="off"`).
+   */
+  const announced = () => {
+    const copy = log().cloneNode(true) as HTMLElement;
+    copy.querySelectorAll('[aria-hidden="true"], [aria-live="off"]').forEach(node => node.remove());
+    return copy.textContent;
+  };
+  const thread = (
+    state: AgentSessionState,
+    decisions?: Parameters<typeof ChatThread>[0]['decisions']
+  ) => (
+    <ChatThread
+      state={state}
+      specId="scatter-basic"
+      language="python"
+      onRequestTheme={vi.fn()}
+      onFetchArtifact={vi.fn()}
+      onTrack={vi.fn()}
+      decisions={decisions}
+    />
+  );
+  const decisionsProps = () => ({
+    disabled: false,
+    onForget: vi.fn(async () => undefined),
+    onForgetAll: vi.fn(async () => undefined),
+    onAnnounce: vi.fn(),
+  });
+
+  it('marks a question once its turn settled, in the elements already there: the log reads the label once', () => {
+    const asked: ChatItem = { id: 1, kind: 'user', text: 'what is on x?' };
+    const reply: ChatItem = { id: 2, kind: 'assistant', text: 'The hours.' };
+    const view = render(thread(ready([asked, reply])));
+    const bubble = screen.getByText('what is on x?');
+    const answer = screen.getByText('The hours.');
+    const before = log().textContent ?? '';
+    const heard = announced() ?? '';
+    expect(screen.queryByTestId('question-mark')).not.toBeInTheDocument();
+
+    // The `done` said `answer`, and the memory read after it is still to come: no mark yet.
+    const marked: ChatItem = { ...asked, outcome: 'answer' };
+    view.rerender(thread(ready([marked, reply], { memoryTurn: 1 })));
+    expect(log().textContent).toBe(before);
+
+    view.rerender(thread(ready([marked, reply], { memoryTurn: null })));
+    expect(screen.getByText('what is on x?')).toBe(bubble);
+    expect(screen.getByText('The hours.')).toBe(answer);
+    expect(screen.getByTestId('question-mark')).toHaveAttribute('aria-hidden', 'true');
+    expect(bubble).toHaveAttribute('id', 'agent-turn-1');
+    expect(bubble).toHaveAttribute('tabindex', '-1');
+    expect(bubble.textContent).toBe('Question: ❯what is on x?');
+    expect(screen.getByTestId('answer-label').firstChild).toHaveTextContent(
+      '? answer · nothing changed'
+    );
+    // What the polite log reads as it comes: the reply's label alone, once, in words.
+    expect(announced()).toBe(heard.replace('The hours.', 'answer, nothing changedThe hours.'));
+    // On screen also the chapter's count, the mark and, for a screen reader on the bubble, its word.
+    expect(log().textContent).toBe(
+      before
+        .replace('# data', '# data·1 question')
+        .replace('❯what', '?Question: ❯what')
+        .replace('The hours.', '? answer · nothing changedanswer, nothing changedThe hours.')
+    );
+  });
+
+  it('marks no note sent with a paste and no turn that changed something', () => {
+    render(
+      thread(
+        ready([
+          { id: 1, kind: 'paste', text: '▤ table' },
+          { id: 2, kind: 'user', text: 'is share a fraction?', outcome: 'answer', note: true },
+          { id: 3, kind: 'assistant', text: '12 rows; share is a fraction.' },
+          { id: 4, kind: 'user', text: 'a title, ok?', outcome: 'kept' },
+          { id: 5, kind: 'assistant', text: 'Kept for the first plot.' },
+        ])
+      )
+    );
+    expect(screen.queryByTestId('question-mark')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('answer-label')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('question-jump')).not.toBeInTheDocument();
+  });
+
+  it("jumps from a chapter's count to its questions in turn, back to the first after the last", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const items: ChatItem[] = [
+        { id: 1, kind: 'paste', text: '▤ table' },
+        { id: 2, kind: 'data' },
+        { id: 3, kind: 'user', text: 'what is in b?', outcome: 'answer' },
+        { id: 4, kind: 'assistant', text: 'Months.' },
+        { id: 5, kind: 'user', text: 'and in c?', outcome: 'answer' },
+        { id: 6, kind: 'assistant', text: 'Regions.' },
+        { id: 7, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+        { id: 8, kind: 'user', text: 'why blue?', outcome: 'answer' },
+        { id: 9, kind: 'assistant', text: 'The first colour.' },
+      ];
+      const view = render(thread(ready(items)));
+      const lines = screen.getAllByTestId('chapter-line');
+      expect(lines.map(line => line.textContent)).toEqual([
+        '# data·2 questions',
+        '# plot·1 question',
+      ]);
+      const data = within(lines[0]).getByRole('button', {
+        name: '2 questions in this chapter, go to the next',
+      });
+      // The count stands beside the heading, never in it.
+      expect(within(lines[0]).getByRole('heading', { level: 3 })).toHaveAccessibleName('data');
+      const first = screen.getByText('what is in b?');
+      const second = screen.getByText('and in c?');
+
+      await user.click(data);
+      expect(first).toHaveFocus();
+      expect(first).toHaveAttribute('data-jump');
+      await user.click(data);
+      expect(second).toHaveFocus();
+      await user.click(data);
+      expect(first).toHaveFocus();
+      // The highlight goes after a moment.
+      vi.advanceTimersByTime(1600);
+      expect(first).not.toHaveAttribute('data-jump');
+
+      const plot = within(lines[1]).getByRole('button', {
+        name: '1 question in this chapter, go to it',
+      });
+      await user.click(plot);
+      expect(screen.getByText('why blue?')).toHaveFocus();
+
+      // A question that comes in meanwhile: the next press goes on from the one it went to last.
+      view.rerender(
+        thread(
+          ready([
+            ...items,
+            { id: 10, kind: 'user', text: 'and the dots?', outcome: 'answer' },
+            { id: 11, kind: 'assistant', text: 'One per row.' },
+          ])
+        )
+      );
+      await user.click(plot);
+      expect(screen.getByText('and the dots?')).toHaveFocus();
+      await user.click(plot);
+      expect(screen.getByText('why blue?')).toHaveFocus();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('puts the decisions on the latest plot line, and the list right after it, folded', async () => {
+    const user = userEvent.setup();
+    const items: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      { id: 4, kind: 'assistant', text: 'Plot 1.' },
+    ];
+    render(thread(ready(items, { memory: MEMORY }), decisionsProps()));
+    const [, plot] = screen.getAllByTestId('chapter-line');
+    const toggle = within(plot).getByRole('button', { name: '2 decisions remembered' });
+    expect(plot).toHaveTextContent('# plot·2 decisions ▾');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    const list = screen.getByTestId('plot-memory');
+    expect(plot.nextElementSibling).toBe(list);
+    expect(list).not.toBeVisible();
+    // Unfolding adds no text to the log: the list was there, hidden, and is no live region.
+    const before = log().textContent;
+    await user.click(toggle);
+    expect(list).toBeVisible();
+    expect(list).toHaveAttribute('aria-live', 'off');
+    expect(log().textContent).toBe(before?.replace('▾', '▴'));
+  });
+
+  it('shows no count while the memory is empty or unknown, and none without the page', () => {
+    const items: ChatItem[] = [
+      { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+    ];
+    const view = render(thread(ready(items, { memory: null }), decisionsProps()));
+    expect(screen.queryByTestId('decisions-toggle')).not.toBeInTheDocument();
+    view.rerender(
+      thread(
+        ready(items, { memory: { entries: [], max_entries: 30, written: true } }),
+        decisionsProps()
+      )
+    );
+    expect(log()).not.toHaveTextContent(/decision/);
+    view.rerender(thread(ready(items, { memory: MEMORY })));
+    expect(screen.queryByTestId('decisions-toggle')).not.toBeInTheDocument();
+  });
+
+  it('moves the list under a newer plot line with its node, its open state and a focus inside it', async () => {
+    const user = userEvent.setup();
+    const props = decisionsProps();
+    const first: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data' },
+      { id: 3, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      { id: 4, kind: 'assistant', text: 'Plot 1.' },
+    ];
+    const view = render(thread(ready(first, { memory: MEMORY }), props));
+    await user.click(screen.getByRole('button', { name: '2 decisions remembered' }));
+    const list = screen.getByTestId('plot-memory');
+    const forget = screen.getByRole('button', { name: 'Forget: title in German' });
+    forget.focus();
+
+    // A data change after the plot, then a plot of it: a `# data` and a newer `# plot` line.
+    const later: ChatItem[] = [
+      ...first,
+      { id: 5, kind: 'user', text: 'only 2024', outcome: 'data' },
+      { id: 6, kind: 'assistant', text: 'Kept 2024.' },
+      { id: 7, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+    ];
+    // A browser drops the focus of an element whose node moves, and React gives it back after the
+    // commit: the DOM's insert drops it as a browser does, for this rerender.
+    const insert = Node.prototype.insertBefore;
+    Node.prototype.insertBefore = function <T extends Node>(
+      this: Node,
+      node: T,
+      child: Node | null
+    ) {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && node.contains(active)) active.blur();
+      return insert.call(this, node, child) as T;
+    };
+    try {
+      view.rerender(thread(ready(later, { memory: MEMORY }), props));
+    } finally {
+      Node.prototype.insertBefore = insert;
+    }
+    const lines = screen.getAllByTestId('chapter-line');
+    expect(lines.map(line => line.dataset.chapter)).toEqual(['data', 'plot', 'data', 'plot']);
+    expect(within(lines[1]).queryByTestId('decisions-toggle')).not.toBeInTheDocument();
+    expect(within(lines[3]).getByTestId('decisions-toggle')).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(screen.getByTestId('plot-memory')).toBe(list);
+    expect(lines[3].nextElementSibling).toBe(list);
+    expect(list).toBeVisible();
+    expect(forget).toHaveFocus();
+  });
+
+  it('announces a removal through the page, outside the log, which loses the entry and gains nothing', async () => {
+    const user = userEvent.setup();
+    const props = decisionsProps();
+    const items: ChatItem[] = [
+      { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      { id: 2, kind: 'assistant', text: 'Plot 1.' },
+    ];
+    const view = render(thread(ready(items, { memory: MEMORY }), props));
+    await user.click(screen.getByRole('button', { name: '2 decisions remembered' }));
+    await user.click(screen.getByRole('button', { name: 'Forget: title in German' }));
+    expect(props.onForget).toHaveBeenCalledWith('m2');
+    expect(props.onAnnounce).toHaveBeenCalledWith('forgot: title in German');
+    const before = log().textContent ?? '';
+    view.rerender(
+      thread(ready(items, { memory: { ...MEMORY, entries: MEMORY.entries.slice(0, 1) } }), props)
+    );
+    const after = log().textContent ?? '';
+    expect(after).toBe(
+      before.replace('title in German.forget()', '').replace('2 decisions', '1 decision')
+    );
   });
 });

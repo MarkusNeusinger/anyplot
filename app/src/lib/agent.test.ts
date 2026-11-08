@@ -198,6 +198,50 @@ describe('parseAgentEvent', () => {
     });
   });
 
+  it("reads done's turn outcome, an unknown value as unknown, and none as none", () => {
+    const turn = (value: unknown) => {
+      const event = parseAgentEvent(raw('done', { llm_calls: 1, turn: value }));
+      return event?.type === 'done' ? event.turn : 'not done';
+    };
+    for (const value of ['answer', 'data', 'plot', 'switch', 'language', 'kept', 'memory']) {
+      expect(turn(value)).toBe(value);
+    }
+    // A newer server's word: a change the page cannot name, never a question.
+    expect(turn('restyled')).toBe('unknown');
+    expect(turn(3)).toBe('unknown');
+    expect(turn(['answer'])).toBe('unknown');
+    // A refused, failed or stopped turn, or an older server: no field.
+    expect(turn(undefined)).toBeUndefined();
+    expect(turn(null)).toBeUndefined();
+    expect(parseAgentEvent(raw('done', {}))).not.toHaveProperty('turn');
+  });
+
+  it("reads a version's kept and added decision ids, and no field as an unknown memory", () => {
+    const memory = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('plot', { status: 'ok', attempts: 1, artifacts: [], version: 4, memory: value })
+      );
+      return event?.type === 'plot' ? event.result.memory : 'not a plot';
+    };
+    expect(memory({ kept: ['m1', 'm2', 'm3'], added: ['m4'] })).toEqual({
+      kept: ['m1', 'm2', 'm3'],
+      added: ['m4'],
+    });
+    // A session without memory: two empty lists, which is not the same as none.
+    expect(memory({ kept: [], added: [] })).toEqual({ kept: [], added: [] });
+    // An entry that is no id goes, the list stays; a malformed value is no field at all.
+    expect(memory({ kept: ['m1', 'title in German', 7], added: [] })).toEqual({
+      kept: ['m1'],
+      added: [],
+    });
+    expect(memory({ kept: ['m1'] })).toBeUndefined();
+    expect(memory(['m1'])).toBeUndefined();
+    expect(memory(undefined)).toBeUndefined();
+    expect(
+      parseAgentEvent(raw('plot', { status: 'ok', attempts: 1, artifacts: [], version: 4 }))
+    ).toMatchObject({ result: expect.not.objectContaining({ memory: expect.anything() }) });
+  });
+
   it("reads done's switch the user asked for in the chat, and drops one the page cannot make", () => {
     const done = (value: unknown) => parseAgentEvent(raw('done', { switch: value }));
     expect(done({ library: 'seaborn', plot: true })).toMatchObject({

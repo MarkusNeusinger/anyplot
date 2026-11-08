@@ -365,9 +365,139 @@ describe('threadModel', () => {
   });
 
   it('gives a thread without a turn one data chapter, and an empty thread none', () => {
-    expect(threadModel([])).toEqual({ rows: [], chapters: [] });
+    expect(threadModel([])).toEqual({
+      rows: [],
+      chapters: [],
+      answers: new Set(),
+      decisionsAt: 0,
+    });
     const copied: ChatItem[] = [{ id: 1, kind: 'data' }];
     expect(headings(copied)).toEqual(['# data', 'data']);
+  });
+});
+
+describe('threadModel: questions and the decisions', () => {
+  const card: ChatItem = { id: 2, kind: 'data' };
+  const reply = (id: number, text = 'Sure.'): ChatItem => ({ id, kind: 'assistant', text });
+
+  it('counts a turn that changed nothing, and names the first reply of its turn as its answer', () => {
+    const items: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      card,
+      { id: 3, kind: 'user', text: 'what is in b?', outcome: 'answer' },
+      reply(4),
+      { id: 5, kind: 'notice', text: 'reply language: German' },
+      reply(6, 'And one more line.'),
+    ];
+    const model = threadModel(items);
+    expect(model.chapters[0].questions).toEqual([3]);
+    expect([...model.answers]).toEqual([4]);
+  });
+
+  it('never counts the note sent with a paste, a turn that waits for its memory read, or a trailing ?', () => {
+    const items: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      card,
+      // Its reply summarizes the data that just came: "nothing changed" would be false.
+      { id: 3, kind: 'user', text: 'is share a fraction?', outcome: 'answer', note: true },
+      reply(4),
+      // The read after it may still move it to `kept`.
+      { id: 5, kind: 'user', text: 'what is on x?', outcome: 'answer' },
+      reply(6),
+      // No outcome (refused, failed, stopped, an outcome the page does not know): no question,
+      // whatever the text says.
+      { id: 7, kind: 'user', text: 'and on y?' },
+      reply(8),
+      { id: 9, kind: 'user', text: 'a log scale?', outcome: 'kept' },
+      reply(10),
+    ];
+    const waiting = threadModel(items, 5);
+    expect(waiting.chapters[0].questions).toEqual([]);
+    expect(waiting.answers.size).toBe(0);
+    // Once the read landed or failed, the question counts.
+    const settled = threadModel(items, null);
+    expect(settled.chapters[0].questions).toEqual([5]);
+    expect([...settled.answers]).toEqual([6]);
+  });
+
+  it('never counts a turn that shows an error, which a later read of its cut stream marked', () => {
+    const items: ChatItem[] = [
+      { id: 1, kind: 'user', text: 'what is on x?', outcome: 'answer' },
+      { id: 2, kind: 'error', code: 'network', ref: null },
+      reply(3, 'The hours.'),
+      { id: 4, kind: 'user', text: 'tell me a joke', outcome: 'answer' },
+      { id: 5, kind: 'refusal', code: 'out_of_scope', text: 'Only plots.' },
+    ];
+    const model = threadModel(items);
+    expect(model.chapters[0].questions).toEqual([]);
+    expect(model.answers.size).toBe(0);
+  });
+
+  it('opens a chapter from a server data or plot, with and without a card in the turn', () => {
+    const plotted: ChatItem = { id: 6, kind: 'plot', version: 1 };
+    const items: ChatItem[] = [
+      { id: 1, kind: 'paste', text: '▤ table' },
+      card,
+      // A server `plot` whose run the page showed nothing of (a result it could not read): the
+      // server ran the plot pipeline, so the turn is about the plot all the same.
+      { id: 3, kind: 'user', text: 'plot it in red', outcome: 'plot' },
+      reply(4),
+      { id: 5, kind: 'user', text: 'and a log scale', outcome: 'plot' },
+      plotted,
+      reply(7),
+      // A server `data` without a card (the root's binding change) and one with its card.
+      { id: 8, kind: 'user', text: 'swap the axes', outcome: 'data' },
+      reply(9),
+      { id: 10, kind: 'user', text: 'what is on x?', outcome: 'answer' },
+      reply(11),
+      { id: 12, kind: 'user', text: 'and a title', outcome: 'plot' },
+      reply(13),
+      { id: 14, kind: 'user', text: 'only 2024', outcome: 'data' },
+      { id: 15, kind: 'data_stub', rows: 2, columns: 2, card: 2 },
+      reply(16),
+    ];
+    expect(headings(items)).toEqual([
+      '# data',
+      'paste',
+      'data',
+      '# plot',
+      'user',
+      'assistant',
+      'user',
+      'plot',
+      'assistant',
+      '# data',
+      'user',
+      'assistant',
+      'user',
+      'assistant',
+      '# plot',
+      'user',
+      'assistant',
+      '# data',
+      'user',
+      'data_stub ▸',
+      'assistant',
+    ]);
+  });
+
+  it('puts the decisions on the latest plot line, and before the first plot on the latest line', () => {
+    const before = run(paste('▤ table'), summary('12 rows.'), ask('what is in b?', 'answer'));
+    expect(threadModel(before.items).decisionsAt).toBe(1);
+    const after = run(
+      paste('▤ table'),
+      summary('12 rows.'),
+      plot(1),
+      ask('only 2024 please', 'data', 'Kept the 2024 rows.'),
+      item({ type: 'data_prepared', dataset: CHANGED }),
+      plot(2),
+      ask('sum per month', 'data', 'Summed.'),
+      item({ type: 'data_prepared', dataset: { ...CHANGED, version: 3 } })
+    );
+    const { chapters, decisionsAt } = threadModel(after.items);
+    expect(chapters.map(chapter => chapter.kind)).toEqual(['data', 'plot', 'data', 'plot', 'data']);
+    // The newest `# plot` line, where the next plot takes them over, above a newer `# data`.
+    expect(decisionsAt).toBe(4);
   });
 });
 

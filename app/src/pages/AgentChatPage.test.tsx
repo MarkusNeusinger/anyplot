@@ -2948,7 +2948,10 @@ describe('AgentChatPage library switch and plot memory', () => {
     });
   }
 
-  const memoryList = () => screen.getByRole('region', { name: /remembered/ });
+  /** The remembered decisions' count on the latest `# plot` line, which unfolds their list. */
+  const decisionsCount = (count: string) =>
+    screen.findByRole('button', { name: `${count} remembered` });
+  const memoryList = () => screen.getByRole('list', { name: 'Remembered decisions' });
 
   /** Paste and plot in matplotlib with one click: version 1, whose run left `memory` behind. */
   async function plotInMatplotlib() {
@@ -2963,8 +2966,10 @@ describe('AgentChatPage library switch and plot memory', () => {
   it('offers the plot in the new library with the remembered decisions, and the offer ends once it ships', async () => {
     switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
     await plotInMatplotlib();
-    // The run's decisions stand above the composer.
-    expect(await screen.findByRole('region', { name: /remembered · 2 decisions/ })).toBeVisible();
+    // The run's decisions stand on the `# plot` line, their list folded under it.
+    const count = await decisionsCount('2 decisions');
+    expect(count.closest('[data-testid="chapter-line"]')).toHaveAttribute('data-chapter', 'plot');
+    expect(count).toHaveAttribute('aria-expanded', 'false');
     const turns = turnBodies().length;
 
     const create = screen.getByRole('button', { name: 'Update plot' });
@@ -3160,13 +3165,15 @@ describe('AgentChatPage library switch and plot memory', () => {
     await waitFor(() => expect(libraryChip()).toHaveTextContent(/^seaborn ▾$/));
     expect(screen.getByTestId('data-step')).not.toHaveTextContent('decisions kept');
     expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
-    expect(screen.queryByRole('region', { name: /remembered/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('decisions-toggle')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Remembered decisions' })).not.toBeInTheDocument();
   });
 
   it('forgets a remembered decision, and holds the list while a turn runs', async () => {
     switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
     await plotInMatplotlib();
-    const list = await screen.findByRole('region', { name: /remembered · 2 decisions/ });
+    fireEvent.click(await decisionsCount('2 decisions'));
+    const list = memoryList();
     const forgetLine = within(list).getByRole('button', { name: `Forget: ${LINE.text}` });
 
     // While a turn runs, the server would refuse a removal: the list waits.
@@ -3179,7 +3186,8 @@ describe('AgentChatPage library switch and plot memory', () => {
 
     await waitFor(() => expect(forgetLine).toBeEnabled());
     fireEvent.click(forgetLine);
-    await waitFor(() => expect(memoryList()).toHaveAccessibleName('# remembered · 1 decision'));
+    // The plot turn opened no newer `# plot` chapter: the count stays on its line, one less.
+    expect(await decisionsCount('1 decision')).toHaveAttribute('aria-expanded', 'true');
     expect(
       agentCalls()
         .filter(([, init]) => (init as RequestInit | undefined)?.method === 'DELETE')
@@ -3187,6 +3195,10 @@ describe('AgentChatPage library switch and plot memory', () => {
     ).toContain('/debug/agent/sessions/S1/memory/m1');
     expect(within(memoryList()).queryByText(LINE.text)).not.toBeInTheDocument();
     expect(within(memoryList()).getByText(LABEL.text)).toBeInTheDocument();
+    // Said outside the thread's log, by the region at the chat's foot, which stays.
+    const status = screen.getByTestId('memory-status');
+    expect(status).toHaveTextContent(`forgot: ${LINE.text}`);
+    expect(screen.getByRole('log', { name: 'Conversation' })).not.toContainElement(status);
   });
 
   it('shows a refused switch under the menu, and the library and the URL stay', async () => {

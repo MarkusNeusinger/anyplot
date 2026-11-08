@@ -191,7 +191,11 @@
  * root's call that writes it), MOCK_PARSE_MS (400, how long a
  * parse takes, the dataset judge's call in production; a transcription takes
  * 900 ms more), MOCK_OPEN_MS (0, how long `POST /sessions` takes, so the page's
- * opening state, where the bot check runs on the public lane, stays visible).
+ * opening state, where the bot check runs on the public lane, stays visible),
+ * MOCK_DONE_MS (0, how long a turn's `done` waits after its last event, so the
+ * marks that come with it, a question's `?` and its answer label, arrive visibly
+ * after the reply), MOCK_MEMORY_FIELD (`0`: a shipped plot names no
+ * `memory`, as an older server's, so its card shows no kept label).
  * Slowed down, the page's working states stay visible:
  *
  *   MOCK_OPEN_MS=2500 MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
@@ -222,7 +226,15 @@
  * shipped `create_plot` keeps the memory, which only the user clears; `{action: "carry_plot"}` plots from the
  * catalogue code like `create_plot`, in the theme the user asked for in the library before, and spends the
  * carry. `GET .../memory` lists the entries with `written` (the memory ever held one), `DELETE .../memory/{id}`
- * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all.
+ * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all. A shipped plot's event
+ * names the memory its version stands on, `memory: {kept, added}` by entry id, settled before the event as the
+ * service does. A typed plot wish before the data is confirmed (also in the note sent with a paste), while the
+ * library has no plot, is kept for its first plot as the root's `keep_plot_request` keeps it, which the stream
+ * shows nothing of; that plot then remembers it.
+ *
+ * What a turn changed: every `done` of a turn that ended well carries `turn` (`answer`, `data`, `plot`,
+ * `language` or `kept`, the service's `stream.turn_outcome` for the paths the mock plays): a question, a
+ * summary and a note without a change are `answer`, a refusal, an error or a stop carry none.
  *
  * The data panel's full view (`.view_all()`): `GET .../dataset/data.csv` answers the current version's CSV
  * (`422 no_dataset` without data). A chat message naming a size such as "10000 rows x 30 columns" (also `×` or
@@ -244,6 +256,11 @@ const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const START_MS = Number(process.env.MOCK_START_MS ?? 0);
 const REPLY_MS = process.env.MOCK_REPLY_MS ? Number(process.env.MOCK_REPLY_MS) : null;
+// The wait between a turn's last event and its `done` (MOCK_DONE_MS), so the page's marks that come
+// with `done` (a question's `?`, its answer label) can be watched arriving after the reply.
+const DONE_MS = Number(process.env.MOCK_DONE_MS ?? 0);
+// MOCK_MEMORY_FIELD=0 plays a server that names no version memory (`plot.memory`), as an older one.
+const MEMORY_FIELD = process.env.MOCK_MEMORY_FIELD !== '0';
 const REPAIR = process.env.MOCK_REPAIR === '1';
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
@@ -1157,6 +1174,9 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   session.active = true;
   session.cancelled = false;
   session.changed = null; // set by a data change of this turn, carried in `done.dataset`
+  // What the turn changed (`done.turn`, the service's `stream.turn_outcome`): `answer` until a path
+  // names its change; `null` for a refusal or an error, whose `done` carries none, as a stop's.
+  let turn = 'answer';
   try {
     send('ready', { v: 'anyplot/1', run_id: log.runId });
     // Pretend `QUEUE_START - 1` other turns wait ahead of this one.
@@ -1195,6 +1215,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       if (asked) {
         session.language = asked.code;
         session.languageSource = 'chosen';
+        // The root's `set_language`; a data change or a plot of the same turn names the turn first.
+        turn = 'language';
         if (session.versions.length === 0) {
           await sleep(STEP_MS);
           send('message', {
@@ -1220,18 +1242,25 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         await sleep(STEP_MS * 2);
         const summary = summarizeData(session);
         const year = lower.match(/\b(?:nur|only)\s+(\d{4})\b/);
+        // A plot wish in the note (a title, a label, a scale…) is kept for the first plot, as the
+        // root's `keep_plot_request`; a question about the data changes nothing.
+        const wish = !year && plotWish(lower) && !libraryHasPlot(session);
         const acted = year
           ? keepYear(session, year[1])
           : /dezimal|decimal comma|tausender|thousands/.test(lower)
             ? dotsAsThousands(session)
-            : `Noted: ${text.trim()}`;
+            : wish
+              ? keepWish(session, text)
+              : `Noted: ${text.trim()}`;
         session.summaryPending = false;
+        turn = session.changed ? 'data' : asked ? 'language' : wish ? 'kept' : 'answer';
         send('message', { text: `${summary} ${acted}` });
         return;
       }
       // The scope judge answers before any agent: a request for figures to fetch ends here.
       if (needsData) {
         await sleep(STEP_MS);
+        turn = null;
         send('refusal', {
           code: 'needs_data',
           text: 'I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the message box as a table or open its file with .open().',
@@ -1241,6 +1270,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       if (body.action === 'example_data') {
         // The root's `get_spec_brief` and a sandbox run take a few seconds: the page's working line counts them.
         await sleep(STEP_MS * 6);
+        turn = 'data';
         send('message', { text: exampleData(session) });
         return;
       }
@@ -1248,17 +1278,20 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // `422 data_request`): the root's `run_data_code` in miniature, the same made-up table.
       if (typeof body.text === 'string' && (looksLikeCode(text) || asksForData(text))) {
         await sleep(STEP_MS * 4);
+        turn = 'data';
         send('message', { text: exampleData(session, looksLikeCode(text)) });
         return;
       }
       const size = wideTableSize(lower);
       if (size) {
         await sleep(STEP_MS * 2);
+        turn = 'data';
         send('message', { text: generateWideTable(session, size) });
         return;
       }
       if (asksForFormula(lower)) {
         await sleep(STEP_MS * 2);
+        turn = 'data';
         send('message', { text: generateData(session, lower) });
         return;
       }
@@ -1276,6 +1309,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
           return;
         }
         const reply = change(session);
+        if (session.changed) turn = 'data';
         // "instead of" plays the root that read the change as a plot change too and called the
         // plot after its own data change: the server refuses it, before the turn's `done`.
         if (/instead of|statt/.test(lower)) {
@@ -1293,6 +1327,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       }
       if (outOfScope) {
         await sleep(STEP_MS);
+        turn = null;
         send('refusal', {
           code: 'out_of_scope',
           text: 'I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code.',
@@ -1301,11 +1336,13 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       }
       if (lower.includes('busy')) {
         await sleep(STEP_MS);
+        turn = null;
         send('error', { code: 'capacity', ref });
         return;
       }
       if (lower.includes('swap')) {
         await sleep(STEP_MS);
+        turn = 'data';
         send('message', { text: swapBindings(session) });
         return;
       }
@@ -1326,6 +1363,21 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
           : !session.complete
             ? 'incomplete_bindings'
             : 'data_unconfirmed';
+        // A typed plot wish before the data is confirmed, while this library has no plot yet: the
+        // root's `keep_plot_request` keeps it for the first plot, which the stream shows nothing of.
+        if (
+          reason === 'data_unconfirmed' &&
+          typeof body.text === 'string' &&
+          !libraryHasPlot(session)
+        ) {
+          // A language the same message chose comes first in the service's order.
+          if (turn !== 'language') turn = 'kept';
+          send('message', { text: keepWish(session, text) });
+          return;
+        }
+        // A run stopped for missing data or roles shows a failed card; one refused for unconfirmed
+        // data shows none and changes nothing.
+        if (reason !== 'data_unconfirmed') turn = 'plot';
         send('plot', {
           status: 'not_ready',
           reason,
@@ -1432,6 +1484,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         pngs: {},
       };
       renderVersion(session, version, theme);
+      // The library's first plot: a wish kept for it in step 1 is its request.
+      const firstHere = !libraryHasPlot(session);
       session.versions.push(version);
       const x = columnOf(version, 'x');
       const y = yColumns(version).join(', ');
@@ -1455,12 +1509,26 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         version: version.number,
         rounds,
       };
-      send('plot', version.result);
-      // The plot memory once the run shipped (`pipeline.settle_memory`): a typed change keeps its
-      // decision, a start over keeps the memory as it is (only the user clears it), and the
-      // switch's carry is spent.
+      // The plot memory, settled with the version before its event (`pipeline.settle_memory`): a
+      // typed change keeps its decision, the first plot of a library the wish kept for it in step
+      // 1, a start over keeps the memory as it is (only the user clears it), and the switch's carry
+      // is spent. The event names what the version stands on (`pipeline.memory_ids`): the kept
+      // entries from before the run and the added ones; one a change replaced is in neither.
+      const before = new Set(session.memory.map(entry => entry.id));
       if (refine) rememberChange(session, text);
+      else if (session.keptWish && firstHere) {
+        rememberChange(session, session.keptWish);
+        session.keptWish = null;
+      }
       if (carried) session.carry = null;
+      if (MEMORY_FIELD) {
+        version.result.memory = {
+          kept: session.memory.filter(entry => before.has(entry.id)).map(entry => entry.id),
+          added: session.memory.filter(entry => !before.has(entry.id)).map(entry => entry.id),
+        };
+      }
+      turn = 'plot';
+      send('plot', version.result);
       // The root writes its reply after the plot: seconds in production (MOCK_REPLY_MS).
       await sleep(REPLY_MS ?? STEP_MS / 2);
       const decisions = session.memory.length;
@@ -1475,9 +1543,11 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       runsInFlight -= 1;
     }
   } finally {
+    if (DONE_MS > 0 && !closed) await sleep(DONE_MS);
     session.active = false;
     // The sync fields: the session's bindings and step state after the run, and the
-    // new dataset version after a turn that changed the data.
+    // new dataset version after a turn that changed the data; what the turn changed, for a
+    // turn that ended well (no refusal, no error, no stop).
     send('done', {
       llm_calls: 4,
       tokens: 18734,
@@ -1486,6 +1556,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       language: { language: session.language, source: session.languageSource },
       ...(session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {}),
       ...(session.changed ? { dataset: session.changed } : {}),
+      ...(turn && !session.cancelled && !closed ? { turn } : {}),
     });
     log.ended = true;
     for (const reader of log.readers) reader();
@@ -1547,11 +1618,9 @@ const ADDITIVE_KINDS = new Set(['reference_line', 'annotation', 'marker', 'other
  * The root's `remember` in miniature: a shipped change keeps one decision in the user's words, its
  * kind read from a few keywords. A full memory refuses the new entry, as the service does.
  */
-function rememberChange(session, text) {
-  const words = text.trim().replace(/\s+/g, ' ');
-  if (!words) return;
-  const lower = words.toLowerCase();
-  const kind = /\btitle\b|titel/.test(lower)
+/** A decision's kind, read from a few keywords of the user's words (`memory.py`'s closed set). */
+function memoryKind(lower) {
+  return /\btitle\b|titel/.test(lower)
     ? 'title'
     : /label|beschrift/.test(lower)
       ? 'axis_label'
@@ -1568,6 +1637,30 @@ function rememberChange(session, text) {
                 : /\bdark\b|\blight\b/.test(lower)
                   ? 'theme'
                   : 'other';
+}
+
+/** Whether a message is a wish for the plot (a title, a label, a scale…), not a question. */
+const plotWish = lower => !lower.trim().endsWith('?') && memoryKind(lower) !== 'other';
+
+/** Whether the session's library has a plot yet: a wish for its first plot is kept until then. */
+const libraryHasPlot = session => session.versions.some(item => item.library === session.library);
+
+/**
+ * The root's `keep_plot_request` in miniature: a plot wish before the data is confirmed is kept
+ * for the library's first plot (`session.keptWish`, the service's held request), which changes
+ * nothing the stream shows; that plot keeps its decision once it shipped. Answers the reply's line.
+ */
+function keepWish(session, text) {
+  const words = text.trim().replace(/\s+/g, ' ');
+  session.keptWish = words;
+  return `I kept "${words}" for the first plot.`;
+}
+
+function rememberChange(session, text) {
+  const words = text.trim().replace(/\s+/g, ' ');
+  if (!words) return;
+  const lower = words.toLowerCase();
+  const kind = memoryKind(lower);
   const target = /\by\b|y-ax/.test(lower) ? 'y' : /\bx\b|x-ax/.test(lower) ? 'x' : null;
   const kept = ADDITIVE_KINDS.has(kind)
     ? session.memory
@@ -2501,6 +2594,8 @@ async function route(req, res) {
       memorySeq: 0,
       turns: 0,
       carry: null,
+      // A plot wish kept for the library's first plot in step 1 (`keep_plot_request`), until it ships.
+      keptWish: null,
       active: false,
       cancelled: false,
     });
