@@ -12,4 +12,4 @@
   called v2. Every dataset answer and `done.dataset` now carries `can_undo`,
   which the page reads for `.undo()` instead of guessing from the number, and
   `original_version`, from which the `agent_data_undo` bucket still counts the
-  paste as 1.
+  paste as 1. (#12616)
