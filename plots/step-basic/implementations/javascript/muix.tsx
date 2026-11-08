@@ -1,139 +1,104 @@
 // anyplot.ai
 // step-basic: Basic Step Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 93/100 | Created: 2026-07-25
-
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 85/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const sz = window.ANYPLOT_SIZE;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-// Warehouse inventory level, sampled daily over a month. Stock holds
-// constant between restock/shipment events, then jumps or drops on the
-// event day — a textbook "stepAfter" pattern (the reported value applies
-// from the current day until the next reading).
-const days = Array.from({ length: 24 }, (_, i) => i + 1);
-const unitsInStock = [
-  500, 500, 460, 460, 460, 410, 410, 410, 680, 680, 680, 630, 630, 580, 580,
-  580, 820, 820, 760, 760, 760, 700, 700, 650,
-];
-const REORDER_POINT = 500;
+// Constants
+const BASELINE = 0; // stock counts start from an empty warehouse
+const X_PAD_SHARE = 0.02;
+const Y_PAD_SHARE = 0.08;
 
-// The two largest restock jumps (day 9: 410 -> 680, day 17: 580 -> 820) get a
-// bigger, filled marker so the chart's story reads at a glance instead of a
-// uniform row of small dots.
-const EVENT_INDICES = [8, 16];
+// Columns: set these to your data's column names
+const DAY = "Day of month"; // role: x
+const UNITS = "Units in stock"; // role: y
 
-function EventMark({ x, y, color, dataIndex }) {
-  const isEvent = EVENT_INDICES.includes(dataIndex);
-  return (
-    <circle
-      cx={x}
-      cy={y}
-      r={isEvent ? 9 : 6}
-      fill={isEvent ? color : t.pageBg}
-      stroke={color}
-      strokeWidth={isEvent ? 3 : 2}
-    />
-  );
-}
+// Data: replace this block with your own records, one object per row
+// Daily warehouse inventory: stock holds between restocks and shipments, so each
+// reading applies from its day until the next one ("post" steps)
+const data = [
+  500, 500, 460, 460, 460, 410, 410, 410, 680, 680, 680, 630,
+  630, 580, 580, 580, 820, 820, 760, 760, 760, 700, 700, 650,
+].map((units, i) => ({ [DAY]: i + 1, [UNITS]: units }));
 
-const margin = { top: 90, bottom: 80, left: 110, right: 60 };
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[DAY] != null).sort((a, b) => a[DAY] - b[DAY]);
+const days = rows.map((d) => d[DAY]);
+const units = rows.map((d) => d[UNITS]);
+const values = units.filter((v) => v != null);
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+const xSpan = days[days.length - 1] - days[0];
+const yLow = Math.min(BASELINE, ...values);
+const yHigh = Math.max(...values);
+const xMin = days[0] - xSpan * X_PAD_SHARE;
+const xMax = days[days.length - 1] + xSpan * X_PAD_SHARE;
+const yMax = yHigh + (yHigh - yLow) * Y_PAD_SHARE;
+
+const TITLE = "step-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 64;
+
 export default function Chart() {
+  const { width: W, height: H } = window.ANYPLOT_SIZE;
+
   return (
-    <Box sx={{ position: "relative", width: sz.width, height: sz.height }}>
-      <Typography
-        sx={{
-          position: "absolute",
-          top: 14,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 600,
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-      >
-        step-basic · javascript · muix · anyplot.ai
-      </Typography>
-
-      {/* Rotated y-axis label, centered on the drawing area — rendered
-          manually because ChartsYAxis positions its built-in `label` from
-          `tickFontSize` rather than the tick labels' measured width, which
-          overlaps 3-digit tick numbers at this font size. */}
-      <Box
-        sx={{
-          position: "absolute",
-          left: 4,
-          top: margin.top,
-          height: sz.height - margin.top - margin.bottom,
-          width: 28,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none",
-        }}
-      >
-        <Typography sx={{ transform: "rotate(-90deg)", whiteSpace: "nowrap", color: t.ink, fontSize: 16 }}>
-          Units in Stock
-        </Typography>
+    <Box sx={{ width: W, height: H, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600 }}>{TITLE}</Typography>
       </Box>
-
       <LineChart
-        width={sz.width}
-        height={sz.height}
+        width={W}
+        height={H - TITLE_H}
         skipAnimation
-        margin={margin}
-        colors={[t.palette[0]]}
+        hideLegend
+        margin={{ top: 16, right: 48, bottom: 16, left: 24 }}
         grid={{ horizontal: true }}
-        sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiAreaElement-root": { fillOpacity: 0.12 },
-        }}
         xAxis={[
           {
             data: days,
-            label: "Day of Month",
             scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            label: DAY,
             tickNumber: 12,
+            height: 64,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
-            min: 0,
+            min: yLow,
+            max: yMax,
+            label: UNITS,
+            tickNumber: 9,
+            width: 80,
+            labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         series={[
           {
-            data: unitsInStock,
-            label: "Warehouse Inventory",
+            id: "stock",
+            data: units,
+            label: UNITS,
+            color: t.palette[0],
             curve: "stepAfter",
             showMark: true,
-            area: true,
+            shape: "circle",
           },
         ]}
-        slots={{ mark: EventMark }}
-        slotProps={{ legend: { hidden: true } }}
-      >
-        <ChartsReferenceLine
-          y={REORDER_POINT}
-          label="Reorder Point"
-          labelAlign="end"
-          lineStyle={{ stroke: t.amber, strokeDasharray: "6 4", strokeWidth: 2 }}
-          labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.amber }}
-        />
-      </LineChart>
+        sx={{
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiLineChart-mark": { strokeWidth: 2.5 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      />
     </Box>
   );
 }

@@ -1,180 +1,107 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 95/100 | Created: 2026-08-11
-import { BarChart } from "@mui/x-charts/BarChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: raw support-ticket categories, counted (not pre-aggregated) ------
-// A count plot tallies occurrences from raw observations rather than plotting
-// pre-computed values, so we simulate individual ticket records first and only
-// derive the bar heights by counting them.
-function lcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const HEADROOM_SHARE = 0.05; // space above the tallest bar for its count label, as a share of the top count
+
+// Columns: set these to your data's column names
+const CATEGORY = "Support ticket category"; // role: category
+
+// Data: replace this block with your own records, one object per observation
+// 620 raw support tickets, each tagged with one category; the plot counts them
+const data = (() => {
+  let state = 42;
+  const rand = () => {
     state = (state * 1664525 + 1013904223) % 4294967296;
     return state / 4294967296;
   };
-}
+  const ticketTypes = ["Technical", "Billing", "Shipping", "Account", "Feature Request", "Other"];
+  const weights = [0.3, 0.24, 0.18, 0.14, 0.09, 0.05];
+  return Array.from({ length: 620 }, () => {
+    const r = rand();
+    let cumulative = 0;
+    const index = weights.findIndex((w) => {
+      cumulative += w;
+      return r < cumulative;
+    });
+    return { [CATEGORY]: ticketTypes[index === -1 ? ticketTypes.length - 1 : index] };
+  });
+})();
 
-const rand = lcg(42);
-const TICKET_TYPES = [
-  "Technical",
-  "Billing",
-  "Shipping",
-  "Account",
-  "Feature Request",
-  "Other",
-];
-const TYPE_WEIGHTS = [0.3, 0.24, 0.18, 0.14, 0.09, 0.05];
-const TICKET_COUNT = 620;
+// Plot: reads only data and the constants above
+// Count the observations per category, then order by descending count (ties keep first appearance)
+const countByCategory = new Map<string, number>();
+data
+  .filter((d) => d[CATEGORY] != null)
+  .forEach((d) => countByCategory.set(d[CATEGORY], (countByCategory.get(d[CATEGORY]) ?? 0) + 1));
+const ranked = [...countByCategory.entries()]
+  .map(([category, count]) => ({ category, count }))
+  .sort((a, b) => b.count - a.count);
+const total = ranked.reduce((sum, r) => sum + r.count, 0);
+const topCount = ranked[0]?.count ?? 0;
 
-const rawTickets = Array.from({ length: TICKET_COUNT }, () => {
-  const r = rand();
-  let cumulative = 0;
-  for (let i = 0; i < TICKET_TYPES.length; i++) {
-    cumulative += TYPE_WEIGHTS[i];
-    if (r < cumulative) return TICKET_TYPES[i];
-  }
-  return TICKET_TYPES[TICKET_TYPES.length - 1];
-});
-
-const countByType = new Map();
-for (const ticketType of rawTickets) {
-  countByType.set(ticketType, (countByType.get(ticketType) ?? 0) + 1);
-}
-
-// Sorted by frequency, descending — the default reading order for a count plot.
-const sortedEntries = [...countByType.entries()].sort((a, b) => b[1] - a[1]);
-const categories = sortedEntries.map(([category]) => category);
-const counts = sortedEntries.map(([, count]) => count);
-const meanCount = counts.reduce((sum, c) => sum + c, 0) / counts.length;
-
-// Leading category vs. the average — surfaces the takeaway instead of leaving
-// the viewer to read it off the bars themselves.
-const topCategory = categories[0];
-const pctAboveAvg = Math.round(((counts[0] - meanCount) / meanCount) * 100);
-
-// The y-axis label's offset from the axis line is computed internally by MUI X
-// as `tickFontSize + tickSize + 10` (not from tickLabelStyle.fontSize, the
-// prop that actually sets the rendered glyph size) — so tickFontSize has to be
-// sized to clear the widest tick number, or the label collides with it. Scale
-// it off the real digit count instead of a fixed magic number so the offset
-// stays correct if the data range changes.
-const yTickDigits = String(Math.max(...counts)).length;
-const yTickFontSize = 12 + yTickDigits * 8;
+const TITLE = "Support Tickets · count-basic · javascript · muix · anyplot.ai";
+const subtitle = `n = ${total.toLocaleString("en-US")} observations in ${ranked.length} categories, sorted by count`;
+const HEADER_H = 88;
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
-  const H = window.ANYPLOT_SIZE.height; // 900 CSS px
-  const CHART_TOP = 108;
-
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      {/* Title */}
-      <Box sx={{ position: "absolute", top: 24, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>
-          count-basic · javascript · muix · anyplot.ai
-        </Typography>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", gap: "6px", px: "56px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
       </Box>
-
-      {/* Subtitle: surfaces the takeaway directly rather than leaving the
-          viewer to read the sort order + average line themselves. */}
-      <Box sx={{ position: "absolute", top: 58, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.inkSoft, fontSize: 15, fontWeight: 400 }}>
-          {topCategory} tickets run {pctAboveAvg}% above the category average
-        </Typography>
-      </Box>
-
-      {/* Bar chart */}
-      <Box
+      <BarChart
+        width={width}
+        height={height - HEADER_H}
+        dataset={ranked}
+        colors={[t.palette[0]]}
+        skipAnimation
+        hideLegend
+        borderRadius={4}
+        grid={{ horizontal: true }}
+        margin={{ top: 8, right: 48, bottom: 16, left: 32 }}
+        xAxis={[
+          {
+            scaleType: "band",
+            dataKey: "category",
+            label: CATEGORY,
+            height: 68,
+            categoryGapRatio: 0.4,
+            disableTicks: true,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            label: "Count",
+            width: 76,
+            min: 0,
+            max: topCount * (1 + HEADROOM_SHARE),
+            tickMinStep: 1, // counts are whole numbers
+            tickNumber: 8,
+            disableTicks: true,
+            disableLine: true,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
+        series={[{ id: "count", dataKey: "count", label: "Count", barLabel: "value", barLabelPlacement: "outside" }]}
         sx={{
-          position: "absolute",
-          top: CHART_TOP,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          "& .MuiBarChart-label": { fontSize: "16px", fontWeight: 600, fill: t.ink },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
         }}
-      >
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          colors={[t.palette[0]]}
-          skipAnimation
-          borderRadius={4}
-          xAxis={[
-            {
-              scaleType: "band",
-              data: categories,
-              label: "Support Ticket Category",
-              disableTicks: true,
-              disableLine: true,
-              labelStyle: { fontSize: 16, fill: t.ink },
-              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-              categoryGapRatio: 0.4,
-            },
-          ]}
-          yAxis={[
-            {
-              label: "Number of Tickets",
-              labelStyle: { fontSize: 16, fill: t.ink },
-              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-              // tickFontSize only sizes the *reserved layout offset* between the
-              // tick labels and the axis label (tickLabelStyle.fontSize above
-              // wins for the rendered glyph size) — derived from yTickFontSize
-              // above so it stays correct if the data range changes.
-              tickFontSize: yTickFontSize,
-              disableTicks: true,
-              disableLine: true,
-              max: Math.max(...counts) * 1.15,
-            },
-          ]}
-          series={[{ data: counts, label: "Tickets" }]}
-          barLabel="value"
-          margin={{ top: 14, right: 40, bottom: 90, left: 96 }}
-          grid={{ horizontal: true }}
-          slotProps={{
-            legend: { hidden: true },
-            // The leading category (dataIndex 0, since bars are sorted
-            // descending) gets a slightly bolder/larger label — a focal-point
-            // emphasis that reinforces the subtitle without changing the
-            // brand-green fill, so data color stays identical across themes.
-            barLabel: (ownerState) => ({
-              style: {
-                fontSize: ownerState.dataIndex === 0 ? 17 : 15,
-                fontWeight: ownerState.dataIndex === 0 ? 700 : 600,
-                fill: t.ink,
-              },
-            }),
-            // A thin ink-colored stroke crisps the bar edges against the page
-            // background — the style guide's sanctioned outline pattern, not
-            // a color/gradient change, so it doesn't affect data color parity.
-            bar: { style: { stroke: t.ink, strokeOpacity: 0.15, strokeWidth: 1 } },
-          }}
-          sx={{
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        >
-          {/* Mean reference line: turns "6 bars" into "which categories run
-              above/below the average ticket volume" — lands in open canvas at
-              the right (short bars), never crossing the in-bar value labels. */}
-          <ChartsReferenceLine
-            y={meanCount}
-            label={`Avg ${Math.round(meanCount)}`}
-            labelAlign="end"
-            lineStyle={{
-              stroke: t.inkSoft,
-              strokeDasharray: "6 4",
-              strokeWidth: 1.5,
-            }}
-            labelStyle={{ fill: t.inkSoft, fontSize: 13, fontWeight: 500 }}
-          />
-        </BarChart>
-      </Box>
+      />
     </Box>
   );
 }

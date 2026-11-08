@@ -2,133 +2,128 @@ library: muix
 language: javascript
 specification_id: pictogram-basic
 created: '2026-08-20T22:59:00Z'
-updated: '2026-08-20T23:03:46Z'
-generated_by: claude-sonnet
-workflow_run: 32425898740
+updated: '2026-11-08T04:04:31Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42445011395
 issue: 4674
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - 'Clever, correct pictogram construction: circles are rendered via a custom MUI
-    X scatter slot with a clipPath-based partial-fill technique for fractional remainders,
-    matching the spec''s ''partial icons represent fractional remainders'' requirement
-    precisely.'
-  - Exact per-category values ('35 t', '22 t', ...) are aligned in a clean right-hand
-    column, plus a legend subtitle stating the icon-to-unit ratio ('● = 5 tons of
-    fruit'), satisfying the spec's unit-legend requirement.
-  - 'Theme handling is clean: icons are identical brand green (#009E73) in both renders,
-    and title/labels/background are correctly theme-adaptive with no dark-on-dark
-    or light-on-light failures.'
-  - Rows are left-aligned per category exactly as the spec requests, mirroring a horizontal
-    bar chart layout with category labels on the y-axis and no unnecessary x-axis
-    chrome.
+  - 'Uses MUI X''s composition API the way it is meant to be used: ChartsContainer
+    with a band y-axis (''fruit'') and a hidden linear x-axis (''slots''), with custom
+    SVG icon marks placed through the useYScale and useDrawingArea hooks inside the
+    container, so rows follow the library''s own band layout.'
+  - Partial icons are a full-size outline ring with a fill clipped in proportion to
+    the remainder, so 4.4, 3.6, 5.4 and 2.8 icons read as part of one icon rather
+    than a smaller whole one.
+  - The icon value is derived from the data (the smallest nice step that keeps the
+    longest row within 8 icons), so the legend's '= 5 tons' and the row lengths stay
+    consistent when the data block is replaced.
+  - The legend uses the same green circle as the rows, in inkSoft text below the ink
+    title, which keeps a clear hierarchy in both themes.
+  - 'Value axis, ticks and axis line are dropped (disableTicks/disableLine, position:
+    ''none''), as the spec permits, so the icon count carries the value.'
   weaknesses:
-  - Missing `skipAnimation` prop on <ScatterChart> — prompts/library/muix.md mandates
-    it on every chart component as a second belt against mid-tween screenshots; relying
-    solely on the harness's prefers-reduced-motion emulation is a spec violation even
-    though this run happened to render cleanly.
-  - Legend indicator '●' in the subtitle ('● = 5 tons of fruit') is rendered in the
-    muted secondary ink color instead of the brand green (#009E73) used for the actual
-    icons — the bullet glyph doesn't visually match what it explains.
-  - Categories are not sorted by value (Apples 35, Oranges 22, Bananas 18, Mangoes
-    27, Grapes 14) — sorting descending would strengthen the at-a-glance comparison
-    typical of ISOTYPE-style pictograms.
+  - 'Suggestion: sorting the rows by harvest (Apples, Mangoes, Oranges, Bananas, Grapes)
+    would let row lengths compare like a ranked bar chart.'
+  - 'Suggestion: the 140 px y-axis band leaves a wide gap between the ''Fruit'' axis
+    title and the category labels; a narrower band would tie them together.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white, not dark.
-      Chrome: Title "Weekly Fruit Harvest · pictogram-basic · javascript · muix · anyplot.ai" in bold dark ink, centered at top; subtitle "● = 5 tons of fruit" in muted gray beneath it; category labels (Apples, Oranges, Bananas, Mangoes, Grapes) on a thin left-hand axis line; per-row value labels ("35 t", "22 t", "18 t", "27 t", "14 t") aligned in a right-hand column. All text is dark on the light surface and clearly readable.
-      Data: Five rows of brand-green (#009E73) filled circles, one circle per 5 tons, with a clipped partial circle (outlined remainder) representing the fractional leftover for Oranges, Bananas, Mangoes, and Grapes. Rows are left-aligned for easy row-to-row comparison, matching a horizontal-bar-chart layout.
-      Legibility verdict: PASS — no overlap, no clipping, all text crisp against the cream background.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold dark title "Weekly Fruit Harvest · pictogram-basic · javascript · muix · anyplot.ai" centred at the top (~45 % of the width); below it a legend line with a green circle "= 5 tons · a cut icon shows the remainder" in a softer grey ink; category labels Apples, Oranges, Bananas, Mangoes, Grapes right-aligned on the left in dark ink, with the rotated axis title "Fruit" at the far left. There is no value axis, ticks or grid, as the spec permits.
+      Data: five rows of large brand-green (#009E73) circles, all one size and left-aligned at one pitch: Apples 7 full; Oranges 4 full plus one ~40 % cut icon; Bananas 3 plus ~60 %; Mangoes 5 plus ~40 %; Grapes 2 plus ~80 %. Each partial icon is a green outline ring with a fill clipped from the left. The longest row reaches near the right edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black, not light.
-      Chrome: Same title and subtitle layout, now in light ink (#F0EFE8 title / lighter gray subtitle) against the dark surface; category and value labels are light-colored and fully legible; the thin y-axis line is visible but subtle.
-      Data: Icons are the identical brand green (#009E73) as the light render — confirmed unchanged data color, only chrome flipped. Partial-icon outlines remain visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements; all chrome correctly inverted for the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title and category labels in light ink, legend text in a lighter grey, axis title "Fruit" in light ink; no dark-on-dark text anywhere.
+      Data: identical #009E73 circles and counts as the light render; the partial-icon outline rings render as a dimmer green on the dark page but stay clearly visible, and the unfilled part shows the page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scaled by length, 16px categories,
-          18px value labels, 14px subtitle); readable in both themes and well-proportioned.
+        comment: Title 22 px, ticks/axis title/legend 16 px, set explicitly; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between icons, category labels, value labels, or title/subtitle.
+        comment: No collisions between text or icons
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 42px-radius circles are prominent and well-sized for 5 sparse rows
-          of icons.
+        comment: Large uniform icons; partial-icon rings visible in both themes; legend
+          glyph matches the row icons
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, no red-green reliance, good contrast on
-          both surfaces.
+        comment: Single hue; partial versus full is told apart by shape, not color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced portion of the canvas; nothing cut off;
-          margins consistent.
+        comment: 3200x1800, rows fill the drawing area, nothing clipped, balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Category labels descriptive; unit (tons per icon) explicit via subtitle
-          and per-row value labels.
+        comment: Category axis titled 'Fruit'; the unit 'tons' is in the legend; no
+          value axis by design
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both renders; backgrounds are #FAF8F1/#1A1A17;
-          chrome theme-correct.'
+        comment: 'All icons #009E73 (t.palette[0]); backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful custom pictogram construction (clipPath partial fill)
-          clearly above library defaults; not quite publication-grade polish.
+        comment: A deliberate three-level hierarchy (bold ink title, inkSoft legend
+          line that also explains the cut icon, ink row labels) beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid, minimal chrome, generous whitespace, but the legend bullet
-          color mismatch (gray '●' vs. green icons) is a detail miss.
+        comment: The icon pitch is derived so the longest row spans the drawing width,
+          and icon size fits both row height and pitch for even whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Partial-fill affordance and aligned value column create visual hierarchy,
-          but categories aren't sorted by value so there's no single clear focal point.
+        comment: Data displayed; no hierarchy chosen beyond the Notes (rows in data
+          order)
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pictogram/isotype chart, custom-built since MUI X has no
-          native icon-array chart.
+        comment: Pictogram rows of one icon type and one color, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent unit legend, partial icons, left-aligned rows, category
-          labels on left — all present.
+        comment: 'Consistent unit and a legend with the same icon; partial icons for
+          remainders; left-aligned rows; simple circle icons; category labels on the
+          left: all Notes and good-version bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = icon count, Y = category, matches horizontal-bar-like layout
-          requested by spec.
+        comment: 'Icon counts match values / 5: 7, 4.4, 3.6, 5.4, 2.8'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend/subtitle correctly explains the unit-per-icon
-          convention.
+        comment: Title 'Weekly Fruit Harvest · pictogram-basic · javascript · muix
+          · anyplot.ai'; the legend states the unit value
     data_quality:
       score: 15
       max: 15
@@ -170,22 +164,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both full icons and partial/fractional icons across multiple
-          categories.
+        comment: One whole-number row plus four rows with different fractional remainders
+          (0.4, 0.6, 0.4, 0.8)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible farm-co-op weekly harvest scenario.
+        comment: Weekly fruit harvest of a farm co-op, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tonnages and icon-unit ratio are sensible for a small farm co-op.
+        comment: 'Checked in the render: Apples 35 = 7 icons, Oranges 22 = 4 + 0.4,
+          Bananas 18 = 3 + 0.6, Mangoes 27 = 5 + 0.4, Grapes 14 = 2 + 0.8; the unit
+          value 5 is computed from the max'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,59 +189,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward top-level data/derivation, one required default-export
-          component plus the necessary custom slot renderer.
+        comment: Columns, Data and Plot zones; the IconRows child component is required
+          to use the MUI X scale hooks inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded data.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart, Box, Typography imported and used.
+        comment: All four imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant clipPath-based partial-icon solution, no fake UI.
+        comment: Concise; the nice-step unit derivation is short and has no library
+          equivalent
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Missing mandatory `skipAnimation` prop on <ScatterChart> per prompts/library/muix.md.
+        passed: true
+        comment: Default-exported component sized to ANYPLOT_SIZE, v9 ChartsContainer,
+          skipAnimation
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ScatterChart's slots API with xScale/yScale, axis config,
-          and valueFormatter.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'The slots={{scatter: ...}} override with direct xScale/yScale access
-          is a genuinely MUI X-specific mechanism for custom mark rendering.'
+        comment: Composition with ChartsContainer, a band y-axis, ChartsYAxis, and
+          the useYScale/useDrawingArea hooks
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Custom SVG marks placed through MUI X's scale hooks inside the composition
+          container, a MUI X–specific extension pattern
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:01:53Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - layer-composition
+  - patches
+  - html-export
   patterns:
-  - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome

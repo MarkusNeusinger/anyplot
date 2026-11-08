@@ -2,58 +2,61 @@ library: muix
 language: javascript
 specification_id: curve-bias-variance-tradeoff
 created: '2026-08-24T20:33:00Z'
-updated: '2026-08-24T20:38:44Z'
-generated_by: claude-sonnet
-workflow_run: 32773780223
+updated: '2026-11-08T01:51:15Z'
+generated_by: claude-opus-5-5
+adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
+workflow_run: 42435737708
 issue: 4134
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/muix/plot-dark.html
-quality_score: 97
+quality_score: 90
 review:
   strengths:
-  - 'Correct Imprint palette usage: brand green (#009E73) for Total Error, semantic
-    amber tint for the overfitting zone, and the theme-adaptive neutral ink for the
-    constant Irreducible Error baseline.'
-  - Custom SVG overlay built with useXScale/useYScale/useDrawingArea (community @mui/x-charts
-    hooks) implements zone shading, zone labels, and direct end-of-line curve labels
-    with anti-overlap stacking — genuine mastery of the library beyond basic props.
-  - 'Every spec-required element is present: 4 distinctly colored/dashed curves, an
-    optimal-complexity reference line with annotation, the Total Error = Bias² + Variance
-    + Irreducible Error formula as a subtitle, and shaded underfitting/overfitting
-    zones.'
-  - Both light and dark renders are fully legible with theme-adaptive chrome and no
-    dark-on-dark or light-on-light failures; data colors are identical across themes.
-  - Deterministic, formula-driven data generation (no RNG needed) with the optimal
-    complexity computed dynamically as the argmin of total error rather than hardcoded.
-  - No overlap or edge clipping anywhere in either render, including the 'Optimal
-    ≈ 7.3' annotation near the x-axis and the right-edge end-of-line labels (verified
-    via close crops).
+  - 'All four curves follow the spec''s shape: bias² falls (2.4/(1+0.3c)), variance
+    rises (0.005c²), the irreducible error stays flat at 0.15, and the total error
+    is their computed sum. It is U-shaped and lies above the other three across the
+    whole range.'
+  - 'Each curve has its own color and stroke: total in brand green #009E73 with a
+    solid 4 px line, bias² in lavender with long dashes, variance in blue with dots,
+    and the irreducible noise floor in the theme-adaptive neutral ink with short dashes.
+    Every curve is labeled in its own color at its right end, and the labels move
+    apart only when two ends are close.'
+  - The optimum is computed as the argmin of the total error. A ChartsReferenceLine
+    marks it exactly at the curve's minimum, at c = 7.3 with error 1.17. That matches
+    the analytic check 0.752 + 0.266 + 0.15 = 1.168.
+  - The underfitting and overfitting zones are drawn through useXScale/useDrawingArea
+    and split at the optimum. They use low-opacity inkSoft fills and letter-spaced
+    uppercase labels, so the curves stay dominant in both themes.
+  - The decomposition formula sits as an inkSoft subtitle under the title. It is generated
+    from the column constants, so it stays legible and clear of every curve.
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with LinePlot, ChartsXAxis/ChartsYAxis,
+    ChartsReferenceLine and custom SVG layers that read the chart''s scales through
+    hooks. Per-series stroke styling uses the v9 data-series selectors, and skipAnimation
+    is set.'
   weaknesses:
-  - No grid lines at all, not even a subtle y-axis grid; given the plot's quantitative
-    nature (readers estimating approximate error values), a faint horizontal grid
-    would aid precision without adding clutter.
-  - Title and subtitle use plain default MUI Typography styling with no custom letter-spacing/weight
-    refinement, which reads slightly less 'designed' than the custom SVG-overlay parts
-    of the chart.
-  - End-of-line curve labels are set at 15px — fine at full resolution, but worth
-    double-checking legibility when the image is scaled down to the ~400px mobile
-    thumbnail.
+  - 'Suggestion: the irreducible-error line (ink, 4 4 dash, 1.5 px) and the optimum
+    reference line (ink, 6 4 dash, 1.5 px) share color and weight; a distinct dash
+    or weight for the reference line would separate the structural marker from the
+    data curve faster.'
+  - 'Suggestion: the two zone fills differ in opacity (0.07 vs 0.13), which gives
+    the overfitting side more visual weight than the underfitting side without a data
+    reason; equal opacities or two lightly tinted hues would read as symmetric zones.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 as required.
-      Chrome: Centered dark title "curve-bias-variance-tradeoff · javascript · muix · anyplot.ai" with a smaller "Total Error = Bias² + Variance + Irreducible Error" subtitle underneath. X-axis "Model Complexity (Low → High)" from 1-20, y-axis "Prediction Error" from 0-2.6. All axis titles and tick labels render in dark ink, clearly readable against the light background.
-      Data: Four curves share the same shapes as in dark mode. Total Error is a thick solid brand-green (#009E73) U-shaped curve; Bias² is a dashed lavender/purple line decreasing from ~1.85 to ~0.35; Variance is a dotted blue line increasing from ~0 to ~2.0; Irreducible Error is a thin dotted ink-colored horizontal line at 0.15. A vertical dashed reference line marks "Optimal ≈ 7.3" near the total-error minimum. Two soft shaded zones (muted gray-tan left of the optimal line labeled "UNDERFITTING", pale amber right of it labeled "OVERFITTING") divide the plot. Direct end-of-line labels (color-matched text) replace a legend, and are non-overlapping thanks to a stacking algorithm.
-      Legibility verdict: PASS — no light-on-light text found anywhere; verified no clipping/overlap via pixel crops around the optimal annotation and the right-edge end labels.
+      Background: warm off-white #FAF8F1, landscape 3200x1800.
+      Chrome: bold dark title "curve-bias-variance-tradeoff · javascript · muix · anyplot.ai" centered at top, with the formula "Total error = Bias² + Variance + Irreducible error" in inkSoft below it. Left and bottom axis lines only, no grid. Y-axis "Prediction error" runs 0.0–2.6 and the x-axis "Model complexity (low → high)" runs 1–20; all ticks are dark and readable. A left zone labeled "UNDERFITTING" and a right zone labeled "OVERFITTING", both in letter-spaced inkSoft caps, are split by a dashed ink vertical line at 7.3, captioned "Optimum at 7.3 (minimum total error 1.17)" near the bottom.
+      Data: total error is a solid #009E73 U-curve (2.0 → min 1.17 → 2.5), bias² a lavender dashed falling curve (1.85 → 0.34), variance a blue dotted rising curve (0 → 2.0), and the irreducible error a thin dashed ink horizontal line at 0.15. Right-end labels in matching colors: Total error, Variance, Bias², Irreducible error. Bias² and variance cross near c ≈ 10.7.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 as required.
-      Chrome: Same title/subtitle/axis-label layout, now rendered in light ink (#F0EFE8-family) against the dark background — fully legible, no dark-on-dark issues. Zone labels "UNDERFITTING"/"OVERFITTING" remain in a muted gray, clearly visible.
-      Data: All four curve colors are pixel-identical to the light render (brand green, lavender dashed, blue dotted, ink-colored dotted irreducible line) — confirms only chrome flips between themes, not data colors. The optimal reference line switches to a light dashed stroke for contrast against the dark background, consistent with the theme-adaptive ink token.
-      Legibility verdict: PASS — no dark-on-dark failures found; tick labels, axis titles, zone labels, and end-of-line curve labels are all clearly readable.
+      Background: warm near-black #1A1A17.
+      Chrome: title, formula, axis titles, ticks, zone labels and the optimum caption all render in light ink or inkSoft and are readable. There is no dark-on-dark text, and the optimum and irreducible dashed lines flip to light ink. The zone fills are subtle lighter tints.
+      Data: the green, lavender and blue curve colors are identical to the light render; only the chrome and the neutral irreducible line flip. The blue variance curve and its label have lower contrast on the dark surface but stay clearly visible. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,76 +67,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick/annotation text clearly legible in both themes;
-          sizes appropriate.
+        comment: Explicit sizes (title 22, labels 16, ticks 14, curve labels 16);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'Verified via pixel crops: optimal-point annotation and stacked end-of-line
-          labels do not collide with axis ticks or each other.'
+        comment: No text collisions; optimum caption sits clear of the irreducible
+          line and variance curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4 curves distinguished by both color and distinct dash/dot patterns
-          and stroke widths; density-appropriate for 80-point smooth curves.
+        comment: Line weights 1.5–4 px with distinct dashes, all visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant linestyle encoding on top of color; no red-green-only signal.
+        comment: Green/lavender/blue plus dash styles; not color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800 (canvas gate passed); nothing cut off;
-          generous right margin for end labels.
+        comment: 3200x1800, balanced margins, title well proportioned, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels; y-axis unitless is inherent to the theoretical
-          bias-variance formula.
+        comment: '''Prediction error'' and ''Model complexity (low → high)'' are descriptive;
+          the units are theoretical'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Total Error) uses palette[0] #009E73; irreducible
-          error uses the theme-adaptive neutral ink anchor; overfitting zone uses
-          the amber warning anchor; backgrounds match #FAF8F1/#1A1A17.'
+        comment: Imprint positions 1–3 in order, irreducible baseline in neutral ink
+          anchor, correct backgrounds
     design_excellence:
-      score: 17
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom SVG overlay with semantic zone shading and direct labels is
-          well above generic defaults, but title/subtitle typography is plain default
-          MUI styling.
+        comment: 'A deliberate hierarchy: line weight ranks total > variance > bias
+          > floor, the formula is an inkSoft subtitle, and the zone labels are letter-spaced
+          caps'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, generous whitespace, subtle 7-10% opacity zone shading;
-          docked slightly for omitting any grid at all.
+        comment: Right-end direct labels with a minimum-gap pass, a no-grid choice,
+          rounded line caps, subtle zone fills
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point (thick green Total Error curve), optimal point
-          called out, underfit/overfit zones and formula guide the reader.
+        comment: Total error leads the visual hierarchy, and the optimum caption carries
+          its computed value
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-curve line chart of theoretical error decomposition.
+        comment: Four-curve bias-variance decomposition
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 4 curves, optimal-point marker, direct curve labels, formula, and
-          under/overfitting shaded zones all present.
+        comment: Distinct styles, direct labels, optimum line, formula and labeled
+          zones are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = model complexity 1-20, Y = prediction error 0-yMax, full data
-          range shown.
+        comment: Curves at their values; monotoneX does not overshoot; only labels
+          are spaced
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend replaced by matching
-          direct end-of-line labels.
+        comment: Mandated title format; direct labels replace a legend
     data_quality:
       score: 15
       max: 15
@@ -174,21 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 curve types present with the correct qualitative shapes (decreasing
-          bias, increasing variance, constant noise, U-shaped total).
+        comment: Bias falling, variance rising, a flat floor and a U-shaped total
+          with a clear minimum
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Textbook-plausible, neutral ML-education content.
+        comment: Canonical theoretical ML decomposition, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Error values and complexity range are sensible for the conceptual
-          domain.
+        comment: 'Checked: total = sum in code; optimum 7.3 / 1.17 is computed by
+          argmin and matches the analytic 0.752+0.266+0.15'
     code_quality:
       score: 10
       max: 10
@@ -198,60 +197,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; the one helper component (Annotations) is the idiomatic
-          MUI X pattern for chart-context overlays via hooks.
+        comment: Linear module; the two small components are required to use the MUI
+          X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic formula-based data, no RNG needed.
+        comment: Deterministic formulas
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity for the custom overlay.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows harness contract: export default, skipAnimation, sized from
-          window.ANYPLOT_SIZE, no manual mount.'
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Community-only @mui/x-charts API used idiomatically (LineChart, ChartsReferenceLine).
+        comment: ChartsContainer composition with LinePlot, axes, ChartsReferenceLine
+          and v9 data-series selectors
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale/useDrawingArea hooks drive a custom SVG overlay
-          for zone shading and anti-collision end labels — a genuinely distinctive,
-          advanced use of the library.
+        comment: Custom SVG layers drawn through useXScale/useYScale/useDrawingArea
+          inside the chart context
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:48:27Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
-  - publication-ready
+  - minimal-chrome
+  - theme-adaptive

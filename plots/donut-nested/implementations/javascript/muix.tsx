@@ -1,206 +1,156 @@
 // anyplot.ai
 // donut-nested: Nested Donut Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-08-18
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
-
 import { PieChart } from "@mui/x-charts/PieChart";
+import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Company revenue, two hierarchy levels: business unit (inner ring) ->
-// customer segment (outer ring). Both rings share the same $1,740M total, so
-// the d3 pie layout keeps every segment's angular span nested exactly inside
-// its parent unit's wedge.
-const BUSINESS_UNITS = [
-  { id: "software", label: "Software", value: 710 },
-  { id: "hardware", label: "Hardware", value: 440 },
-  { id: "services", label: "Services", value: 350 },
-  { id: "consulting", label: "Consulting", value: 240 },
+// Constants
+const TINT_FIRST = 0.12; // share of white mixed into a parent's first child
+const TINT_LAST = 0.6; // share of white mixed into its last child, still clear of the page in both themes
+const DARK_INK = "#1A1A17"; // fixed label inks: segment colours do not change with the theme
+const LIGHT_INK = "#FAF8F1";
+const INK_SPLIT = 0.194; // relative luminance at which both inks reach the same WCAG contrast
+const OUTER_LABEL_MIN_ANGLE = 22; // degrees; narrower outer segments are named in the legend only
+const TITLE = "donut-nested · javascript · muix · anyplot.ai";
+const TITLE_H = 72;
+const LEGEND_H = 124; // two legend rows plus the 28 px bottom padding of the page
+
+// Columns: set these to your data's column names
+const BUSINESS_UNIT = "Business unit"; // role: level_1
+const CUSTOMER_SEGMENT = "Customer segment"; // role: level_2
+const REVENUE = "Revenue (million USD)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// Annual revenue of a technology company by business unit and customer segment
+const data = [
+  { [BUSINESS_UNIT]: "Software", [CUSTOMER_SEGMENT]: "Enterprise SaaS", [REVENUE]: 380 },
+  { [BUSINESS_UNIT]: "Software", [CUSTOMER_SEGMENT]: "SMB Subscriptions", [REVENUE]: 210 },
+  { [BUSINESS_UNIT]: "Software", [CUSTOMER_SEGMENT]: "Developer Tools", [REVENUE]: 120 },
+  { [BUSINESS_UNIT]: "Hardware", [CUSTOMER_SEGMENT]: "Enterprise Devices", [REVENUE]: 260 },
+  { [BUSINESS_UNIT]: "Hardware", [CUSTOMER_SEGMENT]: "Consumer Devices", [REVENUE]: 180 },
+  { [BUSINESS_UNIT]: "Services", [CUSTOMER_SEGMENT]: "Managed Support", [REVENUE]: 150 },
+  { [BUSINESS_UNIT]: "Services", [CUSTOMER_SEGMENT]: "Professional Services", [REVENUE]: 130 },
+  { [BUSINESS_UNIT]: "Services", [CUSTOMER_SEGMENT]: "Training", [REVENUE]: 70 },
+  { [BUSINESS_UNIT]: "Consulting", [CUSTOMER_SEGMENT]: "Strategy Advisory", [REVENUE]: 140 },
+  { [BUSINESS_UNIT]: "Consulting", [CUSTOMER_SEGMENT]: "Implementation", [REVENUE]: 100 },
 ];
 
-const SEGMENTS = [
-  { id: "enterprise-saas", label: "Enterprise SaaS", value: 380, unit: "software" },
-  { id: "smb-subscriptions", label: "SMB Subscriptions", value: 210, unit: "software" },
-  { id: "developer-tools", label: "Developer Tools", value: 120, unit: "software" },
-  { id: "enterprise-devices", label: "Enterprise Devices", value: 260, unit: "hardware" },
-  { id: "consumer-devices", label: "Consumer Devices", value: 180, unit: "hardware" },
-  { id: "managed-support", label: "Managed Support", value: 150, unit: "services" },
-  { id: "professional-services", label: "Professional Services", value: 130, unit: "services" },
-  { id: "training", label: "Training", value: 70, unit: "services" },
-  { id: "strategy-advisory", label: "Strategy Advisory", value: 140, unit: "consulting" },
-  { id: "implementation", label: "Implementation", value: 100, unit: "consulting" },
-];
+// Plot: reads only data and the constants above
+const units = [...new Set(data.map((d) => d[BUSINESS_UNIT]))];
+const total = data.reduce((sum, d) => sum + d[REVENUE], 0);
+const revenueUnit = REVENUE.match(/\(([^)]+)\)/)?.[1] ?? "";
 
-// Business unit -> Imprint hue (units are abstract categories, so canonical
-// palette order applies; first series is always brand green).
-const UNIT_COLOR = {
-  software: t.palette[0],
-  hardware: t.palette[1],
-  services: t.palette[2],
-  consulting: t.palette[3],
-};
-
-// Same hue per unit across both rings; children step towards white by a
-// fixed ratio so every color stays an identical solid hex in both themes
-// (unlike alpha blending, which would shift visibly against the different
-// page backgrounds) while still reading as clearly nested within its unit.
-const hexToRgb = (hex) => [
-  parseInt(hex.slice(1, 3), 16),
-  parseInt(hex.slice(3, 5), 16),
-  parseInt(hex.slice(5, 7), 16),
-];
-const lighten = (hex, amount) => {
-  const [r, g, b] = hexToRgb(hex);
-  const mix = (channel) => Math.round(channel + (255 - channel) * amount);
-  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
-};
-const CHILD_TINTS = [0.15, 0.38, 0.6, 0.8, 0.92];
-
-const formatRevenue = (item) => `$${item.value}M`;
-
-const unitData = BUSINESS_UNITS.map((unit) => ({
-  id: unit.id,
-  value: unit.value,
-  // Excluded from the legend (return undefined for 'legend') since every
-  // unit is large enough to carry its own arc label; the legend is reserved
-  // for the smaller outer-ring segments per the spec's labeling guidance.
-  label: (location) => (location === "legend" ? undefined : unit.label),
-  color: UNIT_COLOR[unit.id],
+// Inner ring: one segment per business unit, its value aggregated from its children
+const inner = units.map((unit, i) => ({
+  id: `unit-${i}`,
+  // Units carry their own arc label, so the legend lists only the customer segments
+  label: (location) => (location === "legend" ? undefined : unit),
+  value: data.filter((d) => d[BUSINESS_UNIT] === unit).reduce((sum, d) => sum + d[REVENUE], 0),
+  color: t.palette[i],
 }));
 
-const unitChildIndex = {};
-const segmentData = SEGMENTS.map((segment) => {
-  const index = unitChildIndex[segment.unit] ?? 0;
-  unitChildIndex[segment.unit] = index + 1;
-  return {
-    id: segment.id,
-    value: segment.value,
-    label: segment.label,
-    color: lighten(UNIT_COLOR[segment.unit], CHILD_TINTS[index]),
-  };
+// Outer ring: children grouped under their unit in the inner ring's order, so every child
+// sits inside its parent's arc; children mix the parent's hue with white, lighter in order
+const outer = units.flatMap((unit, i) => {
+  const children = data.filter((d) => d[BUSINESS_UNIT] === unit);
+  const rgb = [1, 3, 5].map((k) => parseInt(t.palette[i].slice(k, k + 2), 16));
+  return children.map((d, j) => {
+    const tint = TINT_FIRST + ((TINT_LAST - TINT_FIRST) * j) / Math.max(1, children.length - 1);
+    const mixed = rgb.map((c) => Math.round(c + (255 - c) * tint));
+    return {
+      id: `segment-${i}-${j}`,
+      label: d[CUSTOMER_SEGMENT],
+      value: d[REVENUE],
+      color: `rgb(${mixed.join(", ")})`,
+      rgb: mixed,
+    };
+  });
 });
 
-const TITLE = "donut-nested · javascript · muix · anyplot.ai";
-const MARGIN = { top: 130, bottom: 50, left: 90, right: 260 };
-const TOTAL_REVENUE = BUSINESS_UNITS.reduce((sum, unit) => sum + unit.value, 0);
+// Label ink on each segment from its colour's WCAG relative luminance
+const inkRules = Object.fromEntries(
+  [
+    ...inner.map((s, i) => ["units", i, [1, 3, 5].map((k) => parseInt(s.color.slice(k, k + 2), 16))]),
+    ...outer.map((s, i) => ["segments", i, s.rgb]),
+  ].map(([series, i, rgb]) => {
+    const [r, g, b] = rgb.map((c) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+    const ink = 0.2126 * r + 0.7152 * g + 0.0722 * b > INK_SPLIT ? DARK_INK : LIGHT_INK;
+    return [`& .MuiPieChart-seriesLabels[data-series="${series}"] .MuiPieChart-arcLabel:nth-of-type(${i + 1})`, { fill: ink }];
+  }),
+);
+
+function CenterTotal() {
+  const { left, top, width, height } = useDrawingArea();
+  const cx = left + width / 2;
+  const cy = top + height / 2;
+  return (
+    <g textAnchor="middle">
+      <text x={cx} y={cy - 34} fontSize={15} fontWeight={600} letterSpacing="0.12em" fill={t.inkSoft}>
+        TOTAL
+      </text>
+      <text x={cx} y={cy + 14} fontSize={42} fontWeight={700} fill={t.ink}>
+        {total.toLocaleString("en-US")}
+      </text>
+      <text x={cx} y={cy + 40} fontSize={15} fill={t.inkSoft}>
+        {revenueUnit}
+      </text>
+    </g>
+  );
+}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const pieCx = (MARGIN.left + width - MARGIN.right) / 2;
-  const pieCy = (MARGIN.top + height - MARGIN.bottom) / 2;
-
   return (
-    <div
-      style={{
-        position: "relative",
-        width,
-        height,
-        fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      }}
-    >
-      {/* Title */}
-      <div
-        style={{
-          position: "absolute",
-          top: 20,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          fontSize: 22,
-          fontWeight: 600,
-          color: t.ink,
-          letterSpacing: "0.01em",
-          lineHeight: 1.3,
-        }}
-      >
-        {TITLE}
+    <div style={{ width, height, display: "flex", flexDirection: "column", paddingBottom: 28, boxSizing: "border-box" }}>
+      <div style={{ height: TITLE_H, paddingTop: 26, boxSizing: "border-box", textAlign: "center" }}>
+        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</span>
       </div>
-
-      {/* Nested donut — inner ring: business units, outer ring: customer
-          segments. Both series total 1,740 so their arcs stay angularly
-          aligned, and a radius gap between the rings gives visual separation. */}
       <PieChart
         width={width}
-        height={height}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
-        margin={MARGIN}
+        margin={{ top: 8, right: 40, bottom: 16, left: 40 }}
         series={[
           {
-            id: "business-units",
-            data: unitData,
-            innerRadius: 85,
-            outerRadius: 200,
-            paddingAngle: 1.5,
+            id: "units",
+            data: inner,
+            innerRadius: "22%",
+            outerRadius: "50%",
             cornerRadius: 3,
             arcLabel: "label",
-            arcLabelMinAngle: 0,
-            valueFormatter: formatRevenue,
+            valueFormatter: (item) => `${item.value.toLocaleString("en-US")} ${revenueUnit}`,
           },
           {
-            id: "customer-segments",
-            data: segmentData,
-            innerRadius: 225,
-            outerRadius: 420,
-            paddingAngle: 1.5,
+            id: "segments",
+            data: outer,
+            innerRadius: "54%",
+            outerRadius: "100%",
             cornerRadius: 3,
             arcLabel: "label",
-            arcLabelMinAngle: 18,
-            valueFormatter: formatRevenue,
+            arcLabelMinAngle: OUTER_LABEL_MIN_ANGLE,
+            valueFormatter: (item) => `${item.value.toLocaleString("en-US")} ${revenueUnit}`,
           },
         ]}
         slotProps={{
           legend: {
-            direction: "column",
-            position: { vertical: "middle", horizontal: "right" },
-            itemMarkWidth: 14,
-            itemMarkHeight: 14,
-            markGap: 8,
-            itemGap: 12,
-            labelStyle: { fontSize: 15, fill: t.inkSoft },
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 16, color: t.ink, columnGap: 3, rowGap: 1.5, px: 6, justifyContent: "center" },
           },
         }}
         sx={{
-          "& .MuiPieArc-root": { stroke: t.pageBg, strokeWidth: 2 },
-          "& .MuiPieArcLabel-root": {
-            fill: t.ink,
-            paintOrder: "stroke",
-            stroke: t.pageBg,
-            strokeWidth: 4,
-            strokeLinejoin: "round",
-          },
-          "& .MuiPieArcLabel-series-business-units": { fontSize: 18, fontWeight: 700 },
-          "& .MuiPieArcLabel-series-customer-segments": { fontSize: 15, fontWeight: 600 },
-        }}
-      />
-
-      {/* Center overlay — total revenue across all business units */}
-      <div
-        style={{
-          position: "absolute",
-          top: pieCy,
-          left: pieCx,
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          pointerEvents: "none",
-          lineHeight: 1.2,
+          "& .MuiPieChart-arc": { stroke: t.pageBg, strokeWidth: 3 },
+          '& .MuiPieChart-seriesLabels[data-series="units"] .MuiPieChart-arcLabel': { fontSize: 18, fontWeight: 700 },
+          '& .MuiPieChart-seriesLabels[data-series="segments"] .MuiPieChart-arcLabel': { fontSize: 15, fontWeight: 600 },
+          ...inkRules,
         }}
       >
-        <div style={{ fontSize: 34, fontWeight: 700, color: t.ink }}>
-          {`$${(TOTAL_REVENUE / 1000).toFixed(2)}B`}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: t.inkSoft,
-            marginTop: 6,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          Total Revenue
-        </div>
-      </div>
+        <CenterTotal />
+      </PieChart>
     </div>
   );
 }
