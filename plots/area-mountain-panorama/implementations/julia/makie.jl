@@ -18,58 +18,65 @@ const SKY_BG   = THEME == "light" ? colorant"#B8D8EF" : colorant"#0D1825"
 const MTN_FILL = THEME == "light" ? colorant"#262623" : colorant"#5A6E8C"
 const BRAND    = colorant"#009E73"  # Imprint palette position 1
 
-# Peaks: (angle_deg, elevation_m, name, left_slope_deg, right_slope_deg)
-# Panorama from Gornergrat-area vantage, sweeping west to east
+# Peaks: (position, elevation_m, name, left_flank, right_flank)
+# Order is the real clockwise sweep seen from Gornergrat (SE → S → W → N → E);
+# horizontal spacing is schematic, compressing the empty stretches of the 360° view
 const PEAKS = [
-    ( 10.0, 4506.0, "Weisshorn",      15.0, 10.0),
-    ( 22.0, 4221.0, "Zinalrothorn",    8.0,  7.0),
-    ( 33.0, 4063.0, "Ober Gabelhorn",  7.0,  9.0),
-    ( 52.0, 4358.0, "Dent Blanche",   13.0,  9.0),
-    ( 88.0, 4478.0, "Matterhorn",      8.0,  6.5),
-    (103.0, 4491.0, "Täschhorn",       8.0,  6.0),
-    (110.0, 4545.0, "Dom",             6.0,  8.0),
-    (122.0, 4206.0, "Alphubel",        8.0,  8.0),
-    (133.0, 4027.0, "Allalinhorn",     7.0,  6.0),
-    (141.0, 4199.0, "Rimpfischhorn",   6.0,  6.0),
-    (148.0, 4190.0, "Strahlhorn",      6.0,  5.0),
-    (154.0, 4164.0, "Breithorn",       5.0,  4.5),
-    (160.0, 4223.0, "Castor",          4.5,  4.0),
-    (166.0, 4092.0, "Pollux",          4.0,  4.0),
-    (172.0, 4527.0, "Liskamm",         5.0,  5.0),
-    (179.0, 4634.0, "Monte Rosa",      7.0, 10.0),
+    (  4.0, 4634.0, "Monte Rosa",      9.0, 10.0),
+    ( 16.0, 4527.0, "Liskamm",         8.0,  8.0),
+    ( 26.0, 4223.0, "Castor",          6.0,  5.0),
+    ( 34.0, 4092.0, "Pollux",          5.0,  7.0),
+    ( 46.0, 4164.0, "Breithorn",       8.0,  7.0),
+    ( 72.0, 4478.0, "Matterhorn",      4.0,  5.5),
+    ( 98.0, 4358.0, "Dent Blanche",   10.0,  7.0),
+    (108.0, 4063.0, "Ober Gabelhorn",  6.0,  6.0),
+    (120.0, 4221.0, "Zinalrothorn",    7.0,  6.0),
+    (132.0, 4506.0, "Weisshorn",       9.0,  8.0),
+    (150.0, 4545.0, "Dom",             7.0,  4.0),
+    (155.0, 4491.0, "Täschhorn",       4.0,  6.0),
+    (164.0, 4206.0, "Alphubel",        6.0,  6.0),
+    (172.0, 4027.0, "Allalinhorn",     5.0,  5.0),
+    (181.0, 4199.0, "Rimpfischhorn",   6.0,  5.0),
+    (190.0, 4190.0, "Strahlhorn",      5.0,  8.0),
 ]
+const ANCHOR = "Matterhorn"
 
-# Unnamed sub-peaks and cols filling the ridge between Dent Blanche and Matterhorn
+# Unnamed sub-peaks and cols; the anchor horn is the steepest, narrowest summit,
+# isolated by deep notches on both sides, with a Hörnli shoulder on its right flank
 const SUBPEAKS = [
-    ( 63.0, 3820.0, 6.0, 5.0),
-    ( 70.0, 3690.0, 4.0, 4.5),
-    ( 77.0, 3910.0, 5.0, 6.0),
+    ( 53.0, 3880.0, 4.0, 5.0),
+    ( 60.0, 3350.0, 4.0, 5.0),
+    ( 75.0, 3800.0, 1.0, 3.0),
+    ( 84.0, 3560.0, 5.0, 5.0),
+    ( 90.0, 3720.0, 5.0, 6.0),
+    (141.0, 3700.0, 5.0, 5.0),
 ]
 
-# Staggered label heights — three levels keep neighboring labels apart
+# Staggered label heights — three levels, set so no leader line crosses a neighbor's label
+const LVL_A, LVL_B, LVL_C = 4790.0, 5010.0, 5230.0
 const LABEL_YS = [
-    5100.0,  # Weisshorn
-    4870.0,  # Zinalrothorn
-    5100.0,  # Ober Gabelhorn
-    4870.0,  # Dent Blanche
-    5250.0,  # Matterhorn (focal point — highest label)
-    4870.0,  # Täschhorn
-    5100.0,  # Dom
-    4870.0,  # Alphubel
-    5100.0,  # Allalinhorn
-    4870.0,  # Rimpfischhorn
-    5100.0,  # Strahlhorn
-    4640.0,  # Breithorn
-    4870.0,  # Castor
-    5100.0,  # Pollux
-    4870.0,  # Liskamm
-    5100.0,  # Monte Rosa
+    LVL_B,  # Monte Rosa
+    LVL_C,  # Liskamm
+    LVL_A,  # Castor
+    LVL_B,  # Pollux
+    LVL_A,  # Breithorn
+    LVL_C,  # Matterhorn
+    LVL_B,  # Dent Blanche
+    LVL_A,  # Ober Gabelhorn
+    LVL_C,  # Zinalrothorn
+    LVL_A,  # Weisshorn
+    LVL_B,  # Dom
+    LVL_C,  # Täschhorn
+    LVL_A,  # Alphubel
+    LVL_B,  # Allalinhorn
+    LVL_C,  # Rimpfischhorn
+    LVL_A,  # Strahlhorn
 ]
 
 const BASELINE = 2780.0
 const N        = 1600
 
-angles = collect(LinRange(-5.0, 185.0, N))
+angles = collect(LinRange(-6.0, 197.0, N))
 
 # Ridgeline = max over asymmetric tent functions (sharp apex, linear flanks)
 tents = vcat([(pa, pe, lw, rw) for (pa, pe, _, lw, rw) in PEAKS], SUBPEAKS)
@@ -80,7 +87,7 @@ ridgeline = [maximum(
                  for (pa, pe, lw, rw) in tents)
              for a in angles]
 
-# Midpoint-displacement jaggedness, damped near summits to preserve sharp apexes
+# Irregular rocky jaggedness, damped near summits to preserve sharp apexes
 jitter = 30.0 .* (rand(N) .- 0.5)
 for (pa, pe, pname, lw, rw) in PEAKS
     for i in eachindex(angles)
@@ -133,39 +140,39 @@ with_theme(ANYPLOT_MAKIE_THEME) do
         fig[2, 1];
         title          = title_str,
         titlesize      = title_sz,
-        xlabel         = "Bearing (°)",
+        xlabel         = "Clockwise sweep from Gornergrat:  SE  →  S  →  W  →  N  →  E",
         ylabel         = "Elevation (m)",
         xlabelsize     = 14,
         ylabelsize     = 14,
-        xticklabelsize = 12,
-        yticklabelsize = 12,
-        xticks         = 0:30:180,
+        yticklabelsize = 14,
+        xticksvisible      = false,
+        xticklabelsvisible = false,
         yticks         = 2500:500:5000,
     )
 
     # Makie layout: subtitle Label sits above the axis panel in row 1
-    Label(fig[1, 1], "Swiss Alps · Wallis Region · Gornergrat Vantage · 3100 m";
-          fontsize = 12, color = INK_SOFT, tellwidth = false)
+    Label(fig[1, 1], "Swiss Alps · Wallis · 360° view from Gornergrat (3100 m) · schematic horizontal spacing";
+          fontsize = 13, color = INK_SOFT, tellwidth = false)
     rowgap!(fig.layout, 1, 2)
 
-    xlims!(ax, -5.0, 185.0)
-    ylims!(ax, 2450.0, 5350.0)
+    xlims!(ax, -6.0, 197.0)
+    ylims!(ax, 2450.0, 5450.0)
 
     # Mountain silhouette fill
     poly!(ax, sil_pts; color = MTN_FILL, strokewidth = 0)
 
-    # Peak markers and staggered labels with leader lines
+    # Peak markers and staggered labels with leader lines; the anchor summit gets
+    # a larger marker, a brand-green leader and a bold, larger label
     for (i, (pa, pe, name, lw, rw)) in enumerate(PEAKS)
-        is_matterhorn = (name == "Matterhorn")
-        ms = is_matterhorn ? 14 : 8
-        sw = is_matterhorn ? 1.5 : 0.0
-        scatter!(ax, [pa], [pe]; color = BRAND, markersize = ms,
-                 strokewidth = sw, strokecolor = PAGE_BG)
-
+        is_anchor = name == ANCHOR
         lh = LABEL_YS[i]
-        lines!(ax, [pa, pa], [pe + 30.0, lh - 150.0]; color = INK_SOFT, linewidth = 1.0)
-        text!(ax, pa, lh; text = "$(name)\n$(Int(pe)) m",
-              color = INK, fontsize = 12, align = (:center, :bottom))
+        lines!(ax, [pa, pa], [pe + 40.0, lh - 40.0];
+               color = is_anchor ? BRAND : INK_SOFT, linewidth = is_anchor ? 2.0 : 1.0)
+        scatter!(ax, [pa], [pe]; color = BRAND, markersize = is_anchor ? 18 : 9,
+                 strokewidth = is_anchor ? 2.0 : 0.0, strokecolor = PAGE_BG)
+        text!(ax, pa, lh; text = "$(name)\n$(Int(pe)) m", color = INK,
+              fontsize = is_anchor ? 18 : 15, font = is_anchor ? :bold : :regular,
+              align = (:center, :bottom))
     end
 
     save("plot-$(THEME).png", fig; px_per_unit = 2)
