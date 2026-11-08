@@ -1,7 +1,7 @@
 // anyplot.ai
 // slope-basic: Basic Slope Chart (Slopegraph)
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 94/100 | Updated: 2026-07-26
+// Quality: pending | Updated: 2026-07-26
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
