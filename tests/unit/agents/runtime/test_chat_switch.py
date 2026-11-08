@@ -179,6 +179,45 @@ async def test_the_fanout_copy_brings_the_memory_and_a_carry(
     assert carry is not None and (carry.theme, carry.expected_texts) == ("dark", ["Zeit (h)"])
 
 
+async def test_the_fanout_copy_of_new_data_carries_no_plot_of_the_earlier_data(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services
+) -> None:
+    """Owner decision of 2026-11-08: the page's latest plot drew data v1, and the user pasted again before
+    `.plot_all()`; the fan-out plots the new data with the memory, never with the old plot's theme and texts."""
+    source = await open_session(client)
+    await paste(client, source)
+    held = plan([], [LINE, LABEL], seq=1, turn=2)
+    await runtime.write_state(await runtime.session(COPY_USER, source), memory_delta(held.entries, 7))
+    services.versions.add(
+        source,
+        CodeVersion(
+            number=1,
+            working="w",
+            run_form="r",
+            export="e",
+            data_csv="a\n1\n",
+            render_id="r1",
+            result=PlotResult(status="ok", attempts=1, artifacts=["plot.py"]),
+            library="matplotlib",
+            spec_id="scatter-basic",
+            theme="dark",
+            theme_asked=True,
+            requests=["add a line at 7"],
+            data_version=1,
+        ),
+    )
+    await paste(client, source)  # data v2, confirmed
+    target = await open_session(client, library="seaborn", fanout=True)
+
+    response = await copy(client, target, source)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["carry"]["from_plot"] is False and response.json()["carry"]["decisions"] == 2
+    carry = read_carry(dict((await runtime.session(COPY_USER, target)).state), ("scatter-basic", "seaborn"))
+    assert carry is not None and (carry.theme, carry.requests) == (None, [])
+    assert carry.expected_texts == ["Zeit (h)"]  # the memory still travels
+
+
 async def test_a_copy_of_an_untuned_session_carries_nothing(client: httpx.AsyncClient, runtime: Runtime) -> None:
     source = await open_session(client)
     await paste(client, source)

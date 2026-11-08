@@ -1276,6 +1276,57 @@ describe('ChatThread: questions and remembered decisions', () => {
     expect(forget).toHaveFocus();
   });
 
+  it('holds the decisions on the new data line after a paste with other columns, with .forget_all()', async () => {
+    // Owner decision of 2026-11-08: the decisions of the earlier plot stand where the user looks
+    // before the next plot takes them over; one click forgets them all, and ignoring keeps them.
+    const user = userEvent.setup();
+    const props = decisionsProps();
+    const snapshot: DataSnapshot = {
+      n: 2,
+      change: 'paste',
+      summary: 'pasted',
+      label: 'data v2 · pasted',
+      rows: 3,
+      columns: 2,
+      sheet: null,
+      fileName: null,
+      changes: [],
+      preview: [['0.25', '1.003']],
+      profile: {
+        rows: 3,
+        columns: [
+          { name: 'Length (m)', dtype: 'number', missing: 0, unique: 3 },
+          { name: 'Period (s)', dtype: 'number', missing: 0, unique: 3 },
+        ],
+        source_format: 'csv',
+        decimal: '.',
+        warnings: [],
+      },
+      columnsChanged: true,
+    };
+    const items: ChatItem[] = [
+      { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      { id: 2, kind: 'assistant', text: 'Plot 1.' },
+      { id: 3, kind: 'paste', text: '▤ pendulum' },
+      { id: 4, kind: 'data', snapshot },
+    ];
+    render(thread(ready(items, { memory: MEMORY }), props));
+
+    const lines = screen.getAllByTestId('chapter-line');
+    expect(lines.map(line => line.dataset.chapter)).toEqual(['plot', 'data']);
+    expect(within(lines[0]).queryByTestId('decisions-toggle')).not.toBeInTheDocument();
+    expect(lines[1]).toHaveTextContent('# data·2 earlier decisions ▾·.forget_all()');
+    expect(screen.getByTestId('plot-memory')).not.toBeVisible();
+
+    await user.click(
+      within(lines[1]).getByRole('button', { name: 'Forget all earlier decisions' })
+    );
+    expect(props.onForgetAll).toHaveBeenCalledTimes(1);
+    expect(props.onAnnounce).toHaveBeenCalledWith('forgot every decision');
+    // The list opened for it: its progress and a failure show there.
+    expect(screen.getByTestId('plot-memory')).toBeVisible();
+  });
+
   it('announces a removal through the page, outside the log, which loses the entry and gains nothing', async () => {
     const user = userEvent.setup();
     const props = decisionsProps();

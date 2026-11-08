@@ -370,6 +370,7 @@ describe('threadModel', () => {
       chapters: [],
       answers: new Set(),
       decisionsAt: 0,
+      decisionsEarlier: false,
     });
     const copied: ChatItem[] = [{ id: 1, kind: 'data' }];
     expect(headings(copied)).toEqual(['# data', 'data']);
@@ -498,6 +499,35 @@ describe('threadModel: questions and the decisions', () => {
     expect(chapters.map(chapter => chapter.kind)).toEqual(['data', 'plot', 'data', 'plot', 'data']);
     // The newest `# plot` line, where the next plot takes them over, above a newer `# data`.
     expect(decisionsAt).toBe(4);
+  });
+
+  it('puts them on the new data line after a paste with other columns, until the next plot', () => {
+    // Owner decision of 2026-11-08: the user sees the decisions of the earlier plot before the next
+    // plot takes them over, and can forget them there; a paste whose columns all carried keeps them
+    // on the plot line.
+    const other = item({
+      type: 'parse_done',
+      parsed: { ...PARSED, version: 2, columns_changed: true } as DatasetParsed,
+      bytes: 10,
+      chip: '▤ pendulum',
+    });
+    const pasted = run(paste('▤ table'), summary('12 rows.'), plot(1), other, summary('3 rows.'));
+    const model = threadModel(pasted.items);
+    expect(model.chapters.map(chapter => chapter.kind)).toEqual(['data', 'plot', 'data']);
+    expect([model.decisionsAt, model.decisionsEarlier]).toEqual([3, true]);
+
+    const plotted = run(paste('▤ table'), summary('12 rows.'), plot(1), other, plot(2));
+    expect([
+      threadModel(plotted.items).decisionsAt,
+      threadModel(plotted.items).decisionsEarlier,
+    ]).toEqual([4, false]);
+    const same = run(paste('▤ table'), summary('12 rows.'), plot(1), paste('▤ again'));
+    expect([threadModel(same.items).decisionsAt, threadModel(same.items).decisionsEarlier]).toEqual(
+      [2, false]
+    );
+    // Before any plot the decisions have no earlier plot to come from.
+    const first = run(other, summary('3 rows.'));
+    expect(threadModel(first.items).decisionsEarlier).toBe(false);
   });
 });
 

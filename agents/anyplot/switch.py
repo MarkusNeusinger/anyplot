@@ -10,7 +10,9 @@ first-plot note (`pipeline.take_pending_request`): it starts from the new librar
 rewrite apply), takes its standing decisions from the memory (or, with an empty memory, from the
 source lineage's requests in `Carry.requests`), renders in the carried theme when the user asked
 for it, and checks the carried texts. A shipped run in the target clears the carry; one that ships
-nothing keeps it for the next.
+nothing keeps it for the next. A new data version (a paste, a change, `.to_long()`, an undo) drops it,
+as it drops the kept first-plot note (owner decision of 2026-11-08): its texts and theme came from a
+plot of the data before, and a plot of earlier data carries nothing (`source_plot`).
 
 The switch answer (`SwitchSummary`) says how much would carry and whether the target already
 has a plot. Switching back to a library with an older version would resume a stale lineage,
@@ -54,7 +56,8 @@ def _library(value: str) -> str:
 
 
 CARRY = "anyplot.carry"
-"""The carry of the latest switch (`Carry`), or None; written by the switch route, cleared by a shipped run."""
+"""The carry of the latest switch (`Carry`), or None; written by the switch route, cleared by a shipped run and by
+every new data version (`opening.IngestedDataset.state_delta`, `dataset_versions`)."""
 
 
 class Target(BaseModel):
@@ -110,9 +113,15 @@ class SourcePlot:
     requests: list[str]
 
 
-def source_plot(version: CodeVersion | None) -> SourcePlot | None:
-    """What a carry reads of the source's latest rendered version, or None without one."""
-    if version is None:
+def source_plot(version: CodeVersion | None, data_version: int | None = None) -> SourcePlot | None:
+    """What a carry reads of the source's latest rendered version, or None without one.
+
+    Also None when the version drew another data version than `data_version`, the session's current one: its texts,
+    theme and requests were written for that data, and a new data version drops a carry made before it (owner
+    decision of 2026-11-08), so a switch or the fan-out's copy after the data changed carries none of them either.
+    The plot memory, which only the user clears, still carries (`carry_for`).
+    """
+    if version is None or (data_version is not None and not version.drew(data_version)):
         return None
     return SourcePlot(
         theme=version.theme,

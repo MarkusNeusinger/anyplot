@@ -613,13 +613,26 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
 
     A replacing paste used to take the defaults, which bind in column order: the user's `x = Land area km2,
     y = Population` became `x = Population, y = Area km2` on a table that lists the population first, and the
-    plot turned on its side. So each old binding's column is carried to the new column of the same meaning, by
-    name: the same name once normalised (`_norm`), else the one column whose `name_similarity` reaches
+    plot turned on its side. So each old binding's column is carried to the new column of the same meaning
+    (`carried_by_name`). Every role left open gets the defaults on the columns left free (`filled_bindings`); with
+    nothing carried, the result is `default_bindings`.
+    """
+    carried = carried_by_name(bindings, roles, profile)
+    if not carried:
+        return default_bindings(roles, profile)
+    return filled_bindings(carried, roles, profile)
+
+
+def carried_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
+    """The old bindings whose column the new data has again, each on its new column, in their order.
+
+    By name: the same name once normalised (`_norm`), else the one column whose `name_similarity` reaches
     `CARRY_SIMILARITY` (`Land area km2` and `Area km2`, one inside the other), never a tie. The new column must
     fit the role without an error or a warning (`check_bindings`), and it takes the place of one old column only,
     the closest one: a column the user bound to several roles is carried to each of them, two old columns never
-    land on one new column (the same series twice). Every role left open gets the defaults on the columns left
-    free (`filled_bindings`); with nothing carried, the result is `default_bindings`.
+    land on one new column (the same series twice). Fewer than `bindings` means a column the old data was plotted
+    by is not in the new data: the paste answer says so (`columns_changed`), and the page shows the remembered
+    decisions on the new data's line, where the user can forget them (owner decision of 2026-11-08).
     """
     old = list(dict.fromkeys(binding.column for binding in bindings))
     scored: list[tuple[float, int, str, str]] = []
@@ -650,9 +663,7 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
         check = check_bindings([*carried, moved], roles, profile)
         if not check.errors and set(check.fit_warnings) <= allowed:
             carried.append(moved)
-    if not carried:
-        return default_bindings(roles, profile)
-    return filled_bindings(carried, roles, profile)
+    return carried
 
 
 def _carry_score(old: str, new: str) -> float:
