@@ -30,24 +30,29 @@ const PLACE = "Place"; // role: landmark_name
 const ELEVATION_PER_DISTANCE = 1000; // elevation units per distance unit (m per km), for the exaggeration note
 
 // Data: replace this block with your own records, one object per row
-// Tour du Mont Blanc, Les Houches to Courmayeur: 81 samples every 500 m, linearly
-// interpolated between surveyed waypoints [km, m]
+// Tour du Mont Blanc stages 1–3, Les Houches to Courmayeur: 121 samples every 500 m,
+// linearly interpolated between approximate route waypoints [km, m]
 const data = (() => {
   const waypoints = [
-    [0, 1010], [2.5, 1280], [4, 1653], [6, 1710], [8, 1780],
-    [10, 2020], [13, 2195], [14, 2360], [15, 2516], [16.5, 2260],
-    [18, 1973], [20, 2180], [22, 2435], [24, 2230], [26, 2010],
-    [28, 1820], [30, 1650], [32, 1490], [34, 1370], [36, 1280],
-    [38, 1250], [40, 1224],
+    [0, 1010], [3, 1330], [6.5, 1653], [8, 1420], [9.5, 1340],
+    [12, 1250], [14, 1180], [16, 1167], [18, 1190], [20.5, 1210],
+    [22.5, 1500], [24, 1706], [26, 2050], [27.5, 2329], [29, 2479],
+    [31, 2050], [33.5, 1549], [36, 1700], [38, 1789], [40, 2000],
+    [42.5, 2300], [44.5, 2516], [46.5, 2200], [48, 2050], [50, 1970],
+    [51.5, 2150], [53.5, 2435], [55, 2150], [56.5, 1956], [58.5, 1550],
+    [60, 1224],
   ];
   const places = new Map([
     [0, "Les Houches"],
-    [4, "Col de Voza"],
-    [15, "Col de la Seigne"],
-    [22, "Col du Mont Favre"],
-    [40, "Courmayeur"],
+    [6.5, "Col de Voza"],
+    [16, "Les Contamines"],
+    [27.5, "Col du Bonhomme"],
+    [33.5, "Les Chapieux"],
+    [44.5, "Col de la Seigne"],
+    [53.5, "Arête du Mont Favre"],
+    [60, "Courmayeur"],
   ]);
-  return Array.from({ length: 81 }, (_, i) => {
+  return Array.from({ length: 121 }, (_, i) => {
     const d = i * 0.5;
     let j = 0;
     while (j < waypoints.length - 2 && waypoints[j + 1][0] <= d) j += 1;
