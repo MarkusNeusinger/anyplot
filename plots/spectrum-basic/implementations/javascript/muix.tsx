@@ -23,20 +23,22 @@ const AMPLITUDE = "Amplitude (dB)"; // role: amplitude
 
 // Data: replace this block with your own records, one object per row
 // Magnitude spectrum of a plucked low-E guitar string (82.4 Hz) and its first four
-// harmonics over a gently sloping noise floor, on 400 log-spaced bins from 20 Hz to 8 kHz
+// harmonics as narrow lines over a gently sloping noise floor, on 1024 log-spaced bins
+// from 20 Hz to 8 kHz
 const data = (() => {
   let seed = 42;
   const rand = () => {
     seed = (Math.imul(seed, 1103515245) + 12345) | 0;
     return (seed >>> 0) / 4294967296;
   };
+  const bins = 1024;
   const harmonics = [1, 2, 3, 4, 5].map((n) => ({
     freq: 82.4 * n,
     amplitudeDb: -6 - (n - 1) * 8,
-    widthDecades: 0.04 + n * 0.008,
+    widthDecades: 0.005 + n * 0.001,
   }));
-  return Array.from({ length: 400 }, (_, i) => {
-    const f = 10 ** (Math.log10(20) + (Math.log10(8000) - Math.log10(20)) * (i / 399));
+  return Array.from({ length: bins }, (_, i) => {
+    const f = 10 ** (Math.log10(20) + (Math.log10(8000) - Math.log10(20)) * (i / (bins - 1)));
     const floorDb = -55 - 6 * Math.log10(f / 20) + (rand() - 0.5) * 4;
     const peakDb = Math.max(
       -100,
@@ -77,10 +79,12 @@ const xTicks = Array.from(
 )
   .flatMap((decade) => LOG_TICK_MANTISSAS.map((m) => m * decade))
   .filter((v) => v >= xMin && v <= xMax);
-const formatHz = (v) => (v >= 1000 ? `${Number((v / 1000).toPrecision(3))}k` : `${Number(v.toPrecision(3))}`);
+const peakLabels = peaks.map((p) => `${p[FREQUENCY].toLocaleString("en-US", { maximumSignificantDigits: 3 })} Hz`);
 
 const TITLE = "spectrum-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${rows.length} bins from ${formatHz(xMin)} to ${formatHz(xMax)} Hz · ${peaks.length} peaks at least ${PEAK_PROMINENCE_DB} dB above the median level`;
+const SUBTITLE = `${rows.length.toLocaleString("en-US")} bins from ${xMin.toLocaleString("en-US")} to ${xMax.toLocaleString(
+  "en-US",
+)} Hz · ${peaks.length} peaks at least ${PEAK_PROMINENCE_DB} dB above the median level`;
 const HEADER_H = 80;
 
 function PeakMarkers() {
@@ -88,7 +92,7 @@ function PeakMarkers() {
   const yScale = useYScale();
   return (
     <g>
-      {peaks.map((p) => (
+      {peaks.map((p, i) => (
         <g key={p[FREQUENCY]}>
           <circle
             cx={xScale(p[FREQUENCY])}
@@ -106,7 +110,7 @@ function PeakMarkers() {
             fontWeight={600}
             fill={t.ink}
           >
-            {`${formatHz(p[FREQUENCY])} Hz`}
+            {peakLabels[i]}
           </text>
         </g>
       ))}
@@ -156,7 +160,7 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             tickInterval: xTicks,
-            valueFormatter: formatHz,
+            valueFormatter: (v) => (v >= 1000 ? `${v / 1000}k` : `${v}`),
             label: FREQUENCY,
             height: 62,
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
