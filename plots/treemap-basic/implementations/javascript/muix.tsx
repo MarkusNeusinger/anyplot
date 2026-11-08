@@ -2,321 +2,196 @@
 // treemap-basic: Basic Treemap
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-08-24
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-const title = "treemap-basic · javascript · muix · anyplot.ai";
-const titleFontSize = Math.max(18, Math.min(34, Math.round(34 * Math.min(1, 67 / title.length))));
+// Constants
+const TITLE = "treemap-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+const MARGIN = { top: 8, right: 32, bottom: 24, left: 32 };
+const GUTTER = 3; // px between main categories
+const HEADER_H = 30; // px band that names a main category above its tiles
+const MIN_NESTED_H = 40; // px a category needs below its header to show its subcategories
+const TILE_TINT = 0.3; // share mixed toward white for the subcategory level
+const LABEL_FONT = 15;
+const CHAR_W = 0.56; // average glyph width as a share of the font size
 
-// --- Data: a company expense breakdown by department (category) and cost
-// center / project (subcategory), in $ thousands -- one of the spec's listed
-// applications. 6 departments, 20 cost centers (26 rectangles total). -------
-const DEPARTMENTS = [
-  {
-    name: "Engineering",
-    items: [
-      { name: "Platform Infra", value: 820 },
-      { name: "Mobile Apps", value: 540 },
-      { name: "DevOps", value: 310 },
-      { name: "QA & Testing", value: 210 },
-    ],
-  },
-  {
-    name: "Sales",
-    items: [
-      { name: "Enterprise", value: 610 },
-      { name: "SMB", value: 380 },
-      { name: "Partnerships", value: 190 },
-    ],
-  },
-  {
-    name: "Marketing",
-    items: [
-      { name: "Digital Ads", value: 430 },
-      { name: "Content", value: 260 },
-      { name: "Events", value: 150 },
-      { name: "Brand", value: 120 },
-    ],
-  },
-  {
-    name: "R&D",
-    items: [
-      { name: "Applied Research", value: 480 },
-      { name: "Prototyping", value: 260 },
-      { name: "Patents & Compliance", value: 140 },
-    ],
-  },
-  {
-    name: "Operations",
-    items: [
-      { name: "Facilities", value: 340 },
-      { name: "IT Support", value: 220 },
-      { name: "Logistics", value: 180 },
-    ],
-  },
-  {
-    name: "Customer Success",
-    items: [
-      { name: "Support", value: 300 },
-      { name: "Onboarding", value: 180 },
-      { name: "Training", value: 110 },
-    ],
-  },
+// Columns: set these to your data's column names
+const CATEGORY = "Department"; // role: category
+const SUBCATEGORY = "Cost center"; // role: subcategory
+const VALUE = "Budget (USD thousand)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// Company expense breakdown: six departments, 20 cost centers.
+const data = [
+  { [CATEGORY]: "Engineering", [SUBCATEGORY]: "Platform Infra", [VALUE]: 820 },
+  { [CATEGORY]: "Engineering", [SUBCATEGORY]: "Mobile Apps", [VALUE]: 540 },
+  { [CATEGORY]: "Engineering", [SUBCATEGORY]: "DevOps", [VALUE]: 310 },
+  { [CATEGORY]: "Engineering", [SUBCATEGORY]: "QA & Testing", [VALUE]: 210 },
+  { [CATEGORY]: "Sales", [SUBCATEGORY]: "Enterprise", [VALUE]: 610 },
+  { [CATEGORY]: "Sales", [SUBCATEGORY]: "SMB", [VALUE]: 380 },
+  { [CATEGORY]: "Sales", [SUBCATEGORY]: "Partnerships", [VALUE]: 190 },
+  { [CATEGORY]: "Marketing", [SUBCATEGORY]: "Digital Ads", [VALUE]: 430 },
+  { [CATEGORY]: "Marketing", [SUBCATEGORY]: "Content", [VALUE]: 260 },
+  { [CATEGORY]: "Marketing", [SUBCATEGORY]: "Events", [VALUE]: 150 },
+  { [CATEGORY]: "Marketing", [SUBCATEGORY]: "Brand", [VALUE]: 120 },
+  { [CATEGORY]: "R&D", [SUBCATEGORY]: "Applied Research", [VALUE]: 480 },
+  { [CATEGORY]: "R&D", [SUBCATEGORY]: "Prototyping", [VALUE]: 260 },
+  { [CATEGORY]: "R&D", [SUBCATEGORY]: "Patents & Compliance", [VALUE]: 140 },
+  { [CATEGORY]: "Operations", [SUBCATEGORY]: "Facilities", [VALUE]: 340 },
+  { [CATEGORY]: "Operations", [SUBCATEGORY]: "IT Support", [VALUE]: 220 },
+  { [CATEGORY]: "Operations", [SUBCATEGORY]: "Logistics", [VALUE]: 180 },
+  { [CATEGORY]: "Customer Success", [SUBCATEGORY]: "Support", [VALUE]: 300 },
+  { [CATEGORY]: "Customer Success", [SUBCATEGORY]: "Onboarding", [VALUE]: 180 },
+  { [CATEGORY]: "Customer Success", [SUBCATEGORY]: "Training", [VALUE]: 110 },
 ];
-const departments = DEPARTMENTS.map((d) => ({
-  ...d,
-  value: d.items.reduce((sum, i) => sum + i.value, 0),
+
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[VALUE] != null && d[VALUE] > 0);
+const categories = [...new Set(rows.map((d) => d[CATEGORY]))];
+const categoryTotals = categories.map((c) => ({
+  name: c,
+  value: rows.filter((d) => d[CATEGORY] === c).reduce((sum, d) => sum + d[VALUE], 0),
 }));
-const grandTotal = departments.reduce((sum, d) => sum + d.value, 0);
+const grandTotal = categoryTotals.reduce((sum, c) => sum + c.value, 0);
 
-// --- Squarified treemap layout (Bruls, Huizing & van Wijk, 1999) -----------
-// Lays out `items` (each with a numeric `.value`) inside `container`
-// ({x, y, w, h}), returning each item with added `.x/.y/.w/.h`, minimizing
-// aspect ratio so rectangles stay close to square rather than thin slivers.
-function worstRatio(row, length) {
-  if (row.length === 0) return Infinity;
-  const sum = row.reduce((a, r) => a + r.area, 0);
-  const rmax = Math.max(...row.map((r) => r.area));
-  const rmin = Math.min(...row.map((r) => r.area));
-  return Math.max((length * length * rmax) / (sum * sum), (sum * sum) / (length * length * rmin));
-}
-
-function layoutRow(row, rect) {
-  const sum = row.reduce((a, r) => a + r.area, 0);
-  const { x, y, w, h } = rect;
-  const placed = [];
-  if (w >= h) {
-    const stripW = sum / h;
-    let cy = y;
-    row.forEach((item) => {
-      const itemH = item.area / stripW;
-      placed.push({ ...item, x, y: cy, w: stripW, h: itemH });
-      cy += itemH;
+// Colors: one Imprint hue per main category in order of appearance; the
+// subcategory tiles take a lighter shade of it, so shading tells the levels
+// apart. Text ink follows each fill's luminance, not the theme.
+const shades = new Map(
+  categories.map((c, i) => {
+    const base = [16, 8, 0].map((s) => (parseInt(t.palette[i].slice(1), 16) >> s) & 255);
+    const tile = base.map((v) => Math.round(v + (255 - v) * TILE_TINT));
+    const [headInk, tileInk] = [base, tile].map((rgb) => {
+      const [r, g, b] = rgb.map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.2 ? "#1A1A17" : "#FAF8F1";
     });
-    return { placed, rest: { x: x + stripW, y, w: w - stripW, h } };
-  }
-  const stripH = sum / w;
-  let cx = x;
-  row.forEach((item) => {
-    const itemW = item.area / stripH;
-    placed.push({ ...item, x: cx, y, w: itemW, h: stripH });
-    cx += itemW;
-  });
-  return { placed, rest: { x, y: y + stripH, w, h: h - stripH } };
-}
+    return [c, { head: t.palette[i], tile: `rgb(${tile.join(",")})`, headInk, tileInk }];
+  }),
+);
 
-function squarify(items, container) {
-  const total = items.reduce((s, i) => s + i.value, 0);
-  const area = Math.max(container.w, 0) * Math.max(container.h, 0);
-  const sorted = items.map((i) => ({ ...i, area: total > 0 ? (i.value / total) * area : 0 })).sort((a, b) => b.area - a.area);
-
-  const results = [];
-  let rect = container;
+// Squarified layout (Bruls, Huizing & van Wijk) in px of the drawing area, one
+// task per container: the main categories over the whole area first, then the
+// subcategories of each category inside its rectangle below the header band.
+const PLOT_W = window.ANYPLOT_SIZE.width - MARGIN.left - MARGIN.right;
+const PLOT_H = window.ANYPLOT_SIZE.height - TITLE_H - MARGIN.top - MARGIN.bottom;
+const tiles = [];
+const tasks = [{ level: 0, category: null, items: categoryTotals, rect: { x: 0, y: 0, w: PLOT_W, h: PLOT_H } }];
+while (tasks.length > 0) {
+  const { level, category, items, rect } = tasks.shift();
+  const total = items.reduce((sum, d) => sum + d.value, 0);
+  const rest = items
+    .map((d) => ({ ...d, area: (d.value / total) * rect.w * rect.h }))
+    .sort((a, b) => b.area - a.area);
+  let free = { ...rect };
   let row = [];
-  let remaining = sorted;
-  while (remaining.length > 0) {
-    const candidate = remaining[0];
-    const shortSide = Math.min(rect.w, rect.h);
-    const nextRow = row.concat(candidate);
-    if (row.length === 0 || worstRatio(nextRow, shortSide) <= worstRatio(row, shortSide)) {
-      row = nextRow;
-      remaining = remaining.slice(1);
-    } else {
-      const { placed, rest } = layoutRow(row, rect);
-      results.push(...placed);
-      rect = rest;
-      row = [];
+  while (rest.length > 0 || row.length > 0) {
+    // Grow the current strip while that keeps its worst aspect ratio from rising
+    const side = Math.min(free.w, free.h);
+    let grow = rest.length > 0 && row.length === 0;
+    if (rest.length > 0 && row.length > 0) {
+      const [current, next] = [row, [...row, rest[0]]].map((r) => {
+        const s = r.reduce((sum, d) => sum + d.area, 0);
+        const areas = r.map((d) => d.area);
+        return Math.max((side * side * Math.max(...areas)) / (s * s), (s * s) / (side * side * Math.min(...areas)));
+      });
+      grow = next <= current;
     }
+    if (grow) {
+      row.push(rest.shift());
+      continue;
+    }
+    // Lay the strip along the shorter side of the free space
+    const stripArea = row.reduce((sum, d) => sum + d.area, 0);
+    const vertical = free.w >= free.h;
+    const thickness = stripArea / (vertical ? free.h : free.w);
+    let offset = vertical ? free.y : free.x;
+    row.forEach((d) => {
+      const span = d.area / thickness;
+      const box = vertical
+        ? { x: free.x, y: offset, w: thickness, h: span }
+        : { x: offset, y: free.y, w: span, h: thickness };
+      offset += span;
+      if (level === 0) {
+        const outer = { x: box.x + GUTTER, y: box.y + GUTTER, w: Math.max(0, box.w - 2 * GUTTER), h: Math.max(0, box.h - 2 * GUTTER) };
+        const nested = outer.h >= HEADER_H + MIN_NESTED_H;
+        tiles.push({ level, category: d.name, name: d.name, value: d.value, ...outer, nested });
+        if (nested) {
+          tasks.push({
+            level: 1,
+            category: d.name,
+            items: rows.filter((r) => r[CATEGORY] === d.name).map((r) => ({ name: r[SUBCATEGORY], value: r[VALUE] })),
+            rect: { x: outer.x, y: outer.y + HEADER_H, w: outer.w, h: outer.h - HEADER_H },
+          });
+        }
+      } else {
+        tiles.push({ level, category, name: d.name, value: d.value, ...box });
+      }
+    });
+    free = vertical
+      ? { x: free.x + thickness, y: free.y, w: free.w - thickness, h: free.h }
+      : { x: free.x, y: free.y + thickness, w: free.w, h: free.h - thickness };
+    row = [];
   }
-  if (row.length > 0) results.push(...layoutRow(row, rect).placed);
-  return results;
 }
 
-function inset(r, px) {
-  const w = Math.max(0, r.w - 2 * px);
-  const h = Math.max(0, r.h - 2 * px);
-  return { ...r, x: r.x + px, y: r.y + px, w, h };
-}
+const fmt = new Intl.NumberFormat("en-US");
+const SUBTITLE = `${rows.length} ${SUBCATEGORY.toLowerCase()} tiles in ${categories.length} ${CATEGORY.toLowerCase()} blocks · area ∝ ${VALUE}, ${fmt.format(grandTotal)} in total`;
 
-// --- Color: distinct Imprint hue per department; cost centers within a
-// department get progressively lighter tints of that hue (largest = base
-// hue, smallest = lightest), so shading intensity communicates both the
-// category identity and the nesting depth, per the spec's Notes. -----------
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function rgbToHsl(r, g, b) {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  if (max === min) return [0, 0, l];
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h;
-  if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
-  else if (max === g) h = (b - r) / d + 2;
-  else h = (r - g) / d + 4;
-  return [h / 6, s, l];
-}
-function hueToRgb(p, q, tIn) {
-  let tt = tIn;
-  if (tt < 0) tt += 1;
-  if (tt > 1) tt -= 1;
-  if (tt < 1 / 6) return p + (q - p) * 6 * tt;
-  if (tt < 1 / 2) return q;
-  if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
-  return p;
-}
-function hslToRgb(h, s, l) {
-  if (s === 0) {
-    const v = Math.round(l * 255);
-    return [v, v, v];
-  }
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  return [Math.round(hueToRgb(p, q, h + 1 / 3) * 255), Math.round(hueToRgb(p, q, h) * 255), Math.round(hueToRgb(p, q, h - 1 / 3) * 255)];
-}
-function tintRgb(hex, factor) {
-  const [r, g, b] = hexToRgb(hex);
-  const [h, s, l] = rgbToHsl(r, g, b);
-  return hslToRgb(h, s, l + (0.94 - l) * factor);
-}
-function relLuminanceRgb([r, g, b]) {
-  const srgb = [r, g, b].map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
-  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
-}
-function textColorForRgb(rgb) {
-  return relLuminanceRgb(rgb) > 0.45 ? "#1A1A17" : "#FAF8F1";
-}
-function textColorFor(hex) {
-  return textColorForRgb(hexToRgb(hex));
-}
-
-// Keyed by department name (not array position) so color assignment stays
-// correct even if DEPARTMENTS is reordered or rebalanced -- squarify() sorts
-// its output by value, so indexing colors by position would silently
-// misassign hues once input order no longer matches value order.
-const DEPT_COLOR_BY_NAME = new Map(DEPARTMENTS.map((d, i) => [d.name, t.palette[i % t.palette.length]]));
-
-// --- Layout: departments squarified over the chart area, then each
-// department's cost centers squarified again inside a header-inset rect --
-const MARGIN = { top: 130, right: 32, bottom: 24, left: 32 };
-const GUTTER = 3;
-const HEADER_H = 30;
-const LABEL_FONT_SIZE = 15;
-const CHAR_WIDTH_RATIO = 0.56;
-
-function fmtK(v) {
-  return `$${v.toLocaleString()}K`;
-}
-function fitsLabel(w, h, text, fontSize) {
-  return w - 12 >= text.length * fontSize * CHAR_WIDTH_RATIO && h >= fontSize + 6;
-}
-
-function TreemapRect({ x, y, w, h, fill, stroke, strokeWidth, label, sublabel, fontSize, textFill, tooltip }) {
-  const showLabel = label && fitsLabel(w, h, label, fontSize);
-  const showSub = showLabel && sublabel && h >= fontSize * 2 + 10;
-  return (
-    <g>
-      <rect x={x} y={y} width={w} height={h} fill={fill} stroke={stroke} strokeWidth={strokeWidth}>
-        <title>{tooltip}</title>
-      </rect>
-      {showLabel && (
-        <text x={x + 8} y={y + fontSize + 4} fontSize={fontSize} fontWeight={500} fill={textFill} pointerEvents="none">
-          {label}
-        </text>
-      )}
-      {showSub && (
-        <text x={x + 8} y={y + fontSize * 2 + 6} fontSize={fontSize - 2} fill={textFill} opacity={0.85} pointerEvents="none">
-          {sublabel}
-        </text>
-      )}
-    </g>
-  );
-}
-
+// The community package has no treemap: a custom layer draws the tiles through
+// the container's px-unit scales, labels only where the text fits its tile.
 function Treemap() {
-  // The drawing area comes from MUI X's own DrawingProvider (via
-  // ChartContainer's `margin` prop) rather than a hand-rolled offset -- the
-  // same layout primitive MUI X's own axis/legend components rely on.
-  const { left, top, width, height } = useDrawingArea();
-  const chartArea = { x: left, y: top, w: width, h: height };
-  const deptRects = squarify(departments, chartArea).map((d) => ({ ...d, color: DEPT_COLOR_BY_NAME.get(d.name) }));
+  const xScale = useXScale();
+  const yScale = useYScale();
 
   return (
     <g>
-      {deptRects.map((dept) => {
-        const outer = inset(dept, GUTTER);
-        const pct = ((dept.value / grandTotal) * 100).toFixed(1);
-        const canShowHeader = outer.h >= HEADER_H + 40 && outer.w >= 70;
-        const headerText = textColorFor(dept.color);
+      {tiles.map((tile) => {
+        const shade = shades.get(tile.category);
+        const x = xScale(tile.x);
+        const y = yScale(tile.y);
+        const w = xScale(tile.x + tile.w) - x;
+        const h = yScale(tile.y + tile.h) - y;
+        const pct = ((tile.value / grandTotal) * 100).toFixed(1);
 
-        if (!canShowHeader) {
-          // Too small for a nested breakdown -- fill flat with the base hue.
+        if (tile.level === 0) {
+          const header = `${tile.name} · ${fmt.format(tile.value)}`;
+          const headerFits = w - 16 >= header.length * LABEL_FONT * CHAR_W;
+          const nameFits = w - 16 >= tile.name.length * LABEL_FONT * CHAR_W && h >= LABEL_FONT + 10;
           return (
-            <TreemapRect
-              key={dept.name}
-              x={outer.x}
-              y={outer.y}
-              w={outer.w}
-              h={outer.h}
-              fill={dept.color}
-              stroke={t.pageBg}
-              strokeWidth={1.5}
-              label={dept.name}
-              fontSize={LABEL_FONT_SIZE - 1}
-              textFill={headerText}
-              tooltip={`${dept.name}: ${fmtK(dept.value)} (${pct}%)`}
-            />
+            <g key={`cat-${tile.name}`}>
+              <rect x={x} y={y} width={w} height={tile.nested ? HEADER_H : h} fill={shade.head}>
+                <title>{`${tile.name}: ${fmt.format(tile.value)} (${pct}%)`}</title>
+              </rect>
+              {(tile.nested ? headerFits : nameFits) && (
+                <text x={x + 8} y={y + HEADER_H / 2 + 5} fontSize={LABEL_FONT} fontWeight={700} fill={shade.headInk}>
+                  {tile.nested ? header : tile.name}
+                </text>
+              )}
+              <rect x={x} y={y} width={w} height={h} fill="none" stroke={t.pageBg} strokeWidth={GUTTER} />
+            </g>
           );
         }
 
-        const innerArea = { x: outer.x, y: outer.y + HEADER_H, w: outer.w, h: outer.h - HEADER_H };
-        const itemRects = squarify(dept.items, innerArea);
-        const maxItemArea = Math.max(...itemRects.map((x) => x.area));
-
+        const nameFits = w - 16 >= tile.name.length * LABEL_FONT * CHAR_W && h >= LABEL_FONT + 12;
+        const valueFits = nameFits && h >= LABEL_FONT * 2 + 18;
         return (
-          <g key={dept.name}>
-            <rect x={outer.x} y={outer.y} width={outer.w} height={HEADER_H} fill={dept.color}>
-              <title>{`${dept.name}: ${fmtK(dept.value)} (${pct}% of total)`}</title>
+          <g key={`sub-${tile.category}-${tile.name}`}>
+            <rect x={x} y={y} width={w} height={h} fill={shade.tile} stroke={t.pageBg} strokeWidth={2}>
+              <title>{`${tile.category} / ${tile.name}: ${fmt.format(tile.value)} (${pct}%)`}</title>
             </rect>
-            <text x={outer.x + 8} y={outer.y + HEADER_H / 2 + 5} fontSize={LABEL_FONT_SIZE} fontWeight={700} fill={headerText}>
-              {dept.name} · {fmtK(dept.value)}
-            </text>
-            <rect x={outer.x} y={outer.y} width={outer.w} height={outer.h} fill="none" stroke={t.pageBg} strokeWidth={GUTTER} />
-            {itemRects.map((item) => {
-              const r = inset(item, 2);
-              // Largest cost center keeps the department's base hue; smaller
-              // ones tint progressively lighter, so shade intensity echoes
-              // relative size within the department (nesting-depth cue).
-              const tintFactor = itemRects.length <= 1 ? 0 : (1 - item.area / maxItemArea) * 0.75;
-              const rgb = tintRgb(dept.color, tintFactor);
-              const fill = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-              const itemPct = ((item.value / dept.value) * 100).toFixed(0);
-              return (
-                <TreemapRect
-                  key={item.name}
-                  x={r.x}
-                  y={r.y}
-                  w={r.w}
-                  h={r.h}
-                  fill={fill}
-                  stroke={t.pageBg}
-                  strokeWidth={1.5}
-                  label={item.name}
-                  sublabel={fmtK(item.value)}
-                  fontSize={LABEL_FONT_SIZE - 2}
-                  textFill={textColorForRgb(rgb)}
-                  tooltip={`${dept.name} / ${item.name}: ${fmtK(item.value)} (${itemPct}% of ${dept.name})`}
-                />
-              );
-            })}
+            {nameFits && (
+              <text x={x + 8} y={y + LABEL_FONT + 7} fontSize={LABEL_FONT} fontWeight={500} fill={shade.tileInk}>
+                {tile.name}
+              </text>
+            )}
+            {valueFits && (
+              <text x={x + 8} y={y + LABEL_FONT * 2 + 12} fontSize={LABEL_FONT - 1} fill={shade.tileInk}>
+                {fmt.format(tile.value)}
+              </text>
+            )}
           </g>
         );
       })}
@@ -324,32 +199,26 @@ function Treemap() {
   );
 }
 
-const topDept = departments.reduce((a, b) => (b.value > a.value ? b : a));
-const topDeptPct = ((topDept.value / grandTotal) * 100).toFixed(0);
-const insight = `${topDept.name} leads at ${fmtK(topDept.value)} — ${topDeptPct}% of total budget`;
-
-// --- Chart (default-exported component -- the harness mounts it) ----------
-// ChartContainer supplies the <ChartsSurface> SVG root and theme context; its
-// `margin` prop drives the DrawingProvider that Treemap() reads back via
-// useDrawingArea(), so the top-chrome/plot split is expressed through MUI X's
-// own layout system rather than a parallel hand-rolled offset. The treemap
-// body itself is laid out in absolute pixel space via squarify() above, so no
-// axis/scale is needed -- xAxis/yAxis are omitted entirely.
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <ChartContainer width={width} height={height} series={[]} margin={MARGIN} skipAnimation>
-      <text x={width / 2} y={48} textAnchor="middle" fontSize={titleFontSize} fontWeight={600} fill={t.ink}>
-        {title}
-      </text>
-      <text x={width / 2} y={78} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
-        Company expense breakdown by department and cost center · values in $K, area ∝ budget
-      </text>
-      <text x={width / 2} y={102} textAnchor="middle" fontSize={13} fontStyle="italic" fill={DEPT_COLOR_BY_NAME.get(topDept.name)}>
-        {insight}
-      </text>
-      <Treemap />
-    </ChartContainer>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H}
+        series={[]}
+        skipAnimation
+        margin={MARGIN}
+        xAxis={[{ id: "px-x", scaleType: "linear", min: 0, max: PLOT_W, position: "none" }]}
+        yAxis={[{ id: "px-y", scaleType: "linear", min: 0, max: PLOT_H, reverse: true, position: "none" }]}
+      >
+        <Treemap />
+      </ChartsContainer>
+    </div>
   );
 }
