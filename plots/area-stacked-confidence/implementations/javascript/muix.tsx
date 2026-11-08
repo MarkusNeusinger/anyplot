@@ -93,6 +93,11 @@ const series = [
     area: true,
     showMark: false,
     curve: "monotoneX" as const,
+    // The tooltip row carries the bounds, since the band helpers below stay out of it
+    valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) => {
+      const d = cells[g][dataIndex];
+      return v == null || !d ? null : `$${v.toFixed(1)}M (${d[LOWER].toFixed(1)}–${d[UPPER].toFixed(1)})`;
+    },
   })),
   ...lines.flatMap((_, g) => [
     {
@@ -102,6 +107,7 @@ const series = [
       stack: `band-${g}`,
       showMark: false,
       curve: "monotoneX" as const,
+      valueFormatter: () => null,
     },
     {
       id: `band-width-${g}`,
@@ -111,6 +117,7 @@ const series = [
       area: true,
       showMark: false,
       curve: "monotoneX" as const,
+      valueFormatter: () => null,
     },
   ]),
 ];
