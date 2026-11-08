@@ -19,8 +19,8 @@ const REFERENCE_DURATIONS = [
 ];
 // Human-readable tick ladder for a log time axis, in seconds (1 s up to 5 h)
 const DURATION_TICKS = [1, 5, 30, 60, 300, 1200, 3600, 7200, 18000];
-const POWER_UNIT = "W"; // power-duration curves are always in watts, work capacity in kilojoules
-const WORK_UNIT = "kJ";
+const WATT = "W"; // W′ is power × seconds: for a power column in watts that is joules, shown in kilojoules
+const KILOJOULE = "kJ";
 const HEADROOM_SHARE = 0.08; // space above the 1-second peak, as a share of it
 
 // Columns: set these to your data's column names
@@ -70,6 +70,9 @@ const wPrimeFit =
   inverse.reduce((s, x, i) => s + (x - meanInverse) * (modelPower[i] - meanPower), 0) /
   inverse.reduce((s, x) => s + (x - meanInverse) ** 2, 0);
 const cpFit = meanPower - wPrimeFit * meanInverse;
+// Units come from the power column's "(unit)" suffix; W′ carries that unit times seconds
+const powerUnit = POWER.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const wPrimeText = powerUnit === WATT ? `${(wPrimeFit / 1000).toFixed(1)} ${KILOJOULE}` : `${wPrimeFit.toFixed(0)} ${powerUnit}·s`;
 
 const xMin = durations[0];
 const xMax = durations[durations.length - 1];
@@ -84,7 +87,7 @@ const formatDuration = (seconds: number) => {
 };
 
 const TITLE = "Cyclist Power Profile · curve-power-duration · javascript · muix · anyplot.ai";
-const subtitle = `${rows.length} durations from ${formatDuration(xMin)} to ${formatDuration(xMax)} · model fit CP = ${cpFit.toFixed(0)} ${POWER_UNIT}, W′ = ${(wPrimeFit / 1000).toFixed(1)} ${WORK_UNIT}`;
+const subtitle = `${rows.length} durations from ${formatDuration(xMin)} to ${formatDuration(xMax)} · model fit CP = ${cpFit.toFixed(0)} ${powerUnit}, W′ = ${wPrimeText}`;
 const HEADER_H = 88;
 const LEGEND_H = 44;
 
@@ -135,7 +138,13 @@ export default function Chart() {
           legend: {
             direction: "horizontal",
             position: { vertical: "top", horizontal: "center" },
-            sx: { fontSize: 15, color: t.ink, gap: "28px" },
+            sx: {
+              fontSize: 15,
+              color: t.ink,
+              gap: "28px",
+              '& [data-series="model"] .MuiChartsLabelMark-root': { width: 28 },
+              '& [data-series="model"] .MuiChartsLabelMark-fill': { strokeDasharray: "6 4", strokeLinecap: "butt" },
+            },
           },
         }}
         sx={{
@@ -157,7 +166,7 @@ export default function Chart() {
         ))}
         <ChartsReferenceLine
           y={cpFit}
-          label={`Critical power ${cpFit.toFixed(0)} ${POWER_UNIT}`}
+          label={`Critical power ${cpFit.toFixed(0)} ${powerUnit}`}
           labelAlign="start"
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
           labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
