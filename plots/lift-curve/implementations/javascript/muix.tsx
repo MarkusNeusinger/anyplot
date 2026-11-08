@@ -1,7 +1,7 @@
 // anyplot.ai
 // lift-curve: Model Lift Chart
-// Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
