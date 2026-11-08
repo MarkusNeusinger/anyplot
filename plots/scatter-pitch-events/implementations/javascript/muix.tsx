@@ -3,410 +3,330 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 87/100 | Created: 2026-06-21
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Imprint palette for event types ---
-const PASS_COLOR = t.palette[0];      // #009E73 brand green
-const SHOT_COLOR = t.palette[1];      // #C475FD lavender
-const TACKLE_COLOR = t.palette[2];    // #4467A3 blue
-const INTERCEPT_COLOR = t.palette[3]; // #BD8233 ochre
+// Constants
+// FIFA pitch geometry in metres
+const PITCH_LENGTH = 105;
+const PITCH_WIDTH = 68;
+const CENTRE_CIRCLE_RADIUS = 9.15;
+const PENALTY_AREA_DEPTH = 16.5;
+const PENALTY_AREA_WIDTH = 40.32;
+const GOAL_AREA_DEPTH = 5.5;
+const GOAL_AREA_WIDTH = 18.32;
+const PENALTY_SPOT_DISTANCE = 11;
+const GOAL_WIDTH = 7.32;
+const GOAL_DEPTH = 2;
+const CORNER_ARC_RADIUS = 1;
+const RUN_OFF = 3; // metres shown around the pitch, room for the goals
+// One shape per event type, by order of first appearance (unit radius, centred on the origin)
+const MARKER_SHAPES = [
+  "M -1 0 A 1 1 0 1 0 1 0 A 1 1 0 1 0 -1 0 Z",
+  `M ${Array.from({ length: 10 }, (_, i) => {
+    const a = (i * Math.PI) / 5 - Math.PI / 2;
+    const r = i % 2 === 0 ? 1.25 : 0.5;
+    return `${(r * Math.cos(a)).toFixed(3)} ${(r * Math.sin(a)).toFixed(3)}`;
+  }).join(" L ")} Z`,
+  "M 0 -1.15 L 1 0.6 L -1 0.6 Z",
+  "M 0 -1.2 L 0.85 0 L 0 1.2 L -0.85 0 Z",
+  "M -0.9 -0.9 L 0.9 -0.9 L 0.9 0.9 L -0.9 0.9 Z",
+  "M 0 1.15 L 1 -0.6 L -1 -0.6 Z",
+];
+const FILLED_OUTCOME = "Successful"; // the spec's outcome levels: this one is drawn filled, any other hollow
+const MARKER_RADIUS = 8; // px
 
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+// Columns: set these to your data's column names
+const X = "x (m)"; // role: x
+const Y = "y (m)"; // role: y
+const EVENT = "Event type"; // role: event_type
+const OUTCOME = "Outcome"; // role: outcome
+const END_X = "End x (m)"; // role: end_x
+const END_Y = "End y (m)"; // role: end_y
 
-// --- Deterministic seeded RNG (LCG) ---
-function makeLcg(seed) {
-  let s = seed >>> 0;
-  return () => {
+// Data: replace this block with your own records, one object per row
+// Synthetic match segment: passes and shots carry an end position, tackles and
+// interceptions do not.
+const data = (() => {
+  let s = 42;
+  const rng = () => {
     s = (Math.imul(1664525, s) + 1013904223) >>> 0;
     return s / 4294967296;
   };
-}
-
-const rng = makeLcg(42);
-
-// --- Synthetic match event data ---
-// Passes: start + end coords for directional arrows
-const passes = Array.from({ length: 48 }, (_, i) => {
-  const x = rng() * 100 + 2.5;
-  const y = rng() * 63 + 2.5;
-  const dx = (rng() - 0.2) * 22;
-  const dy = (rng() - 0.5) * 16;
-  const x2 = Math.max(2, Math.min(103, x + dx));
-  const y2 = Math.max(2, Math.min(66, y + dy));
-  const successful = rng() > 0.22;
-  return { id: `pass-${i}`, x, y, x2, y2, successful };
-});
-
-// Shots: from attacking half toward goal at x=105
-const shots = Array.from({ length: 10 }, (_, i) => {
-  const x = 70 + rng() * 30;
-  const y = 17 + rng() * 34;
-  const x2 = 102 + rng() * 3;
-  const y2 = 30.34 + rng() * 7.32;
-  const successful = rng() > 0.75;
-  return { id: `shot-${i}`, x, y, x2, y2, successful };
-});
-
-// Tackles: spread across the pitch
-const tackles = Array.from({ length: 22 }, (_, i) => {
-  const x = rng() * 105;
-  const y = rng() * 68;
-  const successful = rng() > 0.35;
-  return { id: `tackle-${i}`, x, y, successful };
-});
-
-// Interceptions: midfield-heavy
-const interceptions = Array.from({ length: 18 }, (_, i) => {
-  const x = rng() * 105;
-  const y = rng() * 68;
-  const successful = rng() > 0.12;
-  return { id: `intercept-${i}`, x, y, successful };
-});
-
-// --- MUI X scatter series (for legend and domain — markers drawn in EventMarkersLayer) ---
-const scatterSeries = [
-  {
-    type: "scatter", id: "pass-series", label: "Pass",
-    data: passes.map(p => ({ x: p.x, y: p.y, id: p.id })),
-    color: PASS_COLOR,
-  },
-  {
-    type: "scatter", id: "shot-series", label: "Shot",
-    data: shots.map(s => ({ x: s.x, y: s.y, id: s.id })),
-    color: SHOT_COLOR,
-  },
-  {
-    type: "scatter", id: "tackle-series", label: "Tackle",
-    data: tackles.map(tk => ({ x: tk.x, y: tk.y, id: tk.id })),
-    color: TACKLE_COLOR,
-  },
-  {
-    type: "scatter", id: "intercept-series", label: "Interception",
-    data: interceptions.map(ic => ({ x: ic.x, y: ic.y, id: ic.id })),
-    color: INTERCEPT_COLOR,
-  },
-];
-
-// --- Pitch constants ---
-const PITCH_GREEN = "#2a6e1e";
-const LINE_W = "rgba(255,255,255,0.88)";
-const LW = 1.8;
-const DEG = Math.PI / 180;
-
-// Parametric arc → polyline points string (pitch coords → SVG via scale fns)
-function pitchArc(cx, cy, r, aFrom, aTo, X, Y) {
-  const steps = Math.ceil(Math.abs(aTo - aFrom));
-  const pts = [];
-  for (let i = 0; i <= steps; i++) {
-    const a = (aFrom + ((aTo - aFrom) * i) / steps) * DEG;
-    pts.push(`${X(cx + r * Math.cos(a))},${Y(cy + r * Math.sin(a))}`);
+  const rows = [];
+  const event = (type, x, y, ok, endX = null, endY = null) =>
+    rows.push({
+      [X]: Number(x.toFixed(1)),
+      [Y]: Number(y.toFixed(1)),
+      [EVENT]: type,
+      [OUTCOME]: ok ? "Successful" : "Unsuccessful",
+      [END_X]: endX === null ? null : Number(endX.toFixed(1)),
+      [END_Y]: endY === null ? null : Number(endY.toFixed(1)),
+    });
+  for (let i = 0; i < 48; i += 1) {
+    const x = rng() * 100 + 2.5;
+    const y = rng() * 63 + 2.5;
+    const dx = (rng() - 0.2) * 22;
+    const dy = (rng() - 0.5) * 16;
+    const endX = Math.max(2, Math.min(103, x + dx));
+    const endY = Math.max(2, Math.min(66, y + dy));
+    event("Pass", x, y, rng() > 0.22, endX, endY);
   }
-  return pts.join(" ");
-}
-
-// SVG shape helpers (cx/cy/r in SVG pixel space)
-function starPoints(cx, cy, r) {
-  const inner = r * 0.4;
-  const pts = [];
-  for (let i = 0; i < 10; i++) {
-    const angle = (i * Math.PI) / 5 - Math.PI / 2;
-    const rad = i % 2 === 0 ? r : inner;
-    pts.push(`${cx + rad * Math.cos(angle)},${cy + rad * Math.sin(angle)}`);
+  for (let i = 0; i < 10; i += 1) {
+    const x = 70 + rng() * 30;
+    const y = 17 + rng() * 34;
+    const endX = 102 + rng() * 3;
+    const endY = 30.34 + rng() * 7.32;
+    event("Shot", x, y, rng() > 0.75, endX, endY);
   }
-  return pts.join(" ");
-}
+  for (let i = 0; i < 22; i += 1) {
+    const x = rng() * 105;
+    const y = rng() * 68;
+    event("Tackle", x, y, rng() > 0.35);
+  }
+  for (let i = 0; i < 18; i += 1) {
+    const x = rng() * 105;
+    const y = rng() * 68;
+    event("Interception", x, y, rng() > 0.12);
+  }
+  return rows;
+})();
 
-function trianglePoints(cx, cy, r) {
-  const top = `${cx},${cy - r}`;
-  const bl = `${cx - r * 0.866},${cy + r * 0.5}`;
-  const br = `${cx + r * 0.866},${cy + r * 0.5}`;
-  return `${top} ${bl} ${br}`;
-}
+// Plot: reads only data and the constants above
+const types = [...new Set(data.map((d) => d[EVENT]))];
+const outcomes = [...new Set(data.map((d) => d[OUTCOME]))];
+const events = data.map((d, i) => {
+  const k = types.indexOf(d[EVENT]);
+  return {
+    id: `event-${i}`,
+    x: d[X],
+    y: d[Y],
+    endX: d[END_X],
+    endY: d[END_Y],
+    color: t.palette[k],
+    shape: MARKER_SHAPES[k],
+    typeIndex: k,
+    filled: d[OUTCOME] === FILLED_OUTCOME,
+  };
+});
+// Arrows go wherever a row carries an end position
+const arrows = events.filter((e) => e.endX !== null && e.endY !== null);
+const arrowTypes = types.filter((_, k) => arrows.some((a) => a.typeIndex === k));
 
-function diamondPoints(cx, cy, r) {
-  return `${cx},${cy - r} ${cx + r * 0.7},${cy} ${cx},${cy + r} ${cx - r * 0.7},${cy}`;
-}
+const penaltyArcHalf = Math.sqrt(CENTRE_CIRCLE_RADIUS ** 2 - (PENALTY_AREA_DEPTH - PENALTY_SPOT_DISTANCE) ** 2);
+const corners = [
+  [0, 0, 1, 1],
+  [PITCH_LENGTH, 0, -1, 1],
+  [0, PITCH_WIDTH, 1, -1],
+  [PITCH_LENGTH, PITCH_WIDTH, -1, -1],
+]; // corner x, corner y, and the inward direction along each touchline
 
-// --- Custom SVG layer: pitch markings ---
-function PitchBackground() {
+const TITLE = "scatter-pitch-events · javascript · muix · anyplot.ai";
+const SUBTITLE = `${data.length} events · ${PITCH_LENGTH} m × ${PITCH_WIDTH} m pitch · arrows run to the end position of ${arrowTypes.map((s) => s.toLowerCase()).join(" and ")} events`;
+const HEADER_HEIGHT = 72;
+const LEGEND_HEIGHT = 48;
+const chartWidth = window.ANYPLOT_SIZE.width;
+const chartHeight = window.ANYPLOT_SIZE.height - HEADER_HEIGHT - LEGEND_HEIGHT;
+
+// Equal px per metre on both axes keeps the centre circle round and the pitch at 105:68
+const domainLength = PITCH_LENGTH + 2 * RUN_OFF;
+const domainWidth = PITCH_WIDTH + 2 * RUN_OFF;
+const areaHeight = Math.min(chartHeight - 16, ((chartWidth - 48) * domainWidth) / domainLength);
+const areaWidth = (areaHeight * domainLength) / domainWidth;
+const marginX = (chartWidth - areaWidth) / 2;
+const marginY = (chartHeight - areaHeight) / 2;
+
+const line = { fill: "none", stroke: t.inkSoft, strokeWidth: 2 };
+
+function PitchMarkings() {
   const { left, top, width, height } = useDrawingArea();
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const X = (m) => xScale(m);
-  const Y = (m) => yScale(m);
-
-  // FIFA standard pitch dimensions (meters)
-  const circleR = 9.15;
-  const penDepth = 16.5;
-  const penHW = 20.16; // half-width of penalty area (40.32/2)
-  const goalDepth = 5.5;
-  const goalHW = 9.16; // half-width of goal area (18.32/2)
-  const goalHalfWidth = 3.66; // half-width of goal mouth (7.32/2)
-  const goalDepthPx = X(2) - X(0); // 2m goal depth shown as visual post
-
-  // Penalty arcs: only the portion outside the penalty area
-  const leftPenArc = (() => {
-    const pts = [];
-    for (let a = -60; a <= 60; a++) {
-      const px = 11 + circleR * Math.cos(a * DEG);
-      const py = 34 + circleR * Math.sin(a * DEG);
-      if (px > penDepth) pts.push(`${X(px)},${Y(py)}`);
-    }
-    return pts.join(" ");
-  })();
-
-  const rightPenArc = (() => {
-    const pts = [];
-    for (let a = 120; a <= 240; a++) {
-      const px = 94 + circleR * Math.cos(a * DEG);
-      const py = 34 + circleR * Math.sin(a * DEG);
-      if (px < 105 - penDepth) pts.push(`${X(px)},${Y(py)}`);
-    }
-    return pts.join(" ");
-  })();
-
-  // Helper: rectangle from pitch coords
-  const R = (x1, y1, x2, y2) => ({
-    x: X(Math.min(x1, x2)),
-    y: Y(Math.max(y1, y2)),
-    w: Math.abs(X(x2) - X(x1)),
-    h: Math.abs(Y(y2) - Y(y1)),
-  });
-
-  const lp = { fill: "none", stroke: LINE_W, strokeWidth: LW };
-
+  const xs = useXScale();
+  const ys = useYScale();
+  const k = xs(1) - xs(0); // px per metre
+  const midY = PITCH_WIDTH / 2;
   return (
     <g>
-      {/* Pitch grass */}
-      <rect x={left} y={top} width={width} height={height} fill={PITCH_GREEN} />
-
-      {/* Pitch outline */}
-      {(() => { const r = R(0, 0, 105, 68); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
-
-      {/* Halfway line */}
-      <line {...lp} x1={X(52.5)} y1={Y(0)} x2={X(52.5)} y2={Y(68)} />
-
-      {/* Center circle */}
-      <polyline {...lp} points={pitchArc(52.5, 34, circleR, 0, 360, X, Y)} />
-
-      {/* Center spot */}
-      <circle cx={X(52.5)} cy={Y(34)} r={4} fill={LINE_W} />
-
-      {/* Left penalty area */}
-      {(() => { const r = R(0, 34 - penHW, penDepth, 34 + penHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
-
-      {/* Right penalty area */}
-      {(() => { const r = R(105 - penDepth, 34 - penHW, 105, 34 + penHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
-
-      {/* Left goal area */}
-      {(() => { const r = R(0, 34 - goalHW, goalDepth, 34 + goalHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
-
-      {/* Right goal area */}
-      {(() => { const r = R(105 - goalDepth, 34 - goalHW, 105, 34 + goalHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
-
-      {/* Left goal (extends outside pitch) */}
-      <rect
-        x={X(0) - goalDepthPx} y={Y(34 + goalHalfWidth)}
-        width={goalDepthPx} height={Math.abs(Y(34 - goalHalfWidth) - Y(34 + goalHalfWidth))}
-        fill="none" stroke={LINE_W} strokeWidth={LW}
-      />
-
-      {/* Right goal (extends outside pitch) */}
-      <rect
-        x={X(105)} y={Y(34 + goalHalfWidth)}
-        width={goalDepthPx} height={Math.abs(Y(34 - goalHalfWidth) - Y(34 + goalHalfWidth))}
-        fill="none" stroke={LINE_W} strokeWidth={LW}
-      />
-
-      {/* Penalty spots */}
-      <circle cx={X(11)} cy={Y(34)} r={3} fill={LINE_W} />
-      <circle cx={X(94)} cy={Y(34)} r={3} fill={LINE_W} />
-
-      {/* Penalty arcs (portions visible outside penalty areas) */}
-      {leftPenArc && <polyline {...lp} points={leftPenArc} />}
-      {rightPenArc && <polyline {...lp} points={rightPenArc} />}
-
-      {/* Corner arcs (radius 1m from each corner) */}
-      <polyline {...lp} points={pitchArc(0, 0, 1, 0, 90, X, Y)} />
-      <polyline {...lp} points={pitchArc(105, 0, 1, 90, 180, X, Y)} />
-      <polyline {...lp} points={pitchArc(0, 68, 1, -90, 0, X, Y)} />
-      <polyline {...lp} points={pitchArc(105, 68, 1, 180, 270, X, Y)} />
+      <rect x={left} y={top} width={width} height={height} fill={t.grid} />
+      <rect x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} fill={t.elevatedBg} />
+      <rect {...line} x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} />
+      <line {...line} x1={xs(PITCH_LENGTH / 2)} y1={ys(0)} x2={xs(PITCH_LENGTH / 2)} y2={ys(PITCH_WIDTH)} />
+      <circle {...line} cx={xs(PITCH_LENGTH / 2)} cy={ys(midY)} r={CENTRE_CIRCLE_RADIUS * k} />
+      <circle cx={xs(PITCH_LENGTH / 2)} cy={ys(midY)} r={3.5} fill={t.inkSoft} />
+      {[0, PITCH_LENGTH].map((goalLine) => {
+        const inward = goalLine === 0 ? 1 : -1;
+        const spotX = goalLine + inward * PENALTY_SPOT_DISTANCE;
+        const boxX = goalLine + inward * PENALTY_AREA_DEPTH;
+        return (
+          <g key={`end-${goalLine}`}>
+            <rect
+              {...line}
+              x={xs(Math.min(goalLine, boxX))}
+              y={ys(midY + PENALTY_AREA_WIDTH / 2)}
+              width={PENALTY_AREA_DEPTH * k}
+              height={PENALTY_AREA_WIDTH * k}
+            />
+            <rect
+              {...line}
+              x={xs(Math.min(goalLine, goalLine + inward * GOAL_AREA_DEPTH))}
+              y={ys(midY + GOAL_AREA_WIDTH / 2)}
+              width={GOAL_AREA_DEPTH * k}
+              height={GOAL_AREA_WIDTH * k}
+            />
+            <rect
+              {...line}
+              strokeWidth={3}
+              x={xs(Math.min(goalLine, goalLine - inward * GOAL_DEPTH))}
+              y={ys(midY + GOAL_WIDTH / 2)}
+              width={GOAL_DEPTH * k}
+              height={GOAL_WIDTH * k}
+            />
+            <circle cx={xs(spotX)} cy={ys(midY)} r={3} fill={t.inkSoft} />
+            {/* Penalty arc: the part of the 9.15 m circle around the spot that lies outside the box */}
+            <path
+              {...line}
+              d={`M ${xs(boxX)} ${ys(midY + penaltyArcHalf)} A ${CENTRE_CIRCLE_RADIUS * k} ${CENTRE_CIRCLE_RADIUS * k} 0 0 ${goalLine === 0 ? 1 : 0} ${xs(boxX)} ${ys(midY - penaltyArcHalf)}`}
+            />
+          </g>
+        );
+      })}
+      {corners.map(([cx, cy, dx, dy]) => (
+        <path
+          key={`corner-${cx}-${cy}`}
+          {...line}
+          d={`M ${xs(cx + dx * CORNER_ARC_RADIUS)} ${ys(cy)} A ${CORNER_ARC_RADIUS * k} ${CORNER_ARC_RADIUS * k} 0 0 ${-dx * dy > 0 ? 1 : 0} ${xs(cx)} ${ys(cy + dy * CORNER_ARC_RADIUS)}`}
+        />
+      ))}
     </g>
   );
 }
 
-// --- Custom SVG layer: directional arrows for passes and shots ---
-function ArrowsLayer() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const X = (m) => xScale(m);
-  const Y = (m) => yScale(m);
-
-  const passOk = hexToRgba(PASS_COLOR, 0.75);
-  const passFail = hexToRgba(PASS_COLOR, 0.3);
-  const shotOk = hexToRgba(SHOT_COLOR, 0.85);
-  const shotFail = hexToRgba(SHOT_COLOR, 0.38);
-
+function EventLayer() {
+  const xs = useXScale();
+  const ys = useYScale();
   return (
     <g>
       <defs>
-        <marker id="arr-pass-ok" viewBox="0 0 8 8" refX="7" refY="4"
-                markerWidth="3" markerHeight="3" orient="auto">
-          <path d="M 0 0 L 8 4 L 0 8 z" fill={passOk} />
-        </marker>
-        <marker id="arr-pass-fail" viewBox="0 0 8 8" refX="7" refY="4"
-                markerWidth="3" markerHeight="3" orient="auto">
-          <path d="M 0 0 L 8 4 L 0 8 z" fill={passFail} />
-        </marker>
-        <marker id="arr-shot-ok" viewBox="0 0 8 8" refX="7" refY="4"
-                markerWidth="3.5" markerHeight="3.5" orient="auto">
-          <path d="M 0 0 L 8 4 L 0 8 z" fill={shotOk} />
-        </marker>
-        <marker id="arr-shot-fail" viewBox="0 0 8 8" refX="7" refY="4"
-                markerWidth="3.5" markerHeight="3.5" orient="auto">
-          <path d="M 0 0 L 8 4 L 0 8 z" fill={shotFail} />
-        </marker>
+        {types.map((type, k) => (
+          <marker
+            key={`head-${type}`}
+            id={`pitch-head-${k}`}
+            viewBox="0 0 10 10"
+            refX={9}
+            refY={5}
+            markerWidth={11}
+            markerHeight={11}
+            markerUnits="userSpaceOnUse"
+            orient="auto"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 Z" fill={t.palette[k]} />
+          </marker>
+        ))}
       </defs>
-
-      {/* Pass trajectories */}
-      {passes.map(p => (
+      {arrows.map((a) => (
         <line
-          key={p.id}
-          x1={X(p.x)} y1={Y(p.y)} x2={X(p.x2)} y2={Y(p.y2)}
-          stroke={p.successful ? passOk : passFail}
-          strokeWidth={p.successful ? 1.6 : 1.1}
-          strokeDasharray={p.successful ? undefined : "4,3"}
-          markerEnd={p.successful ? "url(#arr-pass-ok)" : "url(#arr-pass-fail)"}
+          key={`arrow-${a.id}`}
+          x1={xs(a.x)}
+          y1={ys(a.y)}
+          x2={xs(a.endX)}
+          y2={ys(a.endY)}
+          stroke={a.color}
+          strokeOpacity={a.filled ? 0.8 : 0.55}
+          strokeWidth={a.filled ? 1.8 : 1.4}
+          strokeDasharray={a.filled ? undefined : "5 4"}
+          markerEnd={`url(#pitch-head-${a.typeIndex})`}
         />
       ))}
-
-      {/* Shot trajectories */}
-      {shots.map(s => (
-        <line
-          key={s.id}
-          x1={X(s.x)} y1={Y(s.y)} x2={X(s.x2)} y2={Y(s.y2)}
-          stroke={s.successful ? shotOk : shotFail}
-          strokeWidth={s.successful ? 2.2 : 1.6}
-          strokeDasharray={s.successful ? undefined : "5,3"}
-          markerEnd={s.successful ? "url(#arr-shot-ok)" : "url(#arr-shot-fail)"}
+      {events.map((e) => (
+        <path
+          key={e.id}
+          d={e.shape}
+          transform={`translate(${xs(e.x)} ${ys(e.y)}) scale(${MARKER_RADIUS})`}
+          vectorEffect="non-scaling-stroke"
+          fill={e.filled ? e.color : t.elevatedBg}
+          stroke={e.filled ? t.elevatedBg : e.color}
+          strokeWidth={e.filled ? 1 : 2.2}
         />
       ))}
     </g>
   );
 }
 
-// --- Custom SVG layer: distinct marker shapes per event type ---
-// Passes=circles, Shots=stars, Tackles=triangles, Interceptions=diamonds
-function EventMarkersLayer() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const X = (m) => xScale(m);
-  const Y = (m) => yScale(m);
-
-  return (
-    <g>
-      {/* Passes: circles */}
-      {passes.map(p => {
-        const cx = X(p.x), cy = Y(p.y);
-        const r = p.successful ? 7 : 5;
-        const fill = p.successful ? PASS_COLOR : hexToRgba(PASS_COLOR, 0.35);
-        return <circle key={p.id} cx={cx} cy={cy} r={r} fill={fill} />;
-      })}
-
-      {/* Shots: 5-pointed stars */}
-      {shots.map(s => {
-        const cx = X(s.x), cy = Y(s.y);
-        const r = s.successful ? 10 : 7;
-        const fill = s.successful ? SHOT_COLOR : hexToRgba(SHOT_COLOR, 0.4);
-        return <polygon key={s.id} points={starPoints(cx, cy, r)} fill={fill} />;
-      })}
-
-      {/* Tackles: upward-pointing triangles */}
-      {tackles.map(tk => {
-        const cx = X(tk.x), cy = Y(tk.y);
-        const r = tk.successful ? 8 : 6;
-        const fill = tk.successful ? TACKLE_COLOR : hexToRgba(TACKLE_COLOR, 0.35);
-        return <polygon key={tk.id} points={trianglePoints(cx, cy, r)} fill={fill} />;
-      })}
-
-      {/* Interceptions: diamonds */}
-      {interceptions.map(ic => {
-        const cx = X(ic.x), cy = Y(ic.y);
-        const r = ic.successful ? 8 : 6;
-        const fill = ic.successful ? INTERCEPT_COLOR : hexToRgba(INTERCEPT_COLOR, 0.35);
-        return <polygon key={ic.id} points={diamondPoints(cx, cy, r)} fill={fill} />;
-      })}
-    </g>
-  );
-}
-
-// --- Root chart component ---
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-
-  // Margins computed to maintain the FIFA 105:68 pitch aspect ratio
-  const topM = 68;
-  const botM = 92;
-  const pitchH = height - topM - botM;
-  const pitchW = Math.round(pitchH * (105 / 68));
-  const hM = Math.round((width - pitchW) / 2);
-  const margin = { top: topM, bottom: botM, left: hM, right: hM };
-
-  const TITLE = "scatter-pitch-events · javascript · muix · anyplot.ai";
-  const titleSize = Math.round(22 * Math.min(1, 67 / TITLE.length));
-
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      margin={margin}
-      xAxis={[{ id: "x", min: 0, max: 105, scaleType: "linear", disableTicks: true }]}
-      yAxis={[{ id: "y", min: 0, max: 68, scaleType: "linear", disableTicks: true }]}
-      series={scatterSeries}
-      skipAnimation
-    >
-      {/* 1. Pitch background and markings */}
-      <PitchBackground />
-
-      {/* 2. Directional arrows (below markers) */}
-      <ArrowsLayer />
-
-      {/* 3. Event markers — circles/stars/triangles/diamonds per event type */}
-      <EventMarkersLayer />
-
-      {/* 4. Legend — row layout, centered below pitch */}
-      <ChartsLegend
-        position={{ horizontal: "middle", vertical: "bottom" }}
-        direction="row"
-        itemMarkWidth={18}
-        itemMarkHeight={12}
-        markGap={8}
-        itemGap={24}
-        labelStyle={{ fontSize: 14, fill: t.ink }}
-      />
-
-      {/* 5. Title */}
-      <text
-        x={width / 2}
-        y={topM / 2}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={titleSize}
-        fontWeight="600"
-        fill={t.ink}
-        fontFamily='-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+        }}
       >
-        {TITLE}
-      </text>
-    </ChartContainer>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
+        width={chartWidth}
+        height={chartHeight}
+        margin={{ top: marginY, bottom: marginY, left: marginX, right: marginX }}
+        skipAnimation
+        series={types.map((type, k) => ({
+          type: "scatter" as const,
+          id: `type-${k}`,
+          label: type,
+          color: t.palette[k],
+          data: events.filter((e) => e.typeIndex === k).map((e) => ({ id: e.id, x: e.x, y: e.y })),
+        }))}
+        xAxis={[{ id: "x", scaleType: "linear", min: -RUN_OFF, max: PITCH_LENGTH + RUN_OFF, position: "none" }]}
+        yAxis={[{ id: "y", scaleType: "linear", min: -RUN_OFF, max: PITCH_WIDTH + RUN_OFF, position: "none" }]}
+      >
+        <ChartsSurface>
+          <PitchMarkings />
+          <EventLayer />
+        </ChartsSurface>
+      </ChartsDataProvider>
+      <div
+        style={{
+          height: LEGEND_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 26,
+          fontSize: 16,
+          color: t.ink,
+        }}
+      >
+        {types.map((type, k) => (
+          <span key={`legend-${type}`} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width={24} height={24}>
+              <path d={MARKER_SHAPES[k]} transform={`translate(12 12) scale(${MARKER_RADIUS})`} fill={t.palette[k]} />
+            </svg>
+            {type}
+          </span>
+        ))}
+        <span style={{ width: 1, height: 24, background: t.grid }} />
+        {outcomes.map((outcome) => (
+          <span key={`legend-${outcome}`} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width={24} height={24}>
+              <path
+                d={MARKER_SHAPES[0]}
+                transform={`translate(12 12) scale(${MARKER_RADIUS})`}
+                vectorEffect="non-scaling-stroke"
+                fill={outcome === FILLED_OUTCOME ? t.inkSoft : "none"}
+                stroke={t.inkSoft}
+                strokeWidth={2}
+              />
+            </svg>
+            {outcome}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
