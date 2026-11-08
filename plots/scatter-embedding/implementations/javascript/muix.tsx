@@ -1,119 +1,120 @@
 // anyplot.ai
 // scatter-embedding: t-SNE and UMAP Embedding Visualization
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 90/100 | Created: 2026-08-11
-//# anyplot-orientation: landscape
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// Deterministic LCG (seed 42) — no Math.random() in the browser harness
-let seed = 42;
-function rng() {
-  seed = (1664525 * seed + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
-function randn() {
-  const u = Math.max(rng(), 1e-9);
-  const v = rng();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+// Constants
+const EMBEDDING_METHOD = "UMAP (n_neighbors = 15)"; // the projection behind the two embedding columns
+const POINT_OPACITY = 0.62; // slight transparency, so dense cores read darker
+const EXTENT_PAD_SHARE = 0.05; // room beyond the outermost points, as a share of each axis span
+const LABEL_FONT_SIZE = 15;
+const LABEL_CHAR_WIDTH = 0.56; // average glyph width of the centroid labels, as a share of the font size
+const LABEL_BOX_OPACITY = 0.35; // light enough that the cluster core shows through; a text halo keeps the label legible
 
-// --- Data: simulated UMAP projection of single-cell RNA-seq data -----------
-// 8 cell-type clusters scattered around distinct centroids in 2D embedding
-// space (the axes themselves carry no interpretable units). Point count and
-// spread vary per cluster — real UMAP/t-SNE embeddings show clusters of
-// differing size and compactness, not uniform blobs.
-const CLUSTERS = [
-  { label: "T cells", cx: -9, cy: 5, spread: 1.9, n: 90 },
-  { label: "B cells", cx: 8, cy: 6.5, spread: 1.3, n: 65 },
-  { label: "Monocytes", cx: -7, cy: -6.5, spread: 2.1, n: 95 },
-  { label: "NK cells", cx: 9.5, cy: -4, spread: 1.4, n: 60 },
-  { label: "Dendritic cells", cx: 0.5, cy: 10, spread: 1.6, n: 70 },
-  { label: "Platelets", cx: -1, cy: -10, spread: 1.0, n: 55 },
-  { label: "Erythrocytes", cx: -12, cy: -1, spread: 1.75, n: 80 },
-  { label: "Neutrophils", cx: 13, cy: 1.5, spread: 1.5, n: 65 },
-];
+// Columns: set these to your data's column names
+const X = "UMAP dimension 1"; // role: x
+const Y = "UMAP dimension 2"; // role: y
+const LABEL = "Cell type"; // role: label
 
-const clusterData = CLUSTERS.map((cluster) =>
-  Array.from({ length: cluster.n }, (_, i) => ({
-    id: `${cluster.label}-${i}`,
-    x: cluster.cx + randn() * cluster.spread,
-    y: cluster.cy + randn() * cluster.spread,
-  })),
-);
+// Data: replace this block with your own records, one object per row
+// Simulated UMAP projection of single-cell RNA-seq profiles: eight cell types
+// of differing size and compactness around their own centres.
+const data = (() => {
+  let seed = 42;
+  const uniform = () => {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(uniform(), 1e-9))) * Math.cos(2 * Math.PI * uniform());
+  const cellTypes = [
+    { name: "T cells", cx: -9, cy: 5, spread: 1.9, n: 90 },
+    { name: "B cells", cx: 8, cy: 6.5, spread: 1.3, n: 65 },
+    { name: "Monocytes", cx: -7, cy: -6.5, spread: 2.1, n: 95 },
+    { name: "NK cells", cx: 9.5, cy: -4, spread: 1.4, n: 60 },
+    { name: "Dendritic cells", cx: 0.5, cy: 10, spread: 1.6, n: 70 },
+    { name: "Platelets", cx: -1, cy: -10, spread: 1.0, n: 55 },
+    { name: "Erythrocytes", cx: -12, cy: -1, spread: 1.75, n: 80 },
+    { name: "Neutrophils", cx: 13, cy: 1.5, spread: 1.5, n: 65 },
+  ];
+  return cellTypes.flatMap((c) =>
+    Array.from({ length: c.n }, () => ({
+      [X]: Number((c.cx + gaussian() * c.spread).toFixed(3)),
+      [Y]: Number((c.cy + gaussian() * c.spread).toFixed(3)),
+      [LABEL]: c.name,
+    })),
+  );
+})();
 
-// Denser, tighter clusters get more transparency so overlapping cores stay
-// distinguishable; sparser clusters can afford to render more opaque.
-const densities = CLUSTERS.map((c) => c.n / (c.spread * c.spread));
-const MIN_DENSITY = Math.min(...densities);
-const MAX_DENSITY = Math.max(...densities);
-function alphaForCluster(cluster) {
-  const density = cluster.n / (cluster.spread * cluster.spread);
-  const t01 = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY || 1);
-  return 0.72 - t01 * 0.17; // 0.72 (sparse) -> 0.55 (dense)
-}
+// Plot: reads only data and the constants above
+const labels = [...new Set(data.map((d) => d[LABEL]))];
+const groups = labels.map((label, i) => {
+  const rows = data.filter((d) => d[LABEL] === label);
+  return {
+    label,
+    color: t.palette[i],
+    points: rows.map((d, k) => ({ id: `${i}-${k}`, x: d[X], y: d[Y] })),
+    centroidX: rows.reduce((s, d) => s + d[X], 0) / rows.length,
+    centroidY: rows.reduce((s, d) => s + d[Y], 0) / rows.length,
+  };
+});
 
-const allPoints = clusterData.flat();
-const xs = allPoints.map((p) => p.x);
-const ys = allPoints.map((p) => p.y);
-const xPad = (Math.max(...xs) - Math.min(...xs)) * 0.08;
-const yPad = (Math.max(...ys) - Math.min(...ys)) * 0.08;
-const X_MIN = Math.min(...xs) - xPad;
-const X_MAX = Math.max(...xs) + xPad;
-const Y_MIN = Math.min(...ys) - yPad;
-const Y_MAX = Math.max(...ys) + yPad;
+const xs = data.map((d) => d[X]);
+const ys = data.map((d) => d[Y]);
+const xPad = (Math.max(...xs) - Math.min(...xs)) * EXTENT_PAD_SHARE;
+const yPad = (Math.max(...ys) - Math.min(...ys)) * EXTENT_PAD_SHARE;
 
-const MARGIN = { top: 120, right: 250, bottom: 60, left: 60 };
+const TITLE = "scatter-embedding · javascript · muix · anyplot.ai";
+const SUBTITLE = `${EMBEDDING_METHOD} · n = ${data.length} · coloured by ${LABEL.toLowerCase()} (${labels.length} groups)`;
+const HEADER_HEIGHT = 84;
+const LEGEND_WIDTH = 220;
 
-// Centroid labels rendered at data coordinates via the live D3 scales — the
-// redundant color+text encoding required once a chart uses all 8 categorical
-// series (see default-style-guide.md "series-count guidance").
 function CentroidLabels() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale) return null;
-
   return (
     <g>
-      {CLUSTERS.map((cluster, i) => {
-        const cx = xScale(cluster.cx);
-        const cy = yScale(cluster.cy) - 20;
-        const halfWidth = cluster.label.length * 3.9 + 8;
+      {groups.map((g) => {
+        const cx = xScale(g.centroidX);
+        const cy = yScale(g.centroidY);
+        const halfWidth = (g.label.length * LABEL_FONT_SIZE * LABEL_CHAR_WIDTH) / 2 + 10;
         return (
-          <g key={cluster.label}>
+          <g key={g.label}>
             <rect
               x={cx - halfWidth}
               y={cy - 14}
               width={halfWidth * 2}
-              height={20}
-              rx={5}
+              height={28}
+              rx={6}
               fill={t.elevatedBg}
-              opacity={0.88}
+              fillOpacity={LABEL_BOX_OPACITY}
+              stroke={g.color}
+              strokeWidth={2}
             />
             <text
               x={cx}
-              y={cy}
+              y={cy + 1}
               textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={13}
+              dominantBaseline="central"
+              fontSize={LABEL_FONT_SIZE}
               fontWeight={600}
-              fill={t.palette[i]}
+              fill={t.ink}
+              stroke={t.pageBg}
+              strokeWidth={4}
+              strokeLinejoin="round"
+              paintOrder="stroke"
             >
-              {cluster.label}
+              {g.label}
             </text>
           </g>
         );
@@ -122,74 +123,75 @@ function CentroidLabels() {
   );
 }
 
-const TITLE = "scatter-embedding · javascript · muix · anyplot.ai";
-const SUBTITLE = "UMAP (n_neighbors=15) · synthetic single-cell RNA-seq embedding";
-
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      margin={MARGIN}
-      sx={{ "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { display: "none" } }}
-      series={CLUSTERS.map((cluster, i) => ({
-        type: "scatter",
-        id: cluster.label,
-        label: cluster.label,
-        data: clusterData[i],
-        color: hexToRgba(t.palette[i], alphaForCluster(cluster)),
-        markerSize: 5,
-      }))}
-      xAxis={[
-        {
-          id: "umap1",
-          scaleType: "linear",
-          min: X_MIN,
-          max: X_MAX,
-          disableTicks: true,
-          disableLine: true,
-          tickLabelStyle: { display: "none" },
-          label: "UMAP dimension 1",
-          labelStyle: { fontSize: 15, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          id: "umap2",
-          scaleType: "linear",
-          min: Y_MIN,
-          max: Y_MAX,
-          disableTicks: true,
-          disableLine: true,
-          tickLabelStyle: { display: "none" },
-          label: "UMAP dimension 2",
-          labelStyle: { fontSize: 15, fill: t.inkSoft },
-        },
-      ]}
-    >
-      <ScatterPlot skipAnimation />
-      <CentroidLabels />
-      <ChartsXAxis axisId="umap1" />
-      <ChartsYAxis axisId="umap2" />
-      <ChartsLegend
-        position={{ vertical: "middle", horizontal: "right" }}
-        direction="column"
-        slotProps={{
-          legend: {
-            itemMarkWidth: 12,
-            itemMarkHeight: 12,
-            markGap: 8,
-            itemGap: 18,
-            labelStyle: { fontSize: 14, fill: t.ink },
-          },
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
         }}
-      />
-      <text x={width / 2} y={46} textAnchor="middle" fontSize={28} fontWeight={600} fill={t.ink}>
-        {TITLE}
-      </text>
-      <text x={width / 2} y={82} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
-        {SUBTITLE}
-      </text>
-    </ChartContainer>
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 16, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
+        width={width - LEGEND_WIDTH}
+        height={height - HEADER_HEIGHT}
+        margin={{ top: 12, right: 24, bottom: 16, left: 24 }}
+        skipAnimation
+        series={groups.map((g, i) => ({
+          type: "scatter" as const,
+          id: `group-${i}`,
+          label: g.label,
+          data: g.points,
+          color: g.color,
+          markerSize: 5,
+        }))}
+        xAxis={[
+          {
+            id: "x",
+            scaleType: "linear",
+            min: Math.min(...xs) - xPad,
+            max: Math.max(...xs) + xPad,
+            label: X,
+            height: 40,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { display: "none" },
+            labelStyle: { fontSize: 16, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "y",
+            scaleType: "linear",
+            min: Math.min(...ys) - yPad,
+            max: Math.max(...ys) + yPad,
+            label: Y,
+            width: 40,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { display: "none" },
+            labelStyle: { fontSize: 16, fill: t.inkSoft },
+          },
+        ]}
+      >
+        <ChartsWrapper legendPosition={{ vertical: "middle", horizontal: "end" }} legendDirection="vertical">
+          <ChartsLegend direction="vertical" sx={{ fontSize: 16, color: t.ink, width: LEGEND_WIDTH, gap: 1.5, pl: 3 }} />
+          <ChartsSurface sx={{ "& .MuiScatterChart-marker": { fillOpacity: POINT_OPACITY } }}>
+            <ChartsXAxis />
+            <ChartsYAxis />
+            <ScatterPlot />
+            <CentroidLabels />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
