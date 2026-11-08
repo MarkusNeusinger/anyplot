@@ -2,134 +2,131 @@ library: muix
 language: javascript
 specification_id: radar-multi
 created: '2026-08-20T07:56:48Z'
-updated: '2026-08-20T08:11:36Z'
-generated_by: claude-sonnet
-workflow_run: 32346057653
+updated: '2026-11-08T04:27:40Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42446297379
 issue: 2026
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Correct Imprint palette order (green, lavender, blue) held identical across light/dark
-    themes, with fully theme-adaptive chrome (title, axis labels, ticks, callout)
-    and no dark-on-dark or light-on-light legibility failures in either render
-  - 'Genuine design polish: alternating banded rings with eased grid opacity toward
-    the outer ring, translucent fill (alpha 0.22) plus solid stroke plus vertex markers
-    per the spec''s ''fill and outline'' suggestion'
-  - Explicit data-storytelling callout ('Best on Value') gives the chart a clear focal
-    point instead of a flat three-way comparison
-  - 'Fully covers the spec: 7 axes / 3 series, closed polygons, 20/40/60/80/100 gridlines
-    with tick labels, legend, realistic and neutral headphone-comparison dataset'
-  - 'Idiomatic solution to the community-package gap: since @mui/x-charts community
-    (v7) has no RadarChart, composing on ChartContainer + useDrawingArea is exactly
-    the workaround the library doc recommends, done with deterministic in-memory data
-    and skipAnimation set'
+  - 'Native RadarChart composition: the chart''s own areas carry only the translucent
+    fills (fillOpacity 0.22, no stroke), and a second <RadarSeriesArea fill="none">
+    pass draws every outline above all fills, so no fill tints another series'' outline'
+  - 'Grid configured through the chart''s own props: divisions={5} rings at 20/40/60/80/100,
+    shape="sharp" polygonal rings, stripeColor={null}, and a single <RadarAxis> labels
+    the ring values once on the first spoke with a page-colored halo that keeps them
+    legible over the fills in both themes'
+  - Vertex marks via <RadarSeriesMarks> with a page-colored ring make every data point
+    readable at its exact spoke value, including where series nearly coincide (Connectivity,
+    Battery Life)
+  - Theme tokens threaded through every chrome element (title, subtitle, metric labels,
+    grid, legend); both renders read cleanly and the Imprint colors are identical
+    across themes
+  - Plausible fictional headphone review with real trade-offs (budget model wins Value,
+    premium model wins Sound Quality, mid model wins Noise Cancelling), so polygons
+    cross and one sits mostly inside another
+  - Columns and data block are cleanly separated from the plot code, which reads only
+    the data and constants
   weaknesses:
-  - Callout box fill uses PAGE_BG (t.pageBg) instead of the elevated-surface token
-    (t.elevatedBg) the style guide specifies for callout/legend box fills -- visually
-    near-invisible against the page background except for its border stroke; switch
-    to t.elevatedBg for a properly 'lifted' card
-  - Near the Value axis, the AudioMax Pro (60) and SoundWave Elite (55) vertices sit
-    almost on top of the callout's dashed-line anchor point, creating a small cluttered
-    cluster of overlapping dots -- nudge the anchor radius or draw order so the cluster
-    reads cleanly
-  - 'LM-02: relies entirely on hand-drawn SVG (manual polar math, grid/polygon construction)
-    rather than exercising more first-party MUI X building blocks (e.g. ChartsTooltip,
-    built-in legend/axis primitives) that could coexist with the custom radar layer
-    -- a stronger ''distinctive features'' showing would lean on more MUI X pieces'
+  - 'Suggestion: a focal treatment (e.g. a slightly heavier outline for one model
+    the subtitle names) could guide the reader to the main comparison.'
+  - 'Suggestion: the ~130 px gap between the subtitle and the top metric label could
+    shrink a little so the radar fills more of the square canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white, not dark.
-      Chrome: Title "radar-multi · javascript · muix · anyplot.ai" in bold dark ink, clearly visible; 7 axis category labels (Sound Quality, Noise Cancelling, Battery Life, Comfort, Build Quality, Value, Connectivity) in dark bold text; radial gridline value ticks (20/40/60/80/100) in a softer gray, readable; legend at the bottom (AudioMax Pro, SoundWave Elite, EchoBudget) with color swatches and dark text; a callout card ("Best on Value / EchoBudget trails elsewhere") near the Value axis with a near-white fill, thin border, and dark text.
-      Data: Three overlapping filled polygons -- brand green (AudioMax Pro), lavender/purple (SoundWave Elite), and blue (EchoBudget) -- each with translucent fill, solid outline, and circular vertex markers. First series is the Imprint brand green as required.
-      Legibility verdict: PASS -- all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1, square 2400x2400.
+      Chrome: bold dark title "radar-multi · javascript · muix · anyplot.ai" centered at top, soft-ink subtitle "3 series × 7 axes · Score (0–100)"; seven bold dark metric labels (Sound Quality, Noise Cancelling, Battery Life, Comfort, Build Quality, Value, Connectivity) at the outer spoke ends; ring values 20–100 on the top spoke with a page-colored halo; subtle gray heptagonal rings and spokes; horizontal legend at the bottom. All text readable.
+      Data: three closed straight-edged polygons with translucent fills and 3 px outlines plus white-ringed vertex dots: AudioMax Pro #009E73 (first), SoundWave Elite #C475FD, EchoBudget #4467A3. Overlaps blend but every outline and the gridlines stay visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black, not light.
-      Chrome: Same title, axis labels, and legend rendered in light/white text, clearly visible against the dark surface; gridline tick labels in a lighter gray, still legible; the callout card now uses a near-black fill with a thin border and white/light-gray text.
-      Data: The same three polygons (brand green, lavender, blue) render with identical hues to the light version -- only the chrome (background, text, grid) flipped, as required. No dark-on-dark failures were found; all text remains visible against the near-black background.
-      Legibility verdict: PASS -- title, axis labels, ticks, and callout text are all readable in the dark theme; data colors are confirmed identical to the light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, metric labels and legend in light ink, subtitle and ring values in soft light ink, grid rings dark gray but visible; no dark-on-dark text.
+      Data: identical colors and geometry to the light render; vertex dots ringed in the dark page color; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; sizes match the JS-library CSS-px
-          guidance
+        comment: Explicit font sizes; title, metric labels, ring values and legend
+          readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor cluster of near-coincident vertices/anchor dot near the Value
-          axis; no text-on-text overlap
+        comment: No text collisions; ring labels haloed against fills; polygon overlap
+          is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Prominent 5.5px vertex markers and 3px strokes appropriate for 7-point
-          sparse data
+        comment: 3 px outlines drawn above all fills, ringed vertex dots, legend swatches
+          match series colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, no red-green-only signaling, only 3 series so no
-          shape encoding needed
+        comment: Green / lavender / blue are distinct hue families, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct, no clipping, generous margins
+        comment: Square canvas, radar centered, labels inside the canvas, legend clear
+          of the chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive category labels, correct mandated title format
+        comment: Readable metric names; subtitle states the 0–100 score unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical palette order (positions 1-3), theme-correct backgrounds
-          in both renders
+        comment: 'Imprint order #009E73, #C475FD, #4467A3; correct backgrounds in
+          both themes'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Banded rings, eased grid opacity, layered polygon rendering show
-          real design intent
+        comment: 'Typographic hierarchy beyond baseline: bold title, soft-ink subtitle,
+          bold metric labels, haloed ring values'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace; callout box fill token choice (PAGE_BG
-          vs elevatedBg) slightly undercuts the refinement
+        comment: Outlines in a second pass above all fills, axis lines hidden, stripes
+          off, vertex dots ringed in page color, ring values shown once on one spoke
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Explicit 'Best on Value' callout creates a clear focal point
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-series radar chart
+        comment: Multi-series radar with filled polygons
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alpha-filled polygons, distinct colors, legend, gridlines, outer-edge
-          axis labels, closed polygons, fill+outline
+        comment: Translucent fills + outlines, legend, rings at 20/40/60/80/100 labeled,
+          outer axis labels, closed polygons, evenly spaced spokes, sharp (unsmoothed)
+          edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 7 axes, 3 series, 0-100 scale, all data represented
+        comment: Vertices at their values on one shared 0–100 scale
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend labels match series
+        comment: Mandated title format; legend names each model
     data_quality:
       score: 15
       max: 15
@@ -168,19 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 metrics shown for all 3 series
+        comment: 7 axes, 3 series, crossing outlines and distinct strengths per series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral fictional headphone brands
+        comment: Fictional headphone review, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 scale as recommended by spec
+        comment: Scores 55–95 on a 0–100 scale; checked e.g. EchoBudget Value 92,
+          SoundWave Noise Cancelling 95 against the render
     code_quality:
       score: 10
       max: 10
@@ -190,35 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, focused components; complexity matches the custom-SVG-radar
-          requirement
+        comment: Only the mandatory default-export component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer and useDrawingArea imported, both used
+        comment: All four RadarChart imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; real geometry drawn to scale
+        comment: Compact; data reshaped once, no hand-rolled geometry
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sized to window.ANYPLOT_SIZE, correct harness
-          contract
+        comment: Default export, skipAnimation, ANYPLOT_SIZE, v9 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,26 +223,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartContainer + useDrawingArea is exactly the documented workaround
-          for the community package's missing RadarChart
+        comment: High-level RadarChart with radar/divisions/shape/stripeColor props
+          and series-level fillArea
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Mostly hand-rolled SVG geometry; doesn't lean on other first-party
-          MUI X primitives (tooltip, legend, axis components)
+        passed: true
+        comment: Uses RadarChart's composition children (RadarSeriesArea, RadarSeriesMarks,
+          RadarAxis) to layer a second outline pass and a single labeled value axis
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:25:09Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
-  - annotations
-  - custom-legend
+  - layer-composition
+  - html-export
+  - hover-tooltips
   patterns:
-  - iteration-over-groups
+  - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - publication-ready
+  - edge-highlighting
+  - minimal-chrome
