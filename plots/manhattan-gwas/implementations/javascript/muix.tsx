@@ -46,7 +46,8 @@ const data = (() => {
       const spread = length * 0.08;
       for (let k = 0; k < 45; k += 1) {
         const position = Math.min(Math.max(peakPos + (rand() + rand() + rand() - 1.5) * spread, 1), length);
-        const distance = (position - peakPos) / (spread * 2);
+        // Association falls off with distance from the causal variant, so each locus tapers into the null band
+        const distance = (position - peakPos) / (spread / 2);
         push(chrom, position, -Math.log(rand()) / Math.LN10 + peaks[chrom] * Math.exp(-distance * distance));
       }
     }
@@ -83,12 +84,7 @@ const leads = chromosomes
   .filter(Boolean);
 const yMax = Math.max(genomeWide, ...points.map((p) => p.y)) * (1 + Y_PAD_SHARE);
 
-const SUPERSCRIPT = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻";
-const formatP = (p: number) => {
-  const [mantissa, exponent] = p.toExponential(0).split("e");
-  const sup = String(Number(exponent)).split("").map((c) => SUPERSCRIPT["0123456789-".indexOf(c)]).join("");
-  return `${mantissa}×10${sup}`;
-};
+const formatP = (p: number) => p.toExponential(1);
 
 const TITLE = "manhattan-gwas · javascript · muix · anyplot.ai";
 const SUBTITLE = `${rows.length.toLocaleString("en-US")} variants on ${chromosomes.length} chromosomes · ${significant.length} past genome-wide significance, highlighted · lead ${SNP} labelled per chromosome`;
