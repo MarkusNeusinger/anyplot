@@ -980,6 +980,21 @@ class TestLoaderNotes:
         both = finish(run).changes
         assert len(both) == MAX_CHANGES and both[:2] == run.loader_notes  # both loader notes first, then three
 
+    def test_the_rows_without_a_value_follow_the_loader_and_keep_their_place_under_the_cap(self) -> None:
+        """Owner decision of 2026-11-08: a row the plot cannot draw is counted, so the cap never drops its line."""
+        left_out = "The plot draws no mark where a value is missing: 2 rows without y ('Score')"
+        run = run_with(reviewed_ok=True)
+        run.loader_notes, run.row_notes = [self.NOTE], [left_out]
+
+        result = finish(run)
+
+        assert (result.status, result.residual_defects) == ("ok", [])
+        assert result.changes == [self.NOTE, left_out, "c"]
+
+        run = run_with(reviewed_ok=True, changes=["note"])
+        run.loader_notes, run.row_notes = [f"{self.NOTE} {index}" for index in range(MAX_CHANGES)], [left_out]
+        assert finish(run).changes[-1] == left_out and len(finish(run).changes) == MAX_CHANGES
+
     def test_column_kinds_of_reads_the_stored_dataset(self) -> None:
         store = DatasetStore()
         dataset = store.get(store.put("s", parse_dataset("id,n\n9007199254740993,1\n2,2\n")), "s")

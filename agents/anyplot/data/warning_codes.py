@@ -245,7 +245,13 @@ def warning_codes(sentences: list[str]) -> list[WarningCode]:
 
 
 BindingWarningCode = Literal[
-    "negative_values", "negative_unbound", "label_sibling", "window_mismatch", "bound_pair_inverted", "other"
+    "negative_values",
+    "negative_unbound",
+    "label_sibling",
+    "window_mismatch",
+    "bound_pair_inverted",
+    "repeated_key",
+    "other",
 ]
 """The binding check's warnings (`bindings.check_bindings`) as closed codes."""
 
@@ -269,6 +275,11 @@ _BINDING_RULES: tuple[tuple[re.Pattern[str], BindingWarningCode], ...] = tuple(
             r"^.* and .*: every value of '.*' \(from .*\) lies above every value of '.*' \(up to .*\), so each row's "
             r"lower bound is above its upper bound$",
             "bound_pair_inverted",
+        ),
+        (
+            r"^.*: column '.*' holds [0-9,]+ values? in [0-9,]+ rows.*; the plot draws one value per .*, so rows with "
+            r"the same .* need an aggregate first$",
+            "repeated_key",
         ),
     )
 )

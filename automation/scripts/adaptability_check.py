@@ -142,6 +142,10 @@ class DataRole:
     """Whether the agent's default bindings give the role only a column whose name clearly holds it, as they do a
     computed role, while it stays required (`agents/anyplot/data/computed.py`, `NAME_ONLY_ROLES`): a MACD line,
     an RSI or a control limit that no role of the spec can compute. Set per spec by the agent, never parsed."""
+    key: bool = False
+    """Whether the role keys the spec's marks: the plot draws one value per key, one bar per category or one point
+    per x of each series (`agents/anyplot/data/fidelity.py`, `KEY_ROLES`), so a column that repeats needs an
+    aggregate first. Set per spec by the agent, never parsed."""
 
     def member(self, index: int) -> str:
         """The binding role name of the `index`-th (1-based) column of a variadic family."""
