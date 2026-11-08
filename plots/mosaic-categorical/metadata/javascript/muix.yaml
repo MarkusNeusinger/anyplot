@@ -2,130 +2,134 @@ library: muix
 language: javascript
 specification_id: mosaic-categorical
 created: '2026-09-02T06:58:42Z'
-updated: '2026-09-02T07:03:03Z'
-generated_by: claude-sonnet
-workflow_run: 33600809519
+updated: '2026-11-08T03:56:23Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42444487122
 issue: 3650
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - 'Elegant composition technique: builds an unsupported chart type (mosaic) from
-    ScatterChart''s xScale/yScale plus a custom slots.scatter renderer, exactly the
-    kind of richness-within-the-community-surface the library rules encourage'
-  - Factually accurate, historically grounded data (survival rates match the real
-    Titanic class breakdown)
-  - Redundant encoding (color + consistent vertical position) keeps the red/green
-    outcome distinction colorblind-safe
-  - Clean theme handling - both renders pass the light/dark legibility check with
-    zero deductions
+  - 'Correct mosaic geometry: column widths follow the class marginals (24.7 / 21.7
+    / 53.6 %) and the tile heights follow the conditional survival shares, so each
+    tile''s area is proportional to its cell count (1st 203/122, 2nd 118/167, 3rd
+    178/528, total 1,316)'
+  - 'Semantic exception applied correctly: Survived in brand green #009E73 and Did
+    not survive in the matte-red anchor #AE3030, the same in every column and in both
+    themes'
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with a custom SVG layer drawn
+    through the useXScale / useYScale / useDrawingArea hooks and a themed ChartsYAxis,
+    with skipAnimation set'
+  - 'Clear typographic hierarchy: bold class labels over soft n = … (share %) sublabels,
+    a stated x-axis meaning (column width ∝ Passengers), and title, subtitle and legend
+    bands that are theme-token driven and readable in both renders'
+  - Even page-colored gaps between columns and stacked tiles set each class apart
+    as a unit, and the gaps come out of the column before the shares are scaled, so
+    the tile proportions are kept
   weaknesses:
-  - Title renders noticeably smaller than the 50-70% width target due to the conservative
-    length-based scaling formula - could grow the title fontsize slightly since there's
-    headroom before overflow
-  - The axis caption ("Passenger Class (width) - Survival rate (height)") is anchored
-    under column 1 only, which can read as belonging to that column rather than the
-    whole chart - consider centering it under the full plot width instead
-  - Rectangles use flat fills with no edge treatment (e.g. a subtle ink stroke) that
-    could add a touch more visual refinement per the style guide's optional outline
-    pattern
+  - 'Suggestion: the 2-point vertical gap shifts the tile boundaries slightly off
+    the % axis (1st-class survival is 62.5 % but its edge reads about 61 %). A conditional-share
+    label inside each large tile would let readers read the exact values.'
+  - 'Suggestion: the residual color coding that the Notes allow (imprint_div by Pearson
+    residual) would show where the association comes from, which the χ² subtitle only
+    summarizes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title, custom legend (Survived/Did not survive), per-column class labels (1st/2nd/3rd Class), and the "Passenger Class (width) / Survival rate (height)" caption are all dark ink and clearly readable against the light background.
-      Data: Bottom rectangle of each column (Survived) is brand green #009E73; top rectangle (Did not survive) is matte red #AE3030. Column widths encode class marginal share; rectangle heights encode conditional survival rate.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: bold dark title "Titanic Survival by Class · mosaic-categorical · javascript · muix · anyplot.ai" centered at about 50% of the width; a soft-ink subtitle "Passengers: 1,316 · 3 × 2 table · Pearson χ² = 133.1, df = 2"; a centered HTML legend "Outcome ■ Survived ■ Did not survive"; a left y-axis 0%–100% in 10% steps, titled "Outcome within Passenger class (%)"; bold column labels 1st / 2nd / 3rd Class with "n = 325 (24.7%)", "n = 285 (21.7%)", "n = 706 (53.6%)" below; x-axis title "Passenger class (column width ∝ Passengers)". All text is dark on light and readable.
+      Data: three columns whose widths are proportional to the class totals, separated by page-colored gaps; green #009E73 Survived tiles at the bottom (about 61%, 41% and 25% tall) and matte-red #AE3030 Did not survive tiles above them, with a small gap between the stacked tiles.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Title, legend, class labels, and caption all render in light ink and remain fully legible - no dark-on-dark failures observed.
-      Data: Colors identical to the light render (#009E73 green / #AE3030 red) - only chrome flipped, confirming theme-adaptive tokens were used correctly.
+      Background: warm near-black #1A1A17.
+      Chrome: the title, legend title, class labels and axis title switch to light ink; the subtitle, n-labels and y ticks switch to soft light gray; the axis line and ticks are a light soft ink. Nothing is dark on dark, and all text is readable.
+      Data: the green and red tile colors are identical to the light render; only the chrome flips. The gaps now show the dark page.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit; title scaled by length formula but lands
-          conservatively small rather than at the 50-70% target - no overflow or clipping
+        comment: All font sizes explicit (title 22, axis titles 16, ticks/legend 14–15
+          CSS px); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, class labels, caption, or data
+        comment: No text collisions; labels sit clear of the tiles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rectangles large, high-contrast, correctly proportioned to marginal/conditional
-          frequencies
+        comment: Six large tiles with clear gaps; the legend swatches match the tile
+          fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red redundantly encoded by consistent vertical position (died
-          always top, survived always bottom), matching the style guide's bad->red/good->green
-          semantic exception
+        comment: Green vs matte red differ in lightness, plus a consistent stacking
+          position (Survived always at the bottom) and a legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot uses ~80%+ of canvas, balanced margins, legend directly above
-          plot, nothing cut off
+        comment: 3200x1800 canvas; balanced bands for title, subtitle and legend;
+          no overflow; title at about 50% of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No numeric axes (correct for a mosaic); class labels plus explicit
-          width/height caption identify both categorical variables
+        comment: Descriptive axis titles with units and meaning (% within class; column
+          width ∝ Passengers)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Survived) is #009E73; second correctly uses matte-red
-          semantic anchor; theme-correct chrome in both renders; data colors identical
-          across themes'
+        comment: 'Semantic exception: Survived #009E73, Did not survive #AE3030; theme-correct
+          backgrounds and chrome'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color use, clean typography hierarchy, deliberate
-          gap spacing - above defaults but short of publication-level polish
+        comment: A two-level label hierarchy (bold class name over a soft n/share
+          line) and a deliberate title/subtitle/legend banding beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All four axes hidden, no grid, generous whitespace and gap spacing;
-          flat rectangle fills with no edge treatment keep it just short of perfect
+        comment: Page-colored gaps carved out of the column before scaling so the
+          proportions hold; the n-labels are centered under each column; the x-axis
+          title states the width encoding
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Size disparity across columns makes the survival-inequality story
-          immediately visible without needing annotations
+        comment: Per-column n and share labels make the dominant 3rd-class width and
+          its low survival share the focal contrast
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct mosaic: widths = marginal proportions, heights = conditional
-          proportions, area proportional to cell frequency'
+        comment: A true two-way mosaic (Marimekko-style), one rectangle per cell
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gap spacing present, both categorical variables clearly labeled,
-          area-proportional encoding correct; optional residual color-coding not required
-          by spec
+        comment: Widths = marginals, heights = conditionals, area ∝ frequency, gaps,
+          both variables labelled, color encodes the outcome levels with a legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Passenger class on width, survival rate on height, all data visible
+        comment: Tiles sit at their computed shares; the gap is taken out proportionally
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match data exactly
+        comment: Title 'Titanic Survival by Class · mosaic-categorical · javascript
+          · muix · anyplot.ai'; legend titled Outcome with readable entries
     data_quality:
       score: 15
       max: 15
@@ -167,21 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of outcomes shown across the three classes
+        comment: Unequal column widths and boundaries at different heights in every
+          column show the association clearly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Titanic survival-by-class is the canonical example named in the spec's
-          own notes; neutral scenario
+        comment: Historical Titanic passenger counts, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Survival rates closely track real historical Titanic class-survival
-          figures
+        comment: Checked the counts against the known passenger table (total 1,316);
+          recomputed χ² ≈ 133 with df = 2, matching the subtitle
     code_quality:
       score: 10
       max: 10
@@ -191,35 +193,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> chart; functions present are the mandated Chart
-          export plus the required MUI X custom slot component
+        comment: Linear script; the single MosaicTiles component is required by the
+          MUI X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded historical data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only Box, Typography, ScatterChart imported, all used
+        comment: All three imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Legitimate use of ScatterChart scale functions plus custom slot to
-          synthesize a mosaic plot; no fake UI
+        comment: Short contingency, chi-square and layout passes; no stats helpers
+          available in MUI X per the library prompt
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-owned save/HTML export; skipAnimation set; current API
+        comment: export default, skipAnimation, ANYPLOT_SIZE/TOKENS, v9 ChartsContainer
+          and axis position 'none'
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,24 +230,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses documented custom-slot composition pattern, disableVoronoi,
-          skipAnimation, and theme tokens as the library prompt recommends
+        comment: Composition API with the useXScale/useYScale/useDrawingArea hooks
+          and a ChartsYAxis with labelStyle/tickLabelStyle/valueFormatter, the v9
+          way to build a custom mark type
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: false
-        comment: Scale-function-driven custom slot renderer is a genuinely MUI X-specific
-          technique, short of the absolute ceiling
+        comment: MUI X's composable container + scale hooks drive a custom SVG layer
+          on library axes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:53:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - layer-composition
   - annotations
+  - html-export
   patterns:
+  - explicit-dataset
   - iteration-over-groups
   dataprep:
+  - contingency-table
   - normalization
   styling:
+  - publication-ready
   - minimal-chrome
