@@ -2,242 +2,226 @@
 // line-win-probability: Win Probability Chart
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 92/100 | Created: 2026-06-21
-//# anyplot-orientation: landscape
-
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Deterministic LCG — no Math.random(), fully reproducible
-function lcg(seed: number): () => number {
-  let s = seed | 0;
-  return () => {
+// Constants
+const EVEN = 0.5; // even odds: the reference line and the boundary between the two team fills
+const PROB_TICKS = [0, 0.25, 0.5, 0.75, 1]; // the full probability domain
+const PERIOD_LENGTH = 45; // minutes per half of a football match; a marker is drawn at every period end inside the game
+const PERIOD_LABEL = "Half time";
+
+// Columns: set these to your data's column names
+const MINUTE = "Match time (min)"; // role: game_time
+const WIN_PROB = "Home win probability"; // role: win_probability
+const EVENT = "Event"; // role: event
+const HOME = "Forest Green FC"; // role: extra
+const AWAY = "City Blue FC"; // role: extra
+
+// Data: replace this block with your own records, one object per row
+// Minute-by-minute model probability of a home win in a 90-minute match, with the running score
+// of each team: the away side scores early, the home side equalises and wins it late.
+const data = (() => {
+  let s = 42;
+  const rand = () => {
     s = (Math.imul(1664525, s) + 1013904223) | 0;
     return (s >>> 0) / 0x100000000;
   };
-}
-
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
-
-const rand = lcg(42);
-const TOTAL_MINUTES = 90;
-
-const AWAY_GOAL = 19;
-const HALF_TIME = 45;
-const HOME_GOAL_EQ = 58;
-const HOME_GOAL_WIN = 84;
-
-// Forest Green FC (home) vs City Blue FC (away) — away scores early, home fights back
-const minutes: number[] = Array.from({ length: TOTAL_MINUTES + 1 }, (_, i) => i);
-
-let wp = 0.50;
-const winProb: number[] = [0.50];
-
-for (let i = 1; i <= TOTAL_MINUTES; i++) {
-  if (i === AWAY_GOAL) {
-    wp = 0.26;
-  } else if (i === HOME_GOAL_EQ) {
-    wp = 0.54;
-  } else if (i === HOME_GOAL_WIN) {
-    wp = 0.88;
-  } else {
-    const noise = (rand() - 0.5) * 0.055;
-    const revert = (0.5 - wp) * 0.018;
-    wp = clamp(wp + noise + revert, 0.05, 0.95);
-    if (i > AWAY_GOAL && i < HOME_GOAL_EQ) {
-      wp = clamp(wp, 0.11, 0.50);
-    } else if (i > HOME_GOAL_EQ && i < HOME_GOAL_WIN) {
-      wp = clamp(wp, 0.42, 0.67);
-    } else if (i > HOME_GOAL_WIN) {
-      wp = clamp(wp, 0.81, 0.97);
+  const goals = {
+    19: { side: "away", wp: 0.26, scorer: "Lindqvist" },
+    58: { side: "home", wp: 0.54, scorer: "Okafor" },
+    84: { side: "home", wp: 0.88, scorer: "Mensah" },
+  };
+  const bands = { "0-0": [0.05, 0.95], "0-1": [0.11, 0.5], "1-1": [0.42, 0.67], "2-1": [0.81, 0.97] };
+  let wp = 0.5;
+  let home = 0;
+  let away = 0;
+  return Array.from({ length: 91 }, (_, minute) => {
+    const goal = goals[minute];
+    if (goal) {
+      if (goal.side === "home") home += 1;
+      else away += 1;
+      wp = goal.wp;
+    } else if (minute > 0) {
+      const [lo, hi] = bands[`${home}-${away}`];
+      wp = Math.max(lo, Math.min(hi, wp + (rand() - 0.5) * 0.055 + (0.5 - wp) * 0.018));
     }
+    return {
+      [MINUTE]: minute,
+      [WIN_PROB]: Math.round(wp * 1000) / 1000,
+      [EVENT]: goal ? `Goal · ${goal.scorer}` : null,
+      [HOME]: home,
+      [AWAY]: away,
+    };
+  });
+})();
+
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[MINUTE] - b[MINUTE]);
+const last = rows[rows.length - 1];
+const xMin = rows[0][MINUTE];
+const xMax = last[MINUTE];
+
+// Where the line crosses even odds, a point at exactly EVEN is inserted, so each team's fill ends at the crossing
+const points = [];
+rows.forEach((d, i) => {
+  const prev = rows[i - 1];
+  if (prev && prev[WIN_PROB] != null && d[WIN_PROB] != null) {
+    const da = prev[WIN_PROB] - EVEN;
+    const db = d[WIN_PROB] - EVEN;
+    if (da * db < 0) points.push({ x: prev[MINUTE] + (da / (da - db)) * (d[MINUTE] - prev[MINUTE]), p: EVEN });
   }
-  winProb.push(Math.round(wp * 1000) / 1000);
-}
+  points.push({ x: d[MINUTE], p: d[WIN_PROB] });
+});
+const xs = points.map((p) => p.x);
+const homeAhead = points.map((p) => (p.p != null && p.p >= EVEN ? p.p : null));
+const awayAhead = points.map((p) => (p.p != null && p.p <= EVEN ? p.p : null));
 
-// Spec fill semantics: fill area above 50% with home color, below 50% with away color.
-// baseline=0.5 makes each series fill only the band between the probability line and
-// the 50% baseline — home green fills upward from 50% when home leads, away blue
-// fills downward from 50% when away leads.
-const homeArea: number[] = winProb.map(v => Math.max(v, 0.5));
-const awayArea: number[] = winProb.map(v => Math.min(v, 0.5));
+const HOME_COLOR = t.palette[0];
+const AWAY_COLOR = t.palette[1];
 
-const HOME_COLOR = t.palette[0]; // #009E73 brand green
-const AWAY_COLOR = t.palette[2]; // #4467A3 Imprint blue — semantic match for "City Blue FC"
+// An event takes the colour of the team whose score rose on its row; its label sits left of the swing,
+// at the new level, where the line arrives from the level before the event
+const events = rows
+  .map((d, i) => ({ d, prev: rows[i - 1] ?? d }))
+  .filter(({ d }) => d[EVENT] != null && d[WIN_PROB] != null)
+  .map(({ d, prev }) => ({
+    x: d[MINUTE],
+    p: d[WIN_PROB],
+    color: d[HOME] > prev[HOME] ? HOME_COLOR : d[AWAY] > prev[AWAY] ? AWAY_COLOR : t.inkSoft,
+    text: `${d[MINUTE]}' ${d[EVENT]} (${d[HOME]}–${d[AWAY]})`,
+  }));
+const periodEnds = Array.from({ length: Math.ceil(xMax / PERIOD_LENGTH) }, (_, k) => (k + 1) * PERIOD_LENGTH).filter(
+  (m) => m > xMin && m < xMax,
+);
 
 const TITLE = "line-win-probability · javascript · muix · anyplot.ai";
-const SUBTITLE = "Forest Green FC 2 – 1 City Blue FC · 90 minutes";
-const TITLE_HEIGHT = 70;
+const SUBTITLE = `Final score: ${HOME} ${last[HOME]} – ${last[AWAY]} ${AWAY} · ${rows.length} model updates over ${xMax - xMin} minutes`;
+const HEADER_H = 80;
+const LEGEND_H = 44;
+
+function EventMarks() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  return (
+    <g>
+      {events.map((e) => (
+        <g key={e.text}>
+          <circle cx={xScale(e.x)} cy={yScale(e.p)} r={7} fill={e.color} stroke={t.pageBg} strokeWidth={2.5} />
+          <text
+            x={xScale(e.x) - 16}
+            y={yScale(e.p)}
+            textAnchor="end"
+            dominantBaseline="middle"
+            fontSize={15}
+            fontWeight={600}
+            fill={t.ink}
+          >
+            {e.text}
+          </text>
+        </g>
+      ))}
+    </g>
+  );
+}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
 
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: t.pageBg,
-      }}
-    >
-      <Box sx={{ textAlign: "center", pt: 1.5 }}>
-        <Typography
-          sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}
-        >
-          {TITLE}
-        </Typography>
-        <Typography sx={{ fontSize: 13, color: t.inkSoft, mt: 0.25 }}>
-          {SUBTITLE}
-        </Typography>
-      </Box>
-
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 112px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
       <LineChart
         width={width}
-        height={chartHeight}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
-            data: minutes,
-            label: "Match Time (minutes)",
-            min: 0,
-            max: 90,
+            data: xs,
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
             tickNumber: 7,
-            valueFormatter: (v: number) => `${v}'`,
-            labelStyle: { fontSize: 14, fill: t.inkSoft },
-            tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
-            disableTicks: true,
+            valueFormatter: (v: number) => `${Math.round(v)}'`,
+            label: MINUTE,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            min: 0,
-            max: 1,
-            tickNumber: 5,
+            min: PROB_TICKS[0],
+            max: PROB_TICKS[PROB_TICKS.length - 1],
+            tickInterval: PROB_TICKS,
             valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
-            label: "Home Win Probability",
-            labelStyle: { fontSize: 14, fill: t.inkSoft },
-            tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
-            disableTicks: true,
+            label: WIN_PROB,
+            width: 84,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         series={[
           {
             id: "home",
-            data: homeArea,
-            label: "Home Win — Forest Green FC",
-            area: true,
-            baseline: 0.5,
-            showMark: false,
+            data: homeAhead,
+            label: `${HOME} (home) ahead`,
             color: HOME_COLOR,
+            area: true,
+            baseline: EVEN,
+            curve: "linear",
+            showMark: false,
+            valueFormatter: (v: number | null) => (v == null ? "" : `${(v * 100).toFixed(1)}%`),
           },
           {
             id: "away",
-            data: awayArea,
-            label: "Away Win — City Blue FC",
-            area: true,
-            baseline: 0.5,
-            showMark: false,
+            data: awayAhead,
+            label: `${AWAY} (away) ahead`,
             color: AWAY_COLOR,
+            area: true,
+            baseline: EVEN,
+            curve: "linear",
+            showMark: false,
+            valueFormatter: (v: number | null) => (v == null ? "" : `${(v * 100).toFixed(1)}%`),
           },
         ]}
-        margin={{ top: 16, bottom: 64, left: 96, right: 48 }}
-        sx={{
-          bgcolor: "transparent",
-          "& .MuiAreaElement-series-home": { fillOpacity: 0.82 },
-          "& .MuiAreaElement-series-away": { fillOpacity: 0.82 },
-          // Home line traces max(wp, 0.5): probability cursor when home leads
-          "& .MuiLineElement-series-home": { strokeWidth: 2.5 },
-          // Away line traces min(wp, 0.5): probability cursor when away leads
-          "& .MuiLineElement-series-away": { strokeWidth: 2.5 },
-        }}
         slotProps={{
           legend: {
-            position: { vertical: "top", horizontal: "right" },
-            padding: { top: 8, right: 28 },
-            itemMarkWidth: 14,
-            itemMarkHeight: 14,
-            labelStyle: { fontSize: 12, fill: t.inkSoft },
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 16, color: t.ink, columnGap: 3, pr: 5 },
           },
         }}
+        sx={{
+          "& .MuiLineChart-area": { fillOpacity: 0.32 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
       >
-        {/* 50% neutral baseline */}
-        <ChartsReferenceLine
-          y={0.5}
-          label="50% — even odds"
-          labelAlign="end"
-          lineStyle={{
-            stroke: t.ink,
-            strokeWidth: 1.5,
-            strokeDasharray: "8 4",
-            opacity: 0.45,
-          }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-        />
-
-        {/* Away goal — probability falls */}
-        <ChartsReferenceLine
-          x={AWAY_GOAL}
-          label={`Goal (Away) ${AWAY_GOAL}'`}
-          labelAlign="start"
-          lineStyle={{
-            stroke: AWAY_COLOR,
-            strokeWidth: 1.5,
-            strokeDasharray: "5 3",
-            opacity: 0.75,
-          }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-        />
-
-        {/* Half time */}
-        <ChartsReferenceLine
-          x={HALF_TIME}
-          label="Half Time"
-          labelAlign="start"
-          lineStyle={{
-            stroke: t.ink,
-            strokeWidth: 1,
-            strokeDasharray: "4 3",
-            opacity: 0.3,
-          }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-        />
-
-        {/* Home equaliser */}
-        <ChartsReferenceLine
-          x={HOME_GOAL_EQ}
-          label={`Goal (Home) ${HOME_GOAL_EQ}'`}
-          labelAlign="start"
-          lineStyle={{
-            stroke: HOME_COLOR,
-            strokeWidth: 1.5,
-            strokeDasharray: "5 3",
-            opacity: 0.75,
-          }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-        />
-
-        {/* Home winner */}
-        <ChartsReferenceLine
-          x={HOME_GOAL_WIN}
-          label={`Goal (Home) ${HOME_GOAL_WIN}'`}
-          labelAlign="end"
-          lineStyle={{
-            stroke: HOME_COLOR,
-            strokeWidth: 1.5,
-            strokeDasharray: "5 3",
-            opacity: 0.75,
-          }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-        />
+        {periodEnds.map((m) => (
+          <ChartsReferenceLine
+            key={m}
+            x={m}
+            label={PERIOD_LABEL}
+            labelAlign="start"
+            spacing={{ x: 8, y: 8 }}
+            labelStyle={{ fontSize: 15, fill: t.inkSoft }}
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+          />
+        ))}
+        <ChartsReferenceLine y={EVEN} lineStyle={{ stroke: t.inkSoft, strokeWidth: 2.5 }} />
+        <EventMarks />
       </LineChart>
-    </Box>
+    </div>
   );
 }
