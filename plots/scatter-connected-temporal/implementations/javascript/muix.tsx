@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 90/100 | Updated: 2026-11-08
+// Quality: 87/100 | Updated: 2026-11-08
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
@@ -10,8 +10,8 @@ import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { LinePlot, MarkElement, MarkPlot } from "@mui/x-charts/LineChart";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -20,11 +20,17 @@ const PAD_SHARE = 0.06; // axis padding on each side as a share of the data span
 const PERIOD = 10; // years per colour step along the path (decades)
 // A second cue per period, in time order, so neighbouring steps of the ramp stay apart where loops cross
 const PERIOD_SHAPES = ["circle", "square", "triangle", "diamond", "star", "wye", "cross"] as const;
-const LABEL_GAP = 12; // px between a marker and its time label
-const LABEL_DIRECTIONS = 8; // candidate label positions around each labelled point
-const MARKER_ROOM = 34; // px a label keeps from any other point's marker
+const LABEL_GAP = 12; // px between a marker and its time label box
+const LABEL_GAP_MAX = 60; // px, the farthest a label steps out when nothing nearer is clear
+const LABEL_STEP = 4; // px per step outwards
+const LABEL_DIRECTIONS = 16; // candidate label positions around each labelled point
+const LABEL_FONT = 14;
+const LABEL_HALF_H = 8; // px, half the height of a label box, halo included
+const PATH_ROOM = 9; // px a label box keeps from every segment, arrowheads included
+const MARKER_ROOM = 26; // px a label box keeps from any other point's marker centre
 const ARROW_LENGTH = 22; // px
 const ARROW_HEAD = 17; // px, large enough to stand out from the 2.5 px line
+const MARK_SCALE = 1.6; // the default mark symbol is too small a bead for a few dozen sparse points
 
 // Columns: set these to your data's column names
 const YEAR = "Year"; // role: time
@@ -112,49 +118,67 @@ const SUBTITLE = `${INFLATION} against ${UNEMPLOYMENT}, ${rows[0][YEAR]}–${row
 const HEADER_HEIGHT = 84;
 const LEGEND_HEIGHT = 40;
 
+// MarkElement takes no size and positions itself by its transform, so the mark slot draws it at the
+// origin of a group that is moved to the point and scaled there
+function LargeMark({ x, y, ...props }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${MARK_SCALE})`}>
+      <MarkElement {...props} x={0} y={0} />
+    </g>
+  );
+}
+
 function TemporalLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
+  const { left, top, width, height } = useDrawingArea();
   const pts = rows.map((d) => [xScale(d[UNEMPLOYMENT]), yScale(d[INFLATION])]);
   const segments = pts.slice(1).map((p, i) => [pts[i], p]);
 
-  // Each label takes the position around its point with the most room to the path, the markers
-  // and the labels already placed
-  const placed: { x: number; y: number; w: number; anchor: string }[] = [];
+  // Each label takes the nearest position around its point, stepping outwards ring by ring, whose
+  // whole text box keeps its room from every segment, every other marker (a label beside another
+  // point's marker reads as belonging to it), the labels already placed and the plot edge; where no
+  // ring is clear, the position with the most room wins
+  const placed: { x: number; y: number; hw: number; room: number }[] = [];
   labelled.forEach(({ i, text }) => {
-    const w = text.length * 8.5 + 4;
-    const options = Array.from({ length: LABEL_DIRECTIONS }, (_, k) => (2 * Math.PI * k) / LABEL_DIRECTIONS).map((a) => {
-      const cos = Math.cos(a);
-      const sin = Math.sin(a);
-      const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
-      const x = pts[i][0] + cos * (LABEL_GAP + 6);
-      const y = pts[i][1] - sin * (LABEL_GAP + 8);
-      const left = anchor === "start" ? x : anchor === "end" ? x - w : x - w / 2;
-      const samples = [0, 0.25, 0.5, 0.75, 1].map((f) => [left + f * w, y]);
-      const pathRoom = Math.min(
-        ...samples.flatMap(([sx, sy]) =>
-          segments.map(([[ax, ay], [bx, by]]) => {
-            const len2 = (bx - ax) ** 2 + (by - ay) ** 2 || 1;
-            const s = Math.max(0, Math.min(1, ((sx - ax) * (bx - ax) + (sy - ay) * (by - ay)) / len2));
-            return Math.hypot(sx - ax - s * (bx - ax), sy - ay - s * (by - ay)) - 8;
-          }),
-        ),
-      );
-      // A label beside another point's marker reads as belonging to it, so markers need more room than lines
-      const markerRoom = Math.min(
-        ...samples.flatMap(([sx, sy]) =>
-          pts
-            .filter((_, j) => j !== i)
-            .flatMap(([px, py]) => [-7, 0, 7].map((dy) => Math.hypot(sx - px, sy + dy - py) - MARKER_ROOM)),
-        ),
-      );
-      const clash = placed.some((p) => {
-        const pLeft = p.anchor === "start" ? p.x : p.anchor === "end" ? p.x - p.w : p.x - p.w / 2;
-        return left < pLeft + p.w && pLeft < left + w && Math.abs(p.y - y) < 18;
-      });
-      return { x, y, w, anchor, room: clash ? -Infinity : Math.min(pathRoom, markerRoom) };
-    });
-    placed.push(options.reduce((best, o) => (o.room > best.room ? o : best)));
+    const hw = (text.length * LABEL_FONT * 0.6 + 4) / 2;
+    let best = { x: pts[i][0], y: pts[i][1], hw, room: -Infinity };
+    for (let gap = LABEL_GAP; gap <= LABEL_GAP_MAX && best.room < 0; gap += LABEL_STEP) {
+      for (let k = 0; k < LABEL_DIRECTIONS; k += 1) {
+        const cos = Math.cos((2 * Math.PI * k) / LABEL_DIRECTIONS);
+        const sin = Math.sin((2 * Math.PI * k) / LABEL_DIRECTIONS);
+        const reach = gap + Math.abs(cos) * hw + Math.abs(sin) * LABEL_HALF_H;
+        const x = pts[i][0] + cos * reach;
+        const y = pts[i][1] - sin * reach;
+        const outline: number[][] = [];
+        for (let s = -hw; s <= hw; s += LABEL_STEP) outline.push([x + s, y - LABEL_HALF_H], [x + s, y + LABEL_HALF_H]);
+        for (let s = -LABEL_HALF_H; s <= LABEL_HALF_H; s += LABEL_STEP) outline.push([x - hw, y + s], [x + hw, y + s]);
+        const pathRoom =
+          Math.min(
+            ...outline.flatMap(([sx, sy]) =>
+              segments.map(([[ax, ay], [bx, by]]) => {
+                const len2 = (bx - ax) ** 2 + (by - ay) ** 2 || 1;
+                const s = Math.max(0, Math.min(1, ((sx - ax) * (bx - ax) + (sy - ay) * (by - ay)) / len2));
+                return Math.hypot(sx - ax - s * (bx - ax), sy - ay - s * (by - ay));
+              }),
+            ),
+          ) - PATH_ROOM;
+        const markerRoom =
+          Math.min(
+            ...pts
+              .filter((_, j) => j !== i)
+              .map(([px, py]) => Math.hypot(Math.max(Math.abs(px - x) - hw, 0), Math.max(Math.abs(py - y) - LABEL_HALF_H, 0))),
+          ) - MARKER_ROOM;
+        const labelRoom = Math.min(
+          Infinity,
+          ...placed.map((p) => Math.max(Math.abs(p.x - x) - p.hw - hw, Math.abs(p.y - y) - 2 * LABEL_HALF_H) - LABEL_STEP),
+        );
+        const edgeRoom = Math.min(x - hw - left, left + width - x - hw, y - LABEL_HALF_H - top, top + height - y - LABEL_HALF_H);
+        const room = Math.min(pathRoom, markerRoom, labelRoom, edgeRoom);
+        if (room > best.room) best = { x, y, hw, room };
+      }
+    }
+    placed.push(best);
   });
 
   return (
@@ -202,9 +226,9 @@ function TemporalLayer() {
           key={`label-${text}`}
           x={placed[k].x}
           y={placed[k].y}
-          textAnchor={placed[k].anchor}
+          textAnchor="middle"
           dominantBaseline="central"
-          fontSize={14}
+          fontSize={LABEL_FONT}
           fontWeight={500}
           fill={t.ink}
           stroke={t.pageBg}
@@ -282,7 +306,7 @@ export default function Chart() {
           <ChartsSurface
             sx={{
               "& .MuiLineChart-line": { strokeWidth: 2.5 },
-              "& .MuiLineChart-mark": { stroke: t.pageBg, strokeWidth: 1.5 },
+              "& .MuiLineChart-mark": { stroke: t.pageBg, strokeWidth: 1 },
               ...markFills,
               "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
               "& .MuiChartsAxis-line": { stroke: t.inkSoft },
@@ -291,7 +315,7 @@ export default function Chart() {
           >
             <ChartsGrid horizontal vertical />
             <LinePlot skipAnimation />
-            <MarkPlot skipAnimation />
+            <MarkPlot skipAnimation slots={{ mark: LargeMark }} />
             <TemporalLayer />
             <ChartsXAxis axisId="unemployment" />
             <ChartsYAxis axisId="inflation" />

@@ -1,151 +1,124 @@
 // anyplot.ai
 // line-multi: Multi-Line Comparison Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 83/100 | Created: 2026-08-05
-//# anyplot-orientation: landscape
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const sz = window.ANYPLOT_SIZE;
 
-// Average monthly temperature (°C) across four cities spanning distinct
-// climate zones — the crossover between Singapore and Dubai each spring/
-// autumn is the reason a multi-line comparison earns its place here.
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+// Constants
+const X_PAD_SHARE = 0.03; // share of the x range added on both sides so the end markers stay whole
+const Y_PAD_SHARE = 0.06; // share of the value range added below and above the data
 
-const reykjavik = [0, 1, 2, 5, 8, 11, 13, 13, 10, 6, 3, 1];
-const berlin = [1, 2, 6, 11, 16, 19, 21, 21, 16, 11, 6, 2];
-const dubai = [19, 20, 24, 29, 34, 36, 38, 38, 35, 31, 25, 21];
-const singapore = [27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27];
+// Columns: set these to your data's column names
+const MONTH = "Month"; // role: x
+const CITY = "City"; // role: series
+const TEMP = "Average temperature (°C)"; // role: y
+
+// Data: replace this block with your own records, one object per row
+// Monthly mean temperatures of four cities in distinct climate zones.
+const data = Object.entries({
+  Reykjavik: [0, 1, 2, 5, 8, 11, 13, 13, 10, 6, 3, 1],
+  Berlin: [1, 2, 6, 11, 16, 19, 21, 21, 16, 11, 6, 2],
+  Dubai: [19, 20, 24, 29, 34, 36, 38, 38, 35, 31, 25, 21],
+  Singapore: [27, 27, 28, 28, 28, 28, 28, 28, 27, 27, 27, 27],
+}).flatMap(([city, temps]) =>
+  ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((month, i) => ({
+    [MONTH]: month,
+    [CITY]: city,
+    [TEMP]: temps[i],
+  })),
+);
+
+// Plot: reads only data and the constants above
+// Months keep their order of appearance and sit on an index axis, so the axis can pad past the end markers.
+const months = [...new Set(data.map((d) => d[MONTH]))];
+const cities = [...new Set(data.map((d) => d[CITY]))];
+const xs = months.map((_, i) => i);
+const lines = cities.map((city, i) => ({
+  id: `city-${i}`,
+  label: city,
+  color: t.palette[i],
+  values: months.map((m) => data.find((d) => d[CITY] === city && d[MONTH] === m)?.[TEMP] ?? null),
+}));
+
+const temps = data.map((d) => d[TEMP]);
+const yLow = Math.min(...temps);
+const yHigh = Math.max(...temps);
+const yPad = (yHigh - yLow) * Y_PAD_SHARE;
+const xPad = (xs.length - 1) * X_PAD_SHARE;
+const unit = TEMP.match(/\(([^)]+)\)/)?.[1] ?? "";
+
+const TITLE = "line-multi · javascript · muix · anyplot.ai";
+const SUBTITLE = `${cities.length} series × ${months.length} ${MONTH.toLowerCase()}s · range ${yLow} to ${yHigh} ${unit}`;
+const HEADER_H = 80;
+const LEGEND_H = 44;
 
 export default function Chart() {
-  return (
-    <Box sx={{ position: "relative", width: sz.width, height: sz.height }}>
-      <Typography
-        sx={{
-          position: "absolute",
-          top: 14,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 600,
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-      >
-        line-multi · javascript · muix · anyplot.ai
-      </Typography>
+  const { width, height } = window.ANYPLOT_SIZE;
 
+  return (
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 104px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
       <LineChart
-        width={sz.width}
-        height={sz.height}
+        width={width}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        margin={{ top: 100, bottom: 130, left: 100, right: 50 }}
-        colors={[t.palette[0], t.palette[1], t.palette[2], t.palette[3]]}
         grid={{ horizontal: true }}
-        sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3.5 },
-          "& .MuiMarkElement-root": { strokeWidth: 2.5 },
-        }}
+        margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
-            id: "month",
-            scaleType: "point",
-            data: months,
-            label: "Month",
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            data: xs,
+            scaleType: "linear",
+            min: -xPad,
+            max: xs.length - 1 + xPad,
+            tickInterval: xs,
+            valueFormatter: (v: number) => months[v] ?? "",
+            label: MONTH,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            id: "temp",
-            label: "Average Temperature (°C)",
-            valueFormatter: (v) => `${v}°`,
-            // tickFontSize only feeds the axis-label offset calculation (not the
-            // rendered tick size, which tickLabelStyle.fontSize controls below) —
-            // bumped so the rotated label clears our wide "38°"-style ticks.
-            tickFontSize: 40,
+            min: yLow - yPad,
+            max: yHigh + yPad,
+            label: TEMP,
+            width: 76,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        series={[
-          {
-            id: "reykjavik",
-            data: reykjavik,
-            label: "Reykjavik",
-            curve: "monotoneX",
-            showMark: true,
-            xAxisId: "month",
-            yAxisId: "temp",
-          },
-          {
-            id: "berlin",
-            data: berlin,
-            label: "Berlin",
-            curve: "monotoneX",
-            showMark: true,
-            xAxisId: "month",
-            yAxisId: "temp",
-          },
-          {
-            id: "dubai",
-            data: dubai,
-            label: "Dubai",
-            curve: "monotoneX",
-            showMark: true,
-            xAxisId: "month",
-            yAxisId: "temp",
-          },
-          {
-            id: "singapore",
-            data: singapore,
-            label: "Singapore",
-            curve: "monotoneX",
-            showMark: true,
-            xAxisId: "month",
-            yAxisId: "temp",
-          },
-        ]}
+        series={lines.map((line) => ({
+          id: line.id,
+          data: line.values,
+          label: line.label,
+          color: line.color,
+          curve: "monotoneX",
+          showMark: true,
+          labelMarkType: "line+mark",
+          valueFormatter: (v: number | null) => (v == null ? "" : `${v} ${unit}`),
+        }))}
         slotProps={{
           legend: {
-            position: { vertical: "bottom", horizontal: "middle" },
-            direction: "row",
-            itemMarkWidth: 20,
-            itemMarkHeight: 4,
-            markGap: 8,
-            itemGap: 28,
-            labelStyle: { fontSize: 14, fill: t.inkSoft },
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 16, color: t.ink, columnGap: 3, pr: 5, "& .MuiChartsLegend-mark": { width: 24, height: 24 } },
           },
         }}
-      >
-        {/* Dubai/Singapore trade seasonal lead twice a year — mark both crossovers. */}
-        <ChartsReferenceLine
-          x="Apr"
-          axisId="month"
-          label="crossover"
-          labelAlign="start"
-          spacing={{ x: 6, y: 4 }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-        />
-        <ChartsReferenceLine
-          x="Nov"
-          axisId="month"
-          label="crossover"
-          labelAlign="start"
-          spacing={{ x: 6, y: 4 }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-        />
-      </LineChart>
-    </Box>
+        sx={{
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiLineChart-mark": { strokeWidth: 2.5 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      />
+    </div>
   );
 }
