@@ -4,188 +4,204 @@
 // Quality: 86/100 | Created: 2026-06-18
 //# anyplot-orientation: square
 
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME;
 
-// Theme-adaptive chrome tokens
-const ink = THEME === "light" ? "#1A1A17" : "#F0EFE8";
-const inkSoft = THEME === "light" ? "#4A4A44" : "#B8B7B0";
-const boundaryStroke =
-  THEME === "light" ? "rgba(26,26,23,0.35)" : "rgba(240,239,232,0.35)";
+// Constants
+const IDEAL_COLOR = t.palette[4]; // matte red: the spec's convention for the ideal reference markers
+const EXTENT_PAD_SHARE = 0.25; // room beyond the outermost symbol, as a share of its distance from the origin
+const RECEIVED_OPACITY = 0.45;
+const TICK_COUNT = 8; // about this many ticks per axis
 
-// --- Seeded LCG RNG for deterministic data ---
-let _seed = 42;
-function lcg() {
-  _seed = (Math.imul(1664525, _seed) + 1013904223) >>> 0;
-  return _seed / 0x100000000;
-}
+// Columns: set these to your data's column names
+const I = "In-Phase (I)"; // role: i
+const Q = "Quadrature (Q)"; // role: q
+const IDEAL_I = "Ideal I"; // role: ideal_i
+const IDEAL_Q = "Ideal Q"; // role: ideal_q
 
-function randNorm(mu, sigma) {
-  const u1 = Math.max(1e-10, lcg());
-  const u2 = lcg();
-  return mu + sigma * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
-
-// --- 16-QAM ideal constellation points (4×4 grid at ±1, ±3) ---
-const idealPoints = [];
-for (let q = -3; q <= 3; q += 2) {
-  for (let i = -3; i <= 3; i += 2) {
-    idealPoints.push({ x: i, y: q });
+// Data: replace this block with your own records, one object per row
+// 16-QAM received symbols with additive Gaussian noise (sigma 0.15 per axis),
+// each row carrying the ideal constellation point it was sent as.
+const data = (() => {
+  let seed = 42;
+  const uniform = () => {
+    seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+    return seed / 0x100000000;
+  };
+  const noise = () => 0.15 * Math.sqrt(-2 * Math.log(Math.max(1e-10, uniform()))) * Math.cos(2 * Math.PI * uniform());
+  const levels = [-3, -1, 1, 3];
+  const rows = [];
+  for (const iq of levels) {
+    for (const ii of levels) {
+      for (let k = 0; k < 62; k += 1) {
+        rows.push({
+          [I]: Number((ii + noise()).toFixed(3)),
+          [Q]: Number((iq + noise()).toFixed(3)),
+          [IDEAL_I]: ii,
+          [IDEAL_Q]: iq,
+        });
+      }
+    }
   }
-}
+  return rows;
+})();
 
-// Received symbols with AWGN (σ=0.15 per axis → EVM ≈ 6.7%)
-const SIGMA = 0.15;
-const N_PER_POINT = 62; // 16 × 62 = 992 received symbols total
+// Plot: reads only data and the constants above
+const idealKeys = [...new Set(data.map((d) => `${d[IDEAL_I]}|${d[IDEAL_Q]}`))];
+const idealPoints = idealKeys.map((key, k) => {
+  const row = data.find((d) => `${d[IDEAL_I]}|${d[IDEAL_Q]}` === key);
+  return { id: `ideal-${k}`, x: row[IDEAL_I], y: row[IDEAL_Q] };
+});
+const receivedPoints = data.map((d, k) => ({ id: `rx-${k}`, x: d[I], y: d[Q] }));
 
-const receivedData = idealPoints.flatMap((pt, idx) =>
-  Array.from({ length: N_PER_POINT }, (_, n) => ({
-    id: `rx-${idx}-${n}`,
-    x: randNorm(pt.x, SIGMA),
-    y: randNorm(pt.y, SIGMA),
-  }))
-);
+// RMS error vector magnitude, normalised by the mean power of the ideal symbols sent
+const errorPower = data.reduce((s, d) => s + (d[I] - d[IDEAL_I]) ** 2 + (d[Q] - d[IDEAL_Q]) ** 2, 0) / data.length;
+const idealPower = data.reduce((s, d) => s + d[IDEAL_I] ** 2 + d[IDEAL_Q] ** 2, 0) / data.length;
+const evmPercent = Math.sqrt(errorPower / idealPower) * 100;
 
-const idealData = idealPoints.map((pt, i) => ({
-  id: `id-${i}`,
-  x: pt.x,
-  y: pt.y,
-}));
+// Decision boundaries run midway between neighbouring ideal levels on each axis
+const iLevels = [...new Set(data.map((d) => d[IDEAL_I]))].sort((a, b) => a - b);
+const qLevels = [...new Set(data.map((d) => d[IDEAL_Q]))].sort((a, b) => a - b);
+const iBoundaries = iLevels.slice(1).map((v, k) => (v + iLevels[k]) / 2);
+const qBoundaries = qLevels.slice(1).map((v, k) => (v + qLevels[k]) / 2);
 
-// EVM = σ·√2 / √E_s  where E_s(16-QAM) = 10
-const evmPct = ((SIGMA * Math.SQRT2) / Math.sqrt(10) * 100).toFixed(1);
-
-// Decision boundaries for 16-QAM: midpoints between symbol positions ±1, ±3
-const BOUNDARIES = [-2, 0, 2];
+// One symmetric extent on both axes, centred on the origin
+const reach = Math.max(...data.flatMap((d) => [Math.abs(d[I]), Math.abs(d[Q]), Math.abs(d[IDEAL_I]), Math.abs(d[IDEAL_Q])]));
+const extent = reach * (1 + EXTENT_PAD_SHARE);
 
 const TITLE = "scatter-constellation-diagram · javascript · muix · anyplot.ai";
+const SUBTITLE = `${data.length} received symbols around ${idealPoints.length} ideal points · dashed lines: decision boundaries`;
+const HEADER_HEIGHT = 84;
+const LEGEND_HEIGHT = 40;
+const X_AXIS_HEIGHT = 64;
+const Y_AXIS_WIDTH = 72;
+const chartWidth = window.ANYPLOT_SIZE.width;
+const chartHeight = window.ANYPLOT_SIZE.height - HEADER_HEIGHT - LEGEND_HEIGHT;
 
-// --- Custom SVG overlays (rendered inside ChartContainer's SVG context) ---
-function PlotTitle() {
-  const { left, top, width } = useDrawingArea();
+// A square drawing area keeps px per unit equal on both axes, so the grid geometry is true
+const side = Math.min(chartWidth - Y_AXIS_WIDTH - 48, chartHeight - X_AXIS_HEIGHT - 24);
+const marginX = (chartWidth - Y_AXIS_WIDTH - side) / 2;
+const marginY = (chartHeight - X_AXIS_HEIGHT - side) / 2;
+
+const boundaryStyle = { stroke: t.inkSoft, strokeOpacity: 0.6, strokeWidth: 1.5, strokeDasharray: "9 6" };
+
+function EvmLabel() {
+  const { left, top } = useDrawingArea();
   return (
     <text
-      x={left + width / 2}
-      y={Math.round(top * 0.52)}
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fill={ink}
-      fontSize={22}
-      fontWeight={500}
-      fontFamily="sans-serif"
+      x={left + 18}
+      y={top + 34}
+      fontSize={20}
+      fontWeight={600}
+      fill={t.ink}
+      stroke={t.pageBg}
+      strokeWidth={4}
+      paintOrder="stroke"
     >
-      {TITLE}
+      {`EVM = ${evmPercent.toFixed(1)}%`}
     </text>
   );
 }
 
-function EvmAnnotation() {
-  const { left, top, width } = useDrawingArea();
-  return (
-    <g>
-      <text
-        x={left + 18}
-        y={top + 30}
-        fill={ink}
-        fontSize={17}
-        fontWeight={600}
-        fontFamily="monospace, sans-serif"
-      >
-        {`EVM = ${evmPct}%`}
-      </text>
-      {/* Series key: received symbols */}
-      <circle cx={left + 18} cy={top + 62} r={6} fill="rgba(0,158,115,0.5)" />
-      <text x={left + 34} y={top + 67} fill={inkSoft} fontSize={14} fontFamily="sans-serif">
-        Received symbols
-      </text>
-      {/* Series key: ideal points */}
-      <circle cx={left + 18} cy={top + 88} r={10} fill={t.palette[4]} />
-      <text x={left + 34} y={top + 93} fill={inkSoft} fontSize={14} fontFamily="sans-serif">
-        Ideal points
-      </text>
-    </g>
-  );
-}
-
-// --- Chart ---
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ScatterChart
-      width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
-      skipAnimation
-      colors={["rgba(0,158,115,0.5)", t.palette[4]]}
-      margin={{ top: 72, bottom: 72, left: 72, right: 72 }}
-      series={[
-        {
-          id: "received",
-          label: "Received symbols",
-          data: receivedData,
-          markerSize: 5,
-          valueFormatter: (v) => `I=${v.x.toFixed(2)}, Q=${v.y.toFixed(2)}`,
-        },
-        {
-          id: "ideal",
-          label: "Ideal points",
-          data: idealData,
-          markerSize: 12,
-          valueFormatter: (v) => `I=${v.x}, Q=${v.y}`,
-        },
-      ]}
-      xAxis={[{
-        min: -4.5,
-        max: 4.5,
-        label: "In-Phase (I)",
-        tickNumber: 5,
-        tickLabelStyle: { fontSize: 14, fill: inkSoft },
-        labelStyle: { fontSize: 16, fill: ink },
-      }]}
-      yAxis={[{
-        min: -4.5,
-        max: 4.5,
-        label: "Quadrature (Q)",
-        tickNumber: 5,
-        tickLabelStyle: { fontSize: 14, fill: inkSoft },
-        labelStyle: { fontSize: 16, fill: ink },
-      }]}
-      slotProps={{
-        legend: { hidden: true },
-      }}
-      sx={{
-        "& .MuiChartsAxis-line": { stroke: inkSoft },
-        "& .MuiChartsAxis-tick": { stroke: inkSoft },
-        "& .MuiChartsAxis-top .MuiChartsAxis-line": { display: "none" },
-        "& .MuiChartsAxis-right .MuiChartsAxis-line": { display: "none" },
-      }}
-    >
-      {BOUNDARIES.map((val) => (
-        <ChartsReferenceLine
-          key={`xb${val}`}
-          x={val}
-          lineStyle={{
-            stroke: boundaryStroke,
-            strokeDasharray: "9 5",
-            strokeWidth: 1.5,
-          }}
-        />
-      ))}
-      {BOUNDARIES.map((val) => (
-        <ChartsReferenceLine
-          key={`yb${val}`}
-          y={val}
-          lineStyle={{
-            stroke: boundaryStroke,
-            strokeDasharray: "9 5",
-            strokeWidth: 1.5,
-          }}
-        />
-      ))}
-      <PlotTitle />
-      <EvmAnnotation />
-    </ScatterChart>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
+        width={chartWidth}
+        height={chartHeight}
+        margin={{ top: marginY, bottom: marginY, left: marginX, right: marginX }}
+        skipAnimation
+        series={[
+          {
+            type: "scatter",
+            id: "received",
+            label: "Received symbols",
+            data: receivedPoints,
+            markerSize: 4,
+            color: t.palette[0],
+          },
+          {
+            type: "scatter",
+            id: "ideal",
+            label: "Ideal points",
+            data: idealPoints,
+            markerSize: 11,
+            color: IDEAL_COLOR,
+          },
+        ]}
+        xAxis={[
+          {
+            id: "i",
+            scaleType: "linear",
+            min: -extent,
+            max: extent,
+            label: I,
+            tickNumber: TICK_COUNT,
+            height: X_AXIS_HEIGHT,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 17, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "q",
+            scaleType: "linear",
+            min: -extent,
+            max: extent,
+            label: Q,
+            tickNumber: TICK_COUNT,
+            width: Y_AXIS_WIDTH,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 17, fill: t.ink },
+          },
+        ]}
+      >
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 16, color: t.ink, height: LEGEND_HEIGHT, alignItems: "center" }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              '& [data-series="received"] .MuiScatterChart-marker': { fillOpacity: RECEIVED_OPACITY },
+              '& [data-series="ideal"] .MuiScatterChart-marker': { stroke: t.pageBg, strokeWidth: 2.5 },
+            }}
+          >
+            {iBoundaries.map((v) => (
+              <ChartsReferenceLine key={`i-${v}`} x={v} lineStyle={boundaryStyle} />
+            ))}
+            {qBoundaries.map((v) => (
+              <ChartsReferenceLine key={`q-${v}`} y={v} lineStyle={boundaryStyle} />
+            ))}
+            <ChartsXAxis />
+            <ChartsYAxis />
+            <ScatterPlot />
+            <EvmLabel />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
