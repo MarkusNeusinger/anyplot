@@ -11,8 +11,8 @@
   in the chat such as "auf Deutsch bitte", ends the offers. The fixed refusals
   use the session language now, never the message's, and the reply-language
   check asks again when the assistant answers an English session in the
-  language it offered. The page is English, so
-  a visitor who never asked for German should not get German replies; the offer
-  replaces the `# reply language: de` notice, which repeated for every paste and
-  first message. Plausible counts the offers and the picks as
-  `agent_language{via: shown|offer|header}`.
+  language it offered. The page is English, so a visitor who never asked for
+  German should not get German replies; the offer replaces the
+  `# reply language: de` notice, which repeated for every paste and first
+  message. Plausible counts the offers and the picks as
+  `agent_language{via: shown|offer|header}`. (#12865)
