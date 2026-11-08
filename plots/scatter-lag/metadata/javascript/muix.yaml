@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-lag
 created: '2026-06-24T23:18:19Z'
-updated: '2026-11-08T05:04:03Z'
+updated: '2026-11-08T05:09:00Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42448982471
@@ -13,45 +13,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Both axes share one padded range computed from the data (axisMin/axisMax) with
-    a matching tick step, so the y = x reference line runs exactly along the plot
-    diagonal, dashed in inkSoft at 0.6 opacity, lighter than the points
-  - Lag order is a configurable constant (LAG) and is stated in the y-axis label,
-    the subtitle and the r annotation
-  - Time-index coloring uses the Imprint sequential stops through MUI X's native zAxis
-    continuous colorMap, with a ContinuousColorLegend titled 'Hour of record'
-  - The r annotation picks the empty corner from the sign of r and carries a page-colored
-    halo (paintOrder stroke), so it stays clear of the points in both themes
-  - Diagonal and annotation are drawn as a custom SVG layer inside ChartsSurface with
-    useXScale/useYScale/useDrawingArea, so they share the chart's scales exactly
-  - Theme tokens threaded through every text and chrome element; both renders are
-    fully legible, and the HTML keeps MUI X's native hover tooltips
+  - Both axes share one padded range and the same tick step, so the dashed y = x line
+    runs exactly along the plot diagonal, drawn lighter than the points
+  - Time index mapped through MUI X's zAxis continuous colorMap on the Imprint sequential
+    ramp, with a native ContinuousColorLegend titled 'Hour of record'
+  - Custom SVG layer (diagonal and r annotation) drawn with useXScale/useYScale/useDrawingArea;
+    the annotation is placed in the corner the correlation sign leaves empty, with
+    a page-colored halo
+  - Lag order is a single LAG constant that drives the pairing, axis titles, subtitle
+    and annotation
+  - Theme tokens threaded through every chrome element; both renders fully legible
   weaknesses:
-  - 'DQ-03 (both): the scenario is hourly station temperature, but the AR(1) process
-    with sigma about 5 °C and rho 0.82 produces one-hour jumps of up to about 10 °C
-    (e.g. the pair at 30.0 → 20.6 °C, and 22.5 → 29.1 °C), which real hourly temperature
-    does not show → one-hour changes of a few °C at most, i.e. a higher rho (about
-    0.95–0.98) or a smaller shock scale, or a domain where such jumps are plausible
-    (e.g. daily returns). Likely cause: rho = 0.82 with the 5 °C scale in the data
-    block.'
-  - 'Suggestion: the color bar shows only its end ticks 0 and 198; a few intermediate
-    hour ticks would make the time mapping easier to read.'
-  - 'Suggestion: the axis titles sit about 40–60 px away from their tick labels; a
-    slightly smaller x height / y width band would tie them closer to the axes.'
+  - 'Suggestion: a few intermediate ticks on the color bar (e.g. every 50 hours) would
+    make the time index easier to read off individual points.'
+  - 'Suggestion: the color bar could be taller to match the plot height, giving the
+    time gradient more resolution.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, no white plot box.
-      Chrome: bold title "scatter-lag · javascript · muix · anyplot.ai" centered at top with a grey subtitle "Lag k = 1 · 199 pairs from 200 observations · dashed line: y = x"; x-axis "Temperature (°C) at t", y-axis "Temperature (°C) at t + 1", both ranged ~7.6–33 with ticks 8–32 every 2; subtle grey horizontal and vertical grid; "r(lag 1) = 0.747" in bold dark ink at top-left; vertical color bar at right titled "Hour of record" with ticks 0 and 198. All text dark on light and readable.
-      Data: 199 unconnected circles (~6 px, 0.85 opacity) colored by hour on the Imprint sequential ramp from brand green #009E73 (hour 0) to blue (hour 198); elongated cloud along a grey dashed y = x diagonal that runs corner to corner; a few outliers (9.2, 15.8), (12.9, 9.2), (30.0, 20.6).
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "scatter-lag · javascript · muix · anyplot.ai" centered at the top with a soft-ink subtitle "Lag k = 1 · 199 pairs from 200 observations · dashed line: y = x"; x axis "Temperature (°C) at t", y axis "Temperature (°C) at t + 1", ticks 15–30 at 1 °C steps on both axes; subtle grid; color bar "Hour of record" (0 to 198) on the right. All readable.
+      Data: 199 circular markers at 0.85 opacity forming a tight band along the dashed grey y = x diagonal; colors run from brand green #009E73 (early hours) to blue (late hours); "r(lag 1) = 0.934" in the empty top-left corner.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles, tick labels, r annotation and color-bar title/ticks all in light ink and clearly readable; grid lines subtle grey but visible; dashed diagonal light grey. No dark-on-dark elements.
-      Data: point positions and colors identical to the light render (same green-to-blue sequential mapping); only chrome flipped.
+      Chrome: title, subtitle, axis titles, tick labels and color-bar labels in light ink; grid subtle but visible; dashed diagonal in light grey. No dark-on-dark text.
+      Data: identical marker positions and green-to-blue colors as the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,49 +53,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 15, axis titles 17, annotation 18);
-          readable in both themes
+        comment: Explicit sizes (title 22 px, subtitle 15, axis titles 17, ticks 15,
+          r annotation 18) readable in both themes; ink tokens on both surfaces
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; r annotation sits in the empty top-left corner
-          with a halo
+        comment: r annotation sits in the empty top-left corner with a page-colored
+          halo; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 199 points at size 6 with 0.85 opacity, appropriate for the density;
-          color bar visible
+        comment: '199 points at markerSize 6 with 0.85 opacity: prominent and still
+          separable in the dense center; color-bar gradient visible in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp, CVD-safe, good contrast on both backgrounds
+        comment: Green-to-blue sequential ramp, CVD-safe, position carries the main
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, plot fills the canvas, balanced axis and tick labels,
-          nothing cut off
+        comment: 3200x1800, canvas gate passed; balanced axis titles, plot fills the
+          canvas, color bar on the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axis titles with units and lag: ''Temperature (°C) at t'' / ''at
-          t + 1'''
+        comment: '''Temperature (°C) at t'' / ''at t + 1'' with units and lag order'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous coloring from Imprint seq stops (t.seq); backgrounds
-          #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'Time index on imprint_seq (t.seq[0] to t.seq[1]); backgrounds #FAF8F1
+          / #1A1A17; data colors identical across themes'
     design_excellence:
       score: 10
       max: 20
@@ -115,23 +105,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised: custom two-level header (bold title + softer explanatory
-          subtitle naming lag, pair count and the dashed-line meaning) and a titled
-          color-bar panel'
+        comment: Title/subtitle hierarchy with a subtitle stating lag, pair count
+          and the dashed-line meaning; semibold haloed r annotation
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised: page-colored halo behind the r label, shared padded extent
-          with matched tick step so the grid is square-stepped on both axes'
+        comment: Shared padded range and matching 1 °C tick step on both axes so the
+          diagonal is the plot diagonal; r label placed in the corner the correlation
+          sign leaves empty
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: 'Default: r annotation and time coloring are what the Notes suggest;
-          no further hierarchy chosen'
+        passed: true
+        comment: Data displayed with the Notes' r annotation and time coloring; no
+          further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +131,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Lag scatter y(t) vs y(t+k)
+        comment: Lag scatter y(t) vs y(t+1); time coloring and r annotation are options
+          the Notes offer
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Configurable LAG, y = x diagonal lighter than points, equal axis
-          ranges, unconnected unjittered points, time coloring on sequential map with
-          labeled color bar, r placed clear of points
+        comment: Configurable LAG constant, y = x reference drawn lighter and dashed,
+          equal axis ranges, lag stated in axis titles and subtitle, unconnected points,
+          sequential color bar labeled 'Hour of record', r clear of points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Earlier value on x, later on y; all points within the axes; no displacement
+        comment: Earlier value on x, later on y; no jitter; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in mandated format; color bar titled 'Hour of record'
+        comment: Title 'scatter-lag · javascript · muix · anyplot.ai'; color bar titled
+          for a reader
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows a positively autocorrelated band along the diagonal with spread
-          and a few outliers
+        comment: Strong AR(1) band along the diagonal plus a few outliers; time coloring
+          shows the series drifting
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral weather-station scenario
+        comment: Hourly station temperature, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Temperature levels 9–31 °C are plausible, but one-hour jumps of up
-          to ~10 °C are not (defect line). No Check values in the Notes; r = 0.747
-          is computed from the pairs
+        comment: 15–30 °C with hour-to-hour changes of a few degrees; r = 0.934 computed
+          from the pairs, consistent with rho 0.97 on 199 pairs; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -196,32 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module; DiagonalAndR is the component MUI X hooks require
+        comment: Linear module; the one helper component is needed for the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG with Box-Muller
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Hand-written Pearson r is fine: no statistics helpers are available'
+        comment: Short written-out Pearson r, allowed by the library prompt's Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
-          v9 composition API
+        comment: Default-exported component, skipAnimation, v9 composition API, sized
+          to ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -231,19 +224,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised: composition API (ChartsDataProvider, ChartsWrapper, ChartsSurface,
-          ChartsGrid, ChartsXAxis/YAxis, ScatterPlot) with sized axis bands'
+        comment: ChartsDataProvider/ChartsWrapper/ChartsSurface composition with per-axis
+          tickNumber and sized axis bands
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Raised: zAxis continuous colorMap with ContinuousColorLegend, and
-          a custom layer via useXScale/useYScale/useDrawingArea'
-  verdict: REJECTED
+        comment: zAxis continuous colorMap feeding ContinuousColorLegend; custom SVG
+          layer drawn through useXScale/useYScale/useDrawingArea
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:01:24Z'
+  rendered_at: '2026-11-08T05:06:05Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -259,4 +252,3 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
