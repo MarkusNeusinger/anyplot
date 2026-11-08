@@ -24,7 +24,7 @@ const COL = "Grid column"; // role: col
 // Data: replace this block with your own records, one object per row
 // Renewable share of electricity by European country on a compass tile grid (row 0 = north, col 0 = west).
 const data = [
-  ["IS", 0, 0, 85], ["NO", 0, 3, 98], ["SE", 0, 5, 65], ["FI", 0, 7, 55],
+  ["IS", 0, 0, 99], ["NO", 0, 3, 98], ["SE", 0, 5, 65], ["FI", 0, 7, 55],
   ["IE", 1, 0, 40], ["GB", 1, 1, 43], ["DK", 1, 4, 62], ["EE", 1, 8, 32],
   ["NL", 2, 2, 37], ["DE", 2, 4, 46], ["PL", 2, 6, 18], ["LT", 2, 8, 28],
   ["BE", 3, 1, 24], ["CZ", 3, 4, 17], ["SK", 3, 5, 23], ["UA", 3, 8, 9],
