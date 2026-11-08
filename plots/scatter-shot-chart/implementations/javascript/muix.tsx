@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-shot-chart: Basketball Shot Chart
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: pending | Created: 2026-06-21
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
