@@ -569,6 +569,16 @@ function AgentChat({
     commitWaiters.current = [];
     for (const resolve of waiting) resolve();
   });
+  // A page that goes ends its chain: a waiting one reads on once more, finds it ended, and stops.
+  useEffect(
+    () => () => {
+      chainRef.current = null;
+      const waiting = commitWaiters.current;
+      commitWaiters.current = [];
+      for (const resolve of waiting) resolve();
+    },
+    []
+  );
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
   // catalogue API; the enabled libraries from the agents service. Both are best effort.
@@ -936,37 +946,47 @@ function AgentChat({
     const since = state.nextItemId;
     let seen: AgentSessionState = state;
     setChainView({ kind: 'reading' });
-    const result = await sendAttachment(sent, ownNote);
-    let rechecked = false;
-    while (chainRef.current === id) {
-      const page = chainPage.current;
-      // Until the page rendered after the last await, it shows what the chain already decided on.
-      // A send that stored nothing ends the chain at once: it may have changed no session state.
-      const step: ChainStep =
-        !result || !page || result.outcome !== 'stored'
-          ? { kind: 'stop', stop: null }
-          : page.state === seen
-            ? { kind: 'wait' }
-            : chainStep(page.state, { result, since, rechecked }, page);
-      if (step.kind === 'wait') {
-        await new Promise<void>(resolve => commitWaiters.current.push(resolve));
-        continue;
+    try {
+      const result = await sendAttachment(sent, ownNote);
+      let rechecked = false;
+      while (chainRef.current === id) {
+        const page = chainPage.current;
+        // Until the page rendered after the last await, it shows what the chain already decided
+        // on. A send that stored nothing ends the chain at once: it may have changed no session
+        // state.
+        const step: ChainStep =
+          !result || !page || result.outcome !== 'stored'
+            ? { kind: 'stop', stop: null }
+            : page.state === seen
+              ? { kind: 'wait' }
+              : chainStep(page.state, { result, since, rechecked }, page);
+        if (step.kind === 'wait') {
+          await new Promise<void>(resolve => commitWaiters.current.push(resolve));
+          continue;
+        }
+        if (step.kind === 'recheck' && page) {
+          rechecked = true;
+          seen = page.state;
+          if (await session.checkBindings()) continue;
+        }
+        chainRef.current = null;
+        if (step.kind === 'plot' && page) {
+          setChainView(null);
+          page.plot();
+        } else if (step.kind === 'stop' && step.stop && page) {
+          setChainView({ kind: 'stopped', stop: step.stop, mark: stopMark(page.state) });
+        } else {
+          setChainView(null);
+        }
+        return;
       }
-      if (step.kind === 'recheck' && page) {
-        rechecked = true;
-        seen = page.state;
-        if (await session.checkBindings()) continue;
-      }
-      chainRef.current = null;
-      if (step.kind === 'plot' && page) {
+    } finally {
+      // A failure on the way the session did not catch itself: the chain ends, and the status
+      // line no longer says that it reads.
+      if (chainRef.current === id) {
+        chainRef.current = null;
         setChainView(null);
-        page.plot();
-      } else if (step.kind === 'stop' && step.stop && page) {
-        setChainView({ kind: 'stopped', stop: step.stop, mark: stopMark(page.state) });
-      } else {
-        setChainView(null);
       }
-      return;
     }
   };
 
@@ -1343,23 +1363,39 @@ function AgentChat({
                     state={state}
                     part={part}
                     version={version}
-                    onParse={(text, source, table, file) =>
-                      void session.parseData(text, false, source, table, { file })
-                    }
+                    // Every control of the card is the user's own step: the one click's chain
+                    // plots nothing after it (`cancelChain`).
+                    onParse={(text, source, table, file) => {
+                      cancelChain();
+                      void session.parseData(text, false, source, table, { file });
+                    }}
                     onConfirmTranscription={() => {
+                      cancelChain();
                       transcribedFrom.current = null;
                       void session.confirmTranscription();
                     }}
                     onTrack={trackEvent}
                     // The sheet picker's read holds the composer back until its parse starts.
-                    onConvert={session.readSheet}
-                    onDiscardTranscription={handleDiscard}
+                    onConvert={(dataBase64, sheet) => {
+                      cancelChain();
+                      return session.readSheet(dataBase64, sheet);
+                    }}
+                    onDiscardTranscription={() => {
+                      cancelChain();
+                      handleDiscard();
+                    }}
                     onBind={(name, column) => {
                       cancelChain();
                       session.setBinding(name, column);
                     }}
-                    onUndo={() => void session.undoData()}
-                    onToLong={() => void session.toLongData()}
+                    onUndo={() => {
+                      cancelChain();
+                      void session.undoData();
+                    }}
+                    onToLong={() => {
+                      cancelChain();
+                      void session.toLongData();
+                    }}
                     // Not while the fan-out's panel is open: its sessions copy this session's data.
                     locked={!!fanOut}
                     onLoadData={session.fetchDataCsv}
