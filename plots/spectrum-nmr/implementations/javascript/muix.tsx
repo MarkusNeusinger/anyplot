@@ -20,14 +20,15 @@ const SHIFT = "Chemical shift δ (ppm)"; // role: chemical_shift
 const INTENSITY = "Intensity (a.u.)"; // role: intensity
 
 // Data: replace this block with your own records, one object per row
-// Synthetic 1H NMR spectrum of ethanol (CH3-CH2-OH) with TMS as internal standard.
-// The assignment table names the sample's signals; the trace below is built from it
-// (first-order multiplets with binomial line intensities, Lorentzian line shapes).
-const assignments = [
-  { group: "TMS", shift: 0.0, lines: 1, splittingPpm: 0, halfWidthPpm: 0.006, height: 24 },
-  { group: "CH₃", shift: 1.2, lines: 3, splittingPpm: 0.024, halfWidthPpm: 0.004, height: 34 },
-  { group: "OH", shift: 2.6, lines: 1, splittingPpm: 0, halfWidthPpm: 0.012, height: 52 },
-  { group: "CH₂", shift: 3.7, lines: 4, splittingPpm: 0.024, halfWidthPpm: 0.004, height: 20 },
+// Synthetic 1H NMR spectrum of ethanol (CH3-CH2-OH) with TMS as internal standard, built
+// from the sample's signals (first-order multiplets with binomial line intensities,
+// Lorentzian line shapes). A signal's area is proportional to height × binomial sum × half-width,
+// scaled so CH3 : CH2 : OH integrate to 3 : 2 : 1 protons; the TMS height is arbitrary.
+const signals = [
+  { shift: 0.0, lines: 1, splittingPpm: 0, halfWidthPpm: 0.006, height: 24 }, // TMS singlet
+  { shift: 1.2, lines: 3, splittingPpm: 0.024, halfWidthPpm: 0.004, height: 34 }, // CH3 triplet
+  { shift: 2.6, lines: 1, splittingPpm: 0, halfWidthPpm: 0.012, height: 15.1 }, // OH singlet
+  { shift: 3.7, lines: 4, splittingPpm: 0.024, halfWidthPpm: 0.004, height: 11.3 }, // CH2 quartet
 ];
 const data = (() => {
   let seed = 42;
@@ -41,7 +42,7 @@ const data = (() => {
   return Array.from({ length: count }, (_, i) => {
     const shift = lo + (i * (hi - lo)) / (count - 1);
     const noise = rand() * 0.6;
-    const signal = assignments.reduce(
+    const signal = signals.reduce(
       (acc, a) =>
         acc +
         Array.from({ length: a.lines }, (_, k) => {
@@ -79,11 +80,10 @@ const multiplets = lines
   }, [])
   .map((group) => {
     const centre = group.reduce((acc, l) => acc + l.shift, 0) / group.length;
-    const assignment = assignments.find((a) => Math.abs(a.shift - centre) < MULTIPLET_GAP_PPM);
     return {
       centre,
       top: Math.max(...group.map((l) => l.value)),
-      text: `${Number(centre.toFixed(2)).toFixed(2)} ${MULTIPLICITY[group.length - 1] ?? "m"}${assignment ? ` · ${assignment.group}` : ""}`,
+      text: `${Number(centre.toFixed(2)).toFixed(2)} ${MULTIPLICITY[group.length - 1] ?? "m"}`,
     };
   });
 
