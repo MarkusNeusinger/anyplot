@@ -2,55 +2,55 @@ library: muix
 language: javascript
 specification_id: kagi-basic
 created: '2026-09-02T02:12:15Z'
-updated: '2026-09-02T02:33:30Z'
-generated_by: claude-sonnet
-workflow_run: 33581792440
+updated: '2026-11-08T07:37:00Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42440754115
 issue: 3341
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 87
 review:
   strengths:
-  - 'Every actionable weakness from the previous review was addressed: the "+$59 move"
-    breakout callout and "Start $180" baseline (ChartsReferenceLine) now give the
-    chart clear data storytelling and a bespoke reference-line composition, and tickSize:
-    0 removes the default tick marks for a cleaner L-shaped frame.'
-  - Correctly applies the finance semantic-color exception (green for yang/uptrend,
-    matte red for yin/downtrend) exactly as the spec's Notes section requests, using
-    Imprint palette positions 1 and 5.
-  - Line-width encoding (6px yang vs 2px yin) faithfully reproduces the real Kagi-chart
-    convention and gives a redundant, colorblind-safe cue alongside the hue difference.
-  - 'Both themes are fully compliant: identical data colors between light/dark renders,
-    chrome flips correctly, no dark-on-dark or light-on-light failures.'
-  - Data generation (seeded log-return random walk into a reversal-threshold Kagi
-    construction) now naturally produces both a sustained multi-segment downtrend
-    and a large breakout, covering the chart type's full storytelling range.
+  - 'Correct Kagi construction: turning points follow a 4 % reversal against the running
+    extreme, and a vertical that breaks past the previous shoulder or waist is split
+    at exactly that level, so the line turns thin at the fall below the 203.5 waist
+    in column 6 and thick again at the rise above the 200.7 shoulder in column 11'
+  - 'Thickness and color agree everywhere: yang is drawn 6 px in brand green #009E73,
+    yin 2 px in the Imprint red anchor #AE3030, identical in both themes, with the
+    thickness carrying the state on its own for CVD readers'
+  - 'Idiomatic MUI X: two LineChart series with null gaps that share the transition
+    vertex, so the thick and the thin line join without a seam; v9 per-series selectors
+    ([data-series] on .MuiLineChart-line) set the weights, and the legend line marks
+    get the same 6 px / 2 px weights so the legend is a true key'
+  - The x axis is a construction index (one column per reversal, ticks 1–16) and the
+    subtitle states the 240 closes, the date range and the 4 % reversal amount, which
+    makes the time-independence of the chart explicit
+  - 'Clean adaptable-code layout: role constants, a seeded LCG data block that ends
+    in const data, and plot code that reads only data and the constants; skipAnimation
+    set and the chart sized from window.ANYPLOT_SIZE'
   weaknesses:
-  - 'The tickFontSize: 40 value on the Y-axis is a layout-spacing workaround (exploiting
-    the labelRefPoint.x formula) rather than a documented API — works correctly here,
-    but is fragile if MUI X changes that internal formula in a future version.'
-  - Four small helper functions now sit ahead of the component (lcg, randomNormal,
-    buildKagiTurningPoints, classifyKagiThickness); each is justified by the Kagi
-    algorithm's complexity, but keep an eye on further growth.
-  - Aesthetic composition is intentional and above default, but stops short of a fully
-    bespoke/publication-level design (e.g. no background shading, gradient, or additional
-    micro-typography touches).
+  - 'Suggestion: the 2 px yin line fades in the 400 px thumbnail; about 2.5 px would
+    keep it visible while staying clearly thinner than the 6 px yang line.'
+  - 'Suggestion: the 84 px header leaves a band of about 50 px between the subtitle
+    and the top of the plot area; a slightly shorter header would tighten the vertical
+    rhythm.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "kagi-basic · javascript · muix · anyplot.ai" bold dark ink at top-left, clearly readable. X-axis label "Kagi Line Index" and Y-axis label "Closing Price ($)" in dark ink, balanced sizes. Tick labels ($180-$280, 0-16) are dark, crisp, with tick marks removed (tickSize: 0) for a clean L-shaped frame. Horizontal grid lines are thin and subtle. A dashed horizontal reference line labeled "Start $180" marks the origin price; a dashed vertical reference line labeled "+$59 move" calls out the largest breakout near line index 15. Legend ("Yang (uptrend)" green, "Yin (downtrend)" red) sits centered below the plot, close to the chart.
-      Data: Yang (uptrend) renders in Imprint brand green #009E73 as a thick (6px) step line; Yin (downtrend) renders in Imprint matte red #AE3030 as a thin (2px) step line. The rectilinear Kagi path shows a run of ~5 consecutive thin red segments (a sustained corrective/downtrend phase) followed by a large green breakout to ~$277, explicitly labeled by the reference-line annotation.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: bold dark title "kagi-basic · javascript · muix · anyplot.ai" centered at the top, a soft-ink subtitle "240 closes, Jan 2, 2024 – Dec 2, 2024 · reversal amount 4 % · 16 vertical lines"; y axis "Close (USD)" with ticks 180–280 every 10, x axis "Kagi line (one column per reversal)" with ticks 1–16; subtle horizontal grid lines; left and bottom axis lines only. All text dark and readable.
+      Data: one continuous Kagi line. Columns 1–6 thick brand green #009E73 (start at 180, shoulders about 213, 216, 215, waists about 202, 203.5); at column 6 the fall turns thin red #AE3030 below the 203.5 waist and stays yin through columns 7–11 (shoulders about 209, 201, waists about 199, 189, 192); at column 11 the rise turns thick green above the 200.7 shoulder and climbs to 232, 240 and 277, with the last open segment falling to about 259. Horizontal shoulders and waists join each column to the next. Bottom legend: thick green line mark "Yang: thick, rising above the previous shoulder", thin red line mark "Yin: thin, falling below the previous waist".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, tick labels, and both reference-line annotations now render in light ink, clearly legible against the dark background. Grid lines are thin and subtle in a light tone. Legend text and swatches are legible in the same bottom-center position.
-      Data: Yang segments are the identical brand green (#009E73) and Yin segments the identical matte red (#AE3030) as in the light render — confirmed pixel-for-pixel color match; only the chrome (background, text, grid) flipped to the dark theme.
-      Legibility verdict: PASS — no dark-on-dark failures; every title/axis/tick/legend/annotation element is clearly visible against the near-black surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, tick labels and legend text flip to light ink and are all readable; grid lines are subtle but visible; no dark-on-dark text.
+      Data: identical to the light render — same #009E73 green for yang at 6 px, same #AE3030 red for yin at 2 px, same geometry; both colors read well on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,77 +61,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks/legend
-          14-15px); fully readable in both themes, no overflow, balanced axis labels.
+        comment: Title 22 px, subtitle 15 px, axis titles 16 px, ticks 14 px, legend
+          15 px, all explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions in either render.
+        comment: No text collides with text or data; legend sits in its own band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick (6px) yang / thin (2px) yin step lines are clearly distinguishable,
-          appropriate for the ~17-point turning-point series.
+        comment: 6 px yang and 2 px yin lines clearly visible in both themes; legend
+          line marks match the series weights and colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red hues carry a strong redundant line-width encoding, so color
-          is never the sole signal.
+        comment: Green/red pair is backed by a redundant thickness encoding, so color
+          is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot occupies a large, balanced share of the canvas; legend close
-          to chart; nothing clipped.
+        comment: 3200x1800, plot fills the canvas, balanced axis labels, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Kagi Line Index" and "Closing Price ($)" are descriptive, Y carries
-          units.'
+        comment: '"Close (USD)" with units and "Kagi line (one column per reversal)"
+          explain both axes'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #AE3030 under the spec-requested finance
-          semantic exception; identical across themes; chrome and background theme-correct
-          in both renders.'
+        comment: 'Yang in brand green #009E73, yin in the Imprint semantic red #AE3030
+          as the spec suggests; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 17
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color + line-width pairing plus the new start-price
-          reference line shows real design thought, clearly above defaults, but not
-          yet a fully bespoke/publication-level composition.
+        comment: 'Beyond baseline: a two-level header with a 600-weight title over
+          a soft-ink subtitle that carries the construction parameters (closes, date
+          range, reversal amount, line count)'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: 'Tick marks removed (tickSize: 0) leaving a clean L-shaped frame,
-          subtle single-axis grid, generous whitespace.'
+        comment: 'Beyond baseline: half-column x padding beside the first and last
+          verticals, a 6 % y pad from the outermost turns, and legend line marks sized
+          to the 6 px / 2 px series weights'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: The new "+$59 move" callout on the largest breakout, paired with
-          the "Start $180" baseline, gives the chart a clear focal point and narrative
-          arc.
+        comment: Legend entries state the reading rule (rising above the previous
+          shoulder / falling below the previous waist), guiding the viewer to the
+          two state changes
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rectilinear Kagi construction with shoulders/waists and reversal-threshold
-          turning points.
+        comment: A single Kagi line with no underlying price line, candles, reference
+          lines or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick yang / thin yin, green/red coloring, line-index x-axis, reversal-triggered
-          direction changes all present.
+        comment: Thick yang / thin yin, 4 % reversal, shoulders and waists, green/red
+          agreeing with thickness, line-index x axis; every 'A good version shows'
+          bullet met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X is line index, Y is price; full data range visible.
+        comment: Verticals run between the turning prices on the price axis; transitions
+          split at the exact shoulder/waist level; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels correctly
-          describe each series.
+        comment: Title follows the mandated format; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -172,61 +173,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both a sustained multi-segment downtrend (~5 consecutive yin
-          segments) and a large decisive breakout.
+        comment: Shows yang runs, a yang-to-yin and a yin-to-yang transition, shoulders
+          and waists of varying width in price, and an open last segment
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Generic, neutral mid-cap stock price scenario.
+        comment: 240 weekday closes of a stock in 2024 with 1.6 % daily volatility;
+          neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price path ($180-$277) and daily drift/volatility parameters are
-          realistic for ~1 trading year.
+        comment: Prices 180–277 USD, within the spec's 100–500 observations and its
+          4 % reversal example; no Check values in the Notes
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Four small helper functions (lcg, randomNormal, buildKagiTurningPoints,
-          classifyKagiThickness) sit between data and component, justified by algorithm
-          complexity.
+        comment: Linear module-level flow; the only helper is the seeded LCG inside
+          the data block, as the library prompt recommends
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed 42).
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, ChartsReferenceLine, Box, Typography imported, all
-          used.
+        comment: LineChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; complexity matches the algorithm.
+        comment: Kagi construction is written out because no available call computes
+          it; concise and commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual save calls (harness-owned); uses current MUI X LineChart
-          API.
+        comment: Default-exported component, skipAnimation, sized from ANYPLOT_SIZE,
+          v9 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -234,23 +235,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong use of xAxis/yAxis config, slotProps.legend, valueFormatter,
-          ChartsReferenceLine; tickFontSize: 40 spacing trick leans on an internal-layout-formula
-          workaround.'
+        comment: Null gaps in LineChart series to split one path into two states,
+          v9 data-series selectors for weights, axis bands sized with height/width,
+          axisHighlight disabled for the construction axis
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Two ChartsReferenceLine annotations (baseline + breakout callout)
-          plus per-series stroke-width overrides via sx targeting MuiLineElement-series-*
-          classes are genuinely MUI X-specific techniques.
+        comment: 'labelMarkType: "line" legend marks restyled via slotProps.legend.sx
+          to match the series weights; MUI Typography header composed around the chart'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:00:13Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:

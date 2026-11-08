@@ -2,124 +2,133 @@ library: muix
 language: javascript
 specification_id: scatter-pitch-events
 created: '2026-06-21T06:31:04Z'
-updated: '2026-06-21T06:49:05Z'
-generated_by: claude-sonnet
-workflow_run: 27895549199
+updated: '2026-11-08T05:17:53Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42449549204
 issue: 4417
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Fully accurate FIFA-standard pitch markings drawn entirely via MUI X custom SVG
-    layers using scale hooks — an advanced and idiomatic MUI X pattern
-  - Four distinct marker shapes (circles, stars, triangles, diamonds) with directional
-    arrow overlays exactly matching spec requirements
-  - Seeded LCG random number generator for deterministic, reproducible synthetic data
-  - Opacity + linestyle dual-encoding for successful vs unsuccessful events provides
-    strong visual differentiation without needing extra colors
-  - Correct 105:68 aspect ratio maintained dynamically using margin computation
-  - Theme-adaptive title and legend text via t.ink token; page backgrounds correctly
-    differ between light/dark
+  - Pitch geometry is built from named FIFA constants (16.5 m / 40.32 m penalty area,
+    5.5 m / 18.32 m goal area, 9.15 m centre circle, 11 m spot, 7.32 m goals); the
+    penalty arc is computed as the part of the 9.15 m circle outside the box, and
+    corner arcs curve into the pitch
+  - Equal px per metre on both axes (areaHeight/areaWidth from the domain ratio) keeps
+    the 105:68 pitch and a round centre circle in both renders
+  - Four distinct shape+color pairs (green circle passes, purple star shots, blue
+    triangle tackles, ochre diamond interceptions) in Imprint order, identical across
+    themes
+  - 'Outcome is double-encoded: filled vs hollow markers and solid vs dashed, lower-opacity
+    arrows, so unsuccessful events stay visible on the white pitch'
+  - Per-type SVG arrowhead markers anchored at the event position and pointing to
+    the end position; shots fan into the goal mouth as expected
+  - Composes the chart from community ChartsDataProvider + ChartsSurface with useXScale/useYScale/useDrawingArea,
+    so every custom mark sits in MUI X's own coordinate system
+  - 'Theme-adaptive chrome: title, subtitle and legend use t.ink/t.inkSoft, and a
+    translucent ink wash sets the run-off apart from the pitch on both pages'
   weaknesses:
-  - Legend labels at 14px CSS (28 source-px) are too small relative to the 3200x1800
-    canvas; recommend increasing to 18-22px CSS for mobile readability
-  - Legend mark dimensions (18x12px CSS) are quite small; increase itemMarkWidth to
-    24 and itemMarkHeight to 16 for better visibility
-  - Shot event cluster near the right goal creates visual density with overlapping
-    arrows and markers; minor — acceptable for a match analytics map
+  - 'Suggestion: attach MUI X tooltips or a hover highlight to the events so the HTML
+    view reports each event''s type, outcome and coordinates.'
+  - 'Suggestion: unsuccessful shot arrows at 0.55 opacity in light lilac read faint
+    against the white pitch in the 400 px thumbnail; a slightly higher opacity would
+    keep the dashed distinction while adding presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct page surface
-      Chrome: Title "scatter-pitch-events · javascript · muix · anyplot.ai" in dark ink above pitch; legend row at bottom with labels "Pass", "Shot", "Tackle", "Interception" — all readable against light background
-      Data: Green circles (#009E73) for passes with solid/dashed directional arrows; lavender stars (#C475FD) for shots; blue triangles (#4467A3) for tackles; ochre diamonds (#BD8233) for interceptions; successful events full-opacity, unsuccessful low-opacity (~0.35) with dashed lines
-      Legibility verdict: PASS — all title and legend text clearly readable on cream background
+      Background: warm off-white page (#FAF8F1); the plot area has a light grey ink-wash run-off around a near-white (#FFFDF6) pitch.
+      Chrome: bold title "scatter-pitch-events · javascript · muix · anyplot.ai" and a soft-ink subtitle ("98 events · 105 m × 68 m pitch · arrows run to the end position of pass and shot events") centred above; bottom legend: Pass (green circle), Shot (purple star), Tackle (blue triangle), Interception (ochre diamond), a separator, Successful (filled) and Unsuccessful (hollow). All text dark and readable. No axes, as the spec permits.
+      Data: pitch markings in dark grey: outline, halfway line, centre circle and spot, both penalty areas with spots and arcs, goal areas, goals behind the goal lines, small corner arcs. 48 passes in brand green #009E73 with arrows; 10 shots as purple stars, arrows fanning into the right goal mouth; tackles as blue triangles; interceptions as ochre diamonds. Unsuccessful events are hollow with dashed, lighter arrows.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title adapts via t.ink token to light cream on dark background; legend labels similarly adapt — no dark-on-dark failures detected; pitch markings remain white
-      Data: Colors identical to light render — Imprint palette positions 1-4 unchanged across themes as required; brand green #009E73 clearly visible on dark surface
-      Legibility verdict: PASS — title and legend text readable against dark background; no dark-on-dark failures
+      Background: warm near-black page (#1A1A17); run-off is a dark grey wash; the pitch stays near-white by design (spec allows a white pitch with contrasting lines).
+      Chrome: title, subtitle and legend text in light ink, all readable; no dark-on-dark text. Outcome legend glyphs switch to light ink.
+      Data: identical positions and colors to the light render (green, purple, blue, ochre); markings keep the same dark-grey ink on the white pitch, goals visible against the dark run-off.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title at 22px CSS readable; legend labels at 14px CSS slightly undersized
-          for 3200x1800 canvas
+        comment: Title 22 px, subtitle 15 px, legend 16 px; readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Expected marker/arrow overlap in dense shot cluster near goal; acceptable
-          for event map
+        comment: No text collisions; crowding of shot arrows in the goal mouth is
+          permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers well-sized for 98 events; legend swatches 18x12px CSS are
-          small
+        comment: 8 px markers for ~98 events, visible arrowheads, hollow markers with
+          2.2 px stroke stay visible; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette; outcome encoded via opacity+linestyle redundantly
+        comment: Type is double-encoded by shape and color; outcome by fill and dash
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: FIFA 105:68 aspect ratio maintained; centered layout; no overflow
+        comment: 3200x1800, pitch fills the canvas at true aspect ratio, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; no axis labels needed for pitch map
+        comment: N/A for axes (spec permits omitting them); subtitle states units
+          and pitch size
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; positions 1-4 canonical; page backgrounds
-          correct; pitch-green semantic exception'
+        comment: 'First series #009E73, Imprint order for types, page backgrounds
+          correct in both themes; white pitch is the spec''s chosen surface'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Full FIFA pitch markings, 4 marker shapes, directional arrows, opacity
-          outcome encoding — well above defaults
+        comment: Title/subtitle hierarchy, tinted run-off framing the pitch, shape+color
+          legend with a separator between type and outcome groups
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed lines for unsuccessful events, distinct arrowhead sizes; shot
-          cluster density slightly busy
+        comment: Arrows thinner and translucent under the markers, dashed for failures,
+          marker strokes in the pitch color separate overlapping marks
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear spatial narrative; visual hierarchy between successful/unsuccessful
-          events guides viewer
+        comment: Solid vs dashed arrows make successful build-up vs failed attempts
+          readable at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Soccer pitch event map exactly as specified
+        comment: Event map on a scaled pitch
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: accurate pitch markings, 4 marker shapes, opacity
-          outcome encoding, directional arrows, green pitch, correct aspect ratio'
+        comment: All markings incl. corner arcs and goal posts; distinct shapes/colors;
+          outcome by fill; arrows with heads for passes and shots; white pitch; 105:68
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y pitch coordinates correctly mapped; all event types and outcomes
-          present
+        comment: Markers at their coordinates via the MUI X scales; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend shows all 4 event types
+        comment: Mandated title; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -159,86 +167,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 event types, outcome encoding, directional arrows, realistic
-          spatial distribution
+        comment: All four event types with both outcomes; arrows for passes and shots
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shots from attacking half, passes distributed, tackles/interceptions
-          spread — plausible match analytics
+        comment: 'Plausible match segment: forward-biased passes, shots from the attacking
+          third, ~25% shot success'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 98 total events within 50-500 spec range; FIFA 105mx68m dimensions
-          correct
+        comment: Coordinates within 0-105 x 0-68; shot ends inside the 7.32 m goal
+          mouth; 98 events within 50-500
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Multiple helper functions and layer components all justified by the
-          spec complexity
+        comment: Two layer components are needed to call the MUI X hooks; otherwise
+          flat
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG makeLcg(42) for deterministic data
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured SVG layer composition
+        comment: Geometry from named constants, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles output files; current MUI X hooks API
+        comment: Default-exported component, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ChartContainer with custom SVG layers, useDrawingArea/useXScale/useYScale
-          hooks, ChartsLegend, skipAnimation
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: MUI X custom layer composition for specialized visualization; scale
-          hooks for coordinate bridging
+        comment: Composition with ChartsDataProvider/ChartsSurface and hidden linear
+          axes defining the metre domain
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: useXScale/useYScale/useDrawingArea hooks drive custom SVG layers
+          in MUI X's coordinate space
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:14:47Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - patches
   - custom-legend
-  - html-export
+  - patches
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
+  - edge-highlighting

@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: violin-box
 created: '2026-09-09T21:34:18Z'
-updated: '2026-09-09T21:38:32Z'
-generated_by: claude-sonnet
-workflow_run: 34407085829
+updated: '2026-11-08T06:50:25Z'
+generated_by: claude-opus-5-5
+adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
+workflow_run: 42456097135
 issue: 2646
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/javascript/muix/plot-light.html
@@ -15,119 +16,121 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 quality_score: 90
 review:
   strengths:
-  - 'Correct and creative solution for a chart type MUI X community doesn''t natively
-    support: composes ChartContainer + useXScale/useYScale hooks into a hand-rolled
-    mirrored-violin + embedded-box + outlier overlay, exactly the composition technique
-    the library guide recommends'
-  - Deterministic LCG-seeded data with a genuinely interesting story (Yerkes-Dodson-style
-    bimodal split in the 300mg group) that the KDE shape reveals but a plain box plot
-    would hide
-  - Correct Imprint palette usage (brand green first, canonical categorical order)
-    and correct theme backgrounds; data colors identical between light and dark, only
-    chrome flips
-  - 'All spec-required elements present: violin KDE shape, centered box with median/quartiles,
-    Tukey 1.5xIQR whiskers, and outliers rendered as separate hollow points'
-  - 'Clean chrome: no top/right spines, subtle horizontal-only grid, generous margins,
-    no clipping in either theme'
+  - 'Uses the MUI X v9 composition API idiomatically: ChartsContainer with a band
+    x axis and a linear y axis, and a custom ViolinBoxes SVG layer that draws through
+    the chart''s own useXScale/useYScale hooks, so violins, boxes and outliers share
+    the axis scales exactly'
+  - 'Every spec feature is present in both renders: mirrored KDE violins, a narrow
+    box (Q1–Q3) centered on each violin''s axis, a page-colored median bar, Tukey
+    whiskers with caps, and open-circle outliers at their values'
+  - The box fill flips with the theme (ink box with a page-colored median in light,
+    light box with a dark median in dark), so the box and whiskers stand out against
+    the violin fill in both themes
+  - 'The ordered caffeine doses take steps of the imprint_seq ramp in dose order,
+    starting at brand green #009E73, as the style guide asks for ordered categories'
+  - 'The data shows every shape the plot type is for: a right-skewed attention-lapse
+    tail at placebo, a tight 200 mg optimum and a bimodal 300 mg group, with violin
+    tails ending just past each group''s data range (1.5 bandwidths)'
+  - A title/subtitle hierarchy in which the subtitle states n, group count and the
+    box/whisker/outlier encoding, x ticks disabled on the categorical axis, and a
+    value axis not forced to zero
   weaknesses:
-  - Violin tails don't fully taper to zero width before reaching the Y-axis domain
-    limits, producing thin flagpole-like spikes extending from the topmost/bottommost
-    outliers to the plot's vertical extremes (most visible on the placebo and 100mg
-    violins) - widen yPad or increase the KDE bandwidth slightly so density genuinely
-    approaches zero within the plotted range
-  - 'yAxis config sets both tickFontSize: 34 and tickLabelStyle: { fontSize: 14 }
-    - tickFontSize is not a real MUI X Charts axis prop and silently does nothing;
-    remove the dead prop'
-  - Several small helper functions (lcg, randomNormal, sampleReactionTime, quantile,
-    boxStats, stdOf, kde) - justified by the custom violin/box math but a bit more
-    fragmented than the KISS ideal; consider inlining trivial ones like stdOf
+  - 'Suggestion: the outliers of the placebo group cluster around 680–690 ms on one
+    vertical line; a small fill opacity on the outlier circles would make the stacked
+    ones easier to count.'
+  - 'Suggestion: the header''s library version line reads 7.29.1 while the harness
+    pins @mui/x-charts 9.16; the header could carry the pinned version.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the Imprint light theme.
-      Chrome: Title "violin-box · javascript · muix · anyplot.ai" top-left in dark ink, clearly legible. X-axis label "Caffeine Dose" and Y-axis label "Reaction Time (ms)" both dark and legible, with readable tick labels on both axes. Subtle horizontal gridlines at low opacity. No top/right spines.
-      Data: Four violins (0 mg Placebo, 100 mg, 200 mg, 300 mg) in Imprint colors - first series is brand green (#009E73), followed by purple, blue, and amber, matching canonical categorical order. Each violin has a centered box (darker/solid fill of the same hue) showing the median (cream-colored line) and quartiles, a thin whisker line through the box, and small hollow outlier circles above/below the whiskers. The 300mg violin is visibly bimodal (two humps) versus the roughly unimodal placebo/100mg/200mg groups, telling a clear dose-response story.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: bold title "violin-box · javascript · muix · anyplot.ai" top left with a soft-ink subtitle "960 measurements in 4 groups · box Q1–Q3 with median, whiskers to 1.5 × IQR, open circles beyond"; y axis "Reaction time (ms)" with ticks 300–850, x axis "Caffeine dose" with categories 0 mg (placebo), 100 mg, 200 mg, 300 mg; left and bottom axis lines only, subtle horizontal grid. All text dark on light, clearly readable.
+      Data: four translucent violins in sequential-ramp steps from brand green #009E73 (placebo) through teal to slate blue (300 mg), each with a narrow near-black box, a page-colored median bar, black whiskers with caps, and open black outlier circles (placebo upper tail and one low point, 100 mg upper tail, 200 mg three high points). 300 mg is clearly bimodal; placebo is right-skewed.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the Imprint dark theme.
-      Chrome: Same title, now in light ink, fully legible against the dark background. Axis labels and tick labels rendered in light ink, clearly readable. Gridlines subtle but visible. No dark-on-dark failures observed.
-      Data: Colors are identical to the light render (green/purple/blue/amber violins with matching box fills), confirming only chrome flips between themes. Median lines inside boxes render as near-black lines (t.pageBg for dark theme) which stay legible against the lighter colored box fills. Outlier circles use dark fill with colored stroke, remaining visible against the dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, axis lines light, grid subtle dark gray; no dark-on-dark text.
+      Data: violin colors are the same ramp steps as the light render (green, teal, blue-teal, slate blue); boxes flip to light ink with a dark median bar, whiskers and outlier circles in light ink, all clearly visible against the violin fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; dead tickFontSize prop has no visual
-          effect
+        comment: Explicit font sizes (title 22, subtitle 15, axis labels 16, ticks
+          15–16 px); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or annotations
+        comment: No text collisions; outlier circles touching in the placebo tail
+          stay distinguishable by outline (permitted by the spec)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Violin/box/outlier elements clear, but KDE tails leave thin flagpole
-          spikes at the domain edges
+        comment: Violins, narrow boxes, whiskers, caps and outliers all clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, no red-green-only signal
+        comment: Green-to-blue ramp, no red-green signal; groups also separated by
+          position and label
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions, nothing clipped
+        comment: 3200x1800, plot fills the canvas, balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (ms)
+        comment: Reaction time (ms) with unit; Caffeine dose
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73, canonical order, correct theme
-          backgrounds'
+        comment: 'Ordered doses in imprint_seq steps starting at #009E73; correct
+          #FAF8F1 / #1A1A17 backgrounds; theme-correct chrome'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Semi-transparent violins with stroked outlines, custom palette, professional
-          composed chart
+        comment: Title/subtitle hierarchy with a subtitle that explains the box/whisker/outlier
+          encoding; theme-inverted box with contrasting median bar; rounded box corners
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines, subtle grid, generous whitespace; docked for the tail-spike
-          artifact
+        comment: Ticks disabled on the categorical axis, narrow box capped at 16 px
+          so the violin shape reads around it, open outlier circles, violin tails
+          bounded to 1.5 bandwidths past the data
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal 300mg group creates a clear, meaningful focal point in the
-          dose-response narrative
+        comment: 'Data designed as a Yerkes-Dodson story: lapse tail at placebo, tight
+          optimum at 200 mg, bimodal overstimulation at 300 mg; the dose ramp reinforces
+          the ordering'
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Violin plot with embedded box plot, as specified
+        comment: Violin with embedded box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Box centered inside violin, median/quartiles/whiskers, KDE shape,
-          outliers as points
+        comment: Box centered in violin, median/quartiles/whiskers, KDE shape visible
+          on both sides, outliers as points; all four 'A good version shows' bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Group on X (band scale), value on Y, all data shown
+        comment: Shared value axis not forced to zero; all marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; x-axis category labels substitute for a legend
-          appropriately
+        comment: Mandated title format; legend N/A (groups labelled on the x axis)
     data_quality:
       score: 15
       max: 15
@@ -167,78 +170,85 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows density, quartiles, whiskers, and outliers together
+        comment: Skewed, tight and bimodal shapes, outliers on both sides, differing
+          widths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Caffeine-dose reaction-time experiment, plausible and neutral
+        comment: Reaction times by caffeine dose, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times in a sensible 220-850ms range; 240 points/group
+        comment: Simple reaction times of ~300–850 ms are realistic; 240 trials per
+          group within the 50–1000 range; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Several small helper functions, justified by custom KDE/box math
-          but somewhat fragmented
+        comment: Columns → data → plot; the ViolinBoxes component is the React form
+          MUI X custom layers require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only required @mui/x-charts imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the custom composition, no fake functionality
+        comment: Written-out KDE and box statistics are permitted (no stats helpers
+          in @mui/x-charts)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized to
-          window.ANYPLOT_SIZE'
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
+          sized to ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses the documented composition technique (ChartContainer + scale
-          hooks) for a chart type the community package doesn't ship
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Creative use of band/linear scale hooks and ChartsGrid styling to
-          build a genuinely custom chart type
+        comment: Composition with ChartsContainer, ChartsGrid, ChartsXAxis/ChartsYAxis
+          by axisId, sx-based axis styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom SVG layer driven by MUI X's useXScale/useYScale hooks and
+          the band scale's bandwidth()
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:47:36Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
@@ -246,4 +256,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
