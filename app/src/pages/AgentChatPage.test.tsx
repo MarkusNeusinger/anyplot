@@ -3888,6 +3888,19 @@ describe('AgentChatPage attachment', () => {
       ]);
     });
 
+    it('ends at a table read from text, which stores nothing, with its decision on the line', async () => {
+      await openChat();
+      pasteText(FREE_TEXT);
+      await clickCreate();
+      await screen.findByTestId('transcription-card');
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · decide on the table first: .use() or .discard()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual([]);
+    });
+
     it('leaves Enter as it was: it reads the chip and plots nothing', async () => {
       cleanSummary();
       await openChat();

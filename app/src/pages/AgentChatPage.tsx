@@ -941,8 +941,9 @@ function AgentChat({
     while (chainRef.current === id) {
       const page = chainPage.current;
       // Until the page rendered after the last await, it shows what the chain already decided on.
+      // A send that stored nothing ends the chain at once: it may have changed no session state.
       const step: ChainStep =
-        !result || !page
+        !result || !page || result.outcome !== 'stored'
           ? { kind: 'stop', stop: null }
           : page.state === seen
             ? { kind: 'wait' }
