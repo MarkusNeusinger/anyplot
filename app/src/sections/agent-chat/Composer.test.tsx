@@ -221,6 +221,21 @@ describe('Composer row', () => {
     expect(document.getElementById(help)).toHaveTextContent(
       'new from the catalogue plot; keeps your remembered decisions'
     );
+
+    // `plot the new data` may change the latest plot instead: its description says when.
+    rerender(
+      <Composer
+        {...composerProps({
+          hasPlot: true,
+          plot: { kind: 'new_data', active: true, confirming: false, fresh: true },
+        })}
+      />
+    );
+    const newData = screen.getByRole('button', { name: 'Plot the new data' });
+    const [, newDataHelp] = newData.getAttribute('aria-describedby')!.split(' ');
+    expect(document.getElementById(newDataHelp)).toHaveTextContent(
+      'your latest plot with the new data when it comes from the same paste with the same bindings, else new from the catalogue plot; keeps your remembered decisions'
+    );
   });
 
   it('never acts on an inert button, which keeps the keyboard focus', async () => {
