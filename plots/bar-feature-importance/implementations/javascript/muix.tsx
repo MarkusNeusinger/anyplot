@@ -19,19 +19,20 @@ const FEATURE = "Feature"; // role: feature
 const IMPORTANCE = "Importance (mean decrease in impurity)"; // role: importance
 
 // Data: replace this block with your own records, one object per row
-// Random forest regressor predicting wine quality (UCI Wine Quality dataset)
+// Random forest regressor predicting wine quality (UCI Wine Quality dataset); the
+// impurity-based importances of all 11 features sum to 1
 const data = [
-  { [FEATURE]: "Alcohol", [IMPORTANCE]: 0.192 },
-  { [FEATURE]: "Sulphates", [IMPORTANCE]: 0.134 },
-  { [FEATURE]: "Volatile Acidity", [IMPORTANCE]: 0.121 },
-  { [FEATURE]: "Total Sulfur Dioxide", [IMPORTANCE]: 0.095 },
-  { [FEATURE]: "Density", [IMPORTANCE]: 0.084 },
-  { [FEATURE]: "Chlorides", [IMPORTANCE]: 0.069 },
-  { [FEATURE]: "Citric Acid", [IMPORTANCE]: 0.063 },
-  { [FEATURE]: "Fixed Acidity", [IMPORTANCE]: 0.058 },
-  { [FEATURE]: "pH", [IMPORTANCE]: 0.054 },
-  { [FEATURE]: "Free Sulfur Dioxide", [IMPORTANCE]: 0.049 },
-  { [FEATURE]: "Residual Sugar", [IMPORTANCE]: 0.041 },
+  { [FEATURE]: "Alcohol", [IMPORTANCE]: 0.2 },
+  { [FEATURE]: "Sulphates", [IMPORTANCE]: 0.14 },
+  { [FEATURE]: "Volatile Acidity", [IMPORTANCE]: 0.126 },
+  { [FEATURE]: "Total Sulfur Dioxide", [IMPORTANCE]: 0.099 },
+  { [FEATURE]: "Density", [IMPORTANCE]: 0.087 },
+  { [FEATURE]: "Chlorides", [IMPORTANCE]: 0.072 },
+  { [FEATURE]: "Citric Acid", [IMPORTANCE]: 0.066 },
+  { [FEATURE]: "Fixed Acidity", [IMPORTANCE]: 0.06 },
+  { [FEATURE]: "pH", [IMPORTANCE]: 0.056 },
+  { [FEATURE]: "Free Sulfur Dioxide", [IMPORTANCE]: 0.051 },
+  { [FEATURE]: "Residual Sugar", [IMPORTANCE]: 0.043 },
 ];
 
 // Plot: reads only data and the constants above
