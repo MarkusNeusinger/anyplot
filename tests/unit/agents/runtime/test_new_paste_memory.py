@@ -268,3 +268,17 @@ async def test_the_paste_answer_says_when_a_plotted_column_is_gone(client: httpx
     assert back["columns_changed"] is True  # the pendulum columns the defaults bound are gone again
     first = await paste(client, await open_session(client, with_data=False), SAME_COLUMNS)
     assert first["columns_changed"] is False  # nothing was replaced
+
+
+async def test_a_plotted_column_that_no_longer_fits_its_role_is_no_column_gone(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Copilot on #12834: `Exam Score` is in the new table as text, so the y binding does not carry, but the column
+    the plot was drawn by is there; the line would wrongly say the earlier data had other columns."""
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    texts = await paste(client, sid, "Student,Study Hours,Exam Score\nT01,4.5,good\nT02,5.0,fair\nT03,6.5,good\n")
+
+    assert texts["columns_changed"] is False
+    assert {binding["role"]: binding["column"] for binding in texts["bindings"]}.get("y") != "Exam Score"
