@@ -1,79 +1,109 @@
 // anyplot.ai
 // timeline-basic: Event Timeline
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-09
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { ChartsText } from "@mui/x-charts/ChartsText";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic — real public mission dates) -----------
-// A science/exploration timeline rather than a project-management one: dates
-// double as historical record, which is one of the spec's named applications.
-const MILESTONES = [
-  { date: new Date(2020, 6, 30), event: "Launch from Cape Canaveral", category: "Launch" },
-  { date: new Date(2021, 1, 18), event: "Landing in Jezero Crater", category: "Landing" },
-  { date: new Date(2021, 3, 19), event: "First Powered Flight", category: "Exploration" },
-  { date: new Date(2021, 8, 6), event: "First Rock Sample Collected", category: "Science" },
-  { date: new Date(2022, 0, 27), event: "10th Sample Cached", category: "Science" },
-  { date: new Date(2022, 7, 8), event: "Reached River Delta Region", category: "Exploration" },
-  { date: new Date(2023, 2, 22), event: "Sample Depot Completed", category: "Science" },
-  { date: new Date(2023, 6, 18), event: "Crater Rim Ascent Begins", category: "Exploration" },
+// Constants
+const PAD_SHARE = 0.06; // room before the first and after the last event, as a share of the span
+const MARKER_R = 11; // event marker radius (px)
+const LABEL_CLEARANCE = 64; // px kept beyond a stem's end for its two label lines
+const TITLE_H = 64;
+const LEGEND_H = 44;
+const MARGIN = { top: 16, right: 48, bottom: 8, left: 48 };
+const X_AXIS_H = 44;
+
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const EVENT = "Milestone"; // role: event
+const CATEGORY = "Mission phase"; // role: category
+
+// Data: replace this block with your own records, one object per row
+// Milestones of NASA's Perseverance rover mission (public mission dates)
+const data = [
+  { [DATE]: new Date(2020, 6, 30), [EVENT]: "Launch from Cape Canaveral", [CATEGORY]: "Launch" },
+  { [DATE]: new Date(2021, 1, 18), [EVENT]: "Landing in Jezero Crater", [CATEGORY]: "Landing" },
+  { [DATE]: new Date(2021, 3, 19), [EVENT]: "First Powered Flight", [CATEGORY]: "Exploration" },
+  { [DATE]: new Date(2021, 8, 6), [EVENT]: "First Rock Sample Collected", [CATEGORY]: "Science" },
+  { [DATE]: new Date(2022, 0, 27), [EVENT]: "10th Sample Cached", [CATEGORY]: "Science" },
+  { [DATE]: new Date(2022, 7, 8), [EVENT]: "Reached River Delta Region", [CATEGORY]: "Exploration" },
+  { [DATE]: new Date(2023, 2, 22), [EVENT]: "Sample Depot Completed", [CATEGORY]: "Science" },
+  { [DATE]: new Date(2023, 6, 18), [EVENT]: "Crater Rim Ascent Begins", [CATEGORY]: "Exploration" },
 ];
 
-// First-appearance order fixes the brand-green anchor on "Launch" — the
-// canonical Imprint order, not cherry-picked for aesthetics.
-const CATEGORY_ORDER = ["Launch", "Landing", "Exploration", "Science"];
-const categoryColor: Record<string, string> = {
-  Launch: t.palette[0],
-  Landing: t.palette[1],
-  Exploration: t.palette[2],
-  Science: t.palette[3],
-};
+// Plot: reads only data and the constants above
+// Events in date order; labels alternate above and below the spine in that order,
+// and the earliest and latest labels open inward so they stay on the canvas
+const events = data
+  .filter((d) => d[DATE] instanceof Date && !Number.isNaN(d[DATE].getTime()))
+  .sort((a, b) => a[DATE].getTime() - b[DATE].getTime())
+  .map((d, i, all) => ({
+    id: `event-${i}`,
+    time: d[DATE].getTime(),
+    name: d[EVENT],
+    category: d[CATEGORY],
+    dateText: d[DATE].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    above: i % 2 === 0,
+    anchor: i === 0 ? "start" : i === all.length - 1 ? "end" : "middle",
+  }));
+const categories = [...new Set(events.map((e) => e.category))];
+const categoryColor = Object.fromEntries(categories.map((c, i) => [c, t.palette[i]]));
+const tFirst = events[0].time;
+const tLast = events[events.length - 1].time;
+const tPad = (tLast - tFirst) * PAD_SHARE;
+const spanYears = (tLast - tFirst) / (365.25 * 24 * 3600 * 1000);
 
-// --- Event labels: MUI X community has no per-point label primitive for
-// scatter series — draw them against the shared xAxis/yAxis scale via
-// useXScale/useYScale, the documented composition pattern for marks outside
-// the plain chart surface. Labels alternate above/below the spine so
-// adjacent events never collide.
-function EventLabels({ stemLength }: { stemLength: number }) {
-  const xScale = useXScale() as any;
-  const yScale = useYScale() as any;
-  if (!xScale || !yScale) return null;
+const TITLE = "Perseverance Rover Mission · timeline-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${events.length} ${EVENT.toLowerCase()}s over ${spanYears.toFixed(1)} years · color = ${CATEGORY.toLowerCase()}`;
 
-  const textGap = 10;
+function EventLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const spineY = yScale(0);
+  const [plotTop, plotBottom] = [yScale(1), yScale(-1)];
+  const stem = (plotBottom - plotTop) / 2 - LABEL_CLEARANCE;
 
   return (
     <g>
-      {MILESTONES.map((m, i) => {
-        const x = xScale(m.date);
-        const spineY = yScale(0);
-        const above = i % 2 === 0;
-        const stemEnd = above ? spineY - stemLength : spineY + stemLength;
-        const color = categoryColor[m.category];
-        // Center labels by default, but anchor the first/last event's text
-        // inward so it can't run off the canvas edge.
-        const textAnchor = i === 0 ? "start" : i === MILESTONES.length - 1 ? "end" : "middle";
-
+      {events.map((e) => {
+        const x = xScale(e.time);
+        const end = e.above ? spineY - stem : spineY + stem;
         return (
-          <g key={m.event}>
-            <line x1={x} y1={spineY} x2={x} y2={stemEnd} stroke={color} strokeWidth={2} />
-            <ChartsText
+          <g key={e.id}>
+            <line x1={x} y1={spineY} x2={x} y2={end} stroke={categoryColor[e.category]} strokeWidth={2} />
+            <text
               x={x}
-              y={above ? stemEnd - textGap : stemEnd + textGap}
-              text={m.event}
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
-                fill: t.ink,
-                textAnchor,
-                dominantBaseline: above ? "auto" : "hanging",
-              }}
-            />
+              y={e.above ? end - 46 : end + 10}
+              textAnchor={e.anchor}
+              dominantBaseline="hanging"
+              fontSize={16}
+              fontWeight={600}
+              fill={t.ink}
+            >
+              {e.name}
+            </text>
+            <text
+              x={x}
+              y={e.above ? end - 24 : end + 32}
+              textAnchor={e.anchor}
+              dominantBaseline="hanging"
+              fontSize={14}
+              fill={t.inkSoft}
+            >
+              {e.dateText}
+            </text>
           </g>
         );
       })}
@@ -81,96 +111,62 @@ function EventLabels({ stemLength }: { stemLength: number }) {
   );
 }
 
-const TITLE = "Perseverance Rover Mission · timeline-basic · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const titleSize = TITLE.length > 67 ? Math.max(14, Math.round((22 * 67) / TITLE.length)) : 22;
-
-  // Tightened bands: the chart plot area (spine + labels) should dominate
-  // the canvas rather than leaving large blank margins above/below the
-  // label rows (prior attempt left ~38%/~31% of the height empty).
-  const TITLE_H = 56;
-  const LEGEND_H = 44;
-  const chartH = H - TITLE_H - LEGEND_H;
-  const MARGIN_TOP = 28;
-  const MARGIN_BOTTOM = 56;
-
-  // Derive the stem length from the actual plot area so the label rows sit
-  // close to the title/axis edges instead of clustering in a thin strip at
-  // the vertical center — LABEL_CLEARANCE reserves room for the label text
-  // itself plus a small breathing gap from the title/axis.
-  const plotH = chartH - MARGIN_TOP - MARGIN_BOTTOM;
-  const LABEL_CLEARANCE = 48;
-  const stemLength = Math.max(40, plotH / 2 - LABEL_CLEARANCE);
-
-  const series = CATEGORY_ORDER.map((cat) => ({
-    id: cat,
-    label: cat,
-    color: categoryColor[cat],
-    markerSize: 20,
-    data: MILESTONES.filter((m) => m.category === cat).map((m, i) => ({
-      x: m.date,
-      y: 0,
-      id: `${cat}-${i}`,
-    })),
-  }));
+  const { width: W, height: H } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
-        boxSizing: "border-box",
-      }}
-    >
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>{TITLE}</Typography>
+    <Box sx={{ width: W, height: H, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "4px", pt: "6px" }}>
+        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.2 }}>{SUBTITLE}</Typography>
       </Box>
-
-      <ScatterChart
+      <ChartsDataProvider
         width={W}
-        height={chartH}
+        height={H - TITLE_H - LEGEND_H}
         skipAnimation
-        series={series}
+        margin={MARGIN}
+        series={categories.map((c, i) => ({
+          type: "scatter" as const,
+          id: `category-${i}`,
+          label: c,
+          color: categoryColor[c],
+          markerSize: MARKER_R,
+          data: events.filter((e) => e.category === c).map((e) => ({ id: e.id, x: e.time, y: 0 })),
+          valueFormatter: (_v, { dataIndex }) => {
+            const e = events.filter((ev) => ev.category === c)[dataIndex];
+            return `${e.name} · ${e.dateText}`;
+          },
+        }))}
         xAxis={[
           {
-            scaleType: "point",
-            data: MILESTONES.map((m) => m.date),
-            valueFormatter: (d: Date) => d.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+            scaleType: "time",
+            min: new Date(tFirst - tPad),
+            max: new Date(tLast + tPad),
+            height: X_AXIS_H,
+            tickNumber: 8,
+            valueFormatter: (v: Date) => v.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
-        yAxis={[{ min: -1, max: 1, domainLimit: "strict" }]}
-        leftAxis={null}
-        grid={{ horizontal: false, vertical: false }}
-        margin={{ top: MARGIN_TOP, right: 60, bottom: MARGIN_BOTTOM, left: 60 }}
-        slotProps={{ legend: { hidden: true } }}
-        sx={{
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.25 },
-          "& .MuiChartsAxis-tick": { stroke: t.inkSoft, strokeOpacity: 0.25 },
-        }}
+        yAxis={[{ min: -1, max: 1, position: "none" }]}
       >
-        <ChartsReferenceLine y={0} lineStyle={{ stroke: t.grid, strokeWidth: 2 }} />
-        <EventLabels stemLength={stemLength} />
-      </ScatterChart>
-
-      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
-        {CATEGORY_ORDER.map((cat) => (
-          <Box key={cat} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <svg width={14} height={14}>
-              <circle cx={7} cy={7} r={7} fill={categoryColor[cat]} />
-            </svg>
-            <Typography sx={{ color: t.inkSoft, fontSize: 13, fontWeight: 500 }}>{cat}</Typography>
-          </Box>
-        ))}
-      </Box>
+        <ChartsWrapper legendPosition={{ vertical: "bottom", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend direction="horizontal" sx={{ fontSize: 15, color: t.inkSoft, height: LEGEND_H, justifyContent: "center" }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 2 },
+            }}
+          >
+            <ChartsXAxis />
+            <ChartsReferenceLine y={0} lineStyle={{ stroke: t.inkSoft, strokeWidth: 2 }} />
+            <EventLabels />
+            <ScatterPlot />
+          </ChartsSurface>
+          <ChartsTooltip trigger="item" />
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </Box>
   );
 }
