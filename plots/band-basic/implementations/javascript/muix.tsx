@@ -13,6 +13,8 @@ const TITLE = "band-basic · javascript · muix · anyplot.ai";
 const TITLE_H = 84;
 const LEGEND_H = 44;
 const BAND_OPACITY = 0.28;
+const BAND_COLOR = t.palette[0];
+const CENTER_COLOR = t.palette[2]; // a second hue, so the central line contrasts with the band fill
 
 // Columns: set these to your data's column names
 const DAY = "Forecast day"; // role: x
@@ -93,7 +95,7 @@ export default function Chart() {
           },
         ]}
         series={[
-          { id: "lower", data: lowerEdge, label: LOWER, stack: "band", showMark: false, color: t.palette[0], curve: "monotoneX" },
+          { id: "lower", data: lowerEdge, label: LOWER, stack: "band", showMark: false, color: BAND_COLOR, curve: "monotoneX" },
           {
             id: "band",
             data: bandWidth,
@@ -101,12 +103,12 @@ export default function Chart() {
             stack: "band",
             area: true,
             showMark: false,
-            color: t.palette[0],
+            color: BAND_COLOR,
             curve: "monotoneX",
             valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) =>
               v == null ? "" : `${rows[dataIndex][LOWER]} – ${rows[dataIndex][UPPER]}`,
           },
-          { id: "center", data: rows.map((d) => d[CENTER]), label: CENTER, showMark: false, color: t.palette[0], curve: "monotoneX" },
+          { id: "center", data: rows.map((d) => d[CENTER]), label: CENTER, showMark: false, color: CENTER_COLOR, curve: "monotoneX" },
         ]}
         margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
         sx={{
@@ -121,11 +123,11 @@ export default function Chart() {
       />
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "36px" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Box sx={{ width: 28, height: 16, bgcolor: t.palette[0], opacity: BAND_OPACITY, borderRadius: "3px" }} />
+          <Box sx={{ width: 28, height: 16, bgcolor: BAND_COLOR, opacity: BAND_OPACITY, borderRadius: "3px" }} />
           <Typography sx={{ fontSize: 15, color: t.ink }}>{BAND_NAME}</Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Box sx={{ width: 28, height: 3, bgcolor: t.palette[0] }} />
+          <Box sx={{ width: 28, height: 3, bgcolor: CENTER_COLOR }} />
           <Typography sx={{ fontSize: 15, color: t.ink }}>{CENTER}</Typography>
         </Box>
       </Box>
