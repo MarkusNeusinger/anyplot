@@ -16,3 +16,6 @@
   - each detected convention matches a plain reading of the file's text and the harness's own orientation
     pattern;
   - the normaliser makes only its known rewrites.
+
+  The eval matrix's MUI X 7 preflight tests build their own MUI X 7 file instead of reading `scatter-basic`'s,
+  which the MUI X 9 pass rewrote.
