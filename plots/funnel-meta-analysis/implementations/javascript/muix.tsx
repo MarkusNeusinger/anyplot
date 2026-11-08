@@ -1,7 +1,7 @@
 // anyplot.ai
 // funnel-meta-analysis: Meta-Analysis Funnel Plot for Publication Bias
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: pending | Created: 2026-06-10
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
