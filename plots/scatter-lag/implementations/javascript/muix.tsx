@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
-// Library: muix 7.29.1 | JavaScript 22.23.0
-// Quality: pending | Created: 2026-06-24
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
