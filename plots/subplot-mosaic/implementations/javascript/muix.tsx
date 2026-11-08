@@ -24,7 +24,7 @@ const PAD_SHARE = 0.06; // room around the outermost scatter marks
 const DAY = "Day of month"; // role: x
 const PAGEVIEWS = "Pageviews"; // role: y
 const DEVICE = "Device"; // role: x
-const SESSIONS = "Sessions"; // role: y
+const SESSIONS = "Avg. daily sessions"; // role: y
 const BOUNCE = "Bounce rate (%)"; // role: x
 const DURATION = "Avg. duration (s)"; // role: y
 const CHANNEL = "Acquisition channel"; // role: extra
@@ -34,12 +34,13 @@ const KPI_MIN = "Scale minimum (%)"; // role: extra
 const KPI_MAX = "Scale maximum (%)"; // role: extra
 
 // Data: replace this block with your own records, one object per row
-// A website analytics dashboard: 30 days of site pageviews, sessions per device,
-// 35 landing pages per acquisition channel, and three KPIs on their own scales
+// A website analytics dashboard: 30 days of site pageviews, the average daily sessions
+// per device (about 2.7 pageviews per session), 35 landing pages per acquisition
+// channel, and three KPIs on their own scales
 const devices = [
-  { [DEVICE]: "Desktop", [SESSIONS]: 18400 },
-  { [DEVICE]: "Mobile", [SESSIONS]: 24900 },
-  { [DEVICE]: "Tablet", [SESSIONS]: 5100 },
+  { [DEVICE]: "Desktop", [SESSIONS]: 6400 },
+  { [DEVICE]: "Mobile", [SESSIONS]: 8700 },
+  { [DEVICE]: "Tablet", [SESSIONS]: 1800 },
 ];
 const kpis = [
   { [KPI]: "Conversion rate", [KPI_VALUE]: 4.8, [KPI_MIN]: 0, [KPI_MAX]: 10 },
@@ -88,6 +89,8 @@ const cells = Object.fromEntries(
 const gridCols = MOSAIC[0].length;
 const gridTemplateAreas = MOSAIC.map((row) => `"${[...row].join(" ")}"`).join(" ");
 const kpiCells = letters.filter((l) => ![TREND_CELL, DEVICE_CELL, PAGE_CELL].includes(l));
+// One gauge per KPI cell, in KPI order; KPIs beyond the free cells get no panel
+const kpiPanels = kpis.slice(0, kpiCells.length).map((kpi, i) => ({ kpi, cell: kpiCells[i] }));
 
 // Panel A: pageviews in day order
 const trend = [...data].sort((a, b) => a[DAY] - b[DAY]);
@@ -250,8 +253,8 @@ export default function Chart() {
           />
         </Box>
 
-        {kpis.map((kpi, i) => (
-          <Box key={kpi[KPI]} sx={{ gridArea: kpiCells[i], display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {kpiPanels.map(({ kpi, cell }) => (
+          <Box key={kpi[KPI]} sx={{ gridArea: cell, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Typography sx={{ ...panelTitleSx, textAlign: "center" }}>
               {kpi[KPI]}
               <Box component="span" sx={{ fontWeight: 400, color: t.inkSoft, fontSize: 14 }}>
@@ -259,8 +262,8 @@ export default function Chart() {
               </Box>
             </Typography>
             <Gauge
-              width={size[kpiCells[i]].w}
-              height={size[kpiCells[i]].h - PANEL_TITLE_H}
+              width={size[cell].w}
+              height={size[cell].h - PANEL_TITLE_H}
               value={kpi[KPI_VALUE]}
               valueMin={kpi[KPI_MIN]}
               valueMax={kpi[KPI_MAX]}
