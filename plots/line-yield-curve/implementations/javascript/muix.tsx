@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-yield-curve: Yield Curve (Interest Rate Term Structure)
-// Library: muix 7.29.1 | JavaScript 22.23.3
-// Quality: pending | Updated: 2026-10-09
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 91/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
