@@ -4,8 +4,10 @@
 # Usage: resume_paused.sh <round-dir> [--library <lib>] [--repairs] [--all-open] [--execute]
 #
 # Lists the open PRs labelled ai-review-paused (and with --repairs ai-repair-paused) titled
-# "feat(<library>): implement <spec>" for a pair this round dispatched (<round-dir>/dispatch.state); --all-open drops
-# that filter and takes every paused PR, which needs the owner to name it. --library narrows the list further. For each
+# "feat(<library>): implement <spec>" for a pair this round dispatched (<round-dir>/dispatch.state). Only an approved
+# dispatch writes those lines, and the owner's OK for the round's queue covers resuming its pairs (SKILL.md, step 7);
+# --all-open drops that filter and takes every paused PR, which needs the owner to name it. --library narrows the
+# list further. For each
 # PR still labelled, and only when neither a review run ("Review: PR #N") nor a repair run of its pair
 # ("Repair: <library> for <spec> (attempt N)") is queued or in progress (two runs on one PR race their labels), it runs
 # what the pause comment says:
@@ -53,6 +55,7 @@ if [ "$ALL_OPEN" != 1 ]; then
       adopt|rerender|regen) for s in $specs; do IN_ROUND["$lib $s"]=1; done ;;
     esac
   done < "$STATE"
+  [ "${#IN_ROUND[@]}" -gt 0 ] || { echo "resume_paused: $STATE lists no dispatched pair; --all-open takes every paused PR" >&2; exit 2; }
 fi
 mkdir -p "$ROUND"
 log() { echo "$(date -u +%FT%TZ) $*" | tee -a "$LOG"; }

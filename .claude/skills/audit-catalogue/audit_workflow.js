@@ -5,19 +5,24 @@ export const meta = {
   phases: [
     { title: 'Audit', detail: 'one auditor per group of about six pairs' },
     { title: 'Verify', detail: 'a skeptic tries to refute every high or medium finding' },
+    { title: 'Re-audit', detail: 'a skeptic per marked pair: is the live pair clean after a repair changed the fix?' },
   ],
 }
 
 // args: {round, repo, ref?, label?, group_size?, pairs: [{spec, language, library, reasons?: [string]}]}
+//   or:  {round, repo, ref?, label?, reaudit: [{pair, finding_id, severity, defect_class, cause, what, evidence, fix,
+//         pr, mark}]}, the reaudit-<time>.json verify_merged.py writes for the marked pairs (only the re-audit runs)
 //   round  the private round directory (~/anyplot-audit/<date>), outside every checkout
 //   repo   the main checkout, whose git store holds ref (default origin/main)
 //   label  names this run's scratch folder, round/audit/<label>/
-// Returns one entry per group: {group, pairs, checked, findings, verified}. The caller writes it to
-// round/audit-<label>.json; this script cannot write files.
+// Returns one entry per group: {group, pairs, checked, findings, verified}; a re-audit returns one such entry, with
+// the clean pairs in checked and the rest as findings. The caller writes it to round/audit-<label>.json; this
+// script cannot write files.
 
 const A = args || {}
-if (!A.round || !A.repo || !Array.isArray(A.pairs) || A.pairs.length === 0) {
-  throw new Error('args needs round, repo and a non-empty pairs list')
+const REAUDITS = Array.isArray(A.reaudit) ? A.reaudit : []
+if (!A.round || !A.repo || ((!Array.isArray(A.pairs) || A.pairs.length === 0) && REAUDITS.length === 0)) {
+  throw new Error('args needs round, repo and a non-empty pairs or reaudit list')
 }
 // The scripts check this against every checkout on disk; this one only sees the repo it is given.
 const repoRoot = A.repo.replace(/\/+$/, '')
@@ -31,10 +36,10 @@ const SIZE = A.group_size || 6
 const GH = 'MarkusNeusinger/anyplot'
 const GCS = 'https://storage.googleapis.com/anyplot-images/plots'
 
-const pairs = [...A.pairs].sort((a, b) => `${a.spec}/${a.library}`.localeCompare(`${b.spec}/${b.library}`))
+const pairs = [...(A.pairs || [])].sort((a, b) => `${a.spec}/${a.library}`.localeCompare(`${b.spec}/${b.library}`))
 const groups = []
 for (let i = 0; i < pairs.length; i += SIZE) groups.push(pairs.slice(i, i + SIZE))
-log(`${pairs.length} pair(s) in ${groups.length} group(s) of up to ${SIZE}, read at ${REF}`)
+if (!REAUDITS.length) log(`${pairs.length} pair(s) in ${groups.length} group(s) of up to ${SIZE}, read at ${REF}`)
 
 const key = (p) => `${p.spec}/${p.language}/${p.library}`
 
@@ -107,9 +112,10 @@ For each pair:
    SC-01 (plot type) first.
 2. Renders: cb=$(date +%s); for theme in light dark, run
    curl -sf -D "${OUT}/g${i}/<spec>--<library>-<theme>.headers" -o "${OUT}/g${i}/<spec>--<library>-<theme>.png" "${GCS}/<spec>/<language>/<library>/plot-<theme>.png?cb=$cb"
+   and curl -sfI "${GCS}/<spec>/<language>/<library>/plot-<theme>_800.webp?cb=$cb" for the image the site shows.
    ALWAYS with the cache-buster: the bucket serves Cache-Control max-age=604800, so a plain URL can return an edge copy up
-   to a week old. Last-Modified must not be older than the metadata's updated (older or missing means the pipeline
-   never promoted this version: cause pipeline). Look at BOTH images with the Read tool.
+   to a week old. No Last-Modified, of the PNG or of the _800.webp, may be older than the metadata's updated (older or
+   missing means the pipeline never promoted this version: cause pipeline). Look at BOTH PNGs with the Read tool.
 3. The spec: git -C "${A.repo}" show ${REF}:plots/<spec>/specification.md. Does the plot show what it describes: the plot
    type, the Data roles, every bullet of "What a good version looks like"?
 4. The merged review: gh -R ${GH} pr list --state merged --search "head:implementation/<spec>/<library>" --json number,title,mergedAt --limit 5,
@@ -149,17 +155,94 @@ Decide: refuted=true when the evidence is not visible in the images or the files
 calls a defect. Default to refuted=true when unsure. When the defect is real, say how severe it really is, and correct the
 cause if the auditor got it wrong.`
 
+const REAUDIT_VERDICT = {
+  type: 'object',
+  properties: {
+    clean: { type: 'boolean' },
+    severity: { type: 'string', enum: ['high', 'medium', 'low'] },
+    cause: { type: 'string', enum: ['implementation', 'spec', 'pipeline', 'rubric'] },
+    reason: { type: 'string' },
+  },
+  required: ['clean', 'severity', 'cause', 'reason'],
+}
+
+const reauditPrompt = (c) => `You are a skeptic. The fix for an audit finding on a live pair of anyplot's catalogue merged, but a
+pipeline repair or a later merge then changed lines the fix had added, so the merged code is not the fix the owner
+approved. Decide whether the live pair is clean. ${READ_ONLY}
+Scratch folder: "${OUT}/reaudit/" (create it with mkdir -p; keep the quotes around every path in a command).
+
+Pair: ${fence(c.pair)}   (spec/language/library)
+The finding ${fence(c.finding_id || 'without an id')} (${fence(c.severity)}, ${fence(c.defect_class)}, cause ${fence(c.cause)}): ${fence(c.what)}
+The fix the owner picked: ${fence(c.fix || 'none recorded')}
+What changed after the fix: ${fence(c.mark)}
+
+1. Renders: cb=$(date +%s); for theme in light dark, run
+   curl -sf -D "${OUT}/reaudit/<spec>--<library>-<theme>.headers" -o "${OUT}/reaudit/<spec>--<library>-<theme>.png" "${GCS}/<spec>/<language>/<library>/plot-<theme>.png?cb=$cb"
+   and curl -sfI "${GCS}/<spec>/<language>/<library>/plot-<theme>_800.webp?cb=$cb" (the image the site shows).
+   ALWAYS with the cache-buster. Every Last-Modified must not be older than the metadata's updated. Look at BOTH PNGs
+   with the Read tool; crop with python3 (PIL) where a detail is small.
+2. Metadata at ${REF}: git -C "${A.repo}" show ${REF}:plots/<spec>/metadata/<language>/<library>.yaml: quality_score,
+   updated, review.weaknesses and review.criteria_checklist.
+3. The merged review: gh -R ${GH} pr list --state merged --search "head:implementation/<spec>/<library>" --json number,title,mergedAt --limit 5,
+   take the newest, and read its review and repair comments (gh api repos/${GH}/issues/<n>/comments).
+4. If it helps, this pair's own code at ${REF} (plots/<spec>/implementations/<language>/), never another library's.
+
+Decide: clean=true only when both renders show the finding's defect gone, the repair added no defect a careful
+reviewer would flag, and the merged review names no defect the merge kept on the finding's item. When unsure, clean=false:
+the pair then goes back on the owner's page, which is the safe side. When it is not clean, give the severity and cause
+of what you see; the reason names what you saw.`
+
 // A skeptic that returns nothing gets one more try; a second miss leaves the finding unverified (build_page.py).
-const skeptic = async (f) => {
-  for (const label of [`verify:${f.pair}`, `verify-again:${f.pair}`]) {
+const ask = async (prompt, name, phase, schema) => {
+  for (const label of [name, `${name}:again`]) {
     try {
-      const verdict = await agent(verifyPrompt(f), { label, phase: 'Verify', schema: VERDICT })
+      const verdict = await agent(prompt, { label, phase, schema })
       if (verdict) return verdict
     } catch (err) {
       log(`${label}: ${err && err.message ? err.message : err}`)
     }
   }
   return null
+}
+const skeptic = (f) => ask(verifyPrompt(f), `verify:${f.pair}`, 'Verify', VERDICT)
+
+if (REAUDITS.length) {
+  // The re-audit: a pair passes only when every claim on it came back clean. A claim without a verdict goes back
+  // on the page at medium or above, so it lands among the unverified cards, never in the clean list.
+  log(`${REAUDITS.length} claim(s) on marked pair(s) to re-audit, read at ${REF}`)
+  const verdicts = await parallel(
+    REAUDITS.map((c) => () => ask(reauditPrompt(c), `reaudit:${c.pair}`, 'Re-audit', REAUDIT_VERDICT)),
+  )
+  const done = REAUDITS.map((claim, i) => ({ claim, verdict: verdicts[i] || null }))
+  const back = done.filter((r) => !(r.verdict && r.verdict.clean))
+  const dirty = new Set(back.map((r) => r.claim.pair))
+  const findings = back.map(({ claim, verdict }) => ({
+    pair: claim.pair,
+    severity: verdict ? verdict.severity : claim.severity === 'high' ? 'high' : 'medium',
+    defect_class: claim.defect_class,
+    cause: verdict ? verdict.cause : claim.cause,
+    what: claim.what,
+    evidence: `${claim.evidence || ''} | re-audit after: ${claim.mark || ''}`,
+    fix: claim.fix || '',
+    pr: claim.pr || 0,
+  }))
+  const verified = findings
+    .map((f, i) => ({ f, verdict: back[i].verdict }))
+    .filter((r) => r.verdict)
+    .map(({ f, verdict }) => ({
+      ...f,
+      verdict: { refuted: false, severity: verdict.severity, cause: verdict.cause, reason: verdict.reason },
+    }))
+  const checked = [...new Set(REAUDITS.map((c) => c.pair))].map((pair) => ({
+    pair,
+    verdict: dirty.has(pair) ? 'findings' : 'clean',
+    note: done
+      .filter((r) => r.claim.pair === pair)
+      .map((r) => `re-audit ${r.claim.finding_id || ''}: ${r.verdict ? r.verdict.reason : 'no verdict came back'}`)
+      .join(' / '),
+  }))
+  log(`${checked.length - dirty.size} of ${checked.length} marked pair(s) came back clean`)
+  return [{ group: 'reaudit', pairs: checked.map((c) => c.pair), checked, findings, verified, reaudit: done }]
 }
 
 const results = await pipeline(

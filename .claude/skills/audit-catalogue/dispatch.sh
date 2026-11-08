@@ -17,10 +17,11 @@
 #   or a fix a one-sentence hint describes better than a patch.
 #
 # The OK is bound to what the owner saw. The dry run resolves every adopt ref to a SHA (origin's, else the local
-# branch's, so it runs before the push), checks it, writes <round>/queue.plan and prints a token over queue.txt and
-# the plan. --execute needs that token, stops (exit 1) when queue.txt or the plan changes, and refuses an adopt line
-# whose ref on origin is not the planned SHA. A refused line stays refused: to retry it, push the re-cut fix to a new
-# ref, change the line, run the dry run again and ask again.
+# branch's, so it runs before or after the push; a claude/* push starts no workflow, so refs may go out before the
+# OK), checks it, writes <round>/queue.plan and prints a token over queue.txt and the plan. --execute needs that
+# token, stops (exit 1) when queue.txt or the plan changes, and refuses an adopt line whose ref on origin is not the
+# planned SHA. A refused line stays refused: to retry it, push the re-cut fix to a new ref, change the line, run the
+# dry run again and ask again.
 #
 # The single-run rule: a line goes out only while no bulk-generate run is queued or in progress. GitHub keeps one
 # pending run per concurrency group and cancels the older pending one, daily-regen's spec-mode run included. A
@@ -32,10 +33,12 @@
 #   <key> <adopt|rerender|regen|refused|failed> <library|-> <sha|-> <time> <count> [<spec> ...]
 # A dispatch whose `gh workflow run` failed is looked up among the runs created since, before it is tried again, so a
 # dispatch GitHub accepted despite the error never goes out twice. The log is <round>/dispatch.log. Env: PACE
-# (bulk-generate pace_seconds, empty for its default), REGEN_PACE (seconds after each impl-generate dispatch, default
-# 180), UV_PROJECT_ENVIRONMENT (a shared venv for check_fix.py; SKILL.md, step 6).
+# (bulk-generate pace_seconds for adopt lines, default 120, since adopt mode generates nothing; PACE= empty leaves
+# bulk-generate's own default, 180 for Opus), REGEN_PACE (seconds after each impl-generate dispatch, default 180),
+# UV_PROJECT_ENVIRONMENT (a shared venv for check_fix.py; SKILL.md, step 6).
 set -uo pipefail
 umask 077
+PACE=${PACE-120}
 
 ROUND=${1:?usage: dispatch.sh <round-dir> [--execute --approved <token>] [--hours N]}
 shift
@@ -225,7 +228,8 @@ adopt() {
   fi
   if [ "$EXECUTE" != 1 ]; then
     PLAN_LINES+=("$key $sha")
-    echo "dry-run: line $key would dispatch bulk-generate library=$lib source_ref=$sha source_model=$model specs: ${ok[*]}"
+    echo "dry-run: line $key would dispatch bulk-generate library=$lib source_ref=$sha source_model=$model" \
+      "pace_seconds=${PACE:-default} specs: ${ok[*]}"
     if [ "${#skipped[@]}" -gt 0 ]; then echo "dry-run: line $key skips ${skipped[*]}"; fi
     return 0
   fi

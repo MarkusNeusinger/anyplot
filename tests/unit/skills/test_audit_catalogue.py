@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import stat
 import subprocess
 import sys
@@ -205,17 +206,57 @@ def test_stale_reasons(mods) -> None:
     assert _codes(sc.stale_reasons(_metadata(), pinned="9.17.0", now=now, older_than=None)) == []
 
 
+def _heads(answer, **overrides) -> dict:
+    """A HEAD answer for every render of `catalogue.RENDERS`, by file name, with some replaced."""
+    names = ("plot-light.png", "plot-dark.png", "plot-light_800.webp", "plot-dark_800.webp")
+    return {name: overrides.get(name.removeprefix("plot-").replace(".", "_"), answer) for name in names}
+
+
 def test_gcs_reasons(mods) -> None:
     sc = mods["select_candidates"]
     fresh = UPDATED + timedelta(minutes=5)
 
-    assert sc.gcs_reasons({"light": (200, fresh), "dark": (200, fresh)}, UPDATED) == []
-    assert sc.gcs_reasons({"light": (200, UPDATED - timedelta(seconds=30)), "dark": (200, fresh)}, UPDATED) == []
-    stale = sc.gcs_reasons({"light": (200, datetime(2026, 8, 4, tzinfo=UTC)), "dark": (404, None)}, UPDATED)
+    assert sc.RENDER_NAMES == ("plot-light.png", "plot-dark.png", "plot-light_800.webp", "plot-dark_800.webp")
+    assert sc.gcs_reasons(_heads((200, fresh)), UPDATED) == []
+    # within the clock slack
+    assert sc.gcs_reasons(_heads((200, fresh), light_png=(200, UPDATED - timedelta(seconds=30))), UPDATED) == []
+    old = datetime(2026, 8, 4, tzinfo=UTC)
+    stale = sc.gcs_reasons(_heads((200, fresh), light_png=(200, old), dark_png=(404, None)), UPDATED)
     assert _codes(stale) == ["render_stale", "render_missing"]
-    assert _codes(sc.gcs_reasons({"light": (None, None)}, UPDATED)) == ["render_unchecked", "render_unchecked"]
+    assert _codes(sc.gcs_reasons({}, UPDATED)) == ["render_unchecked"] * 4
     # a 200 without Last-Modified proves nothing about freshness
-    assert _codes(sc.gcs_reasons({"light": (200, None), "dark": (200, fresh)}, UPDATED)) == ["render_unchecked"]
+    assert _codes(sc.gcs_reasons(_heads((200, fresh), dark_png=(200, None)), UPDATED)) == ["render_unchecked"]
+
+
+def test_a_fresh_png_next_to_an_old_webp_is_stale(mods) -> None:
+    """The site shows the `_800.webp`; a promotion that refreshed only the PNG still leaves the old image up."""
+    sc = mods["select_candidates"]
+    fresh, old = UPDATED + timedelta(minutes=5), datetime(2026, 8, 4, tzinfo=UTC)
+
+    reasons = sc.gcs_reasons(_heads((200, fresh), light_800_webp=(200, old), dark_800_webp=(404, None)), UPDATED)
+    assert _codes(reasons) == ["render_stale", "render_missing"]
+    assert reasons[0].detail.startswith("plot-light_800.webp modified 2026-08-04")
+    assert reasons[1].detail == "plot-dark_800.webp: HTTP 404"
+
+
+def test_the_render_check_heads_both_pngs_and_both_webps_with_a_cache_buster(mods, monkeypatch) -> None:
+    sc, Pair = mods["select_candidates"], mods["catalogue"].Pair
+    asked: list[str] = []
+
+    def fake_head(url: str, *, attempts: int = 3):
+        asked.append(url)
+        return 200, UPDATED
+
+    monkeypatch.setattr(sc, "head", fake_head)
+    pair = Pair.parse("scatter-basic/muix")
+    heads = sc.check_renders([pair], 1731000000)
+
+    base = "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix"
+    assert sorted(asked) == sorted(
+        f"{base}/{name}?cb=1731000000"
+        for name in ("plot-light.png", "plot-dark.png", "plot-light_800.webp", "plot-dark_800.webp")
+    )
+    assert set(heads[pair]) == set(sc.RENDER_NAMES)
 
 
 def test_votes_split_at_the_last_update(mods) -> None:
@@ -565,6 +606,80 @@ def test_build_page_refuses_a_round_inside_a_checkout(mods, tmp_path: Path) -> N
     assert (tmp_path / "r" / "page" / "audit.html").is_file()
 
 
+def test_a_named_page_keeps_the_rounds_findings_and_ids(mods, tmp_path: Path) -> None:
+    """The re-audit gets a page and a findings file of its own, so the ids the owner picked from stay valid."""
+    main = mods["build_page"].main
+    audit = tmp_path / "audit.json"
+    audit.write_text(json.dumps(_audit()), encoding="utf-8")
+    round_dir = tmp_path / "r"
+    assert main(["--round", str(round_dir), "--audit", str(audit), "--no-images"]) == 0
+    before = (round_dir / "findings.json").read_text(encoding="utf-8")
+
+    args = ["--round", str(round_dir), "--audit", str(audit), "--no-images", "--name", "reaudit", "--id-prefix", "R"]
+    assert main(args) == 0
+    assert (round_dir / "findings.json").read_text(encoding="utf-8") == before
+    again = json.loads((round_dir / "findings-reaudit.json").read_text(encoding="utf-8"))
+    assert [f["id"] for f in again["findings"]][:2] == ["R01", "R02"]
+    page = (round_dir / "page" / "reaudit.html").read_text(encoding="utf-8")
+    assert page.startswith("<title>Catalogue reaudit r</title>")
+    assert main(["--round", str(round_dir), "--audit", str(audit), "--name", "../x"]) == 2
+    assert main(["--round", str(round_dir)]) == 2  # neither --audit nor --fixes
+
+
+def test_the_fixes_gallery_shows_production_next_to_the_local_render(mods, tmp_path: Path) -> None:
+    from PIL import Image
+
+    bp, Pair = mods["build_page"], mods["catalogue"].Pair
+    model = bp.collect([_audit()], {})
+    groups, unknown = bp.picked(model["findings"], ["F02", "F01", "F99", "F01"])
+    assert unknown == ["F99"]
+    assert [(key.split("/")[0], [e["id"] for e in entries]) for key, entries in groups] == [
+        ("b-spec", ["F02"]),
+        ("a-spec", ["F01"]),
+    ]
+
+    renders = tmp_path / "renders"
+    for package in ("muix-1", "muix-1b"):
+        target = renders / package / "a-spec" / "muix"
+        target.mkdir(parents=True)
+        Image.new("RGB", (3200, 1800), "white").save(target / "plot-light.png")
+    newest = renders / "muix-1b" / "a-spec" / "muix" / "plot-light.png"
+    os.utime(renders / "muix-1" / "a-spec" / "muix" / "plot-light.png", (1, 1))  # the package before the re-cut
+    pair = Pair.parse("a-spec/muix")
+    assert bp.local_render(renders, pair, "light") == newest
+    assert bp.local_render(renders, pair, "dark") is None
+    uri = bp.scaled(newest)
+    assert uri and uri.startswith("data:image/webp;base64,") and len(uri) < 20_000
+
+    page = bp.render_fixes_html(
+        [*groups, ("a-spec/r/ggplot2", [model["findings"][0]])],
+        {"a-spec/javascript/muix": {"light": "data:image/webp;base64,PROD"}},
+        {"a-spec/javascript/muix": {"light": uri}},
+        round_name="2026-11-08",
+        cache_buster=7,
+    )
+    assert page.startswith("<title>Catalogue fixes 2026-11-08</title>") and "<script" not in page
+    assert "data:image/webp;base64,PROD" in page and uri in page and "plot-light.png?cb=7" in page
+    assert "the pipeline renders the regeneration" in page  # R has no local render
+    assert "renders in the pipeline" in page  # the muix pair's dark theme and b-spec have none
+    hosts = {part.split("/")[2] for part in page.split('"') if part.startswith("https://")}
+    assert hosts <= {"fonts.googleapis.com", "anyplot.ai", "github.com", "storage.googleapis.com"}
+
+
+def test_the_fixes_gallery_needs_known_ids(mods, tmp_path: Path, capsys) -> None:
+    main = mods["build_page"].main
+    audit = tmp_path / "audit.json"
+    audit.write_text(json.dumps(_audit()), encoding="utf-8")
+    round_dir = tmp_path / "r"
+
+    assert main(["--round", str(round_dir), "--fixes", "F01"]) == 2  # no findings.json yet
+    assert main(["--round", str(round_dir), "--audit", str(audit), "--no-images"]) == 0
+    assert main(["--round", str(round_dir), "--fixes", "F01", "F42", "--no-images"]) == 2
+    assert "F42" in capsys.readouterr().err
+    assert main(["--round", str(round_dir), "--fixes", "F01", "F02", "--no-images"]) == 0
+    assert (round_dir / "page" / "fixes.html").is_file()
+
+
 # --- the shell scripts ------------------------------------------------------------------------------------------
 
 
@@ -608,6 +723,10 @@ def test_resuming_needs_this_rounds_dispatches_or_all_open(tmp_path: Path) -> No
     result = _run("resume_paused.sh", str(tmp_path), "--repairs")
 
     assert result.returncode == 2 and "--all-open" in result.stderr
+    # a state with only refused lines dispatched nothing, so it covers no resume
+    (tmp_path / "dispatch.state").write_text("k1 refused - - 2026-11-08T10:00:00Z 0\n", encoding="utf-8")
+    result = _run("resume_paused.sh", str(tmp_path), "--repairs")
+    assert result.returncode == 2 and "no dispatched pair" in result.stderr
 
 
 # --- verify_merged.py -------------------------------------------------------------------------------------------
@@ -665,12 +784,12 @@ def test_the_code_check_ignores_the_header_and_keeps_a_repair_that_kept_the_fix(
     repaired = merged.replace("  height: 64,\n", "  height: 64,\n  disableTicks: true,\n")
     problems, notes = vm.code_check(repaired, fix, start)
     assert problems == [] and notes[0].startswith("code: changed after the fix") and "all 1 line(s)" in notes[0]
-    # a later change dropped the fix's line
+    # a later change dropped the fix's line: the pair is marked for a re-audit, not failed
     problems, _ = vm.code_check(merged.replace("  height: 64,\n", ""), fix, start)
-    assert (
-        problems[0].startswith("code: 1 of the 1 line(s) the fix added are not on main") and "height: 64" in problems[0]
-    )
-    assert vm.code_check(None, fix, start)[0] and vm.code_check(merged, None, start)[0]
+    assert problems[0].startswith(f"{vm.MARKED} 1 of the 1 line(s) the fix added are not on main")
+    assert "height: 64" in problems[0]
+    assert vm.code_check(None, fix, start)[0][0].startswith("code:")
+    assert vm.code_check(merged, None, start)[0][0].startswith("code:")
 
 
 def _merged_meta() -> dict:
@@ -698,44 +817,174 @@ def test_stored_copies_must_match_the_metadata(mods) -> None:
     ]
 
 
+def test_a_library_version_behind_the_pin_is_a_metadata_problem(mods) -> None:
+    """A migration round's merge must also carry the new library version (the header gets it only at the merge)."""
+    vm = mods["verify_merged"]
+    meta = {**_merged_meta(), "library_version": "7.29.1"}
+
+    assert vm.metadata_problems(meta, model="claude-opus-5-5", pinned="9.17.0") == [
+        "metadata: library_version 7.29.1, pinned 9.17.0 (an older API level)"
+    ]
+    assert vm.metadata_problems({**meta, "library_version": "9.16.0"}, model=None, pinned="9.17.0") == []
+    assert vm.metadata_problems(meta, model=None, pinned=None) == []  # no pin known: nothing to compare
+
+
 def test_a_pair_is_pending_until_merged_and_then_checked_end_to_end(mods) -> None:
     vm, Pair = mods["verify_merged"], mods["catalogue"].Pair
     when = datetime(2026, 11, 8, 10, tzinfo=UTC)
     entry = vm.Dispatched("k1", "adopt", "muix", "a" * 40, when, ("a-spec",), "claude-opus-5-5")
     pair = Pair.parse("a-spec/muix")
     meta = _merged_meta()
-    fresh = datetime(2026, 11, 8, 12, 5, tzinfo=UTC)
-    good = {
-        "metadata": meta,
-        "on_main": "x();\n",
-        "fix": "x();\n",
-        "start": "w();\n",
-        "row": {**meta, "updated": datetime(2026, 11, 8, 12)},
-        "api_entry": {**meta, "updated": "2026-11-08T12:00:00"},
-        "heads": {"light": (200, fresh), "dark": (200, fresh)},
-        "check_db": True,
-    }
+    good = _good_inputs(meta)
+    old = datetime(2026, 8, 1, tzinfo=UTC)
 
     assert vm.evaluate(entry, pair, **good).status == "ok"
     pending = vm.evaluate(entry, pair, **{**good, "metadata": {**meta, "updated": "2026-11-07T00:00:00Z"}})
     assert pending.status == "pending" and not pending.route
     stale = vm.evaluate(
-        entry, pair, **{**good, "heads": {"light": (200, datetime(2026, 8, 1, tzinfo=UTC)), "dark": (404, None)}}
+        entry, pair, **{**good, "heads": _heads((200, FRESH), light_png=(200, old), dark_png=(404, None))}
     )
     assert stale.status == "failed" and stale.route == "queue line: rerender muix claude-opus-5-5 a-spec"
+    old_webp = vm.evaluate(entry, pair, **{**good, "heads": _heads((200, FRESH), dark_800_webp=(200, old))})
+    assert old_webp.status == "failed" and old_webp.problems[0].startswith("renders: plot-dark_800.webp modified")
     r_entry = vm.Dispatched("k4", "regen", "ggplot2", None, when, ("a-spec",))
-    one_stale = {"light": (200, fresh), "dark": (200, datetime(2026, 8, 1, tzinfo=UTC))}
-    r_stale = vm.evaluate(r_entry, Pair.parse("a-spec/ggplot2"), **{**good, "heads": one_stale})
+    r_stale = vm.evaluate(
+        r_entry, Pair.parse("a-spec/ggplot2"), **{**good, "heads": _heads((200, FRESH), dark_png=(200, old))}
+    )
     assert r_stale.route.startswith("queue line: regen ggplot2 a-spec ")
     unsynced = vm.evaluate(entry, pair, **{**good, "row": None})
     assert unsynced.problems == ["database: no entry for the pair"] and "sync" in unsynced.route
     assert vm.evaluate(entry, pair, **{**good, "row": None, "check_db": False}).status == "ok"
     silent = vm.evaluate(entry, pair, **{**good, "api_entry": None, "api_answered": False})
     assert silent.problems == ["api: no answer"] and "again" in silent.route
-    undone = vm.evaluate(entry, pair, **{**good, "on_main": "y();\n"})
-    assert undone.status == "failed" and undone.route.startswith("read the merged PR")
+    gone = vm.evaluate(entry, pair, **{**good, "on_main": None})
+    assert gone.status == "failed" and gone.route.startswith("read the merged PR")
+    behind = vm.evaluate(entry, pair, **{**good, "metadata": {**meta, "library_version": "7.29.1"}, "pinned": "9.17.0"})
+    assert behind.status == "failed" and behind.problems[0].startswith("metadata: library_version 7.29.1")
     kept = vm.evaluate(entry, pair, **{**good, "on_main": "x();\nrepaired();\n"})
     assert kept.status == "ok" and kept.notes and not kept.problems
+
+
+FRESH = datetime(2026, 11, 8, 12, 5, tzinfo=UTC)
+
+
+def _good_inputs(meta: dict) -> dict:
+    """evaluate()'s inputs for a merged adopt pair that passes every check."""
+    return {
+        "metadata": meta,
+        "on_main": "x();\n",
+        "fix": "x();\n",
+        "start": "w();\n",
+        "row": {**meta, "updated": datetime(2026, 11, 8, 12)},
+        "api_entry": {**meta, "updated": "2026-11-08T12:00:00"},
+        "heads": _heads((200, FRESH)),
+        "check_db": True,
+    }
+
+
+def test_a_fix_a_repair_changed_is_marked_for_a_re_audit_never_passed(mods) -> None:
+    """When lines the fix added are gone from main, the pair neither passes nor fails: a skeptic re-audits it."""
+    vm, Pair = mods["verify_merged"], mods["catalogue"].Pair
+    entry = vm.Dispatched("k1", "adopt", "muix", "a" * 40, datetime(2026, 11, 8, 10, tzinfo=UTC), ("a-spec",))
+    pair = Pair.parse("a-spec/muix")
+    good = _good_inputs(_merged_meta())
+
+    marked = vm.evaluate(entry, pair, **{**good, "on_main": "y();\n"})
+    assert marked.status == "marked" and marked.route == vm.REAUDIT
+    assert marked.problems[0].startswith(f"{vm.MARKED} 1 of the 1 line(s)")
+    assert "never merge by hand" in marked.route and "?cb=" in marked.route
+    # marked and stale: the render comes first, the re-audit after it
+    both = vm.evaluate(
+        entry, pair, **{**good, "on_main": "y();\n", "heads": _heads((200, FRESH), light_png=(404, None))}
+    )
+    assert both.status == "failed" and both.route.startswith("queue line: rerender muix")
+    assert both.route.endswith("then the re-audit of its marked lines")
+    assert vm.route(pair, [marked.problems[0]], {}) == vm.REAUDIT
+
+
+def test_the_re_audit_claims_carry_the_pairs_findings_or_one_of_their_own(mods) -> None:
+    vm = mods["verify_merged"]
+    mark = f"{vm.MARKED} 2 of the 3 line(s) the fix added are not on main"
+    marked = vm.PairResult("a-spec/javascript/muix", "k1", "adopt", status="marked", problems=[mark])
+    lone = vm.PairResult("b-spec/javascript/muix", "k1", "adopt", status="marked", problems=[mark])
+    fine = vm.PairResult("c-spec/javascript/muix", "k1", "adopt")
+    first = {
+        "id": "F01",
+        "pair": "a-spec/javascript/muix",
+        "status": "confirmed",
+        "severity": "high",
+        "what": "a cartogram",
+        "fix": "draw symbols",
+        "defect_class": "wrong-plot-type",
+        "cause": "implementation",
+        "evidence": "SC-01 3/5",
+        "pr": 1,
+    }
+    findings = [
+        first,
+        {"id": "F07", "pair": "a-spec/javascript/muix", "status": "refuted", "what": "a refuted claim"},
+        {"id": "F02", "pair": "c-spec/javascript/muix", "status": "confirmed", "what": "not marked"},
+    ]
+
+    claims = vm.reaudit_claims([marked, marked, lone, fine], findings)
+    assert [(c["pair"].split("/")[0], c["finding_id"]) for c in claims] == [("a-spec", "F01"), ("b-spec", None)]
+    assert claims[0]["what"] == "a cartogram" and claims[0]["fix"] == "draw symbols" and claims[0]["mark"] == mark
+    assert claims[1]["severity"] == "medium" and claims[1]["evidence"] == mark
+    assert vm.read_findings(Path("/nonexistent/findings.json")) == []
+
+
+def test_a_running_sync_leaves_a_database_difference_pending(mods) -> None:
+    """impl-merge triggers one sync per merge and the workflow queues them, so the row can lag the merge by minutes."""
+    vm, Pair = mods["verify_merged"], mods["catalogue"].Pair
+    merged_at = datetime(2026, 11, 8, 12, tzinfo=UTC)
+    runs = [
+        {"status": "completed", "createdAt": "2026-11-08T12:01:00Z"},
+        {"status": "queued", "createdAt": "2026-11-08T12:03:00Z"},
+    ]
+
+    assert vm.sync_pending(runs, merged_at)
+    assert not vm.sync_pending(runs[:1], merged_at)  # the one after the merge is done
+    assert not vm.sync_pending([{"status": "in_progress", "createdAt": "2026-11-08T11:00:00Z"}], merged_at)
+    assert vm.sync_pending([{"status": "in_progress", "createdAt": "2026-11-08T11:59:30Z"}], merged_at)  # clock slack
+    assert not vm.sync_pending(None, merged_at)  # gh failed: no known run
+
+    entry = vm.Dispatched("k1", "adopt", "muix", "a" * 40, datetime(2026, 11, 8, 10, tzinfo=UTC), ("a-spec",))
+    pair = Pair.parse("a-spec/muix")
+    good = _good_inputs(_merged_meta())
+    waiting = vm.evaluate(entry, pair, **{**good, "row": None, "api_entry": None, "sync_active": True})
+    assert waiting.status == "pending" and waiting.route == vm.SYNC_WAIT
+    assert waiting.problems == ["database: no entry for the pair", "api: no entry for the pair"]
+    assert vm.evaluate(entry, pair, **{**good, "row": None}).status == "failed"
+    # a running sync does not excuse a stale render
+    stale = vm.evaluate(entry, pair, **{**good, "row": None, "sync_active": True, "heads": _heads((404, None))})
+    assert stale.status == "failed"
+
+
+def test_a_pr_closed_without_a_merge_returns_the_finding_to_the_plan(mods) -> None:
+    vm, Pair = mods["verify_merged"], mods["catalogue"].Pair
+    since = datetime(2026, 11, 8, 10, tzinfo=UTC)
+
+    def pr(number: int, spec: str, state: str, created: str) -> dict:
+        return {"number": number, "title": f"feat(muix): implement {spec}", "state": state, "createdAt": created}
+
+    prs = [
+        pr(12700, "a-spec", "CLOSED", "2026-11-08T10:04:00Z"),
+        pr(12650, "a-spec", "MERGED", "2026-11-07T10:00:00Z"),  # before the dispatch
+        pr(12701, "b-spec", "OPEN", "2026-11-08T10:05:00Z"),
+    ]
+
+    assert vm.pr_outcome(prs, library="muix", spec="a-spec", since=since) == "closed"
+    assert vm.pr_outcome(prs, library="muix", spec="b-spec", since=since) == "open"
+    assert vm.pr_outcome(prs, library="muix", spec="c-spec", since=since) is None
+    assert vm.pr_outcome(None, library="muix", spec="a-spec", since=since) is None
+    superseded = [*prs, {**prs[0], "number": 12710, "state": "OPEN"}]
+    assert vm.pr_outcome(superseded, library="muix", spec="a-spec", since=since) == "open"
+
+    entry = vm.Dispatched("k1", "adopt", "muix", "a" * 40, since, ("a-spec",))
+    not_merged = {**_good_inputs(_merged_meta()), "metadata": {**_merged_meta(), "updated": "2026-11-07T00:00:00Z"}}
+    closed = vm.evaluate(entry, Pair.parse("a-spec/muix"), **not_merged, pr_state="closed")
+    assert closed.status == "closed" and closed.route == vm.CLOSED and "never a hand merge" in closed.route
+    assert vm.evaluate(entry, Pair.parse("a-spec/muix"), **not_merged, pr_state="open").status == "pending"
 
 
 async def test_the_impl_rows_come_from_the_impls_table(mods, test_session) -> None:

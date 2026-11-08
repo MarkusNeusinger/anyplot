@@ -14,8 +14,10 @@
   scrubbed environment). `dispatch.sh` adopts them from their full SHA, one
   bulk-generate run at a time, so it never cancels a pending run such as
   daily-regen's, and only under an OK bound to a token over the queue and its
-  planned SHAs. R and Julia go through a forced regeneration, stale renders
-  through a re-render from `main`, and spec causes through a spec issue that
-  is filed only on the owner's OK. `verify_merged.py` then checks every merged
-  pair on the live site: the code on `main` against the fix, the metadata,
-  the database row, both renders and the API. (#12825)
+  planned SHAs; a gallery shows the owner each fix next to production first.
+  R and Julia go through a forced regeneration, stale renders through a
+  re-render from `main`, and spec causes through a spec issue the owner files.
+  `verify_merged.py` then checks every merged pair on the live site: the code
+  on `main` against the fix, the metadata, the database row, both PNGs and the
+  `_800.webp` the site shows, and the API. A pair whose fix a pipeline repair
+  changed goes to a skeptic's re-audit instead of passing. (#12825)

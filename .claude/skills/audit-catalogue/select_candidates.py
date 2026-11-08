@@ -17,8 +17,8 @@ Sources, any combination, each adding reasons to a pair:
   cap, spec-compliance or other technical items below their maximum, and defect lines the merge kept on such an item.
 - `--stale`: a stored `library_version` an API level behind the pinned one (`core.library_versions`), and with
   `--older-than DAYS` an `updated` older than that.
-- `--gcs`: a HEAD on both production renders with a cache-busting query; a render that is missing, or older than
-  the metadata's `updated`, is stale (a silent promote, as on 2026-11-08).
+- `--gcs`: a HEAD on both production PNGs and both `_800.webp` variants the site shows, with a cache-busting query;
+  a render that is missing, or older than the metadata's `updated`, is stale (a silent promote, as on 2026-11-08).
 - `--readiness`: the agent validator's scan of each file (`uv run --extra agents`); a refusal for anything but a
   map spec means the agent chat refuses the file.
 - `--sweep`: every pair of the filtered universe, with no other condition.
@@ -63,6 +63,7 @@ SOURCES = ("votes", "scores", "stale", "gcs", "readiness", "sweep")
 THUMBS = ("thumbs_up", "thumbs_down")
 GCS_SLACK = timedelta(seconds=60)
 """Clock slack between the runner that stamps `updated` and the bucket's `Last-Modified`."""
+RENDER_NAMES = tuple(catalogue.render_name(*render) for render in catalogue.RENDERS)
 ITEM_ID = re.compile(r"\b[A-Z]{2}-\d{2}\b")
 """A checklist item id (`VQ-02`, `SC-01`) anywhere in a stored defect line."""
 WEIGHTS = {
@@ -224,23 +225,20 @@ def stale_reasons(
 
 
 def gcs_reasons(heads: dict[str, tuple[int | None, datetime | None]], updated: datetime | None) -> list[Reason]:
-    """`heads` maps a theme to the HEAD's status (None: no answer) and `Last-Modified`."""
+    """`heads` maps a render's file name (`catalogue.RENDERS`: `plot-light.png`, `plot-light_800.webp`, …) to the
+    HEAD's status (None: no answer) and `Last-Modified`."""
     reasons: list[Reason] = []
-    for theme in catalogue.THEMES:
-        status, modified = heads.get(theme, (None, None))
+    for name in RENDER_NAMES:
+        status, modified = heads.get(name, (None, None))
         if status is None:
-            reasons.append(Reason("gcs", "render_unchecked", f"plot-{theme}.png: no answer"))
+            reasons.append(Reason("gcs", "render_unchecked", f"{name}: no answer"))
         elif status != 200:
-            reasons.append(Reason("gcs", "render_missing", f"plot-{theme}.png: HTTP {status}"))
+            reasons.append(Reason("gcs", "render_missing", f"{name}: HTTP {status}"))
         elif modified is None:
-            reasons.append(Reason("gcs", "render_unchecked", f"plot-{theme}.png: no Last-Modified, freshness unknown"))
+            reasons.append(Reason("gcs", "render_unchecked", f"{name}: no Last-Modified, freshness unknown"))
         elif updated is not None and modified + GCS_SLACK < updated:
             reasons.append(
-                Reason(
-                    "gcs",
-                    "render_stale",
-                    f"plot-{theme}.png modified {_iso(modified)}, metadata updated {_iso(updated)}",
-                )
+                Reason("gcs", "render_stale", f"{name} modified {_iso(modified)}, metadata updated {_iso(updated)}")
             )
     return reasons
 
@@ -261,12 +259,20 @@ def head(url: str, *, attempts: int = 3) -> tuple[int | None, datetime | None]:
 
 
 def check_renders(pairs: list[Pair], cache_buster: int) -> dict[Pair, dict[str, tuple[int | None, datetime | None]]]:
-    jobs = [(pair, theme) for pair in pairs for theme in catalogue.THEMES]
+    """A HEAD on every render of `catalogue.RENDERS` per pair, keyed by the render's file name."""
+    jobs = [(pair, render) for pair in pairs for render in catalogue.RENDERS]
     with ThreadPoolExecutor(max_workers=16) as pool:
-        answers = list(pool.map(lambda job: head(job[0].render_url(job[1], cache_buster=cache_buster)), jobs))
+        answers = list(
+            pool.map(
+                lambda job: head(
+                    job[0].render_url(job[1][0], size=job[1][1], ext=job[1][2], cache_buster=cache_buster)
+                ),
+                jobs,
+            )
+        )
     out: dict[Pair, dict[str, tuple[int | None, datetime | None]]] = defaultdict(dict)
-    for (pair, theme), answer in zip(jobs, answers, strict=True):
-        out[pair][theme] = answer
+    for (pair, render), answer in zip(jobs, answers, strict=True):
+        out[pair][catalogue.render_name(*render)] = answer
     return out
 
 
@@ -445,7 +451,9 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         parser.add_argument(f"--{source}", action="store_true", help=f"add the {source} source")
     parser.add_argument("--env", type=Path, default=catalogue.REPO_ROOT / ".env", help="the .env with DATABASE_URL")
     parser.add_argument("--min-down", type=int, default=1, help="thumbs down a pair needs (default 1)")
-    parser.add_argument("--below", type=float, default=85, help="flag a stored score below this (default 85)")
+    parser.add_argument(
+        "--below", type=float, default=85, help="flag a stored score below this (default 85; Opus reviews score lower)"
+    )
     parser.add_argument("--older-than", type=int, metavar="DAYS", help="with --stale: flag an update older than this")
     parser.add_argument("--library", action="append", default=[], help="only this library (repeatable)")
     parser.add_argument("--language", action="append", default=[], help="only this language (repeatable)")

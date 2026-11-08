@@ -3,8 +3,9 @@
 Use this page when an audit finds that the spec itself causes a defect: it
 asks for the defect, contradicts itself, or several libraries fail the same
 bullet. The channel was found on 2026-11-08 and has **never run end to
-end**. File the first issue of a round alone and follow it to
-`spec-ready` before you file more.
+end**: its first real case is the test. The skill writes the issue text and
+the owner files it. Follow the first issue to `spec-ready` before the next
+one is written.
 
 ## The channel
 
@@ -40,17 +41,17 @@ Not verified, because no run was made:
   gives the spec's original issue (`issue:` in `specification.yaml`)
   `spec-ready`; the comment therefore forbids touching `issue:`.
 
-Two owner decisions are open: whether this combination is the accepted spec
-channel (then a docs PR describes it in `docs/workflows/overview.md`), or a
-`spec-change` mode gets built; and the `[spec-id]` title prefix, which
-`CLAUDE.md` forbids for new specs and which this channel needs.
+If the first run works end to end, a docs PR describes the channel in
+`docs/workflows/overview.md` and adds one line to `CLAUDE.md`: a change to an
+existing spec uses the id prefix. `CLAUDE.md` forbids the `[spec-id]` title
+prefix for new specs only. Until that PR, `CLAUDE.md` stays as it is.
 
 ## What the skill does, and what the owner does
 
 | Step | Who | Gate |
 |---|---|---|
 | Write the issue text and the `@claude` comment into `$ROUND/spec-<spec-id>.md` | Claude | none, it is a draft |
-| File the issue (`gh issue create --title "[<spec-id>] …" --label spec-request --body-file …`) | Claude | the owner's OK for that issue, by spec id |
+| File the issue (`gh issue create --title "[<spec-id>] …" --label spec-request --body-file …`) | the owner | his own action |
 | Post the `@claude` comment | the owner, or Claude when he names that action | it starts a Claude run |
 | Read the PR diff and CI | Claude | none |
 | Add `approved` to the issue | the owner | a Todoist task with the issue link |

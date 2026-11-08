@@ -43,10 +43,24 @@ GCS_PLOTS = "https://storage.googleapis.com/anyplot-images/plots"
 SITE = "https://anyplot.ai"
 REPOSITORY = "MarkusNeusinger/anyplot"
 THEMES = ("light", "dark")
+RENDERS: tuple[tuple[str, int | None, str], ...] = (
+    ("light", None, "png"),
+    ("dark", None, "png"),
+    ("light", 800, "webp"),
+    ("dark", 800, "webp"),
+)
+"""What a freshness check HEADs per pair, as `(theme, size, ext)`: the PNG the pipeline writes and the `_800.webp` the
+site and the audit page show. impl-generate and impl-repair make the sized variants with a command of their own
+(`core.images responsive`), so a fresh PNG next to an old or missing webp is a real case."""
 TECHNICAL_PREFIXES = ("VQ", "SC", "DQ", "CQ")
 """The 19 technical criteria (`docs/workflows/overview.md`, "Nothing to repair"); DE and LM are design levels."""
 METADATA_PATH = re.compile(r"^plots/(?P<spec>[a-z0-9-]+)/metadata/(?P<language>[a-z]+)/(?P<library>[a-z0-9]+)\.yaml$")
 SUGGESTION = re.compile(r"^\s*Suggestion:", re.IGNORECASE)
+
+
+def render_name(theme: str, size: int | None = None, ext: str = "png") -> str:
+    """A render's file name in the bucket: `plot-light.png`, `plot-dark_800.webp`."""
+    return f"plot-{theme}{f'_{size}' if size else ''}.{ext}"
 
 
 @dataclass(frozen=True, order=True)
@@ -93,8 +107,7 @@ class Pair:
     ) -> str:
         """The production render. Pass `cache_buster` (epoch seconds) for every check: the bucket serves
         `Cache-Control: public, max-age=604800`, so a plain URL can return an edge copy up to a week old."""
-        suffix = f"_{size}" if size else ""
-        url = f"{GCS_PLOTS}/{self.spec}/{self.language}/{self.library}/plot-{theme}{suffix}.{ext}"
+        url = f"{GCS_PLOTS}/{self.spec}/{self.language}/{self.library}/{render_name(theme, size, ext)}"
         return f"{url}?cb={cache_buster}" if cache_buster is not None else url
 
     @property
