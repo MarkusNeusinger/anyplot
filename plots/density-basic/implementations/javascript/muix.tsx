@@ -8,7 +8,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const SILVERMAN = 1.06; // rule-of-thumb factor: bandwidth = 1.06 · sd · n^(-1/5)
-const KDE_CUT = 3; // the curve extends this many bandwidths past the smallest and largest observation
+const KDE_CUT = 2; // the curve extends this many bandwidths past the smallest and largest observation
 const GRID_POINTS = 240;
 const TITLE = "density-basic · javascript · muix · anyplot.ai";
 const TITLE_H = 76;
