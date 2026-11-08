@@ -17,10 +17,13 @@ It reads `<round>/dispatch.state` (each dispatched line's kind, library, adopted
   impl-review rewrites. When a repair commit or a later merge changed it since, the pair passes with a note as long
   as every line the fix added (against the commit it was cut from) is still there. Once one is gone, the pair is
   `marked`: the merged code is not the fix the owner saw, so a skeptic re-audits the merged production renders and
-  the merged review (`<round>/reaudit-<time>.json` holds the audit workflow's args). Clean, it passes; otherwise its
-  finding goes back on the page. A marked pair never passes silently.
+  the merged review (`<round>/reaudit-<time>.json` holds the audit workflow's args). A marked pair never passes
+  silently. The verifier reads the saved results back (`<round>/audit-reaudit-*.json`), bound to the merged state
+  each claim names (`merged_state`: the metadata's `updated` and the code on main): a pair the skeptic judged clean
+  at its current state passes with a note; one it found not clean stays `marked`, its finding on
+  `page/reaudit.html` for the owner to pick, and gets no new claim. A later change to the pair needs a new re-audit.
 - `metadata`: `quality_score`, `updated` and `generated_by` are set, `generated_by` is the line's source_model for
-  adopt and rerender lines, and `library_version` is not an API level behind the pinned version.
+  adopt and rerender lines, and `library_version` is not an API level behind the version `--ref` pins.
 - `database` (unless `--no-db`): the `impls` row, read in a transaction PostgreSQL holds read-only, carries the
   metadata's quality_score, updated and generated_by. While a `Sync: PostgreSQL` run created since the pair's update
   is queued or in progress, a database or API difference leaves the pair `pending`: impl-merge triggers one sync per
@@ -82,6 +85,12 @@ REAUDIT = (
     "finding (audit_workflow.js with the reaudit file's args); clean, the pair passes; otherwise the finding goes back "
     "on the page. Never pass it silently, never merge by hand"
 )
+REAUDIT_FOUND = (
+    "the re-audit found the merged pair not clean: its finding is on page/reaudit.html (findings-reaudit.json, R ids) "
+    "for the owner to pick; never a hand merge"
+)
+REAUDIT_RESULTS = "audit-reaudit-*.json"
+"""The audit workflow's re-audit results the caller saved in the round directory (SKILL.md, step 9)."""
 CLOSED = (
     "the fix did not pass the pipeline: the finding returns to the plan (a new fix, or the owner's call); "
     "never a hand merge"
@@ -113,6 +122,20 @@ class PairResult:
     problems: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     route: str = ""
+    merged: str = ""
+    """`merged_state` of the pair on main: what a re-audit of it judged, so a later change needs a re-audit of its own."""
+    reaudit: str = ""
+    """`clean` or `not clean` when a re-audit judged the pair at `merged`; empty when none did."""
+
+
+@dataclass(frozen=True)
+class Reaudit:
+    """A re-audit's judgment of one marked pair at one merged state."""
+
+    clean: bool
+    source: str
+    """The result file it came from."""
+    reason: str
 
 
 # --- the round's files ------------------------------------------------------------------------------------------
@@ -191,6 +214,14 @@ def code_check(on_main: str | None, fix: str | None, start: str | None) -> tuple
     return [], [f"code: changed after the fix (a repair or a later merge); all {len(added)} line(s) it added are in"]
 
 
+def merged_state(metadata: dict[str, Any], on_main: str | None) -> str:
+    """A digest of the merged pair a re-audit judges: the metadata's `updated` and the implementation on main. A
+    re-audit's verdict holds for this state only; a later merge or repair of the pair changes it."""
+    updated = catalogue.parse_time(metadata.get("updated"))
+    stamp = updated.isoformat() if updated else str(metadata.get("updated"))
+    return hashlib.sha256(f"{stamp}\n{on_main or ''}".encode()).hexdigest()[:16]
+
+
 def metadata_problems(metadata: dict[str, Any], *, model: str | None, pinned: str | None = None) -> list[str]:
     problems: list[str] = []
     if not isinstance(metadata.get("quality_score"), int | float):
@@ -262,12 +293,14 @@ def pr_outcome(prs: list[dict[str, Any]] | None, *, library: str, spec: str, sin
 NO_ANSWER = "api: no answer"
 
 
-def route(pair: Pair, problems: list[str], metadata: dict[str, Any]) -> str:
-    """What to do about a pair that did not pass, most specific first. A queue line still needs the owner's OK."""
+def route(pair: Pair, problems: list[str], metadata: dict[str, Any], *, judged: bool = False) -> str:
+    """What to do about a pair that did not pass, most specific first. A queue line still needs the owner's OK.
+    `judged` says a re-audit already found the marked pair not clean, so its finding waits for the owner's pick."""
     rest = [problem for problem in problems if not problem.startswith(MARKED)]
     if not rest:
-        return REAUDIT
-    then = "; then the re-audit of its marked lines" if len(rest) < len(problems) else ""
+        return REAUDIT_FOUND if judged else REAUDIT
+    mark = "the owner's pick of its re-audit finding" if judged else "the re-audit of its marked lines"
+    then = f"; then {mark}" if len(rest) < len(problems) else ""
     if any(problem.startswith(("code:", "metadata:")) for problem in rest):
         return "read the merged PR and its impl-merge run before anything is re-dispatched" + then
     if any(problem.startswith("renders:") for problem in rest):
@@ -299,12 +332,18 @@ def evaluate(
     pinned: str | None = None,
     sync_active: bool = False,
     pr_state: str | None = None,
+    merged: str = "",
+    reaudit: Reaudit | None = None,
 ) -> PairResult:
     """One pair's verdict. `fix` and `start` are the adopted file and the one it was cut from (adopt lines only);
     `row` and `api_entry` are None when the store has no entry for the pair; `api_answered` is False when the API gave
     no answer at all; `pinned` is the library's pinned version; `sync_active` says a sync run created since the pair's
-    update is still running; `pr_state` is `pr_outcome` for a pair not merged yet."""
-    result = PairResult(pair.key, entry.key, entry.kind)
+    update is still running; `pr_state` is `pr_outcome` for a pair not merged yet; `merged` is `merged_state` of the
+    pair on main, and `reaudit` a re-audit's judgment of the pair at that state.
+
+    A re-audit that judged the marked pair clean lifts the mark, with a note; one that found it not clean keeps the
+    mark and sends it to the owner's pick, so no second re-audit of the same state is asked for."""
+    result = PairResult(pair.key, entry.key, entry.kind, merged=merged)
     updated = catalogue.parse_time(metadata.get("updated"))
     if updated is None:
         result.status, result.problems = "failed", ["metadata: no updated"]
@@ -321,6 +360,15 @@ def evaluate(
         ]
         return result
     problems, result.notes = code_check(on_main, fix, start) if entry.kind == "adopt" else ([], [])
+    if reaudit is not None and any(problem.startswith(MARKED) for problem in problems):
+        result.reaudit = "clean" if reaudit.clean else "not clean"
+        if reaudit.clean:
+            problems = [problem for problem in problems if not problem.startswith(MARKED)]
+            result.notes.append(
+                f"re-audit: a skeptic judged the merged pair clean ({reaudit.source}): {reaudit.reason}"[:400]
+            )
+        else:
+            result.notes.append(f"re-audit: found the merged pair not clean ({reaudit.source}): {reaudit.reason}"[:400])
     model = entry.model if entry.kind in ("adopt", "rerender") else None
     problems += metadata_problems(metadata, model=model, pinned=pinned)
     if check_db:
@@ -334,20 +382,23 @@ def evaluate(
         result.status, result.route = "pending", SYNC_WAIT
         result.notes.append("sync: a Sync: PostgreSQL run created since the pair's update is queued or in progress")
     elif synced or others:
-        result.status, result.route = "failed", route(pair, problems, metadata)
+        result.status = "failed"
+        result.route = route(pair, problems, metadata, judged=result.reaudit == "not clean")
     elif problems:
-        result.status, result.route = "marked", REAUDIT
+        result.status = "marked"
+        result.route = REAUDIT_FOUND if result.reaudit == "not clean" else REAUDIT
     return result
 
 
 def reaudit_claims(results: list[PairResult], findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """The re-audit's claims for the marked pairs, in the audit workflow's finding shape: each finding of the pair
     the round's page held (refuted ones aside), with the mark; a marked pair without one gets a claim of its own, so
-    none passes unexamined."""
+    none passes unexamined. A pair a re-audit already found not clean at its merged state is on the owner's page and
+    gets no new claim. Every claim carries `merged`, which the workflow hands back with its verdict."""
     claims: list[dict[str, Any]] = []
     seen: set[tuple[str, str | None]] = set()
     for result in results:
-        if result.status != "marked":
+        if result.status != "marked" or result.reaudit == "not clean":
             continue
         mark = "; ".join(problem for problem in result.problems if problem.startswith(MARKED))
         own = [f for f in findings if f.get("pair") == result.pair and f.get("status") != "refuted"]
@@ -356,7 +407,12 @@ def reaudit_claims(results: list[PairResult], findings: list[dict[str, Any]]) ->
                 continue
             seen.add((result.pair, finding.get("id")))
             claims.append(
-                {**{key: finding.get(key) for key in FINDING_KEYS}, "finding_id": finding.get("id"), "mark": mark}
+                {
+                    **{key: finding.get(key) for key in FINDING_KEYS},
+                    "finding_id": finding.get("id"),
+                    "mark": mark,
+                    "merged": result.merged,
+                }
             )
         if not own and (result.pair, None) not in seen:
             seen.add((result.pair, None))
@@ -373,6 +429,7 @@ def reaudit_claims(results: list[PairResult], findings: list[dict[str, Any]]) ->
                     "pr": 0,
                     "finding_id": None,
                     "mark": mark,
+                    "merged": result.merged,
                 }
             )
     return claims
@@ -471,6 +528,44 @@ def read_findings(path: Path) -> list[dict[str, Any]]:
     return [f for f in findings if isinstance(f, dict)] if isinstance(findings, list) else []
 
 
+def reaudit_results(round_dir: Path) -> tuple[dict[tuple[str, str], Reaudit], list[str]]:
+    """`((pair, merged state) -> judgment, notes)` from the round's saved re-audit results (`REAUDIT_RESULTS`, the
+    audit workflow's return value: groups whose `reaudit` lists `{claim, verdict}`).
+
+    A pair counts as clean at a state when one result file judged every one of its claims there clean. A verdict
+    that found it not clean at that state wins over any clean one, earlier or later: re-running the skeptic does not
+    undo a finding, the owner's pick does. A claim without a verdict leaves that file's judgment of the pair open,
+    and a claim without `merged` (written before the verifier bound claims to a state) counts for no state."""
+    judged: dict[tuple[str, str], Reaudit] = {}
+    notes: list[str] = []
+    for path in sorted(round_dir.glob(REAUDIT_RESULTS)):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except OSError, ValueError:
+            notes.append(f"{path.name} is not readable JSON, skipped")
+            continue
+        verdicts: dict[tuple[str, str], list[Any]] = {}
+        for group in data if isinstance(data, list) else []:
+            rows = group.get("reaudit") if isinstance(group, dict) else None
+            for row in rows if isinstance(rows, list) else []:
+                claim = row.get("claim") if isinstance(row, dict) else None
+                if not isinstance(claim, dict):
+                    continue
+                pair, state = claim.get("pair"), claim.get("merged")
+                if isinstance(pair, str) and isinstance(state, str) and state:
+                    verdicts.setdefault((pair, state), []).append(row.get("verdict"))
+        if not verdicts:
+            notes.append(f"{path.name} holds no re-audit verdict bound to a merged state, skipped")
+        for key, given in verdicts.items():
+            found = [v for v in given if isinstance(v, dict) and v.get("clean") is False]
+            if found:
+                reason = "; ".join(str(v.get("reason") or "") for v in found)
+                judged[key] = Reaudit(False, path.name, reason)
+            elif key not in judged and all(isinstance(v, dict) and v.get("clean") is True for v in given):
+                judged[key] = Reaudit(True, path.name, "; ".join(str(v.get("reason") or "") for v in given))
+    return judged, notes
+
+
 # --- the round --------------------------------------------------------------------------------------------------
 
 
@@ -511,10 +606,10 @@ def main(argv: list[str] | None = None) -> int:
         print("verify_merged: no dispatched pair to verify", file=sys.stderr)
         return 2
 
-    from core.library_versions import pinned_versions
-
-    pins = pinned_versions(catalogue.REPO_ROOT).libraries
     tree = catalogue.GitTree(args.repo, args.ref)
+    pins, pin_errors = catalogue.pinned_libraries(tree)
+    for error in pin_errors:
+        print(f"verify_merged: no pin at {args.ref}: {error}", file=sys.stderr)
     metadata_text = tree.read_many(sorted({pair.metadata_path for _, pair in jobs}))
     main_code = tree.read_many(sorted({pair.impl_path for _, pair in jobs}))
     fixes: dict[tuple[str, str], tuple[str | None, str | None]] = {}
@@ -543,12 +638,16 @@ def main(argv: list[str] | None = None) -> int:
     syncs = gh_list("run", "list", "--workflow", "sync-postgres.yml", "--limit", "20", "--json", "status,createdAt")
     waiting = {entry for entry, pair in jobs if not is_merged(entry, pair)}
     prs = {entry.key: line_prs(entry) for entry in waiting}
+    judged, reaudit_notes = reaudit_results(args.round)
+    for note in reaudit_notes:
+        print(f"verify_merged: {note}", file=sys.stderr)
 
     results: list[PairResult] = []
     for entry, pair in jobs:
         spec_api = api.get(pair.spec)
         fix, start = fixes.get((entry.key, pair.key), (None, None))
         updated = catalogue.parse_time(metadata[pair.key].get("updated"))
+        state = merged_state(metadata[pair.key], main_code[pair.impl_path])
         results.append(
             evaluate(
                 entry,
@@ -565,6 +664,8 @@ def main(argv: list[str] | None = None) -> int:
                 pinned=pins.get(pair.library),
                 sync_active=updated is not None and sync_pending(syncs, updated),
                 pr_state=pr_outcome(prs.get(entry.key), library=pair.library, spec=pair.spec, since=entry.when),
+                merged=state,
+                reaudit=judged.get((pair.key, state)),
             )
         )
 
@@ -590,15 +691,20 @@ def main(argv: list[str] | None = None) -> int:
     claims = reaudit_claims(results, read_findings(args.round / "findings.json"))
     if claims:
         reaudit = args.round / f"reaudit-{stamp}.json"
+        # The commit, not the ref: the skeptic reads the state each claim's `merged` digest names.
         workflow_args = {
             "round": str(args.round.expanduser().resolve()),
             "repo": str(args.repo.expanduser().resolve()),
-            "ref": args.ref,
+            "ref": tree.sha,
             "label": f"reaudit-{stamp}",
             "reaudit": claims,
         }
         catalogue.write_private(reaudit, json.dumps(workflow_args, indent=2) + "\n")
-        print(f"wrote {reaudit}: {len(claims)} claim(s) of {counts['marked']} marked pair(s) for the re-audit")
+        pairs = len({claim["pair"] for claim in claims})
+        print(f"wrote {reaudit}: {len(claims)} claim(s) on {pairs} marked pair(s) for the re-audit")
+    found = sum(r.status == "marked" and r.reaudit == "not clean" for r in results)
+    if found:
+        print(f"{found} marked pair(s) the re-audit found not clean wait for the owner's pick on page/reaudit.html")
     return 0 if counts["ok"] == len(results) else 1
 
 

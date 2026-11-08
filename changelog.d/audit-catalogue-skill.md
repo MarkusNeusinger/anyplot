@@ -20,4 +20,5 @@
   `verify_merged.py` then checks every merged pair on the live site: the code
   on `main` against the fix, the metadata, the database row, both PNGs and the
   `_800.webp` the site shows, and the API. A pair whose fix a pipeline repair
-  changed goes to a skeptic's re-audit instead of passing. (#12825)
+  changed goes to a skeptic's re-audit instead of passing, and passes only
+  once that re-audit judges the merged pair clean. (#12825)

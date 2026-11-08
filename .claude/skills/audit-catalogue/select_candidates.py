@@ -15,8 +15,8 @@ Sources, any combination, each adding reasons to a pair:
   contact or session id leaves it.
 - `--scores`: the stored review in `metadata/*.yaml`: no score, a score below `--below`, a total lowered by a score
   cap, spec-compliance or other technical items below their maximum, and defect lines the merge kept on such an item.
-- `--stale`: a stored `library_version` an API level behind the pinned one (`core.library_versions`), and with
-  `--older-than DAYS` an `updated` older than that.
+- `--stale`: a stored `library_version` an API level behind the one `--ref` pins (`core.library_versions`, read from
+  the ref's pin files), and with `--older-than DAYS` an `updated` older than that.
 - `--gcs`: a HEAD on both production PNGs and both `_800.webp` variants the site shows, with a cache-busting query;
   a render that is missing, or older than the metadata's `updated`, is stale (a silent promote, as on 2026-11-08).
 - `--readiness`: the agent validator's scan of each file (`uv run --extra agents`); a refusal for anything but a
@@ -511,9 +511,9 @@ def main(argv: list[str] | None = None) -> int:
         for candidate in candidates.values():
             candidate.reasons += score_reasons(candidate.metadata, below=args.below)
     if args.stale:
-        from core.library_versions import pinned_versions
-
-        pinned = pinned_versions(catalogue.REPO_ROOT).libraries
+        pinned, pin_errors = catalogue.pinned_libraries(tree)
+        for error in pin_errors:
+            print(f"select_candidates: no pin at {args.ref}: {error}", file=sys.stderr)
         older = timedelta(days=args.older_than) if args.older_than else None
         for pair, candidate in candidates.items():
             candidate.reasons += stale_reasons(

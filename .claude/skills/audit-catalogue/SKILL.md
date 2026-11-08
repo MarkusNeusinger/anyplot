@@ -99,7 +99,7 @@ Combine the sources per round:
 |---|---|---|
 | `--votes` | `feedback` reactions per spec × language × library, one vote per visitor session | `thumbs_down` (more down than up since the metadata's `updated`), `thumbs_down_old_version` (more down than up before it, and no more up than down since: cast on an older version) |
 | `--scores` | the stored review in `metadata/*.yaml` | `no_score`, `below_threshold` (`--below`, default 85), `capped` (total below the item sum), `plot_type_below_max` (SC-01), `spec_compliance_below_max`, `technical_below_max`, `residual_defects` (a kept defect line on an item below its maximum) |
-| `--stale` | `library_version` against `core.library_versions` | `library_behind` (an older API level), `old_update` (with `--older-than DAYS`) |
+| `--stale` | `library_version` against the pins at `--ref` (`core.library_versions`) | `library_behind` (an older API level), `old_update` (with `--older-than DAYS`) |
 | `--gcs` | a HEAD on both production PNGs and both `_800.webp` variants the site shows, with `?cb=<epoch>` | `render_missing`, `render_stale` (older than `updated`), `render_unchecked` |
 | `--readiness` | the agent validator's scan, as the corpus tests run it | `validator_refusal` (any refusal but a map spec), `validator_error` |
 | `--sweep` | every pair of the filtered universe | `sweep` |
@@ -299,7 +299,8 @@ local reproduction is ever needed.
    uv run python $S/build_page.py --round "$ROUND" --fixes F01 F03 ...
    ```
 
-   Per picked pair it puts the production `_800.webp` (with `?cb=`) next to the
+   It takes the audit's F ids and the re-audit's R ids (`findings-reaudit.json`,
+   step 9). Per picked pair it puts the production `_800.webp` (with `?cb=`) next to the
    local render of `check_fix.py --render`, both themes, with the finding ids
    and fix sentences. R, Julia, and a plotly or bokeh pair whose local render
    failed show the production side and "renders in the pipeline".
@@ -372,8 +373,12 @@ new OK, and the restart skips what already went out.
      renders (with `?cb=`) and the merged review against the pair's finding.
      Write the result to `$ROUND/audit-reaudit-<time>.json` and run
      `build_page.py --round "$ROUND" --audit <that file> --name reaudit --id-prefix R`.
-     A clean pair passes; any other comes back on `page/reaudit.html` as a
-     finding for the owner to pick, never a hand merge.
+     Then run the verifier again: it reads the saved result. A pair the
+     skeptic judged clean passes with a note; any other stays `marked`, comes
+     back on `page/reaudit.html` as a finding for the owner to pick, and gets
+     no new re-audit file. The verdict holds for the merged state it judged
+     (the metadata's `updated` and the code on `main`); a later change to the
+     pair needs a new re-audit. Never a hand merge.
    - `closed`: the pair's PR closed without a merge, so the fix did not pass
      the pipeline. Its finding returns to the plan, as a new fix or the
      owner's call; never a hand merge.

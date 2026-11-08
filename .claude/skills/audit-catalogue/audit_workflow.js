@@ -11,7 +11,9 @@ export const meta = {
 
 // args: {round, repo, ref?, label?, group_size?, pairs: [{spec, language, library, reasons?: [string]}]}
 //   or:  {round, repo, ref?, label?, reaudit: [{pair, finding_id, severity, defect_class, cause, what, evidence, fix,
-//         pr, mark}]}, the reaudit-<time>.json verify_merged.py writes for the marked pairs (only the re-audit runs)
+//         pr, mark, merged}]}, the reaudit-<time>.json verify_merged.py writes for the marked pairs (only the re-audit
+//         runs); each claim comes back unchanged next to its verdict in the result's `reaudit` list, where
+//         verify_merged.py reads the verdict for the merged state the claim's `merged` digest names
 //   round  the private round directory (~/anyplot-audit/<date>), outside every checkout
 //   repo   the main checkout, whose git store holds ref (default origin/main)
 //   label  names this run's scratch folder, round/audit/<label>/

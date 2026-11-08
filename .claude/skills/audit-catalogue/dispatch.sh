@@ -55,6 +55,22 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# inside_checkout <dir>: 0 when the directory or one above it holds a .git (a checkout or a worktree), as
+# catalogue.outside_repository decides for the Python scripts; a path that does not resolve counts as inside.
+inside_checkout() {
+  local dir
+  dir=$(realpath -m -- "$1" 2>/dev/null) || return 0
+  while :; do
+    [ -e "$dir/.git" ] && return 0
+    [ "$dir" = / ] && return 1
+    dir=$(dirname -- "$dir")
+  done
+}
+if inside_checkout "$ROUND"; then
+  echo "dispatch: $ROUND is inside a git checkout; a round's files stay outside" >&2
+  exit 2
+fi
+
 GH_REPO=MarkusNeusinger/anyplot
 S=$(cd "$(dirname "$0")" && pwd)
 REPO=$(git -C "$S" rev-parse --show-toplevel)

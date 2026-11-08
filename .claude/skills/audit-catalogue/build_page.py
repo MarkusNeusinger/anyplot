@@ -24,12 +24,14 @@ the new ids apart (`R01`).
 
 The fixes gallery, after the fixes are rendered locally (SKILL.md, step 7):
 
-    uv run python .claude/skills/audit-catalogue/build_page.py --round "$ROUND" --fixes F01 F03 [--renders DIR]
+    uv run python .claude/skills/audit-catalogue/build_page.py --round "$ROUND" --fixes F01 F03 R02 [--renders DIR]
 
-It shows, per picked pair, the finding ids with their fix sentences, the production `_800.webp` (with a
-cache-buster) and the newest local render of `check_fix.py --render` under `--renders` (default `<round>/renders`),
-both themes, scaled to 800 px. A pair with no local render (R, Julia, or a plotly or bokeh render that needs a
-Chrome) shows the production side and "renders in the pipeline". It writes `page/fixes.html`.
+The ids come from `findings.json` and every `findings-<name>.json` of the round, so a re-audit's R ids are pickable
+next to the audit's F ids; an id two files give is refused. It shows, per picked pair, the finding ids with their
+fix sentences, the production `_800.webp` (with a cache-buster) and the newest local render of
+`check_fix.py --render` under `--renders` (default `<round>/renders`), both themes, scaled to 800 px. A pair with
+no local render (R, Julia, or a plotly or bokeh render that needs a Chrome) shows the production side and "renders
+in the pipeline". It writes `page/fixes.html`.
 
 Every file stays in the round directory, outside every checkout. Exit codes: 0 written, 2 bad arguments.
 """
@@ -413,17 +415,39 @@ def render_fixes_html(
 """
 
 
+def pick_list(round_dir: Path) -> tuple[list[dict[str, Any]], list[Path], dict[str, list[str]]]:
+    """`(findings, files, clashes)`: every finding the owner can pick by id, from the round's `findings.json` (the
+    audit page, F ids) and each named page's `findings-<name>.json` (the re-audit's R ids); `clashes` maps an id that
+    two files give to their names, so a pick never lands on the wrong finding."""
+    files = [
+        path for path in (round_dir / "findings.json", *sorted(round_dir.glob("findings-*.json"))) if path.is_file()
+    ]
+    findings: list[dict[str, Any]] = []
+    owners: dict[str, list[str]] = {}
+    for path in files:
+        listed = json.loads(path.read_text(encoding="utf-8")).get("findings", [])
+        for finding in listed if isinstance(listed, list) else []:
+            if isinstance(finding, dict):
+                findings.append(finding)
+                owners.setdefault(str(finding.get("id")), []).append(path.name)
+    clashes = {i: names for i, names in owners.items() if len(names) > 1}
+    return findings, files, clashes
+
+
 def fixes_page(args: argparse.Namespace) -> int:
-    findings_path = args.round / "findings.json"
-    if not findings_path.is_file():
-        print(f"build_page: no {findings_path}; build the audit page first", file=sys.stderr)
+    findings, files, clashes = pick_list(args.round)
+    if not files:
+        print(f"build_page: no findings.json in {args.round}; build the audit page first", file=sys.stderr)
         return 2
-    findings = json.loads(findings_path.read_text(encoding="utf-8")).get("findings", [])
+    ambiguous = [i for i in args.fixes if i in clashes]
+    if ambiguous:
+        named = "; ".join(f"{i} in {', '.join(clashes[i])}" for i in dict.fromkeys(ambiguous))
+        print(f"build_page: an id names more than one finding: {named}", file=sys.stderr)
+        return 2
     groups, unknown = picked(findings, args.fixes)
     if unknown or not groups:
-        print(
-            f"build_page: no such finding id in {findings_path}: {', '.join(unknown) or 'none picked'}", file=sys.stderr
-        )
+        sources = ", ".join(path.name for path in files)
+        print(f"build_page: no such finding id in {sources}: {', '.join(unknown) or 'none picked'}", file=sys.stderr)
         return 2
     renders = args.renders or args.round / "renders"
     cache_buster = int(time.time())
@@ -458,7 +482,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-images", action="store_true", help="leave the thumbnails out")
     parser.add_argument("--name", default="audit", help="the page's name: audit (default), or e.g. reaudit")
     parser.add_argument("--id-prefix", default="F", help="the ids' prefix (default F)")
-    parser.add_argument("--fixes", nargs="+", metavar="ID", help="build the fixes gallery for these picked ids")
+    parser.add_argument(
+        "--fixes", nargs="+", metavar="ID", help="build the fixes gallery for these picked ids (F and R ids)"
+    )
     parser.add_argument("--renders", type=Path, help="with --fixes: the local renders (default <round>/renders)")
     args = parser.parse_args(argv)
     if not catalogue.outside_repository(args.round):

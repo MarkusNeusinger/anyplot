@@ -159,6 +159,31 @@ def test_round_files_stay_outside_checkouts_and_private(mods, tmp_path: Path) ->
     assert stat.S_IMODE(target.stat().st_mode) == 0o600 and target.read_text(encoding="utf-8") == "[]"
 
 
+def test_the_pins_come_from_the_ref_not_the_working_tree(mods, repo: Path) -> None:
+    """A worktree whose lock lags or leads the ref must not move the version a round compares against."""
+    catalogue = mods["catalogue"]
+    lock = {"packages": {"node_modules/@mui/x-charts": {"version": "9.17.0"}}}
+    uv_lock = 'version = 1\n\n[[package]]\nname = "matplotlib"\nversion = "3.10.7"\n'
+    _commit(repo, {".python-version": "3.14.0\n", "package-lock.json": json.dumps(lock), "uv.lock": uv_lock}, "pins")
+    lock["packages"]["node_modules/@mui/x-charts"]["version"] = "7.29.1"
+    (repo / "package-lock.json").write_text(json.dumps(lock), encoding="utf-8")  # not committed
+
+    libraries, errors = catalogue.pinned_libraries(catalogue.GitTree(repo, "HEAD"))
+    assert libraries["muix"] == "9.17.0" and libraries["matplotlib"] == "3.10.7"
+    assert "makie" not in libraries and any(error.startswith("makie:") for error in errors)
+
+
+def test_every_pin_file_the_reader_needs_is_read_from_the_ref(mods) -> None:
+    """When `core.library_versions` starts reading another file, `PIN_FILES` must name it, or a pin goes missing."""
+    from core.constants import LIBRARY_LANGUAGES
+
+    catalogue = mods["catalogue"]
+    libraries, errors = catalogue.pinned_libraries(catalogue.GitTree(REPO_ROOT, "HEAD"))
+
+    assert errors == []
+    assert set(libraries) == set(LIBRARY_LANGUAGES)
+
+
 # --- select_candidates.py ---------------------------------------------------------------------------------------
 
 
@@ -680,6 +705,47 @@ def test_the_fixes_gallery_needs_known_ids(mods, tmp_path: Path, capsys) -> None
     assert (round_dir / "page" / "fixes.html").is_file()
 
 
+def test_the_fixes_gallery_takes_the_re_audits_r_ids(mods, tmp_path: Path, capsys) -> None:
+    """The owner may pick a re-audit finding (SKILL.md, step 9); its R id lives in findings-reaudit.json."""
+    main = mods["build_page"].main
+    audit = tmp_path / "audit.json"
+    audit.write_text(json.dumps(_audit()), encoding="utf-8")
+    reaudit = tmp_path / "reaudit.json"
+    lost = _finding("h-spec/javascript/muix", "medium", "the repair brought the overlap back")
+    verdict = {"refuted": False, "severity": "medium", "cause": "implementation", "reason": "still there"}
+    reaudit.write_text(
+        json.dumps(
+            [
+                {
+                    "group": "reaudit",
+                    "pairs": [],
+                    "checked": [],
+                    "findings": [lost],
+                    "verified": [{**lost, "verdict": verdict}],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    round_dir = tmp_path / "r"
+    assert main(["--round", str(round_dir), "--audit", str(audit), "--no-images"]) == 0
+    named = ["--round", str(round_dir), "--audit", str(reaudit), "--no-images", "--name", "reaudit", "--id-prefix", "R"]
+    assert main(named) == 0
+
+    assert main(["--round", str(round_dir), "--fixes", "F01", "R01", "--no-images"]) == 0
+    page = (round_dir / "page" / "fixes.html").read_text(encoding="utf-8")
+    assert "h-spec/javascript/muix" in page and "the repair brought the overlap back" in page and ">R01<" in page
+    assert "a-spec/javascript/muix" in page and ">F01<" in page
+    assert main(["--round", str(round_dir), "--fixes", "R02", "--no-images"]) == 2
+    assert "findings.json, findings-reaudit.json" in capsys.readouterr().err
+
+    # a second named page that reuses the F prefix makes F01 ambiguous, and leaves the R ids alone
+    assert main([*named[:2], "--audit", str(audit), "--no-images", "--name", "other", "--id-prefix", "F"]) == 0
+    assert main(["--round", str(round_dir), "--fixes", "F01", "--no-images"]) == 2
+    assert "F01 in findings.json, findings-other.json" in capsys.readouterr().err
+    assert main(["--round", str(round_dir), "--fixes", "R01", "--no-images"]) == 0
+
+
 # --- the shell scripts ------------------------------------------------------------------------------------------
 
 
@@ -717,6 +783,22 @@ def test_the_dispatcher_executes_only_the_approved_plan(tmp_path: Path) -> None:
     result = _run("dispatch.sh", str(tmp_path), "--execute", "--approved", token)
     assert result.returncode == 2 and "changed since the approved dry run" in result.stderr
     assert not (tmp_path / "dispatch.state").exists()
+
+
+@pytest.mark.parametrize("script", ["dispatch.sh", "resume_paused.sh"])
+def test_the_shell_scripts_refuse_a_round_inside_a_checkout(script: str, tmp_path: Path) -> None:
+    round_dir = tmp_path / "co" / "rounds" / "2026-11-08"
+    round_dir.mkdir(parents=True)
+    (tmp_path / "co" / ".git").write_text("gitdir: /elsewhere\n", encoding="utf-8")  # a worktree's .git is a file
+    (round_dir / "queue.txt").write_text("regen ggplot2 a-spec Use the periods the spec names.\n", encoding="utf-8")
+    (round_dir / "dispatch.state").write_text("k4 regen ggplot2 - 2026-11-08T10:03:00Z 1 a-spec\n", encoding="utf-8")
+
+    runs = [_run(script, str(round_dir))]
+    if script == "dispatch.sh":
+        runs.append(_run(script, str(round_dir), "--execute", "--approved", "abc"))
+    for result in runs:
+        assert result.returncode == 2 and "inside a git checkout" in result.stderr
+    assert not (round_dir / "dispatch.log").exists() and not (round_dir / "resume.log").exists()
 
 
 def test_resuming_needs_this_rounds_dispatches_or_all_open(tmp_path: Path) -> None:
@@ -1022,3 +1104,97 @@ def test_the_verifier_refuses_before_reading_anything(mods, tmp_path: Path, caps
     assert main(["--round", str(tmp_path / "co" / "r"), "--no-db"]) == 2  # inside a checkout
     assert main(["--round", str(tmp_path / "r"), "--no-db"]) == 2  # nothing dispatched
     assert "nothing was dispatched" in capsys.readouterr().err
+
+
+def _reaudit_result(rows: list[tuple[dict, dict | None]]) -> str:
+    """The audit workflow's re-audit return value, as the caller saves it: each claim next to its verdict."""
+    return json.dumps(
+        [{"group": "reaudit", "reaudit": [{"claim": claim, "verdict": verdict} for claim, verdict in rows]}]
+    )
+
+
+def _clean(clean: bool, reason: str = "seen") -> dict:
+    return {"clean": clean, "severity": "medium", "cause": "implementation", "reason": reason}
+
+
+def test_the_merged_state_changes_with_the_code_or_the_update(mods) -> None:
+    state = mods["verify_merged"].merged_state
+    meta = _merged_meta()
+
+    assert state(meta, "x();\n") == state({**meta, "updated": "2026-11-08T12:00:00+00:00"}, "x();\n")
+    assert state(meta, "x();\n") != state(meta, "y();\n")
+    assert state(meta, "x();\n") != state({**meta, "updated": "2026-11-09T12:00:00Z"}, "x();\n")
+
+
+def test_the_re_audit_results_are_read_per_pair_and_merged_state(mods, tmp_path: Path) -> None:
+    vm = mods["verify_merged"]
+    a, b, c, d = (f"{spec}/javascript/muix" for spec in ("a-spec", "b-spec", "c-spec", "d-spec"))
+    first = [
+        ({"pair": a, "merged": "s1", "finding_id": "F01"}, _clean(True, "boundary smooth")),
+        ({"pair": a, "merged": "s1", "finding_id": "F02"}, _clean(True, "label clear")),
+        ({"pair": b, "merged": "s1"}, _clean(True)),
+        ({"pair": b, "merged": "s1"}, None),  # no verdict came back: no judgment of b in this file
+        ({"pair": c, "merged": "s1"}, _clean(True)),
+        ({"pair": d}, _clean(True)),  # a claim bound to no state
+    ]
+    (tmp_path / "audit-reaudit-20261108T120000Z.json").write_text(_reaudit_result(first), encoding="utf-8")
+    later = [({"pair": c, "merged": "s1"}, _clean(False, "the overlap is back"))]
+    (tmp_path / "audit-reaudit-20261108T130000Z.json").write_text(_reaudit_result(later), encoding="utf-8")
+    (tmp_path / "audit-reaudit-20261108T140000Z.json").write_text("{not json", encoding="utf-8")
+    (tmp_path / "audit-run1.json").write_text(_reaudit_result(first), encoding="utf-8")  # not a re-audit result
+
+    judged, notes = vm.reaudit_results(tmp_path)
+    assert set(judged) == {(a, "s1"), (c, "s1")}
+    assert judged[(a, "s1")].clean and judged[(a, "s1")].reason == "boundary smooth; label clear"
+    assert judged[(a, "s1")].source == "audit-reaudit-20261108T120000Z.json"
+    # a later finding wins over the earlier clean verdict: a second skeptic run never undoes a finding
+    assert not judged[(c, "s1")].clean and judged[(c, "s1")].reason == "the overlap is back"
+    assert notes == ["audit-reaudit-20261108T140000Z.json is not readable JSON, skipped"]
+
+
+def test_a_re_audit_settles_a_marked_pair_at_the_state_it_judged(mods, tmp_path: Path) -> None:
+    """Round trip: the verifier's claims go through the workflow and come back; clean passes, not clean waits for the
+    owner and gets no new claim, and a later change to the pair needs a new re-audit."""
+    vm, Pair = mods["verify_merged"], mods["catalogue"].Pair
+    entry = vm.Dispatched("k1", "adopt", "muix", "a" * 40, datetime(2026, 11, 8, 10, tzinfo=UTC), ("a-spec",))
+    pair = Pair.parse("a-spec/muix")
+    meta = _merged_meta()
+    marked_inputs = {**_good_inputs(meta), "on_main": "y();\n"}
+    state = vm.merged_state(meta, "y();\n")
+    finding = {"id": "F01", "pair": pair.key, "status": "confirmed", "severity": "high", "what": "a staircase"}
+
+    marked = vm.evaluate(entry, pair, **marked_inputs, merged=state)
+    assert marked.status == "marked" and marked.merged == state and not marked.reaudit
+    claims = vm.reaudit_claims([marked], [finding])
+    assert [(c["finding_id"], c["merged"]) for c in claims] == [("F01", state)]
+
+    result_file = tmp_path / "audit-reaudit-20261108T120000Z.json"
+    result_file.write_text(_reaudit_result([(claims[0], _clean(True, "the mesh is smooth"))]), encoding="utf-8")
+    judged, _ = vm.reaudit_results(tmp_path)
+    passed = vm.evaluate(entry, pair, **marked_inputs, merged=state, reaudit=judged.get((pair.key, state)))
+    assert passed.status == "ok" and not passed.problems and passed.reaudit == "clean"
+    assert passed.notes[-1].startswith("re-audit: a skeptic judged the merged pair clean (audit-reaudit-")
+    assert "the mesh is smooth" in passed.notes[-1]
+
+    # a later merge changed the pair: the clean verdict was for another state
+    moved = vm.merged_state(meta, "z();\n")
+    again = vm.evaluate(
+        entry, pair, **{**marked_inputs, "on_main": "z();\n"}, merged=moved, reaudit=judged.get((pair.key, moved))
+    )
+    assert again.status == "marked" and again.route == vm.REAUDIT and vm.reaudit_claims([again], [finding])
+
+    found = vm.Reaudit(False, result_file.name, "the staircase is back")
+    held = vm.evaluate(entry, pair, **marked_inputs, merged=state, reaudit=found)
+    assert held.status == "marked" and held.reaudit == "not clean" and held.route == vm.REAUDIT_FOUND
+    assert "page/reaudit.html" in held.route and "never a hand merge" in held.route
+    assert vm.reaudit_claims([held], [finding]) == []
+    stale = vm.evaluate(
+        entry,
+        pair,
+        **{**marked_inputs, "heads": _heads((200, FRESH), light_png=(404, None))},
+        merged=state,
+        reaudit=found,
+    )
+    assert stale.status == "failed" and stale.route.endswith("then the owner's pick of its re-audit finding")
+    # a re-audit verdict lifts only a mark: a pair with no marked lines keeps its own status
+    assert vm.evaluate(entry, pair, **_good_inputs(meta), merged=state, reaudit=found).status == "ok"

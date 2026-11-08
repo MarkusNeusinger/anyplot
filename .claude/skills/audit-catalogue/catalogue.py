@@ -1,5 +1,5 @@
-"""What the audit skill's Python scripts share: the catalogue read from a git ref, a pair's paths and render URLs,
-the stored review's checklist, and the private round directory.
+"""What the audit skill's Python scripts share: the catalogue and the pinned library versions read from a git ref, a
+pair's paths and render URLs, the stored review's checklist, and the private round directory.
 
 Nothing here writes to a checkout. The catalogue comes from a commit (`origin/main` by default) through one
 `git cat-file --batch` process, so a worktree's uncommitted state or drift never changes what a round reads.
@@ -11,6 +11,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -187,6 +188,38 @@ class GitTree:
     def changed_paths(self, base: str) -> list[str]:
         """Every path the commit changes against its merge base with `base` (`git diff base...sha`)."""
         return self._git("diff", "--name-only", f"{base}...{self.sha}").splitlines()
+
+
+PIN_FILES = (
+    ".python-version",
+    "uv.lock",
+    "package-lock.json",
+    "Manifest.toml",
+    ".github/actions/setup-r/action.yml",
+    ".github/actions/setup-julia/action.yml",
+    ".github/actions/setup-node/action.yml",
+)
+"""The files `core.library_versions` reads the pins from, relative to the repository root."""
+
+
+def pinned_libraries(tree: GitTree) -> tuple[dict[str, str], list[str]]:
+    """`(library -> pinned version, errors)` at the tree's commit.
+
+    `core.library_versions` reads the pins from a checkout's files, so the pin files go from git into a temporary
+    directory and are read there: the version a round compares against is the ref's, as the rest of the catalogue is,
+    never the working tree's. A pin file the reader needs but `PIN_FILES` misses shows up in the errors."""
+    from core.library_versions import pinned_versions
+
+    texts = tree.read_many(list(PIN_FILES))
+    with tempfile.TemporaryDirectory(prefix="audit-pins-") as directory:
+        root = Path(directory)
+        for path, text in texts.items():
+            if text is not None:
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(text, encoding="utf-8")
+        pins = pinned_versions(root)
+    return pins.libraries, pins.errors
 
 
 def load_metadata(text: str | None) -> dict[str, Any]:
