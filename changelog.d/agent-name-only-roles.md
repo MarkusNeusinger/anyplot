@@ -4,12 +4,12 @@
   from the agent to `core/spec_roles.py`, and `spec_context` applies them, so the checker, its workflow mirror
   and the smoke run no longer ask for column constants of the 27 roles of 13 specs that the agent already
   treats as computed, such as the Bollinger bands and the moving averages. `CHECKER_VERSION` is 2, so a
-  record says which reading produced it.
+  record says which reading produced it (#12612).
 - **The EMA chart accepts both pairs its spec names.** `EMA 50` and `EMA 200`, the golden cross of the spec's
   first application, bind without a window warning beside the example's 12 and 26, and the adapter's brief
-  names the window it computes an open EMA with: 26 by default, 200 beside a bound `EMA 50`.
+  names the window it computes an open EMA with: 26 by default, 200 beside a bound `EMA 50` (#12612).
 - **A changed `specification.md` runs the unit tests.** The role audit reads every spec's Data bullets, and a
-  spec PR used to skip pytest, which left a failure to the next Python PR.
+  spec PR used to skip pytest, which left a failure to the next Python PR (#12612).
 
 ### Fixed
 
@@ -20,4 +20,4 @@
   conversion makes. Before, a price table drew its opening prices as the MACD line or as an RSI on a 0 to
   100 axis, and `Sample, X1, ..., X5` drew the first measurement as the sample mean and the next ones as
   the range and the limits, each with complete bindings and no warning. Now the role stays missing and the
-  page asks for its column.
+  page asks for its column (#12612).
