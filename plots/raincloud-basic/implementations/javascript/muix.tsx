@@ -178,7 +178,7 @@ export default function Chart() {
             data: arms,
             categoryGapRatio: 0.3,
             label: ARM,
-            width: 140,
+            width: 118,
             disableTicks: true,
             disableLine: true,
             labelStyle: { fontSize: 16, fill: t.ink },
