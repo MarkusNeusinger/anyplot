@@ -21,17 +21,18 @@ const TICK_LABEL_PX = 14; // gap between an axis and its tick labels (px)
 const AXIS_TITLE_PX = 48; // gap between an axis and its title (px)
 const HEADER_H = 84;
 const LEGEND_W = 150;
-const MARGIN = { top: 56, right: 120, bottom: 80, left: 120 };
+const MARGIN = { top: 56, right: 64, bottom: 80, left: 120 };
 
 // Data: replace these with your own grid, z[row][col] being the height at x[col], y[row]
-// A smooth response surface z = sin(x) · cos(y) sampled on a 30 × 30 grid
-const X_NAME = "x";
-const Y_NAME = "y";
-const Z_NAME = "z = sin(x) · cos(y)";
+// Terrain elevation over a 12 × 12 km survey area, two hills and two basins on
+// rolling ground, sampled on a 30 × 30 grid
+const X_NAME = "Easting (km)";
+const Y_NAME = "Northing (km)";
+const Z_NAME = "Elevation (m)";
 const GRID_N = 30;
-const x = Array.from({ length: GRID_N }, (_, i) => -3 + (6 * i) / (GRID_N - 1)); // role: x
-const y = Array.from({ length: GRID_N }, (_, i) => -3 + (6 * i) / (GRID_N - 1)); // role: y
-const z = y.map((yv) => x.map((xv) => Math.sin(xv) * Math.cos(yv))); // role: z
+const x = Array.from({ length: GRID_N }, (_, i) => (12 * i) / (GRID_N - 1)); // role: x
+const y = Array.from({ length: GRID_N }, (_, i) => (12 * i) / (GRID_N - 1)); // role: y
+const z = y.map((yv) => x.map((xv) => Number((420 + 80 * Math.sin((xv - 6) / 2) * Math.cos((yv - 6) / 2)).toFixed(1)))); // role: z
 
 // Plot: reads only the grid and the constants above
 // The ground is the unit square (gx along x, gy along y), the height gz runs 0 to
@@ -113,7 +114,7 @@ const pyHi = Math.max(...allPoints.map((p) => p.py));
 const tickFormat = (v: number) => Number(v.toFixed(2)).toString();
 
 const TITLE = "surface-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${x.length} × ${y.length} grid · ${Z_NAME} from ${zMin.toFixed(2)} to ${zMax.toFixed(2)}`;
+const SUBTITLE = `${x.length} × ${y.length} grid · ${Z_NAME} from ${tickFormat(zMin)} to ${tickFormat(zMax)}`;
 const textSx = { fontSize: 14, fill: t.inkSoft };
 const titleText = { fontSize: 16, fontWeight: 600, fill: t.ink };
 
@@ -212,21 +213,26 @@ export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartW = width - LEGEND_W;
   const chartH = height - HEADER_H;
-  // equal px per unit on both axes keeps the projection's angles true
-  const drawW = chartW - MARGIN.left - MARGIN.right;
+  // equal px per unit on both axes keeps the projection's angles true; the chart takes
+  // only the width the surface needs, so the colour bar sits right beside it
+  const k = Math.min(
+    (chartW - MARGIN.left - MARGIN.right) / (pxHi - pxLo),
+    (chartH - MARGIN.top - MARGIN.bottom) / (pyHi - pyLo),
+  );
+  const drawW = k * (pxHi - pxLo);
   const drawH = chartH - MARGIN.top - MARGIN.bottom;
-  const k = Math.min(drawW / (pxHi - pxLo), drawH / (pyHi - pyLo));
+  const plotW = drawW + MARGIN.left + MARGIN.right;
   const pxMid = (pxLo + pxHi) / 2;
   const pyMid = (pyLo + pyHi) / 2;
 
   return (
-    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
       <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
         <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
         <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{SUBTITLE}</Typography>
       </Box>
       <ChartsDataProvider
-        width={chartW}
+        width={plotW}
         height={chartH}
         series={[]}
         skipAnimation
@@ -235,7 +241,7 @@ export default function Chart() {
         yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMid - drawH / (2 * k), max: pyMid + drawH / (2 * k), position: "none" }]}
         zAxis={[{ id: "height", min: zMin, max: zMax, colorMap: { type: "continuous", min: zMin, max: zMax, color: [t.seq[0], t.seq[1]] } }]}
       >
-        <ChartsWrapper legendPosition={{ vertical: "middle", horizontal: "end" }} legendDirection="vertical" sx={{ width, height: chartH }}>
+        <ChartsWrapper legendPosition={{ vertical: "middle", horizontal: "end" }} legendDirection="vertical" sx={{ width: plotW + LEGEND_W, height: chartH }}>
           <Box sx={{ gridArea: "legend", width: LEGEND_W, height: chartH * 0.55, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Typography sx={{ color: t.ink, fontSize: 15, fontWeight: 600, mb: "10px" }}>{Z_NAME}</Typography>
             <ContinuousColorLegend
