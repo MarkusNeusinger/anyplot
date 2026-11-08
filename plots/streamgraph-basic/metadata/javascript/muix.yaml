@@ -2,99 +2,104 @@ library: muix
 language: javascript
 specification_id: streamgraph-basic
 created: '2026-08-05T11:47:11Z'
-updated: '2026-08-05T21:45:55Z'
-generated_by: claude-sonnet
-workflow_run: 31002324488
+updated: '2026-11-08T06:07:20Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42453166083
 issue: 856
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Correct, idiomatic MUI X streamgraph implementation (wiggle offset + insideOut
-    order + catmullRom curve) matching the library's documented recipe
-  - 'Both renders are fully theme-correct: identical data colors, correctly flipped
-    chrome, no dark-on-dark or light-on-light legibility failures'
-  - Canonical Imprint palette order across all 6 categories with brand green correctly
-    first
-  - Deterministic, realistic monthly genre-listening data well within the spec's size/category
-    ranges
+  - 'Uses MUI X''s native stacking options — `stack`, `stackOffset: "silhouette"`
+    and `stackOrder: "insideOut"` — so the centered baseline and the wiggle-reducing
+    layer order come from the library rather than hand-computed offsets'
+  - Filled layers sit directly on each other with no gaps, `catmullRom` curves give
+    smooth flowing edges while each layer's thickness at a month stays its value
+  - Y axis is hidden (thickness is the only value read) and the subtitle carries the
+    value unit and time span instead, so nothing is lost without the axis
+  - 'Six Imprint colors in canonical order starting with #009E73, identical in both
+    renders; chrome flips cleanly between #FAF8F1 and #1A1A17 with all text readable'
+  - 'Clean data story: Electronic and Hip-Hop grow, Rock cools off, Jazz and Classical
+    decline, Pop stays flat, visible as layer thickness changes over 24 months'
+  - 'Square legend glyphs (`labelMarkType: "square"`) match the filled areas; tooltips
+    available in the HTML view'
   weaknesses:
-  - Y-axis is fully hidden with no numeric scale or unit reference anywhere in the
-    chart - the title mentions Streaming Hours but the actual magnitude (in thousands,
-    per the code comment) is never surfaced to the viewer
-  - No explicit x-axis title (only bare month/year tick labels) - a short axis label
-    would remove ambiguity
-  - Design Excellence stays close to library defaults beyond the palette/curve choices
-    - no annotation or emphasis calls out the clearest trend to strengthen data storytelling
+  - 'Suggestion: a slightly larger title (about 26 px) would give the header more
+    presence; it currently spans about 32 % of the width.'
+  - 'Suggestion: the stream fills nearly the whole plot height, so the upper and lower
+    outlines read almost flat; a little more vertical padding would let the river-like
+    silhouette show more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title ("Genre Streaming Hours · streamgraph-basic · javascript · muix · anyplot.ai") and legend (6 swatches: Pop, Hip-Hop, Electronic, Rock, Jazz, Classical) in dark ink, clearly readable. X-axis tick labels (Jan 2024 ... Oct 2025, every 3rd month) in soft dark gray, readable. No y-axis (intentionally hidden).
-      Data: Six-band streamgraph with wiggle-centered baseline and smooth catmullRom curves. First series (Pop) is brand green #009E73. Full order: green, lavender, blue, ochre, red, cyan - canonical Imprint order.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "streamgraph-basic · javascript · muix · anyplot.ai" centered at top, a soft-ink subtitle "Layer thickness: Streaming hours (thousands) · 24 months, Jan 2024 to Dec 2025", a horizontal legend (Pop, Hip-Hop, Electronic, Rock, Jazz, Classical) with square swatches, quarterly x ticks Jan 2024 … Oct 2025 and the axis title "Month". No y axis, no grid. All text dark and readable.
+      Data: six filled layers stacked without gaps around a centered baseline, insideOut order (Hip-Hop top, then Rock, Electronic, Pop #009E73, Classical, Jazz at the bottom), smooth curved edges; Electronic and Hip-Hop visibly thicken, Rock thins over time.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and legend text rendered in light ink, clearly readable against dark background. X-axis tick labels in soft light gray, readable. No dark-on-dark failures observed.
-      Data: Colors identical to light render (green, lavender, blue, ochre, red, cyan) - only chrome (background, text ink, axis line) flipped, as required. Brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend labels, tick labels and "Month" all render in light ink and are clearly readable; axis line light. No dark-on-dark text.
+      Data: layer colors identical to the light render (Pop #009E73, purple, blue, ochre, red, cyan); neighboring layers stay distinguishable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title/legend/ticks readable in both themes; tick label size (14px)
-          on the small side
+        comment: Explicit sizes (title 22, subtitle 15, ticks 14, axis label 16, legend
+          15 px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, bands, or tick labels
+        comment: No text collisions; layers abut without hiding each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 24 monthly points per band render as smooth, clearly visible shapes
+        comment: Filled layers fully opaque, legend squares match the areas in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; identity carried by color+position+legend
+        comment: Adjacent layers differ in hue and lightness; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Clean margins, nothing clipped, title width matches expected range
+        comment: 3200x1800, stream fills the plot area, balanced header and axis band
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis fully suppressed with no numeric/unit reference; no explicit
-          x-axis title
+        passed: true
+        comment: '''Month'' on x; value unit given in subtitle since the y axis is
+          intentionally hidden'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, correct backgrounds, identical data colors
-          across themes
+        comment: 'Imprint positions 1-6 in canonical order, first series #009E73,
+          correct backgrounds'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -102,22 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Harmonious palette, smooth curves, stroke separators; otherwise close
-          to defaults
+        comment: Title/subtitle hierarchy where the subtitle carries the unit and
+          time span, replacing the hidden value axis
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Deliberately minimal chrome (no y-axis, grid, ticks), generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Shapes convey trends but no explicit emphasis or annotation
+        passed: true
+        comment: Y axis dropped entirely with the gap reclaimed by the stream, outline-free
+          fills, quarterly tick density chosen for 24 months
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Data displayed; no focal hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,27 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamgraph via wiggle offset + insideOut order
+        comment: Streamgraph with silhouette baseline; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth curves, wiggle-centered baseline, distinct colors, legend
-          present
+        comment: Smooth interpolation, centered stack, distinct colors, legend, gap-free
+          layers - all present
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: X and stacked values correctly mapped but y-axis fully hidden, no
-          scale shown
+        passed: true
+        comment: Thickness = value at each month; catmullRom shows no visible overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match genres
+        comment: Correct mandated title; legend names the six genres
     data_quality:
       score: 15
       max: 15
@@ -155,19 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 24 points, 6 categories - within spec range
+        comment: Growing, shrinking and flat layers show how the stream composition
+          shifts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral genre-listening trends
+        comment: Monthly streaming hours by genre, the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible streaming-hours magnitudes
+        comment: Plausible magnitudes (100-500 thousand hours per genre); 24 months,
+          6 categories inside the spec's ranges; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -177,59 +184,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Linear data block + one component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: LineChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Stacking and offset delegated to the library; nothing written out
+          that a call computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, current MUI X API
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: wiggle + insideOut + catmullRom is MUI X's documented streamgraph
-          pattern
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom tickLabelInterval, disableTicks, legend positioning, per-series
-          overrides
+        comment: Series-level stack/stackOffset/stackOrder/curve, axis tickInterval
+          and valueFormatter, slotProps legend config
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: MUI X's exposed d3 stack offsets and orders (silhouette, insideOut)
+          used directly on LineChart area series
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:04:52Z'
 impl_tags:
   dependencies: []
   techniques:
-  - stacked-area
-  - wiggle-offset
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
+  - long-to-wide
   dataprep:
   - time-series
   styling:
   - minimal-chrome
-  - alpha-blending
