@@ -11,7 +11,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const DAY_MS = 86400000;
-const TICK_DAYS = 7; // one date tick per week from the first start
+const TICK_TARGET = 7; // about this many date ticks across the schedule, at a whole-week step
 const X_PAD_SHARE = 0.02; // time padding on both sides, as a share of the schedule span
 const ARROW_STUB = 12; // px an arrow runs straight out of a bar end before it turns
 const DEPENDENCY_SEPARATOR = ";"; // separates several predecessors in one cell
@@ -88,9 +88,10 @@ const edges = tasks.flatMap((d) =>
 const firstStart = Math.min(...rows.map((r) => r.start));
 const lastEnd = Math.max(...rows.map((r) => r.end));
 const xPad = (lastEnd - firstStart) * X_PAD_SHARE;
+const tickStep = 7 * DAY_MS * Math.max(1, Math.round((lastEnd - firstStart) / TICK_TARGET / (7 * DAY_MS)));
 const ticks = Array.from(
-  { length: Math.floor((lastEnd - firstStart) / (TICK_DAYS * DAY_MS)) + 1 },
-  (_, i) => firstStart + i * TICK_DAYS * DAY_MS,
+  { length: Math.floor((lastEnd - firstStart) / tickStep) + 1 },
+  (_, i) => firstStart + i * tickStep,
 );
 const dayFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 const fullDateFormat = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
@@ -136,9 +137,21 @@ function DependencyArrows() {
         const toX = xScale(edge.to.start);
         const toY = yScale(edge.to.label) + band / 2;
         // Out of the predecessor's end into the gap below its row, across to just left of the
-        // successor's start, then down and into its left edge, clear of bars that start with it
+        // successor's start, then down and into its left edge, clear of bars that start with it.
+        // When a bar on a row in between covers that vertical leg, the leg runs right of the latest
+        // bar end among those rows and turns back left in the gap next to the successor's row.
         const gapY = yScale(edge.from.label) + band + gap / 2;
-        const d = `M ${fromX} ${fromY} H ${fromX + ARROW_STUB} V ${gapY} H ${toX - ARROW_STUB} V ${toY} H ${toX}`;
+        const legX = toX - ARROW_STUB;
+        const between = rows.filter((r) => {
+          const y = yScale(r.label) + band / 2;
+          return y > Math.min(gapY, toY) && y < Math.max(gapY, toY);
+        });
+        const blocked = between.some((r) => xScale(r.start) <= legX && legX <= xScale(r.end));
+        const approachY = toY > gapY ? yScale(edge.to.label) - gap / 2 : yScale(edge.to.label) + band + gap / 2;
+        const route = blocked
+          ? `H ${Math.max(...between.map((r) => xScale(r.end))) + ARROW_STUB} V ${approachY} H ${legX}`
+          : `H ${legX}`;
+        const d = `M ${fromX} ${fromY} H ${fromX + ARROW_STUB} V ${gapY} ${route} V ${toY} H ${toX}`;
         return (
           <path
             key={`${edge.from.label}->${edge.to.label}`}
