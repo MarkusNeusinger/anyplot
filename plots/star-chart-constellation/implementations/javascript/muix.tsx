@@ -51,7 +51,7 @@ const TO_STAR = "To star"; // role: edges
 
 // Data: replace this block with your own records, one object per row
 // Bright stars of the northern sky (approximate J2000 positions) with their
-// stick figures, plus a deterministic field of faint background stars.
+// stick figures, plus stars to magnitude 5.0 outside the figures.
 const edges = [
   ["Dubhe", "Merak"], ["Merak", "Phecda"], ["Phecda", "Megrez"], ["Megrez", "Dubhe"],
   ["Megrez", "Alioth"], ["Alioth", "Mizar"], ["Mizar", "Alkaid"],
@@ -158,6 +158,152 @@ const catalog: [string, number, number, number, string][] = [
   ["Sirius", 6.75, -16.72, -1.46, "CMa"], ["Mirzam", 6.38, -17.96, 1.98, "CMa"],
   ["Wezen", 7.14, -26.39, 1.83, "CMa"], ["Adhara", 6.98, -28.97, 1.5, "CMa"],
   ["Aludra", 7.4, -29.3, 2.45, "CMa"],
+  // Stars outside the stick figures, down to magnitude 5.0
+  ["Talitha", 8.99, 48.04, 3.14, "UMa"], ["KapUMa", 9.06, 47.16, 3.6, "UMa"],
+  ["TaniaBorealis", 10.29, 42.91, 3.45, "UMa"], ["TaniaAustralis", 10.37, 41.5, 3.05, "UMa"],
+  ["AlulaBorealis", 11.31, 33.09, 3.48, "UMa"], ["AlulaAustralis", 11.3, 31.53, 3.79, "UMa"],
+  ["Muscida", 8.5, 60.72, 3.36, "UMa"], ["ThetUMa", 9.55, 51.68, 3.17, "UMa"],
+  ["UpsUMa", 9.85, 59.04, 3.8, "UMa"], ["PsiUMa", 11.16, 44.5, 3.01, "UMa"],
+  ["ChiUMa", 11.77, 47.78, 3.71, "UMa"], ["23UMa", 9.53, 63.06, 3.67, "UMa"],
+  ["EtaUMi", 16.29, 75.76, 4.95, "UMi"],
+  ["Achird", 0.82, 57.82, 3.44, "Cas"], ["ZetCas", 0.62, 53.9, 3.66, "Cas"],
+  ["KapCas", 0.55, 62.93, 4.16, "Cas"], ["ThetCas", 1.19, 55.15, 4.33, "Cas"],
+  ["50Cas", 2.05, 72.42, 3.95, "Cas"],
+  ["DelCep", 22.49, 58.42, 4.07, "Cep"], ["EtaCep", 20.76, 61.84, 3.41, "Cep"],
+  ["ThetCep", 20.5, 62.99, 4.21, "Cep"], ["EpsCep", 22.25, 57.04, 4.18, "Cep"],
+  ["MuCep", 21.73, 58.78, 4.08, "Cep"],
+  ["ChiDra", 18.35, 72.73, 3.55, "Dra"], ["EpsDra", 19.8, 70.27, 3.83, "Dra"],
+  ["KapDra", 12.56, 69.79, 3.87, "Dra"], ["Giausar", 11.52, 69.33, 3.84, "Dra"],
+  ["Athebyne", 16.4, 61.51, 2.73, "Dra"], ["NuDra", 17.54, 55.18, 4.88, "Dra"],
+  ["PhiDra", 18.35, 71.34, 4.22, "Dra"],
+  ["Kornephoros", 16.5, 21.49, 2.77, "Her"], ["Rasalgethi", 17.24, 14.39, 3.08, "Her"],
+  ["DelHer", 17.25, 24.84, 3.14, "Her"], ["MuHer", 17.77, 27.72, 3.42, "Her"],
+  ["XiHer", 17.96, 29.25, 3.7, "Her"], ["OmiHer", 18.13, 28.76, 3.83, "Her"],
+  ["IotHer", 17.66, 46.01, 3.8, "Her"], ["ThetHer", 17.94, 37.25, 3.86, "Her"],
+  ["TauHer", 16.33, 46.31, 3.89, "Her"], ["GamHer", 16.37, 19.15, 3.75, "Her"],
+  ["SigHer", 16.57, 42.44, 4.2, "Her"],
+  ["ZetCyg", 21.22, 30.23, 3.21, "Cyg"], ["IotCyg", 19.5, 51.73, 3.76, "Cyg"],
+  ["KapCyg", 19.29, 53.37, 3.8, "Cyg"], ["EtaCyg", 19.94, 35.08, 3.89, "Cyg"],
+  ["Omi1Cyg", 20.23, 46.74, 3.8, "Cyg"], ["XiCyg", 21.08, 43.93, 3.72, "Cyg"],
+  ["NuCyg", 20.95, 41.17, 3.94, "Cyg"], ["TauCyg", 21.25, 38.05, 3.72, "Cyg"],
+  ["RhoCyg", 21.57, 45.59, 4.02, "Cyg"],
+  ["Anser", 19.48, 24.66, 4.44, "Vul"], ["23Vul", 20.26, 27.81, 4.52, "Vul"],
+  ["GamSge", 19.98, 19.49, 3.47, "Sge"], ["DelSge", 19.79, 18.53, 3.82, "Sge"],
+  ["AlpSge", 19.67, 18.01, 4.37, "Sge"],
+  ["Rotanev", 20.63, 14.6, 3.63, "Del"], ["Sualocin", 20.66, 15.91, 3.77, "Del"],
+  ["GamDel", 20.78, 16.12, 3.87, "Del"], ["EpsDel", 20.55, 11.3, 4.03, "Del"],
+  ["Kitalpha", 21.26, 5.25, 3.92, "Equ"],
+  ["LamAql", 19.1, -4.88, 3.43, "Aql"], ["ThetAql", 20.19, -0.82, 3.26, "Aql"],
+  ["EtaAql", 19.87, 1.01, 3.87, "Aql"], ["EpsAql", 18.99, 15.07, 4.02, "Aql"],
+  ["RhoBoo", 14.53, 30.37, 3.58, "Boo"], ["ZetBoo", 14.69, 13.73, 3.78, "Boo"],
+  ["UpsBoo", 13.83, 15.8, 4.07, "Boo"], ["LamBoo", 14.27, 46.09, 4.18, "Boo"],
+  ["ThetBoo", 14.42, 51.85, 4.05, "Boo"], ["Alkalurops", 15.41, 37.38, 4.31, "Boo"],
+  ["EpsCrB", 15.96, 26.88, 4.15, "CrB"],
+  ["Diadem", 13.17, 17.53, 4.32, "Com"], ["BetCom", 13.2, 27.88, 4.26, "Com"],
+  ["GamCom", 12.45, 28.27, 4.35, "Com"],
+  ["Spica", 13.42, -11.16, 0.97, "Vir"], ["Porrima", 12.69, -1.45, 2.74, "Vir"],
+  ["Vindemiatrix", 13.04, 10.96, 2.83, "Vir"], ["Zavijava", 11.85, 1.76, 3.61, "Vir"],
+  ["Zaniah", 12.33, -0.67, 3.89, "Vir"], ["DelVir", 12.93, 3.4, 3.38, "Vir"],
+  ["Heze", 13.58, -0.6, 3.37, "Vir"], ["MuVir", 14.72, -5.66, 3.88, "Vir"],
+  ["IotVir", 14.27, -6.0, 4.08, "Vir"], ["NuVir", 11.76, 6.53, 4.03, "Vir"],
+  ["GienahCrv", 12.26, -17.54, 2.59, "Crv"], ["Kraz", 12.57, -23.4, 2.65, "Crv"],
+  ["Algorab", 12.5, -16.52, 2.94, "Crv"], ["Minkar", 12.17, -22.62, 3.0, "Crv"],
+  ["Alchiba", 12.14, -24.73, 4.02, "Crv"],
+  ["DelCrt", 11.32, -14.78, 3.56, "Crt"], ["Alkes", 11.0, -18.3, 4.08, "Crt"],
+  ["Alphard", 9.46, -8.66, 1.98, "Hya"], ["ZetHya", 8.92, 5.95, 3.11, "Hya"],
+  ["EpsHya", 8.78, 6.42, 3.38, "Hya"], ["DelHya", 8.63, 5.7, 4.16, "Hya"],
+  ["ThetHya", 9.24, 2.31, 3.88, "Hya"], ["IotHya", 9.66, -1.14, 3.91, "Hya"],
+  ["NuHya", 10.83, -16.19, 3.11, "Hya"], ["LamHya", 10.18, -12.35, 3.61, "Hya"],
+  ["Zubenelgenubi", 14.85, -16.04, 2.75, "Lib"], ["Zubeneschamali", 15.28, -9.38, 2.61, "Lib"],
+  ["Brachium", 15.07, -25.28, 3.29, "Lib"], ["GamLib", 15.59, -14.79, 3.91, "Lib"],
+  ["UpsLib", 15.62, -28.14, 3.58, "Lib"],
+  ["Antares", 16.49, -26.43, 1.06, "Sco"], ["Dschubba", 16.01, -22.62, 2.29, "Sco"],
+  ["Acrab", 16.09, -19.81, 2.62, "Sco"], ["PiSco", 15.98, -26.11, 2.89, "Sco"],
+  ["SigSco", 16.35, -25.59, 2.89, "Sco"], ["TauSco", 16.6, -28.22, 2.82, "Sco"],
+  ["Rasalhague", 17.58, 12.56, 2.08, "Oph"], ["Cebalrai", 17.72, 4.57, 2.77, "Oph"],
+  ["YedPrior", 16.24, -3.69, 2.73, "Oph"], ["YedPosterior", 16.31, -4.69, 3.24, "Oph"],
+  ["ZetOph", 16.62, -10.57, 2.56, "Oph"], ["Sabik", 17.17, -15.72, 2.43, "Oph"],
+  ["KapOph", 16.96, 9.38, 3.2, "Oph"], ["GamOph", 17.8, 2.71, 3.75, "Oph"],
+  ["NuOph", 17.98, -9.77, 3.32, "Oph"], ["LamOph", 16.52, 1.98, 3.82, "Oph"],
+  ["ThetOph", 17.37, -25.0, 3.27, "Oph"],
+  ["Unukalhai", 15.74, 6.43, 2.63, "Ser"], ["BetSer", 15.77, 15.42, 3.67, "Ser"],
+  ["GamSer", 15.94, 15.66, 3.85, "Ser"], ["EpsSer", 15.85, 4.48, 3.71, "Ser"],
+  ["DelSer", 15.58, 10.54, 3.8, "Ser"], ["MuSer", 15.83, -3.43, 3.53, "Ser"],
+  ["EtaSer", 18.36, -2.9, 3.26, "Ser"], ["Alya", 18.94, 4.2, 4.1, "Ser"],
+  ["XiSer", 17.63, -15.4, 3.54, "Ser"],
+  ["AlpSct", 18.59, -8.24, 3.85, "Sct"],
+  ["Nunki", 18.92, -26.3, 2.05, "Sgr"], ["KausBorealis", 18.47, -25.42, 2.81, "Sgr"],
+  ["PhiSgr", 18.76, -26.99, 3.17, "Sgr"], ["TauSgr", 19.12, -27.67, 3.32, "Sgr"],
+  ["Albaldah", 19.16, -21.02, 2.89, "Sgr"], ["Xi2Sgr", 18.96, -21.11, 3.51, "Sgr"],
+  ["OmiSgr", 19.08, -21.74, 3.77, "Sgr"],
+  ["DenebAlgedi", 21.78, -16.13, 2.87, "Cap"], ["Dabih", 20.35, -14.78, 3.08, "Cap"],
+  ["Nashira", 21.67, -16.66, 3.68, "Cap"], ["Algedi", 20.3, -12.54, 3.57, "Cap"],
+  ["ZetCap", 21.44, -22.41, 3.74, "Cap"],
+  ["Sadalsuud", 21.53, -5.57, 2.87, "Aqr"], ["Sadalmelik", 22.1, -0.32, 2.94, "Aqr"],
+  ["Skat", 22.91, -15.82, 3.27, "Aqr"], ["ZetAqr", 22.48, -0.02, 3.65, "Aqr"],
+  ["LamAqr", 22.88, -7.58, 3.74, "Aqr"], ["Albali", 20.79, -9.5, 3.77, "Aqr"],
+  ["Sadachbia", 22.36, -1.39, 3.84, "Aqr"], ["88Aqr", 23.16, -21.17, 3.66, "Aqr"],
+  ["Homam", 22.69, 10.83, 3.4, "Peg"], ["Matar", 22.72, 30.22, 2.94, "Peg"],
+  ["Biham", 22.17, 6.2, 3.53, "Peg"], ["LamPeg", 22.78, 23.57, 3.95, "Peg"],
+  ["MuPeg", 22.83, 24.6, 3.48, "Peg"], ["IotPeg", 22.12, 25.35, 3.76, "Peg"],
+  ["PiAnd", 0.61, 33.72, 4.36, "And"], ["MuAnd", 0.95, 38.5, 3.87, "And"],
+  ["51And", 1.63, 48.63, 3.57, "And"], ["OmiAnd", 23.03, 42.33, 3.62, "And"],
+  ["LamAnd", 23.63, 46.46, 3.82, "And"], ["KapAnd", 23.67, 44.33, 4.14, "And"],
+  ["AlpLac", 22.52, 50.28, 3.77, "Lac"], ["1Lac", 22.27, 37.75, 4.13, "Lac"],
+  ["Alpherg", 1.53, 15.35, 3.62, "Psc"], ["GamPsc", 23.29, 3.28, 3.69, "Psc"],
+  ["OmePsc", 23.99, 6.86, 4.03, "Psc"], ["IotPsc", 23.67, 5.63, 4.13, "Psc"],
+  ["Alrescha", 2.03, 2.76, 3.82, "Psc"], ["OmiPsc", 1.76, 9.16, 4.26, "Psc"],
+  ["Menkar", 3.04, 4.09, 2.54, "Cet"], ["Diphda", 0.73, -17.99, 2.04, "Cet"],
+  ["Kaffaljidhma", 2.72, 3.24, 3.47, "Cet"], ["TauCet", 1.73, -15.94, 3.5, "Cet"],
+  ["EtaCet", 1.14, -10.18, 3.45, "Cet"], ["ThetCet", 1.4, -8.18, 3.6, "Cet"],
+  ["BatenKaitos", 1.86, -10.34, 3.73, "Cet"], ["IotCet", 0.32, -8.82, 3.56, "Cet"],
+  ["UpsCet", 2.0, -21.08, 4.0, "Cet"],
+  ["Bharani", 2.83, 27.26, 3.63, "Ari"], ["Botein", 3.19, 19.73, 4.35, "Ari"],
+  ["ZetPer", 3.9, 31.88, 2.85, "Per"], ["Menkib", 3.98, 35.79, 4.04, "Per"],
+  ["Atik", 3.9, 32.29, 3.84, "Per"], ["RhoPer", 3.09, 38.84, 3.39, "Per"],
+  ["KapPer", 3.16, 44.86, 3.8, "Per"], ["EtaPer", 2.85, 55.9, 3.76, "Per"],
+  ["NuPer", 3.75, 42.58, 3.77, "Per"], ["MuPer", 4.25, 48.41, 4.14, "Per"],
+  ["BetCam", 5.06, 60.44, 4.03, "Cam"], ["AlpCam", 4.9, 66.34, 4.29, "Cam"],
+  ["GamCam", 3.84, 71.33, 4.63, "Cam"],
+  ["Almaaz", 5.03, 43.82, 2.99, "Aur"], ["Haedus", 5.11, 41.23, 3.17, "Aur"],
+  ["Saclateni", 5.04, 41.08, 3.75, "Aur"], ["DelAur", 5.99, 54.28, 3.72, "Aur"],
+  ["NuAur", 5.86, 39.15, 3.97, "Aur"],
+  ["Alcyone", 3.79, 24.11, 2.87, "Tau"], ["Atlas", 3.82, 24.05, 3.62, "Tau"],
+  ["Electra", 3.75, 24.11, 3.7, "Tau"], ["Maia", 3.76, 24.37, 3.87, "Tau"],
+  ["Del1Tau", 4.38, 17.54, 3.77, "Tau"], ["Thet2Tau", 4.48, 15.87, 3.4, "Tau"],
+  ["OmiTau", 3.41, 9.03, 3.6, "Tau"], ["XiTau", 3.45, 9.73, 3.74, "Tau"],
+  ["NuTau", 4.05, 5.99, 3.91, "Tau"],
+  ["Meissa", 5.59, 9.93, 3.39, "Ori"], ["Pi3Ori", 4.83, 6.96, 3.19, "Ori"],
+  ["EtaOri", 5.41, -2.4, 3.36, "Ori"], ["Hatysa", 5.59, -5.91, 2.77, "Ori"],
+  ["MuOri", 6.04, 9.65, 4.12, "Ori"], ["Pi4Ori", 4.85, 5.61, 3.69, "Ori"],
+  ["TauOri", 5.29, -6.84, 3.6, "Ori"], ["SigOri", 5.65, -2.6, 3.81, "Ori"],
+  ["Propus", 6.25, 22.51, 3.28, "Gem"], ["KapGem", 7.74, 24.4, 3.57, "Gem"],
+  ["LamGem", 7.3, 16.54, 3.58, "Gem"], ["XiGem", 6.75, 12.9, 3.35, "Gem"],
+  ["IotGem", 7.43, 27.8, 3.79, "Gem"], ["ThetGem", 6.88, 33.96, 3.6, "Gem"],
+  ["Mekbuda", 7.07, 20.57, 3.79, "Gem"],
+  ["Procyon", 7.66, 5.22, 0.34, "CMi"], ["Gomeisa", 7.45, 8.29, 2.89, "CMi"],
+  ["Altarf", 8.28, 9.19, 3.52, "Cnc"], ["AsellusAustralis", 8.74, 18.15, 3.94, "Cnc"],
+  ["AsellusBorealis", 8.72, 21.47, 4.66, "Cnc"], ["Acubens", 8.97, 11.86, 4.26, "Cnc"],
+  ["IotCnc", 8.78, 28.76, 4.02, "Cnc"],
+  ["AlpLyn", 9.35, 34.39, 3.14, "Lyn"], ["38Lyn", 9.31, 36.8, 3.82, "Lyn"],
+  ["31Lyn", 8.38, 43.19, 4.25, "Lyn"], ["15Lyn", 6.95, 58.42, 4.35, "Lyn"],
+  ["Praecipua", 10.89, 34.21, 3.83, "LMi"], ["BetLMi", 10.46, 36.71, 4.21, "LMi"],
+  ["Adhafera", 10.28, 23.42, 3.44, "Leo"], ["Rasalas", 9.88, 26.01, 3.88, "Leo"],
+  ["Subra", 9.69, 9.89, 3.52, "Leo"], ["IotLeo", 11.4, 10.53, 3.94, "Leo"],
+  ["SigLeo", 11.35, 6.03, 4.05, "Leo"], ["RhoLeo", 10.55, 9.31, 3.85, "Leo"],
+  ["Muliphein", 7.06, -15.63, 4.12, "CMa"], ["Omi2CMa", 7.05, -23.83, 3.02, "CMa"],
+  ["Omi1CMa", 6.9, -24.18, 3.87, "CMa"], ["Nu2CMa", 6.61, -19.26, 3.95, "CMa"],
+  ["SigCMa", 7.03, -27.93, 3.47, "CMa"], ["ThetCMa", 6.9, -12.04, 4.07, "CMa"],
+  ["Arneb", 5.55, -17.82, 2.58, "Lep"], ["Nihal", 5.47, -20.76, 2.84, "Lep"],
+  ["EpsLep", 5.09, -22.37, 3.19, "Lep"], ["MuLep", 5.22, -16.21, 3.31, "Lep"],
+  ["ZetLep", 5.78, -14.82, 3.55, "Lep"], ["GamLep", 5.74, -22.45, 3.59, "Lep"],
+  ["BetMon", 6.48, -7.03, 3.76, "Mon"], ["AlpMon", 7.69, -9.55, 3.94, "Mon"],
+  ["GamMon", 6.25, -6.27, 3.98, "Mon"], ["DelMon", 7.2, -0.49, 4.15, "Mon"],
+  ["Cursa", 5.13, -5.09, 2.79, "Eri"], ["Zaurak", 3.97, -13.51, 2.95, "Eri"],
+  ["Rana", 3.72, -9.76, 3.54, "Eri"], ["EpsEri", 3.55, -9.46, 3.73, "Eri"],
+  ["Azha", 2.94, -8.9, 3.89, "Eri"], ["NuEri", 4.61, -3.35, 3.93, "Eri"],
+  ["Tau4Eri", 3.32, -21.76, 3.69, "Eri"],
+  ["RhoPup", 8.13, -24.3, 2.81, "Pup"], ["XiPup", 7.82, -24.86, 3.34, "Pup"],
 ];
 
 const data: Record<string, string | number | null>[] = catalog.map(([star, ra, dec, mag, con]) => ({
@@ -167,22 +313,6 @@ const data: Record<string, string | number | null>[] = catalog.map(([star, ra, d
   [MAGNITUDE]: mag,
   [CONSTELLATION]: con,
 }));
-let seed = 1337;
-for (let i = 0; i < 230; i += 1) {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  const area = seed / 0x7fffffff;
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  const turn = seed / 0x7fffffff;
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  const faint = seed / 0x7fffffff;
-  data.push({
-    [STAR]: `Field star ${i + 1}`,
-    [RA]: Number((turn * 24).toFixed(3)),
-    [DEC]: Number((90 - Math.sqrt(area) * 0.99 * 142).toFixed(2)),
-    [MAGNITUDE]: Number((3.6 + faint * 2.8).toFixed(2)),
-    [CONSTELLATION]: null,
-  });
-}
 
 // Plot: reads only data and the constants above
 // North-pole azimuthal equidistant projection: the pole sits at the centre, the
@@ -215,7 +345,9 @@ const sticks = edges
   .map((e) => [starById.get(e[FROM_STAR]), starById.get(e[TO_STAR])])
   .filter(([a, b]) => a && b);
 
-const constellations = [...new Set(stars.filter((s) => s.con != null).map((s) => s.con as string))];
+// Only constellations with a stick figure get a name
+const constellations = [...new Set(sticks.flatMap(([a, b]) => [a.con, b.con]).filter((c) => c != null) as string[])];
+const figured = new Set(constellations);
 const centroids = constellations.map((con) => {
   const members = stars.filter((s) => s.con === con);
   return {
@@ -233,14 +365,11 @@ const decRings: number[] = [];
 for (let dec = Math.ceil(rimDec / DEC_GRID_DEG) * DEC_GRID_DEG; dec < 90; dec += DEC_GRID_DEG) {
   if (dec > rimDec) decRings.push(dec);
 }
-// The dec labels run through the middle of the spoke sector holding the fewest constellation stars
+// The dec labels prefer the middle of the spoke sector holding the fewest stars
+const turnGap = (a: number, b: number) => Math.abs(((a - b + 1.5) % 1) - 0.5);
 const sectorTurns = Array.from({ length: RA_SPOKES }, (_, k) => (k + 0.5) / RA_SPOKES);
 const sectorCrowding = sectorTurns.map(
-  (turn) =>
-    stars.filter((s) => {
-      const starTurn = (Math.atan2(s.x, s.y) / (2 * Math.PI) + 1) % 1;
-      return s.con != null && Math.abs(((starTurn - turn + 1.5) % 1) - 0.5) < 0.5 / RA_SPOKES;
-    }).length,
+  (turn) => stars.filter((s) => turnGap((Math.atan2(s.x, s.y) / (2 * Math.PI) + 1) % 1, turn) < 0.5 / RA_SPOKES).length,
 );
 const decLabelTurn = sectorTurns[sectorCrowding.indexOf(Math.min(...sectorCrowding))];
 // Grid labels in rim radii: hour labels just outside the rim, declination labels on their circles
@@ -250,14 +379,15 @@ const raLabels = spokes.map((h) => ({
   x: RA_LABEL_RADIUS * Math.sin((h / RA_PERIOD) * 2 * Math.PI),
   y: RA_LABEL_RADIUS * Math.cos((h / RA_PERIOD) * 2 * Math.PI),
 }));
-const decLabels = decRings.map((dec) => ({
-  dec,
-  text: `${dec > 0 ? "+" : ""}${dec}${decUnit}`,
-  x: ((90 - dec) / rimDistance) * Math.sin(decLabelTurn * 2 * Math.PI),
-  y: ((90 - dec) / rimDistance) * Math.cos(decLabelTurn * 2 * Math.PI),
-}));
+const decLabelsAt = (turn: number) =>
+  decRings.map((dec) => ({
+    dec,
+    text: `${dec > 0 ? "+" : ""}${dec}${decUnit}`,
+    x: ((90 - dec) / rimDistance) * Math.sin(turn * 2 * Math.PI),
+    y: ((90 - dec) / rimDistance) * Math.cos(turn * 2 * Math.PI),
+  }));
 const legendLo = Math.ceil(magMin);
-const legendHi = Math.floor(magMax);
+const legendHi = Math.round(magMax);
 const legendMags = [
   ...new Set(
     Array.from({ length: LEGEND_SAMPLES }, (_, k) =>
@@ -291,11 +421,55 @@ for (let i = -NAME_REACH_STEPS; i <= NAME_REACH_STEPS; i += 1) {
   }
 }
 nameShifts.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy));
+const DEC_LABEL_STEPS = 144; // candidate angles for the declination label column
+const DEC_LABEL_GAP_PX = 4;
+const decTurns = Array.from({ length: DEC_LABEL_STEPS }, (_, k) => k / DEC_LABEL_STEPS)
+  .filter((turn) => turnGap(turn * RA_SPOKES, 0) > 0.15) // keep the labels off the spokes
+  .sort((a, b) => turnGap(a, decLabelTurn) - turnGap(b, decLabelTurn));
+
+// Every mark in pixels, each tagged with its figure (stars outside the figures carry none): the
+// stars, and the stick lines as points a few px apart. The declination labels take the angle
+// nearest the preferred sector at which they clear all of them.
+function useSkyMarks() {
+  const xs = useXScale() as (v: number) => number;
+  const ys = useYScale() as (v: number) => number;
+  const magAxis = useZAxis("mag");
+  const marks = [
+    ...stars.map((s) => ({
+      x: xs(s.x),
+      y: ys(s.y),
+      reach: magAxis.sizeScale(s.sizeValue) as number,
+      con: s.con != null && figured.has(s.con) ? s.con : null,
+    })),
+    ...sticks.flatMap(([a, b]) => {
+      const [ax, ay, bx, by] = [xs(a.x), ys(a.y), xs(b.x), ys(b.y)];
+      const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / STICK_SAMPLE_PX));
+      return Array.from({ length: steps + 1 }, (_, k) => ({
+        x: ax + ((bx - ax) * k) / steps,
+        y: ay + ((by - ay) * k) / steps,
+        reach: 1,
+        con: a.con,
+      }));
+    }),
+  ];
+  const clashes = (labels: { text: string; x: number; y: number }[]) =>
+    labels.filter((l) => {
+      const halfW = (l.text.length * NAME_CHAR_PX) / 2;
+      return marks.some(
+        (p) =>
+          Math.hypot(Math.max(Math.abs(p.x - xs(l.x)) - halfW, 0), Math.max(Math.abs(p.y - ys(l.y)) - NAME_HALF_H_PX, 0)) <
+          p.reach + DEC_LABEL_GAP_PX,
+      );
+    }).length;
+  const options = decTurns.map((turn) => decLabelsAt(turn));
+  const scores = options.map(clashes);
+  const decLabels = options[scores.indexOf(Math.min(...scores))];
+  return { xs, ys, magAxis, marks, decLabels };
+}
 
 // Declination circles, hour spokes, the rim and the constellation stick figures
 function SkyGrid() {
-  const xs = useXScale() as (v: number) => number;
-  const ys = useYScale() as (v: number) => number;
+  const { xs, ys, decLabels } = useSkyMarks();
   const unit = xs(1) - xs(0);
   const cx = xs(0);
   const cy = ys(0);
@@ -338,32 +512,12 @@ function SkyGrid() {
 // Constellation names near their star centroids, shifted off the stars, and the
 // magnitude key, read from the size axis
 function SkyLabels() {
-  const xs = useXScale() as (v: number) => number;
-  const ys = useYScale() as (v: number) => number;
+  const { xs, ys, magAxis, marks: skyMarks, decLabels } = useSkyMarks();
   const { left, top, height } = useDrawingArea();
-  const magAxis = useZAxis("mag");
   const x0 = left + 12;
   const y0 = top + height - legendMags.length * 30 - 6;
-  // Every mark a name must clear: the stars, and the stick lines as points a few px apart, each
-  // tagged with its constellation (field stars carry none)
-  const marks = [
-    ...stars.map((s) => ({
-      x: xs(s.x),
-      y: ys(s.y),
-      reach: (magAxis.sizeScale(s.sizeValue) as number) + NAME_STAR_GAP_PX,
-      con: s.con,
-    })),
-    ...sticks.flatMap(([a, b]) => {
-      const [ax, ay, bx, by] = [xs(a.x), ys(a.y), xs(b.x), ys(b.y)];
-      const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / STICK_SAMPLE_PX));
-      return Array.from({ length: steps + 1 }, (_, k) => ({
-        x: ax + ((bx - ax) * k) / steps,
-        y: ay + ((by - ay) * k) / steps,
-        reach: 1,
-        con: a.con,
-      }));
-    }),
-  ];
+  // Names keep a small gap to the stars
+  const marks = skyMarks.map((m, i) => (i < stars.length ? { ...m, reach: m.reach + NAME_STAR_GAP_PX } : m));
   const figureMarks = marks.filter((m) => m.con != null);
   // The grid's hour and declination labels are taken space, like every name placed before
   const placedBoxes = [...raLabels, ...decLabels].map((l) => ({
