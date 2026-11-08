@@ -30,143 +30,90 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# imprint semantic anchors (green for yang/bullish, red for yin/bearish)
-YANG_COLOR = "#009E73"
-YIN_COLOR = "#AE3030"
+# Imprint semantic anchors: green for yang (bullish), red for yin (bearish)
+TREND_COLORS = {"yang": "#009E73", "yin": "#AE3030"}
+TREND_WIDTHS = {"yang": 1.5, "yin": 0.5}
+TREND_LABELS = {"yang": "Yang (bullish)", "yin": "Yin (bearish)"}
+REVERSAL = 0.04  # a 4 % move against the running extreme reverses the line
 
-# Generate synthetic stock price data
+# Data: synthetic daily closing prices, a random walk with a slight upward drift
 np.random.seed(42)
 n_days = 250
-
-# Create random walk with trend
 returns = np.random.normal(0.0005, 0.02, n_days)
-prices = 100 * np.exp(np.cumsum(returns))
-dates = pd.date_range("2024-01-01", periods=n_days, freq="B")
+df_prices = pd.DataFrame(
+    {"date": pd.date_range("2024-01-01", periods=n_days, freq="B"), "close": 100 * np.exp(np.cumsum(returns))}
+)
 
-df_prices = pd.DataFrame({"date": dates, "close": prices})
-
-
-# Kagi chart algorithm with reversal threshold
-def build_kagi_data(prices, reversal_pct=0.04):
-    """Build Kagi chart segments from price series."""
-    kagi_segments = []
-
-    if len(prices) < 2:
-        return pd.DataFrame()
-
-    # Initialize
-    direction = 1 if prices[1] > prices[0] else -1
-    high = prices[0]
-    low = prices[0]
-    x_idx = 0
-    segment_start_price = prices[0]
-
-    # Track yang/yin state (thick/thin)
-    is_yang = direction == 1
-
-    for i in range(1, len(prices)):
-        price = prices[i]
-
-        if direction == 1:
-            if price > high:
-                high = price
-                is_yang = True
-            elif price < high * (1 - reversal_pct):
-                kagi_segments.append(
-                    {
-                        "x": x_idx,
-                        "x_end": x_idx,
-                        "y": segment_start_price,
-                        "y_end": high,
-                        "trend": "yang" if is_yang else "yin",
-                    }
-                )
-                kagi_segments.append(
-                    {"x": x_idx, "x_end": x_idx + 1, "y": high, "y_end": high, "trend": "yang" if is_yang else "yin"}
-                )
-                x_idx += 1
-                direction = -1
-                segment_start_price = high
-                low = price
-                high = price
-
-        else:
-            if price < low:
-                low = price
-                is_yang = False
-            elif price > low * (1 + reversal_pct):
-                kagi_segments.append(
-                    {
-                        "x": x_idx,
-                        "x_end": x_idx,
-                        "y": segment_start_price,
-                        "y_end": low,
-                        "trend": "yin" if not is_yang else "yang",
-                    }
-                )
-                kagi_segments.append(
-                    {"x": x_idx, "x_end": x_idx + 1, "y": low, "y_end": low, "trend": "yin" if not is_yang else "yang"}
-                )
-                x_idx += 1
-                direction = 1
-                segment_start_price = low
-                high = price
-                low = price
-
-    # Add final segment
-    final_price = prices[-1]
-    final_trend = "yang" if is_yang else "yin"
+# Kagi construction: each reversal adds a vertical line and the shoulder or waist that joins it to the next column
+prices = df_prices["close"].to_numpy()
+direction = 1 if prices[1] > prices[0] else -1
+high = low = segment_start = prices[0]
+is_yang = direction == 1
+column = 0
+segments = []
+for price in prices[1:]:
     if direction == 1:
-        kagi_segments.append(
-            {
-                "x": x_idx,
-                "x_end": x_idx,
-                "y": segment_start_price,
-                "y_end": max(high, final_price),
-                "trend": final_trend,
-            }
-        )
+        if price > high:
+            high = price
+            is_yang = True
+        elif price < high * (1 - REVERSAL):
+            trend = "yang" if is_yang else "yin"
+            segments += [(column, column, segment_start, high, trend), (column, column + 1, high, high, trend)]
+            column += 1
+            direction = -1
+            segment_start = high
+            high = low = price
     else:
-        kagi_segments.append(
-            {"x": x_idx, "x_end": x_idx, "y": segment_start_price, "y_end": min(low, final_price), "trend": final_trend}
-        )
+        if price < low:
+            low = price
+            is_yang = False
+        elif price > low * (1 + REVERSAL):
+            trend = "yang" if is_yang else "yin"
+            segments += [(column, column, segment_start, low, trend), (column, column + 1, low, low, trend)]
+            column += 1
+            direction = 1
+            segment_start = low
+            high = low = price
 
-    return pd.DataFrame(kagi_segments)
+# The last vertical line stays open at the latest extreme
+last_end = max(high, prices[-1]) if direction == 1 else min(low, prices[-1])
+segments.append((column, column, segment_start, last_end, "yang" if is_yang else "yin"))
+kagi_df = pd.DataFrame(segments, columns=["x", "x_end", "y", "y_end", "trend"])
 
+# Plot: plotnine draws the groups in category order, so yang comes last and its thick line covers the
+# thin line's round caps where the two meet
+kagi_df["trend"] = pd.Categorical(kagi_df["trend"], categories=["yin", "yang"])
 
-# Build Kagi data with 4% reversal threshold
-kagi_df = build_kagi_data(df_prices["close"].values, reversal_pct=0.04)
-
-# Create plot with trend layers and legend
+# Color and width share one scale name and labels, so plotnine draws a single legend
 plot = (
     ggplot(kagi_df, aes(x="x", xend="x_end", y="y", yend="y_end", color="trend", size="trend"))
     + geom_segment(lineend="round")
-    + scale_color_manual(
-        values={"yang": YANG_COLOR, "yin": YIN_COLOR}, labels={"yang": "Yang (Bullish)", "yin": "Yin (Bearish)"}
-    )
-    + scale_size_manual(values={"yang": 2, "yin": 0.7})
-    + labs(x="Kagi Line Index", y="Price ($)", title="kagi-basic · plotnine · anyplot.ai", color="Trend")
+    + scale_color_manual(name="Trend", values=TREND_COLORS, labels=TREND_LABELS, limits=list(TREND_COLORS))
+    + scale_size_manual(name="Trend", values=TREND_WIDTHS, labels=TREND_LABELS, limits=list(TREND_COLORS))
+    + labs(x="Kagi Line Index", y="Price ($)", title="kagi-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK),
+        plot_title=element_text(size=12, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        axis_ticks=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.12),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_border=element_line(color=INK_SOFT),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
         legend_position="right",
-        text=element_text(size=14),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        plot_margin_right=0.03,
     )
 )
 
-# Save plot
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
