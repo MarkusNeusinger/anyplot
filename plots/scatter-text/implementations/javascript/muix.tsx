@@ -15,8 +15,7 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const FONT_MIN = 19; // px, label farthest from its cluster centroid; bold at 19 px is large text, so 3:1 contrast suffices in both themes
-const FONT_MAX = 25; // px, label at the centroid
+const FONT_SIZE = 22; // px, one size for all labels, fitted to ~32 words; bold at this size is large text, so 3:1 contrast suffices in both themes
 const X_PAD_SHARE = 0.07; // axis padding as a share of the data span, room for the text
 const Y_PAD_SHARE = 0.08;
 
@@ -50,23 +49,18 @@ for (const [topic, cx, cy, words] of topics) {
 // Plot: reads only data and the constants above
 const clusters = [...new Set(data.map((d) => String(d[CLUSTER])))];
 
-// Font size grows with closeness to the cluster centroid
-const labels = clusters.flatMap((cluster, ci) => {
-  const rows = data.filter((d) => d[CLUSTER] === cluster);
-  const mx = rows.reduce((s, d) => s + Number(d[X]), 0) / rows.length;
-  const my = rows.reduce((s, d) => s + Number(d[Y]), 0) / rows.length;
-  const dists = rows.map((d) => Math.hypot(Number(d[X]) - mx, Number(d[Y]) - my));
-  const maxDist = Math.max(...dists) || 1;
-  return rows.map((d, i) => ({
-    id: `${ci}-${i}`,
-    cluster: ci,
-    x: Number(d[X]),
-    y: Number(d[Y]),
-    text: String(d[LABEL]),
-    color: t.palette[ci],
-    size: Math.round(FONT_MIN + (FONT_MAX - FONT_MIN) * (1 - dists[i] / maxDist)),
-  }));
-});
+const labels = clusters.flatMap((cluster, ci) =>
+  data
+    .filter((d) => d[CLUSTER] === cluster)
+    .map((d, i) => ({
+      id: `${ci}-${i}`,
+      cluster: ci,
+      x: Number(d[X]),
+      y: Number(d[Y]),
+      text: String(d[LABEL]),
+      color: t.palette[ci],
+    })),
+);
 
 const xs = data.map((d) => Number(d[X]));
 const ys = data.map((d) => Number(d[Y]));
@@ -78,7 +72,7 @@ const xPad = (xMax - xMin) * X_PAD_SHARE;
 const yPad = (yMax - yMin) * Y_PAD_SHARE;
 
 const title = "scatter-text · javascript · muix · anyplot.ai";
-const subtitle = `${data.length} labels in ${clusters.length} clusters · each word is centered on its (x, y) · larger text sits closer to its cluster centroid`;
+const subtitle = `${data.length} labels in ${clusters.length} clusters · each word is centered on its (x, y)`;
 const HEADER_H = 84;
 const LEGEND_H = 40;
 
@@ -93,13 +87,13 @@ function TextLabels() {
           x={xScale(p.x)}
           y={yScale(p.y)}
           fill={p.color}
-          fontSize={p.size}
+          fontSize={FONT_SIZE}
           fontWeight={700}
           textAnchor="middle"
           dominantBaseline="central"
           paintOrder="stroke"
           stroke={t.pageBg}
-          strokeWidth={p.size / 4}
+          strokeWidth={FONT_SIZE / 4}
           strokeLinejoin="round"
         >
           {p.text}
