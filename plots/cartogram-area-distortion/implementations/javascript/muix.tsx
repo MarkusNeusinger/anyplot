@@ -16,7 +16,7 @@ const t = window.ANYPLOT_TOKENS;
 const MAX_RADIUS_CAP = 64; // px ceiling for the largest circle
 const GAP_SHARE = 0.06; // free space kept between the two closest circles, as a share of their distance
 const PAD_SHARE = 0.12; // map padding as a share of the centroids' longitude and latitude span
-const LABEL_MIN_RADIUS = 16; // px: smaller circles stay unlabeled, a 14 px abbreviation would not fit
+const LABEL_MIN_RADIUS = 12; // px: smaller circles stay unlabeled, a 14 px abbreviation would not fit
 const LABEL_DARK = "#1A1A17";
 const LABEL_LIGHT = "#FAF8F1";
 
@@ -29,7 +29,7 @@ const POPULATION = "Population (millions)"; // role: value
 const CENSUS_REGION = "Census region"; // role: extra
 
 // Data: replace this block with your own records, one object per row
-// 2023 US Census population estimates for the 20 most populous states,
+// 2023 US Census population estimates for the 48 contiguous states,
 // each at its approximate geographic centroid.
 const data = [
   { [STATE]: "California", [ABBR]: "CA", [LON]: -119.4, [LAT]: 36.8, [POPULATION]: 38.9, [CENSUS_REGION]: "West" },
@@ -42,16 +42,44 @@ const data = [
   { [STATE]: "Georgia", [ABBR]: "GA", [LON]: -83.5, [LAT]: 32.6, [POPULATION]: 11.0, [CENSUS_REGION]: "South" },
   { [STATE]: "North Carolina", [ABBR]: "NC", [LON]: -79.4, [LAT]: 35.5, [POPULATION]: 10.8, [CENSUS_REGION]: "South" },
   { [STATE]: "Michigan", [ABBR]: "MI", [LON]: -85.0, [LAT]: 44.3, [POPULATION]: 10.0, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "New Jersey", [ABBR]: "NJ", [LON]: -74.7, [LAT]: 40.1, [POPULATION]: 9.3, [CENSUS_REGION]: "Northeast" },
   { [STATE]: "Virginia", [ABBR]: "VA", [LON]: -78.2, [LAT]: 37.5, [POPULATION]: 8.7, [CENSUS_REGION]: "South" },
   { [STATE]: "Washington", [ABBR]: "WA", [LON]: -120.4, [LAT]: 47.0, [POPULATION]: 7.8, [CENSUS_REGION]: "West" },
   { [STATE]: "Arizona", [ABBR]: "AZ", [LON]: -111.4, [LAT]: 34.0, [POPULATION]: 7.4, [CENSUS_REGION]: "West" },
   { [STATE]: "Tennessee", [ABBR]: "TN", [LON]: -86.3, [LAT]: 35.8, [POPULATION]: 7.1, [CENSUS_REGION]: "South" },
-  { [STATE]: "Massachusetts", [ABBR]: "MA", [LON]: -71.8, [LAT]: 42.3, [POPULATION]: 7.0, [CENSUS_REGION]: "Northeast" },
+  { [STATE]: "Massachusetts", [ABBR]: "MA", [LON]: -72.0, [LAT]: 42.4, [POPULATION]: 7.0, [CENSUS_REGION]: "Northeast" },
   { [STATE]: "Indiana", [ABBR]: "IN", [LON]: -86.1, [LAT]: 39.9, [POPULATION]: 6.8, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "Maryland", [ABBR]: "MD", [LON]: -76.8, [LAT]: 39.0, [POPULATION]: 6.2, [CENSUS_REGION]: "South" },
   { [STATE]: "Missouri", [ABBR]: "MO", [LON]: -92.5, [LAT]: 38.5, [POPULATION]: 6.2, [CENSUS_REGION]: "Midwest" },
   { [STATE]: "Wisconsin", [ABBR]: "WI", [LON]: -89.6, [LAT]: 44.6, [POPULATION]: 5.9, [CENSUS_REGION]: "Midwest" },
   { [STATE]: "Colorado", [ABBR]: "CO", [LON]: -105.5, [LAT]: 39.0, [POPULATION]: 5.9, [CENSUS_REGION]: "West" },
   { [STATE]: "Minnesota", [ABBR]: "MN", [LON]: -94.3, [LAT]: 46.0, [POPULATION]: 5.7, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "South Carolina", [ABBR]: "SC", [LON]: -80.9, [LAT]: 33.9, [POPULATION]: 5.4, [CENSUS_REGION]: "South" },
+  { [STATE]: "Alabama", [ABBR]: "AL", [LON]: -86.8, [LAT]: 32.8, [POPULATION]: 5.1, [CENSUS_REGION]: "South" },
+  { [STATE]: "Louisiana", [ABBR]: "LA", [LON]: -92.0, [LAT]: 31.0, [POPULATION]: 4.6, [CENSUS_REGION]: "South" },
+  { [STATE]: "Kentucky", [ABBR]: "KY", [LON]: -85.3, [LAT]: 37.5, [POPULATION]: 4.5, [CENSUS_REGION]: "South" },
+  { [STATE]: "Oregon", [ABBR]: "OR", [LON]: -120.6, [LAT]: 43.9, [POPULATION]: 4.2, [CENSUS_REGION]: "West" },
+  { [STATE]: "Oklahoma", [ABBR]: "OK", [LON]: -97.5, [LAT]: 35.6, [POPULATION]: 4.1, [CENSUS_REGION]: "South" },
+  { [STATE]: "Connecticut", [ABBR]: "CT", [LON]: -72.7, [LAT]: 41.6, [POPULATION]: 3.6, [CENSUS_REGION]: "Northeast" },
+  { [STATE]: "Utah", [ABBR]: "UT", [LON]: -111.7, [LAT]: 39.3, [POPULATION]: 3.4, [CENSUS_REGION]: "West" },
+  { [STATE]: "Iowa", [ABBR]: "IA", [LON]: -93.5, [LAT]: 42.1, [POPULATION]: 3.2, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "Nevada", [ABBR]: "NV", [LON]: -116.6, [LAT]: 39.3, [POPULATION]: 3.2, [CENSUS_REGION]: "West" },
+  { [STATE]: "Arkansas", [ABBR]: "AR", [LON]: -92.4, [LAT]: 34.9, [POPULATION]: 3.1, [CENSUS_REGION]: "South" },
+  { [STATE]: "Mississippi", [ABBR]: "MS", [LON]: -89.7, [LAT]: 32.7, [POPULATION]: 2.9, [CENSUS_REGION]: "South" },
+  { [STATE]: "Kansas", [ABBR]: "KS", [LON]: -98.4, [LAT]: 38.5, [POPULATION]: 2.9, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "New Mexico", [ABBR]: "NM", [LON]: -106.1, [LAT]: 34.4, [POPULATION]: 2.1, [CENSUS_REGION]: "West" },
+  { [STATE]: "Nebraska", [ABBR]: "NE", [LON]: -99.8, [LAT]: 41.5, [POPULATION]: 2.0, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "Idaho", [ABBR]: "ID", [LON]: -114.6, [LAT]: 44.4, [POPULATION]: 2.0, [CENSUS_REGION]: "West" },
+  { [STATE]: "West Virginia", [ABBR]: "WV", [LON]: -80.6, [LAT]: 38.6, [POPULATION]: 1.8, [CENSUS_REGION]: "South" },
+  { [STATE]: "New Hampshire", [ABBR]: "NH", [LON]: -71.6, [LAT]: 43.7, [POPULATION]: 1.4, [CENSUS_REGION]: "Northeast" },
+  { [STATE]: "Maine", [ABBR]: "ME", [LON]: -69.2, [LAT]: 45.4, [POPULATION]: 1.4, [CENSUS_REGION]: "Northeast" },
+  { [STATE]: "Montana", [ABBR]: "MT", [LON]: -109.6, [LAT]: 47.0, [POPULATION]: 1.1, [CENSUS_REGION]: "West" },
+  { [STATE]: "Rhode Island", [ABBR]: "RI", [LON]: -71.5, [LAT]: 41.7, [POPULATION]: 1.1, [CENSUS_REGION]: "Northeast" },
+  { [STATE]: "Delaware", [ABBR]: "DE", [LON]: -75.5, [LAT]: 39.0, [POPULATION]: 1.0, [CENSUS_REGION]: "South" },
+  { [STATE]: "South Dakota", [ABBR]: "SD", [LON]: -100.2, [LAT]: 44.4, [POPULATION]: 0.9, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "North Dakota", [ABBR]: "ND", [LON]: -100.5, [LAT]: 47.5, [POPULATION]: 0.8, [CENSUS_REGION]: "Midwest" },
+  { [STATE]: "Vermont", [ABBR]: "VT", [LON]: -72.7, [LAT]: 44.0, [POPULATION]: 0.6, [CENSUS_REGION]: "Northeast" },
+  { [STATE]: "Wyoming", [ABBR]: "WY", [LON]: -107.6, [LAT]: 43.0, [POPULATION]: 0.6, [CENSUS_REGION]: "West" },
 ];
 
 // Reference geography: simplified outline of the contiguous United States as a
