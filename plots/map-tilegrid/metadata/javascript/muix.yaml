@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-tilegrid
 created: '2026-09-05T09:18:12Z'
-updated: '2026-11-08T03:51:49Z'
+updated: '2026-11-08T03:56:43Z'
 generated_by: claude-opus-5-5
 adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
 workflow_run: 42444074881
@@ -13,40 +13,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tileg
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - The tile colors and the vertical ContinuousColorLegend share one zAxis continuous
-    colorMap (imprint_seq), read through useZColorScale, so the legend always matches
-    the tiles
-  - The ChartsDataProvider/ChartsSurface composition uses linear x/y axes as the grid
-    coordinate system, and one shared pitch keeps every tile square and equal-area
-  - The label ink switches on tile luminance, so abbreviations and values stay legible
-    on every tile in both themes
-  - 'A recognisable Europe with north at the top: Nordics across the top row, Iberia
-    in the SW, the Balkans and Greece in the SE'
-  - The subtitle is computed from the data and names the extremes (UA 9% to IS 99%)
-    and the region count
+  - 'Composes the tile map from MUI X community building blocks: ChartsDataProvider
+    with linear x/y axes hidden via position: ''none'', a custom Tiles component that
+    reads useXScale/useYScale for placement, and a zAxis continuous colorMap consumed
+    through useZColorScale, so tiles and colour bar share one scale'
+  - ContinuousColorLegend bound to the same zAxis id draws a vertical Imprint sequential
+    bar with data-driven min/max labels, so the colour mapping can't drift from the
+    tiles
+  - Ink switches by relative luminance of each tile fill (getLuminance from @mui/material),
+    so labels on the dark-blue high-share tiles turn light and stay legible on every
+    tile in both themes
+  - Equal square tiles from one shared pitch on both axes; the 28-country layout reads
+    as Europe (Nordics on top, Iberia bottom-left, Greece bottom-right), and north
+    is at the top
+  - Two-level tile label hierarchy (bold abbreviation, smaller value) plus a computed
+    subtitle that names the lowest (UA 9%) and highest (IS 99%) countries gives the
+    reader the range at a glance
+  - Every limit, unit and extreme comes from the data (min/max of the share column,
+    the unit parsed from the column name), and animation is off via skipAnimation
   weaknesses:
-  - 'CQ-04 (code): lines 67-73 parse the fill into RGB channels and write out the
-    WCAG relative-luminance formula by hand → replace them with `getLuminance(fill)`
-    from `@mui/material/styles`, which accepts both hex and rgb() strings. Likely
-    cause: the luminance helper was hand-rolled instead of imported.'
-  - 'Suggestion: add one or two intermediate labels (e.g. 50%) to the color bar so
-    mid-range tiles can be read off the scale, not only from their printed values.'
-  - 'Suggestion: a slightly larger title would give the header more weight against
-    the large tile grid.'
+  - 'DQ-02 (both): real country names carry values that drift from reported renewable-electricity
+    shares, e.g. DK 62% (reported around 80–88%) and PL 18% (reported around 25–27%)
+    → use figures close to a single published year (e.g. Ember/Eurostat 2023) for
+    every country, or keep the countries and state approximate values consistently.
+    Likely cause: hand-typed values in the data block.'
+  - 'Suggestion: one or two intermediate ticks on the colour bar (e.g. 30%, 60%) would
+    let readers place mid-range tiles without reading each value label.'
+  - 'Suggestion: the empty strip right of the colour bar could be reclaimed by widening
+    the grid pitch slightly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, measured #FAF8F1.
-      Chrome: The bold near-black title 'map-tilegrid · javascript · muix · anyplot.ai' sits top-left, aligned with the grid, over a grey subtitle ('28 countries, one equal tile each · Renewable electricity share (%) from 9% (UA) to 99% (IS)'). The vertical color bar on the right is titled 'Renewable electricity share (%)', with 99% at the top and 9% at the bottom. All of it is readable.
-      Data: 28 equal rounded square tiles on a 9x7 grid in the shape of Europe (IS/NO/SE/FI on top, PT/ES at the SW, GR at the bottom). Tile colors run along the imprint_seq ramp from brand green #009E73 (UA 9%, CZ 17%) to blue (IS 99%, NO 98%). Each tile shows a bold abbreviation and its value. The ink is dark on light-green tiles and off-white on darker blue tiles (IS, NO, SE, FI, DK, CH, AT, PT, HR).
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "map-tilegrid · javascript · muix · anyplot.ai" bold dark ink top-left, subtitle "28 countries, one equal tile each · Renewable electricity share (%) from 9% (UA) to 99% (IS)" in soft ink; colour-bar title "Renewable electricity share (%)" in dark ink right of the grid, 99% / 9% end labels readable. No axes (by design).
+      Data: 28 equal rounded-square tiles on a 9×7 compass grid (IS, NO, SE, FI top; IE, GB, DK, EE; NL, DE, PL, LT; BE, CZ, SK, UA; FR, CH, AT, HU, RO; PT, ES, IT, HR, RS, BG; GR). Fill from the Imprint sequential ramp: brand green #009E73 at low share (UA, CZ, HU, PL) to blue at high share (IS, NO). Bold abbreviation plus value on each tile; ink switches dark on green/teal tiles and light on blue tiles; all legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, measured #1A1A17.
-      Chrome: The title is off-white, and the subtitle, legend title and color bar labels are light grey. All are readable, with no dark-on-dark text.
-      Data: The tile fills, the color bar gradient and the per-tile ink choices are identical to the light render. Only the page and chrome flipped. Brand green stays clearly visible.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, colour-bar title and end labels flip to light ink and are clearly readable; no dark-on-dark text.
+      Data: tile fills identical to the light render (same green-to-blue ramp); tile labels keep the same luminance-based ink, so they read the same in both themes. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,52 +66,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (22 px title, 15 px subtitle, bold abbreviations at
-          30% of tile, 15 px values, 15-16 px legend). The ink switches on tile luminance,
-          so labels read on every tile in both themes.
+        comment: Title 22 px, subtitle/legend/values 15 px, abbreviations ~30% of
+          tile; readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Tiles are separated by an 8% gap.
+        comment: No text collisions; tiles separated by an 8% gap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 28 large, equal tiles. The color bar gradient is visible on both
-          backgrounds.
+        comment: Large tiles, colour bar 20 px thick; value labels fit inside their
+          tiles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: A single-hue-family green-to-blue ramp with a luminance step, plus
-          a printed value on every tile, so color is never the only cue.
+        comment: Sequential green-to-blue ramp with luminance change; no red-green
+          signal; values also printed on tiles
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800. The grid is centred left of the legend with even margins
-          and nothing overflows.
+        comment: 3200x1800; grid centred with colour bar on the right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes, by design. The legend title 'Renewable electricity share
-          (%)' carries the unit.
+        comment: No axes by design; colour-bar title is descriptive with unit (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous imprint_seq from t.seq[0] to t.seq[1]. Backgrounds measured
-          #FAF8F1 and #1A1A17. Tile colors are identical across themes.'
+        comment: 'Continuous fill from t.seq (imprint_seq); backgrounds #FAF8F1 /
+          #1A1A17; data colours identical across themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -111,23 +116,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: A deliberate two-level label hierarchy on each tile (bold abbreviation
-          over a smaller value) and rounded tiles sized from one shared pitch.
+        comment: 'Raised: two-level tile typography (bold 700 abbreviation over a
+          smaller value), rounded tiles, title/subtitle left-aligned with the grid
+          edge'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: The tile gap is chosen as a share of the pitch, the title block is
-          aligned to the grid's left edge, and the legend is centred on the grid's
-          middle 60%.
+        comment: 'Raised: proportional tile gap, colour bar vertically centred on
+          the grid at 60% of its height, axes removed entirely'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: The subtitle computes and names the extremes (UA 9% to IS 99%), which
-          points the reader at the range.
+        comment: 'Raised: computed subtitle names the lowest and highest countries,
+          giving a focal range beyond the Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -137,32 +142,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A square tile grid map with equal tiles at their grid row and column.
+        comment: Square tile grid map, one tile per region
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Every requirement is met: equal square tiles, a recognisable Europe
-          with north up and neighbours nearby (Iberia SW, Nordics on top, Balkans
-          SE), an abbreviation on every tile that stays legible in both themes, a
-          sequential colormap, and a color bar.'
+        comment: Equal tiles at row/col, recognisable Europe with north at top, abbreviation
+          on every tile with luminance-switched ink, sequential colormap with colour
+          bar
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tiles sit exactly at their row/col. The color domain is the data
-          min and max.
+        comment: Tiles at their grid row/col via the x/y scales; colour from the shared
+          z scale
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: The title is 'map-tilegrid · javascript · muix · anyplot.ai'. The
-          color bar title and its min/max labels match the data.
+        comment: Title follows the mandated format; colour-bar title reads as text
+          for a reader
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -170,24 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: The data spans 9-99%, so the full ramp appears and the label ink
-          switches in both directions. 28 regions is within 10-60.
+        comment: Shows equal-weight tiles, approximate geography with holes, full
+          value range 9–99%
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Renewable electricity share by European country is a neutral, real-world
-          scenario.
+        comment: Neutral, plausible scenario, but several real-country values drift
+          from reported shares (DK, PL) (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible magnitudes (IS/NO near 100%, AT/CH hydro-heavy in the 70s,
-          PL/CZ/UA low). The spec has no Check values.
+        comment: Percentages within 0–100; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,35 +198,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the default-export component and the one child component the
-          hooks need.
+        comment: Only the React components the hooks require; linear flow otherwise
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The color parsing and relative-luminance formula are written out
-          at lines 67-73, but getLuminance from @mui/material/styles computes the
-          same value (defect line).
+        passed: true
+        comment: Concise; limits, unit and extremes derived from data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, sized from ANYPLOT_SIZE, skipAnimation, v9 composition
-          API.
+        comment: Default-exported component, skipAnimation, v9 community API only
     library_mastery:
       score: 7
       max: 10
@@ -233,31 +232,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Builds the chart from the v9 composition primitives (ChartsDataProvider
-          + ChartsSurface) with linear x/y axes as the grid coordinate system, instead
-          of hand-computing pixel positions.
+        comment: 'Raised: composition via ChartsDataProvider + ChartsSurface with
+          a custom component reading useXScale/useYScale'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: The tile colors come from a zAxis continuous colorMap through useZColorScale,
-          and the same axis drives ContinuousColorLegend (axisDirection='z'), so the
-          tiles and the legend share one scale.
-  verdict: REJECTED
+        comment: 'Raised: zAxis continuous colorMap with useZColorScale and the bound
+          ContinuousColorLegend'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T03:47:36Z'
+  rendered_at: '2026-11-08T03:53:57Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - patches
   - html-export
-  patterns:
-  - data-generation
+  - layer-composition
+  patterns: []
   dataprep: []
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
