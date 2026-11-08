@@ -2,62 +2,54 @@ library: muix
 language: javascript
 specification_id: bar-stacked
 created: '2026-09-02T13:42:25Z'
-updated: '2026-09-02T13:59:48Z'
-generated_by: claude-sonnet
-workflow_run: 33636912289
+updated: '2026-11-08T01:12:10Z'
+generated_by: claude-opus-5-5
+adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
+workflow_run: 42432902447
 issue: 1947
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct canonical Imprint palette order (green → lavender → blue → ochre), byte-identical
-    between light and dark renders, with a thoughtful ordering rationale (largest/most-volatile
-    service first onto brand green)
-  - Theme-adaptive chrome is fully correct in both renders — warm off-white (#FAF8F1)
-    and warm near-black (#1A1A17) backgrounds, all title/axis/tick/legend text legible
-    with no dark-on-dark or light-on-light failures
-  - 'Clean, well-proportioned layout: mandated title format plus a genuinely useful
-    narrative subtitle ("Compute spend nearly doubles by June..."), legend placed
-    close to the chart with generous whitespace, subtle single-axis horizontal grid'
-  - Deterministic, realistic cloud-spend dataset (3-10 categories, 2-6 components
-    both satisfied) with a consistent stacking order across all 6 months and plausible,
-    factually sensible values
+  - 'Native MUI X stacking (stack: "total" on every series) with the stack order computed
+    from the data: the largest service overall (Compute) sits at the bottom of every
+    bar, so the same order holds across all six months'
+  - Total labels are a custom SVG layer composed as a BarChart child with useXScale/useYScale,
+    so each label sits exactly above its stack and equals the sum of its segments
+    (82, 88, 94, 100, 109, 120 checked against the data)
+  - Colours keep their palette position by first appearance even after the stack reorder,
+    the y domain is derived from the data (maxTotal × 1.1) on a zero baseline, and
+    categoryGapRatio 0.4 gives even gaps between bars of one width
+  - A computed subtitle (stack total 82 → 120, +46 %; fastest growth Compute +53 %)
+    adds a typographic hierarchy below the title, every number falling out of the
+    data
+  - Thin elevatedBg segment strokes separate neighbouring segments in both themes;
+    ticks disabled and a subtle horizontal grid keep the chrome quiet; tooltips and
+    legend highlighting work in the HTML output
   weaknesses:
-  - The <TotalLabels /> overlay (SVG '$XXK' text meant to sit above each stack, per
-    the spec's 'Consider adding total value labels' note) never appears in either
-    render. Verified by cropping close-ups above both the tallest bar (Jun, total=$120K,
-    zero headroom) and a mid-height bar (Jan, total=$82K, ~30% headroom above it)
-    in both plot-light.png and plot-dark.png — no text is visible anywhere above any
-    bar in either theme. This is dead code; either make it render or remove it rather
-    than shipping a non-functional feature.
-  - 'Likely contributing cause: the yAxis[0].max prop (set to 140 for label headroom)
-    is not taking effect — the rendered y-axis tops out at exactly 120, the raw data
-    max, with the Jun bar flush against the top of the plot area. But since even bars
-    with ample natural headroom (Jan) also show no label, the <TotalLabels/> children
-    component (using useXScale/useYScale) likely isn''t rendering at all, not just
-    mispositioned — check whether this version of @mui/x-charts BarChart requires
-    a different pattern for custom SVG children, or whether the hooks silently return
-    unusable scales before series data is ready.'
-  - 'DE-01/DE-02 stop short of ''publication-ready'': the palette and layout are solid
-    but rely on the standard Imprint categorical order and mostly-standard MUI X chrome
-    (axis lines still visible in both themes) rather than deeper custom refinement.'
+  - 'Suggestion: the x-axis band (height: 64) leaves a wide gap between the month
+    ticks and the ''Month'' title; a band of about 48 px would tie the title to its
+    axis.'
+  - 'Suggestion: the header still names muix 7.29.1 although the harness pins @mui/x-charts
+    9; the workflow rewrites the header, but the source could state the version it
+    targets.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Cloud Costs by Service · bar-stacked · javascript · muix · anyplot.ai" in dark ink, subtitle in softer gray-ink below it, both clearly readable. Y-axis label "Spend ($K)" and x-axis label "Month" in dark ink, tick labels in softer gray, all legible. Horizontal grid lines are thin and subtle, not competing with data. Legend at right (Compute/Storage/Networking/Database) in soft gray text, readable box-free.
-      Data: 6 stacked bars (Jan-Jun), 4 segments each. Bottom-to-top: Compute (brand green #009E73), Storage (lavender), Networking (blue), Database (ochre) — consistent stacking order across all bars. Bar edges have a subtle light stroke separating segments. No "$XXK" total labels are visible above any bar despite the code containing a TotalLabels component intended to render them.
-      Legibility verdict: PASS (all chrome text readable; the missing total labels are a functional/code bug, not a legibility failure).
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold dark title "Cloud Costs by Service · bar-stacked · javascript · muix · anyplot.ai" top left (~45 % of width), soft-ink subtitle below it, centred horizontal legend (Compute, Database, Storage, Networking), y axis "Spend (thousand USD)" 0–130 in steps of 10, x axis months Jan–Jun with title "Month"; subtle light grid lines; all text dark and readable.
+      Data: six stacked bars, Compute #009E73 at the bottom, then Database (purple), Storage (blue), Networking (ochre) in the same order in every bar, thin light separators between segments; bold total labels 82, 88, 94, 100, 109, 120 above each stack, none colliding.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and subtitle rendered in light ink (near-white / soft gray), clearly readable against the dark background — no dark-on-dark failures. Axis labels and tick labels are light-colored and legible. Grid lines are faint but visible. Legend text is light gray, readable.
-      Data: Same 4-segment stack order and identical hues as the light render — Compute (#009E73 green), Storage (lavender), Networking (blue), Database (ochre) — confirming data colors are theme-independent; only chrome flipped. Bar segment edges use the dark page background as the separating stroke, consistent with the light render's technique. Same absence of "$XXK" total labels above any bar.
-      Legibility verdict: PASS (no dark-on-dark issues; same missing-labels bug as light render).
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and tick labels all flip to light ink and read clearly; grid lines subtle dark grey but visible; no dark-on-dark text.
+      Data: segment colours identical to the light render (green, purple, blue, ochre), separators now dark; total labels in light ink above each stack, readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -68,79 +60,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 21px, subtitle 14px, axis labels
-          15px, ticks/legend 14px); readable in both themes with no overflow or clipping
+        comment: Explicit sizes (title 22 px, ticks 15-16 px, totals 16 px bold);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text collisions; total labels clear of each other and of the stacks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments clearly distinguishable with subtle edge stroke; sizing
-          appropriate for 6 categories x 4 components
+        comment: Wide bars, thin segment separators, legend swatches match the segments
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 categorical hues from the Imprint palette are CVD-safe and distinguishable
-          without relying on hue alone
+        comment: Green/purple/blue/ochre are CVD-distinguishable; no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800; plot area, legend, and margins are well
-          balanced with nothing cut off
+        comment: 3200x1800, canvas gate passed; balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Spend ($K)" includes units; "Month" is descriptive'
+        comment: '''Spend (thousand USD)'' with units, ''Month'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining series follow canonical Imprint
-          order, identical across themes; backgrounds and chrome are theme-correct
-          in both renders'
+        comment: 'First series #009E73, Imprint order from tokens, theme-correct backgrounds'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful component ordering, coherent typography hierarchy, and
-          a narrative subtitle — clearly above defaults but still using the standard
-          Imprint order rather than a more custom treatment
+        comment: Title / soft-ink subtitle / bold total labels form a deliberate typographic
+          hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle single-axis grid, generous whitespace, bar-edge stroke for
-          segment definition; axis lines still visible in both themes rather than
-          fully minimized
+        comment: elevatedBg segment strokes, small corner radius, disabled ticks,
+          10 % headroom sized for the total labels
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtitle calls out the insight (compute driving stack growth) and
-          the green brand series doubles as a visual focal point; the intended total-value
-          labels (which would have strengthened this further) don't render
+        comment: Computed subtitle names the total growth (+46 %) and the fastest-growing
+          service
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,54 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart
+        comment: Stacked bar chart from a shared zero baseline
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 6 categories, 4 components, consistent stack order, adequate spacing
-          all present; the optional total-value-label feature from the spec's Notes
-          is coded but non-functional
+        comment: Consistent order largest at bottom, distinct colours with legend,
+          even gaps, totals above stacks equal to the segment sums, untruncated axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on x-axis, Spend ($K) on y-axis, all data visible
+        comment: Months on x, spend on y, segments at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match series exactly
+        comment: Descriptive prefix + mandated title; legend entries are the service
+          names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows full composition and growth trend across all 4 components;
-          all components increase monotonically, missing a declining/flat component
-          for more variety
+        comment: 6 categories x 4 components, unequal stack heights, a thin top component
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible cloud-infrastructure business scenario
+        comment: Monthly cloud spend by service, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions are realistic for cloud spend by service
+        comment: 82-120 k USD/month; checked totals 82/88/94/100/109/120 and the subtitle's
+          +46 % and Compute +53 % against the data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -203,35 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → derived totals → chart component, no unnecessary classes;
-          function components are required by the MUI X hook pattern
+        comment: Columns / Data / Plot zones; the only extra component is the custom
+          layer MUI X composition needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (BarChart, useXScale, useYScale, Box, Typography)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The TotalLabels component is dead code — it never renders in either
-          theme; ship a working feature or remove it
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, no deprecated API usage
+        comment: Default export, skipAnimation, v9 API (hooks, axis height/width,
+          slotProps.legend)
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -239,23 +222,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic series/stack/xAxis/yAxis/slotProps configuration
+        comment: Native series stacking, band axis with categoryGapRatio, grid prop,
+          per-chart CSS classes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Attempts a distinctive MUI X pattern (useXScale/useYScale custom
-          SVG overlay) but it produces no visible output, so it can't be credited
-          as a working distinctive feature
+        passed: true
+        comment: Custom SVG layer as a BarChart child driven by useXScale/useYScale
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:09:30Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - aggregation
   styling:
+  - minimal-chrome
   - edge-highlighting
-  - grid-styling
