@@ -1,165 +1,111 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-25
-//# anyplot-orientation: landscape
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 84/100 | Updated: 2026-11-08
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
-import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// Deterministic LCG (seed 42) — no Math.random() in browser harness
-let _seed = 42;
-function lcg() {
-  _seed = (1664525 * _seed + 1013904223) >>> 0;
-  return _seed / 4294967296;
-}
-function randn() {
-  const u = lcg(), v = lcg();
-  return Math.sqrt(-2 * Math.log(u + 1e-15)) * Math.cos(2 * Math.PI * v);
-}
+// Constants
+const PAD_SHARE = 0.05; // axis padding on each side as a share of the data span
+const POINT_ALPHA = 0.7; // moderate transparency so overlapping points read darker
 
-// Data: Weekly creative project hours vs employee innovation score
-// Scenario: 120 tech-sector employees; moderate positive correlation (r ≈ 0.72)
-const N = 120;
-const scatterData = Array.from({ length: N }, (_, id) => {
-  const hours = 2 + lcg() * 36;
-  const score = 28 + (hours / 40) * 58 + randn() * 11;
-  return {
-    id,
-    x: Math.round(hours * 10) / 10,
-    y: Math.min(98, Math.max(12, Math.round(score * 10) / 10)),
+// Columns: set these to your data's column names
+const HOURS = "Weekly study hours (h)"; // role: x
+const SCORE = "Final exam score (%)"; // role: y
+
+// Data: replace this block with your own records, one object per row
+// 120 university students: self-logged weekly study hours against their final exam score.
+const data = (() => {
+  let seed = 42;
+  const lcg = () => {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    return seed / 4294967296;
   };
-});
+  const randn = () => Math.sqrt(-2 * Math.log(lcg() + 1e-15)) * Math.cos(2 * Math.PI * lcg());
+  return Array.from({ length: 120 }, () => {
+    const hours = 2 + lcg() * 36;
+    const score = 28 + (hours / 40) * 58 + randn() * 11;
+    return {
+      [HOURS]: Math.round(hours * 10) / 10,
+      [SCORE]: Math.min(98, Math.max(12, Math.round(score * 10) / 10)),
+    };
+  });
+})();
 
-// OLS linear regression for trend line overlay
-const sumX  = scatterData.reduce((s, p) => s + p.x, 0);
-const sumY  = scatterData.reduce((s, p) => s + p.y, 0);
-const sumXY = scatterData.reduce((s, p) => s + p.x * p.y, 0);
-const sumX2 = scatterData.reduce((s, p) => s + p.x * p.x, 0);
-const sumY2 = scatterData.reduce((s, p) => s + p.y * p.y, 0);
-const meanX = sumX / N;
-const meanY = sumY / N;
-const slope     = (sumXY - N * meanX * meanY) / (sumX2 - N * meanX * meanX);
-const intercept = meanY - slope * meanX;
-const r = (N * sumXY - sumX * sumY) /
-  Math.sqrt((N * sumX2 - sumX * sumX) * (N * sumY2 - sumY * sumY));
+// Plot: reads only data and the constants above
+const xs = data.map((d) => d[HOURS]);
+const ys = data.map((d) => d[SCORE]);
+const xPad = (Math.max(...xs) - Math.min(...xs)) * PAD_SHARE;
+const yPad = (Math.max(...ys) - Math.min(...ys)) * PAD_SHARE;
 
-// Pixel-space helpers — CSS px in the 1600×900 mount
-const MARGIN = { top: 72, right: 52, bottom: 90, left: 100 };
-const X_MIN = 0, X_MAX = 42, Y_MIN = 8, Y_MAX = 105;
-const PLOT_W = width  - MARGIN.left - MARGIN.right;
-const PLOT_H = height - MARGIN.top  - MARGIN.bottom;
-const xPx = (x) => MARGIN.left + ((x - X_MIN) / (X_MAX - X_MIN)) * PLOT_W;
-const yPx = (y) => height - MARGIN.bottom - ((y - Y_MIN) / (Y_MAX - Y_MIN)) * PLOT_H;
-
-// Trend line endpoints (clamped to y-axis domain)
-const trendY0   = Math.max(Y_MIN, Math.min(Y_MAX, intercept));
-const trendY42  = Math.max(Y_MIN, Math.min(Y_MAX, slope * X_MAX + intercept));
-
-// Brand green at 72% opacity — satisfies "alpha ~0.7" spec requirement
-const BRAND_RGBA = "rgba(0, 158, 115, 0.72)";
 const TITLE = "scatter-basic · javascript · muix · anyplot.ai";
+const HEADER_HEIGHT = 64;
 
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      margin={MARGIN}
-      series={[{
-        type: "scatter",
-        id: "employees",
-        label: "Employee",
-        color: BRAND_RGBA,
-        markerSize: 7,
-        data: scatterData,
-        valueFormatter: (v) => v ? `${v.x} h/wk · score ${v.y}` : "",
-      }]}
-      xAxis={[{
-        scaleType: "linear",
-        min: X_MIN,
-        max: X_MAX,
-        label: "Weekly Hours on Creative Projects",
-        tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        labelStyle: { fontSize: 16, fill: t.ink },
-      }]}
-      yAxis={[{
-        scaleType: "linear",
-        min: Y_MIN,
-        max: Y_MAX,
-        label: "Innovation Score",
-        tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        labelStyle: { fontSize: 16, fill: t.ink },
-      }]}
-    >
-      <ChartsGrid horizontal vertical />
-      <ScatterPlot skipAnimation />
-
-      {/* OLS trend line — dashed SVG path, highlights the positive correlation */}
-      <line
-        x1={xPx(X_MIN)} y1={yPx(trendY0)}
-        x2={xPx(X_MAX)} y2={yPx(trendY42)}
-        stroke={t.inkSoft}
-        strokeWidth={2}
-        strokeDasharray="6 4"
-        opacity={0.55}
-      />
-
-      {/* MUI X ChartsReferenceLine — vertical marker at mean creative hours */}
-      <ChartsReferenceLine
-        x={Math.round(meanX)}
-        label={`Avg ${Math.round(meanX)} h/wk`}
-        labelAlign="end"
-        lineStyle={{ stroke: t.inkSoft, opacity: 0.4 }}
-        labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-      />
-
-      <ChartsXAxis />
-      <ChartsYAxis />
-
-      {/* L-frame: suppress top and right axis lines for clean L-shape */}
-      <line
-        x1={MARGIN.left - 1} y1={MARGIN.top}
-        x2={width - MARGIN.right + 1} y2={MARGIN.top}
-        stroke={t.pageBg}
-        strokeWidth={3}
-      />
-      <line
-        x1={width - MARGIN.right} y1={MARGIN.top - 1}
-        x2={width - MARGIN.right} y2={height - MARGIN.bottom + 1}
-        stroke={t.pageBg}
-        strokeWidth={3}
-      />
-
-      {/* Title */}
-      <text
-        x={width / 2}
-        y={38}
-        textAnchor="middle"
-        fontSize={22}
-        fontWeight={600}
-        fill={t.ink}
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontWeight: 600,
+          color: t.ink,
+        }}
       >
         {TITLE}
-      </text>
-
-      {/* Correlation annotation — focal point for the storytelling */}
-      <text
-        x={width - MARGIN.right - 10}
-        y={MARGIN.top + 22}
-        textAnchor="end"
-        fontSize={13}
-        fill={t.inkSoft}
-      >
-        {`r = ${r.toFixed(2)}`}
-      </text>
-    </ChartContainer>
+      </div>
+      <ScatterChart
+        width={width}
+        height={height - HEADER_HEIGHT}
+        skipAnimation
+        hideLegend
+        grid={{ horizontal: true, vertical: true }}
+        margin={{ top: 16, right: 48, bottom: 16, left: 24 }}
+        series={[
+          {
+            id: "observations",
+            label: SCORE,
+            color: t.palette[0],
+            markerSize: 7,
+            data: data.map((d, i) => ({ id: i, x: d[HOURS], y: d[SCORE] })),
+            valueFormatter: (v) => (v ? `${HOURS}: ${v.x} · ${SCORE}: ${v.y}` : ""),
+          },
+        ]}
+        xAxis={[
+          {
+            min: Math.min(...xs) - xPad,
+            max: Math.max(...xs) + xPad,
+            label: HOURS,
+            tickNumber: 8,
+            height: 72,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: Math.min(...ys) - yPad,
+            max: Math.max(...ys) + yPad,
+            label: SCORE,
+            tickNumber: 6,
+            width: 76,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        sx={{
+          "& .MuiScatterChart-marker": { fillOpacity: POINT_ALPHA },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      />
+    </div>
   );
 }

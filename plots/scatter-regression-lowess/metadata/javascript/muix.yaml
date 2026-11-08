@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: scatter-regression-lowess
 created: '2026-09-09T07:00:29Z'
-updated: '2026-09-09T07:13:16Z'
-generated_by: claude-sonnet
-workflow_run: 34321214176
+updated: '2026-11-08T05:16:35Z'
+generated_by: claude-opus-5-5
+adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
+workflow_run: 42449835266
 issue: 2855
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/muix/plot-light.html
@@ -15,123 +16,120 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 quality_score: 88
 review:
   strengths:
-  - 'Palette order violation from attempt 1 is fixed: the LOWESS line now uses t.palette[1]
-    (#C475FD lavender) per the canonical Imprint order, instead of the previously
-    cherry-picked palette[2] blue'
-  - New ±1 SD confidence band around the LOWESS curve, computed as the weighted RMS
-    residual per local window and rendered as a translucent path via the community
-    useXScale/useYScale hooks — a genuinely advanced, library-idiomatic technique,
-    not a canned feature
-  - Band is drawn and z-ordered before ScatterPlot/LinePlot so it sits behind the
-    data and fit line rather than competing with them for attention, strengthening
-    the data storytelling around fit uncertainty
-  - LOWESS curve remains a genuine locally-weighted regression (tricube kernel, weighted
-    normal equations) over a 120-point grid, tracing the non-monotonic speed/efficiency
-    relationship cleanly without oscillation
-  - Scatter alpha (0.6) and marker size (8px) remain well matched to the 170-point
-    density per the spec's alpha ~0.5-0.7 guidance
-  - 'Both renders remain fully theme-correct: correct page backgrounds, all chrome
-    text readable, identical data colors between light and dark, canvas at 3200x1800'
+  - Composes the chart from MUI X building blocks (ChartsDataProvider, ChartsSurface,
+    ScatterPlot, LinePlot, ChartsXAxis/YAxis) and draws the residual band as a custom
+    SVG layer through the useXScale/useYScale hooks, so the band sits in the same
+    coordinate system as the data
+  - 'LOWESS is a short tricube-weighted local linear fit with frac = 0.4 (68 of 170
+    points per window), evaluated on 120 grid x positions from the minimum to the
+    maximum observed speed: the curve follows the inverted-U through its bend and
+    ends at the outermost points without extrapolating'
+  - Points at their exact values in Imprint green at 0.6 opacity, curve in solid purple
+    (palette position 2) at 3.5 px drawn on top, band in the theme-adaptive inkSoft
+    tone at 0.16 opacity with every point inside still visible
+  - 'Title and subtitle hierarchy: the subtitle states n, the span and what the shaded
+    band means, so the reader gets the method parameters without an annotation on
+    the data'
+  - Plausible, neutral scenario (test-drive fuel efficiency against vehicle speed,
+    peaking near 75–80 km/h) with a seeded LCG, so the output is deterministic
+  - Theme chrome is threaded through the tokens (ink, inkSoft, pageBg) and the item
+    tooltip adds per-point inspection in the HTML view
   weaknesses:
-  - 'Design Excellence is still close to baseline: grid renders both horizontal and
-    vertical lines at default MUI X styling with no subtler grid treatment or spine/legend
-    framing refinement beyond the two series colors and the new band — consider a
-    lighter/y-axis-only grid or added emphasis around the fit-line region to lift
-    DE-01/DE-02.'
-  - Legend swatches render as solid squares rather than reflecting the scatter series'
-    actual 0.6 alpha — a very minor mismatch between legend and rendered marker appearance.
-  - Title occupies a noticeably narrower share of the plot width (~35%) than the 50-70%
-    (up to ~70-85% for the mandated long title) proportional guideline — not a defect
-    since it's fully legible with no overflow, but a slightly conservative use of
-    the title's visual weight.
+  - 'Suggestion: the curve shows small corners near 73 km/h and 108 km/h where the
+    nearest-neighbour window changes. A finer grid or a robustness iteration would
+    make it read smoother.'
+  - 'Suggestion: the y-axis title sits about 50 px from its tick labels. A slightly
+    narrower y-axis band would tighten the left edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "scatter-regression-lowess · javascript · muix · anyplot.ai" in dark ink, top-left, fully visible and not clipped. X-axis label "Vehicle Speed (km/h)" and Y-axis label "Fuel Efficiency (km/L)" both dark, clearly readable with units. Tick labels on both axes are dark and legible. Legend ("Vehicles (observed)", "LOWESS fit") sits top-right in dark text with colored swatches, no overlap with data or title. Grid lines (horizontal + vertical) are thin and subtle, don't compete with data.
-      Data: Scatter points are brand green (#009E73) at ~0.6 alpha, moderately dense but individually distinguishable (170 points, size 8px). The LOWESS fit is a solid lavender (#C475FD) line, 3.5px, tracing a smooth rise-peak-fall arc matching the non-monotonic speed/efficiency relationship, with a new translucent gray ±1 SD confidence band drawn behind it — band sits cleanly behind the scatter/line, doesn't obscure either.
-      Legibility verdict: PASS — no light-on-light text found anywhere.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "LOWESS Smoothing · scatter-regression-lowess · javascript · muix · anyplot.ai" (about 52 % of the width), grey subtitle with n = 170, span frac = 0.4 (68 nearest points), and a note that the band is ±1 SD of the local residuals; legend at top right ("Observations", "LOWESS fit (frac = 0.4)"); axis titles "Vehicle speed (km/h)" and "Fuel efficiency (km/L)"; ticks 20–140 and 8–22; subtle grid on both axes. All text is dark and readable.
+      Data: 170 translucent #009E73 points forming an inverted-U, a solid purple LOWESS curve rising from about 12 at 23 km/h to a peak of about 18.7 near 75 km/h and falling to about 10.9 at 139 km/h, and a light grey ±1 SD band around it. The points inside the band are still visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, axis labels, tick labels, legend and grid all re-rendered in light ink (theme-adaptive) — fully legible against the dark surface. No dark-on-dark text anywhere; grid lines are faint but visible.
-      Data: Scatter points and LOWESS line use the identical #009E73 / #C475FD hex values as the light render — only the chrome (text, grid, legend, band tint) flipped tone, confirming the Imprint theme-adaptive contract is respected for data colors. The confidence band remains legible as a subtle darker-gray region against the near-black background without washing out the fit line.
-      Legibility verdict: PASS — all chrome text reads clearly against the dark background; no dark-on-dark failures observed.
+      Background: warm near-black #1A1A17.
+      Chrome: the title, subtitle, legend, axis titles and ticks are light ink. The grid is subtle but visible. There is no dark-on-dark text.
+      Data: the points (#009E73) and the purple curve are the same colors as in the light render. The band switches to a dark warm grey, and the points inside it stay visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at set font sizes (title 22px, axis
-          16px, ticks/legend 14px)
+        comment: Explicit font sizes (title 22, subtitle 15, axes 16, ticks 14, legend
+          16 CSS px); all text is readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, data, or the new confidence band
+        comment: No text collisions; the points overlap only lightly, and the 0.6
+          alpha keeps them apart
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size/alpha appropriate for 170-point density; fit line and
-          band clearly distinct
+        comment: 7 px markers suit 170 points; the 3.5 px curve stands out; the legend
+          glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender series, CVD-safe Imprint hues, no red-green sole
-          signal
+        comment: Green and purple separate under CVD, and the curve also differs from
+          the points by shape
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no clipping or overflow
+        comment: 3200x1800; balanced margins; title about 52 % of the width; nothing
+          is clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units; correct mandated title
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Fixed: second series now uses canonical palette[1] (lavender) instead
-          of palette[2] (blue)'
+        comment: 'First series #009E73, the second is Imprint position 2; backgrounds
+          #FAF8F1 and #1A1A17; the band uses the inkSoft token'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Mostly MUI X composition defaults; confidence band adds context but
-          grid/legend framing still default
+        passed: true
+        comment: A title/subtitle hierarchy that puts the method parameters in the
+          subtitle, beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Grid subtle and margins generous, but full horizontal+vertical grid
-          and no spine/legend refinement beyond defaults
+        passed: true
+        comment: Legend kept out of the data area at top right; the neutral band sits
+          below the points, so the green and purple dominate
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Fit line plus new ±1 SD confidence band creates a clearer focal point
-          and communicates fit uncertainty
+        comment: The band shows local spread and the subtitle explains it, which guides
+          the reader to the peak-efficiency speed
     spec_compliance:
       score: 15
       max: 15
@@ -141,26 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter + LOWESS regression line, as specified
+        comment: Scatter with a LOWESS curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Moderate bandwidth (frac=0.4), moderate alpha, distinct solid contrasting
-          fit line, axis labels + title, optional confidence band now included
+        comment: Solid contrasting curve, frac 0.4, alpha 0.6, axis labels, title
+          mentions LOWESS, optional band translucent; all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=speed, Y=efficiency, axes cover full data range
+        comment: Points at exact values; the curve spans exactly the min to the max
+          x; the linear segments do not overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels are descriptive
+        comment: Correct title format with a descriptive prefix; the legend entries
+          read well
     data_quality:
       score: 15
       max: 15
@@ -170,20 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Now covers scatter + fit + confidence band, the full optional feature
-          set
+        comment: A nonlinear inverted-U that the LOWESS curve has to bend through;
+          noise and outliers the curve does not chase
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral vehicle speed/fuel-efficiency domain
+        comment: 'Fuel efficiency against vehicle speed: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Speed 20-140 km/h, efficiency ~8-22 km/L — realistic ranges
+        comment: 20–140 km/h and 8–22 km/L with a peak near 75–80 km/h are realistic;
+          the Notes have no Check values
     code_quality:
       score: 10
       max: 10
@@ -193,35 +194,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions are necessary for LOWESS math and the band overlay,
-          no classes, flat script
+        comment: Flat script; the only helper is the ResidualBand component, which
+          the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42), fully deterministic
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, including new useXScale/useYScale hooks
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch LOWESS with band; no fake
-          UI
+        comment: Concise LOWESS; the library prompt permits written-out fits because
+          no stats helpers are available
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, harness produces plot-{theme}.png/html
+        comment: Default-export component sized to ANYPLOT_SIZE, skipAnimation set,
+          current v9 composition API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -229,16 +231,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly uses the ChartContainer composition API to mix scatter
-          + line series, which the high-level ScatterChart can't do
+        comment: Composition API (ChartsDataProvider + ChartsWrapper + ChartsSurface)
+          with the axis band height/width sized as the library prompt advises
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Adds a custom confidence-band overlay built directly on the community
-          useXScale/useYScale hooks — a genuinely distinctive, non-trivial MUI X technique
+        comment: A custom SVG layer drawn through the useXScale/useYScale hooks inside
+          the composed surface, plus a mixed scatter and line series in one provider
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:13:39Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -247,6 +252,8 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
+  - lowess
   - regression
   styling:
   - alpha-blending
+  - publication-ready
