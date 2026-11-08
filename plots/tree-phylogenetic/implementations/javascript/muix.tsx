@@ -204,7 +204,7 @@ export default function Chart() {
         height={height - TITLE_H - LEGEND_H}
         skipAnimation
         series={tipSeries}
-        margin={{ top: 24, right: 170, bottom: 8, left: 36 }}
+        margin={{ top: 24, right: 170, bottom: 24, left: 36 }}
         xAxis={[
           {
             id: "distance",
