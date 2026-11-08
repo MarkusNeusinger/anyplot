@@ -3,191 +3,137 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
 //# anyplot-orientation: square
-
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// The puzzle itself is a monochrome print artifact (per spec: "Monochrome
-// design optimized for printing") — its black/white pattern is the chart's
-// data, so it stays fixed across themes, like a categorical data color would.
-// Only the surrounding page and title (below) follow ANYPLOT_THEME.
-const GRID_PAPER = "#FAF8F1";
-const GRID_INK = "#1A1A17";
-const GRID_LINE = "#4A4A44";
+// Constants
+// The puzzle is a monochrome print artefact: paper, ink and rules keep their values in both themes
+const PAPER = "#FAF8F1";
+const INK = "#1A1A17";
+const RULE = "#4A4A44";
+const BLOCK = "#"; // blocking-cell symbol in GRID; every other symbol is an entry cell
+const NUMBER_SHARE = 0.3; // clue-number size as a share of the cell, leaves room for a letter
+const HEADER_H = 84;
+const BOARD_PAD = 28;
 
-const GRID_SIZE = 15;
+// Data: replace this block with your own parameters
+// 15 × 15 newspaper-style grid, one string per row: "#" blocks, "." takes a letter
+const GRID = [
+  "....#.....#....",
+  "....#.....#....",
+  "....#..#..#....",
+  "##.............",
+  ".......#.......",
+  "...#.......#...",
+  "...#..#.#..#...",
+  "#....#...#....#",
+  "...#..#.#..#...",
+  "...#.......#...",
+  ".......#.......",
+  ".............##",
+  "....#..#..#....",
+  "....#.....#....",
+  "....#.....#....",
+]; // role: grid
 
-// Black-cell coordinates for one half of the grid; mirrored below to enforce
-// the traditional 180-degree rotational symmetry of newspaper-style crosswords.
-const HALF_BLOCKS = [
-  [0, 4], [0, 10],
-  [1, 4], [1, 10],
-  [2, 4], [2, 7], [2, 10],
-  [3, 0], [3, 1],
-  [4, 7],
-  [5, 3], [5, 11],
-  [6, 3], [6, 6], [6, 8], [6, 11],
-  [7, 0], [7, 5],
-];
+// Plot: reads only the parameters and the constants above
+const rowCount = GRID.length;
+const colCount = Math.max(...GRID.map((row) => row.length));
+const isEntry = GRID.map((row) => Array.from({ length: colCount }, (_, c) => c < row.length && row[c] !== BLOCK));
 
-const BLOCKED = new Set();
-HALF_BLOCKS.forEach(([r, c]) => {
-  BLOCKED.add(`${r},${c}`);
-  BLOCKED.add(`${GRID_SIZE - 1 - r},${GRID_SIZE - 1 - c}`);
-});
-
-const isBlocked = (r, c) => BLOCKED.has(`${r},${c}`);
-const isOpen = (r, c) =>
-  r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE && !isBlocked(r, c);
-
-// Number every cell that starts an across or down entry, in reading order —
-// the same rule newspaper puzzle constructors use.
-const numbers = new Map();
+// A cell gets the next clue number, in reading order, when it starts an across or a down word:
+// open itself, closed (or the edge) before it and open after it
+const cells: { r: number; c: number; entry: boolean; number: number | null }[] = [];
 let nextNumber = 1;
-for (let r = 0; r < GRID_SIZE; r++) {
-  for (let c = 0; c < GRID_SIZE; c++) {
-    if (isBlocked(r, c)) continue;
-    const startsAcross = !isOpen(r, c - 1) && isOpen(r, c + 1);
-    const startsDown = !isOpen(r - 1, c) && isOpen(r + 1, c);
-    if (startsAcross || startsDown) {
-      numbers.set(`${r},${c}`, nextNumber++);
-    }
+let acrossCount = 0;
+let downCount = 0;
+for (let r = 0; r < rowCount; r += 1) {
+  for (let c = 0; c < colCount; c += 1) {
+    const entry = isEntry[r][c];
+    const startsAcross = entry && !(isEntry[r][c - 1] ?? false) && (isEntry[r][c + 1] ?? false);
+    const startsDown = entry && !(isEntry[r - 1]?.[c] ?? false) && (isEntry[r + 1]?.[c] ?? false);
+    acrossCount += startsAcross ? 1 : 0;
+    downCount += startsDown ? 1 : 0;
+    cells.push({ r, c, entry, number: startsAcross || startsDown ? nextNumber++ : null });
   }
 }
+const blockCount = cells.filter((cell) => !cell.entry).length;
+const symmetric = cells.every((cell) => cell.entry === isEntry[rowCount - 1 - cell.r][colCount - 1 - cell.c]);
 
-const COLS = Array.from({ length: GRID_SIZE }, (_, c) => `c${c}`);
-const ROWS = Array.from({ length: GRID_SIZE }, (_, r) => `r${r}`);
+// Square cells: the board takes the largest cell size that fits, centred in the drawing space
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const cellSize = Math.min((W - 2 * BOARD_PAD) / colCount, (H - HEADER_H - 2 * BOARD_PAD) / rowCount);
+const marginX = (W - cellSize * colCount) / 2;
+const marginY = (H - HEADER_H - cellSize * rowCount) / 2;
+const columnKeys = Array.from({ length: colCount }, (_, c) => String(c));
+const rowKeys = Array.from({ length: rowCount }, (_, r) => String(r));
 
-const cells = [];
-for (let r = 0; r < GRID_SIZE; r++) {
-  for (let c = 0; c < GRID_SIZE; c++) {
-    cells.push({ id: `${r}-${c}`, x: COLS[c], y: ROWS[r], r, c });
-  }
-}
+const TITLE = "crossword-basic · javascript · muix · anyplot.ai";
+const subtitle = `${rowCount} × ${colCount} grid · ${blockCount} blocking cells${symmetric ? " in 180° rotational symmetry" : ""} · ${acrossCount} across and ${downCount} down entries`;
 
-// Every square renders in one custom marker: a black fill for blocked cells,
-// a paper-white fill with a clue number for cells that start a word.
-function GridMark(props) {
-  const { series, xScale, yScale } = props;
-  const cellW = xScale.bandwidth();
-  const cellH = yScale.bandwidth();
-
+function BoardLayer() {
+  const xScale = useXScale("column");
+  const yScale = useYScale("row");
+  const cell = xScale.bandwidth();
+  const left = xScale(columnKeys[0])!;
+  const top = yScale(rowKeys[0])!;
   return (
     <g>
-      {series.data.map((pt) => {
-        const cx = xScale(pt.x) ?? 0;
-        const cy = yScale(pt.y) ?? 0;
-        const blocked = isBlocked(pt.r, pt.c);
-        const number = numbers.get(`${pt.r},${pt.c}`);
-        return (
-          <g key={pt.id}>
-            <rect
-              x={cx}
-              y={cy}
-              width={cellW}
-              height={cellH}
-              fill={blocked ? GRID_INK : GRID_PAPER}
-              stroke={GRID_LINE}
-              strokeWidth={1.5}
-            />
-            {number !== undefined && (
-              <text
-                x={cx + cellW * 0.1}
-                y={cy + cellH * 0.32}
-                fontSize={cellW * 0.32}
-                fontWeight={600}
-                fill={GRID_INK}
-                textAnchor="start"
-                dominantBaseline="middle"
-              >
-                {number}
-              </text>
-            )}
-          </g>
-        );
-      })}
-      <rect
-        x={xScale(COLS[0]) ?? 0}
-        y={yScale(ROWS[0]) ?? 0}
-        width={cellW * GRID_SIZE}
-        height={cellH * GRID_SIZE}
-        fill="none"
-        stroke={GRID_INK}
-        strokeWidth={3}
-      />
+      {cells.map((c) => (
+        <rect
+          key={`cell-${c.r}-${c.c}`}
+          x={xScale(columnKeys[c.c])}
+          y={yScale(rowKeys[c.r])}
+          width={cell}
+          height={cell}
+          fill={c.entry ? PAPER : INK}
+          stroke={RULE}
+          strokeWidth={1.5}
+        />
+      ))}
+      {cells
+        .filter((c) => c.number !== null)
+        .map((c) => (
+          <text
+            key={`number-${c.r}-${c.c}`}
+            x={xScale(columnKeys[c.c])! + cell * 0.09}
+            y={yScale(rowKeys[c.r])! + cell * 0.08}
+            fontSize={cell * NUMBER_SHARE}
+            fontWeight={600}
+            fill={INK}
+            dominantBaseline="hanging"
+          >
+            {c.number}
+          </text>
+        ))}
+      {/* Board frame in theme chrome, so edge blocks stay distinct from a dark page */}
+      <rect x={left} y={top} width={cell * colCount} height={cell * rowCount} fill="none" stroke={t.inkSoft} strokeWidth={3} />
     </g>
   );
 }
 
-const TITLE = "crossword-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 64;
-
 export default function Chart() {
-  const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
-
-  // Keep every cell perfectly square: shrink the board to the smaller of the
-  // two available dimensions, then center it with even margins on both axes.
-  const MARGIN = 24;
-  const boardSize = Math.min(width, chartHeight) - MARGIN * 2;
-  const vMargin = (chartHeight - boardSize) / 2;
-  const hMargin = (width - boardSize) / 2;
-
   return (
-    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 30,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-          pt: "16px",
-          height: TITLE_HEIGHT,
-          fontFamily: "inherit",
-        }}
-      >
-        {TITLE}
-      </Typography>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <ScatterChart
-          width={width}
-          height={chartHeight}
-          skipAnimation
-          disableVoronoi
-          series={[{ id: "cells", type: "scatter", data: cells, xAxisId: "col", yAxisId: "row" }]}
-          xAxis={[
-            {
-              id: "col",
-              scaleType: "band",
-              data: COLS,
-              categoryGapRatio: 0,
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
-          yAxis={[
-            {
-              id: "row",
-              scaleType: "band",
-              data: ROWS,
-              categoryGapRatio: 0,
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
-          topAxis={null}
-          bottomAxis={null}
-          leftAxis={null}
-          rightAxis={null}
-          margin={{ top: vMargin, bottom: vMargin, left: hMargin, right: hMargin }}
-          slots={{ scatter: GridMark }}
-          slotProps={{ legend: { hidden: true } }}
-        />
+    <Box sx={{ width: W, height: H, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
       </Box>
+      <ChartsContainer
+        width={W}
+        height={H - HEADER_H}
+        series={[]}
+        skipAnimation
+        margin={{ top: marginY, bottom: marginY, left: marginX, right: marginX }}
+        xAxis={[{ id: "column", scaleType: "band", data: columnKeys, categoryGapRatio: 0, position: "none" }]}
+        yAxis={[{ id: "row", scaleType: "band", data: rowKeys, categoryGapRatio: 0, position: "none" }]}
+      >
+        <BoardLayer />
+      </ChartsContainer>
     </Box>
   );
 }
