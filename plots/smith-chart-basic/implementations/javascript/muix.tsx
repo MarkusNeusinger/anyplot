@@ -49,6 +49,7 @@ const locus = sweep.map((d) => {
 });
 const labelIdx = [...new Set(Array.from({ length: LABEL_COUNT }, (_, k) => Math.round((k * (locus.length - 1)) / (LABEL_COUNT - 1))))];
 const freqUnit = FREQUENCY.match(/\(([^)]+)\)/)?.[1] ?? "";
+const impedanceUnit = RESISTANCE.match(/\(([^)]+)\)/)?.[1] ?? "";
 
 // Grid: constant-reactance arcs run from the open-circuit point (1, 0) to Γ(jx) on the boundary
 const arcs = REACTANCE_ARCS.flatMap((x) => [x, -x]).map((x) => ({
@@ -67,7 +68,7 @@ const hMargin = (W - side) / 2;
 const vMargin = (chartH - side) / 2;
 
 const title = "smith-chart-basic · javascript · muix · anyplot.ai";
-const subtitle = `n = ${sweep.length} points · ${FREQUENCY} ${sweep[0][FREQUENCY]} to ${sweep[sweep.length - 1][FREQUENCY]} · impedance normalized to Z₀ = ${Z0}`;
+const subtitle = `n = ${sweep.length} points · ${FREQUENCY} ${sweep[0][FREQUENCY]} to ${sweep[sweep.length - 1][FREQUENCY]} · impedance normalized to Z₀ = ${Z0} ${impedanceUnit}, matched point at the centre`;
 
 function SmithChart() {
   const xScale = useXScale() as (v: number) => number;
@@ -117,9 +118,6 @@ function SmithChart() {
         </text>
       ))}
       <circle cx={cx} cy={cy} r={5} fill="none" stroke={t.ink} strokeWidth={2} />
-      <text x={cx + 10} y={cy - 12} fontSize={15} fontWeight={600} fill={t.ink}>
-        {`Z₀ = ${Z0}`}
-      </text>
       <path d={locusPath} fill="none" stroke={t.palette[0]} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
       {labelIdx.map((i) => {
         const p = locus[i];
