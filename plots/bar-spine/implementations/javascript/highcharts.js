@@ -52,21 +52,13 @@ const bars = tiers.map((tier) => {
 });
 
 // Highcharts stacks the first series on top, so the last status sits on the
-// baseline. Each segment's fill is a subtle vertical gradient (a touch lighter
-// at the top) that gives the stack depth without changing the perceived hue.
+// baseline.
 const areaSeries = statuses.map((status, i) => {
   const color = STATUS_COLORS[status] ?? t.palette[i];
   return {
     type: "area",
     name: status,
     color,
-    fillColor: {
-      linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
-      stops: [
-        [0, Highcharts.color(color).brighten(0.12).get()],
-        [1, color],
-      ],
-    },
     data: bars.flatMap((bar, j) => {
       const y = bar.rows.find((d) => d[STATUS] === status)?.[CUSTOMERS] ?? null;
       return [
