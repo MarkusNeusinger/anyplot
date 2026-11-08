@@ -9,7 +9,7 @@ import { BarChart } from "@mui/x-charts/BarChart";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const HEADROOM_SHARE = 0.1; // space above the tallest bar for its count label, as a share of the top count
+const HEADROOM_SHARE = 0.05; // space above the tallest bar for its count label, as a share of the top count
 
 // Columns: set these to your data's column names
 const CATEGORY = "Support ticket category"; // role: category
@@ -68,7 +68,7 @@ export default function Chart() {
         hideLegend
         borderRadius={4}
         grid={{ horizontal: true }}
-        margin={{ top: 24, right: 48, bottom: 16, left: 32 }}
+        margin={{ top: 8, right: 48, bottom: 16, left: 32 }}
         xAxis={[
           {
             scaleType: "band",
