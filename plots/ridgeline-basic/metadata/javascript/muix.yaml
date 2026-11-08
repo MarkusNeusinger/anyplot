@@ -2,146 +2,131 @@ library: muix
 language: javascript
 specification_id: ridgeline-basic
 created: '2026-07-25T04:19:39Z'
-updated: '2026-07-25T04:25:26Z'
-generated_by: claude-sonnet
-workflow_run: 30143591654
+updated: '2026-11-08T04:32:48Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42446992746
 issue: 923
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 89
 review:
   strengths:
-  - Correct ridgeline construction via MUI X's low-level composition API (ChartContainer
-    + useXScale/useYScale/useDrawingArea) — the library has no native ridgeline chart
-    type, so this is the idiomatic way to build one while staying inside the theme-aware
-    coordinate system
-  - 'Theme-adaptive ridge separators: each ridge''s outline stroke uses t.pageBg,
-    so overlap boundaries render as cream lines in light mode and near-black lines
-    in dark mode automatically — a subtle but correct detail'
-  - Deterministic Gaussian KDE per month via a seeded LCG (seed 42), with Silverman's-rule
-    bandwidth and peak-normalization so ridge height compares shape rather than raw
-    sample count
-  - Realistic, well-scaled seasonal data (temperate continental climate, winter mean/std
-    wider than summer) with all 12 months distinctly shaped, none flat or identical
-  - 'Full spec compliance: chronological Jan→Dec ordering, group labels replace the
-    numeric Y-axis, partial vertical overlap between ridges, redundant color+position
-    encoding of month order'
-  - 'Clean theme/palette handling: first ridge (Jan) is exactly #009E73, gradient
-    built from the Imprint imprint_seq stops (t.seq), identical data colors between
-    light/dark renders, only chrome flips'
-  - No grid, no y-axis spine, generous margins — minimal, uncluttered chrome that
-    lets the ridges read clearly
+  - Composes the ridges as a custom SVG layer inside ChartsContainer, reading the
+    shared linear scales through useXScale/useYScale, so the ridges sit on the native
+    MUI X axes rather than on a hand-drawn coordinate system
+  - Y axis uses tickInterval at the integer baselines plus a valueFormatter that maps
+    each baseline to its month, so every group label sits exactly at its ridge's baseline
+    with no numeric density values
+  - Ridge peak at 1.6 row spacings gives about 60 % overlap; drawing later (lower)
+    ridges on top with a 2 px page-colored outline keeps every ridge's outline traceable
+    against the one behind in both themes
+  - Months colored in twelve ordered steps of imprint_seq (t.seq) from brand green
+    to blue in chronological order, identical between themes
+  - Realistic continental-climate daily highs with wider winter spread show the seasonal
+    sweep and the narrowing summer distributions; Gaussian KDE with Silverman bandwidth,
+    normalized per group
+  - 'Clean chrome: no grid, y axis line and ticks disabled, explicit font sizes, all
+    text theme-token colored and readable in both renders'
   weaknesses:
-  - Title (~49 chars, no descriptive prefix) renders at only ~28-30% of plot width
-    at the default 22px size — well under the 50-70% guidance for a short title; growing
-    the title fontsize slightly (e.g. to ~26-28px) would give it more visual weight
-    without risking overflow
-  - The per-ridge stroke (t.pageBg, 2px) creates visible crossing lines where adjacent
-    ridges overlap (most noticeable Jan/Feb and Jun-Sep) — attractive as a separation
-    technique, but in the densely-packed middle months it reads slightly busy/wireframe-like;
-    consider a thinner stroke (1-1.5px) or lower peak-height overlap in that band
-  - The green-to-blue color gradient tracks month index (Jan=green...Dec=blue), which
-    is fully redundant with the existing vertical position encoding and adds no new
-    information (e.g. it does not track actual temperature) — mapping the gradient
-    to mean temperature instead would give the color a second, non-redundant storytelling
-    job
-  - Adjacent ridges in the May-Sep range land on visually similar mid-gradient teal
-    shades, making it slightly harder to tell exactly which color belongs to which
-    ridge from color alone (position/labels still disambiguate, so this is a soft
-    VQ-04 nit, not a defect)
+  - 'Suggestion: interpolating the ramp in a perceptual space instead of raw RGB would
+    make the step from month to month more even, especially in the green half.'
+  - 'Suggestion: a tick every 4 °C instead of every 2 °C would lighten the x axis
+    without losing precision.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "ridgeline-basic · javascript · muix · anyplot.ai" centered at top, clearly readable. Y-axis shows month labels (Jan-Dec, top to bottom) in soft dark-gray text instead of numeric ticks, per spec. X-axis is labeled "Daily High Temperature (°C)" with dark tick labels from -18 to 38. No grid, no y-axis spine — minimal chrome.
-      Data: 12 overlapping density "ridges," one per month, ordered chronologically top (Jan) to bottom (Dec). Jan is #009E73 (Imprint brand green); color interpolates through teal to #4467A3 (Imprint blue) for Dec, i.e. the imprint_seq gradient tied to month order. Ridges show a partial vertical overlap with a thin outline (colored to match the page background) where a lower ridge paints over the tail of the one above it, creating the classic mountain-ridge look. Winter months (Jan/Feb/Dec) show visibly wider, flatter distributions; summer months (Jun-Aug) show narrower, taller peaks — consistent with real seasonal temperature variance.
-      Legibility verdict: PASS — title, axis title, tick labels, and all 12 month labels are clearly readable against the light background; no light-on-light text.
+      Background: warm off-white #FAF8F1, no grid.
+      Chrome: centered bold title "ridgeline-basic · javascript · muix · anyplot.ai" at top; y-axis title "Month" rotated on the left with month tick labels Jan..Dec (Jan at top) at each ridge baseline; x axis with ticks −16..36 every 2 and title "Daily high temperature (°C)". All text dark and readable.
+      Data: 12 filled density ridges stacked top-to-bottom, colored in steps from brand green #009E73 (Jan) to Imprint blue (Dec); ~60 % overlap, each lower ridge drawn in front with a thin page-colored outline so contours stay traceable. Ridges sweep right toward Jul/Aug (~28–30 °C) and back left in winter.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title renders in light/white text, fully readable. Month labels on the Y-axis and the "Daily High Temperature (°C)" X-axis title/ticks all render in light gray — no dark-on-dark failures observed anywhere (including the ridge-separator strokes, which correctly switch from a white line in light mode to a near-black line in dark mode, since the stroke color is theme-token-driven).
-      Data: Same 12 ridges, same #009E73-to-#4467A3 gradient as the light render — data colors are pixel-for-pixel identical between themes, confirming only chrome flipped.
-      Legibility verdict: PASS — all text and data remain fully legible; brand green stays vivid against the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, month labels and x ticks rendered in light ink; x axis line light; no dark-on-dark text.
+      Data: identical ridge colors to the light render (green → blue ramp); outlines switch to the dark page color and still separate the ridges.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; title is
-          a bit small relative to the 50-70% width guidance for a short title
+        comment: Explicit 22/16/15/14 px fonts; all text readable in both themes and
+          at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No text collisions; ridge overlap is the intended form and outlines
+          keep shapes distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ridge fills (opacity 0.92) clearly visible with well-tuned overlap
+        comment: All 12 ridges clearly visible with page-colored separating outlines
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe endpoints (green/blue); position fully disambiguates adjacent
-          similar-hue ridges
+        comment: Green-to-blue ramp, CVD-safe; groups also identified by position
+          and label
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well, balanced margins, nothing cut off
+        comment: 3200x1800; balanced margins, nothing clipped, plot fills the canvas
+          well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Daily High Temperature (°C)" includes units'
+        comment: '''Daily high temperature (°C)'' with unit, ''Month'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; gradient built from imprint_seq stops;
-          identical data colors across themes; theme-correct chrome in both renders'
+        comment: 'Ordered months in steps of imprint_seq from #009E73, identical across
+          themes; backgrounds correct'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom low-level construction with intentional gradient and layering,
-          clearly above library defaults; slightly busy crosshatch lines in the dense
-          middle months keep it below publication-perfect
+        comment: Page-colored ridge outlines and 0.92 fill opacity give a cohesive
+          layered look; clear type hierarchy with medium-weight title
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: 'No grid, no y-axis spine, generous whitespace; minor: overlap-separator
-          strokes add some visual noise in the packed middle months'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color+position visual hierarchy clearly conveys the seasonal progression,
-          though the color gradient is redundant with position rather than encoding
-          new information (e.g. actual temperature)
+        comment: Y axis line and ticks removed so labels read as row headers; padding
+          tuned per row spacing (BASE/TOP_PAD_ROWS); tail cutoff trims ridges cleanly
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Data chosen so the ridges trace the seasonal arc and the summer narrowing,
+          reinforced by the chronological ramp
     spec_compliance:
       score: 15
       max: 15
@@ -151,29 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline/joyplot with stacked partially-overlapping density
-          curves
+        comment: Basic ridgeline, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Partial overlap, group labels replacing numeric y-axis, color differentiation,
-          chronological ordering — all present
+        comment: Shared x axis, even baselines, group labels on y, ~60 % overlap,
+          traceable outlines, chronological order, gradient — all good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = temperature, Y = density with per-group baseline offset; axes
-          show all data
+        comment: Value on x, groups at baselines; axis covers all ridge extents
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; no legend needed since month
-          labels already identify each ridge
+        comment: Correct title format; legend N/A (groups labelled on axis)
     data_quality:
       score: 15
       max: 15
@@ -183,22 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 distinctly-shaped distributions with realistic width/skew variation
-          across the year, not uniform copies
+        comment: 12 groups with shifting location and spread, some skew/shoulders
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral scenario: monthly daily-high temperatures for a temperate
-          continental climate'
+        comment: Monthly daily highs in a continental climate — the spec's own example,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Monthly means/spreads are factually plausible for the stated climate
-          type
+        comment: Means −2 to 29 °C with SD 2.3–4.5, 200 obs per month (within 50–500);
+          no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -208,64 +190,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Structure (data gen → KDE → layout → components) is as flat as a
-          custom SVG ridgeline in React can be
+        comment: Linear module; the Ridges component is required to call the scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, ChartsXAxis, and the three scale/drawing-area
-          hooks — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a chart type MUI X has no native component
-          for; no fake UI
+        comment: Hand-written KDE is permitted (no stats helpers in MUI X); concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, current composition-API hooks, harness owns the
-          screenshot/save step
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses MUI X's documented composition pattern (ChartContainer + scale
-          hooks) exactly as intended for custom content
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages MUI X's hooks-based coordinate system to build a chart
-          type the library doesn't ship natively — distinctive to this library's architecture
+        comment: Composition API with ChartsContainer + ChartsXAxis/ChartsYAxis and
+          axis-config styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useXScale/useYScale hooks for a custom series layer; tickInterval
+          + valueFormatter to turn a linear axis into group labels
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:30:13Z'
 impl_tags:
   dependencies: []
   techniques:
+  - patches
+  - manual-ticks
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
   styling:
-  - alpha-blending
   - gradient-fill
+  - alpha-blending
   - minimal-chrome
