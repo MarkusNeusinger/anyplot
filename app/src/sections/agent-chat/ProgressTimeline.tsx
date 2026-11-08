@@ -32,32 +32,19 @@ import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { RunState } from 'src/hooks/useAgentSession';
 import { RECONNECTING_TEXT } from 'src/sections/agent-chat/messages';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
+import { holdScrollAnchoring } from 'src/sections/agent-chat/scrollAnchoring';
 import { liveRows } from 'src/sections/agent-chat/timeline';
 import { fontSize, typography } from 'src/theme';
 
-/** How many mounted timelines hold the page's scroll anchoring off, and the value the first found. */
-let anchoringHolds = 0;
-let anchoringBefore = '';
-
 /**
- * Turns the page's scroll anchoring off while the run lasts. The run's grid grows only below
- * what it shows, so the anchoring has nothing to hold still there and would only scroll the
- * page by each new row; the page's value comes back when the last timeline unmounts. Excluding
- * the composer or the footer alone did not stop the jump: the browser found another anchor.
+ * Turns the page's scroll anchoring off while the run lasts (`holdScrollAnchoring`). The run's
+ * grid grows only below what it shows, so the anchoring has nothing to hold still there and would
+ * only scroll the page by each new row; the page's value comes back when the last hold ends.
+ * Excluding the composer or the footer alone did not stop the jump: the browser found another
+ * anchor.
  */
 function useNoScrollAnchoring() {
-  useEffect(() => {
-    const root = document.documentElement;
-    if (anchoringHolds === 0) {
-      anchoringBefore = root.style.overflowAnchor;
-      root.style.overflowAnchor = 'none';
-    }
-    anchoringHolds += 1;
-    return () => {
-      anchoringHolds -= 1;
-      if (anchoringHolds === 0) root.style.overflowAnchor = anchoringBefore;
-    };
-  }, []);
+  useEffect(() => holdScrollAnchoring(), []);
 }
 
 export function ProgressTimeline({ run }: { run: RunState }) {

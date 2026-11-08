@@ -15,9 +15,11 @@ import { getAvailableValues, getSearchResults } from 'src/utils';
 export interface FilterSearchProps {
   activeFilters: ActiveFilters;
   filterCounts: FilterCounts | null; // Contextual counts (for AND additions)
+  globalCounts: FilterCounts | null; // Unfiltered counts (search hint, search after a clear)
   specTitles: Record<string, string>; // Mapping spec_id -> title for search/tooltips
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   onAddFilter: (category: FilterCategory, value: string) => void;
+  onClearFilters: () => void;
   onTrackEvent: (event: string, props?: Record<string, string>) => void;
 }
 
@@ -27,12 +29,20 @@ export interface FilterSearchProps {
  */
 export function FilterSearch({
   activeFilters,
-  filterCounts,
+  filterCounts: contextualCounts,
+  globalCounts,
   specTitles,
   searchInputRef,
   onAddFilter,
+  onClearFilters,
   onTrackEvent,
 }: FilterSearchProps) {
+  // Without filters the contextual counts equal the global ones once the
+  // refetch lands; reading the global ones right away keeps the dropdown
+  // filled in between, after `.search_all()` removed the filters.
+  const filterCounts =
+    activeFilters.length === 0 ? (globalCounts ?? contextualCounts) : contextualCounts;
+
   // Search/dropdown state
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownAnchor, setDropdownAnchor] = useState<HTMLElement | null>(null);
@@ -118,6 +128,32 @@ export function FilterSearch({
     [filterCounts, activeFilters, searchQuery, selectedCategory, specTitles]
   );
 
+  // A search inside the filters only sees the values of the filtered plots.
+  // When it finds nothing, count what the same search finds in all plots, so
+  // the empty state can say that the filters are the reason.
+  const hiddenMatchCount = useMemo(() => {
+    if (activeFilters.length === 0 || searchResults.length > 0 || !searchQuery.trim()) return 0;
+    return getSearchResults(globalCounts, [], searchQuery, selectedCategory, specTitles).length;
+  }, [
+    activeFilters.length,
+    searchResults.length,
+    globalCounts,
+    searchQuery,
+    selectedCategory,
+    specTitles,
+  ]);
+
+  // Drop the filters and keep the query, so the dropdown shows the hits in all plots
+  const handleSearchAll = useCallback(() => {
+    onClearFilters();
+    setHighlightedIndex(-1);
+    setIsSearchManuallyExpanded(true);
+    setTimeout(() => {
+      setDropdownAnchor(searchContainerRef.current);
+      inputRef.current?.focus();
+    }, 50);
+  }, [onClearFilters, inputRef]);
+
   // Track searches with no results (debounced, to discover missing specs)
   const lastTrackedQueryRef = useRef<string>('');
   useEffect(() => {
@@ -162,11 +198,13 @@ export function FilterSearch({
         count,
         matchType: 'exact' as const,
       }));
+    } else if (searchResults.length === 0 && hiddenMatchCount > 0) {
+      return [{ type: 'search_all' as const }];
     } else {
       // Search results (with query)
       return searchResults.map(r => ({ type: 'value' as const, ...r }));
     }
-  }, [selectedCategory, hasQuery, filterCounts, activeFilters, searchResults]);
+  }, [selectedCategory, hasQuery, filterCounts, activeFilters, searchResults, hiddenMatchCount]);
 
   const dropdownItems = getDropdownItems();
 
@@ -181,11 +219,17 @@ export function FilterSearch({
         setHighlightedIndex(prev => Math.max(prev - 1, -1));
       } else if (event.key === 'Enter') {
         event.preventDefault();
-        const item = dropdownItems[highlightedIndex] || dropdownItems[0];
+        const highlighted = dropdownItems[highlightedIndex];
+        // A bare Enter takes the first entry, but never `.search_all()`:
+        // removing the filters takes an explicit pick.
+        const item =
+          highlighted ?? (dropdownItems[0]?.type === 'search_all' ? undefined : dropdownItems[0]);
         if (item) {
           if (item.type === 'category') {
             handleCategorySelect(item.category);
             setHighlightedIndex(-1);
+          } else if (item.type === 'search_all') {
+            handleSearchAll();
           } else {
             handleValueSelect(item.category, item.value);
           }
@@ -200,6 +244,7 @@ export function FilterSearch({
       highlightedIndex,
       handleCategorySelect,
       handleValueSelect,
+      handleSearchAll,
       handleDropdownClose,
       inputRef,
     ]
@@ -345,11 +390,13 @@ export function FilterSearch({
         selectedCategory={selectedCategory}
         hasQuery={hasQuery}
         searchResults={searchResults}
+        hiddenMatchCount={hiddenMatchCount}
         dropdownItems={dropdownItems}
         highlightedIndex={highlightedIndex}
         onClose={handleDropdownClose}
         onCategorySelect={handleCategorySelect}
         onValueSelect={handleValueSelect}
+        onSearchAll={handleSearchAll}
         onBack={handleBackToCategories}
       />
     </>

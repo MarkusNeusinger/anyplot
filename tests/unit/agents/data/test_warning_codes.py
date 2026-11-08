@@ -40,6 +40,11 @@ SAMPLES: dict[str, str] = {
     "the header stood in two lines; joined them into one name per column, such as 'Density /km2'": (
         "header_lines_joined"
     ),
+    "the header stood in a comment line above the table; read the column names from it, such as 'time'": (
+        "header_from_comments"
+    ),
+    "the header stood in two comment lines above the table; joined them into one name per column, such as "
+    "'decimal date'": "header_from_comments",
     "left out 1 summary row at the end of the table (a total, sum, mean or similar)": "summary_rows_left_out",
     "2 rows had fewer fields than the header; their cells were placed under the header's columns by their "
     "position, and the cells left over are empty (lines 3, 4)": "short_rows_positional",
@@ -89,6 +94,10 @@ SAMPLES: dict[str, str] = {
     "left out the column '': its 24 cells only number the rows 1 to 24 in order, as R's write.csv or pandas' index "
     "write row names": "row_number_column_dropped",
     "1 column with the same text in every row moved to the notes: 'unit'": "constant_columns_to_notes",
+    "2 columns of flags ('p', 'e') beside number columns kept as text columns named after them, such as "
+    "'2021 flag', with 5 flagged cells": "flag_columns",
+    "1 column of flags ('b') beside number columns kept as text columns named after them, such as '2019 flag', "
+    "with 1 flagged cell": "flag_columns",
     "column 'zip': numbers with leading zeros kept as text": "leading_zeros_text",
     "column 'id': whole numbers beyond the 64-bit range kept as text, so no digit is lost": "big_integers_text",
     "column 'x': commas read as decimal commas; remove them first if they separate thousands": (

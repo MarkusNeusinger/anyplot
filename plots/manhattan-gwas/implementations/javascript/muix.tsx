@@ -1,192 +1,184 @@
 // anyplot.ai
 // manhattan-gwas: Manhattan Plot for GWAS
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Deterministic PRNG (LCG, no seeded Math.random in the browser) ---------
-let seed = 42;
-function rand() {
-  seed = (seed * 1664525 + 1013904223) % 4294967296;
-  return seed / 4294967296;
-}
+// Constants
+const GENOME_WIDE_P = 5e-8; // genome-wide significance threshold
+const SUGGESTIVE_P = 1e-5; // suggestive threshold
+const Y_PAD_SHARE = 0.08; // share of the highest -log10 p added above it
 
-// --- Chromosome layout (approximate relative lengths, Mb) -------------------
-const CHROM_LENGTHS = [
-  248, 242, 198, 190, 181, 170, 159, 145, 138, 133, 135, 133, 114, 107, 101, 90,
-  83, 80, 58, 63, 46, 50,
-];
+// Columns: set these to your data's column names
+const CHROMOSOME = "Chromosome"; // role: chromosome
+const POSITION = "Position (bp)"; // role: position
+const P_VALUE = "P-value"; // role: p_value
+const SNP = "SNP"; // role: snp_id
 
-let cursor = 0;
-const chromRanges = CHROM_LENGTHS.map((length, i) => {
-  const start = cursor;
-  cursor += length;
-  return { label: String(i + 1), start, length, center: start + length / 2 };
-});
-const genomeLength = cursor;
-
-// --- Simulated association signal -------------------------------------------
-// Null-model baseline: for p ~ Uniform(0,1), -log10(p) is Exponential(ln 10).
-// A few chromosomes additionally carry a genuine association peak — a dense
-// cluster of points near one locus whose height decays with distance from it.
-const PEAK_CHROM_INDICES = [5, 10, 16]; // chr6, chr11, chr17 (0-indexed)
-const PEAK_HEIGHTS = [14.5, 9.6, 11.3];
-
-const GENOME_WIDE_SIGNIFICANCE = -Math.log10(5e-8); // ≈ 7.3
-const SUGGESTIVE_THRESHOLD = -Math.log10(1e-5); // 5
-
-const oddPoints = [];
-const evenPoints = [];
-const significantPoints = [];
-let pointId = 0;
-
-function pushPoint(chromIndex, position, negLogP) {
-  const y = Math.min(negLogP, 16);
-  const point = { x: position, y, id: pointId };
-  pointId += 1;
-  if (y >= GENOME_WIDE_SIGNIFICANCE) {
-    significantPoints.push(point);
-  } else if (chromIndex % 2 === 0) {
-    oddPoints.push(point);
-  } else {
-    evenPoints.push(point);
-  }
-}
-
-chromRanges.forEach((range, chromIndex) => {
-  // Baseline scatter across the whole chromosome.
-  const numPoints = Math.round(range.length / 3);
-  for (let i = 0; i < numPoints; i += 1) {
-    const position = range.start + rand() * range.length;
-    const negLogP = -Math.log(rand()) / Math.LN10;
-    pushPoint(chromIndex, position, negLogP);
-  }
-
-  // Associated locus: a denser cluster around a peak position, height
-  // decaying with distance (an approximate-normal jitter via Irwin-Hall).
-  const peakIdx = PEAK_CHROM_INDICES.indexOf(chromIndex);
-  if (peakIdx >= 0) {
-    const peakPos = range.start + range.length * (0.3 + rand() * 0.4);
-    const peakHeight = PEAK_HEIGHTS[peakIdx];
-    const spread = range.length * 0.08;
-    for (let i = 0; i < 45; i += 1) {
-      const jitter = (rand() + rand() + rand() - 1.5) * spread;
-      const position = Math.min(Math.max(peakPos + jitter, range.start), range.start + range.length);
-      const distance = (position - peakPos) / (spread * 2);
-      const negLogP = -Math.log(rand()) / Math.LN10 + peakHeight * Math.exp(-distance * distance);
-      pushPoint(chromIndex, position, negLogP);
+// Data: replace this block with your own records, one object per row
+// Simulated GWAS on the 22 autosomes: null p-values everywhere plus three associated loci (chr 6, 11, 17).
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+  const lengthsMb = [248, 242, 198, 190, 181, 170, 159, 145, 138, 133, 135, 133, 114, 107, 101, 90, 83, 80, 58, 63, 46, 50];
+  const peaks = { 6: 14.5, 11: 9.6, 17: 11.3 };
+  const rows = [];
+  const push = (chrom, position, negLogP) =>
+    rows.push({
+      [CHROMOSOME]: String(chrom),
+      [POSITION]: Math.round(position),
+      [P_VALUE]: Number((10 ** -negLogP).toPrecision(3)),
+      [SNP]: `rs${2000000 + rows.length * 7919}`,
+    });
+  lengthsMb.forEach((mb, i) => {
+    const chrom = i + 1;
+    const length = mb * 1e6;
+    for (let k = 0; k < Math.round(mb / 3); k += 1) push(chrom, rand() * length, -Math.log(rand()) / Math.LN10);
+    if (peaks[chrom]) {
+      const peakPos = length * (0.3 + rand() * 0.4);
+      const spread = length * 0.08;
+      for (let k = 0; k < 45; k += 1) {
+        const position = Math.min(Math.max(peakPos + (rand() + rand() + rand() - 1.5) * spread, 1), length);
+        // Association falls off with distance from the causal variant, so each locus tapers into the null band
+        const distance = (position - peakPos) / (spread / 2);
+        push(chrom, position, -Math.log(rand()) / Math.LN10 + peaks[chrom] * Math.exp(-distance * distance));
+      }
     }
-  }
+  });
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+// Chromosomes are laid end to end in their order of appearance, each as wide as its largest position.
+const rows = data.filter((d) => d[P_VALUE] != null && d[P_VALUE] > 0);
+const chromosomes = [...new Set(rows.map((d) => d[CHROMOSOME]))];
+const chromIndex = new Map(chromosomes.map((c, i) => [c, i]));
+const chromSpan = chromosomes.map((c) => Math.max(...rows.filter((d) => d[CHROMOSOME] === c).map((d) => d[POSITION])));
+const offsets = chromSpan.map((_, i) => chromSpan.slice(0, i).reduce((sum, v) => sum + v, 0));
+const genomeLength = offsets[offsets.length - 1] + chromSpan[chromSpan.length - 1];
+const centers = chromosomes.map((_, i) => offsets[i] + chromSpan[i] / 2);
+const labelAtCenter = new Map(centers.map((x, i) => [x, chromosomes[i]]));
+
+const genomeWide = -Math.log10(GENOME_WIDE_P);
+const suggestive = -Math.log10(SUGGESTIVE_P);
+const points = rows.map((d, k) => {
+  const i = chromIndex.get(d[CHROMOSOME]);
+  return { id: k, x: offsets[i] + d[POSITION], y: -Math.log10(d[P_VALUE]), chrom: i, snp: d[SNP], p: d[P_VALUE] };
 });
+// Adjacent chromosomes alternate between two colours; variants past genome-wide significance take a third
+const groups = [
+  { id: "alternate-a", color: t.palette[0], size: 3, points: points.filter((p) => p.y < genomeWide && p.chrom % 2 === 0) },
+  { id: "alternate-b", color: t.palette[1], size: 3, points: points.filter((p) => p.y < genomeWide && p.chrom % 2 === 1) },
+  { id: "significant", color: t.palette[2], size: 5, points: points.filter((p) => p.y >= genomeWide) },
+];
+const significant = groups[2].points;
+const leads = chromosomes
+  .map((_, i) => significant.filter((p) => p.chrom === i).sort((a, b) => b.y - a.y)[0])
+  .filter(Boolean);
+const yMax = Math.max(genomeWide, ...points.map((p) => p.y)) * (1 + Y_PAD_SHARE);
 
-const centerToLabel = new Map(chromRanges.map((r) => [r.center, r.label]));
-const tickCenters = chromRanges.map((r) => r.center);
+const formatP = (p: number) => p.toExponential(1);
 
-// Dense baseline/peak points get a touch of transparency to combat
-// overplotting in the association clusters; the sparse highlighted hits
-// below stay fully opaque.
-const MARKER_ALPHA = "CC"; // ~80% opacity, appended as 8-digit hex alpha
+const TITLE = "manhattan-gwas · javascript · muix · anyplot.ai";
+const SUBTITLE = `${rows.length.toLocaleString("en-US")} variants on ${chromosomes.length} chromosomes · ${significant.length} past genome-wide significance, highlighted · lead ${SNP} labelled per chromosome`;
+const HEADER_H = 80;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+function LeadLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  return (
+    <g>
+      {leads.map((p) => (
+        <text key={p.snp} x={xScale(p.x)} y={yScale(p.y) - 14} textAnchor="middle" fontSize={15} fontWeight={600} fill={t.ink}>
+          {`${p.snp} · p = ${formatP(p.p)}`}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const TITLE_H = 54;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div
-      style={{
-        width: W,
-        height: H,
-        background: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 26,
-          fontWeight: 600,
-          color: t.ink,
-          letterSpacing: 0.15,
-        }}
-      >
-        manhattan-gwas · javascript · muix · anyplot.ai
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 112px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
       </div>
       <ScatterChart
-        width={W}
-        height={H - TITLE_H}
-        series={[
-          {
-            id: "odd",
-            label: "Odd chromosomes",
-            color: `${t.palette[0]}${MARKER_ALPHA}`,
-            markerSize: 3,
-            data: oddPoints,
-          },
-          {
-            id: "even",
-            label: "Even chromosomes",
-            color: `${t.palette[1]}${MARKER_ALPHA}`,
-            markerSize: 3,
-            data: evenPoints,
-          },
-          {
-            id: "significant",
-            label: "Genome-wide significant",
-            color: `${t.amber}${MARKER_ALPHA}`,
-            markerSize: 5,
-            data: significantPoints,
-          },
-        ]}
+        width={width}
+        height={height - HEADER_H}
+        skipAnimation
+        hideLegend
+        disableHitArea
+        grid={{ horizontal: true }}
+        margin={{ top: 16, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
             scaleType: "linear",
             min: 0,
             max: genomeLength,
-            label: "Chromosome",
-            tickInterval: tickCenters,
-            valueFormatter: (value) => centerToLabel.get(value) ?? "",
-            tickLabelStyle: { fontSize: 13 },
-            labelStyle: { fontSize: 15 },
+            tickInterval: centers,
+            tickLabelMinGap: 2,
+            valueFormatter: (v: number) => labelAtCenter.get(v) ?? "",
+            label: CHROMOSOME,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            scaleType: "linear",
             min: 0,
-            label: "-log10(p-value)",
-            tickLabelStyle: { fontSize: 13 },
-            labelStyle: { fontSize: 15 },
+            max: yMax,
+            label: `−log₁₀(${P_VALUE})`,
+            width: 72,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true }}
-        disableVoronoi
-        skipAnimation
-        slotProps={{ legend: { position: { vertical: "top", horizontal: "middle" } } }}
+        series={groups.map((g) => ({
+          id: g.id,
+          color: g.color,
+          markerSize: g.size,
+          data: g.points.map((p) => ({ x: p.x, y: p.y, id: p.id })),
+          valueFormatter: (_v, { dataIndex }) =>
+            `${g.points[dataIndex].snp} · ${CHROMOSOME} ${chromosomes[g.points[dataIndex].chrom]} · p = ${formatP(g.points[dataIndex].p)}`,
+        }))}
+        sx={{
+          '& [data-series="alternate-a"] .MuiScatterChart-marker, & [data-series="alternate-b"] .MuiScatterChart-marker': {
+            fillOpacity: 0.75,
+          },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
       >
         <ChartsReferenceLine
-          y={GENOME_WIDE_SIGNIFICANCE}
-          label="Genome-wide significance (p < 5×10⁻⁸)"
+          y={suggestive}
+          label={`Suggestive, p < ${formatP(SUGGESTIVE_P)}`}
           labelAlign="end"
-          lineStyle={{ stroke: t.amber, strokeDasharray: "8 6", strokeWidth: 2 }}
-          labelStyle={{ fill: t.ink, fontSize: 13 }}
+          spacing={{ x: 8, y: 8 }}
+          labelStyle={{ fontSize: 15, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "3 5", strokeWidth: 1.5 }}
         />
         <ChartsReferenceLine
-          y={SUGGESTIVE_THRESHOLD}
-          label="Suggestive (p < 1×10⁻⁵)"
+          y={genomeWide}
+          label={`Genome-wide significance, p < ${formatP(GENOME_WIDE_P)}`}
           labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
+          spacing={{ x: 8, y: 8 }}
+          labelStyle={{ fontSize: 15, fill: t.ink }}
+          lineStyle={{ stroke: t.ink, strokeDasharray: "9 6", strokeWidth: 2 }}
         />
+        <LeadLabels />
       </ScatterChart>
     </div>
   );

@@ -3948,3 +3948,462 @@ XY_ROLES = [
     DataRole(name="x", kinds=("numeric",), required=True, variadic=False, description="x values"),
     DataRole(name="y", kinds=("numeric",), required=True, variadic=False, description="y values"),
 ]
+
+
+# A monthly series shaped like a climate agency's `.txt` (persona test of 2026-11-06), with invented values: notes in
+# `#` lines, then a header wrapped over two `#` lines whose names are wider than the columns, then aligned rows. The
+# parse split the last comment line at its single spaces: `#`, `date`, `average`, `alized`, `of`, `days`, `mon`, `mean`.
+MONTHLY_SERIES = (
+    "# --------------------------------------------------------------------\n"
+    "# Monthly means at an invented station, test data only.\n"
+    "# Values are mole fractions in dry air, in ppm.\n"
+    "#\n"
+    "# Missing values: -99.99\n"
+    "#\n"
+    "#            decimal     monthly   de-season   #days   st.dev   unc. of\n"
+    "#              date      average      alized            of days  mon mean\n"
+    "  2021   1  2021.0417    412.31     411.10       27     0.41     0.15\n"
+    "  2021   2  2021.1250    413.07     411.25       25     0.52     0.20\n"
+    "  2021   3  2021.2027    414.12     411.66       29     0.47     0.17\n"
+    "  2021   4  2021.2877    -99.99     411.98       -1    -9.99    -0.99\n"
+    "  2021   5  2021.3699    417.50     412.40       30     0.61     0.22\n"
+)
+MONTHLY_NAMES = [
+    "column_1",
+    "column_2",
+    "decimal date",
+    "monthly average",
+    "de-season alized",
+    "#days",
+    "st.dev of days",
+    "unc. of mon mean",
+]
+
+# An export shaped like a statistics office's spreadsheet download (persona test of 2026-11-06), with invented
+# countries and values: a title and key-value metadata padded to the table's width, a header of years, a flag column
+# after each year, `:` for a value that is not available, dots between thousands, and the legend below, after a
+# blank line, padded like every other line. The parse joined two metadata lines into the header, read the years as a
+# row, read the legend as rows, and left every column text.
+STATISTICS_EXPORT = (
+    "Population on 1 January (invented test data),,,,,,,,\n"
+    ",,,,,,,,\n"
+    "Time frequency,Annual,,,,,,,\n"
+    "Demographic indicator,Population on 1 January - total,,,,,,,\n"
+    "Unit of measure,Number,,,,,,,\n"
+    ",,,,,,,,\n"
+    "TIME,2019,,2020,,2021,,2022,\n"
+    "Alphaland,1.234.567,,1.240.112,,1.251.003,p,1.260.448,p\n"
+    "Betaland,845.210,,:,,850.774,e,852.001,\n"
+    "Gammaland,12.003.441,b,12.010.982,,:,,12.044.310,p\n"
+    "Deltaland,77.120,,77.305,,77.512,,77.689,e\n"
+    ",,,,,,,,\n"
+    "Special value,,,,,,,,\n"
+    ":,not available,,,,,,,\n"
+    "Available flags:,,,,,,,,\n"
+    "b,break in time series,,,,,,,\n"
+    "e,estimated,,,,,,,\n"
+    "p,provisional,,,,,,,\n"
+)
+
+
+class TestCommentLines:
+    """A paste that opens with comment lines, as R, numpy, gnuplot and a weather service's `.txt` write them."""
+
+    def test_a_header_wrapped_over_two_comment_lines_names_the_columns_by_their_place(self) -> None:
+        parsed = parse_dataset(MONTHLY_SERIES)
+
+        assert parsed.profile.source_format == "whitespace"
+        assert [c.name for c in parsed.profile.columns] == MONTHLY_NAMES
+        assert parsed.profile.rows == 5
+        assert parsed.csv.splitlines()[1] == "2021,1,2021.0417,412.31,411.1,27,0.41,0.15"
+        assert warned(
+            parsed,
+            "the header stood in two comment lines above the table; joined them into one name per column, such as "
+            "'decimal date'",
+        )
+        assert not warned(parsed, "single spaces")
+
+    def test_the_other_comment_lines_are_notes_and_their_declared_mark_is_missing(self) -> None:
+        parsed = parse_dataset(MONTHLY_SERIES)
+
+        # The rule and the bare `#` lines are counted with the notes but carry no text.
+        assert parsed.context_lines == [
+            "# Monthly means at an invented station, test data only.",
+            "# Values are mole fractions in dry air, in ppm.",
+            "# Missing values: -99.99",
+        ]
+        assert warned(parsed, "left out 6 lines above the table")
+        assert column(parsed, "monthly average").missing == 1
+        assert column(parsed, "monthly average").min == 412.31
+
+    def test_a_csv_header_in_the_last_comment_line(self) -> None:
+        parsed = parse_dataset("# Invented sensor log\n# time,temp,humidity\n0.0,21.5,40\n0.5,21.6,41\n1.0,21.4,42\n")
+
+        assert parsed.column_dtypes == {"time": "number", "temp": "number", "humidity": "integer"}
+        assert parsed.context_lines == ["# Invented sensor log"]
+        assert warned(
+            parsed, "the header stood in a comment line above the table; read the column names from it, such as 'time'"
+        )
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "# Invented log\n# x y z\n1 2 3\n4 5 6\n7 8 9\n",  # single spaces: the names in their order
+            "// generated by a test\n// x  y  z\n1  2  3\n4  5  6\n7  8  9\n",
+            "% exported by a test\n% x  y  z\n1  2  3\n4  5  6\n7  8  9\n",
+            "# Invented log\n#\n#   x   y   z\n    1   2   3\n    4   5   6\n    7   8   9\n",  # a bare `#` between
+        ],
+    )
+    def test_each_marker_and_spacing(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert list(parsed.column_dtypes) == ["x", "y", "z"]
+        assert parsed.profile.rows == 3
+
+    def test_comments_above_a_table_with_its_own_header_are_notes_only(self) -> None:
+        parsed = parse_dataset("# Invented log\n# exported today\nday,rain\n1,2.5\n2,0.0\n3,1.5\n")
+
+        assert parsed.column_dtypes == {"day": "integer", "rain": "number"}
+        assert parsed.context_lines == ["# Invented log", "# exported today"]
+        assert not warned(parsed, "comment line")
+
+    def test_a_header_of_years_below_the_comments_is_the_header(self) -> None:
+        """Its years read as values, yet it is a header: a comment line that fits never takes its place."""
+        parsed = parse_dataset("# Invented export\n# a,b,c\nLand,2020,2021\nCH,8.6,8.7\nAT,8.9,9.0\nIT,59.4,59.2\n")
+
+        assert parsed.column_dtypes == {"Land": "text", "2020": "number", "2021": "number"}
+        assert parsed.context_lines == ["# Invented export", "# a,b,c"]
+        assert not warned(parsed, "comment line")
+
+    def test_a_quote_in_a_comment_line_opens_no_quoted_cell(self) -> None:
+        """Read with the table, the quote ran to the end of the text and the paste became one column of text."""
+        parsed = parse_dataset('# Invented rain log\n# Remark, "unclosed note\nday,rain\n1,2.5\n2,0.0\n3,1.5\n')
+
+        assert parsed.column_dtypes == {"day": "integer", "rain": "number"}
+        assert parsed.context_lines == ["# Invented rain log", '# Remark, "unclosed note']
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "# Notes\n# more notes\nHund 7\nKatze 3\nMaus 5\n",  # no table below the comments
+            "# Invented log\n# exported today\n1,2\n3,4\n5,6\n",  # comments that name no column
+        ],
+    )
+    def test_comments_that_lead_to_no_header_leave_the_text_as_it_read(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert len(parsed.profile.columns) == 1
+        assert not warned(parsed, "comment line")
+
+    @pytest.mark.parametrize(
+        ("text", "names", "first"),
+        [
+            ("#,Player,Goals\n1,Anna,12\n2,Ben,9\n3,Cara,7\n", ["#", "Player", "Goals"], "1,Anna,12"),
+            # A tab after the `#` makes it a cell: a rank column, under a title that is the one comment line.
+            (
+                "# Top scorers\n#\tPlayer\tGoals\n1\tAnna\t12\n2\tBen\t9\n3\tCara\t7\n",
+                ["#", "Player", "Goals"],
+                "1,Anna,12",
+            ),
+            ("% change;Land\n1,5;CH\n2,5;DE\n-0,5;AT\n", ["% change", "Land"], "1.5,CH"),  # one line: no block
+            (
+                "# of players,Team,Budget\n11,Ajax,1.5\n9,Bern,2.5\n12,Chur,3.5\n",
+                ["# of players", "Team", "Budget"],
+                "11,Ajax,1.5",
+            ),
+            ("tag,count\n#tbt,120\n#love,300\n#nofilter,95\n", ["tag", "count"], "#tbt,120"),  # hashtags in the data
+            (
+                'name,note\nAnna,"# not a comment"\nBen,"#2 seller"\nCara,plain\n',
+                ["name", "note"],
+                "Anna,# not a comment",
+            ),
+            ("x,y\n1,2\n3,4\n5,6\n", ["x", "y"], "1,2"),
+            ("year,value\n2019,1.5\n2020,2.5\n2021,3.5\n", ["year", "value"], "2019,1.5"),
+            (
+                "Jahr    Nord    Mitte\n2020     4.1      5.2\n2021     4.4      5.5\n2022     4.7      5.0\n",
+                ["Jahr", "Nord", "Mitte"],
+                "2020,4.1,5.2",
+            ),
+        ],
+    )
+    def test_a_hash_that_is_a_cell_and_tables_without_comments_read_as_before(
+        self, text: str, names: list[str], first: str
+    ) -> None:
+        parsed = parse_dataset(text)
+
+        assert [c.name for c in parsed.profile.columns] == names
+        assert parsed.csv.splitlines()[1] == first
+        assert parsed.profile.rows == 3
+        assert not warned(parsed, "comment line")
+
+    def test_markdown_headings_above_a_table_are_notes_and_change_nothing_else(self) -> None:
+        table = "| Month | Sales |\n|-------|-------|\n| Jan   | 100   |\n| Feb   | 120   |\n| Mar   | 90    |\n"
+        plain = parse_dataset(table)
+
+        for headings, notes in (
+            ("# Sales 2024\n\n", ["# Sales 2024"]),
+            ("# Sales\n## 2024\n\n", ["# Sales", "## 2024"]),
+        ):
+            parsed = parse_dataset(headings + table)
+
+            assert parsed.profile.source_format == "pipe"
+            assert parsed.csv == plain.csv
+            assert parsed.context_lines == notes
+
+
+class TestPeriodHeaderBelowMetadata:
+    """A header of years or months under a title or an export's key-value metadata (persona test of 2026-11-06)."""
+
+    def test_a_statistics_export_reads_its_header_of_years_and_its_metadata_as_notes(self) -> None:
+        parsed = parse_dataset(STATISTICS_EXPORT)
+
+        assert [c.name for c in parsed.profile.columns] == [
+            "TIME",
+            "2019",
+            "2019 flag",
+            "2020",
+            "2021",
+            "2021 flag",
+            "2022",
+            "2022 flag",
+        ]
+        assert parsed.profile.rows == 4
+        assert parsed.context_lines[:4] == [
+            "Population on 1 January (invented test data)",
+            "Time frequency, Annual",
+            "Demographic indicator, Population on 1 January - total",
+            "Unit of measure, Number",
+        ]
+        assert not warned(parsed, "two lines")
+
+    def test_its_legend_below_a_blank_line_is_notes_not_rows(self) -> None:
+        parsed = parse_dataset(STATISTICS_EXPORT)
+
+        assert parsed.context_lines[4:] == [
+            "Special value",
+            ":, not available",
+            "Available flags:",
+            "b, break in time series",
+            "e, estimated",
+            "p, provisional",
+        ]
+        assert warned(parsed, "left out 6 lines below the table (notes or a source line)")
+        assert parsed.csv.splitlines()[-1].startswith("Deltaland,")
+
+    @pytest.mark.parametrize(
+        ("text", "rows"),
+        [
+            ("Land,2020,2021\nA,1,2\nB,3,4\nC,5,6\nD,,\nE,,\n", 5),  # directly under the data: rows, as before
+            ("Land,2020,2021\nA,1,2\nB,3,4\nC,5,6\n\nD,,\nE,,\n", 3),  # after a blank line: notes
+        ],
+    )
+    def test_rows_without_values_extend_the_table_only_up_to_a_blank_line(self, text: str, rows: int) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == rows
+        assert parsed.column_dtypes == {"Land": "text", "2020": "integer", "2021": "integer"}
+
+    def test_its_thousands_dots_and_colons_read_as_numbers_and_missing_cells(self) -> None:
+        parsed = parse_dataset(STATISTICS_EXPORT)
+
+        assert {name: parsed.column_dtypes[name] for name in ("2019", "2020", "2021", "2022")} == dict.fromkeys(
+            ("2019", "2020", "2021", "2022"), "integer"
+        )
+        assert parsed.csv.splitlines()[2] == "Betaland,845210,,,850774,e,852001,"
+        assert column(parsed, "2020").missing == 1 and column(parsed, "2021").missing == 1
+        assert warned(parsed, "column '2020': 1 cell read as missing (':')")
+        assert warned(parsed, "1 empty column without a header dropped")  # 2020's flags: none set
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Population by country (in thousands)\nLand,2020,2021,2022\nSchweiz,8.6,8.7,8.8\nÖsterreich,8.9,9.0,9.1\n"
+            "Italien,59.4,59.2,58.9\n",
+            "Bevölkerung in Mio.\n\nLand       2020   2021   2022\nSchweiz     8.6    8.7    8.8\n"
+            "Österreich  8.9    9.0    9.1\nItalien    59.4   59.2   58.9\n",
+        ],
+        ids=["csv", "space-aligned"],
+    )
+    def test_a_title_above_a_header_of_years(self, text: str) -> None:
+        """A title made the years a row and the title the header: the CSV read as one column of text."""
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {"Land": "text", "2020": "number", "2021": "number", "2022": "number"}
+        assert parsed.profile.rows == 3
+        assert len(parsed.context_lines) == 1
+
+    def test_a_header_of_months_below_metadata(self) -> None:
+        parsed = parse_dataset(
+            "Unit,Number,,\n\nRegion,Jan 2024,Feb 2024,Mar 2024\nNord,10,11,12\nSüd,20,21,22\nWest,30,31,32\n"
+        )
+
+        assert list(parsed.column_dtypes) == ["Region", "Jan 2024", "Feb 2024", "Mar 2024"]
+        assert parsed.context_lines == ["Unit, Number"]
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Name,Born,Died\nAnna,1901,1980\nBen,1910,1975\nCara,1920,1999\n",
+            "Source,Testamt,\nName,Born,Died\nAnna,1901,1980\nBen,1910,1975\nCara,1920,1999\n",
+            # Only the first row reads as a header of years; the line above names as many cells, so it stays.
+            "Name,Born,Died\nAnna,1901,1980\nBen,1910,\nCara,1920,\n",
+        ],
+    )
+    def test_a_header_above_rows_of_years_stays_the_header(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {"Name": "text", "Born": "integer", "Died": "integer"}
+        assert parsed.profile.rows == 3
+
+    def test_rows_that_all_read_as_years_give_no_header_of_their_own(self) -> None:
+        """Every row reads as a header of years, so none is one: the first row stays a row, as before."""
+        parsed = parse_dataset("Lifespans\nAnna,1901,1980\nBen,1910,1975\nCara,1920,1999\n")
+
+        assert "Anna" not in parsed.column_dtypes
+
+    def test_key_value_lines_never_join_into_the_header(self) -> None:
+        """Two key-value lines over a header with an empty cell joined into `Unit Country`, `Number Value`."""
+        parsed = parse_dataset(
+            "Source,Testamt,,\nUnit,Number,,\nCountry,Value,,Flag\nAlphaland,10,,p\nBetaland,20,,\nGammaland,30,,e\n"
+        )
+
+        assert list(parsed.column_dtypes) == ["Country", "Value", "Flag"]
+        assert parsed.context_lines == ["Source, Testamt", "Unit, Number"]
+        assert not warned(parsed, "two lines")
+
+
+class TestFlagsAndNotAvailable:
+    """A statistics export's flag columns and `:` cells (persona test of 2026-11-06)."""
+
+    def test_flag_columns_keep_their_flags_under_the_name_of_their_number_column(self) -> None:
+        parsed = parse_dataset("Land,2021,,2022,\nA,1.5,p,2.5,\nB,2.5,,3.5,e\nC,3.5,ep,4.5,\n")
+
+        assert parsed.column_dtypes == {
+            "Land": "text",
+            "2021": "number",
+            "2021 flag": "text",
+            "2022": "number",
+            "2022 flag": "text",
+        }
+        assert parsed.csv.splitlines()[1:] == ["A,1.5,p,2.5,", "B,2.5,,3.5,e", "C,3.5,ep,4.5,"]
+        assert warned(parsed, "2 columns of flags (")
+        assert warned(parsed, "kept as text columns named after them, such as '2021 flag', with 3 flagged cells")
+        assert not warned(parsed, "empty header named")
+
+    def test_the_statistics_export_counts_every_flag(self) -> None:
+        parsed = parse_dataset(STATISTICS_EXPORT)
+
+        assert warned(
+            parsed,
+            "3 columns of flags ('p', 'e', 'b') beside number columns kept as text columns named after them, such as "
+            "'2019 flag', with 6 flagged cells",
+        )
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "age,sex\n34,F\n41,M\n29,F\n",  # a named column of letters
+            "value,\n1,CH\n2,DE\n3,AT\n",  # country codes under an empty header
+            "Land,,2021\nA,p,1.5\nB,e,2.5\nC,,3.5\n",  # letters right of a text column
+            "Land,2021,\nA,1.5,note\nB,2.5,\nC,3.5,x\n",  # a word is no flag
+            "Land,,\nA,1.5,p\nB,2.5,\nC,3.5,e\n",  # beside a number column without a name to take
+        ],
+    )
+    def test_letters_that_are_no_flags_keep_their_column(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert not any(name.endswith(" flag") for name in parsed.column_dtypes)
+        assert not warned(parsed, "of flags")
+
+    def test_a_colon_is_missing_in_a_number_column_and_kept_in_a_text_column(self) -> None:
+        parsed = parse_dataset("Land,Wert,Note\nA,1.5,:\nB,:,x\nC,3.5,y\n")
+
+        assert column(parsed, "Wert").dtype == "number"
+        assert column(parsed, "Wert").missing == 1
+        assert warned(parsed, "column 'Wert': 1 cell read as missing (':')")
+        assert parsed.csv.splitlines()[1:] == ["A,1.5,:", "B,,x", "C,3.5,y"]
+
+    def test_a_declared_mark_and_a_colon_in_one_column_are_both_missing(self) -> None:
+        parsed = parse_dataset("Missing values: X\n\nLand,Wert\nA,1.5\nB,X\nC,:\nD,4.5\n")
+
+        assert column(parsed, "Wert").dtype == "number"
+        assert column(parsed, "Wert").missing == 2
+        assert warned(parsed, "1 cell of number or date columns matched the missing-value mark the notes declare")
+        assert warned(parsed, "column 'Wert': 1 cell read as missing (':')")
+
+    def test_a_colon_declared_as_the_mark_is_counted_once(self) -> None:
+        parsed = parse_dataset("Missing values: :\n\nLand,Wert\nA,1.5\nB,:\nC,4.5\n")
+
+        assert column(parsed, "Wert").missing == 1
+        assert warned(parsed, "1 cell of number or date columns matched the missing-value mark the notes declare")
+        assert not warned(parsed, "read as missing")
+
+    def test_the_services_own_csv_keeps_a_colon(self) -> None:
+        parsed = parse_dataset("a,b\n1,:\n2,3\n", canonical=True)
+
+        assert parsed.column_dtypes["b"] == "text"
+        assert parsed.csv.splitlines()[1] == "1,:"
+
+
+class TestMarkdownTables:
+    """A Markdown table as chat assistants write it: its alignment row under the header is layout, not a row."""
+
+    @pytest.mark.parametrize("rule", ["|-------|-------|", "|:------|------:|", "| :---: | --- |", "|---|:---:|"])
+    def test_the_alignment_row_leaves_the_header_and_the_rows_alone(self, rule: str) -> None:
+        parsed = parse_dataset(f"| Month | Sales |\n{rule}\n| Jan | 100 |\n| Feb | 120 |\n| Mar | 90 |\n")
+
+        assert parsed.profile.source_format == "pipe"
+        assert parsed.column_dtypes == {"Month": "text", "Sales": "integer"}
+        assert parsed.csv.splitlines()[1:] == ["Jan,100", "Feb,120", "Mar,90"]
+        assert not warned(parsed, "two lines")
+
+    def test_a_table_without_outer_pipes(self) -> None:
+        parsed = parse_dataset("Month | Sales\n--- | ---\nJan | 100\nFeb | 120\nMar | 90\n")
+
+        assert parsed.column_dtypes == {"Month": "text", "Sales": "integer"}
+        assert parsed.profile.rows == 3
+
+    def test_a_table_without_an_alignment_row_reads_as_before(self) -> None:
+        parsed = parse_dataset("| Month | Sales |\n| Jan | 100 |\n| Feb | 120 |\n| Mar | 90 |\n")
+
+        assert parsed.column_dtypes == {"Month": "text", "Sales": "integer"}
+        assert parsed.profile.rows == 3
+
+    def test_a_row_of_dashes_further_down_stays_a_row(self) -> None:
+        parsed = parse_dataset("| Month | Sales |\n|---|---|\n| Jan | 100 |\n| --- | --- |\n| Mar | 90 |\n")
+
+        assert list(parsed.column_dtypes) == ["Month", "Sales"]
+        assert parsed.csv.splitlines()[1:] == ["Jan,100", "---,---", "Mar,90"]
+
+    def test_a_sparse_first_row_of_dashes_under_the_header_is_never_dropped(self) -> None:
+        """No rule in every column, so no alignment row: its `---` is a missing value. A row without values right
+        under the header is `table_block`'s to read, as it always was (here as the header, the line above said as
+        left out); the rule only must not drop it silently."""
+        parsed = parse_dataset(
+            "| Land | Wert | Note |\n| --- | | |\n| A | 1.5 | x |\n| B | 2.5 | y |\n| C | 3.5 | z |\n"
+        )
+
+        assert "---" in parsed.column_dtypes
+        assert parsed.context_lines == ["Land | Wert | Note"]
+
+    def test_an_unnamed_first_column_keeps_its_alignment_row_out(self) -> None:
+        parsed = parse_dataset(
+            "| | 2020 | 2021 |\n|---|---:|---:|\n| CH | 8.6 | 8.7 |\n| AT | 8.9 | 9.0 |\n| IT | 59.4 | 59.2 |\n"
+        )
+
+        assert list(parsed.column_dtypes) == ["column_1", "2020", "2021"]
+        assert parsed.csv.splitlines()[1] == "CH,8.6,8.7"
+
+    @pytest.mark.parametrize(
+        ("text", "name", "dtype", "first"),
+        [
+            ("| Score |\n|-------|\n| 5 |\n| 7 |\n| 9 |\n", "Score", "integer", "5"),
+            ("| Name |\n|------|\n| Anna |\n| Ben |\n| Cara |\n", "Name", "text", "Anna"),
+        ],
+    )
+    def test_a_table_of_one_column(self, text: str, name: str, dtype: str, first: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {name: dtype}
+        assert parsed.profile.rows == 3
+        assert parsed.csv.splitlines()[1] == first

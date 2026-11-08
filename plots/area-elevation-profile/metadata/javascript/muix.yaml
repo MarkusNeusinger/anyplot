@@ -2,108 +2,114 @@ library: muix
 language: javascript
 specification_id: area-elevation-profile
 created: '2026-06-10T06:15:09Z'
-updated: '2026-06-10T06:22:50Z'
-generated_by: claude-sonnet
-workflow_run: 27256619946
+updated: '2026-11-08T00:51:38Z'
+generated_by: claude-opus-5-5
+adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
+workflow_run: 42430904492
 issue: 4578
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-elevation-profile/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - 'Real-world accurate Tour du Mont Blanc data: Les Houches (1010 m), Col de Voza
-    (1653 m exact), Col de la Seigne (2516 m exact), Courmayeur (1224 m) — all geographically
-    correct'
-  - Full spec compliance including area fill, start/end overlay labels, landmark reference
-    lines, and vertical exaggeration note
-  - Perfect theme adaptation via t.pageBg, t.ink, t.inkSoft, t.grid tokens — both
-    renders pass all legibility checks with no dark-on-dark failures
-  - Elegant toPixel coordinate-mapping helper for precise overlay label positioning
-    at start/end data points
-  - ChartsReferenceLine usage is idiomatic and distinctive to MUI X Charts
+  - Composes the annotation layer as a child of LineChart and places every label,
+    marker line and dot in data coordinates through useXScale, useYScale and useDrawingArea,
+    the MUI X composition idiom
+  - The vertical exaggeration note is computed from the drawing area's real px-per-metre
+    ratio (≈14×) instead of being typed, so it stays correct when the data or canvas
+    changes
+  - Every landmark has a dashed vertical marker that meets the profile exactly at
+    a dot on its elevation, with a bold name over a secondary-ink elevation value,
+    staggered onto two rows when landmarks lie close together
+  - Start and end labels sit at their own ends of the profile, lifted above the highest
+    stretch of line they span and tied back to the end points by short leaders, so
+    the profile never runs through them
+  - Area fill with baseline "min" fills the silhouette down to the bottom of the plot
+    in brand green at 35% opacity; chrome flips cleanly between the two themes while
+    the data colors stay identical
+  - 'Realistic, neutral data: the Tour du Mont Blanc stages 1–3 from Les Houches (1,010
+    m) to Courmayeur (1,224 m) over 60 km, with correct pass elevations (Col de Voza
+    1,653 m, Col de la Seigne 2,516 m)'
+  - Native MUI X tooltip on the line series gives distance and elevation on hover
+    in the HTML output
   weaknesses:
-  - 'Reference-line labels at fontSize: 12 CSS px (24 source px) are slightly below
-    the recommended 14-16 px range for axis-level text; consider bumping to 13-14px
-    for better legibility at small viewport widths'
-  - 'Design could be elevated further: a subtle vertical gradient fill (from palette[0]
-    at the profile line to a near-transparent tone at the baseline) would add visual
-    depth and differentiate this terrain silhouette from a generic area chart'
-  - 'LM-02 gap: no use of MUI X composed chart capabilities (e.g., combining the area
-    series with a reference-area band) that would be harder to replicate in other
-    libraries'
+  - 'Suggestion: the profile''s highest point (2,479 m at km 29, Col de la Croix du
+    Bonhomme) is unlabeled while the lower Col du Bonhomme on its shoulder is; labelling
+    the true high point would give the climb a clear focal point.'
+  - 'Suggestion: horizontal grid lines run through the ''Les Contamines'' and ''Courmayeur''
+    label blocks; a small page-colored halo behind label text would keep them crisp.'
+  - 'Suggestion: the profile is linearly interpolated between about 30 waypoints,
+    so the terrain reads as straight facets; a little deterministic small-scale relief
+    would look more like a sampled DEM.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct cream surface, not pure white
-      Chrome: Title "Tour du Mont Blanc · area-elevation-profile · javascript · muix · anyplot.ai" in dark ink at ~65% width, fully readable. Axis labels "Distance (km)" and "Elevation (m)" in dark ink at 16px, readable. Tick labels (800, 1000, ... 2600 on y-axis; 0, 5, 10 ... 40 on x-axis) in inkSoft at 14px, readable. Reference-line labels ("Col de Voza · 1653 m", etc.) at 12px, readable but slightly small. Overlay labels "Les Houches / 1010 m" and "Courmayeur / ◀ 1224 m" at 13px, readable.
-      Data: Brand green #009E73 area fill at 35% opacity with 2.5px profile line clearly visible against cream background. Three dashed vertical reference lines in inkSoft. Footer caption in muted ink.
-      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1 across the whole canvas, not pure white.
+      Chrome: title "area-elevation-profile · javascript · muix · anyplot.ai" in dark ink at the top left, with a secondary-ink subtitle "Les Houches → Courmayeur · 60 km transect · 121 samples · 6 landmarks". Axis titles "Distance (km)" and "Elevation (m)", ticks 0–60 every 5 km and 800–2,800 m every 200 m, subtle horizontal grid, left and bottom axis lines only. "Vertical exaggeration ≈ 14×" sits in the bottom-right corner of the x-axis band. All text reads dark on light.
+      Data: one brand-green (#009E73) profile line at 2.5 px with a translucent green fill down to the bottom of the plot. Six landmarks (Col de Voza, Les Contamines, Col du Bonhomme, Les Chapieux, Col de la Seigne, Arête du Mont Favre) have dashed vertical markers from staggered two-row labels (bold name over the elevation value) down to green dots on the profile. Les Houches (1,010 m) is labelled at the left end and Courmayeur (1,224 m) at the right, each with a short dashed leader to its end dot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark surface, not pure black
-      Chrome: Title in light/white text, fully readable against dark surface. Axis labels in light text, readable. Tick labels in light-gray (inkSoft for dark theme), readable. Reference-line labels in light text, readable. Overlay start/end labels using t.ink (light) and t.inkSoft (muted light), readable. Footer in muted light-gray. No dark-on-dark failures detected anywhere.
-      Data: Brand green #009E73 identical to light render — data color is unchanged, only chrome flips. Fill at 35% opacity produces a slightly darker green silhouette but remains clearly visible and distinguishable from the dark background.
-      Legibility verdict: PASS — all text is readable against the dark background; brand green is clearly visible; no element failures.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles, ticks, the exaggeration note and all landmark labels render in light ink; dashed markers in light secondary ink; grid subtle but visible. No dark-on-dark text anywhere.
+      Data: the same #009E73 line, dots and fill as in the light render (the fill reads as dark teal because of its translucency over the dark page); only the chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; readable in both themes. Minor: ChartsReferenceLine
-          labels at fontSize 12 CSS px are slightly below recommended 14-16px range.'
+        comment: 'Explicit sizes: title 22 px, axis titles 16 px, ticks 15 px, landmark
+          labels 15/14 px; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; overlay labels positioned correctly above data
-          points in background zone.
+        comment: Staggered landmark labels and lifted end labels keep all text clear
+          of other text and of the profile
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area fill at 35% opacity with 2.5px profile line clearly visible.
-          No markers appropriate for 81-point continuous area chart.
+        comment: 2.5 px line, 5 px landmark dots with page-colored outline, dashed
+          markers visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in brand green #009E73; high contrast on both surfaces;
-          CVD-safe.'
+        comment: Single hue, strong contrast on both surfaces; no color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills ~87% vertical and ~97% horizontal canvas space; balanced
-          margins; footer and title well-proportioned.
+        comment: 3200×1800; balanced axis bands, headroom for labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance (km) and Elevation (m) with units. Title includes descriptive
-          prefix in correct format.
+        comment: Distance (km) and Elevation (m), with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series uses t.palette[0]=#009E73. Background t.pageBg correct
-          for both themes. Text tokens t.ink/t.inkSoft theme-adaptive. Data colors
-          identical across renders.
+        comment: 'Imprint #009E73 for the only series, #FAF8F1 / #1A1A17 backgrounds,
+          theme-correct chrome'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,24 +117,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above plain configured default: 35% fill opacity creates effective
-          terrain silhouette, themed reference lines, overlay callouts show intentional
-          design. Not yet at strong design level.'
+        comment: 'Typographic hierarchy beyond the baseline: bold landmark names over
+          secondary-ink elevations, a secondary-ink route subtitle under the title'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed grid, axis lines at inkSoft with 0.4 opacity, no top/right
-          spines, appropriate margins. Some refinement above defaults.
+        comment: 'Label placement decided for this chart: two-row staggering by pixel
+          gap, end labels lifted above the local profile with leaders, exaggeration
+          note tucked into the x-axis band'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Strong geographic narrative with real TMB context, factually accurate
-          pass elevations, vertical exaggeration note. Lacks optional slope-based
-          gradient coloring.
+        comment: All landmarks get equal weight; no focal point chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: LineChart with area:true correctly implements filled terrain silhouette.
+        comment: Filled elevation profile along a transect
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area fill, start/end labels, landmark reference lines, vertical exaggeration
-          note, 81 sample points all present.
+        comment: Fill to plot bottom, start/end names with elevations at their own
+          ends, landmark vertical markers meeting the profile with labels, exaggeration
+          noted, units on both axes; optional slope coloring not used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Distance (km) on x-axis, elevation (m) on y-axis, all 40 km visible.
+        comment: Distance on x, elevation on y, all 121 samples in order, linear curve
+          with no overshoot; landmark dots sit on their samples
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format. No legend needed for single series.
+        comment: Mandated title format; legend N/A for a single series (hidden)
     data_quality:
       score: 15
       max: 15
@@ -168,22 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows area silhouette, elevation variation, landmark annotations,
-          start/end points, and vertical exaggeration.
+        comment: Several climbs and descents, a valley floor, three high passes, 6
+          landmarks plus named ends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tour du Mont Blanc is a real Alpine circuit. All place names and
-          geographic features are real. Neutral outdoor context.
+        comment: Tour du Mont Blanc Les Houches → Courmayeur, real place names with
+          plausible elevations; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Les Houches ~1010m, Col de Voza 1653m (exact), Col de la Seigne 2516m
-          (exact), Courmayeur ~1224m — all geographically accurate.
+        comment: 'Checked: 1,010–2,516 m over 60 km at 0.5 km spacing (121 samples,
+          in the 50–500 range); the exaggeration ≈14× matches the drawing area (≈0.33
+          px/m vertical vs ≈0.024 px/m horizontal)'
     code_quality:
       score: 10
       max: 10
@@ -193,64 +200,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Two small justified helpers (lerp, toPixel); clean data section and
-          chart component.
+        comment: Constants → data → plot; the one child component is needed to call
+          the MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded control points + piecewise linear
-          interpolation; no RNG.'
+        comment: Deterministic waypoint interpolation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart and ChartsReferenceLine both used; no unused imports.
+        comment: LineChart, hooks, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic React functional component; toPixel helper elegantly
-          maps data coordinates to CSS overlay positions.
+        comment: Appropriate complexity; nothing an available call computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles plot-{THEME}.png + .html output; uses current MUI
-          X API; skipAnimation present.
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 API (hideLegend,
+          axis height/width, per-chart CSS classes)
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert MUI X usage: area:true, ChartsReferenceLine, sx prop for
-          SVG overrides, axis labelStyle/tickLabelStyle, skipAnimation, ANYPLOT_TOKENS/ANYPLOT_SIZE
-          consumed correctly.'
+        comment: High-level LineChart with area + baseline "min", axis-level label/tick
+          styling, sx targeting .MuiLineChart-area/-line
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine is distinctive to MUI X Charts; sx-based SVG
-          styling is MUI-specific. No composed chart or more advanced MUI X features
-          that would score 5.
+        comment: Composition child using useXScale/useYScale/useDrawingArea to render
+          SVG annotations in data space, specific to MUI X's hook API
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T00:48:29Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - interpolation
   styling:
   - alpha-blending
+  - grid-styling
+  - edge-highlighting

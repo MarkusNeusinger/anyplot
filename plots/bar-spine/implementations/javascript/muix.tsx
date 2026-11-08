@@ -1,239 +1,210 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 95/100 | Updated: 2026-09-27
-import { BarChart } from "@mui/x-charts/BarChart";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
-const INK_MUTED = window.ANYPLOT_THEME === "light" ? "#6B6A63" : "#A8A79F";
 
-// Segment labels: a redundant text cue on top of stacking position so the
-// three-way split doesn't rely on hue alone. Fixed (theme-independent) fill
-// colors are picked per series for contrast against that series' fixed data
-// color, not the page theme.
-const MIN_LABEL_HEIGHT = 22; // px; hide the label if a segment can't fit one line of text
-const segmentLabel = (item, context) =>
-  context.bar.height < MIN_LABEL_HEIGHT ? null : `${item.value}%`;
-const LABEL_FILL = { retained: "#1A1A17", downgraded: "#1A1A17", churned: "#FAF8F1" };
-const labelSlotProps = (ownerState) => ({
-  style: { fill: LABEL_FILL[ownerState.seriesId], fontSize: 12, fontWeight: 600 },
-});
+// Constants
+const TITLE = "Customer Churn by Subscription Tier · bar-spine · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 40;
+const FULL = 100; // every spine bar spans the whole, 0 to 100 %
+const Y_TICKS = [0, 0.25, 0.5, 0.75, 1].map((f) => f * FULL);
+const DECIMALS = 1;
+const MIN_LABEL_W = 64; // px; a narrower segment keeps no percentage label
+const MIN_LABEL_H = 24; // px; a shorter segment keeps no percentage label
+// Outcome semantics: retained is good (green), downgraded a warning (amber), churned bad (red);
+// an outcome outside the map takes the unused palette positions in order
+const OUTCOME_COLORS = new Map([
+  ["Retained", t.palette[0]],
+  ["Downgraded", t.amber],
+  ["Churned", t.palette[4]],
+]);
+// Fixed label inks: segment fills keep their hex in both themes, so the ink follows the fill
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Customer counts per subscription tier, split into three outcomes: churned
-// (cancelled), downgraded (moved to a cheaper tier but stayed a customer),
-// and retained (stayed at the same tier). Bar WIDTH encodes each tier's
-// marginal share of the customer base; segment HEIGHT encodes the
-// conditional outcome split within that tier — the three-category split
-// showcases the spine plot's conditional-distribution feature better than a
-// binary churned/retained split would.
-const tiers = [
-  { name: "Free", churned: 1664, downgraded: 900, retained: 2636 },
-  { name: "Basic", churned: 651, downgraded: 500, retained: 1949 },
-  { name: "Pro", churned: 216, downgraded: 180, retained: 1404 },
-  { name: "Enterprise", churned: 42, downgraded: 20, retained: 638 },
+// Columns: set these to your data's column names
+const TIER = "Subscription tier"; // role: x_category
+const OUTCOME = "Outcome"; // role: fill_category
+const CUSTOMERS = "Customers"; // role: count
+
+// Data: replace this block with your own records, one object per row
+// Customers per subscription tier, split by what they did at renewal
+const data = [
+  { [TIER]: "Free", [OUTCOME]: "Retained", [CUSTOMERS]: 2636 },
+  { [TIER]: "Free", [OUTCOME]: "Downgraded", [CUSTOMERS]: 900 },
+  { [TIER]: "Free", [OUTCOME]: "Churned", [CUSTOMERS]: 1664 },
+  { [TIER]: "Basic", [OUTCOME]: "Retained", [CUSTOMERS]: 1949 },
+  { [TIER]: "Basic", [OUTCOME]: "Downgraded", [CUSTOMERS]: 500 },
+  { [TIER]: "Basic", [OUTCOME]: "Churned", [CUSTOMERS]: 651 },
+  { [TIER]: "Pro", [OUTCOME]: "Retained", [CUSTOMERS]: 1404 },
+  { [TIER]: "Pro", [OUTCOME]: "Downgraded", [CUSTOMERS]: 180 },
+  { [TIER]: "Pro", [OUTCOME]: "Churned", [CUSTOMERS]: 216 },
+  { [TIER]: "Enterprise", [OUTCOME]: "Retained", [CUSTOMERS]: 638 },
+  { [TIER]: "Enterprise", [OUTCOME]: "Downgraded", [CUSTOMERS]: 20 },
+  { [TIER]: "Enterprise", [OUTCOME]: "Churned", [CUSTOMERS]: 42 },
 ];
 
-const totals = tiers.map((d) => d.churned + d.downgraded + d.retained);
-const grandTotal = totals.reduce((sum, v) => sum + v, 0);
-const churnPct = tiers.map((d, i) => Math.round((d.churned / totals[i]) * 1000) / 10);
-const downgradePct = tiers.map((d, i) => Math.round((d.downgraded / totals[i]) * 1000) / 10);
-// Retained is the remainder, guaranteeing each stack sums to exactly 100%.
-const retainPct = tiers.map((_, i) => Math.round((100 - churnPct[i] - downgradePct[i]) * 10) / 10);
+// Plot: reads only data and the constants above
+// Tiers left to right and outcomes bottom to top, both in order of first appearance
+const tiers = [...new Set(data.map((d) => d[TIER]))];
+const outcomes = [...new Set(data.map((d) => d[OUTCOME]))];
+const rows = data.filter((d) => d[CUSTOMERS] != null);
+const tierTotals = tiers.map((tier) => rows.filter((d) => d[TIER] === tier).reduce((a, d) => a + d[CUSTOMERS], 0));
+const grandTotal = tierTotals.reduce((a, v) => a + v, 0);
 
-// --- Layout: variable-width columns, each a single 100%-stacked bar --------
-const PAD_H = 32;
-const PAD_V = 28;
-const GAP = 10;
-const AXIS_LABEL_W = 26; // rotated "Share of customers" caption, drawn outside the chart SVGs
-const TICK_W = 52; // reserved for the shared y-axis tick numbers, drawn only on the first column
-const TITLE_H = 34;
-const LEGEND_H = 28;
-const CAPTION_H = 24;
+// Bar edges on the count axis: each tier is as wide as its marginal count
+const tierStarts = tierTotals.map((_, i) => tierTotals.slice(0, i).reduce((a, v) => a + v, 0));
+const tierCenters = tierStarts.map((x0, i) => x0 + tierTotals[i] / 2);
+const tickLabels = new Map(
+  tierCenters.map((c, i) => [c, `${tiers[i]}\n${tierTotals[i].toLocaleString("en-US")}`]),
+);
 
-const rowWidth = size.width - PAD_H * 2;
-const barAreaWidth = rowWidth - AXIS_LABEL_W - TICK_W;
-const barWidths = totals.map((total) => Math.round((barAreaWidth * total) / grandTotal));
-barWidths[barWidths.length - 1] += barAreaWidth - barWidths.reduce((sum, w) => sum + w, 0);
-const chartWidths = barWidths.map((w, i) => (i === 0 ? TICK_W + w : w));
-const chartHeight = size.height - PAD_V * 2 - TITLE_H - LEGEND_H - CAPTION_H - GAP * 3;
+const spare = t.palette.filter((c) => ![...OUTCOME_COLORS.values()].includes(c));
+const unmatched = outcomes.filter((o) => !OUTCOME_COLORS.has(o));
+const outcomeColors = outcomes.map((o) => OUTCOME_COLORS.get(o) ?? spare[unmatched.indexOf(o)]);
+// Label ink per outcome: whichever fixed ink contrasts more with the outcome's fill
+const outcomeInks = outcomeColors.map((hex) => {
+  const [R, G, B] = [1, 3, 5].map((k) => {
+    const c = parseInt(hex.slice(k, k + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const lum = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  return (lum + 0.05) / 0.0603 >= 0.985 / (lum + 0.05) ? DARK_INK : LIGHT_INK;
+});
 
-const title = "Customer Churn by Subscription Tier · bar-spine · javascript · muix · anyplot.ai";
-const titleFontSize = Math.round(18 * (title.length > 67 ? 67 / title.length : 1));
+// Segments: conditional share of each outcome within its tier, stacked from zero to FULL
+const segments = tiers.flatMap((tier, ti) => {
+  let base = 0;
+  return outcomes.flatMap((outcome, oi) => {
+    const row = rows.find((d) => d[TIER] === tier && d[OUTCOME] === outcome);
+    if (!row || !tierTotals[ti]) return [];
+    const share = (row[CUSTOMERS] / tierTotals[ti]) * FULL;
+    const seg = {
+      key: `${ti}-${oi}`,
+      x0: tierStarts[ti],
+      x1: tierStarts[ti] + tierTotals[ti],
+      y0: base,
+      y1: base + share,
+      fill: outcomeColors[oi],
+      ink: outcomeInks[oi],
+      label: `${share.toFixed(DECIMALS)}%`,
+    };
+    base += share;
+    return [seg];
+  });
+});
 
-// Amber (downgraded) falls below WCAG 3:1 contrast on the cream background —
-// a thin ink-color stroke on that series only keeps the segment boundary
-// legible without adding noise to the higher-contrast green/red segments.
-const barSx = { "& .MuiBarElement-series-downgraded": { stroke: t.ink, strokeWidth: 1 } };
+const SUBTITLE = `Bar width ∝ ${CUSTOMERS.toLowerCase()} per ${TIER.toLowerCase()} (n = ${grandTotal.toLocaleString("en-US")}) · segment height = ${OUTCOME.toLowerCase()} share within the bar`;
 
-// Reference ticks at 25/50/75%, drawn as an overlay ON TOP of the bars (MUI
-// X's own `grid` prop paints behind the bar fills, invisible on a
-// fully-opaque 100%-stack) so readers can gauge the wide Free bar's segment
-// boundaries without tracing back to the shared y-axis. Kept short and
-// confined to the axis edge of the (widest) Free bar — its percentage labels
-// sit horizontally centered, well clear of this reach — so the ticks never
-// cross a label.
-const MARGIN_TOP = 8;
-const MARGIN_BOTTOM = 26;
-const REF_TICK_W = 130;
-const plotAreaHeight = chartHeight - MARGIN_TOP - MARGIN_BOTTOM;
-const refLines = [75, 50, 25].map((pct) => MARGIN_TOP + ((100 - pct) / 100) * plotAreaHeight);
+// Custom layer: the variable-width stacked bars, drawn in data coordinates
+function SpineSegments() {
+  const xScale = useXScale("count");
+  const yScale = useYScale("share");
 
-// --- Chart (default-exported component — the harness mounts it) -------------
-export default function Chart() {
   return (
-    <div
-      style={{
-        width: size.width,
-        height: size.height,
-        padding: `${PAD_V}px ${PAD_H}px`,
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        gap: GAP,
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
-      <div style={{ height: TITLE_H, fontSize: titleFontSize, fontWeight: 600, color: t.ink }}>
-        {title}
-      </div>
+    <g>
+      {segments.map((s) => {
+        const x = xScale(s.x0);
+        const w = xScale(s.x1) - x;
+        const y = yScale(s.y1);
+        const h = yScale(s.y0) - y;
+        return (
+          <g key={s.key}>
+            <rect x={x} y={y} width={w} height={h} fill={s.fill} stroke={t.elevatedBg} strokeWidth={1} />
+            {w >= MIN_LABEL_W && h >= MIN_LABEL_H && (
+              <text
+                x={x + w / 2}
+                y={y + h / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={s.ink}
+                fontSize={15}
+                fontWeight={600}
+              >
+                {s.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
 
-      <div
-        style={{
-          height: LEGEND_H,
-          display: "flex",
-          alignItems: "center",
-          gap: 20,
-          fontSize: 13,
-          color: t.inkSoft,
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
+  return (
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
+        </Typography>
+      </Box>
+      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "28px" }}>
+        {outcomes.map((outcome, i) => (
+          <Box key={outcome} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Box sx={{ width: 16, height: 16, borderRadius: "3px", bgcolor: outcomeColors[i] }} />
+            <Typography sx={{ fontSize: 15, color: t.ink }}>{outcome}</Typography>
+          </Box>
+        ))}
+      </Box>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
+        skipAnimation
+        series={[]}
+        xAxis={[
+          {
+            id: "count",
+            scaleType: "linear",
+            min: 0,
+            max: grandTotal,
+            label: TIER,
+            height: 84,
+            // One tick under the centre of each bar, named by its tier and its count
+            tickInterval: tierCenters,
+            valueFormatter: (v: number) => tickLabels.get(v) ?? "",
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 15, fill: t.ink },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "share",
+            scaleType: "linear",
+            min: 0,
+            max: FULL,
+            tickInterval: Y_TICKS,
+            label: `Share of ${CUSTOMERS.toLowerCase()} (%)`,
+            width: 72,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        margin={{ top: 12, right: 48, bottom: 8, left: 24 }}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
       >
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 11, height: 11, background: t.palette[0], display: "inline-block" }} />
-          Retained
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 11,
-              height: 11,
-              background: t.amber,
-              border: `1px solid ${t.ink}`,
-              boxSizing: "border-box",
-              display: "inline-block",
-            }}
-          />
-          Downgraded
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 11, height: 11, background: t.palette[4], display: "inline-block" }} />
-          Churned
-        </span>
-        <span style={{ marginLeft: "auto" }}>n = {grandTotal.toLocaleString("en-US")} customers</span>
-      </div>
-
-      <div style={{ display: "flex", height: chartHeight, position: "relative" }}>
-        <div
-          style={{
-            width: AXIS_LABEL_W,
-            height: chartHeight,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              transform: "rotate(-90deg)",
-              whiteSpace: "nowrap",
-              fontSize: 13,
-              color: t.inkSoft,
-            }}
-          >
-            Share of customers
-          </span>
-        </div>
-        {tiers.map((tier, i) => (
-          <BarChart
-            key={tier.name}
-            width={chartWidths[i]}
-            height={chartHeight}
-            skipAnimation
-            margin={{ top: MARGIN_TOP, right: 0, bottom: MARGIN_BOTTOM, left: i === 0 ? TICK_W : 0 }}
-            sx={barSx}
-            xAxis={[
-              {
-                scaleType: "band",
-                data: [tier.name],
-                categoryGapRatio: 0,
-                tickLabelStyle: { fontSize: 13 },
-                disableTicks: true,
-                disableLine: true,
-              },
-            ]}
-            yAxis={[
-              {
-                min: 0,
-                max: 100,
-                disableTicks: i !== 0,
-                disableLine: i !== 0,
-                valueFormatter: i === 0 ? (v) => `${v}%` : () => "",
-                tickLabelStyle: { fontSize: 12 },
-              },
-            ]}
-            series={[
-              {
-                id: "retained",
-                data: [retainPct[i]],
-                label: "Retained",
-                stack: "total",
-                color: t.palette[0],
-              },
-              {
-                id: "downgraded",
-                data: [downgradePct[i]],
-                label: "Downgraded",
-                stack: "total",
-                color: t.amber,
-              },
-              {
-                id: "churned",
-                data: [churnPct[i]],
-                label: "Churned",
-                stack: "total",
-                color: t.palette[4],
-              },
-            ]}
-            barLabel={segmentLabel}
-            slotProps={{ legend: { hidden: true }, barLabel: labelSlotProps }}
-          />
-        ))}
-        <div
-          style={{
-            position: "absolute",
-            left: AXIS_LABEL_W + TICK_W,
-            width: REF_TICK_W,
-            top: 0,
-            height: chartHeight,
-            pointerEvents: "none",
-          }}
-        >
-          {refLines.map((top) => (
-            <div
-              key={top}
-              style={{ position: "absolute", left: 0, right: 0, top, borderTop: `1px solid ${t.grid}` }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div style={{ height: CAPTION_H, fontSize: 12, fontStyle: "italic", color: INK_MUTED }}>
-        Bar width ∝ tier size · segment height = conditional retained/downgraded/churned rate within
-        tier
-      </div>
-    </div>
+        <SpineSegments />
+        <ChartsXAxis axisId="count" />
+        <ChartsYAxis axisId="share" />
+      </ChartsContainer>
+    </Box>
   );
 }

@@ -6,6 +6,7 @@ template literals, indirection through `globalThis`, `self` and `window`, `.cons
 dynamic `import()` and `require`. Each is refused by name or by shape, never by a helper name the test left unbound.
 """
 
+import re
 from collections import Counter
 
 import pytest
@@ -17,7 +18,7 @@ from agents.anyplot.code.profiles.javascript.validate import (
     validate_adaptation,
     validate_security,
 )
-from agents.anyplot.code.validate import Finding
+from agents.anyplot.code.validate import MAX_STRING_CHARS, Finding
 
 from .conftest import JS_CATALOGUE_FILES, JS_CATALOGUE_NORMALISED, JS_WORKING, MUIX_WORKING, js_library
 
@@ -599,25 +600,43 @@ def test_a_muix_7_import_is_an_adaptation_finding_not_a_security_one(line: str, 
     assert [(finding.rule, finding.message) for finding in findings] == [("unavailable-import", message)]
 
 
+KNOWN_FINDINGS: dict[str, frozenset[str]] = {
+    **{
+        f"qrcode-basic/{library}": frozenset({"url-literal"})
+        for library in ("chartjs", "d3", "echarts", "highcharts", "muix")
+    },
+    "line-parametric/chartjs": frozenset({"string-length"}),
+    "flowmap-origin-destination/muix": frozenset({"string-length"}),
+}
+"""The catalogue files the SECURITY profile flags, each for a real reason (8 files on 2026-10-30): qrcode-basic
+encodes the URL https://anyplot.ai in all five libraries (`url-literal`); line-parametric's Chart.js legend is a
+683-character HTML string and the MUI X flowmap-origin-destination, a map spec, writes coastlines as strings past 200
+characters (`string-length`). A regeneration may take a file off the list; a file on it for another rule, or one
+not on it, is a false refusal until shown otherwise."""
+URL_STRING = re.compile(r"""["'`](?:https?|ftp|wss?)://(?!www\.w3\.org/)""")
+"""A string that starts with a URL, the SVG, XLink and XHTML namespace URIs of `www.w3.org` excepted."""
+LONG_STRING = re.compile(rf'"[^"\\\n]{{{MAX_STRING_CHARS + 1},}}"|\'[^\'\\\n]{{{MAX_STRING_CHARS + 1},}}\'')
+"""A quoted string without escapes that is longer than the limit."""
+COMMENT_LINE = re.compile(r"^\s*//.*$", re.MULTILINE)
+"""A line that is only a comment (`// Pre-computed QR matrix for "https://anyplot.ai"`): no string of the code."""
+
+
 def test_catalogue_corpus() -> None:
-    """The SECURITY profile over the 1,617 normalised files on 2026-10-30: findings in 8 files only, each for a real
-    reason. qrcode-basic encodes the URL https://anyplot.ai in all five libraries (`url-literal`); line-parametric's
-    Chart.js legend is a 683-character HTML string (`string-length`); the MUI X flowmap-origin-destination, a map spec,
-    writes coastlines as strings past 200 characters (`string-length`)."""
-    flagged: dict[str, set[str]] = {}
+    """The SECURITY profile over every normalised catalogue file: no file is flagged that `KNOWN_FINDINGS` does not
+    name, or for a rule it does not name; and the text decides the rest, so the profile still finds what is there:
+    each URL string is a `url-literal` finding, each quoted string past `MAX_STRING_CHARS` characters a
+    `string-length` one (a template's length, with its substitutions, is left to the validator). The MUI X 9 pass
+    rewrites flagged files on purpose, so the test holds these rules, not the list of a day; the refused snippets
+    above keep each rule's reach when no catalogue file needs it any more."""
     for path in JS_CATALOGUE_FILES:
         library = js_library(path)
-        findings = validate_security(normalise(path.read_text(encoding="utf-8"), library=library), library=library)
-        if findings:
-            flagged[f"{path.parts[-4]}/{library}"] = rules(findings)
-
-    assert flagged == {
-        **{
-            f"qrcode-basic/{library}": {"url-literal"} for library in ("chartjs", "d3", "echarts", "highcharts", "muix")
-        },
-        "line-parametric/chartjs": {"string-length"},
-        "flowmap-origin-destination/muix": {"string-length"},
-    }
+        name = f"{path.parts[-4]}/{library}"
+        normalised = normalise(path.read_text(encoding="utf-8"), library=library)
+        findings = Counter(finding.rule for finding in validate_security(normalised, library=library))
+        assert set(findings) <= KNOWN_FINDINGS.get(name, frozenset()), (name, findings)
+        code = COMMENT_LINE.sub("", normalised)
+        assert findings["url-literal"] >= len(URL_STRING.findall(code)), name
+        assert findings["string-length"] >= len(LONG_STRING.findall(code)), name
 
 
 def test_the_catalogues_free_names_are_all_admitted() -> None:

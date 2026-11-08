@@ -138,6 +138,23 @@ def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> N
     assert sorted(bullet - buttons) == []
 
 
+def test_the_data_panel_bullet_keeps_the_card_open_and_folds_older_versions() -> None:
+    """Since the v4 chapters (2026-11-07) the live data card stays open in both steps: the pinned header above
+    the thread, whose `.show()` and `.hide()` opened and closed the card, went, and every older data version
+    folds to its label, which opens it read-only. The bullet says so, the folded version has no button the
+    bullet would have to name, and no header is left that the root could send the user to."""
+    section = controls_section()
+    start = section.index("\n- The data panel:")
+    bullet = section[start : section.find("\n", start + 1)]
+
+    assert "open in both steps" in bullet
+    assert "which opens it read-only, with nothing to press" in bullet
+    assert "open and close the card" not in bullet
+    assert "which is not the number the session block lists" in bullet
+    assert buttons_of([AGENT_CHAT / "FoldedData.tsx"]) == set()
+    assert not (AGENT_CHAT / "PinnedData.tsx").exists()
+
+
 def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None:
     """The same for the composer, its row and the data line above the box (`.example_data()` and `.open()`
     as links): a button added to it fails here until the bullet names it, and a button it lost fails until
@@ -190,7 +207,10 @@ def test_the_prompt_names_no_confirm_button() -> None:
 
     assert re.findall(r"\bconfirm\(\)", text) == []
     assert re.findall(r"\bconfirm\(\)", AGENT.read_text(encoding="utf-8")) == []
-    assert "the plot button at the end of the message box's row (`.create_plot()`)" in text
+    # By the box at every width: beside it from the page's `sm` up, under it on a phone.
+    assert "the plot button by the message box (`.create_plot()`)" in text
+    assert "plot button by the message box" in AGENT.read_text(encoding="utf-8")
+    assert "beside the message box" not in text + AGENT.read_text(encoding="utf-8")
 
 
 def test_the_prompt_never_has_a_reply_send_the_user_to_the_plot_button() -> None:

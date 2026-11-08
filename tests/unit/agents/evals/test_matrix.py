@@ -589,25 +589,51 @@ async def test_a_preflight_that_cannot_render_stops_before_the_first_case(
         )
 
 
+MUIX_7_IMPORT = 'import { ChartContainer } from "@mui/x-charts/ChartContainer";\n'
+"""MUI X 7's `ChartContainer` module, which the image's MUI X 9 does not export (`unavailable-import`)."""
+
+
+@pytest.fixture
+def muix_7_scatter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`scatter-basic`'s MUI X file as one written for MUI X 7: its own code with an import of
+    `@mui/x-charts/ChartContainer` before the first import. The catalogue file was such a file until the MUI X 9 pass
+    rewrote it (#12734), and the pass rewrites the others too, so these tests make their own instead of reading one."""
+    from agents.evals import cases as cases_module
+
+    real = cases_module.snapshot_from_repo
+
+    def snapshot(spec_id: str, library: str) -> Any:
+        found = real(spec_id, library)
+        if (spec_id, library) != ("scatter-basic", "muix"):
+            return found
+        first = found.code.index("\nimport ") + 1
+        return found.model_copy(update={"code": found.code[:first] + MUIX_7_IMPORT + found.code[first:]})
+
+    monkeypatch.setattr(cases_module, "snapshot_from_repo", snapshot)
+
+
+@pytest.mark.usefixtures("muix_7_scatter")
 async def test_the_preflight_passes_over_a_muix_file_written_for_muix_7(
     services: Services, backend: FakeBackend
 ) -> None:
-    """JS-4c: `scatter-basic`'s MUI X file imports MUI X 7's `ChartContainer`, which fails the bundle step until the
-    adapter rewrites it, so the preflight renders the library's next selected case whose file bundles as it stands,
-    and the other libraries keep their first case. The preflight checks the renderer, it evaluates no case."""
+    """JS-4c: a MUI X file that imports MUI X 7's `ChartContainer` (`scatter-basic`'s, `muix_7_scatter`) fails the
+    bundle step until the adapter rewrites it, so the preflight renders the library's next selected case whose file
+    bundles as it stands, and the other libraries keep their first case. The preflight checks the renderer, it
+    evaluates no case."""
     cases = select_cases(
         load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12"
     )
     assert [case.case_id for case in cases][:2] == ["scatter-basic-d3-n12", "scatter-basic-muix-date"]
+    assert MUIX_7_IMPORT in cases[1].snapshot().code
 
     await matrix.preflight(cases, services, echo=lambda _: None)
 
     rendered = {job.library: job.source for job in backend.jobs}
     assert set(rendered) == {"d3", "muix"}
     assert rendered["muix"] == normalised_code("violin-basic", "muix")
-    assert '"@mui/x-charts/ChartContainer"' in snapshot_code("scatter-basic", "muix")
 
 
+@pytest.mark.usefixtures("muix_7_scatter")
 async def test_a_selection_of_muix_7_files_alone_passes_the_preflight_through_the_smoke_case(
     services: Services, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
 ) -> None:

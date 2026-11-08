@@ -1,209 +1,165 @@
 // anyplot.ai
 // lift-curve: Model Lift Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
-//# anyplot-orientation: landscape
-
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Deterministic LCG — the browser has no seeded RNG, and Math.random() isn't reproducible.
-let seed = 42;
-function nextRandom() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-}
+// Constants
+const SLICES = 20; // the curve is evaluated at every 1/20 of the ranked population (5 % steps)
+const PERCENT_MAX = 100; // the targeted share runs from 0 to 100 %
+const X_TICK_STEPS = 10; // one tick every tenth of the population
+const NO_LIFT = 1; // a lift of 1 is random selection
+const KEY_PERCENTS = [10, 25, 50]; // targeted shares whose lift is written beside the curve
+const Y_HEADROOM_SHARE = 0.12; // room above the highest lift
+const X_PAD_SHARE = 0.015; // room right of 100 % so the last mark stays inside the plot
 
-// Simulated transaction population: fraud flag + model's predicted fraud score.
-// Fraudulent cases skew toward higher scores, but with enough noise that the
-// model isn't perfect — a realistic imperfect classifier. 3% base rate is in
-// line with real-world card-fraud incidence (well under the 8% used earlier).
-const populationSize = 2000;
-const fraudRate = 0.03;
-const trueLabels = [];
-const modelScores = [];
-for (let i = 0; i < populationSize; i += 1) {
-  const isFraud = nextRandom() < fraudRate ? 1 : 0;
-  const signal = isFraud ? 0.75 : 0.3;
-  const noise = (nextRandom() - 0.5) * 0.7;
-  modelScores.push(Math.min(1, Math.max(0, signal + noise)));
-  trueLabels.push(isFraud);
-}
+// Columns: set these to your data's column names
+const FRAUD = "Fraudulent transaction (1 = yes)"; // role: y_true
+const SCORE = "Model fraud score"; // role: y_score
 
-// Rank transactions by predicted score, descending — the order the model would target.
-const ranked = trueLabels
-  .map((label, i) => ({ label, score: modelScores[i] }))
-  .sort((a, b) => b.score - a.score);
+// Data: replace this block with your own records, one object per case
+// 2,000 card transactions with a 3 % fraud rate; fraud cases score around 0.75 and
+// legitimate ones around 0.30, with enough noise that the model is far from perfect.
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  return Array.from({ length: 2000 }, () => {
+    const fraud = rand() < 0.03 ? 1 : 0;
+    const score = Math.min(1, Math.max(0, (fraud ? 0.75 : 0.3) + (rand() - 0.5) * 0.7));
+    return { [FRAUD]: fraud, [SCORE]: Number(score.toFixed(4)) };
+  });
+})();
 
+// Plot: reads only data and the constants above
+// Cases ranked by score, highest first: the order in which the model would target them
+const ranked = data
+  .filter((d) => d[FRAUD] != null && d[SCORE] != null)
+  .sort((a, b) => b[SCORE] - a[SCORE]);
+const n = ranked.length;
+const cumulativePositives: number[] = [];
 let running = 0;
-const cumulativeFraud = ranked.map((r) => {
-  running += r.label;
-  return running;
+for (const d of ranked) {
+  running += d[FRAUD] === 1 ? 1 : 0;
+  cumulativePositives.push(running);
+}
+const positives = running;
+const baseRate = positives / n;
+
+// Cumulative lift: the response rate among the top share of the ranking over the base rate
+const percents = Array.from({ length: SLICES }, (_, i) => ((i + 1) * PERCENT_MAX) / SLICES);
+const lift = percents.map((p) => {
+  const cutoff = Math.max(1, Math.round((p / PERCENT_MAX) * n));
+  return cumulativePositives[cutoff - 1] / cutoff / baseRate;
 });
-const baselineRate = running / populationSize;
+const liftMax = Math.max(...lift, NO_LIFT);
+const keyPoints = KEY_PERCENTS.map((p) => percents.indexOf(p)).filter((i) => i >= 0);
 
-// Cumulative lift ratio at each 5% slice of the targeted population.
-const percentages = Array.from({ length: 20 }, (_, i) => (i + 1) * 5);
-const liftByPct = percentages.map((pct) => {
-  const cutoff = Math.round((pct / 100) * populationSize);
-  const targetedRate = cumulativeFraud[cutoff - 1] / cutoff;
-  return targetedRate / baselineRate;
-});
+const TITLE = "lift-curve · javascript · muix · anyplot.ai";
+const SUBTITLE =
+  `n = ${n.toLocaleString("en-US")} cases · ${positives} positive (base rate ${(baseRate * 100).toFixed(1)} %) · ` +
+  `marks every ${PERCENT_MAX / SLICES} % of the ranked population`;
+const HEADER_H = 84;
 
-// Key deciles called out with their exact lift value, per the spec's
-// suggestion to surface actual values at a few percentiles.
-const keyPercentiles = [10, 25, 50];
-const maxLift = liftByPct[0];
-
-// Labels the curve's own points at a few key deciles (must be a LineChart
-// child so useXScale/useYScale resolve against the chart's own axes).
-function KeyPercentileLabels() {
+function KeyLiftLabels() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale) return null;
-
   return (
     <g>
-      {keyPercentiles.map((pct) => {
-        const idx = percentages.indexOf(pct);
-        const value = liftByPct[idx];
-        const x = xScale(pct);
-        const y = yScale(value);
-        // Points near the curve's peak sit close to the top margin — flip
-        // the label below the point there so it never runs off-canvas.
-        const below = value > maxLift * 0.85;
-        return (
-          <text
-            key={pct}
-            x={x}
-            y={below ? y + 22 : y - 14}
-            textAnchor="middle"
-            fontSize={14}
-            fontWeight={600}
-            fill={t.ink}
-          >
-            {value.toFixed(1)}×
-          </text>
-        );
-      })}
+      {keyPoints.map((i) => (
+        <text
+          key={percents[i]}
+          x={xScale(percents[i]) + 12}
+          y={yScale(lift[i]) - 14}
+          textAnchor="start"
+          fontSize={15}
+          fontWeight={600}
+          fill={t.ink}
+        >
+          {`${lift[i].toFixed(2)}× at ${percents[i]} %`}
+        </text>
+      ))}
     </g>
   );
 }
 
-// A rotated y-axis title, positioned explicitly to clear the "×"-suffixed
-// tick labels — drawn by hand instead of leaning on the built-in `yAxis.label`,
-// whose only offset lever (the deprecated `tickFontSize`) also resizes the
-// tick text itself, forcing a fight between the two concerns.
-function YAxisTitle() {
-  const { left, top, height } = useDrawingArea();
-  const x = left - 78;
-  const y = top + height / 2;
-  return (
-    <text
-      x={x}
-      y={y}
-      textAnchor="middle"
-      dominantBaseline="middle"
-      fontSize={16}
-      fill={t.ink}
-      transform={`rotate(-90 ${x} ${y})`}
-    >
-      Cumulative lift
-    </text>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      {/* Title rendered in the chart's top margin space */}
-      <div
-        style={{
-          position: "absolute",
-          top: 14,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          zIndex: 1,
-          fontSize: 22,
-          fontWeight: 500,
-          color: t.ink,
-          pointerEvents: "none",
-          fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
-        }}
-      >
-        Fraud Detection Lift · lift-curve · javascript · muix · anyplot.ai
-      </div>
+  const { width, height } = window.ANYPLOT_SIZE;
 
+  return (
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.6 }}>{SUBTITLE}</Typography>
+      </Box>
       <LineChart
-        width={window.ANYPLOT_SIZE.width}
-        height={window.ANYPLOT_SIZE.height}
+        width={width}
+        height={height - HEADER_H}
         skipAnimation
+        hideLegend
+        grid={{ horizontal: true }}
+        margin={{ top: 16, right: 48, bottom: 16, left: 20 }}
         series={[
           {
-            data: liftByPct,
+            id: "lift",
+            data: lift,
+            label: "Cumulative lift",
             color: t.palette[0],
-            curve: "monotoneX",
+            curve: "linear",
             showMark: true,
+            shape: "circle",
+            valueFormatter: (v) => `${v.toFixed(2)}×`,
           },
         ]}
         xAxis={[
           {
-            data: percentages,
-            scaleType: "point",
-            label: "Population targeted (%)",
-            valueFormatter: (v) => `${v}%`,
+            data: percents,
+            scaleType: "linear",
+            min: 0,
+            max: PERCENT_MAX * (1 + X_PAD_SHARE),
+            tickInterval: Array.from({ length: X_TICK_STEPS + 1 }, (_, i) => (i * PERCENT_MAX) / X_TICK_STEPS),
+            valueFormatter: (v: number) => `${v} %`,
+            label: "Population targeted, ranked by score (%)",
+            height: 64,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             min: 0,
-            valueFormatter: (v) => `${v.toFixed(1)}×`,
+            max: liftMax * (1 + Y_HEADROOM_SHARE),
+            width: 72,
+            label: "Cumulative lift (model rate ÷ base rate)",
+            valueFormatter: (v: number) => `${v.toFixed(1)}×`,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true }}
         sx={{
-          "& .MuiChartsAxis-label": {
-            fontSize: "16px !important",
-          },
-          "& .MuiChartsAxis-tickLabel": {
-            fontSize: "14px !important",
-          },
-          "& .MuiLineElement-root": {
-            strokeWidth: "3.5px",
-          },
-          "& .MuiMarkElement-root": {
-            strokeWidth: "2px",
-          },
+          "& .MuiLineChart-line": { strokeWidth: 3.5 },
+          "& .MuiLineChart-mark": { strokeWidth: 2.5 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
-        slotProps={{
-          legend: { hidden: true },
-        }}
-        margin={{ top: 70, right: 60, bottom: 70, left: 100 }}
       >
         <ChartsReferenceLine
-          y={1}
-          label="Random targeting (no lift)"
+          y={NO_LIFT}
+          label="Random selection (lift 1×)"
           labelAlign="start"
-          lineStyle={{
-            stroke: t.ink,
-            strokeDasharray: "6 4",
-            strokeWidth: 2,
-            strokeOpacity: 0.6,
-          }}
-          labelStyle={{
-            fill: t.inkSoft,
-            fontSize: 14,
-          }}
+          spacing={{ x: 10, y: 10 }}
+          labelStyle={{ fontSize: 15, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeWidth: 2, strokeDasharray: "8 5" }}
         />
-        <KeyPercentileLabels />
-        <YAxisTitle />
+        <KeyLiftLabels />
       </LineChart>
-    </div>
+    </Box>
   );
 }

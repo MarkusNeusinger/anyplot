@@ -1,69 +1,78 @@
 """ anyplot.ai
 line-basic: Basic Line Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-04-29
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-07
 """
 
 import os
-import sys
+
+import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
-# Pop script directory so local pygal.py doesn't shadow the installed package
-_script_dir = sys.path.pop(0)
-
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
-
-
-sys.path.insert(0, _script_dir)
-
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-temperatures = [2.3, 3.5, 7.2, 11.8, 16.4, 19.8, 22.1, 21.5, 17.6, 12.3, 7.1, 3.4]
+# Columns: set these to your table's column names
+DAY = "Date"  # role: x
+VISITORS = "Daily visitors (thousands)"  # role: y
 
-# Style
+# Data: replace this block with your own table, for example df = pd.read_csv("traffic.csv")
+rng = np.random.default_rng(7)
+dates = pd.date_range("2025-03-03", periods=70, freq="D")
+weekly = np.where(dates.day_of_week >= 5, -3.5, 0.0)
+growth = np.linspace(0, 9, len(dates))
+df = pd.DataFrame({DAY: dates, VISITORS: (24 + growth + weekly + rng.normal(0, 1.6, len(dates))).round(1)})
+
+# Plot
+labels = df[DAY].dt.strftime("%b %d").tolist()
+major_labels = labels[::7]
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=72,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
     label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
+    major_label_font_size=40,
+    legend_font_size=40,
     value_font_size=36,
-    stroke_width=3,
+    stroke_width=4,
 )
 
-# Plot
 chart = pygal.Line(
-    width=4800,
-    height=2700,
-    title="line-basic · pygal · anyplot.ai",
-    x_title="Month",
-    y_title="Temperature (°C)",
+    width=3200,
+    height=1800,
+    title="line-basic · python · pygal · anyplot.ai",
+    x_title=DAY,
+    y_title=VISITORS,
     style=custom_style,
+    show_legend=False,
     show_dots=True,
-    dots_size=8,
-    stroke_style={"width": 5},
+    dots_size=5,
+    stroke_style={"width": 4},
     show_y_guides=True,
     show_x_guides=False,
     x_label_rotation=0,
-    legend_at_bottom=True,
-    truncate_legend=-1,
+    show_minor_x_labels=False,
+    truncate_label=-1,
+    x_labels_major=major_labels,
+    range=(float(np.floor(df[VISITORS].min() - 2)), float(np.ceil(df[VISITORS].max() + 2))),
 )
 
-chart.x_labels = months
-chart.add("Average Temperature", temperatures)
+chart.x_labels = labels
+chart.add(VISITORS, df[VISITORS].tolist())
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")

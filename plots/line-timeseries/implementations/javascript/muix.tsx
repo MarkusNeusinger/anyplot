@@ -1,200 +1,186 @@
 // anyplot.ai
 // line-timeseries: Time Series Line Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-05
-
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG PRNG — no fetch, no Math.random) ----
-let seed = 11;
-function rand() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
+// Constants
+const DAY_MS = 86_400_000;
+const DAY_ROW_MAX_DAYS = 14; // up to this span the ticks show times of day under a row of day labels
+const MONTH_DAY_MAX_DAYS = 730; // up to this span the ticks show month and day, beyond it the year
+const Y_PAD_SHARE = 0.1; // share of the value range added below and above the line
+
+// Columns: set these to your data's column names
+const TIMESTAMP = "Timestamp"; // role: date
+const TEMP = "Air temperature (°F)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// Hourly rooftop sensor readings for one week: diurnal cycle, a gentle warm-up and sensor noise.
+const data = (() => {
+  let seed = 11;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const start = new Date(2024, 5, 3, 0, 0).getTime();
+  return Array.from({ length: 7 * 24 }, (_, i) => {
+    const diurnal = 8 * Math.sin((((i % 24) - 9) / 24) * 2 * Math.PI);
+    const warmup = Math.floor(i / 24) * 0.7;
+    const noise = (rand() - 0.5) * 2.2;
+    return { [TIMESTAMP]: new Date(start + i * 3_600_000), [TEMP]: Math.round((61 + diurnal + warmup + noise) * 10) / 10 };
+  });
+})();
+
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[TIMESTAMP] - b[TIMESTAMP]);
+const times = rows.map((d) => d[TIMESTAMP]);
+const values = rows.map((d) => d[TEMP]);
+const tMin = times[0].getTime();
+const tMax = times[times.length - 1].getTime();
+const spanDays = (tMax - tMin) / DAY_MS;
+const unit = TEMP.match(/\(([^)]+)\)/)?.[1] ?? "";
+
+const present = values.filter((v) => v != null);
+const yLow = Math.min(...present);
+const yHigh = Math.max(...present);
+const yPad = (yHigh - yLow) * Y_PAD_SHARE;
+
+// Tick format adapts to the span of the data; a short span adds a row of day labels below the times
+const tickFormat =
+  spanDays <= DAY_ROW_MAX_DAYS
+    ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+    : spanDays <= MONTH_DAY_MAX_DAYS
+      ? { month: "short", day: "numeric" }
+      : { year: "numeric" };
+const days = [];
+if (spanDays <= DAY_ROW_MAX_DAYS) {
+  const cursor = new Date(tMin);
+  cursor.setHours(0, 0, 0, 0);
+  while (cursor.getTime() <= tMax) {
+    const dayStart = cursor.getTime();
+    cursor.setDate(cursor.getDate() + 1);
+    days.push({
+      start: Math.max(dayStart, tMin),
+      end: Math.min(cursor.getTime(), tMax),
+      label: new Date(dayStart).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+    });
+  }
 }
+const formatFull = (d: Date) =>
+  d.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const formatDay = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-const DAYS = 7;
-const HOURS = DAYS * 24; // hourly rooftop sensor readings for one week
-const timestamps: Date[] = [];
-const start = new Date(2024, 5, 3, 0, 0); // Mon Jun 3, 2024, 00:00
-for (let i = 0; i < HOURS; i++) {
-  timestamps.push(new Date(start.getTime() + i * 3_600_000));
-}
+const TITLE = "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai";
+const SUBTITLE = `${rows.length} readings · ${formatDay(times[0])} to ${formatDay(times[times.length - 1])} · ${yLow} to ${yHigh} ${unit}`;
+const HEADER_H = 80;
+const X_AXIS_H = days.length > 0 ? 112 : 72;
 
-// Diurnal cycle (peak mid-afternoon, trough before dawn) plus a gentle
-// week-long warm-up and hour-to-hour sensor noise.
-const temperatures: number[] = [];
-for (let i = 0; i < HOURS; i++) {
-  const hourOfDay = i % 24;
-  const dayIndex = Math.floor(i / 24);
-  const diurnal = 8 * Math.sin(((hourOfDay - 9) / 24) * 2 * Math.PI);
-  const weekWarmup = dayIndex * 0.7;
-  const noise = (rand() - 0.5) * 2.2;
-  temperatures.push(Math.round((61 + diurnal + weekWarmup + noise) * 10) / 10);
-}
-
-const minTemp = Math.min(...temperatures);
-const maxTemp = Math.max(...temperatures);
-const tempRange = maxTemp - minTemp;
-const Y_MIN = Math.floor(minTemp - tempRange * 0.15);
-const Y_MAX = Math.ceil(maxTemp + tempRange * 0.15);
-
-// Midnight and noon get a fine "%H:%M" tick — enough to anchor the diurnal
-// shape without the row collapsing into an unreadable smear once the PNG is
-// downscaled for mobile/thumbnail previews.
-const HOUR_TICK_STEP = 12;
-
-// Day-boundary indices anchor the coarser weekday row drawn below the axis.
-const dayStartIndices = timestamps.map((_, i) => i).filter((i) => i % 24 === 0);
-
-// Two-tier date axis: MUI X community has no built-in multi-scale date
-// formatter (the kind d3-time-format's `multiFormat` gives you), so the
-// intelligent adaptation the spec calls for — fine "%H:%M" ticks nested
-// under a coarser weekday/date row — is composed by hand against the shared
-// xAxis scale via useXScale/useDrawingArea, the documented ChartContainer
-// composition pattern for marks outside the community surface.
-function DayBoundaries() {
-  const xScale = useXScale() as any;
-  const drawingArea = useDrawingArea();
-  if (!xScale) return null;
-
-  const bottom = drawingArea.top + drawingArea.height;
-
+function DayRow() {
+  const xScale = useXScale();
+  const { top, height } = useDrawingArea();
+  const bottom = top + height;
   return (
     <g>
-      {dayStartIndices.map((dayStart) => {
-        const dayEnd = Math.min(dayStart + 23, HOURS - 1);
-        const xStart = xScale(timestamps[dayStart]);
-        const xEnd = xScale(timestamps[dayEnd]);
-        const label = timestamps[dayStart].toLocaleDateString("en-US", {
-          weekday: "short",
-          month: "numeric",
-          day: "numeric",
-        });
-
-        return (
-          <g key={dayStart}>
-            {dayStart > 0 && (
+      {days.map((day) => (
+        <g key={day.start}>
+          {/* The separator breaks at the tick row so it never crosses the "00:00" labels */}
+          {day.start > tMin &&
+            [
+              [top, bottom],
+              [bottom + 34, bottom + 62],
+            ].map(([y1, y2]) => (
               <line
-                x1={xStart}
-                y1={drawingArea.top}
-                x2={xStart}
-                y2={bottom + 34}
-                stroke={t.grid}
+                key={y1}
+                x1={xScale(new Date(day.start))}
+                x2={xScale(new Date(day.start))}
+                y1={y1}
+                y2={y2}
+                stroke={t.inkSoft}
+                strokeOpacity={0.5}
                 strokeWidth={1}
                 strokeDasharray="3 3"
               />
-            )}
-            <text
-              x={(xStart + xEnd) / 2}
-              y={bottom + 58}
-              textAnchor="middle"
-              fontSize={14}
-              fontWeight={600}
-              fill={t.ink}
-            >
-              {label}
-            </text>
-          </g>
-        );
-      })}
+            ))}
+          <text
+            x={(xScale(new Date(day.start)) + xScale(new Date(day.end))) / 2}
+            y={bottom + 54}
+            textAnchor="middle"
+            fontSize={15}
+            fontWeight={600}
+            fill={t.ink}
+          >
+            {day.label}
+          </text>
+        </g>
+      ))}
     </g>
   );
 }
 
-const TITLE =
-  "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const titleSize =
-    TITLE.length > 67 ? Math.max(14, Math.round((22 * 67) / TITLE.length)) : 22;
-
-  const TITLE_H = 60;
-  const chartH = H - TITLE_H;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
-        boxSizing: "border-box",
-      }}
-    >
-      <Box
-        sx={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>
-          {TITLE}
-        </Typography>
-      </Box>
-
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 112px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
       <LineChart
-        width={W}
-        height={chartH}
+        width={width}
+        height={height - HEADER_H}
         skipAnimation
-        series={[
-          {
-            id: "temperature",
-            data: temperatures,
-            showMark: false,
-            area: true,
-            color: t.palette[0],
-            valueFormatter: (v: number | null) =>
-              v == null ? "" : `${v.toFixed(1)}°F`,
-          },
-        ]}
+        hideLegend
+        grid={{ horizontal: true, vertical: true }}
+        margin={{ top: 16, right: 48, bottom: 12, left: 24 }}
         xAxis={[
           {
-            data: timestamps,
-            scaleType: "point",
-            valueFormatter: (d: Date) =>
-              d.toLocaleTimeString("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            tickInterval: (_value: Date, index: number) =>
-              index % HOUR_TICK_STEP === 0,
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            data: times,
+            scaleType: "time",
+            min: times[0],
+            max: times[times.length - 1],
+            tickNumber: 14,
+            valueFormatter: (v: Date, context) =>
+              context.location === "tick" ? v.toLocaleString("en-US", tickFormat) : formatFull(v),
+            label: TIMESTAMP,
+            height: X_AXIS_H,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Temperature (°F)",
-            min: Y_MIN,
-            max: Y_MAX,
-            valueFormatter: (v: number) => `${Math.round(v)}°`,
-            labelStyle: { fontSize: 15, fill: t.ink },
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            min: yLow - yPad,
+            max: yHigh + yPad,
+            label: TEMP,
+            width: 84,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true, vertical: true }}
-        slotProps={{ legend: { hidden: true } }}
-        margin={{ top: 24, right: 40, bottom: 112, left: 84 }}
+        series={[
+          {
+            id: "value",
+            data: values,
+            label: TEMP,
+            color: t.palette[0],
+            curve: "linear",
+            showMark: false,
+            valueFormatter: (v: number | null) => (v == null ? "" : `${v.toFixed(1)} ${unit}`),
+          },
+        ]}
         sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiAreaElement-root": { fill: t.palette[0], fillOpacity: 0.12 },
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.25 },
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeOpacity: 0.5 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
-        <DayBoundaries />
+        <DayRow />
       </LineChart>
-    </Box>
+    </div>
   );
 }
