@@ -18,7 +18,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const TITLE = "heatmap-adjacency · javascript · muix · anyplot.ai";
 const TITLE_H = 96;
-const LEGEND_W = 150;
+const LEGEND_W = 190;
 const X_AXIS_H = 34;
 const Y_AXIS_W = 64;
 const TEAM_LABEL_H = 44;
@@ -210,9 +210,11 @@ export default function Chart() {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
+              pr: "24px",
+              boxSizing: "border-box",
             }}
           >
-            <Typography sx={{ fontSize: 15, color: t.ink, textAlign: "center", lineHeight: 1.3, maxWidth: 130, mb: "10px" }}>
+            <Typography sx={{ fontSize: 15, color: t.ink, textAlign: "center", lineHeight: 1.3, maxWidth: 160, mb: "10px", textWrap: "balance" }}>
               {WEIGHT}
             </Typography>
             <ContinuousColorLegend
