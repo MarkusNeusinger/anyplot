@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 climograph-walter-lieth: Walter-Lieth Climate Diagram
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-08
@@ -14,6 +14,7 @@ if _script_dir in sys.path:
     sys.path.remove(_script_dir)
 
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
@@ -32,29 +33,48 @@ TEMP_COLOR = "#AE3030"
 # Walter-Lieth convention: 10 °C on the temperature axis lines up with 20 mm on the precipitation axis
 MM_PER_DEGREE = 2
 
-# Station: Athens, Greece — Mediterranean Csa (1991-2020 normals)
-station = "Athens, Greece"
-elevation = 107
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-temp_c = [9.3, 10.3, 12.4, 16.3, 21.0, 26.1, 28.7, 28.5, 24.1, 19.2, 14.3, 10.7]
-precip_mm = [48, 36, 33, 23, 17, 7, 6, 5, 11, 46, 54, 57]
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: month
+TEMPERATURE = "Temperature (°C)"  # role: temperature
+PRECIPITATION = "Precipitation (mm)"  # role: precipitation
+STATION = "Station"  # role: station_name
+ELEVATION = "Elevation (m)"  # role: elevation
+
+# Data: replace this block with your own table, for example df = pd.read_csv("station_normals.csv")
+# Athens, Greece — Mediterranean Csa (1991-2020 normals)
+df = pd.DataFrame(
+    {
+        MONTH: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        TEMPERATURE: [9.3, 10.3, 12.4, 16.3, 21.0, 26.1, 28.7, 28.5, 24.1, 19.2, 14.3, 10.7],
+        PRECIPITATION: [48, 36, 33, 23, 17, 7, 6, 5, 11, 46, 54, 57],
+        STATION: "Athens, Greece",
+        ELEVATION: 107,
+    }
+)
 
 # Plot: both curves on the temperature scale, precipitation divided by MM_PER_DEGREE
-temp = np.array(temp_c)
-precip_scaled = np.array(precip_mm) / MM_PER_DEGREE
-month_x = np.arange(1, len(months) + 1)  # month numbers; no tick at 0, so pygal draws its left spine
-temp_annual = temp.mean()
-precip_annual = sum(precip_mm)
+months = df[MONTH].astype(str).tolist()
+temp = df[TEMPERATURE].to_numpy(dtype=float, na_value=np.nan)
+precip = df[PRECIPITATION].to_numpy(dtype=float, na_value=np.nan)
+precip_scaled = precip / MM_PER_DEGREE
+month_x = np.arange(1, len(df) + 1)  # month numbers; no tick at 0, so pygal draws its left spine
+station = df[STATION].iloc[0]
+elevation = df[ELEVATION].iloc[0]
+temp_annual = np.nanmean(temp)
+precip_annual = np.nansum(precip)
 
-# Fill polygons between the straight month-to-month segments, split exactly where the curves cross
-diff = precip_scaled - temp
-xs = [month_x[0]]
-for i in range(len(months) - 1):
+# Fill polygons between the straight month-to-month segments, split exactly where the curves cross;
+# months missing either value are left out of the fills
+valid = ~(np.isnan(temp) | np.isnan(precip))
+fx, ft, fp = month_x[valid], temp[valid], precip_scaled[valid]
+diff = fp - ft
+xs = [fx[0]]
+for i in range(len(fx) - 1):
     if diff[i] * diff[i + 1] < 0:
-        xs.append(month_x[i] + diff[i] / (diff[i] - diff[i + 1]))
-    xs.append(month_x[i + 1])
+        xs.append(fx[i] + diff[i] / (diff[i] - diff[i + 1]))
+    xs.append(fx[i + 1])
 xs = np.array(xs)
-t_at, p_at = np.interp(xs, month_x, temp), np.interp(xs, month_x, precip_scaled)
+t_at, p_at = np.interp(xs, fx, ft), np.interp(xs, fx, fp)
 humid_segment = (p_at[:-1] + p_at[1:]) > (t_at[:-1] + t_at[1:])
 
 polygons = []  # (humid, points): upper curve forward, lower curve back
@@ -68,13 +88,14 @@ for k in range(1, len(humid_segment) + 1):
         start = k
 
 # Axes: temperature ticks every 10 °C on the left, the matching mm ticks on the right
-top = max(35.0, np.ceil(max(temp.max(), precip_scaled.max()) / 10) * 10 + 5)
-temp_ticks = list(range(0, int(top), 10))
+bottom = min(0.0, np.floor(min(np.nanmin(temp), np.nanmin(precip_scaled)) / 10) * 10)
+top = max(35.0, np.ceil(max(np.nanmax(temp), np.nanmax(precip_scaled)) / 10) * 10 + 5)
+temp_ticks = list(range(int(bottom), int(top), 10))
 precip_range = (MM_PER_DEGREE * temp_ticks[0], MM_PER_DEGREE * temp_ticks[-1])
 
 title = (
     "climograph-walter-lieth · python · pygal · anyplot.ai\n"
-    f"{station} · {elevation} m a.s.l. · mean {temp_annual:.1f} °C · total {precip_annual} mm"
+    f"{station} · {elevation} m a.s.l. · mean {temp_annual:.1f} °C · total {precip_annual:.0f} mm"
 )
 
 polygon_colors = tuple(PRECIP_COLOR if humid else TEMP_COLOR for humid, _ in polygons)
@@ -102,13 +123,15 @@ custom_style = Style(
 )
 
 polygon_lines = ", ".join(f".serie-{i} .line" for i in range(len(polygons)))
+# The two curves follow the polygons: their legend boxes become opaque line strokes, centred in the box
+curve_legends = ", ".join(f"#activate-serie-{i} rect" for i in (len(polygons), len(polygons) + 1))
 chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
     title=title,
-    x_title="Month",
-    y_title="Temperature (°C)",
+    x_title=MONTH,
+    y_title=TEMPERATURE,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
@@ -117,7 +140,7 @@ chart = pygal.XY(
     show_x_guides=False,
     show_y_guides=True,
     xrange=(month_x[0] - 0.4, month_x[-1] + 0.4),
-    range=(0, top),
+    range=(bottom, top),
     secondary_range=precip_range,
     value_formatter=lambda v: f"{v:g} mm",  # the right axis; the left ticks carry their own labels
     margin=40,
@@ -126,6 +149,8 @@ chart = pygal.XY(
         "file://style.css",
         "file://graph.css",
         f"inline:{polygon_lines} {{ stroke-width: 0 !important; }}",
+        f"inline:{curve_legends} {{ height: 8px; transform: translate(0px, 16px); fill-opacity: 1 !important; }}",
+        "inline:.axis.y .guides text { transform: translate(-14px, 0px); }",  # clear the right-aligned labels off the spine
         "inline:.titles text.plot_title { font-weight: bold; }",
         "inline:.titles text.plot_title + text.plot_title { font-weight: normal; font-size: 46px; }",
     ),
@@ -143,15 +168,16 @@ for humid, points in polygons:
     name = "Humid period (P above T)" if humid else "Arid period (T above P)"
     chart.add(None if name in seen else name, points, fill=True, show_dots=False)
     seen.add(name)
+# A missing month becomes a gap in its curve
 chart.add(
-    "Temperature (°C, left axis)",
-    list(zip(month_x, temp, strict=True)),
+    f"{TEMPERATURE}, left axis",
+    [(x, None if np.isnan(t) else t) for x, t in zip(month_x, temp, strict=True)],
     dots_size=8,
     formatter=lambda p: f"{p[1]:.1f} °C",
 )
 chart.add(
-    "Precipitation (mm, right axis)",
-    list(zip(month_x, precip_mm, strict=True)),
+    f"{PRECIPITATION}, right axis",
+    [(x, None if np.isnan(p) else p) for x, p in zip(month_x, precip, strict=True)],
     secondary=True,
     dots_size=8,
     formatter=lambda p: f"{p[1]:.0f} mm",
