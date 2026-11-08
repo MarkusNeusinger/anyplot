@@ -1125,6 +1125,50 @@ describe('agentFetch', () => {
     });
   });
 
+  it('sends an offer’s pick with via, and once more without it to a server from before the field', async () => {
+    const bodies: unknown[] = [];
+    let strict = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string) as Record<string, string>;
+        bodies.push(body);
+        // A strict body from before `via`: the unknown key is a 422.
+        if (strict && 'via' in body) {
+          return new Response(JSON.stringify({ detail: 'invalid', ref: 'r-v' }), { status: 422 });
+        }
+        return new Response(
+          JSON.stringify({ language: 'de', source: 'via' in body ? 'offer' : 'chosen' }),
+          { status: 200 }
+        );
+      })
+    );
+    await expect(agentApi.setLanguage('', 'S1', 'de', 'offer')).resolves.toEqual({
+      language: 'de',
+      source: 'offer',
+    });
+    expect(bodies).toEqual([{ language: 'de', via: 'offer' }]);
+
+    strict = true;
+    bodies.length = 0;
+    await expect(agentApi.setLanguage('', 'S1', 'de', 'offer')).resolves.toEqual({
+      language: 'de',
+      source: 'chosen',
+    });
+    expect(bodies).toEqual([{ language: 'de', via: 'offer' }, { language: 'de' }]);
+    // The chip's pick never retries: a 422 there is the value's.
+    bodies.length = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        bodies.push(JSON.parse(init.body as string));
+        return new Response(JSON.stringify({ detail: 'invalid', ref: 'r-x' }), { status: 422 });
+      })
+    );
+    await expect(agentApi.setLanguage('', 'S1', 'x/y')).rejects.toMatchObject({ status: 422 });
+    expect(bodies).toHaveLength(1);
+  });
+
   it('sends the delete with keepalive when the page goes away', async () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetchMock);

@@ -54,6 +54,7 @@ describe('the language line', () => {
     expect(languageAcceptedLine('de', true)).toBe(
       'replies and plot labels: Deutsch · the next plot version uses it'
     );
-    expect(languageSwitchLabel('fr')).toBe('Reply and label the plot in French');
+    // The name starts with the word on screen (`.switch()`), so "click switch" finds it.
+    expect(languageSwitchLabel('fr')).toBe('Switch the replies and plot labels to French');
   });
 });

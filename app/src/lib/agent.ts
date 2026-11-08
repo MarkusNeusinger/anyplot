@@ -1439,7 +1439,8 @@ export const agentApi = {
    * runs, `422 invalid` for a value outside `LANGUAGE_PATTERN`. On a session with data
    * the answer also carries `suggestion`, the `.to_long()` offer with its new column
    * names in the new language (or `null`), so the data panel's card follows the language.
-   * The chip sends no `via`: a server from before the field refuses an unknown key.
+   * The chip sends no `via`: a server from before the field refuses an unknown key with
+   * `422`, and an offer's pick then goes once more without it, as the chip's would.
    */
   setLanguage: async (
     token: string,
@@ -1447,10 +1448,17 @@ export const agentApi = {
     language: string,
     via?: 'offer'
   ): Promise<LanguageAnswer> => {
-    const answer = await agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
-      method: 'PUT',
-      body: JSON.stringify(via ? { language, via } : { language }),
-    });
+    const put = (body: Record<string, string>) =>
+      agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+    const answer = await (via ? put({ language, via }) : put({ language })).catch(
+      (err: unknown) => {
+        if (via && err instanceof AgentApiError && err.status === 422) return put({ language });
+        throw err;
+      }
+    );
     const sent: LanguageSource = via === 'offer' ? 'offer' : 'chosen';
     const applied = plotLanguage(answer) ?? { language, source: sent };
     return isRecord(answer) && 'suggestion' in answer

@@ -34,6 +34,15 @@ import { colors, typography } from 'src/theme';
 
 type OfferItem = Extract<ChatItem, { kind: 'language_offer' }>;
 
+/**
+ * The line that takes the focus its button held: no ring for a click, the site's green ring for
+ * a keyboard user, who must see where the focus went (WCAG 2.4.7).
+ */
+const movedFocusSx = {
+  '&:focus': { outline: 'none' },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 3 },
+} as const;
+
 export interface LanguageOfferLineProps {
   item: OfferItem;
   /** The session language, which everything stays in until the user takes the offer. */
@@ -71,7 +80,7 @@ export function LanguageOfferLine({ item, current, busy, onAccept }: LanguageOff
         ref={lineRef}
         tabIndex={-1}
         data-testid="language-offer"
-        sx={{ ...labelSx, ...readableSx, lineHeight: 1.6, outline: 'none' }}
+        sx={{ ...labelSx, ...readableSx, lineHeight: 1.6, ...movedFocusSx }}
       >
         # {languageAcceptedLine(item.language, item.plot ?? false)}
       </Box>
@@ -105,7 +114,7 @@ export function LanguageOfferLine({ item, current, busy, onAccept }: LanguageOff
       ref={lineRef}
       tabIndex={-1}
       data-testid="language-offer"
-      sx={{ ...readableSx, outline: 'none' }}
+      sx={{ ...readableSx, ...movedFocusSx }}
     >
       <Box
         sx={{

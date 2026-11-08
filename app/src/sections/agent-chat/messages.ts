@@ -232,9 +232,12 @@ export function languageOfferLine(
   };
 }
 
-/** The accessible name of an offer's `.switch()`: what a click does, in words. */
+/**
+ * The accessible name of an offer's `.switch()`: what a click does, in words that start with the
+ * word on screen, so a voice command such as "click switch" finds it (WCAG 2.5.3).
+ */
 export const languageSwitchLabel = (language: string) =>
-  `Reply and label the plot in ${englishName(language)}`;
+  `Switch the replies and plot labels to ${englishName(language)}`;
 
 /**
  * The same line once the user took the offer, in the language's own words: `replies and plot

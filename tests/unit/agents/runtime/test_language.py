@@ -338,18 +338,18 @@ class TestSetLanguageTool:
 
     async def test_the_plot_alone_leaves_the_replies(self, services: Services) -> None:
         """A1 of the live test of 2026-11-01: "Make the title German" turned the replies German too; `plot` now
-        changes only the plot's language, and the replies stay English. The request is a pick all the same: no
-        language is offered after it."""
+        changes only the plot's language, and the replies stay English, with their source: a German message that
+        asked for German labels still offers German replies."""
         context = tool_context(opened(), "inv-lang-9")
         services.versions.add("s1", rendered(1, "matplotlib", "en"))
 
         result = await set_language("Deutsch", context, applies_to="plot")
 
         assert result == {"status": "ok", "source": "chosen", "changed": False, "plot_outdated": True}
-        assert (context.state[LANGUAGE], context.state[LANGUAGE_SOURCE]) == ("en", "chosen")
+        assert LANGUAGE not in context.state and LANGUAGE_SOURCE not in context.state
         assert context.state[PLOT_LANGUAGE] == "de"
         view = read_session(context.state)
-        assert view is not None and offer(view.language, view.language_source, [], "de", 5) is None
+        assert view is not None and offer(view.language, view.language_source, [], "de", 5) == "de"
 
     async def test_the_replies_alone_leave_the_plot(self, services: Services) -> None:
         context = tool_context(opened(**language_delta("de", "offer")), "inv-lang-10")

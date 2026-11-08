@@ -4183,7 +4183,8 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
 
     events = await say(client, sid, "Beschriftung auf Deutsch, bitte.")
 
-    assert done_language(events) == {"language": "en", "source": "chosen"}  # a request for the plot is a pick too
+    # A request for the plot's text is no pick of the replies; German was offered with the question already.
+    assert done_language(events) == {"language": "en", "source": "default"}
 
     responses = [
         part.function_response.response
@@ -4195,6 +4196,22 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
     assert [version.language for version in get_services().versions.all(sid)] == ["en", "de"]
+
+
+async def test_a_german_request_for_german_labels_still_offers_german_replies(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """ "Beschriftung auf Deutsch" in an English session asks for the plot's text only: the root's `set_language`
+    with `applies_to` `plot` is no pick of the replies, so the message's German still comes as the offer."""
+    script = {"root": [{"call": "set_language", "args": {"language": "de", "applies_to": "plot"}}, {"text": "Sure."}]}
+    swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+
+    events = await say(client, sid, "Beschriftung auf Deutsch, bitte.")
+
+    assert done_language(events) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
+    assert (await _session_state(client, sid))[PLOT_LANGUAGE] == "de"
 
 
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
@@ -4222,9 +4239,9 @@ async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
-    assert done_language(events) == {"language": "en", "source": "chosen"}  # the replies stay English
+    assert done_language(events) == {"language": "en", "source": "default"}  # the replies stay English
     state = await _session_state(client, sid)
-    assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
+    assert LANGUAGE not in state and state[PLOT_LANGUAGE] == "de"
     second = adapter_inputs(fake)[1]
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
     assert change_request_of(second) == LANGUAGE_REWRITE_REQUEST

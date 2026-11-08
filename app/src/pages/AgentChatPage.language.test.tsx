@@ -222,7 +222,7 @@ describe('AgentChatPage language chip', () => {
     const line = await screen.findByTestId('language-offer');
 
     await user.click(
-      within(line).getByRole('button', { name: 'Reply and label the plot in German' })
+      within(line).getByRole('button', { name: 'Switch the replies and plot labels to German' })
     );
 
     await waitFor(() => expect(chip()).toHaveTextContent(/^Deutsch ▾$/));
@@ -243,7 +243,7 @@ describe('AgentChatPage language chip', () => {
     await waitFor(() => expect(chip()).toBeEnabled());
     await sendTurn('Was zeigt die x-Achse?');
     expect(
-      await screen.findByRole('button', { name: 'Reply and label the plot in German' })
+      await screen.findByRole('button', { name: 'Switch the replies and plot labels to German' })
     ).toBeEnabled();
 
     await user.click(chip());
@@ -255,6 +255,8 @@ describe('AgentChatPage language chip', () => {
     expect(screen.getByTestId('language-offer')).toHaveTextContent(
       /^# German detected in your message$/
     );
-    expect(screen.queryByRole('button', { name: 'Reply and label the plot in German' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'Switch the replies and plot labels to German' })
+    ).toBeNull();
   });
 });

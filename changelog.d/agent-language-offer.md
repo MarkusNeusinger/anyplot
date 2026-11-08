@@ -10,7 +10,8 @@
   offer English back once. A pick in the header's language menu, or a request
   in the chat such as "auf Deutsch bitte", ends the offers. The fixed refusals
   use the session language now, never the message's, and the reply-language
-  check holds replies in an English session to English. The page is English, so
+  check asks again when the assistant answers an English session in the
+  language it offered. The page is English, so
   a visitor who never asked for German should not get German replies; the offer
   replaces the `# reply language: de` notice, which repeated for every paste and
   first message. Plausible counts the offers and the picks as

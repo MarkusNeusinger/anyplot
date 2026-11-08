@@ -821,7 +821,7 @@ class TestOutputGuard:
         language than the session's (German here) never replaces the reply: the first one goes out cut."""
         monkeypatch.setattr(reply_language, "root_model", lambda: ScriptedRoot([answer]))
         ledger.root_request = root_request()
-        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}))
+        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "offer"}))
         german = " ".join(["Die Balken zeigen die monatlichen Ausgaben je Empfänger, nach Betrag sortiert."] * 18)
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):

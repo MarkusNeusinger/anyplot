@@ -11,7 +11,10 @@ saw an English summary in a German session (#12176). This plugin checks it in co
   session language gets in English by design), and `language_detect.mismatch` compares
   its language with the session's, the default English included (`checked_language`): a
   message in another language only makes the page offer that language. Only a sure guess counts (`language_detect.detect`
-  returns None when unsure), and only for a session language the detector knows. On a
+  returns None when unsure), and only for a session language the detector knows. In a session
+  nobody picked a language for, only a reply in a language the page offered counts
+  (`counts_as_wrong`; verdict `not_offered` otherwise, no re-ask): the root answered the
+  user's German in German. On a
   mismatch it writes a content-free attribution line (`reply_language`, verdict
   `mismatch`, the expected and the found code), and, while the request budget allows a
   call, asks the root model once more, without tools, with the wrong reply as its
@@ -39,11 +42,11 @@ from google.adk.models.llm_response import LlmResponse
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
-from ..language import DEFAULT_LANGUAGE, english_name, is_valid
+from ..language import DEFAULT_LANGUAGE, english_name, is_valid, read_source, same_language
 from ..language_detect import detect, expected_code, mismatch
 from ..policy import fixed_replies
 from ..services import get_services
-from ..session_state import LANGUAGE
+from ..session_state import LANGUAGE, LANGUAGE_OFFERED, LANGUAGE_SOURCE
 from ..settings import get_settings
 from .budget import ROOT_AGENT, book_response, strip_tools
 from .ledger import attribution, budget_allows, finish_name, ledger_for
@@ -80,6 +83,21 @@ def checked_language(state: Any) -> str | None:
     if language is None:
         return DEFAULT_LANGUAGE
     return language if isinstance(language, str) and is_valid(language) else None
+
+
+def counts_as_wrong(state: Any, found: str) -> bool:
+    """Whether a reply surely in `found` breaks the session language, so it is asked again.
+
+    Always once the user picked a language (`chosen`, `offer`). In a session nobody picked a
+    language for, only when `found` is a language the page offered (`LANGUAGE_OFFERED`): the root
+    then wrote in the language of the user's message or data, which the user has not taken. Any
+    other sure guess there is the detector's, not the root's, such as an English summary that
+    quotes a German table's words without quotes; it costs no re-ask.
+    """
+    if read_source(state.get(LANGUAGE_SOURCE)) != "default":
+        return True
+    offered = state.get(LANGUAGE_OFFERED)
+    return isinstance(offered, list) and any(isinstance(item, str) and same_language(item, found) for item in offered)
 
 
 def root_model() -> Any:
@@ -171,6 +189,9 @@ class ReplyLanguagePlugin(BasePlugin):
         expected = expected_code(language)
         name = english_name(language)
         if found is None or expected is None or name is None:
+            return None
+        if not counts_as_wrong(callback_context.session.state, found):
+            attribution("reply_language", ledger, verdict="not_offered", expected=expected, found=found)
             return None
         attribution("reply_language", ledger, verdict="mismatch", expected=expected, found=found)
         request = ledger.root_request
