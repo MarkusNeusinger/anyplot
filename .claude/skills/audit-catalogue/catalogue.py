@@ -250,7 +250,10 @@ def checklist_items(metadata: dict[str, Any]) -> list[dict[str, Any]]:
     checklist = (metadata.get("review") or {}).get("criteria_checklist") or {}
     items: list[dict[str, Any]] = []
     for category in checklist.values() if isinstance(checklist, dict) else ():
-        for item in (category or {}).get("items") or []:
+        # Some stored reviews keep a plain number (a category total) beside the categories.
+        if not isinstance(category, dict):
+            continue
+        for item in category.get("items") or []:
             if (
                 isinstance(item, dict)
                 and isinstance(item.get("score"), int | float)
