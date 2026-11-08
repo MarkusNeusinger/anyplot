@@ -2,7 +2,10 @@
 // scatter-regression-lowess: Scatter Plot with LOWESS Regression
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-09
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -11,202 +14,193 @@ import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-// Tiny fixed-seed LCG — the browser has no seeded RNG.
-function makeLcg(seed: number) {
-  let state = seed >>> 0;
-  return function next() {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
+// Constants
+const LOWESS_FRAC = 0.4; // smoothing span: share of the points in each local fit
+const GRID_POINTS = 120; // x positions at which the LOWESS curve is evaluated
+const POINT_OPACITY = 0.6;
+const X_PAD_SHARE = 0.03; // axis padding as a share of the data span
+const Y_PAD_SHARE = 0.06;
+
+// Columns: set these to your data's column names
+const X = "Vehicle speed (km/h)"; // role: x
+const Y = "Fuel efficiency (km/L)"; // role: y
+
+// Data: replace this block with your own records, one object per row
+// Test-drive log: fuel efficiency peaks at a moderate cruising speed and drops at low
+// speed (idling, acceleration) and at high speed (aerodynamic drag).
+const data: Record<string, number>[] = [];
+let seed = 42;
+for (let i = 0; i < 170; i += 1) {
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  const speed = 20 + (seed / 4294967296) * 120;
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  const u1 = Math.max(seed / 4294967296, 1e-9);
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  const u2 = seed / 4294967296;
+  const noise = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  data.push({ [X]: speed, [Y]: Math.max(3, 18.5 - 0.0021 * (speed - 78) ** 2 + noise * 1.6) });
 }
 
-function randNormal(rng: () => number) {
-  const u1 = Math.max(rng(), 1e-9);
-  const u2 = rng();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[X] - b[X]);
+const xs = rows.map((d) => d[X]);
+const ys = rows.map((d) => d[Y]);
+const n = rows.length;
+const xMin = Math.min(...xs);
+const xMax = Math.max(...xs);
+const windowSize = Math.max(2, Math.round(LOWESS_FRAC * n));
+
+// LOWESS: a tricube-weighted linear fit over the nearest windowSize points at each grid x;
+// the weighted RMS of that window's residuals gives a ±1 SD band around the curve.
+const gridX = Array.from({ length: GRID_POINTS }, (_, i) => xMin + ((xMax - xMin) * i) / (GRID_POINTS - 1));
+const fitY: number[] = [];
+const bandSd: number[] = [];
+for (const x0 of gridX) {
+  const dist = xs.map((xi) => Math.abs(xi - x0));
+  const h = [...dist].sort((a, b) => a - b)[windowSize - 1];
+  const w = dist.map((d) => (h > 0 ? (1 - Math.min(d / h, 1) ** 3) ** 3 : Number(d === 0)));
+  let sw = 0;
+  let swx = 0;
+  let swy = 0;
+  let swxx = 0;
+  let swxy = 0;
+  for (let i = 0; i < n; i += 1) {
+    sw += w[i];
+    swx += w[i] * xs[i];
+    swy += w[i] * ys[i];
+    swxx += w[i] * xs[i] * xs[i];
+    swxy += w[i] * xs[i] * ys[i];
+  }
+  const denom = sw * swxx - swx * swx;
+  const slope = denom !== 0 ? (sw * swxy - swx * swy) / denom : 0;
+  const intercept = (swy - slope * swx) / sw;
+  let swResidSq = 0;
+  for (let i = 0; i < n; i += 1) swResidSq += w[i] * (ys[i] - (intercept + slope * xs[i])) ** 2;
+  fitY.push(intercept + slope * x0);
+  bandSd.push(Math.sqrt(swResidSq / sw));
 }
+const upperY = fitY.map((y, i) => y + bandSd[i]);
+const lowerY = fitY.map((y, i) => y - bandSd[i]);
 
-function hexToRgba(hex: string, alpha: number) {
-  const value = parseInt(hex.slice(1), 16);
-  const r = (value >> 16) & 255;
-  const g = (value >> 8) & 255;
-  const b = value & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+const xPad = (xMax - xMin) * X_PAD_SHARE;
+const yLow = Math.min(...ys, ...lowerY);
+const yHigh = Math.max(...ys, ...upperY);
+const yPad = (yHigh - yLow) * Y_PAD_SHARE;
 
-const rng = makeLcg(42);
-const SAMPLE_SIZE = 170;
+const scatterData = rows.map((d, i) => ({ x: d[X], y: d[Y], id: i }));
+const title = "LOWESS Smoothing · scatter-regression-lowess · javascript · muix · anyplot.ai";
+const subtitle = `n = ${n} observations · span frac = ${LOWESS_FRAC} (${windowSize} nearest points per local fit) · shaded band: ±1 SD of the local residuals`;
+const HEADER_H = 88;
+const LEGEND_H = 40;
 
-// Fuel efficiency peaks at a moderate cruising speed and drops off at both
-// low speed (frequent idling/acceleration) and high speed (aerodynamic drag)
-// — a non-monotonic pattern LOWESS traces without assuming a parametric form.
-const vehicleSpeed: number[] = [];
-const fuelEfficiency: number[] = [];
-for (let i = 0; i < SAMPLE_SIZE; i += 1) {
-  const speed = 20 + rng() * 120;
-  const trend = 18.5 - 0.0021 * (speed - 78) ** 2;
-  const value = Math.max(3, trend + randNormal(rng) * 1.6);
-  vehicleSpeed.push(speed);
-  fuelEfficiency.push(value);
-}
-
-// --- LOWESS (locally weighted scatterplot smoothing) ------------------------
-function tricube(distance: number, bandwidth: number) {
-  if (bandwidth <= 0) return distance === 0 ? 1 : 0;
-  const u = Math.min(Math.abs(distance) / bandwidth, 1);
-  return (1 - u ** 3) ** 3;
-}
-
-function lowess(xs: number[], ys: number[], frac: number, gridSize: number) {
-  const n = xs.length;
-  const windowSize = Math.max(2, Math.round(frac * n));
-  const xMin = Math.min(...xs);
-  const xMax = Math.max(...xs);
-  const grid = Array.from({ length: gridSize }, (_, i) => xMin + ((xMax - xMin) * i) / (gridSize - 1));
-
-  return grid.map((x0) => {
-    const distances = xs.map((xi) => Math.abs(xi - x0));
-    const bandwidth = [...distances].sort((a, b) => a - b)[windowSize - 1];
-    const weights = distances.map((d) => tricube(d, bandwidth));
-
-    // Locally weighted linear regression via weighted normal equations.
-    let sw = 0;
-    let swx = 0;
-    let swy = 0;
-    let swxx = 0;
-    let swxy = 0;
-    for (let i = 0; i < n; i += 1) {
-      const w = weights[i];
-      sw += w;
-      swx += w * xs[i];
-      swy += w * ys[i];
-      swxx += w * xs[i] * xs[i];
-      swxy += w * xs[i] * ys[i];
-    }
-    const denom = sw * swxx - swx * swx;
-    const slope = denom !== 0 ? (sw * swxy - swx * swy) / denom : 0;
-    const intercept = sw !== 0 ? (swy - slope * swx) / sw : 0;
-
-    // Local residual spread — the weighted RMS deviation of the raw points
-    // from this window's line, reused as a ±1 SD confidence band around the fit.
-    let swResidSq = 0;
-    for (let i = 0; i < n; i += 1) {
-      const resid = ys[i] - (intercept + slope * xs[i]);
-      swResidSq += weights[i] * resid * resid;
-    }
-    const band = sw !== 0 ? Math.sqrt(swResidSq / sw) : 0;
-
-    return { x: x0, y: intercept + slope * x0, band };
-  });
-}
-
-const smoothed = lowess(vehicleSpeed, fuelEfficiency, 0.4, 120);
-const smoothedX = smoothed.map((point) => point.x);
-const smoothedY = smoothed.map((point) => point.y);
-const smoothedUpper = smoothed.map((point) => point.y + point.band);
-const smoothedLower = smoothed.map((point) => point.y - point.band);
-
-const scatterData = vehicleSpeed.map((speed, i) => ({
-  x: speed,
-  y: fuelEfficiency[i],
-  id: i,
-}));
-
-// A shaded ±1 SD band behind the fit line, drawn from the chart's own scales
-// (community `useXScale`/`useYScale` hooks) rather than as a legend series —
-// it should read as context for the fit, not compete with it for attention.
-function ConfidenceBand({ x, upper, lower, fill }: { x: number[]; upper: number[]; lower: number[]; fill: string }) {
-  const xScale = useXScale("speed");
+function ResidualBand() {
+  const xScale = useXScale();
   const yScale = useYScale();
-  const topEdge = x.map((xi, i) => `${i === 0 ? "M" : "L"}${xScale(xi)},${yScale(upper[i])}`);
-  const bottomEdge = [...x]
-    .map((xi, i) => ({ xi, y: lower[i] }))
+  const top = gridX.map((x, i) => `${xScale(x)},${yScale(upperY[i])}`).join(" L ");
+  const bottom = gridX
+    .map((x, i) => `${xScale(x)},${yScale(lowerY[i])}`)
     .reverse()
-    .map((point) => `L${xScale(point.xi)},${yScale(point.y)}`);
-  return <path d={`${topEdge.join(" ")} ${bottomEdge.join(" ")} Z`} fill={fill} stroke="none" />;
+    .join(" L ");
+  return <path d={`M ${top} L ${bottom} Z`} fill={t.inkSoft} fillOpacity={0.16} stroke="none" />;
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const CHART_TOP = 60;
-
-  const title = "scatter-regression-lowess · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
-
-  // "muted" semantic anchor (adaptive, outside the categorical pool) — used at
-  // low alpha for the confidence-band fill so it sits behind the data.
-  const mutedHex = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
-  const bandFill = hexToRgba(mutedHex, 0.18);
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      <Box sx={{ position: "absolute", top: 20, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>{title}</Typography>
-      </Box>
-      <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
-        <ChartContainer
-          width={W}
-          height={H - CHART_TOP}
-          skipAnimation
-          margin={{ top: 30, right: 40, bottom: 70, left: 90 }}
-          series={[
-            {
-              type: "scatter",
-              data: scatterData,
-              color: hexToRgba(t.palette[0], 0.6),
-              markerSize: 8,
-              label: "Vehicles (observed)",
-            },
-            {
-              type: "line",
-              data: smoothedY,
-              xAxisId: "speed",
-              color: t.palette[1],
-              curve: "natural",
-              showMark: false,
-              label: "LOWESS fit",
-            },
-          ]}
-          xAxis={[
-            {
-              id: "speed",
-              data: smoothedX,
-              scaleType: "linear",
-              label: "Vehicle Speed (km/h)",
-              labelStyle: { fontSize: 16 },
-              tickLabelStyle: { fontSize: 14 },
-              valueFormatter: (value: number) => value.toFixed(0),
-            },
-          ]}
-          yAxis={[
-            {
-              label: "Fuel Efficiency (km/L)",
-              labelStyle: { fontSize: 16 },
-              tickLabelStyle: { fontSize: 14 },
-            },
-          ]}
-          sx={{
-            "& .MuiLineElement-root": { strokeWidth: 3.5 },
-          }}
-        >
-          <ChartsGrid horizontal vertical />
-          <ConfidenceBand x={smoothedX} upper={smoothedUpper} lower={smoothedLower} fill={bandFill} />
-          <ScatterPlot />
-          <LinePlot />
-          <ChartsXAxis />
-          <ChartsYAxis />
-          <ChartsLegend direction="row" position={{ horizontal: "right", vertical: "top" }} slotProps={{ legend: { labelStyle: { fontSize: 14 } } }} />
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{title}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
+      </div>
+      <ChartsDataProvider
+        width={width}
+        height={height - HEADER_H - LEGEND_H}
+        margin={{ top: 12, right: 56, bottom: 16, left: 32 }}
+        skipAnimation
+        series={[
+          {
+            type: "scatter",
+            id: "observations",
+            label: "Observations",
+            data: scatterData,
+            markerSize: 7,
+            color: t.palette[0],
+          },
+          {
+            type: "line",
+            id: "lowess",
+            label: `LOWESS fit (frac = ${LOWESS_FRAC})`,
+            data: fitY,
+            color: t.palette[1],
+            curve: "linear",
+            showMark: false,
+          },
+        ]}
+        xAxis={[
+          {
+            scaleType: "linear",
+            data: gridX,
+            min: xMin - xPad,
+            max: xMax + xPad,
+            label: X,
+            height: 68,
+            valueFormatter: (v: number) => v.toFixed(0),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+            sx: { "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: t.inkSoft } },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: yLow - yPad,
+            max: yHigh + yPad,
+            label: Y,
+            width: 76,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+            sx: { "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: t.inkSoft } },
+          },
+        ]}
+      >
+        <ChartsWrapper legendPosition={{ horizontal: "end", vertical: "top" }} legendDirection="horizontal">
+          <ChartsLegend
+            sx={{
+              fontSize: 16,
+              color: t.ink,
+              pr: 7,
+              '& [data-series="observations"] .MuiChartsLegend-mark': { opacity: POINT_OPACITY },
+            }}
+          />
+          <ChartsSurface
+            sx={{
+              "& .MuiScatterChart-marker": { fillOpacity: POINT_OPACITY },
+              "& .MuiLineChart-line": { strokeWidth: 3.5 },
+            }}
+          >
+            <ChartsGrid horizontal vertical />
+            <ResidualBand />
+            <ScatterPlot />
+            <LinePlot skipAnimation />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
           <ChartsTooltip trigger="item" />
-        </ChartContainer>
-      </Box>
-    </Box>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
