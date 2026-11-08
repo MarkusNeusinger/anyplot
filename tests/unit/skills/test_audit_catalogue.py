@@ -144,6 +144,13 @@ def test_checklist_and_defect_lines(mods) -> None:
     assert mods["catalogue"].checklist_items({}) == []
 
 
+def test_a_plain_number_beside_the_categories_is_skipped(mods) -> None:
+    meta = _metadata()
+    meta["review"]["criteria_checklist"]["total"] = 84
+
+    assert [i["id"] for i in mods["catalogue"].checklist_items(meta)] == ["VQ-01", "SC-01", "DE-01"]
+
+
 def test_round_files_stay_outside_checkouts_and_private(mods, tmp_path: Path) -> None:
     catalogue = mods["catalogue"]
     (tmp_path / "checkout" / ".git").mkdir(parents=True)
