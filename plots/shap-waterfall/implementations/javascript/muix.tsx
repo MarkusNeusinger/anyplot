@@ -158,7 +158,8 @@ export default function Chart() {
         skipAnimation
         margin={{ top: 36, right: 48, bottom: 8, left: 16 }}
         series={[
-          { id: "offset", data: offset, stack: "chain", color: "transparent" },
+          // Stacking helper only: a null formatter keeps it out of the tooltip
+          { id: "offset", data: offset, stack: "chain", color: "transparent", valueFormatter: () => null },
           { id: "up", label: "Pushes the prediction up", data: increase, stack: "chain", color: risingColor },
           { id: "down", label: "Pushes the prediction down", data: decrease, stack: "chain", color: fallingColor },
         ]}
