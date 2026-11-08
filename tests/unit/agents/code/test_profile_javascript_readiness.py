@@ -1,16 +1,18 @@
 """Tests for agents/anyplot/code/profiles/javascript/readiness.py and coupling.py: blocked, coupled or clean."""
 
 import ast
+import re
 from collections import Counter
 
 import pytest
 
 from agents.anyplot.code.profiles.javascript.allowlist import mui_version
-from agents.anyplot.code.profiles.javascript.coupling import coupling, structure_reasons
+from agents.anyplot.code.profiles.javascript.coupling import coupling, is_layout_complete, structure_reasons
 from agents.anyplot.code.profiles.javascript.normalise import normalise
 from agents.anyplot.code.profiles.javascript.readiness import scan
-from agents.anyplot.code.profiles.javascript.regions import LIBRARIES
+from agents.anyplot.code.profiles.javascript.regions import LIBRARIES, find_regions
 from agents.anyplot.schemas import MAX_NOTE_CHARS as MAX_REASON_CHARS
+from core.spec_roles import MAP_SPECS
 
 from .conftest import JS_CATALOGUE_FILES, JS_CATALOGUE_NORMALISED, MUIX_WORKING, REPO_ROOT, js_library, source
 
@@ -172,39 +174,62 @@ def test_structure_reasons_of_a_good_file_are_empty() -> None:
     assert structure_reasons(JS_CATALOGUE_NORMALISED) == []
 
 
+SECURITY_BLOCKED = {
+    **{f"qrcode-basic/{library}": "url-literal" for library in LIBRARIES},
+    "line-parametric/chartjs": "string-length",
+}
+"""The catalogue files a SECURITY finding blocks, each for a real reason: qrcode-basic encodes the URL
+https://anyplot.ai in every library, and line-parametric's Chart.js legend is a 683-character HTML string
+(2026-10-30). JS-3 narrowed every rule that would have blocked another catalogue file (#12473): a new entry here is a
+false refusal until shown otherwise."""
+BLOCKING = frozenset({"map-spec", "library-disabled", "syntax", "security", "no-theme", "savefig-target"})
+"""The reason categories of `blocked` (`readiness.scan`); a clean or coupled file carries none of them."""
+MUIX_7 = re.compile(r"^// Library: muix 7\.", re.MULTILINE)
+"""The header line of a MUI X file written for MUI X 7."""
+
+
 def test_catalogue_corpus() -> None:
-    """The split over the 1,617 normalised files on 2026-10-30, per library: no file of the four classic-script
-    libraries is clean (none carries column constants), 93 MUI X files regenerated for 9.16 are; 68 are blocked, the
-    13 map specs a library has, qrcode-basic in all five (the encoded URL, `url-literal`) and line-parametric's
-    Chart.js legend (a 683-character HTML string, `string-length`). The 51 MUI X 7.29 files that import
-    `@mui/x-charts/ChartContainer` are coupled with the `deprecated-api` hint (owner decision of 2026-10-30)."""
-    statuses: dict[str, Counter[str]] = {library: Counter() for library in LIBRARIES}
+    """Every catalogue file is classified, and each class keeps its meaning while the catalogue changes: the nightly
+    regeneration and the MUI X 9 pass rewrite hundreds of files, so the test holds rules instead of the counts of a
+    day (1,617 files on 2026-10-30: 93 clean, 1,456 coupled, 68 blocked).
+
+    The rules: blocked are exactly the map specs a library has and `SECURITY_BLOCKED`; a clean file has the
+    adaptable-code layout and no reason; a coupled file has one hint per reason, and the `data-block` hint exactly
+    when its layout is incomplete; and the `deprecated-api` hint appears only in a file written for MUI X 7, and in
+    every one that imports `@mui/x-charts/ChartContainer`, which MUI X 9 lacks (owner decision of 2026-10-30: such a
+    file is coupled, never blocked for its version)."""
+    statuses: Counter[str] = Counter()
     blocked: dict[str, str] = {}
-    categories: Counter[str] = Counter()
     for path in JS_CATALOGUE_FILES:
         library, spec = js_library(path), path.parts[-4]
-        normalised = normalise(path.read_text(encoding="utf-8"), library=library)
+        text = path.read_text(encoding="utf-8")
+        normalised = normalise(text, library=library)
         readiness = scan(normalised, spec_id=spec, enabled_libraries=ENABLED, library=library)
-        statuses[library][readiness.status] += 1
+        name = f"{spec}/{library}"
+        categories = [reason.split(":", 1)[0] for reason in readiness.reasons]
+        statuses[readiness.status] += 1
+        assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints), name
         if readiness.status == "blocked":
-            blocked[f"{spec}/{library}"] = readiness.reasons[0].split(":", 1)[0]
-        categories.update(reason.split(":", 1)[0] for reason in readiness.reasons)
-        assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints)
+            first = readiness.reasons[0]
+            blocked[name] = first.split(":", 2)[1].split(" at ")[0].strip() if categories[0] == "security" else first
+            continue
+        assert not set(categories) & BLOCKING, (name, readiness.reasons)
+        assert len(readiness.hints) == len(readiness.reasons), name
+        assert (readiness.status == "clean") == (not readiness.reasons), name
+        complete = is_layout_complete(find_regions(normalised, library=library))
+        assert ("data-block" in categories) == (not complete), name
+        deprecated = "deprecated-api" in categories
+        assert not deprecated or (library == "muix" and MUIX_7.search(text)), name
+        assert deprecated or '"@mui/x-charts/ChartContainer"' not in text, name
 
-    assert statuses == {
-        "chartjs": {"coupled": 306, "blocked": 15},
-        "d3": {"coupled": 311, "blocked": 14},
-        "echarts": {"coupled": 311, "blocked": 14},
-        "highcharts": {"coupled": 310, "blocked": 13},
-        "muix": {"clean": 93, "coupled": 218, "blocked": 12},
-    }
-    assert Counter(blocked.values()) == {"map-spec": 62, "security": 6}
-    assert {name for name, reason in blocked.items() if reason == "security"} == {
-        *(f"qrcode-basic/{library}" for library in LIBRARIES),
-        "line-parametric/chartjs",
-    }
-    assert categories["deprecated-api"] == 51
-    assert categories["data-block"] == 1434  # every coupled file but 22 regenerated MUI X files with the layout
+    assert sum(statuses.values()) == len(JS_CATALOGUE_FILES) and set(statuses) <= {"clean", "coupled", "blocked"}
+    maps = {f"{path.parts[-4]}/{js_library(path)}" for path in JS_CATALOGUE_FILES if path.parts[-4] in MAP_SPECS}
+    present = {f"{path.parts[-4]}/{js_library(path)}" for path in JS_CATALOGUE_FILES}
+    assert {name for name, reason in blocked.items() if reason.startswith("map-spec:")} == maps
+    others = {name: rule for name, rule in blocked.items() if name not in maps}
+    assert others.items() <= SECURITY_BLOCKED.items(), others  # no other catalogue file is refused
+    # The validator still finds the encoded URL; a regenerated line-parametric legend may have become shorter.
+    assert {name for name in present if name.startswith("qrcode-basic/")} <= set(others)
 
 
 def test_the_detection_stays_inside_the_core_boundary() -> None:

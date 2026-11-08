@@ -4,7 +4,9 @@ import ast
 import csv
 import io
 import json
+import re
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -200,24 +202,28 @@ def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture
             assert check.complete and not check.errors, (directory, check.errors)
 
 
+MUIX_7 = re.compile(r"^// Library: muix 7\.", re.MULTILINE)
+"""The header line of a MUI X file written for MUI X 7."""
+
+
 def test_the_muix_files_split_by_the_version_they_were_written_for() -> None:
-    """JS-4c (2026-10-31): the five MUI X files regenerated for 9.16 are `clean`, the five written for 7.29 `coupled`,
-    and only `scatter-basic`'s imports MUI X 7's `ChartContainer` (`deprecated-api`), which the adapter rewrites: such
-    a file is served, never blocked for its version (the plan's question 13). The smoke case avoids it, since the eval
-    harness's preflight renders the catalogue file unchanged."""
+    """JS-4c (2026-10-31): a MUI X file is served whichever version it was written for, never blocked for its version
+    (the plan's question 13). A file written for MUI X 7 is `coupled`, and one that imports MUI X 7's `ChartContainer`
+    carries `deprecated-api`, which the adapter rewrites (`scatter-basic` on 2026-10-31); a `clean` file is one written
+    for MUI X 9 (five of the ten then). The smoke case avoids MUI X 7, since the eval harness's preflight renders the
+    catalogue file unchanged. The MUI X 9 pass regenerates these files, so the test holds the rules, not the split."""
     settings = AgentSettings(libraries=list(LIBRARIES))
-    statuses = {}
-    deprecated = set()
+    plots = Path(__file__).parents[4] / "plots"
+    texts: dict[str, str] = {}
     for spec in SPECS:
+        text = (plots / spec.spec_id / "implementations" / "javascript" / "muix.tsx").read_text(encoding="utf-8")
+        texts[spec.spec_id] = text
         eligibility, _ = assess(snapshot_from_repo(spec.spec_id, "muix"), "muix", settings)
-        statuses[spec.spec_id] = eligibility.status
-        if any(reason.startswith("deprecated-api") for reason in eligibility.reasons):
-            deprecated.add(spec.spec_id)
-    clean = {"box-basic", "heatmap-basic", "area-basic", "violin-basic", "pie-basic"}
-    assert {spec for spec, status in statuses.items() if status == "clean"} == clean
-    assert {spec for spec, status in statuses.items() if status == "coupled"} == set(statuses) - clean
-    assert deprecated == {"scatter-basic"}
-    assert LIBRARY_SMOKE["muix"][0] in clean
+        deprecated = any(reason.startswith("deprecated-api") for reason in eligibility.reasons)
+        assert eligibility.status in ("clean", "coupled"), (spec.spec_id, eligibility.status)
+        assert deprecated == ('"@mui/x-charts/ChartContainer"' in text), spec.spec_id
+        assert not MUIX_7.search(text) or eligibility.status == "coupled", spec.spec_id
+    assert not MUIX_7.search(texts[LIBRARY_SMOKE["muix"][0]])
 
 
 @pytest.mark.parametrize("library", ["plotly", "bokeh"])
