@@ -59,16 +59,19 @@ const grandTotal = categoryTotals.reduce((sum, c) => sum + c.value, 0);
 
 // Colors: one Imprint hue per main category in order of appearance; the
 // subcategory tiles take a lighter shade of it, so shading tells the levels
-// apart. Text ink follows each fill's luminance, not the theme.
+// apart. Text ink follows each fill's luminance, not the theme. Slot 5
+// (matte red) is the semantic bad/loss anchor, so ordinary categories skip it.
+const categoryPalette = t.palette.filter((_, i) => i !== 4);
 const shades = new Map(
   categories.map((c, i) => {
-    const base = [16, 8, 0].map((s) => (parseInt(t.palette[i].slice(1), 16) >> s) & 255);
+    const head = categoryPalette[i % categoryPalette.length];
+    const base = [16, 8, 0].map((s) => (parseInt(head.slice(1), 16) >> s) & 255);
     const tile = base.map((v) => Math.round(v + (255 - v) * TILE_TINT));
     const [headInk, tileInk] = [base, tile].map((rgb) => {
       const [r, g, b] = rgb.map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
       return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.2 ? "#1A1A17" : "#FAF8F1";
     });
-    return [c, { head: t.palette[i], tile: `rgb(${tile.join(",")})`, headInk, tileInk }];
+    return [c, { head, tile: `rgb(${tile.join(",")})`, headInk, tileInk }];
   }),
 );
 
