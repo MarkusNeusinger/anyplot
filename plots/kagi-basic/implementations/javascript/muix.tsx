@@ -20,8 +20,8 @@ const DATE = "Trading date"; // role: date
 const CLOSE = "Close (USD)"; // role: close
 
 // Data: replace this block with your own records, one object per observation
-// 240 weekday closes of a mid-cap stock from 2 Jan 2024: a log-return random walk with
-// a mild upward drift and a daily volatility of 1.6 %.
+// 240 weekday closes of a mid-cap stock from 2 Jan 2024: a random walk of daily returns
+// with a mild upward drift and a daily volatility of 1.6 %.
 const data = (() => {
   let state = 42;
   const rand = () => {
