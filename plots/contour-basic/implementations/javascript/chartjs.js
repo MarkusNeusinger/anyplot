@@ -1,7 +1,7 @@
 // anyplot.ai
 // contour-basic: Basic Contour Plot
-// Library: chartjs 4.4.7 | JavaScript 22.23.0
-// Quality: pending | Created: 2026-06-25
+// Library: chartjs 4.6.1 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 
 //# anyplot-orientation: square
 
