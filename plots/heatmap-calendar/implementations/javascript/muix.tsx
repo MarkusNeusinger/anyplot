@@ -43,7 +43,7 @@ const data = (() => {
     if (i >= 215 && i < 224) continue;
     const weekend = day.getUTCDay() === 0 || day.getUTCDay() === 6;
     let commits = weekend ? 1 + rng() * 3 : 3 + rng() * 7;
-    if (i % 37 === 17) commits += 10 + rng() * 8;
+    if (i % 37 === 17) commits += 4 + rng() * 4;
     rows.push({ [DATE]: day.toISOString().slice(0, 10), [COMMITS]: Math.round(commits) });
   }
   return rows;
