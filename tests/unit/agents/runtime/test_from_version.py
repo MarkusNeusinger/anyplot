@@ -24,9 +24,11 @@ from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dataset_versions import (
     MAX_DATASET_HISTORY,
     MAX_VERSION_LINE_CHARS,
+    DatasetVersion,
     KeptVersion,
     VersionRefused,
     kept_versions,
+    original_number,
     push_version,
     rebuilt_changes,
     resolve_version,
@@ -269,10 +271,10 @@ class TestRefusals:
         await write_back(runtime, sid, context)
         old = [*context.state[DATASET_HISTORY], context.state[DATASET_ID]]
 
-        await paste(client, sid, RUNS)  # a new lineage: its versions start again at 1
+        await paste(client, sid, RUNS)  # a new lineage: its first version takes the session's next number, 4
         context = await context_for(client, sid, "inv-x-2")
 
-        for number in ("2", "3"):
+        for number in ("1", "2", "3"):
             assert await prepare_data(TOP_20, context, from_version=number) == {
                 "status": "error",
                 "code": "other_paste",
@@ -281,7 +283,10 @@ class TestRefusals:
             refused = await query_data([], context, from_version=number)
             assert refused["code"] == "other_paste"
         assert all(get_services().datasets.get(dataset_id, sid) is None for dataset_id in old)
-        assert context.state[DATASET_VERSION] == 1 and context.state[DATASET_TOP] == 1
+        assert context.state[DATASET_VERSION] == 4 and context.state[DATASET_TOP] == 4
+        # "original" and the number 4 both name the new paste: no number of the old data ever does.
+        for start in ("original", "4"):
+            assert (await query_data([], context, from_version=start))["rows"] == 8
 
     async def test_an_undone_version_is_gone_not_another_paste(
         self, client: httpx.AsyncClient, runtime: Runtime
@@ -367,6 +372,29 @@ class TestSessionBlock:
             "2 (current): sorted by Points, descending; kept the first 10 of 24 rows, 14 dropped → 10 rows, 3 columns",
         ]
 
+    async def test_after_an_undo_the_block_and_the_card_name_the_same_numbers(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """Paste, change, undo, change: the undo route answers 1 and the change 3, and the block lists 1 and 3, so a
+        user who says "go back to v2" names a version that is gone, never another table."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-b-3")
+        await prepare_data(TOP_10, context)
+        await write_back(runtime, sid, context)
+        undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+        assert undone.status_code == 200
+        assert (undone.json()["version"], undone.json()["can_undo"], undone.json()["original_version"]) == (1, False, 1)
+        context = await context_for(client, sid, "inv-b-4")
+
+        changed = await prepare_data(TOP_20, context)
+        block = await session_context(context)  # type: ignore[arg-type]
+
+        assert changed["version"] == 3
+        listed = re.search(r"<tool_notes>\n?(.*?)\n?</tool_notes>", block, re.DOTALL)
+        assert listed is not None
+        assert [line.split(":", 1)[0] for line in listed.group(1).splitlines()] == ["1 (original)", "3 (current)"]
+        assert (await prepare_data([], context, from_version="2"))["code"] == "version_not_kept"
+
     async def test_a_scripted_turn_rebuilds_and_the_page_gets_the_where(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
     ) -> None:
@@ -434,9 +462,8 @@ def test_the_original_outlives_the_history_cap_and_undo_never_reaches_it() -> No
     assert state[DATASET_VERSION] == 3
     assert undo_version(store, SID, view_of(state), SNAPSHOT) is None
     assert store.get(original, SID) is not None
-    assert resolve_version(kept_versions(store, SID, view_of(state)), view_of(state), "original").stored.csv == (
-        "a,b\n1,2\n3,4\n5,6\n"
-    )
+    assert resolve_version(kept_versions(store, SID, view_of(state)), "original").stored.csv == "a,b\n1,2\n3,4\n5,6\n"
+    assert not view_of(state).can_undo  # version 3 is above the original's 1, and still nothing is left to undo
 
 
 def test_a_new_paste_deletes_the_original_kept_past_the_history() -> None:
@@ -453,32 +480,120 @@ def test_a_new_paste_deletes_the_original_kept_past_the_history() -> None:
     assert len(store) == 1 and store.get(ingested.dataset_id, SID) is not None
 
 
-def test_resolve_names_the_refusal_by_the_highest_number_reached() -> None:
-    store = DatasetStore()
-    state = opened(store)
-    push(store, state, 2)
-    push(store, state, 3)
-    state.update(undo_version(store, SID, view_of(state), SNAPSHOT).delta)  # type: ignore[union-attr]
+def paste_over(store: DatasetStore, state: dict[str, Any], text: str = "x,y\n1,1\n2,2\n") -> None:
+    """A new paste as the dataset route stores it: under the session's next number, the earlier data gone."""
     view = view_of(state)
-    kept = kept_versions(store, SID, view)
+    ingested = store_dataset(
+        store,
+        SID,
+        parse_dataset(text),
+        SNAPSHOT,
+        view.dataset_id,
+        view.earlier_datasets,
+        notes_screened=True,
+        number=view.next_version,
+    )
+    state.update(ingested.state_delta())
 
-    assert resolve_version(kept, view, "current").number == 2
-    assert resolve_version(kept, view, 1).original
-    with pytest.raises(VersionRefused) as undone:
-        resolve_version(kept, view, 3)
-    with pytest.raises(VersionRefused) as other:
-        resolve_version(kept, view, 4)
-    assert (undone.value.code, other.value.code) == ("version_not_kept", "other_paste")
+
+def undo(store: DatasetStore, state: dict[str, Any]) -> DatasetVersion:
+    restored = undo_version(store, SID, view_of(state), SNAPSHOT)
+    assert restored is not None
+    state.update(restored.delta)
+    return restored
 
 
-def test_state_from_before_the_key_finds_the_original_in_the_history() -> None:
+def refusal(state: dict[str, Any], store: DatasetStore, number: int) -> str:
+    with pytest.raises(VersionRefused) as refused:
+        resolve_version(kept_versions(store, SID, view_of(state)), number)
+    return refused.value.code
+
+
+class TestOneNumberingPerSession:
+    """Owner decision of 2026-11-07: the session numbers every version once and never gives a number twice, the page
+    shows that number, and an undo makes the restored version current under its own; "v2" names one table to the
+    user and to the root."""
+
+    def test_paste_change_undo_change_is_1_2_1_3(self) -> None:
+        store = DatasetStore()
+        state = opened(store)
+        numbers = [state[DATASET_VERSION]]
+        push(store, state, 2)
+        numbers.append(state[DATASET_VERSION])
+        restored = undo(store, state)
+        numbers.append(state[DATASET_VERSION])
+        push(store, state, 3)
+        numbers.append(state[DATASET_VERSION])
+
+        assert numbers == [1, 2, 1, 3]
+        assert restored.payload()["version"] == 1  # the card after the undo reads `data v1` again
+        assert state[DATASET_TOP] == 3
+        assert [
+            (version.number, version.original, version.current) for version in kept_versions(store, SID, view_of(state))
+        ] == [(1, True, False), (3, False, True)]
+
+    def test_an_undone_number_and_one_never_given_are_not_kept(self) -> None:
+        store = DatasetStore()
+        state = opened(store)
+        push(store, state, 2)
+        undo(store, state)
+        push(store, state, 3)
+
+        assert refusal(state, store, 2) == "version_not_kept"  # undone: there is no redo, and 2 is never given again
+        assert refusal(state, store, 4) == "version_not_kept"  # no version has it yet
+
+    def test_a_second_paste_continues_the_count_and_the_numbers_before_it_are_another_paste(self) -> None:
+        store = DatasetStore()
+        state = opened(store)
+        push(store, state, 2)
+        push(store, state, 3)
+
+        paste_over(store, state)
+        assert state[DATASET_VERSION] == 4 and state[DATASET_TOP] == 4
+        push(store, state, 4)
+
+        assert state[DATASET_VERSION] == 5
+        assert [refusal(state, store, number) for number in (1, 2, 3)] == ["other_paste"] * 3
+        kept = kept_versions(store, SID, view_of(state))
+        # "original" is the current data's first number, 4, never the session's 1.
+        assert resolve_version(kept, "original").number == 4 and resolve_version(kept, 4).original
+        assert resolve_version(kept, "current").number == 5
+        assert original_number(store, SID, view_of(state)) == 4
+
+    def test_the_undo_field_is_false_after_every_paste_and_true_after_a_change(self) -> None:
+        store = DatasetStore()
+        state = opened(store)
+        assert not view_of(state).can_undo
+
+        version = push_version(store, SID, view_of(state), parse_dataset("a,b\n7,8\n"), SNAPSHOT)
+        state.update(version.delta)
+        assert version.payload()["can_undo"] is True and view_of(state).can_undo
+        assert version.payload()["original_version"] == 1
+
+        paste_over(store, state)
+        assert not view_of(state).can_undo and view_of(state).dataset_version == 3
+        changed = push_version(store, SID, view_of(state), parse_dataset("x,y\n5,5\n"), SNAPSHOT)
+        state.update(changed.delta)
+        assert (changed.version, changed.payload()["can_undo"], changed.payload()["original_version"]) == (4, True, 3)
+
+        back = undo(store, state)
+        assert (back.payload()["version"], back.payload()["can_undo"], back.payload()["original_version"]) == (
+            3,
+            False,
+            3,
+        )
+
+
+def test_a_state_without_the_original_key_still_numbers_on_and_lists_the_paste_first() -> None:
+    """A view built without `DATASET_ORIGINAL` takes the current version as the original while nothing stands before
+    it; the first push writes the key."""
     store = DatasetStore()
     state = opened(store)
     original = state.pop(DATASET_ORIGINAL)
     state.pop(DATASET_TOP)
     push(store, state, 2)
 
-    assert state[DATASET_ORIGINAL] == original  # the first push writes it
+    assert state[DATASET_ORIGINAL] == original and state[DATASET_VERSION] == 2  # the first push writes it
     del state[DATASET_ORIGINAL]
     assert kept_versions(store, SID, view_of(state))[0].stored.dataset_id == original
 
@@ -503,7 +618,7 @@ def test_a_date_column_a_rebuild_brings_back_fills_the_role_its_drop_left_open()
     state.update(push_version(store, SID, view_of(state), parse_dataset(dropped), rolling).delta)
     assert {binding.role for binding in view_of(state).bindings} == {"value"}  # the date role is open
     view = view_of(state)
-    original = resolve_version(kept_versions(store, SID, view), view, "original")
+    original = resolve_version(kept_versions(store, SID, view), "original")
 
     back = push_version(store, SID, view, original.stored.as_parsed(), rolling, made_from=original.stored)
 

@@ -364,10 +364,23 @@ export interface DatasetParsed {
   /** The table read, 1-based, beside `tables`. */
   table?: unknown;
   /**
-   * The data's version: a paste is 1, each change the assistant made to it one
-   * more, each undo one less. `.undo()` is possible while it is above 1.
+   * The version's number in the session, the `3` of `data v3`: the server numbers every
+   * version it stores once (a paste, a pick, a change, `.to_long()`, a copy) and never gives
+   * a number twice; an undo makes the version it restores current under its own number.
+   * Whether `.undo()` can go is `can_undo`'s, never this number's.
    */
   version: number;
+  /**
+   * Whether `.undo()` has a version to restore (the server's history holds one); absent from
+   * an older server, which the page reads as nothing to undo.
+   */
+  can_undo?: boolean;
+  /**
+   * The number of the current data's first version (its paste, file, copy or the table
+   * computed without data), from which the page counts how far an undo went back; absent
+   * from an older server.
+   */
+  original_version?: number;
   /**
    * The paste's answer only: the session language after it, which a paste
    * before any typed message or choice sets from the language of its notes or
@@ -408,11 +421,15 @@ export interface DatasetChanged {
    * 'Gesamt'` or `generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)`.
    */
   changes: string[];
-  /**
-   * The next version after a change (2 or more), or 1 when `generate_data`
-   * made the session's first data, which has nothing to undo.
-   */
+  /** The version's number in the session (`DatasetParsed.version`). */
   version: number;
+  /**
+   * Whether `.undo()` has a version to restore: false when `generate_data` made the
+   * session's first data; absent from an older server.
+   */
+  can_undo?: boolean;
+  /** The number of the current data's first version (`DatasetParsed.original_version`). */
+  original_version?: number;
 }
 
 /** The spec roles a `done` event's `dataset` lists at most (the service's `MAX_DONE_ROLES`). */
@@ -441,7 +458,7 @@ export type DatasetAnswer = DatasetParsed | DatasetTranscribed;
 /**
  * The answer of `POST .../dataset/copy`, the admin fan-out's copy of the page
  * session's confirmed data into a fan-out session: the dataset route's shape
- * (version 1), already bound and confirmed on the server.
+ * (the session's first version), already bound and confirmed on the server.
  */
 export interface DatasetCopied extends DatasetParsed {
   confirmed: true;
@@ -1857,8 +1874,9 @@ function roleList(value: unknown): RoleSpec[] | undefined {
 /**
  * The data version of a `done` event, or `null`. It replaces the page's
  * preview, bindings and step as a whole, so anything malformed drops all of it
- * rather than putting a table on screen that is not the server's. Version 1 is
- * a generated first dataset (`generate_data` in a session without data).
+ * rather than putting a table on screen that is not the server's. A generated
+ * first dataset (`generate_data` in a session without data) has nothing to undo.
+ * `can_undo` and `original_version` pass only as the server types them.
  */
 function datasetChanged(value: unknown): DatasetChanged | null {
   if (!isRecord(value) || !isInt(value.version) || value.version < 1) return null;
@@ -1881,6 +1899,10 @@ function datasetChanged(value: unknown): DatasetChanged | null {
     suggestion: longSuggestion(value.suggestion),
     changes: strings(value.changes),
     version: value.version,
+    ...(typeof value.can_undo === 'boolean' ? { can_undo: value.can_undo } : {}),
+    ...(isInt(value.original_version) && value.original_version >= 1
+      ? { original_version: value.original_version }
+      : {}),
   };
 }
 

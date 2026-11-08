@@ -99,13 +99,10 @@ export function DataCard(props: DataCardProps) {
   const dataset = part === 'data' ? state.dataset : null;
   const file = dataset?.file;
   const columns = dataset?.parsed.profile.columns ?? [];
-  // An earlier version exists above the paste's 1, until the server says the
-  // history ended (it keeps the last five versions).
-  const canUndo =
-    ready &&
-    !busy &&
-    (dataset?.parsed.version ?? 1) > 1 &&
-    state.undoError?.code !== 'nothing_to_undo';
+  // The server says whether its history holds a version to restore (it keeps the last five);
+  // the version's number says nothing about it, since a paste can carry any number.
+  const undoable = dataset?.parsed.can_undo === true;
+  const canUndo = ready && !busy && undoable && state.undoError?.code !== 'nothing_to_undo';
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
@@ -185,6 +182,7 @@ export function DataCard(props: DataCardProps) {
           {state.dataChange && (
             <ChangeBlock
               change={state.dataChange}
+              first={state.dataChange.kind === 'changed' && !undoable}
               canUndo={canUndo}
               undoBusy={state.undoBusy}
               error={state.undoError}

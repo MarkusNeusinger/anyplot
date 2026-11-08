@@ -7,8 +7,8 @@
 * `ingest_dataset(...)` parses pasted text, stores it in the session's dataset store
   (replacing an older dataset of the session and the versions kept for undo), and
   proposes bindings: the defaults, or for data that replaces data, the old bindings
-  carried by column name (`bindings.carry_by_name`); a paste is version 1 of the data
-  (`dataset_versions.py`).
+  carried by column name (`bindings.carry_by_name`); a paste is the first version of
+  the data, numbered the session's next (`dataset_versions.py`).
 * `instruction_like(parsed)` and `dataset_judge_inputs(parsed)` are what the
   `/dataset` route checks before it stores a dataset: a deterministic pre-filter over
   every header and cell for text addressed to an AI, then the dataset judge on every
@@ -117,23 +117,26 @@ class IngestedDataset:
     dataset_id: str
     parsed: ParsedDataset
     bindings: list[Binding]
+    number: int = 1
+    """The session's number of the stored version (`StoredDataset.number`)."""
 
     def state_delta(self) -> dict[str, Any]:
-        """The delta of a paste: version 1 of the data, with no history to undo.
+        """The delta of a paste: the first version of the data, with no history to undo.
 
         A request kept from a plot that stopped before the confirmation (`PENDING_REQUEST`) was
         written for the data it replaces, so it goes too: a title for the Swiss table must not
         land on the German one pasted after it. Pasted data is the session's own: it was not copied
         from another session (`DATASET_COPIED_FROM`). It is the original of every version made from it
-        (`DATASET_ORIGINAL`), and its numbers start again at 1 (`DATASET_TOP`).
+        (`DATASET_ORIGINAL`), and its number is the session's next (`DATASET_TOP`): the numbers of the
+        data it replaces stay taken, so none of them ever names this data.
         """
         return {
             DATASET_ID: self.dataset_id,
             BINDINGS: [binding.model_dump() for binding in self.bindings],
             DATASET_HISTORY: [],
-            DATASET_VERSION: 1,
+            DATASET_VERSION: self.number,
             DATASET_ORIGINAL: self.dataset_id,
-            DATASET_TOP: 1,
+            DATASET_TOP: self.number,
             DATASET_COPIED_FROM: None,
             **PENDING_CLEARED,
         }
@@ -152,6 +155,7 @@ def store_dataset(
     source: str | None = None,
     file_name: str | None = None,
     carried: Sequence[Binding] = (),
+    number: int = 1,
 ) -> IngestedDataset:
     """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
 
@@ -164,19 +168,20 @@ def store_dataset(
     `file_name` is the dropped file's name as the route screened it (`StoredDataset.file_name`).
     `carried` are the bindings of the data this one replaces: their columns go to the new columns of the
     same name or meaning (`bindings.carry_by_name`), so the plot keeps its axes; without them, the defaults.
+    `number` is the version's number in the session (`SessionView.next_version`; 1 for a session's first data).
     """
     if not notes_screened:
         # Constant columns whose values went into the notes come back as columns, so the values survive.
         parsed = with_constant_columns(parsed)
         if parsed.context_lines:
             parsed = replace(parsed, context_lines=[])
-    dataset_id = store.put(session_id, parsed, code=code, source=source, file_name=file_name)
+    dataset_id = store.put(session_id, parsed, code=code, source=source, file_name=file_name, number=number)
     for old in (previous_id, *history):
         if old and old != dataset_id:
             store.delete(old, session_id)
     roles = snapshot.roles()
     bindings = carry_by_name(carried, roles, parsed.profile) if carried else default_bindings(roles, parsed.profile)
-    return IngestedDataset(dataset_id, parsed, bindings)
+    return IngestedDataset(dataset_id, parsed, bindings, number)
 
 
 def ingest_dataset(
