@@ -2,17 +2,250 @@ library: muix
 language: javascript
 specification_id: bar-diverging
 created: '2026-08-18T13:08:28Z'
-updated: '2026-08-18T13:13:17Z'
-generated_by: claude-sonnet
-workflow_run: 32140122393
+updated: '2026-11-08T00:57:24Z'
+generated_by: claude-opus-5-5
+adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
+workflow_run: 42431837991
 issue: 2009
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - Two sign-split series (null on the other side) in one shared stack give exactly
+    one bar per row, coloured by its direction, without per-bar colour hacks
+  - ChartsReferenceLine at x=0 in the ink token marks the zero baseline across the
+    full bar span and adapts to both themes
+  - Native barLabel with barLabelPlacement 'outside' puts signed (+68 / -55) value
+    labels at the bar ends; the symmetric axis limit is padded from the data so the
+    labels never clip
+  - 'Semantic colour choice: brand green for net agreement, the Imprint red anchor
+    for net disagreement'
+  - Signed valueFormatter on the series and the axis makes the HTML tooltip and the
+    ticks read in the same signed form
+  weaknesses:
+  - 'Suggestion: the negative labels and ticks use an ASCII hyphen ("-55"); a typographic
+    minus (U+2212) would match the width of the "+" sign.'
+  - 'Suggestion: the mandated title fills only about 30 % of the width; a slightly
+    larger title size would anchor the header better.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: semibold dark title "bar-diverging · javascript · muix · anyplot.ai" top left, with a soft-ink subtitle "10 categories, sorted by value · 5 above zero, 5 below". Ten survey statements as y-axis category labels in dark ink; x axis from -75 to +75 with signed ticks -60 … +60 and the axis title "Net agreement score (percentage points)". Subtle light-grey vertical grid; a 2 px dark zero line runs the full height. All text is readable.
+      Data: five brand-green (#009E73) bars extend right (+68, +52, +41, +22, +9) and five matte-red (#AE3030) bars extend left (-8, -19, -34, -41, -55), sorted from largest to most negative, each with a bold signed value label outside its end.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, category labels, value labels and axis title in light ink; the subtitle and ticks in a lighter grey; the zero line flips to light ink and stays clearly visible; the grid is dim but visible. No dark-on-dark text.
+      Data: the same green and red bars, identical to the light render; only the chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit sizes (title 22 px, ticks 15 px, axis title 16 px, bold
+          15 px value labels); all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Value labels sit outside the bar ends, clear of the zero line and
+          the category labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 thick bars; even the +9 and -8 bars are clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Direction is coded by side and by signed labels as well as by green/red,
+          so color is not the only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Net agreement score (percentage points)'' is descriptive and gives
+          the unit'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for the agree side, the semantic red anchor
+          #AE3030 for the disagree side; correct #FAF8F1 / #1A1A17 backgrounds; data
+          colors identical in both themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clear type hierarchy: a semibold title over a soft-ink subtitle,
+          bold signed value labels in ink, soft-ink tick labels'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid on the value axis only, category ticks turned off, a symmetric
+          axis padded for the outside labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: The subtitle counts the split (5 above zero, 5 below); signed labels
+          make each magnitude readable at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Horizontal diverging bar chart from a zero baseline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Contrasting colors, horizontal bars for long labels, a 2 px ink
+          zero line across the full span, bars sorted from +68 down to -55: every
+          ''A good version shows'' bullet is met'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Every bar starts at 0; the axis runs symmetric from -75 to +75, not
+          truncated
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct mandated title; the legend is hidden, which suits two sign
+          series explained by the side of zero
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Positive and negative values of mixed magnitude, including small
+          bars near zero
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'An employee engagement survey with net agreement per statement:
+          plausible and neutral'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Net scores from -55 to +68 fit the -100..+100 range of a net score;
+          the spec has no 'Check values:' line
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat module-level data and plot zones, one default-exported component
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise; the axis limit is derived from the data, not typed
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default export plus skipAnimation, hideLegend and the axis width/height
+          bands per the harness contract
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: layout='horizontal' with two null-split series in one stack gives
+          one sign-colored bar per row; ChartsReferenceLine is composed as a child
+          bound to axisId
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Native barLabel with barLabelPlacement 'outside', and a series valueFormatter
+          for the signed HTML tooltip
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T00:54:53Z'
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
