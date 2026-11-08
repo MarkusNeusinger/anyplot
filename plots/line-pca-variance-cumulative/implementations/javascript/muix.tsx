@@ -2,7 +2,17 @@
 // line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
 // Library: muix 9.17.0 | JavaScript 22.23.4
 // Quality: 86/100 | Updated: 2026-11-08
-import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { ChartsAxisHighlight } from "@mui/x-charts/ChartsAxisHighlight";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { BarPlot } from "@mui/x-charts/BarChart";
+import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
@@ -13,7 +23,7 @@ const THRESHOLDS = [0.9, 0.95]; // the common component-selection thresholds
 const ELBOW_MIN_GAP = 0.1; // an elbow counts as detectable when the normalised curve rises this far above its chord
 const Y_DOMAIN_MAX = 1; // cumulative share of the total variance
 const Y_HEAD_SHARE = 0.05; // headroom above 100 % so the last marker stays whole
-const X_PAD = 0.5; // half a component of space before the first and after the last count
+const BAR_GAP = 0.45; // share of each component's band left empty around its bar
 
 // Columns: set these to your data's column names
 const COMPONENT = "Number of principal components"; // role: n_components
@@ -53,10 +63,10 @@ const LEGEND_H = 44;
 
 // A ring and a label on the elbow's own marker
 function ElbowMark() {
-  const xScale = useXScale() as (v: number) => number;
+  const xScale = useXScale<"band">();
   const yScale = useYScale() as (v: number) => number;
   if (!hasElbow) return null;
-  const x = xScale(components[elbowIdx]);
+  const x = (xScale(components[elbowIdx]) ?? 0) + xScale.bandwidth() / 2;
   const y = yScale(cumulative[elbowIdx]);
   return (
     <g>
@@ -77,19 +87,17 @@ export default function Chart() {
         <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
         <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
       </div>
-      <LineChart
+      <ChartsDataProvider
         width={width}
         height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        grid={{ horizontal: true }}
         margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
+            id: "components",
             data: components,
-            scaleType: "linear",
-            min: components[0] - X_PAD,
-            max: components[n - 1] + X_PAD,
-            tickInterval: components,
+            scaleType: "band",
+            categoryGapRatio: BAR_GAP,
             valueFormatter: (v: number) => `${v}`,
             label: COMPONENT,
             height: 64,
@@ -99,10 +107,11 @@ export default function Chart() {
         ]}
         yAxis={[
           {
+            id: "share",
             min: 0,
             max: Y_DOMAIN_MAX * (1 + Y_HEAD_SHARE),
             tickNumber: 6,
-            label: `Cumulative ${RATIO.toLowerCase()} (%)`,
+            label: `${RATIO} (%)`,
             width: 76,
             valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
@@ -111,6 +120,7 @@ export default function Chart() {
         ]}
         series={[
           {
+            type: "line",
             id: "cumulative",
             label: `Cumulative ${RATIO.toLowerCase()}`,
             data: cumulative,
@@ -122,57 +132,63 @@ export default function Chart() {
             valueFormatter: (v: number | null) => (v == null ? "" : pct(v)),
           },
           {
+            type: "bar",
             id: "individual",
             label: `${RATIO} per component`,
             data: ratios,
             color: t.palette[1],
-            curve: "monotoneX",
-            // No marker where it would cover the cumulative curve's own marker (the first component)
-            showMark: ({ index }: { index: number }) => ratios[index] !== cumulative[index],
-            shape: "circle",
-            labelMarkType: "line+mark",
+            labelMarkType: "square",
             valueFormatter: (v: number | null) => (v == null ? "" : pct(v)),
           },
         ]}
-        slotProps={{
-          legend: {
-            direction: "horizontal",
-            position: { vertical: "top", horizontal: "end" },
-            sx: {
+      >
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "end" }} legendDirection="horizontal">
+          <ChartsLegend
+            sx={{
               fontSize: 16,
               color: t.ink,
               columnGap: 3,
               pr: 5,
               "& .MuiChartsLegend-mark": { width: 24, height: 24 },
-              // Legend glyphs drawn like the series: the cumulative mark filled, the per-component line dashed
+              // Legend glyphs drawn like the series: the cumulative mark filled, the bars as translucent as the plot's
               '& .MuiChartsLegend-item[data-series="cumulative"] .MuiChartsLegend-mark path:last-of-type': { fill: t.palette[0] },
-              '& .MuiChartsLegend-item[data-series="individual"] .MuiChartsLegend-mark path:first-of-type': { strokeDasharray: "4 3" },
-            },
-          },
-        }}
-        sx={{
-          '& .MuiLineChart-line[data-series="cumulative"]': { strokeWidth: 3.5 },
-          '& .MuiLineChart-line[data-series="individual"]': { strokeWidth: 2, strokeDasharray: "6 4" },
-          '& .MuiLineChart-mark[data-series="cumulative"]': { r: 6, fill: t.palette[0], stroke: t.pageBg, strokeWidth: 2 },
-          '& .MuiLineChart-mark[data-series="individual"]': { r: 4.5, strokeWidth: 2 },
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
-        }}
-      >
-        {hits.map(({ thr, k }) => (
-          <ChartsReferenceLine
-            key={thr}
-            y={thr}
-            label={k == null ? `${pct(thr)} not reached` : `${pct(thr)} reached at ${k} components`}
-            labelAlign="start"
-            spacing={{ x: 12, y: 6 }}
-            lineStyle={{ stroke: t.inkSoft, strokeWidth: 1.75, strokeDasharray: "8 5" }}
-            labelStyle={{ fontSize: 15, fill: t.ink }}
+              '& .MuiChartsLegend-item[data-series="individual"] .MuiChartsLegend-mark': { opacity: 0.55 },
+            }}
           />
-        ))}
-        <ElbowMark />
-      </LineChart>
+          <ChartsSurface
+            sx={{
+              '& [data-series="individual"] .MuiBarChart-element': { fillOpacity: 0.55 },
+              '& .MuiLineChart-line[data-series="cumulative"]': { strokeWidth: 3.5 },
+              '& .MuiLineChart-mark[data-series="cumulative"]': { r: 6, fill: t.palette[0], stroke: t.pageBg, strokeWidth: 2 },
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+            }}
+          >
+            <ChartsGrid horizontal />
+            {/* Bars first, so the per-component shares sit behind the cumulative curve */}
+            <BarPlot borderRadius={3} skipAnimation />
+            {hits.map(({ thr, k }) => (
+              <ChartsReferenceLine
+                key={thr}
+                y={thr}
+                label={k == null ? `${pct(thr)} not reached` : `${pct(thr)} reached at ${k} components`}
+                labelAlign="start"
+                spacing={{ x: 12, y: 6 }}
+                lineStyle={{ stroke: t.inkSoft, strokeWidth: 1.75, strokeDasharray: "8 5" }}
+                labelStyle={{ fontSize: 15, fill: t.ink }}
+              />
+            ))}
+            <ChartsAxisHighlight x="band" />
+            <LinePlot skipAnimation />
+            <MarkPlot skipAnimation />
+            <ElbowMark />
+            <ChartsXAxis axisId="components" />
+            <ChartsYAxis axisId="share" />
+          </ChartsSurface>
+          <ChartsTooltip trigger="axis" />
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
