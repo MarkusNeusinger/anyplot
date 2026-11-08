@@ -3,288 +3,266 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-08-24
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// --- Audio synthesis (deterministic, in-memory) ------------------------------
-// A short sung melody (four notes with decaying harmonics + vibrato) plus a
-// breathy broadband onset — the kind of signal an ASR / vocal-quality pipeline
-// would feed into a mel-spectrogram front end.
-const SAMPLE_RATE = 16000;
-const DURATION_S = 2.4;
-const N_SAMPLES = Math.round(SAMPLE_RATE * DURATION_S);
-const NOTES = [261.63, 329.63, 392.0, 523.25]; // C4, E4, G4, C5
-const NOTE_DURATION = DURATION_S / NOTES.length;
-const HARMONIC_AMPS = [1, 0.5, 0.22];
+// Constants
+const N_MELS = 64; // number of mel filter banks
+const N_FFT = 1024; // STFT frame length in samples (Hann window)
+const HOP = 400; // samples between frame starts
+const DYNAMIC_RANGE_DB = 70; // colour scale spans the peak down to this many dB below it; quieter cells clamp to the low end
+const TICK_EVERY_BANDS = 8; // frequency ticks at every eighth mel band edge
+const COLORBAR_TICK_TARGET = 8;
+const POWER_LABEL = "Power (dB re peak)";
+const FREQUENCY_LABEL = "Frequency (Hz, mel-scaled)";
 
-// Tiny LCG for reproducible noise — the browser has no seeded RNG.
-function makeLcg(seed: number) {
-  let s = seed >>> 0;
-  return () => {
+// Columns: set these to your data's column names
+const TIME = "Time (s)"; // role: extra
+const AMPLITUDE = "Amplitude"; // role: audio_signal
+
+// Data: replace this block with your own records, one object per row
+// A sung C-major arpeggio (C4, E4, G4, C5) with three decaying harmonics, 5 Hz vibrato
+// and a breathy onset, sampled at 16 kHz for 2.4 s
+const data = (() => {
+  const sampleRate = 16000;
+  const duration = 2.4;
+  const notes = [261.63, 329.63, 392.0, 523.25];
+  const harmonicAmps = [1, 0.5, 0.22];
+  const noteDuration = duration / notes.length;
+  let s = 42 >>> 0;
+  const rand = () => {
     s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
     return s / 0x100000000;
   };
-}
-const rand = makeLcg(42);
+  return Array.from({ length: Math.round(sampleRate * duration) }, (_, i) => {
+    const time = i / sampleRate;
+    const noteIndex = Math.min(notes.length - 1, Math.floor(time / noteDuration));
+    const localT = time - noteIndex * noteDuration;
+    const envelope = Math.sin(Math.PI * Math.min(1, localT / noteDuration));
+    // Vibrato as a frequency modulation of ±0.6 % at 5 Hz, integrated into the phase
+    const warpedTime = time + (0.006 * (1 - Math.cos(2 * Math.PI * 5 * time))) / (2 * Math.PI * 5);
+    const tone = harmonicAmps.reduce(
+      (acc, amp, h) => acc + amp * Math.sin(2 * Math.PI * notes[noteIndex] * (h + 1) * warpedTime),
+      0,
+    );
+    const breathyOnset = Math.exp(-time / 0.03) * 0.16 * (2 * rand() - 1);
+    const noiseFloor = 0.006 * (2 * rand() - 1);
+    return { [TIME]: time, [AMPLITUDE]: 0.6 * envelope * tone + breathyOnset + noiseFloor };
+  });
+})();
 
-const audioSignal = new Float64Array(N_SAMPLES);
-for (let i = 0; i < N_SAMPLES; i++) {
-  const time = i / SAMPLE_RATE;
-  const noteIndex = Math.min(NOTES.length - 1, Math.floor(time / NOTE_DURATION));
-  const localT = time - noteIndex * NOTE_DURATION;
-  const envelope = Math.sin(Math.PI * Math.min(1, localT / NOTE_DURATION));
-  const vibrato = 1 + 0.006 * Math.sin(2 * Math.PI * 5 * time);
-  const fundamental = NOTES[noteIndex];
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[TIME] - b[TIME]);
+const signal = rows.map((d) => d[AMPLITUDE]);
+const tStart = rows[0][TIME];
+const sampleRate = (rows.length - 1) / (rows[rows.length - 1][TIME] - tStart);
+const nFreq = N_FFT / 2 + 1;
+const frameCount = Math.floor((signal.length - N_FFT) / HOP) + 1;
 
-  let tone = 0;
-  for (let h = 0; h < HARMONIC_AMPS.length; h++) {
-    tone += HARMONIC_AMPS[h] * Math.sin(2 * Math.PI * fundamental * (h + 1) * vibrato * time);
-  }
-  const breathyOnset = Math.exp(-time / 0.03) * 0.16 * (2 * rand() - 1);
-  const noiseFloor = 0.006 * (2 * rand() - 1);
-  audioSignal[i] = 0.6 * envelope * tone + breathyOnset + noiseFloor;
-}
+// Mel filterbank (HTK mel formula) with Slaney area normalisation, so the wider
+// high-frequency filters do not sum more broadband noise than the narrow low ones
+const melMax = 2595 * Math.log10(1 + sampleRate / 2 / 700);
+const melStep = melMax / (N_MELS + 1);
+const hzEdges = Array.from({ length: N_MELS + 2 }, (_, i) => 700 * (10 ** ((i * melStep) / 2595) - 1));
+const binEdges = hzEdges.map((hz) => Math.floor(((N_FFT + 1) * hz) / sampleRate));
+const melFilters = Array.from({ length: N_MELS }, (_, i) => {
+  const [lo, mid, hi] = [binEdges[i], binEdges[i + 1], binEdges[i + 2]];
+  const norm = 2 / (hzEdges[i + 2] - hzEdges[i]);
+  return Array.from({ length: nFreq }, (_, k) =>
+    k >= lo && k < mid
+      ? ((k - lo) / Math.max(1, mid - lo)) * norm
+      : k >= mid && k < hi
+        ? ((hi - k) / Math.max(1, hi - mid)) * norm
+        : 0,
+  );
+});
 
-// --- STFT: iterative radix-2 FFT ---------------------------------------------
-const N_FFT = 1024;
-const HOP = 400;
-const N_FREQ = N_FFT / 2 + 1;
-const N_FRAMES = Math.floor((N_SAMPLES - N_FFT) / HOP) + 1;
-
-function fft(re: Float64Array, im: Float64Array) {
-  const n = re.length;
-  for (let i = 1, j = 0; i < n; i++) {
-    let bit = n >> 1;
-    for (; j & bit; bit >>= 1) j ^= bit;
-    j ^= bit;
-    if (i < j) {
-      const tr = re[i]; re[i] = re[j]; re[j] = tr;
-      const ti = im[i]; im[i] = im[j]; im[j] = ti;
+// STFT power per frame, then mel power, then dB relative to the peak
+const hann = Array.from({ length: N_FFT }, (_, n) => 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (N_FFT - 1)));
+const cosTable = Array.from({ length: N_FFT }, (_, i) => Math.cos((2 * Math.PI * i) / N_FFT));
+const sinTable = Array.from({ length: N_FFT }, (_, i) => Math.sin((2 * Math.PI * i) / N_FFT));
+const melPower = Array.from({ length: frameCount }, (_, f) => {
+  const frame = hann.map((w, n) => w * signal[f * HOP + n]);
+  const spectrum = Array.from({ length: nFreq }, (_, k) => {
+    let re = 0;
+    let im = 0;
+    for (let n = 0; n < N_FFT; n += 1) {
+      const idx = (k * n) % N_FFT;
+      re += frame[n] * cosTable[idx];
+      im -= frame[n] * sinTable[idx];
     }
-  }
-  for (let len = 2; len <= n; len <<= 1) {
-    const ang = (-2 * Math.PI) / len;
-    const wr = Math.cos(ang);
-    const wi = Math.sin(ang);
-    for (let i = 0; i < n; i += len) {
-      let curWr = 1;
-      let curWi = 0;
-      for (let k = 0; k < len / 2; k++) {
-        const ur = re[i + k];
-        const ui = im[i + k];
-        const vr = re[i + k + len / 2] * curWr - im[i + k + len / 2] * curWi;
-        const vi = re[i + k + len / 2] * curWi + im[i + k + len / 2] * curWr;
-        re[i + k] = ur + vr;
-        im[i + k] = ui + vi;
-        re[i + k + len / 2] = ur - vr;
-        im[i + k + len / 2] = ui - vi;
-        const nextWr = curWr * wr - curWi * wi;
-        const nextWi = curWr * wi + curWi * wr;
-        curWr = nextWr;
-        curWi = nextWi;
-      }
-    }
-  }
-}
+    return (re * re + im * im) / N_FFT;
+  });
+  return melFilters.map((filter) => filter.reduce((acc, w, k) => acc + w * spectrum[k], 0));
+});
+const peakPower = Math.max(...melPower.map((col) => Math.max(...col)));
 
-const hannWindow = new Float64Array(N_FFT);
-for (let n = 0; n < N_FFT; n++) hannWindow[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (N_FFT - 1));
-
-// --- Mel filterbank (HTK formula) --------------------------------------------
-const N_MELS = 64;
-const F_MAX = SAMPLE_RATE / 2;
-function hzToMel(hz: number): number {
-  return 2595 * Math.log10(1 + hz / 700);
-}
-function melToHz(mel: number): number {
-  return 700 * (10 ** (mel / 2595) - 1);
-}
-const MEL_MAX = hzToMel(F_MAX);
-const melEdges = Array.from({ length: N_MELS + 2 }, (_, i) => (i * MEL_MAX) / (N_MELS + 1));
-const hzEdges = melEdges.map(melToHz);
-const binEdges = hzEdges.map((hz) => Math.floor(((N_FFT + 1) * hz) / SAMPLE_RATE));
-
-// Slaney-style area normalization — without it, wideband noise sums to a
-// larger response in the wider high-frequency filters, washing out contrast.
-const melFilters: Float64Array[] = Array.from({ length: N_MELS }, () => new Float64Array(N_FREQ));
-for (let m = 1; m <= N_MELS; m++) {
-  const left = binEdges[m - 1];
-  const center = binEdges[m];
-  const right = binEdges[m + 1];
-  const filt = melFilters[m - 1];
-  const norm = 2 / (hzEdges[m + 1] - hzEdges[m - 1] || 1);
-  for (let k = left; k < center && k < N_FREQ; k++) if (k >= 0) filt[k] = ((k - left) / (center - left || 1)) * norm;
-  for (let k = center; k < right && k < N_FREQ; k++) if (k >= 0) filt[k] = ((right - k) / (right - center || 1)) * norm;
-}
-
-// --- STFT -> mel power -> dB (relative to peak, floored at -80 dB) ----------
-const DB_FLOOR = -80;
-let peakPower = 1e-10;
-const melPower: Float64Array[] = [];
-for (let f = 0; f < N_FRAMES; f++) {
-  const start = f * HOP;
-  const re = new Float64Array(N_FFT);
-  const im = new Float64Array(N_FFT);
-  for (let n = 0; n < N_FFT; n++) re[n] = audioSignal[start + n] * hannWindow[n];
-  fft(re, im);
-
-  const power = new Float64Array(N_FREQ);
-  for (let k = 0; k < N_FREQ; k++) power[k] = (re[k] * re[k] + im[k] * im[k]) / N_FFT;
-
-  const melRow = new Float64Array(N_MELS);
-  for (let m = 0; m < N_MELS; m++) {
-    let sum = 0;
-    const filt = melFilters[m];
-    for (let k = 0; k < N_FREQ; k++) sum += filt[k] * power[k];
-    melRow[m] = sum;
-    if (sum > peakPower) peakPower = sum;
-  }
-  melPower.push(melRow);
-}
-const melDb: number[][] = melPower.map((row) =>
-  Array.from(row).map((v) => Math.max(DB_FLOOR, 10 * Math.log10(Math.max(v, 1e-10) / peakPower)))
+// Cells: one per frame and mel band, centred on the frame's centre time and the band's centre mel
+const frameStep = HOP / sampleRate;
+const seqRgb = t.seq.map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+const cells = melPower.flatMap((col, f) =>
+  col.map((p, m) => {
+    const db = Math.max(-DYNAMIC_RANGE_DB, 10 * Math.log10(Math.max(p, 1e-12) / peakPower));
+    const v = (db + DYNAMIC_RANGE_DB) / DYNAMIC_RANGE_DB;
+    const centre = tStart + (f * HOP + N_FFT / 2) / sampleRate;
+    return {
+      key: `${f}-${m}`,
+      t0: centre - frameStep / 2,
+      t1: centre + frameStep / 2,
+      mel0: (m + 0.5) * melStep,
+      mel1: (m + 1.5) * melStep,
+      fill: `rgb(${seqRgb[0].map((c, j) => Math.round(c + (seqRgb[1][j] - c) * v)).join(",")})`,
+    };
+  }),
+);
+const xMin = cells[0].t0;
+const xMax = cells[cells.length - 1].t1;
+const yMin = 0.5 * melStep;
+const yMax = (N_MELS + 0.5) * melStep;
+const melTicks = Array.from(
+  { length: Math.floor(N_MELS / TICK_EVERY_BANDS) + 1 },
+  (_, i) => (i * TICK_EVERY_BANDS + 0.5) * melStep,
 );
 
-const TIME_MAX = (N_FRAMES * HOP) / SAMPLE_RATE;
-const Y_TICKS = Array.from({ length: 9 }, (_, i) => Math.round((i * N_MELS) / 8));
+const rawStep = DYNAMIC_RANGE_DB / COLORBAR_TICK_TARGET;
+const stepMagnitude = 10 ** Math.floor(Math.log10(rawStep));
+const dbStep = [1, 2, 5, 10].map((mul) => mul * stepMagnitude).find((s) => s >= rawStep);
+const dbTicks = Array.from({ length: Math.floor(DYNAMIC_RANGE_DB / dbStep) + 1 }, (_, i) => -i * dbStep);
 
-function formatHz(hz: number): string {
-  if (hz >= 1000) return `${(hz / 1000).toFixed(1).replace(/\.0$/, "")}k Hz`;
-  return `${Math.round(hz)} Hz`;
-}
+const TITLE = "spectrogram-mel · javascript · muix · anyplot.ai";
+const SUBTITLE = `${rows.length.toLocaleString("en-US")} samples at ${Math.round(sampleRate).toLocaleString(
+  "en-US",
+)} Hz · ${N_MELS} mel bands up to ${Math.round(sampleRate / 2).toLocaleString("en-US")} Hz · FFT ${N_FFT}, hop ${HOP} (${(
+  frameStep * 1000
+).toFixed(0)} ms per frame)`;
+const HEADER_H = 80;
+const BAR_W = 22;
+const BAR_GAP = 24;
 
-// Imprint sequential colormap: seq[0]=#009E73 (low power) -> seq[1]=#4467A3 (high power)
-function hexRgb(hex: string): [number, number, number] {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
-}
-function seqColor(frac: number): string {
-  const [r1, g1, b1] = hexRgb(t.seq[0]);
-  const [r2, g2, b2] = hexRgb(t.seq[1]);
-  return `rgb(${Math.round(r1 + (r2 - r1) * frac)},${Math.round(g1 + (g2 - g1) * frac)},${Math.round(b1 + (b2 - b1) * frac)})`;
-}
-// Gamma < 1 stretches the low end of the dB range across more of the color
-// ramp, so quiet early note onsets read against the background instead of
-// blending into a flat mid-tone field.
-const COLOR_GAMMA = 0.6;
-function gammaFrac(frac: number): number {
-  return Math.pow(Math.max(0, frac), COLOR_GAMMA);
-}
-
-// Mel-band cells drawn directly at their frame/bin boundaries via the MUI X scale hooks
-function SpectrogramCells() {
+function MelCells() {
   const xScale = useXScale();
   const yScale = useYScale();
-
   return (
-    <>
-      {melDb.flatMap((row, f) => {
-        const x0 = xScale((f * HOP) / SAMPLE_RATE);
-        const x1 = xScale(((f + 1) * HOP) / SAMPLE_RATE);
-        return row.map((db, m) => {
-          const frac = (db - DB_FLOOR) / -DB_FLOOR;
-          const yTop = yScale(m + 1);
-          const yBottom = yScale(m);
-          return (
-            <rect
-              key={`${f}-${m}`}
-              x={x0}
-              y={yTop}
-              width={x1 - x0 + 0.5}
-              height={yBottom - yTop + 0.5}
-              fill={seqColor(gammaFrac(frac))}
-            />
-          );
-        });
-      })}
-    </>
+    <g shapeRendering="crispEdges">
+      {cells.map((c) => (
+        <rect
+          key={c.key}
+          x={xScale(c.t0)}
+          y={yScale(c.mel1)}
+          width={xScale(c.t1) - xScale(c.t0) + 0.6}
+          height={yScale(c.mel0) - yScale(c.mel1) + 0.6}
+          fill={c.fill}
+        />
+      ))}
+    </g>
   );
 }
 
-// Colorbar gradient positioned from the MUI X drawing-area context
 function Colorbar() {
-  const { left, top, width: gW, height: gH } = useDrawingArea();
-  const cbX = left + gW + 26;
-  const cbW = 20;
-
+  const { left, top, width, height } = useDrawingArea();
+  const x = left + width + BAR_GAP;
   return (
-    <>
+    <g>
       <defs>
-        <linearGradient id="melCbGrad" x1="0" y1="1" x2="0" y2="0">
-          {[0, 0.25, 0.5, 0.75, 1].map((stop) => (
-            <stop key={stop} offset={`${stop * 100}%`} stopColor={seqColor(gammaFrac(stop))} />
-          ))}
+        <linearGradient id="melColorbar" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={t.seq[0]} />
+          <stop offset="100%" stopColor={t.seq[1]} />
         </linearGradient>
       </defs>
-      <rect x={cbX} y={top} width={cbW} height={gH} fill="url(#melCbGrad)" />
-      <text x={cbX + cbW / 2} y={top - 10} textAnchor="middle" fontSize={13} fill={t.inkSoft} fontFamily="Inter, system-ui, sans-serif">
-        0 dB
-      </text>
-      <text x={cbX + cbW / 2} y={top + gH + 18} textAnchor="middle" fontSize={13} fill={t.inkSoft} fontFamily="Inter, system-ui, sans-serif">
-        -80 dB
-      </text>
+      <rect x={x} y={top} width={BAR_W} height={height} fill="url(#melColorbar)" />
+      {dbTicks.map((db) => (
+        <g key={db}>
+          <line
+            x1={x + BAR_W}
+            x2={x + BAR_W + 6}
+            y1={top + (-db / DYNAMIC_RANGE_DB) * height}
+            y2={top + (-db / DYNAMIC_RANGE_DB) * height}
+            stroke={t.inkSoft}
+          />
+          <text
+            x={x + BAR_W + 10}
+            y={top + (-db / DYNAMIC_RANGE_DB) * height}
+            dominantBaseline="middle"
+            fontSize={14}
+            fill={t.inkSoft}
+          >
+            {db === 0 ? "0" : `−${-db}`}
+          </text>
+        </g>
+      ))}
       <text
-        x={cbX + cbW + 20}
-        y={top + gH / 2}
+        x={x + BAR_W + 62}
+        y={top + height / 2}
         textAnchor="middle"
-        fontSize={14}
-        fill={t.inkSoft}
-        fontFamily="Inter, system-ui, sans-serif"
-        transform={`rotate(90, ${cbX + cbW + 20}, ${top + gH / 2})`}
+        fontSize={16}
+        fill={t.ink}
+        transform={`rotate(90, ${x + BAR_W + 62}, ${top + height / 2})`}
       >
-        Power (dB)
+        {POWER_LABEL}
       </text>
-    </>
-  );
-}
-
-function ChartTitle() {
-  const { top } = useDrawingArea();
-  return (
-    <text x={width / 2} y={top - 46} textAnchor="middle" fontSize={22} fontWeight={500} fill={t.ink} fontFamily="Inter, system-ui, sans-serif">
-      spectrogram-mel · javascript · muix · anyplot.ai
-    </text>
+    </g>
   );
 }
 
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      series={[]}
-      skipAnimation
-      xAxis={[{
-        scaleType: "linear",
-        min: 0,
-        max: TIME_MAX,
-        label: "Time (s)",
-        valueFormatter: (v: number) => `${v.toFixed(1)}s`,
-      }]}
-      yAxis={[{
-        scaleType: "linear",
-        min: 0,
-        max: N_MELS,
-        label: "Frequency (mel-scaled)",
-        tickInterval: Y_TICKS,
-        valueFormatter: (v: number) => formatHz(melToHz((v * MEL_MAX) / N_MELS)),
-        // The Hz tick labels ("8k Hz") are much wider than the default tick-font-based
-        // label offset assumes — inflate tickFontSize to push the axis label clear,
-        // then restore the real rendered size via tickLabelStyle.
-        tickFontSize: 70,
-        tickLabelStyle: { fontSize: 13 },
-      }]}
-      margin={{ left: 130, right: 140, top: 100, bottom: 80 }}
-    >
-      <ChartTitle />
-      <SpectrogramCells />
-      <Colorbar />
-      <ChartsXAxis />
-      <ChartsYAxis />
-    </ChartContainer>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - HEADER_H}
+        margin={{ top: 12, right: 140, bottom: 12, left: 24 }}
+        skipAnimation
+        series={[]}
+        xAxis={[
+          {
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            label: TIME,
+            height: 62,
+            tickNumber: 12,
+            valueFormatter: (v) => v.toFixed(1),
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: yMin,
+            max: yMax,
+            tickInterval: melTicks,
+            valueFormatter: (mel) => Math.round(700 * (10 ** (mel / 2595) - 1)).toLocaleString("en-US"),
+            label: FREQUENCY_LABEL,
+            width: 92,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+      >
+        <MelCells />
+        <Colorbar />
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
+    </div>
   );
 }
