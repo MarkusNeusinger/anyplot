@@ -33,16 +33,17 @@ const CLADE = "Clade"; // role: extra
 const data = (() => {
   const newick =
     "(((((((Human:0.02,Chimpanzee:0.021):0.012,Gorilla:0.04):0.018,Orangutan:0.06):0.016,Gibbon:0.08):0.03,Rhesus Macaque:0.11):0.035,Marmoset:0.16):0.06,Lemur:0.24);";
-  const cladeOf = {
-    Human: "Apes",
-    Chimpanzee: "Apes",
-    Gorilla: "Apes",
-    Orangutan: "Apes",
-    Gibbon: "Apes",
-    "Rhesus Macaque": "Old World monkeys",
-    Marmoset: "New World monkeys",
-    Lemur: "Strepsirrhines",
-  };
+  // A Map, not an object: the names come from parsing the string, and a parsed name is no safe object key
+  const cladeOf = new Map([
+    ["Human", "Apes"],
+    ["Chimpanzee", "Apes"],
+    ["Gorilla", "Apes"],
+    ["Orangutan", "Apes"],
+    ["Gibbon", "Apes"],
+    ["Rhesus Macaque", "Old World monkeys"],
+    ["Marmoset", "New World monkeys"],
+    ["Lemur", "Strepsirrhines"],
+  ]);
   const rows = [];
   const addNode = (parent) => {
     const row = { [TAXON]: `ancestor-${rows.length}`, [PARENT]: parent ? parent[TAXON] : null, [BRANCH_LENGTH]: null, [CLADE]: null };
@@ -67,7 +68,7 @@ const data = (() => {
         if (r[PARENT] === current[TAXON]) r[PARENT] = name;
       });
       current[TAXON] = name;
-      current[CLADE] = cladeOf[name] ?? null;
+      current[CLADE] = cladeOf.get(name) ?? null;
     }
   }
   return rows;
