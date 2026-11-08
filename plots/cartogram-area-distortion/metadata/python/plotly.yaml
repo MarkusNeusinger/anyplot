@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: cartogram-area-distortion
 created: '2026-03-13T21:20:40Z'
-updated: '2026-11-08T22:22:09Z'
+updated: '2026-11-08T22:28:14Z'
 generated_by: claude-opus-5-5
 adopted_from: af451a58a159bba2d48c0e6c6240aab491a07b8f (af451a58a159bba2d48c0e6c6240aab491a07b8f)
 workflow_run: 42529534716
@@ -13,57 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Area exactly proportional to population: diameters are sqrt(population / max)
-    × 70 px with no size floor, so CA at 39.0M visibly covers about twice TX-minus-a-third
-    and eight times a median state'
-  - A real Dorling relaxation in the Albers USA screen space keeps every lower-48
-    bubble near its state's position, with no overlapping bubbles and a hairline gap
-    between neighbours in both renders
-  - Faint go.Choropleth state outlines underneath give the undistorted geography for
-    comparison, theme-tinted in both renders, with the native Alaska and Hawaii insets
-    of the albers usa projection
-  - 'Color encodes population density on a log scale with the Imprint sequential ramp
-    (#009E73 → #4467A3), and the colorbar carries a titled unit (per sq mi) and readable
-    10–5k tick text'
-  - 'Theme-adaptive chrome throughout: page, land, lake and colorbar panel backgrounds
-    and all text switch cleanly; the bubble labels and data colors are identical in
-    both renders'
-  - Hover text in the HTML shows population, density and land area per state
+  - Dorling bubble cartogram (a form the Notes accept) with diameter = sqrt(population/max)
+    × 70 px and no size floor, so bubble area is exactly proportional to population;
+    CA reads about 8.6× a median state
+  - Collision relaxation runs in the screen pixels of plotly's own Albers USA projection
+    (conic equal-area, 29.5°/45.5° parallels) and converts back to lon/lat, so bubbles
+    do not overlap and stay near their true positions; Alaska and Hawaii keep their
+    inset coordinates
+  - A transparent go.Choropleth layer draws every state outline in the theme's rule
+    color, giving the undistorted geography for comparison under the bubbles
+  - Color encodes log population density as a secondary variable with the two-stop
+    imprint_seq gradient, and the colorbar uses readable manual ticks (10, 50, 100,
+    500, 1k)
+  - Theme tokens threaded through title, colorbar, annotations, land, lakes and bubble
+    outlines; both renders are fully legible with identical data colors
+  - Hover text in the HTML carries population, density and land area per state
   weaknesses:
-  - 'DQ-03 (both): the density color domain runs from 5 to 6,000 per sq mi (cmin=log10(5),
-    cmax=log10(6000)) while the data spans about 1.1 (AK) to 1,065 (NJ), so the top
-    1k–5k segment of the colorbar is unused and most states sit in a narrow teal band
-    that is hard to tell apart → set cmin/cmax from the data (about log10(density.min())
-    to log10(density.max())), roughly −0.75 decades at the top. Likely cause: the
-    typed cmin/cmax values in the marker dict.'
-  - 'VQ-05 (both): the map fills only the middle band of the canvas, leaving about
-    130 px (layout ≈ 30 px) of empty page between the title and the top of the map
-    and a similar empty strip under the caption → shrink the top and bottom margins
-    or move the geo domain so the map uses the height (about −25 layout px top, −20
-    bottom). Likely cause: margin t=70, b=60 combined with the geo frame''s fixed
-    aspect.'
-  - 'Suggestion: a small size key (reference bubbles for 1M, 10M and 30M) would let
-    readers read population off the bubble areas, not just compare them.'
-  - 'Suggestion: the colorbar ticks 1k/500 and 100/50 sit close together on the log
-    axis; a sparser tick set (10, 100, 1k) would read more cleanly.'
+  - 'Suggestion: a small size key (two or three reference circles, e.g. 1M / 10M /
+    30M) would let the reader decode absolute population from bubble area, not only
+    the ratio'
+  - 'Suggestion: the colorbar''s lowest decade (1–10 per sq mi, where AK, WY and MT
+    sit) has no tick label; a ''1'' tick would close the scale'
+  - 'Suggestion: the ''1k'' tick sits right under the colorbar title''s second line;
+    a little more title padding would give it room'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; the US land is drawn in the slightly lighter #FFFDF6 with faint grey state outlines and a pale lake tint for the Great Lakes.
-      Chrome: centered title "U.S. States Population Cartogram · cartogram-area-distortion · python · plotly · anyplot.ai" in dark ink at about 59 % width; a muted caption under the map "Dorling bubble cartogram · Area ∝ population · Color ∝ density"; on the right a colorbar panel on the elevated surface titled "Population Density (per sq mi)" with ticks 10, 50, 100, 500, 1k, 5k, and below it a boxed callout "CA has 39.0M people, 8.6× the median state's 4.6M, yet NJ is 4.5× denser than CA". All text dark on light and readable.
-      Data: 50 circles (Dorling cartogram) placed near their states, area proportional to population: CA, TX, FL and NY largest; Wyoming, the Dakotas, Vermont, Delaware and others small and unlabeled. Fill runs from brand green #009E73 (sparse states such as AK, MT, WY) to a blue-teal (NJ, MA, RI) on the Imprint sequential ramp; thin page-colored outlines; bold off-white state abbreviations on the larger bubbles. No bubbles overlap. Alaska and Hawaii sit in their insets.
+      Background: warm off-white #FAF8F1 page; lower-48 land in #FFFDF6 with faint grey state outlines, Great Lakes in a pale #EDE9DF, Alaska and Hawaii insets bottom-left.
+      Chrome: centred dark title "U.S. States Population Cartogram · cartogram-area-distortion · python · plotly · anyplot.ai" at about 59 % of the width; muted subtitle "Dorling bubble cartogram · Area ∝ population · Color ∝ density" below the map; vertical colorbar "Population Density (per sq mi)" with ticks 10/50/100/500/1k on an elevated box at the right; elevated callout box below it ("CA has 39.0M people, 8.6× the median state's 4.6M, yet NJ is 4.5× denser than CA"). All text dark and readable.
+      Data: 50 non-overlapping circles, one per state near its true position, area ∝ population (CA, TX, FL, NY largest; WY, VT, AK tiny), colored green (#009E73, sparse AK) to blue (#4467A3, dense NJ) with a thin page-colored outline; white bold abbreviations on the larger bubbles, the smallest unlabeled.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page; land in #242420 with faint light-grey state outlines.
-      Chrome: title, caption, colorbar title and ticks and the callout text switch to light ink and are all readable; colorbar panel and callout box use the dark elevated surface. No dark-on-dark text.
-      Data: bubble positions, sizes and colors are identical to the light render; only the bubble outlines (page color) flip. The off-white abbreviations remain readable on the green-to-blue fills; the brand green bubbles stand out clearly on the dark surface.
+      Background: warm near-black #1A1A17 page; land in #242420 with light-grey state outlines; colorbar and callout boxes on #242420.
+      Chrome: title, colorbar title and ticks in light ink, subtitle and callout in light muted grey; no dark-on-dark text anywhere.
+      Data: bubble colors identical to the light render (green → blue imprint_seq); outlines flip to the dark page color; white abbreviations stay legible on the teal/blue fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -71,76 +61,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 12, colorbar 14/11, caption and callout
-          12, bubble labels 9–14 bold); all text readable in both themes
+        comment: Explicit sizes everywhere; title, colorbar, callout and bubble labels
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the Dorling relaxation keeps every bubble clear
-          of its neighbours; callout sits clear of the AK/HI insets
+        comment: No text collisions; bubbles relaxed so none overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 50 bubbles at sizes proportional to the data with page-colored outlines;
-          colorbar visible in both themes
+        comment: Bubbles sized by value with a hairline page-colored outline; smallest
+          still visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp is CVD-safe; off-white bold labels hold contrast
-          on the fills
+        comment: Green→blue ramp, CVD-safe, white labels have good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Empty bands above the map and below the caption (defect line); canvas
-          3200x1800, nothing clipped
+        comment: 3200×1800, map fills the left, colorbar and callout balanced at the
+          right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes on a map; colorbar title carries the unit (per sq mi), caption
-          names both encodings
+        comment: Colorbar title with units; subtitle states both encodings
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 → #4467A3) for continuous density; backgrounds
-          #FAF8F1 / #1A1A17; both renders theme-correct'
+        comment: 'imprint_seq two-stop #009E73→#4467A3 for density; backgrounds #FAF8F1
+          / #1A1A17'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Clear typographic hierarchy: compact title, muted caption explaining
-          both encodings, colorbar on an elevated panel; land drawn on the elevated
-          tone against the page'
+        passed: false
+        comment: 'Typographic hierarchy beyond baseline: bold keyword subtitle, label
+          font scaled to bubble size, elevated boxes for colorbar'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Page-colored bubble outlines plus a hairline Dorling gap separate
-          neighbours; reference outlines kept faint so they recede behind the bubbles
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data displayed with the spec's dual encoding; the insight callout
-          is an annotation layer the spec does not request and earns no credit
+        comment: Page-colored bubble outlines separating neighbours, faint reference
+          outlines, themed lakes/land, smallest bubbles deliberately unlabeled
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Log density color makes the size/density contrast (big CA vs small
+          but bluest NJ) visible at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -150,32 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Dorling (non-contiguous) cartogram, a form the Notes accept
+        comment: Dorling cartogram, the non-contiguous form the Notes accept
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area ∝ value; bubbles near true positions, not overlapping; original
-          state outlines underneath; color scale on a secondary variable with colorbar;
-          caption says what area and color mean; abbreviations on the major states,
-          smallest unlabeled
+        comment: Original outlines, secondary color variable, abbreviations on major
+          regions, legend text for area and color all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Diameter ∝ sqrt(population), no floor; displacement is the Dorling
-          layout the spec asks for
+        comment: Area ∝ population exactly; displacement is the layout of the type,
+          which the spec permits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'U.S. States Population Cartogram · cartogram-area-distortion
-          · python · plotly · anyplot.ai'; colorbar titled for a reader
+        comment: Title format correct with descriptive prefix; colorbar and subtitle
+          explain encodings
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -183,23 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the size distortion (CA/TX/FL swell, AK/MT/WY shrink), reference
-          geography and the secondary color variable
+        comment: 50 states spanning 0.58M–39M and density 1–1065 per sq mi shows strong
+          distortion
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US state populations (2022-23 Census estimates) and land areas;
-          neutral
+        comment: Real Census population estimates, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Checked CA 39.03M, TX 30.03M, NJ density ≈ 1,065 vs CA ≈ 238 (4.5×,
-          matches the callout); color domain 5–6,000 overshoots the data's 1.1–1,065
-          (defect line)
+        comment: Checked CA 39.03M, TX 30.03M, median 4.56M; NJ density 1065 vs CA
+          238 → 4.5× matches the callout
     code_quality:
       score: 10
       max: 10
@@ -209,13 +191,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data and deterministic relaxation
+        comment: Deterministic data and relaxation
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -227,15 +209,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Projection and Dorling relaxation (lines 311–342) are vectorized
-          numpy; no available call computes a Dorling layout or the Albers USA screen
-          projection
+        comment: Vectorised relaxation; no available call computes a Dorling layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Writes plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
       score: 7
       max: 10
@@ -244,20 +224,20 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: graph_objects Scattergeo with locationmode USA-states, geo layout
-          with albers usa projection, marker colorbar
+        passed: false
+        comment: graph_objects Choropleth + Scattergeo with locationmode USA-states
+          and layout.geo config
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Transparent go.Choropleth as an outline layer, built-in albers usa
-          AK/HI insets, rich hover text in the HTML
-  verdict: REJECTED
+        passed: false
+        comment: albers usa projection with AK/HI insets, choropleth as outline layer,
+          hover tooltips in HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
-  rendered_at: '2026-11-08T22:19:11Z'
+  rendered_at: '2026-11-08T22:25:20Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -268,12 +248,9 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - explicit-figure
   dataprep:
   - normalization
   styling:
   - custom-colormap
-  - alpha-blending
   - edge-highlighting
-  - minimal-chrome
