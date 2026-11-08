@@ -12,9 +12,3 @@
   ('Exam Score')`, for all 15 libraries. It counts only the required roles that place a mark, never a label, an
   optional role or a spec's shorter list beside the rows, such as event dates, and it leaves the status as it
   is.
-
-### Fixed
-
-- **The prep eval runs again.** Its start-version read still passed the session view to `resolve_version`
-  after the one-number-per-session change dropped that parameter, so 11 of its unit tests and every live run
-  failed.
