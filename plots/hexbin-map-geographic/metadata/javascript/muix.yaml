@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: hexbin-map-geographic
 created: '2026-08-25T02:15:28Z'
-updated: '2026-11-08T07:10:24Z'
+updated: '2026-11-08T07:17:53Z'
 generated_by: claude-opus-5-5
 adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
 workflow_run: 42439264703
@@ -16,57 +16,53 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 quality_score: 86
 review:
   strengths:
-  - Uses the MUI X composition API (ChartsDataProvider + ChartsSurface) with custom
-    SVG layers drawn through useXScale/useYScale/useZColorScale, so the hexagons,
-    land polygon and coastline all sit in true data coordinates
-  - 'A zAxis continuous colorMap built from the Imprint imprint_seq tokens (#009E73
-    → #4467A3) drives both the cell fills and the native ContinuousColorLegend, titled
-    ''Count per hex cell'''
-  - Equal-area-looking flat-top hexagonal grid with shared edges, cube-rounded binning
-    in an equirectangular projection scaled at the mid latitude, so cells keep their
-    shape on screen; 72 cells of 11 km radius balance detail against aggregation
-  - Base map of a recognisable Southern California coastline with a tinted land polygon,
-    clipped to the drawing area; translucent cells (0.62) let the coastline and grid
-    show through
-  - Subtitle reports point count, cell count, cell radius and projection, a clear
-    secondary hierarchy under the mandated title
-  - Cell centres registered as a scatter series with a valueFormatter for item tooltips
-    (count and coordinates) in the HTML view
-  - Theme tokens threaded through every chrome element; both renders fully legible
+  - True hexagonal binning in projected units (axial coordinates with cube rounding,
+    longitude scaled by cos of the mid latitude), so the cells are regular, equal
+    and share edges on screen, and each one sits over the points it aggregates
+  - 'The custom hexagon polygons read their colours from the zAxis continuous colorMap
+    through useZColorScale(), and the same z axis drives ContinuousColorLegend, so
+    the cells and the legend share one imprint_seq scale (#009E73 to #4467A3) with
+    a title that names the statistic (count)'
+  - A clipped base map with a land tint, the coastline from Pismo Beach to Ensenada
+    and the Channel Islands, Catalina, San Nicolas and San Clemente, drawn under hexagons
+    at 0.62 opacity so the island outlines show through the cells
+  - The legend gradient uses the cells' opacity, so the bar shows the colours as they
+    are drawn, and the page-coloured hexagon edges separate neighbouring cells in
+    both themes
+  - Composition API (ChartsDataProvider, ChartsWrapper, ChartsSurface, ChartsGrid,
+    ChartsXAxis/YAxis) with custom SVG layers inside the drawing area, plus a scatter
+    series of cell centres whose valueFormatter feeds ChartsTooltip with count, sum,
+    mean and coordinates in the HTML output
+  - 'The hexagon size (HEX_RADIUS_SHARE) and the statistic (AGGREGATION: count, sum
+    or mean) are configurable constants, with labels and the legend title that follow
+    the chosen statistic'
+  - 'A plausible, neutral scenario: 1,520 whale and dolphin sightings clustered off
+    the Santa Barbara Channel, Dana Point and La Jolla, kept at sea by a distance-to-shore
+    filter, with seeded, reproducible generation'
   weaknesses:
-  - 'VQ-03 (both): the color legend gradient is drawn fully opaque while the cells
-    are drawn at 0.62 opacity, so the cells do not match the legend: the 110-count
-    cells read lavender on light and dark navy on dark against a #4467A3 legend end
-    → make the legend show the colors as drawn (same opacity on the legend bar, or
-    opaque cells with a mixed color). Likely cause: fillOpacity={HEX_OPACITY} on the
-    hex polygons with no matching opacity on ContinuousColorLegend.'
-  - 'SC-02 (code): the Notes ask to support the aggregation methods count, sum and
-    mean, but the code only counts points and has no setting or value column to switch
-    to sum or mean → add an aggregation constant (count | sum | mean) next to HEX_RADIUS_SHARE,
-    with an optional value column, and name the chosen statistic in STAT_LABEL. Likely
-    cause: the binning loop only increments bin.count.'
-  - 'DQ-02 (both): the base map omits the Channel Islands, and the Santa Barbara Channel
-    hotspot (centre -119.72, 34.16, sd 0.3° lon) spreads sightings over where Santa
-    Cruz and Santa Rosa Islands lie (about 33.9–34.07°N), so a reader who knows the
-    coast sees reports on land → add the larger Channel Islands to the land geometry
-    and apply the same minimum-distance-from-shore filter to them. Likely cause: COASTLINE/LAND
-    only contain the mainland coast.'
-  - 'Suggestion: the square extent leaves the south-west third of the map as empty
-    ocean; a tighter latitude range or landscape canvas would give the band of cells
-    more room.'
-  - 'Suggestion: intermediate tick values on the color legend (e.g. 25, 50, 75, 100)
-    would make individual cell counts easier to read off the static PNG.'
+  - 'VQ-05 (both): the point extent is about 1.4:1 wide in projected units, but the
+    square canvas stretches the latitude span from the padded 32.3–34.7°N to 32.0–34.8°N,
+    which leaves an empty band of sea below 32.4°N and an empty south-west corner.
+    Together they fill about a third of the drawing area → a drawing area whose aspect
+    matches the data extent (landscape orientation, about 0.3° less latitude padding).
+    Likely cause: the `//# anyplot-orientation: square` directive combined with spanY
+    = spanX / (DRAW_W / DRAW_H).'
+  - 'Suggestion: intermediate tick values on the colour bar (for example 50, 100,
+    150) would make the counts of the mid-tone cells readable without hovering.'
+  - 'Suggestion: in the dark render the 0.62 opacity over #1A1A17 darkens the high-count
+    cells toward navy, which narrows the visible step from low to high. A slightly
+    higher opacity in the dark theme would keep the gradient''s range.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; land east of the coastline tinted light grey with a dark-grey coastline polyline from Point Arguello to Ensenada.
-      Chrome: bold dark title "Gray Whale & Dolphin Sightings · hexbin-map-geographic · javascript · muix · anyplot.ai" (~75% width), soft-ink subtitle with point/cell counts, y-axis "Latitude" with 32.2–34.6°N ticks, x-axis "Longitude" with 120.6–117.4°W ticks, subtle grid, legend title "Count per hex cell" over a horizontal gradient bar labelled 1 and 110. All readable.
-      Data: 72 translucent flat-top hexagons with page-coloured outlines following the coast; low counts brand green #009E73, three hot spots (Santa Barbara Channel, off Dana Point, off La Jolla) shifting to lavender-blue toward #4467A3.
+      Background: warm off-white #FAF8F1 page and plot area; the land east of the coastline is a pale grey tint (grid token) with a dark ink-soft coastline and island outlines.
+      Chrome: bold title "Gray Whale & Dolphin Sightings · hexbin-map-geographic · javascript · muix · anyplot.ai" in dark ink, subtitle "1,520 points binned into 68 hexagons of 11 km radius · equirectangular map scaled at 33.4°N", axis titles "Longitude" and "Latitude", ticks 120.6°W–117.4°W and 32.0°N–34.6°N, light grey grid. All readable.
+      Data: 68 flat-top hexagons of equal size with page-coloured edges along the coast from Point Conception to below San Diego, filled from the imprint_seq ramp: most cells brand green #009E73, the dense cells in the Santa Barbara Channel, off Dana Point and off La Jolla shifting toward blue #4467A3 (darkest about 32.8°N 117.5°W). The island outlines show through the translucent cells. Horizontal colour bar at the bottom titled "Sightings per hex cell (count)", from 1 to 175.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; land tinted dark grey, coastline light grey.
-      Chrome: title, subtitle, axis titles, tick labels and legend text all in light ink; no dark-on-dark text; grid subtle but visible.
-      Data: same hexagon geometry and the same colormap values; the translucent cells blend with the dark page and read darker (deep green to navy), while the legend bar stays opaque green→blue; brand green is clearly visible.
+      Background: warm near-black #1A1A17; land is a dark grey tint with a light coastline and island outlines.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, subtle grid. No dark-on-dark text.
+      Data: the same hexagons with the same fill colours and 0.62 opacity; over the dark page they read as deeper green to navy, with dark page-coloured edges. The colour bar has the same title and the 1–175 range, and its labels are light.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -78,73 +74,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 21 px, ticks 14, labels 16); all text readable
-          in both themes
+        comment: Explicit sizes (title 21, subtitle 15, axis titles 16, ticks 14 CSS
+          px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; hexagons share edges without hiding information
+        comment: No text collisions; hexagons tile without overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Cells clearly visible, but the opaque legend gradient does not match
-          the 0.62-opacity cells (defect line)
+        passed: true
+        comment: Cells clearly visible with page-coloured edges; colour bar visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential ramp with lightness change, CVD-safe
+        comment: The green to blue sequential ramp is CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400, balanced axis labels, nothing cut off
+        comment: The square canvas pads the 1.4:1 data extent with an empty band of
+          sea to the south and an empty south-west corner (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude/Longitude with degree-formatted ticks
+        comment: Longitude/Latitude with degree and hemisphere tick formatting
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq from tokens (#009E73 → #4467A3); correct backgrounds
-          in both themes'
+        comment: 'imprint_seq (t.seq) continuous map; #FAF8F1 / #1A1A17 backgrounds;
+          chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Title/subtitle hierarchy with binning statistics and a titled color
-          legend beyond the baseline
+        passed: true
+        comment: An informative subtitle (point count, bin count, radius in km, projection)
+          under the title, and a legend title that names the statistic
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Page-coloured cell outlines, tinted land polygon with coastline,
-          clip path and an aspect-correct projection
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: Page-coloured cell edges in each theme, and a legend gradient at
+          the cells' opacity so the bar matches the drawn colours
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Data built around three whale-watching launch hotspots that the ramp
-          brings forward
+        comment: The three hotspots emerge from the data; no focal hierarchy chosen
+          beyond that
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,29 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Hexbin map over a coastline base map
+        comment: Geographic hexbin map
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Hex size configurable, sequential colormap with legend, base map,
-          transparency, tooltips; aggregation methods sum/mean not supported (defect
-          line)
+        passed: true
+        comment: Configurable hex size, count/sum/mean aggregation, sequential map
+          plus legend naming the statistic, coastline and island base map, translucent
+          cells, hover tooltip with count/sum/mean/coordinates
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cells at their binned centres in lon/lat; all data shown
+        comment: Bins computed in projected units; each cell lies over its points;
+          the axes cover all the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title with descriptive prefix; legend names the statistic
+        comment: Descriptive prefix plus the mandated title format; legend title text
+          for a reader
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -182,21 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Dense hotspots, sparse cells and gaps all shown
+        comment: Dense hotspots, sparse cells and empty gaps; aggregation boundaries
+          are clear
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Plausible whale-watching sightings, but the base map omits the Channel
-          Islands while the Santa Barbara cluster covers their location (defect line)
+        passed: true
+        comment: Whale and dolphin sightings off Southern California on an approximate
+          real coastline; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,520 points (spec 1,000+), 11 km cells, realistic coordinates; no
-          Check values in the spec
+        comment: 1,520 points (inside the 1,000–100,000 range); 11 km cells; 1–175
+          sightings per cell is plausible
     code_quality:
       score: 10
       max: 10
@@ -206,32 +206,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → plot flow; the two sub-components are needed for MUI X hooks
+        comment: Linear script; the two components are needed for the MUI X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded mulberry32 generator
+        comment: Seeded mulberry32 PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Written-out binning is allowed by the library prompt's Computation
-          line
+        comment: Hex binning is written out because only @mui/x-charts and @mui/material
+          are available (library prompt Computation line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, skipAnimation, v9 API
+        comment: Default-export component sized to ANYPLOT_SIZE, skipAnimation, current
+          v9 API
     library_mastery:
       score: 7
       max: 10
@@ -240,30 +241,35 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface)
-          with custom layers via scale hooks
+        passed: true
+        comment: The composition API with useXScale/useYScale/useDrawingArea for custom
+          SVG layers inside the drawing area
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: zAxis continuous colorMap shared by useZColorScale and ContinuousColorLegend
-  verdict: REJECTED
+        passed: true
+        comment: A zAxis continuous colorMap consumed through useZColorScale by the
+          custom polygons and by ContinuousColorLegend (continuousColorLegendClasses
+          styling); a scatter series' valueFormatter feeding ChartsTooltip
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T02:37:46Z'
+  rendered_at: '2026-11-08T07:13:38Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - colorbar
   - hover-tooltips
   - html-export
-  - layer-composition
   - patches
   patterns:
   - data-generation
   dataprep:
   - binning
+  - groupby-aggregation
   styling:
+  - custom-colormap
   - alpha-blending
+  - edge-highlighting
