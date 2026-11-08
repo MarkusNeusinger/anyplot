@@ -2,180 +2,145 @@
 // residual-plot: Residual Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
+
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG) ------------------------------------
-// A simple linear regression predicting house price from square footage, with
-// noise that widens for larger homes — a classic heteroscedastic pattern a
-// residual plot is designed to surface.
-let seed = 42;
-function nextRandom() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-}
-function gaussian() {
-  const u1 = Math.max(nextRandom(), 1e-9);
-  const u2 = nextRandom();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Constants
+const OUTLIER_SD = 2; // residuals beyond this many standard deviations count as outliers
+const OUTLIER_COLOR = t.palette[4]; // alert red for the outliers; the bulk keeps the brand green
+const PAD_SHARE = 0.04; // axis padding beyond the outermost points and bands, share of the span
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 44;
 
-const HOME_COUNT = 220;
-const squareFootage = Array.from(
-  { length: HOME_COUNT },
-  () => 600 + nextRandom() * 2900,
-);
-const housePrices = squareFootage.map((sqft) => {
-  const noise = gaussian() * (8000 + sqft * 18);
-  return 42000 + sqft * 118 + noise;
-});
+// Columns: set these to your data's column names
+const OBSERVED = "Observed price (USD)"; // role: y_true
+const PREDICTED = "Predicted price (USD)"; // role: y_pred
 
-// Ordinary least squares fit: price = intercept + slope * sqft
-const meanSqft = squareFootage.reduce((sum, v) => sum + v, 0) / HOME_COUNT;
-const meanPrice = housePrices.reduce((sum, v) => sum + v, 0) / HOME_COUNT;
-let covariance = 0;
-let variance = 0;
-for (let i = 0; i < HOME_COUNT; i++) {
-  covariance += (squareFootage[i] - meanSqft) * (housePrices[i] - meanPrice);
-  variance += (squareFootage[i] - meanSqft) ** 2;
-}
-const slope = covariance / variance;
-const intercept = meanPrice - slope * meanSqft;
+// Data: replace this block with your own records, one object per row
+// 220 home sales: price regressed on floor area (600–3500 sq ft) by ordinary least squares, with
+// noise that widens for larger homes; fixed-seed LCG with Box-Muller normals
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const sqft = Array.from({ length: 220 }, () => 600 + rand() * 2900);
+  const price = sqft.map((s) => {
+    const z = Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+    return 42000 + s * 118 + z * (8000 + s * 18);
+  });
+  const mx = sqft.reduce((a, b) => a + b, 0) / sqft.length;
+  const my = price.reduce((a, b) => a + b, 0) / price.length;
+  const slope =
+    sqft.reduce((a, s, i) => a + (s - mx) * (price[i] - my), 0) / sqft.reduce((a, s) => a + (s - mx) ** 2, 0);
+  return sqft.map((s, i) => ({
+    [OBSERVED]: Math.round(price[i]),
+    [PREDICTED]: Math.round(my + slope * (s - mx)),
+  }));
+})();
 
-const fittedValues = squareFootage.map((sqft) => intercept + slope * sqft);
-const residuals = housePrices.map((price, i) => price - fittedValues[i]);
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => Number.isFinite(d[OBSERVED]) && Number.isFinite(d[PREDICTED]));
+const points = rows.map((d, i) => ({ x: d[PREDICTED], y: d[OBSERVED] - d[PREDICTED], id: i }));
+const meanResidual = points.reduce((s, p) => s + p.y, 0) / points.length;
+const sd = Math.sqrt(points.reduce((s, p) => s + (p.y - meanResidual) ** 2, 0) / (points.length - 1));
+const limit = OUTLIER_SD * sd;
+const inliers = points.filter((p) => Math.abs(p.y) <= limit);
+const outliers = points.filter((p) => Math.abs(p.y) > limit);
+const xs = points.map((p) => p.x);
+const ys = [...points.map((p) => p.y), limit, -limit];
+const xPad = (Math.max(...xs) - Math.min(...xs)) * PAD_SHARE;
+const yPad = (Math.max(...ys) - Math.min(...ys)) * PAD_SHARE;
 
-const residualMean = residuals.reduce((sum, r) => sum + r, 0) / HOME_COUNT;
-const residualStd = Math.sqrt(
-  residuals.reduce((sum, r) => sum + (r - residualMean) ** 2, 0) /
-    (HOME_COUNT - 1),
-);
-const upperBand = 2 * residualStd;
-const lowerBand = -2 * residualStd;
+const unit = OBSERVED.match(/\(([^)]+)\)/)?.[1] ?? "";
+const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const TITLE = "residual-plot · javascript · muix · anyplot.ai";
+const SUBTITLE = `${points.length} observations · residual = observed − predicted · SD ${fmt.format(sd)} ${unit} · ${outliers.length} beyond ±${OUTLIER_SD}σ`;
 
-// Points beyond ±2 standard deviations get a semantic-red accent — they are
-// the leverage points / outliers a reviewer checks first.
-const withinBand = [];
-const outliers = [];
-fittedValues.forEach((fitted, i) => {
-  const residual = residuals[i];
-  const point = { x: fitted, y: residual, id: i };
-  if (residual > upperBand || residual < lowerBand) {
-    outliers.push(point);
-  } else {
-    withinBand.push(point);
-  }
-});
-
-const TITLE_HEIGHT = 66;
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        display: "flex",
-        flexDirection: "column",
-        paddingTop: "20px",
-      }}
-    >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 26,
-          fontWeight: 600,
-          textAlign: "center",
-          lineHeight: 1.2,
-        }}
-      >
-        residual-plot · javascript · muix · anyplot.ai
-      </Typography>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
       <ScatterChart
         width={width}
-        height={height - TITLE_HEIGHT}
+        height={height - TITLE_H - SUBTITLE_H - LEGEND_H}
         skipAnimation
+        margin={{ top: 12, right: 40, bottom: 8, left: 16 }}
+        grid={{ horizontal: true, vertical: true }}
         series={[
-          {
-            id: "residuals",
-            data: withinBand,
-            label: "Residuals",
-            markerSize: 7,
-            color: "rgba(0, 158, 115, 0.55)",
-          },
-          {
-            id: "outliers",
-            data: outliers,
-            label: "Outliers (|residual| > 2σ)",
-            markerSize: 11,
-            color: "rgba(174, 48, 48, 0.85)",
-          },
+          { id: "residuals", data: inliers, label: `Residuals within ±${OUTLIER_SD}σ`, markerSize: 6, color: t.palette[0] },
+          { id: "outliers", data: outliers, label: `Outliers beyond ±${OUTLIER_SD}σ`, markerSize: 8, color: OUTLIER_COLOR },
         ]}
         xAxis={[
           {
-            label: "Fitted Price ($)",
+            label: PREDICTED,
+            min: Math.min(...xs) - xPad,
+            max: Math.max(...xs) + xPad,
+            tickNumber: 9,
+            height: 64,
+            valueFormatter: (v) => fmt.format(v),
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
-            label: "Residual ($)",
+            label: `Residual (${unit})`,
+            min: Math.min(...ys) - yPad,
+            max: Math.max(...ys) + yPad,
+            width: 92,
+            valueFormatter: (v) => fmt.format(v),
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
-        margin={{ left: 110, right: 40, top: 20, bottom: 90 }}
-        grid={{ horizontal: true, vertical: true }}
         slotProps={{
           legend: {
-            position: { vertical: "top", horizontal: "middle" },
-            direction: "row",
-            labelStyle: { fontSize: 13, fill: t.inkSoft },
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink },
           },
         }}
         sx={{
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
-          "& circle": { stroke: t.pageBg, strokeWidth: 1 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1 },
+          '& [data-series="residuals"] .MuiScatterChart-marker': { fillOpacity: 0.6 },
         }}
       >
         <ChartsReferenceLine
           y={0}
-          label="Perfect fit: residual = 0"
+          label="Perfect prediction: residual = 0"
           labelAlign="end"
-          lineStyle={{ stroke: t.ink, strokeWidth: 2.5 }}
-          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 600 }}
+          spacing={{ x: 8, y: 8 }}
+          lineStyle={{ stroke: t.ink, strokeWidth: 2 }}
+          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 600, stroke: t.pageBg, strokeWidth: 4, paintOrder: "stroke" }}
         />
-        <ChartsReferenceLine
-          y={upperBand}
-          label={`+2σ: ${Math.round(upperBand).toLocaleString()}`}
-          labelAlign="end"
-          lineStyle={{
-            stroke: t.inkSoft,
-            strokeDasharray: "8 6",
-            strokeWidth: 1.75,
-          }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
-        />
-        <ChartsReferenceLine
-          y={lowerBand}
-          label={`−2σ: ${Math.round(lowerBand).toLocaleString()}`}
-          labelAlign="end"
-          lineStyle={{
-            stroke: t.inkSoft,
-            strokeDasharray: "8 6",
-            strokeWidth: 1.75,
-          }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
-        />
+        {[1, -1].map((side) => (
+          <ChartsReferenceLine
+            key={side}
+            y={side * limit}
+            label={`${side > 0 ? "+" : "−"}${OUTLIER_SD}σ = ${side > 0 ? "" : "−"}${fmt.format(limit)}`}
+            labelAlign="end"
+            spacing={{ x: 8, y: 8 }}
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.5 }}
+            labelStyle={{ fill: t.inkSoft, fontSize: 14, stroke: t.pageBg, strokeWidth: 4, paintOrder: "stroke" }}
+          />
+        ))}
       </ScatterChart>
-    </Box>
+    </div>
   );
 }
