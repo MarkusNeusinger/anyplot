@@ -1,10 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-08
 """
 
+import json
 import os
+import urllib.request
 
 import numpy as np
 import pandas as pd
@@ -19,6 +21,7 @@ from lets_plot import (
     ggplot,
     ggsave,
     ggsize,
+    ggtb,
     labs,
     layer_tooltips,
     scale_color_identity,
@@ -168,87 +171,27 @@ use_dark = (fill_lum + 0.05) / (dark_lum + 0.05) >= (light_lum + 0.05) / (fill_l
 label_colors = dict(zip(categories, np.where(use_dark, DARK_TEXT, LIGHT_TEXT), strict=True))
 groups["text_color"] = groups["dominant"].map(label_colors)
 
-# Simplified continental US outline as the basemap
-us_boundary = [
-    # Canadian border west to east
-    (-125, 49),
-    (-120, 49),
-    (-115, 49),
-    (-110, 49),
-    (-105, 49),
-    (-100, 49),
-    (-95, 49),
-    (-90, 47),
-    (-87, 47),
-    # Great Lakes south shoreline
-    (-85, 46),
-    (-82, 46),
-    (-82, 42),
-    (-79, 43),
-    (-76, 44),
-    (-73, 44),
-    # Maine and New England coast
-    (-70, 45),
-    (-67, 45),
-    (-67, 44),
-    (-69, 43.5),
-    (-70, 42.5),
-    (-71, 41.5),
-    (-73, 41),
-    # Mid-Atlantic
-    (-74, 40.5),
-    (-74, 40),
-    (-75, 39),
-    (-75, 38),
-    # Southeast Atlantic coast
-    (-76, 37),
-    (-76, 36),
-    (-76, 35),
-    (-77, 34),
-    (-79, 33.5),
-    (-80, 32),
-    (-81, 31),
-    (-80, 30),
-    (-80, 28),
-    # Florida peninsula
-    (-80, 26),
-    (-81, 25),
-    (-80, 25),
-    # Florida west coast and Gulf of Mexico
-    (-82, 27),
-    (-83, 29),
-    (-84, 30),
-    (-86, 30),
-    (-88, 30),
-    (-89, 29),
-    (-90, 29),
-    (-91, 29),
-    (-94, 29),
-    # Texas Gulf coast
-    (-97, 26),
-    (-97, 27),
-    (-97, 28),
-    (-100, 29),
-    (-104, 29),
-    # Southwest border
-    (-106, 32),
-    (-109, 31),
-    (-111, 31),
-    (-114, 32),
-    # Pacific coast
-    (-117, 32),
-    (-118, 34),
-    (-120, 34),
-    (-122, 37),
-    (-123, 38),
-    (-124, 40),
-    (-124, 43),
-    (-123, 46),
-    (-124, 48),
-    (-125, 49),
+# Basemap: US-48 state boundaries from Natural Earth (1:50m, Great Lakes cut out), one polygon
+# group per outer ring so islands and multi-part states draw separately
+STATES_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/"
+    "ne_50m_admin_1_states_provinces_lakes.geojson"
+)
+with urllib.request.urlopen(STATES_URL, timeout=60) as response:
+    states = json.load(response)["features"]
+rings = [
+    ring_polygon[0]
+    for state in states
+    if state["properties"]["adm0_a3"] == "USA" and state["properties"]["postal"] not in ("AK", "HI")
+    for ring_polygon in (
+        state["geometry"]["coordinates"]
+        if state["geometry"]["type"] == "MultiPolygon"
+        else [state["geometry"]["coordinates"]]
+    )
 ]
-df_us = pd.DataFrame(us_boundary, columns=["x", "y"])
-df_us["group"] = 0
+df_us = pd.concat(
+    [pd.DataFrame(ring, columns=["x", "y"]).assign(group=i) for i, ring in enumerate(rings)], ignore_index=True
+)
 
 map_fill = "#E0DDD6" if THEME == "light" else "#2A2A27"
 map_border = "#B0ADA6" if THEME == "light" else "#4A4A44"
@@ -260,7 +203,7 @@ caption = (
 
 plot = (
     ggplot()
-    + geom_polygon(data=df_us, mapping=aes(x="x", y="y", group="group"), fill=map_fill, color=map_border, size=0.5)
+    + geom_polygon(data=df_us, mapping=aes(x="x", y="y", group="group"), fill=map_fill, color=map_border, size=0.3)
     # Stores without close neighbors keep their own location
     + geom_point(
         data=singles,
@@ -303,6 +246,8 @@ plot = (
     + ggsize(800, 450)
     + xlim(-127, -65)
     + ylim(23, 51)
+    # Interactive toolbar: zoom and pan into the clusters in the HTML view
+    + ggtb()
 )
 
 ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
