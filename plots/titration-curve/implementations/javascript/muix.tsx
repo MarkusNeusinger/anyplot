@@ -1,201 +1,178 @@
 // anyplot.ai
 // titration-curve: Acid-Base Titration Curve
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-24
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH -----------------
-const N = 201;
-const VOL_MAX = 50;
-const EQ_VOL = 25;
-// Transition zone: ±4 mL around equivalence — the steep-jump buffer region
-const BUFFER_LO = EQ_VOL - 4;
-const BUFFER_HI = EQ_VOL + 4;
+// Constants
+const PH_MIN = 0; // the full pH scale the y axis spans
+const PH_MAX = 14;
+const DERIV_HEADROOM = 0.25; // share of the derivative peak left free above it on the right axis
+const TITLE = "titration-curve · javascript · muix · anyplot.ai";
+const TITLE_H = 76;
+const LEGEND_H = 40;
 
-function phAt(V) {
-  if (Math.abs(V - EQ_VOL) < 1e-4) return 7.0;
-  if (V < EQ_VOL) {
-    const excessH = 0.0025 - V * 1e-4;
-    return Math.max(0, -Math.log10(excessH / ((25 + V) / 1000)));
-  }
-  const excessOH = (V - EQ_VOL) * 1e-4;
-  const pOH = -Math.log10(excessOH / ((25 + V) / 1000));
-  return Math.min(14, 14 - pOH);
-}
+// Columns: set these to your data's column names
+const VOLUME = "Volume of NaOH added (mL)"; // role: volume_ml
+const PH = "pH"; // role: ph
 
-// 201 evenly-spaced volume points (0–50 mL); index 100 = 25.00 mL exactly
-const volumes = Array.from({ length: N }, (_, i) =>
-  parseFloat(((i / (N - 1)) * VOL_MAX).toFixed(2))
-);
-const phData = volumes.map((v) => parseFloat(phAt(v).toFixed(3)));
+// Data: replace this block with your own records, one object per row
+// 25 mL of 0.1 M HCl titrated with 0.1 M NaOH, 201 readings from 0 to 50 mL.
+// pH from the exact charge balance [H+] - [OH-] = excess acid, with Kw = 1e-14.
+const data = (() => {
+  const acidVolume = 25;
+  const acidMolarity = 0.1;
+  const baseMolarity = 0.1;
+  const readings = 201;
+  const maxVolume = 50;
+  const kw = 1e-14;
+  return Array.from({ length: readings }, (_, i) => {
+    const volume = (i / (readings - 1)) * maxVolume;
+    const excess = (acidMolarity * acidVolume - baseMolarity * volume) / (acidVolume + volume);
+    const root = Math.sqrt(excess * excess + 4 * kw);
+    const hydrogen = excess >= 0 ? (excess + root) / 2 : kw / ((root - excess) / 2);
+    return {
+      [VOLUME]: Math.round(volume * 100) / 100,
+      [PH]: Math.round(-Math.log10(hydrogen) * 1000) / 1000,
+    };
+  });
+})();
 
-// Central-difference derivative dpH/dV — spikes sharply at the equivalence point
-const derivData = volumes.map((_, i) => {
-  if (i === 0 || i === N - 1) return 0;
-  const dv = volumes[i + 1] - volumes[i - 1];
-  const dph = phData[i + 1] - phData[i - 1];
-  return parseFloat((dph / dv).toFixed(3));
+// Plot: reads only data and the constants above
+const rows = data
+  .filter((d) => d[VOLUME] != null && d[PH] != null)
+  .sort((a, b) => a[VOLUME] - b[VOLUME]);
+const volumes = rows.map((d) => d[VOLUME]);
+const phValues = rows.map((d) => d[PH]);
+
+// dpH/dV by central differences, one-sided at the two ends
+const derivative = rows.map((_, i) => {
+  const lo = Math.max(0, i - 1);
+  const hi = Math.min(rows.length - 1, i + 1);
+  const dv = volumes[hi] - volumes[lo];
+  return dv === 0 ? null : (phValues[hi] - phValues[lo]) / dv;
 });
 
-const maxDeriv = Math.max(...derivData); // ≈ 14.8 at equivalence
+// Equivalence point: the reading where the derivative peaks
+const eqIndex = derivative.reduce(
+  (best, v, i) => (v != null && v > (derivative[best] ?? -Infinity) ? i : best),
+  0,
+);
+const eqVolume = volumes[eqIndex];
+const eqPh = phValues[eqIndex];
+const derivPeak = derivative[eqIndex];
 
-// --- Buffer zone shading component (uses chart context hooks) -------------
-function BufferZone() {
-  const { top, height } = useDrawingArea();
-  const xScale = useXScale("vol");
-  if (!xScale) return null;
-  const x1 = xScale(BUFFER_LO);
-  const x2 = xScale(BUFFER_HI);
-  return (
-    <rect
-      x={x1}
-      y={top}
-      width={x2 - x1}
-      height={height}
-      fill={t.palette[2]}
-      fillOpacity={0.1}
-    />
-  );
-}
+const VOLUME_UNIT = VOLUME.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const DERIV_NAME = `d${PH}/dV`;
+const DERIV_LABEL = `${DERIV_NAME}${VOLUME_UNIT ? ` (per ${VOLUME_UNIT})` : ""}`;
+const EQ_LABEL = `Equivalence point · ${eqVolume.toFixed(2)} ${VOLUME_UNIT}, ${PH} ${eqPh.toFixed(2)}`;
+const SUBTITLE = `${rows.length} readings, ${volumes[0]}–${volumes[volumes.length - 1]} ${VOLUME_UNIT} of titrant · equivalence at the ${DERIV_NAME} maximum`;
 
-// --- Chart ---------------------------------------------------------------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const TITLE_H = 60;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      {/* Chart title */}
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center" }}>
-        <Typography
-          sx={{
-            fontSize: 22,
-            fontWeight: 500,
-            color: t.ink,
-            letterSpacing: 0.3,
-          }}
-        >
-          titration-curve · javascript · muix · anyplot.ai
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "16px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
         </Typography>
       </Box>
 
       <LineChart
-        width={W}
-        height={H - TITLE_H}
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
-        colors={[t.palette[0], t.palette[1]]}
+        colors={t.palette}
         grid={{ horizontal: true }}
         xAxis={[
           {
-            id: "vol",
+            id: "volume",
             data: volumes,
             scaleType: "linear",
-            label: "Volume of NaOH added (mL)",
-            min: 0,
-            max: VOL_MAX,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            domainLimit: "nice",
+            tickNumber: 10,
+            label: VOLUME,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             id: "ph",
-            min: 0,
-            max: 14,
-            label: "pH",
+            min: PH_MIN,
+            max: PH_MAX,
             tickNumber: 8,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            label: PH,
+            width: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
           {
             id: "deriv",
             position: "right",
             min: 0,
-            max: Math.ceil(maxDeriv * 1.2),
-            label: "dpH/dV (mL⁻¹)",
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            max: derivPeak * (1 + DERIV_HEADROOM),
+            label: DERIV_LABEL,
+            width: 80,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         series={[
           {
-            data: phData,
-            label: "pH",
+            id: "ph",
+            data: phValues,
+            label: PH,
             yAxisId: "ph",
             showMark: false,
             curve: "monotoneX",
-            strokeWidth: 3,
           },
           {
-            data: derivData,
-            label: "dpH/dV",
+            id: "deriv",
+            data: derivative,
+            label: DERIV_LABEL,
             yAxisId: "deriv",
             showMark: false,
-            curve: "monotoneX",
-            strokeWidth: 2.5,
+            curve: "linear",
             area: true,
           },
         ]}
-        margin={{ top: 30, bottom: 90, left: 90, right: 120 }}
-        sx={{
-          // Explicit grid line color and opacity (not relying solely on ThemeProvider)
-          "& .MuiChartsGrid-line": {
-            stroke: t.grid,
-            strokeWidth: 0.8,
-          },
-          // Explicit axis line and tick styling
-          "& .MuiChartsAxis-line": {
-            stroke: t.inkSoft,
-            strokeWidth: 0.5,
-          },
-          "& .MuiChartsAxis-tick": {
-            stroke: t.inkSoft,
-          },
-          // Subtle area fill under the dpH/dV spike
-          "& .MuiAreaElement-root": {
-            fillOpacity: 0.15,
-          },
-        }}
+        margin={{ top: 16, right: 24, bottom: 12, left: 24 }}
         slotProps={{
           legend: {
-            position: { vertical: "top", horizontal: "right" },
-            itemMarkWidth: 18,
-            itemMarkHeight: 3,
-            labelStyle: { fontSize: 14, fill: t.ink },
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 16, color: t.ink },
           },
         }}
+        sx={{
+          '& .MuiLineChart-line[data-series="ph"]': { strokeWidth: 3.5 },
+          '& .MuiLineChart-line[data-series="deriv"]': { strokeWidth: 2 },
+          '& .MuiLineChart-area[data-series="deriv"]': { fillOpacity: 0.15 },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
       >
-        {/* Buffer / transition zone: semi-transparent shading around equivalence region */}
-        <BufferZone />
-
-        {/* Equivalence point dashed marker with annotation */}
         <ChartsReferenceLine
-          x={EQ_VOL}
-          lineStyle={{
-            strokeDasharray: "8 5",
-            stroke: t.inkSoft,
-            strokeWidth: 1.5,
-          }}
-          label="Equivalence Point — 25 mL, pH 7"
+          x={eqVolume}
+          axisId="volume"
+          label={EQ_LABEL}
           labelAlign="start"
-          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          spacing={{ x: 10, y: 10 }}
+          lineStyle={{ strokeDasharray: "8 5", stroke: t.inkSoft, strokeWidth: 1.5 }}
+          labelStyle={{ fontSize: 15, fill: t.ink, fontWeight: 500 }}
         />
       </LineChart>
     </Box>

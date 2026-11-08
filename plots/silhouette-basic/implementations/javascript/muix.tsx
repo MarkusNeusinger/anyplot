@@ -1,201 +1,176 @@
 // anyplot.ai
 // silhouette-basic: Silhouette Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-09
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
+
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-// Tiny fixed-seed LCG — the browser has no seeded RNG.
-function makeLcg(seed: number) {
-  let state = seed >>> 0;
-  return function next() {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
+// Constants
+const SCORE_MAX = 1; // upper bound of the silhouette coefficient
+const X_PAD_SHARE = 0.04; // padding below the lowest score, as a share of the axis span
+const ANNOTATION_W = 180; // px band right of the bars for the cluster averages
 
-function randNormal(rng: () => number) {
-  const u1 = Math.max(rng(), 1e-9);
-  const u2 = rng();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Columns: set these to your data's column names
+const CLUSTER = "Customer segment"; // role: cluster_labels
+const FEATURES = ["Recency score", "Monetary score"]; // role: samples
+const SILHOUETTE = "Silhouette coefficient"; // role: silhouette_values (computed below)
 
-const rng = makeLcg(42);
-const MIN_SCORE = -0.6;
-const MAX_SCORE = 0.95;
-
-// Customer-segmentation clustering (RFM features -> k-means, k=4). Silhouette
-// coefficient per customer, grouped by segment and sorted best-to-worst within
-// each segment — segments ordered by average score, best cohesion first.
-const segments = [
-  { name: "Champions", meanScore: 0.6, spread: 0.16, count: 22 },
-  { name: "Loyal", meanScore: 0.35, spread: 0.22, count: 20 },
-  { name: "At-Risk", meanScore: 0.12, spread: 0.22, count: 19 },
-  { name: "Lost", meanScore: -0.05, spread: 0.24, count: 19 },
+// Data: replace this block with your own records, one object per row
+// Standardized RFM features per customer with the k-means segment (k = 4) they were assigned to.
+const segments: [string, number, number, number, number][] = [
+  // name, recency centre, monetary centre, spread, customers
+  ["Champions", 3.2, 3.0, 0.6, 22],
+  ["Loyal", 1.4, 1.6, 0.6, 20],
+  ["At-Risk", 0.3, 0.2, 0.6, 19],
+  ["Lost", -0.5, -0.6, 0.7, 19],
 ];
-
-const segmentColors = [t.palette[0], t.palette[1], t.palette[2], t.palette[3]];
-
-let allScores: number[] = [];
-const segmentData = segments.map((segment) => {
-  const scores: number[] = [];
-  for (let i = 0; i < segment.count; i += 1) {
-    const raw = segment.meanScore + randNormal(rng) * segment.spread;
-    scores.push(Math.max(MIN_SCORE, Math.min(MAX_SCORE, raw)));
+let seed = 42;
+const gauss = () => {
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  const u1 = Math.max(seed / 4294967296, 1e-9);
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos((2 * Math.PI * seed) / 4294967296);
+};
+const data: Record<string, number | string>[] = [];
+for (const [name, cx, cy, spread, count] of segments) {
+  for (let i = 0; i < count; i += 1) {
+    data.push({ [CLUSTER]: name, [FEATURES[0]]: cx + gauss() * spread, [FEATURES[1]]: cy + gauss() * spread });
   }
-  scores.sort((a, b) => b - a);
-  allScores = allScores.concat(scores);
-  const avgScore = scores.reduce((sum, v) => sum + v, 0) / scores.length;
-  return { ...segment, scores, avgScore };
-});
+}
 
-const overallAvg = allScores.reduce((sum, v) => sum + v, 0) / allScores.length;
-const totalSamples = segmentData.reduce((sum, s) => sum + s.count, 0);
-const categories = Array.from(
-  { length: totalSamples },
-  (_, i) => `customer-${i}`,
-);
-
-// One series per segment, stacked on the same axis positions — each series
-// only has a non-null value at the index range that belongs to it, so every
-// bar renders with exactly one (segment-colored) fill.
-let cursor = 0;
-const series = segmentData.map((segment, segmentIndex) => {
-  const data: (number | null)[] = new Array(totalSamples).fill(null);
-  for (let i = 0; i < segment.scores.length; i += 1) {
-    data[cursor + i] = segment.scores[i];
-  }
-  cursor += segment.count;
-  return {
-    id: segment.name,
-    label: segment.name,
-    data,
-    color: segmentColors[segmentIndex],
-    stack: "silhouette",
+// Plot: reads only data and the constants above
+// Silhouette per sample: s = (b − a) / max(a, b), a = mean distance within its cluster,
+// b = lowest mean distance to another cluster
+const clusters = [...new Set(data.map((d) => String(d[CLUSTER])))];
+const dist = (p: Record<string, number | string>, q: Record<string, number | string>) =>
+  Math.hypot(...FEATURES.map((f) => Number(p[f]) - Number(q[f])));
+const silhouette = data.map((p) => {
+  const meanDist = (cluster: string) => {
+    const others = data.filter((q) => q !== p && q[CLUSTER] === cluster);
+    return others.reduce((s, q) => s + dist(p, q), 0) / Math.max(others.length, 1);
   };
+  const a = meanDist(String(p[CLUSTER]));
+  const b = Math.min(...clusters.filter((c) => c !== p[CLUSTER]).map(meanDist));
+  return (b - a) / Math.max(a, b);
+});
+const blocks = clusters.map((cluster) => {
+  const scores = silhouette.filter((_, i) => data[i][CLUSTER] === cluster).sort((a, b) => b - a);
+  return { cluster, scores, avg: scores.reduce((s, v) => s + v, 0) / scores.length };
 });
 
-// Midpoint category of each segment's band, used to place its average-score
-// annotation at the segment's vertical center.
-let offset = 0;
-const segmentMidpoints = segmentData.map((segment) => {
-  const mid = categories[offset + Math.floor(segment.count / 2)];
-  offset += segment.count;
-  return mid;
+// One band per sample, cluster after cluster; each cluster is one series, null elsewhere
+const categories = blocks.flatMap((b, bi) => b.scores.map((_, i) => `${bi}-${i}`));
+let cursor = 0;
+const series = blocks.map((b, bi) => {
+  const values: (number | null)[] = categories.map(() => null);
+  b.scores.forEach((v, i) => {
+    values[cursor + i] = v;
+  });
+  cursor += b.scores.length;
+  return { id: `cluster-${bi}`, label: b.cluster, data: values, color: t.palette[bi], stack: "silhouette" };
 });
+const midCategory = blocks.map((b, bi) => `${bi}-${Math.floor((b.scores.length - 1) / 2)}`);
 
-// --- Chart (default-exported component — the harness mounts it) -------------
-export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const CHART_TOP = 64;
-  const theme = window.ANYPLOT_THEME;
+const allScores = blocks.flatMap((b) => b.scores);
+const overallAvg = allScores.reduce((s, v) => s + v, 0) / allScores.length;
+const xLow = Math.min(0, ...allScores);
+const xMin = xLow - (SCORE_MAX - xLow) * X_PAD_SHARE;
 
-  const title = "silhouette-basic · javascript · muix · anyplot.ai";
-  const titleSize =
-    title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
+const title = "silhouette-basic · javascript · muix · anyplot.ai";
+const subtitle = `${allScores.length} samples in ${clusters.length} clusters · bars sorted within each cluster`;
+const HEADER_H = 84;
 
-  // Light theme puts lavender/ochre annotation text directly on the cream
-  // background, below WCAG 3:1 contrast for those two hues. A thin ink-color
-  // halo (paintOrder "stroke" draws the stroke behind the fill) keeps the
-  // segment-colored fill intact while restoring crisp edges. Dark theme
-  // already reads cleanly (light hues on near-black), so skip it there.
-  const labelHalo =
-    theme === "light"
-      ? { stroke: t.ink, strokeWidth: 3, paintOrder: "stroke" as const }
-      : {};
-
+function ClusterAverages() {
+  const yScale = useYScale() as ((v: string) => number) & { bandwidth: () => number };
+  const { left, width } = useDrawingArea();
+  const x = left + width + 16;
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      <Box sx={{ position: "absolute", top: 20, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>
-          {title}
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          position: "absolute",
-          top: CHART_TOP,
-          left: 0,
-          right: 0,
-          bottom: 0,
+    <g>
+      {blocks.map((b, bi) => {
+        const y = yScale(midCategory[bi]) + yScale.bandwidth() / 2;
+        return (
+          <g key={b.cluster}>
+            <rect x={x} y={y - 22} width={12} height={12} fill={t.palette[bi]} />
+            <text x={x + 20} y={y - 16} dominantBaseline="central" fontSize={16} fontWeight={600} fill={t.ink}>
+              {b.cluster}
+            </text>
+            <text x={x + 20} y={y + 6} dominantBaseline="central" fontSize={15} fill={t.inkSoft}>
+              {`avg ${b.avg.toFixed(2)}`}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  return (
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 6,
         }}
       >
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          layout="horizontal"
-          skipAnimation
-          borderRadius={0}
-          series={series}
-          yAxis={[
-            {
-              scaleType: "band",
-              data: categories,
-              label: "Customers (by segment)",
-              labelStyle: { fontSize: 16, fill: t.ink },
-              categoryGapRatio: 0.04,
-              disableTicks: true,
-              disableLine: true,
-              tickLabelInterval: () => false,
-            },
-          ]}
-          xAxis={[
-            {
-              min: MIN_SCORE,
-              max: 1,
-              label: "Silhouette coefficient",
-              labelStyle: { fontSize: 16, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              valueFormatter: (value: number) => value.toFixed(1),
-            },
-          ]}
-          grid={{ vertical: true }}
-          slotProps={{
-            legend: {
-              labelStyle: { fontSize: 14, fontWeight: 500 },
-              itemGap: 20,
-            },
-          }}
-        >
-          <ChartsReferenceLine
-            x={overallAvg}
-            label={`Overall avg ${overallAvg.toFixed(2)}`}
-            labelAlign="end"
-            labelStyle={{ fontSize: 15, fill: t.ink, fontWeight: 600 }}
-            lineStyle={{
-              stroke: t.ink,
-              strokeDasharray: "6 4",
-              strokeWidth: 2,
-            }}
-          />
-          {segmentData.map((segment, i) => (
-            <ChartsReferenceLine
-              key={segment.name}
-              y={segmentMidpoints[i]}
-              label={`${segment.name} · avg ${segment.avgScore.toFixed(2)}`}
-              labelAlign="start"
-              labelStyle={{
-                fontSize: 14,
-                fill: segmentColors[i],
-                fontWeight: 600,
-                ...labelHalo,
-              }}
-              lineStyle={{
-                stroke: t.grid,
-                strokeDasharray: "3 5",
-                strokeWidth: 1,
-              }}
-            />
-          ))}
-        </BarChart>
-      </Box>
-    </Box>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{title}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
+      </div>
+      <BarChart
+        width={width}
+        height={height - HEADER_H}
+        layout="horizontal"
+        skipAnimation
+        borderRadius={0}
+        margin={{ top: 16, right: ANNOTATION_W, bottom: 8, left: 16 }}
+        series={series}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: categories,
+            categoryGapRatio: 0.04,
+            label: "Samples, sorted within each cluster",
+            width: 40,
+            disableTicks: true,
+            disableLine: true,
+            tickLabelInterval: () => false,
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        xAxis={[
+          {
+            min: xMin,
+            max: SCORE_MAX,
+            label: SILHOUETTE,
+            height: 64,
+            valueFormatter: (v: number) => v.toFixed(1),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+            sx: { "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: t.inkSoft } },
+          },
+        ]}
+        grid={{ vertical: true }}
+        hideLegend
+      >
+        <ChartsReferenceLine
+          x={overallAvg}
+          label={`Average ${overallAvg.toFixed(2)}`}
+          labelAlign="end"
+          labelStyle={{ fontSize: 15, fill: t.ink, fontWeight: 600 }}
+          lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeWidth: 2 }}
+        />
+        <ClusterAverages />
+      </BarChart>
+    </div>
   );
 }
