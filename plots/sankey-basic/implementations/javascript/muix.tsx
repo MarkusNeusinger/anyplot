@@ -66,9 +66,9 @@ const nodeValue = Object.fromEntries(
   nodeNames.map((name) => [name, Math.max(inflow[name] ?? 0, outflow[name] ?? 0)]),
 );
 
-// Every sending node gets the next Imprint hue in order of appearance; its links carry it.
-// Nodes that only receive stay neutral.
-const senderNames = nodeNames.filter((name) => senders.has(name));
+// Every sending node gets the next Imprint hue in its order of appearance in the source column;
+// its links carry it. Nodes that only receive stay neutral.
+const senderNames = [...senders];
 const sourcePalette = t.palette.filter((_, i) => i !== LOSS_SLOT);
 const nodeColor = Object.fromEntries(
   nodeNames.map((name) => [name, senders.has(name) ? sourcePalette[senderNames.indexOf(name)] : t.inkSoft]),
