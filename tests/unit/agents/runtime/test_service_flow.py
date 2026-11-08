@@ -2734,10 +2734,12 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     assert name == "done" and done["data_confirmed"] is False
     dataset = done["dataset"]
     assert set(dataset) == {
-        *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "changes", "version")
+        *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "changes", "version"),
+        *("can_undo", "original_version"),
     }
     assert [role["name"] for role in dataset["roles"]] == ["x", "y"]  # the dataset route's shape, roles included
     assert dataset["version"] == 2 and dataset["changes"] == ["renamed 'Study Hours' to 'Hours'"]
+    assert dataset["can_undo"] is True and dataset["original_version"] == 1
     assert [column["name"] for column in dataset["profile"]["columns"]] == ["Student", "Hours", "Exam Score"]
     assert dataset["profile"]["rows"] == 24
     assert len(dataset["preview"]) == 20 and len(dataset["preview"][0]) == 3
@@ -2756,9 +2758,11 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     assert undone.status_code == 200, undone.text
     body = undone.json()
     assert set(body) == {
-        *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "version")
+        *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "version"),
+        *("can_undo", "original_version"),
     }
     assert body["version"] == 1 and body["profile"]["columns"][1]["name"] == "Study Hours"
+    assert body["can_undo"] is False and body["original_version"] == 1  # back at the paste
     assert body["bindings"] == [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
     assert [role["name"] for role in body["roles"]] == ["x", "y"]
     view = read_session(await _session_state(client, sid))
@@ -3137,13 +3141,17 @@ async def test_the_dataset_history_keeps_the_last_five_versions(
     for expected in (6, 5, 4, 3, 2):
         undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
         assert undone.status_code == 200 and undone.json()["version"] == expected
-    # Undo as before: five steps, then nothing to undo; the original is no step of it.
+        assert undone.json()["can_undo"] is (expected > 2) and undone.json()["original_version"] == 1
+    # Undo as before: five steps, then nothing to undo; the original is no step of it. Version 2 is above the
+    # original's 1 and still has nothing to undo: the history says so, never the number.
     assert (await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)).status_code == 422
     assert len(services.datasets) == 2
 
     data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
     pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
-    assert pasted.status_code == 200 and pasted.json()["version"] == 1
+    # The session's numbering goes on past the seven numbers it gave: the paste is 8, with nothing to undo.
+    assert pasted.status_code == 200 and pasted.json()["version"] == 8
+    assert pasted.json()["can_undo"] is False and pasted.json()["original_version"] == 8
     assert len(services.datasets) == 1  # a new paste takes the old original with it
 
 
@@ -3230,9 +3238,11 @@ async def test_generate_data_without_data_stores_version_1_and_the_plot_uses_it(
     assert name == "done" and done["data_confirmed"] is False
     dataset = done["dataset"]
     assert set(dataset) == {
-        *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "changes", "version")
+        *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "changes", "version"),
+        *("can_undo", "original_version"),
     }
     assert dataset["version"] == 1 and dataset["changes"] == [SINE_LINE] and dataset["context_lines"] == []
+    assert dataset["can_undo"] is False and dataset["original_version"] == 1  # the session's first data
     assert [(column["name"], column["dtype"]) for column in dataset["profile"]["columns"]] == [
         ("x", "number"),
         ("y", "number"),

@@ -685,7 +685,7 @@ describe('DataPanel bindings', () => {
     // Version 2, so `.undo()` shows and has something to undo once the panel closes.
     const versioned: AgentSessionState = {
       ...changed,
-      dataset: { ...stored, parsed: { ...stored.parsed, version: 2 } },
+      dataset: { ...stored, parsed: { ...stored.parsed, version: 2, can_undo: true } },
     };
     const { rerender } = render(panel(versioned, true));
     openBindings();
@@ -853,11 +853,11 @@ describe('DataPanel version', () => {
 
   it('keeps the focus on .undo() when the version it made moves the card below the plot', async () => {
     const onUndo = vi.fn();
-    const before = changedState(2);
+    const before = changedState(3);
     const view = render(
       <Thread
         state={before}
-        version={snapshot(2, 'turn', 'changed')}
+        version={snapshot(3, 'turn', 'changed')}
         last={false}
         onUndo={onUndo}
       />
@@ -868,11 +868,12 @@ describe('DataPanel version', () => {
     expect(onUndo).toHaveBeenCalledTimes(1);
     expect(undo).toHaveFocus();
 
-    // The undo runs, then lands: version 3 of the session, the card at the thread's end.
+    // The undo runs, then lands: back to v2 under its own number, the card at the thread's end,
+    // with one more version to undo.
     view.rerender(
       <Thread
-        state={changedState(2, { undoBusy: true })}
-        version={snapshot(2, 'turn', 'changed')}
+        state={changedState(3, { undoBusy: true })}
+        version={snapshot(3, 'turn', 'changed')}
         last={false}
         onUndo={onUndo}
       />
@@ -880,7 +881,7 @@ describe('DataPanel version', () => {
     view.rerender(
       <Thread
         state={changedState(2, { dataChange: { kind: 'undone', version: 2 } })}
-        version={snapshot(3, 'undo', 'undone')}
+        version={snapshot(2, 'undo', 'back to v2')}
         last
         onUndo={onUndo}
       />
@@ -976,7 +977,7 @@ describe('DataPanel version', () => {
     fireEvent.pointerDown(
       within(screen.getByTestId('data-card')).getByRole('button', { name: '.undo()' })
     );
-    view.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
+    view.rerender(plain(snapshot(1, 'undo', 'back to v1'), true, undone));
     expect(screen.getByTestId('data-card-label')).toHaveFocus();
     view.unmount();
 
@@ -986,13 +987,13 @@ describe('DataPanel version', () => {
       within(screen.getByTestId('data-card')).getByRole('button', { name: '.undo()' })
     );
     fireEvent.pointerDown(document.body);
-    again.rerender(plain(snapshot(3, 'undo', 'undone'), true, undone));
+    again.rerender(plain(snapshot(1, 'undo', 'back to v1'), true, undone));
     expect(document.body).toHaveFocus();
     again.unmount();
 
     // The keyboard visited `.change()` before; the press names `.undo()`, which can still go
     // back one more step, so the focus lands on it, never on the control visited earlier.
-    const visited = render(plain(snapshot(2, 'turn', 'changed'), false, changedState(3)));
+    const visited = render(plain(snapshot(3, 'turn', 'changed'), false, changedState(3)));
     const card = within(screen.getByTestId('data-card'));
     const change = card.getByRole('button', { name: 'Change the bindings' });
     change.focus();
@@ -1000,7 +1001,7 @@ describe('DataPanel version', () => {
     fireEvent.pointerDown(card.getByRole('button', { name: '.undo()' }));
     visited.rerender(
       plain(
-        snapshot(3, 'undo', 'undone'),
+        snapshot(2, 'undo', 'back to v2'),
         true,
         changedState(2, { dataChange: { kind: 'undone', version: 2 } })
       )
@@ -1123,13 +1124,19 @@ const CHANGES = [
   'summed Umsatz by Datum (month): 3 rows, 2 other columns dropped',
 ];
 
-/** The panel after the assistant changed the data, now at `version`. */
+/**
+ * The panel after the assistant changed the data, now at `version`, as the server answers a
+ * chain of changes on one paste numbered 1: a version to undo while it is above the paste.
+ */
 function changedState(
   version: number,
   overrides: Partial<AgentSessionState> = {}
 ): AgentSessionState {
   const base = stateWith({ x: 'month', y1: 'shoes' });
-  const dataset = base.dataset && { ...base.dataset, parsed: { ...base.dataset.parsed, version } };
+  const dataset = base.dataset && {
+    ...base.dataset,
+    parsed: { ...base.dataset.parsed, version, can_undo: version > 1, original_version: 1 },
+  };
   return {
     ...base,
     dataset,
@@ -1158,7 +1165,7 @@ describe('DataPanel data changes', () => {
   it('lists what changed, line by line above the preview, with .undo()', async () => {
     const { onUndo } = renderPanel(changedState(2));
     const block = within(screen.getByTestId('data-change'));
-    // No server version: the card's label names the version by the chat's own count.
+    // No version number in the block: the card's label on its border names the version.
     expect(block.getByText('# changed')).toBeInTheDocument();
     expect(block.getAllByRole('listitem').map(item => item.textContent)).toEqual(CHANGES);
     expect(
@@ -1212,6 +1219,39 @@ describe('DataPanel data changes', () => {
       'there is no earlier version to go back to · ref r422'
     );
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+  });
+
+  it("reads .undo() from the server's can_undo, never from the version's number", () => {
+    const at = (version: number, canUndo: boolean, overrides: Partial<AgentSessionState> = {}) => {
+      const state = changedState(version, overrides);
+      return {
+        ...state,
+        dataset: state.dataset && {
+          ...state.dataset,
+          parsed: { ...state.dataset.parsed, can_undo: canUndo },
+        },
+      };
+    };
+    // Back at a second paste, numbered 4 in the session: nothing to undo, whatever the number.
+    const { rerender } = renderPanel(at(4, false, { dataChange: { kind: 'undone', version: 4 } }));
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+    // Its change, v5, can go back.
+    rerender(at(5, true));
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeEnabled();
+    // A change with nothing before it (a table computed as new data): no `.undo()` at all,
+    // whatever its number.
+    rerender(at(3, false));
+    expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
+    // An older server sends no `can_undo`: the page asks for no undo it cannot be sure of.
+    const older = changedState(2);
+    rerender({
+      ...older,
+      dataset: older.dataset && {
+        ...older.dataset,
+        parsed: { ...older.dataset.parsed, can_undo: undefined },
+      },
+    });
+    expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
   });
 
   it('shows no change block for data as pasted', () => {

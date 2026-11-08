@@ -12,7 +12,7 @@ from typing import Any
 
 from core.spec_roles import DataRole
 
-from .data.computed import companions
+from .data.computed import companions, open_window
 from .policy import fence
 from .schemas import MAX_TOP_VALUES, Binding, DatasetProfile
 from .session_state import SessionView
@@ -39,7 +39,9 @@ MAX_COMPUTED_DESCRIPTION_CHARS = 200
 """The spec's own words for a computed role in the brief: its formula and window (review of 2026-10-15)."""
 
 
-def describe_role(role: DataRole, bound: bool = False, companions: Sequence[str] = ()) -> str:
+def describe_role(
+    role: DataRole, bound: bool = False, companions: Sequence[str] = (), window: int | None = None
+) -> str:
     """One role for the brief; a role the plot can compute says whether its column is bound or the code computes it.
 
     Owner decision of 2026-10-15, "both allowed" (`data/computed.py`): bound, the plot uses the
@@ -48,7 +50,10 @@ def describe_role(role: DataRole, bound: bool = False, companions: Sequence[str]
     open one beside bound `companions` (the bound computed roles `computed.COMPANIONS` relates
     it to) is computed from them, so the parts agree: the bands around the bound middle band, a
     balance from the bound loads. A role the spec does not relate gets none: a bound `SMA 20`
-    says nothing about the 50-period average.
+    says nothing about the 50-period average. An open role without bound companions names its
+    `window` (`computed.open_window`), the one the bindings expect: where the spec's words name
+    another (`indicator-ema`'s long EMA "e.g., 50-day" beside the 26 of its example and code), the
+    brief still says which one the plot computes.
     """
     kinds = "/".join(role.kinds) if role.kinds else "any"
     name = f"{role.name}1, {role.name}2, ..." if role.variadic else role.name
@@ -63,7 +68,8 @@ def describe_role(role: DataRole, bound: bool = False, companions: Sequence[str]
         if companions
         else ""
     )
-    return f"{name} ({kinds}, not bound: compute it in the plot code from the bound data{built}{described})"
+    over = f" with a {window}-period window" if window is not None and not companions else ""
+    return f"{name} ({kinds}, not bound: compute it in the plot code from the bound data{over}{built}{described})"
 
 
 def _clipped(text: str, limit: int) -> str:
@@ -81,8 +87,14 @@ def spec_brief(view: SessionView) -> str:
         lines.append("Description: " + snapshot.description[:MAX_DESCRIPTION_CHARS])
     if roles:
         bound_computed = [role.name for role in roles if role.computed and role.name in bound]
+        columns = {binding.role: binding.column for binding in view.bindings}
         described = [
-            describe_role(role, role.name in bound, companions(snapshot.spec_id, role.name, bound_computed))
+            describe_role(
+                role,
+                role.name in bound,
+                companions(snapshot.spec_id, role.name, bound_computed),
+                open_window(role.name, columns) if role.computed else None,
+            )
             for role in roles
         ]
         lines.append("Data roles: " + "; ".join(described))

@@ -400,8 +400,9 @@ class TestWorkflowTriggers:
 
 class TestCiTestsSpecSectionCheck:
     """ci-tests.yml lints every spec's characteristic section on every event,
-    inside the required "Run Tests" job — spec-only PRs skip pytest, so this
-    step is the only thing that guards the regen gate's C1..Cn contract there."""
+    inside the required "Run Tests" job — a PR that changes only plots/ files
+    other than a specification.md skips pytest, so this step is the only thing
+    that guards the regen gate's C1..Cn contract there."""
 
     def _steps(self) -> list[dict[str, Any]]:
         return load_workflow("ci-tests.yml")["jobs"]["test"]["steps"]
@@ -425,6 +426,13 @@ class TestCiTestsSpecSectionCheck:
         check = self._step("Check for testable changes")["run"]
         assert "$RUNNER_TEMP/changed_specs.txt" in check
         assert "specification\\.md$" in check
+
+    def test_a_changed_specification_runs_the_unit_tests(self) -> None:
+        """The role audit (tests/unit/agents/data/test_computed.py) reads every spec's Data bullets: a spec PR runs
+        it, instead of leaving a failure to the next Python PR."""
+        check = self._step("Check for testable changes")["run"]
+        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
+        assert "|plots/[^/]+/specification\\.md)$" in config
 
     def test_step_needs_no_dependency_install(self) -> None:
         # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),

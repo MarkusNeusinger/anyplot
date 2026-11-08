@@ -142,6 +142,35 @@ const GENERATED = {
   version: 1,
 };
 
+/**
+ * The stub server's numbering, as the agents service numbers its versions: every stored
+ * version takes the session's next number, never one twice, and an undo brings the version
+ * before back under its own (every undo here goes back to the data's first version).
+ */
+let lastVersion = 0;
+let dataFirst = 1;
+/** A stored paste: new data, its first version. */
+function pasted() {
+  lastVersion += 1;
+  dataFirst = lastVersion;
+  return { ...DATASET, version: lastVersion, can_undo: false, original_version: dataFirst };
+}
+/** A version a turn made from the data: on top of it, with the one before to undo. */
+function changedVersion<T extends object>(dataset: T) {
+  lastVersion += 1;
+  return { ...dataset, version: lastVersion, can_undo: true, original_version: dataFirst };
+}
+/** A table a turn computed in a session without data: the session's next number, new data. */
+function generatedVersion<T extends object>(dataset: T) {
+  lastVersion += 1;
+  dataFirst = lastVersion;
+  return { ...dataset, version: lastVersion, can_undo: false, original_version: dataFirst };
+}
+/** `.undo()`: the data's first version again, with nothing before it. */
+function undone() {
+  return { ...DATASET, version: dataFirst, can_undo: false, original_version: dataFirst };
+}
+
 const FORMULA = 'y = sin(x), x von -pi bis pi';
 const EXAMPLE_REPLY = 'I generated example data to try the plot: 200 rows of x and y, all made up.';
 
@@ -231,7 +260,10 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
           llm_calls: 3,
           bindings: GENERATED.bindings,
           data_confirmed: false,
-          dataset: { ...GENERATED, changes: ['generated example data: 200 rows, 2 columns'] },
+          dataset: generatedVersion({
+            ...GENERATED,
+            changes: ['generated example data: 200 rows, 2 columns'],
+          }),
         },
       ],
     ];
@@ -242,7 +274,12 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
       ['message', { text: 'I generated 200 rows from y = sin(x).' }],
       [
         'done',
-        { llm_calls: 2, bindings: GENERATED.bindings, data_confirmed: false, dataset: GENERATED },
+        {
+          llm_calls: 2,
+          bindings: GENERATED.bindings,
+          data_confirmed: false,
+          dataset: generatedVersion(GENERATED),
+        },
       ],
     ];
   }
@@ -252,7 +289,12 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
       ['message', { text: 'I read score as numbers.' }],
       [
         'done',
-        { llm_calls: 2, bindings: PREPARED.bindings, data_confirmed: false, dataset: PREPARED },
+        {
+          llm_calls: 2,
+          bindings: PREPARED.bindings,
+          data_confirmed: false,
+          dataset: changedVersion(PREPARED),
+        },
       ],
     ];
   }
@@ -301,10 +343,10 @@ function stubFetch(
       if (text.includes('Hund')) return json(200, TRANSCRIBED);
       if (text.includes('slow')) {
         return new Promise<Response>(resolve => {
-          releaseParse = () => resolve(json(200, DATASET));
+          releaseParse = () => resolve(json(200, pasted()));
         });
       }
-      return json(200, DATASET);
+      return json(200, pasted());
     }
     if (url.pathname.endsWith('/sessions/S1/bindings') && method === 'PUT') {
       return json(200, {
@@ -317,7 +359,7 @@ function stubFetch(
       return json(200, { confirmed: true, rows: 2, columns: 2 });
     }
     if (url.pathname.endsWith('/sessions/S1/dataset/undo') && method === 'POST') {
-      return json(200, DATASET);
+      return json(200, undone());
     }
     if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
       const response = sse(turnEvents(JSON.parse(String(init.body))));
@@ -604,6 +646,8 @@ beforeEach(() => {
   releaseParse = null;
   holdNextTurn = false;
   releaseTurn = null;
+  lastVersion = 0;
+  dataFirst = 1;
   analytics.trackEvent.mockClear();
   analytics.trackPageview.mockClear();
   stubFetch();

@@ -78,8 +78,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   (`data/generate.py`): one or two variables, each a range of evenly spaced points,
   and one to ten series, each an expression over them. The table is parsed like a
   paste and stored as the session's next dataset version (`push_version`, the
-  previous data kept for undo) or, in a session without data, as version 1 the way
-  the dataset route stores a paste. Either way the confirmation drops by itself, the
+  previous data kept for undo) or, in a session without data, as the first version of
+  new data the way the dataset route stores a paste, under the session's next number
+  either way. The confirmation drops by itself, the
   bindings are the defaults for the new columns (`push_version(rebind=True)`: a
   binding made for the old data is not carried over, even where a column name such as
   `x` returns), and the turn's `done` carries the version with its change line. The result has `prepare_data`'s shape; a
@@ -474,10 +475,10 @@ async def prepare_data(
 ) -> dict[str, Any]:
     """Change the user's dataset with one to five operations, applied in order by the server; the result becomes the next version of the data, which the user then checks and confirms.
 
-    from_version: the version the operations start from: "current" (the default), "original" (version 1, the table as
-    the user pasted or opened it) or a version number the session block lists, such as "2"; the result is stored as
-    the next version on top all the same, and the change lines say where it started. From an earlier version,
-    operations may be empty: that version as it was becomes the next one.
+    from_version: the version the operations start from: "current" (the default), "original" (the first version, the
+    table as the user pasted or opened it) or a version number the session block lists, such as "2"; the result is
+    stored as the next version on top all the same, and the change lines say where it started. From an earlier
+    version, operations may be empty: that version as it was becomes the next one.
 
     Each operation is an object with "op" and its fields, column names exactly as the profile lists them:
     rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold,
@@ -538,7 +539,7 @@ async def prepare_data(
     if (gap := capability_gap(args.operations, view, tool_context)) is not None:
         return gap
     try:
-        start = resolve_version(kept_versions(services.datasets, session_id, view), view, args.from_version)
+        start = resolve_version(kept_versions(services.datasets, session_id, view), args.from_version)
     except VersionRefused as exc:
         return _version_refusal(exc.code)
     if start.current and not args.operations:  # `from_version` named the current version by its number
@@ -610,9 +611,9 @@ async def query_data(
     change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
     per group an aggregate). columns: the columns to return, at most 8
     (default: the first 8). limit: the rows to return, 1 to 25 (default 10). from_version: the version to read,
-    "current" (the default), "original" (version 1, the table as the user pasted or opened it) or a version number the
-    session block lists. Returns the table (columns and rows), the number of rows of the whole result, whether it was
-    cut, and the change lines, or an error with a code and a message.
+    "current" (the default), "original" (the first version, the table as the user pasted or opened it) or a version
+    number the session block lists. Returns the table (columns and rows), the number of rows of the whole result,
+    whether it was cut, and the change lines, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -630,7 +631,7 @@ async def query_data(
         return gap
     try:
         start = resolve_version(
-            kept_versions(get_services().datasets, tool_context.session.id, view), view, args.from_version
+            kept_versions(get_services().datasets, tool_context.session.id, view), args.from_version
         )
     except VersionRefused as exc:
         return _version_refusal(exc.code)
@@ -722,7 +723,8 @@ def _store_generated(
     source: str,
     changes: list[str],
 ) -> tuple[dict[str, Any], int]:
-    """Store a generated table: the next version of the session's data, or version 1 when it has none; raises `StoreFull`.
+    """Store a generated table: the next version of the session's data, or the first of new data when it has none,
+    under the session's next number either way; raises `StoreFull`.
 
     A session whose dataset left the store (a restart keeps neither) counts as one
     without data, so the stale ids are dropped with the history, as a paste drops them.
@@ -746,8 +748,9 @@ def _store_generated(
         history=view.earlier_datasets,
         code=code,
         source=source,
+        number=view.next_version,
     )
-    return ingested.state_delta(), 1
+    return ingested.state_delta(), ingested.number
 
 
 DATA_CODE_CHANGE = "computed from your code"
@@ -872,10 +875,16 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     example = language == "example"
     change = EXAMPLE_DATA_CHANGE if example else DATA_CODE_CHANGE
     changes = [f"{change}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    # The queue, the run and the judge suspended this call: a data call of the same turn may have stored a version
+    # meanwhile, so the table goes on top of the session as it is now, under the number after that one
+    # (`SessionView.next_version`), never on the view read before the run, which would number it twice.
+    current = _view(tool_context)
+    if current is None:
+        return _error("session_not_open")
     try:
         delta, number = _store_generated(
             tool_context.session.id,
-            view,
+            current,
             parsed,
             code=prepared,
             source=code_source(prepared, language),

@@ -321,6 +321,8 @@ export function TranscriptionCard({
 
 interface ChangeBlockProps {
   change: DataChange;
+  /** The change made the session's first data (the server has nothing to undo after it). */
+  first: boolean;
   canUndo: boolean;
   undoBusy: boolean;
   error: Failure | null;
@@ -329,11 +331,10 @@ interface ChangeBlockProps {
 
 /**
  * What the assistant last changed in the data, or the undo of it, with
- * `.undo()`. A first dataset the assistant generated (version 1) has nothing
+ * `.undo()`. A first dataset the assistant generated (`first`) has nothing
  * before it, so its block offers no `.undo()`.
  */
-export function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: ChangeBlockProps) {
-  const first = change.kind === 'changed' && change.version <= 1;
+export function ChangeBlock({ change, first, canUndo, undoBusy, error, onUndo }: ChangeBlockProps) {
   return (
     <Box
       component="section"
@@ -359,8 +360,8 @@ export function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: Change
         }}
       >
         <Box id="agent-change-title" sx={{ ...labelSx, color: 'var(--ink)' }}>
-          {/* No version number: the card's label names the version by the chat's own count
-              (`data v3`), and the server's `version` starts over with every paste. */}
+          {/* No version number: the card's label on its border names it already
+              (`data v1 · back to v1`). */}
           {change.kind === 'changed' ? '# changed' : '# undone · back to the version before'}
         </Box>
         {!first && (

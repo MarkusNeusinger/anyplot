@@ -25,7 +25,9 @@
  * A library switch stays inside its chapter as a line of its own.
  *
  * Folds: an older data version (a `data_stub`, `FoldedData.tsx`) and every plot card but the
- * latest version's fold to one line; the live data card stays open.
+ * latest version's fold to one line; the live data card stays open. A data version's number is
+ * the server's, so after an undo a stub and the live card can carry the same one: rows and
+ * folds go by the item and its id, never by that number.
  */
 
 import type { ChatItem } from 'src/hooks/useAgentSession';
@@ -45,7 +47,10 @@ export interface Chapter {
    * `answer`). The chapter line counts them, and its count jumps to them.
    */
   questions: number[];
-  /** The data versions it holds (`DataSnapshot.n`), oldest first. */
+  /**
+   * The data versions it holds (`DataSnapshot.n`), oldest first, each once: after an undo the
+   * restored version's card carries the number of a stub before it, and it is the same version.
+   */
   dataVersions: number[];
   /** The plot versions it holds, oldest first. */
   plotVersions: number[];
@@ -188,7 +193,11 @@ export function threadModel(items: readonly ChatItem[]): ThreadModel {
     }
     for (const item of turn) {
       if (item.kind === 'user' && item.outcome === 'answer') chapter.questions.push(item.id);
-      if ((item.kind === 'data' || item.kind === 'data_stub') && item.snapshot) {
+      if (
+        (item.kind === 'data' || item.kind === 'data_stub') &&
+        item.snapshot &&
+        !chapter.dataVersions.includes(item.snapshot.n)
+      ) {
         chapter.dataVersions.push(item.snapshot.n);
       }
       if (item.kind === 'plot') chapter.plotVersions.push(item.version);

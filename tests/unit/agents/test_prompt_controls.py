@@ -142,7 +142,8 @@ def test_the_data_panel_bullet_keeps_the_card_open_and_folds_older_versions() ->
     """Since the v4 chapters (2026-11-07) the live data card stays open in both steps: the pinned header above
     the thread, whose `.show()` and `.hide()` opened and closed the card, went, and every older data version
     folds to its label, which opens it read-only. The bullet says so, the folded version has no button the
-    bullet would have to name, and no header is left that the root could send the user to."""
+    bullet would have to name, and no header is left that the root could send the user to. The card's number is
+    the session's own, the one the session block lists, so "v2" names one table to the user and to the root."""
     section = controls_section()
     start = section.index("\n- The data panel:")
     bullet = section[start : section.find("\n", start + 1)]
@@ -150,7 +151,8 @@ def test_the_data_panel_bullet_keeps_the_card_open_and_folds_older_versions() ->
     assert "open in both steps" in bullet
     assert "which opens it read-only, with nothing to press" in bullet
     assert "open and close the card" not in bullet
-    assert "which is not the number the session block lists" in bullet
+    assert "the same number the session block lists" in bullet
+    assert "which is not the number the session block lists" not in bullet
     assert buttons_of([AGENT_CHAT / "FoldedData.tsx"]) == set()
     assert not (AGENT_CHAT / "PinnedData.tsx").exists()
 

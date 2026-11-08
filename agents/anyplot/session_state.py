@@ -21,10 +21,10 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from core.spec_roles import DataRole, parse_roles
+from core.spec_roles import DataRole, mark_computed, parse_roles
 
 from .data.bindings import BindingCheck, check_bindings, resolve_role
-from .data.computed import mark_computed
+from .data.computed import mark_name_only
 from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
 from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile, LastRun
@@ -60,23 +60,28 @@ DATASET_ID = PREFIX + "dataset_id"
 DATASET_HISTORY = PREFIX + "dataset_history"
 """The ids of the dataset versions before the current one, oldest first, at most
 `dataset_versions.MAX_DATASET_HISTORY`: what `POST .../dataset/undo` restores, newest first.
-A new paste empties it."""
+A new paste empties it. There is a version to undo while it holds one (`SessionView.can_undo`)."""
 DATASET_VERSION = PREFIX + "dataset_version"
-"""The number of the current dataset version: 1 for a paste, one more for every
-`prepare_data`, one less for every undo. Above 1 there is a version to undo."""
+"""The session's number of the current dataset version (`StoredDataset.number`). The session numbers every version it
+stores once, the next number each time, never reused: a paste, an opened file, a copy or a computed table as much as a
+change (`prepare_data`, `.to_long()`, a rebuild), and an undo makes the version it restores current again with its own
+number (owner decision of 2026-11-07: "v2" names the same table to the user, whose card shows this number, and to the
+root, whose session block lists it). Whether there is a version to undo is the history's, never this number's."""
 DATASET_ORIGINAL = PREFIX + "dataset_original"
-"""The id of version 1 of the session's current data: the paste, the opened file, the copy or the table computed in a
-session without data. The store keeps it also after the history cap pushed it out of `DATASET_HISTORY`, so
-`prepare_data` and `query_data` can always start from it (`from_version` `original`); undo never reaches it there. A
-new paste replaces it and deletes the old one (owner decision of 2026-11-06)."""
+"""The id of the first version of the session's current data: the paste, the opened file, the copy or the table
+computed in a session without data. The store keeps it also after the history cap pushed it out of `DATASET_HISTORY`,
+so `prepare_data` and `query_data` can always start from it (`from_version` `original`); undo never reaches it there.
+A new paste replaces it and deletes the old one (owner decision of 2026-11-06)."""
 DATASET_TOP = PREFIX + "dataset_top"
-"""The highest version number the current data reached: an undo lowers `DATASET_VERSION` but not this, so a number
-up to it is a version of this data that is gone (`version_not_kept`), and one above it a version of earlier data
-(`other_paste`). A new paste sets it to 1."""
+"""The highest number the session gave a dataset version: the next version gets one more, a paste included. An undo
+lowers `DATASET_VERSION` but never this; absent before the session's first data. The current data holds the numbers
+from its original's up to this one, so a number below the original's is a version of earlier data, which a paste
+replaced (`other_paste`), and one from it up that the session no longer keeps was undone or left the history
+(`version_not_kept`)."""
 DATASET_COPIED_FROM = PREFIX + "dataset_copied_from"
 """The number of the data version this session's data was copied from (`POST .../dataset/copy`, the admin fan-out's
-copy of the page session's confirmed version), absent for data of the session's own. The copy is the session's
-version 1, with no history; this records where it came from, for the feedback bundle. A paste replaces it."""
+copy of the page session's confirmed version), absent for data of the session's own. The copy is the session's first
+version, with no history; this records where it came from, for the feedback bundle. A paste replaces it."""
 SUMMARY_PENDING = PREFIX + "summary_pending"
 """The id of a pasted dataset the root has not summarized yet: the dataset route writes it with the paste (also a
 transcription's `.use()`), and the messages route clears it once a root turn on that dataset ended without a
@@ -159,9 +164,10 @@ class CatalogueSnapshot(BaseModel):
         return self
 
     def roles(self) -> list[DataRole]:
-        """The spec's data roles, the ones that cannot be negative (`data/signs.py`) and the ones the plot can
-        compute (`data/computed.py`) marked."""
-        return mark_computed(mark_non_negative(parse_roles(self.data_roles), self.spec_id), self.spec_id)
+        """The spec's data roles, with the ones that cannot be negative (`data/signs.py`), the ones the plot can
+        compute (`spec_roles.COMPUTED_ROLES`) and the ones bound only by name (`data/computed.py`) marked."""
+        roles = mark_computed(mark_non_negative(parse_roles(self.data_roles), self.spec_id), self.spec_id)
+        return mark_name_only(roles, self.spec_id)
 
 
 @dataclass
@@ -183,12 +189,12 @@ class SessionView:
     dataset_history: list[str] = field(default_factory=list)
     """The ids of the dataset versions before the current one, oldest first (`DATASET_HISTORY`)."""
     dataset_version: int = 1
-    """The current dataset version's number (`DATASET_VERSION`); 1 without a dataset or for a paste."""
+    """The session's number of the current dataset version (`DATASET_VERSION`); 1 without a dataset."""
     dataset_original: str | None = None
-    """The id of version 1 of the current data (`DATASET_ORIGINAL`); None without data or for state from before the
-    key, where `dataset_versions.kept_versions` finds it in the history while it is still there."""
-    dataset_top: int = 1
-    """The highest version number the current data reached (`DATASET_TOP`), at least `dataset_version`."""
+    """The id of the first version of the current data (`DATASET_ORIGINAL`); None without data, or for a view built
+    without the key, where `dataset_versions` takes the current version while nothing stands before it."""
+    dataset_top: int = 0
+    """The highest number the session gave a dataset version (`DATASET_TOP`); 0 before its first data."""
     language: str = DEFAULT_LANGUAGE
     """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
     language_source: LanguageSource = "default"
@@ -206,6 +212,25 @@ class SessionView:
     def data_confirmed(self) -> bool:
         """Whether the user confirmed the current dataset with its current bindings (step 1 of two)."""
         return bool(self.dataset_id) and self.confirmed == confirmation_fingerprint(self.dataset_id, self.bindings)
+
+    @property
+    def can_undo(self) -> bool:
+        """Whether `POST .../dataset/undo` has a version to restore: the history holds one (`DATASET_HISTORY`). The
+        current number says nothing about it: a paste can carry any number, and past the history cap a version above
+        the original's has nothing left to undo."""
+        return bool(self.dataset_history)
+
+    @property
+    def next_version(self) -> int:
+        """The number the session's next stored dataset version gets: one above every number it gave (`DATASET_TOP`),
+        and so above the current one.
+
+        It comes from the view, so it holds only while nothing stores a version between the view's read and the
+        delta's write, as the history the delta writes does. Every writer keeps that: the data routes (undo,
+        `.to_long()`, copy) read and write with no suspension between them (`InMemorySessionService.get_session` and
+        `append_event` never yield), and a paste or a turn, which do suspend, exclude every other writer of the
+        session while they run (`main._active`)."""
+        return max(self.dataset_top, self.dataset_version if self.dataset_id else 0) + 1
 
     @property
     def earlier_datasets(self) -> list[str]:
@@ -394,7 +419,7 @@ def read_session(state: Any) -> SessionView | None:
         dataset_history=[str(item) for item in state.get(DATASET_HISTORY) or []],
         dataset_version=dataset_version,
         dataset_original=raw_original if isinstance(raw_original, str) and raw_original else None,
-        dataset_top=max(dataset_version, int(state.get(DATASET_TOP) or 1)),
+        dataset_top=max(int(state.get(DATASET_TOP) or 0), dataset_version if state.get(DATASET_ID) else 0),
         language=language,
         language_source=language_source,
         plot_language_choice=plot_language_choice,

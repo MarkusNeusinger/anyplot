@@ -74,7 +74,12 @@ class StoredDataset:
     carries it on, a computed table (`generate_data`, `run_data_code`) does not (`push_version`)."""
     changes: list[str] = field(default_factory=list)
     """The change lines of the step that made this version from an earlier one (`push_version`): the session block
-    lists them, fenced, so the root can tell which version to read or rebuild from; empty for a version 1."""
+    lists them, fenced, so the root can tell which version to read or rebuild from; empty for a paste and for a
+    table computed in a session without data."""
+    number: int = 1
+    """The session's number of this version (`session_state.DATASET_VERSION`), by which the page's card, the session
+    block and `from_version` name it: the session gives every version it stores the next number, never one twice
+    (`dataset_versions.push_version`, `opening.store_dataset`)."""
     dry_runs: dict[tuple[str, str], Any] = field(default_factory=dict, init=False, repr=False, compare=False)
     """The dry runs of converting a text column to numbers or dates (`conversions.py`), by column and type, each made
     once: the data under an id never changes. A copy (`replace`) starts without them."""
@@ -143,9 +148,11 @@ class DatasetStore:
         source: str | None = None,
         file_name: str | None = None,
         changes: Sequence[str] = (),
+        number: int = 1,
     ) -> str:
         """Store a parsed dataset (the code that computed it, where it comes from, the dropped file's name, the change
-        lines that made it) for `session_id` and return its new id; raises `StoreFull` past the cap."""
+        lines that made it, its number in the session) for `session_id` and return its new id; raises `StoreFull` past
+        the cap."""
         size = dataset_size(parsed) + sum(
             len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source, file_name, *changes) if text
         )
@@ -170,17 +177,19 @@ class DatasetStore:
             source=source,
             file_name=file_name,
             changes=list(changes),
+            number=number,
         )
         self._used_bytes += size
         return dataset_id
 
-    def copy(self, dataset_id: str, session_id: str, to_session_id: str) -> str | None:
+    def copy(self, dataset_id: str, session_id: str, to_session_id: str, *, number: int = 1) -> str | None:
         """Store a copy of one dataset of `session_id` for `to_session_id` and return the copy's new id; None when
         the dataset does not exist or belongs to another session, `StoreFull` past the cap (nothing stored then).
 
         The admin fan-out's copy (`POST /v1/sessions/{sid}/dataset/copy`): every field as it is, nothing parsed
         again, the canonical CSV the very same string, so the copy holds the same values, dtypes, column order,
-        notes, file name, source and code. Only the ids and the times are the copy's own.
+        notes, file name, source and code. Only the ids, the times and the number (`number`, the target session's
+        next) are the copy's own.
         """
         stored = self.get(dataset_id, session_id)
         if stored is None:
@@ -199,6 +208,7 @@ class DatasetStore:
             preview=[list(row) for row in stored.preview],
             context_lines=list(stored.context_lines),
             changes=list(stored.changes),
+            number=number,
             created_at=now,
             last_used_at=now,
         )

@@ -81,6 +81,8 @@ const DATASET = {
     description: `${name} values`,
   })),
   version: 1,
+  can_undo: false,
+  original_version: 1,
 };
 const PLOT = {
   status: 'ok',
@@ -100,6 +102,7 @@ const PREPARED = {
   ],
   changes: ['score: 2 cells divided by 100'],
   version: 2,
+  can_undo: true,
 };
 
 /**
