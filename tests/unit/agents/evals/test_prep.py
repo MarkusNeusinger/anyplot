@@ -265,6 +265,11 @@ class TestFixtures:
         with pytest.raises(SetupError, match="no-001: expected_operations leave its table as it is"):
             check_cases([case("no-001", "drop the rows over 100 hours", nothing)])
         check_cases([case("no-002", "drop the rows over 100 hours", nothing, strict_operations=True)])
+        # The scoring's own equality decides: a sort changes the order only, which `row_order: "any"` ignores.
+        ordered = [{"op": "sort", "column": "Exam Score"}]
+        check_cases([case("no-008", "sort by the score", ordered)])
+        with pytest.raises(SetupError, match="no-009: expected_operations leave its table as it is"):
+            check_cases([case("no-009", "sort by the score", ordered, row_order="any")])
         with pytest.raises(SetupError, match="no-003: expected_operations do not apply to its data"):
             check_cases([case("no-003", "rename the ghost", [GHOST])])
         check_cases([case("no-004", "rename the ghost", [GHOST], strict_operations=True)])  # scored by its operations

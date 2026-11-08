@@ -71,8 +71,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    2026-11-05 one surfaced on main only because a sibling PR ran its eval. The suites use the local
    Vertex AI login (ADC), so they run on the owner's machine, not in a cloud session.
    - **Always:**
-     - `uv run --extra agents python -m agents.evals.prep`: the root's step-1 data choices,
-       85 cases, about $0.25. Its gate is 80 percent of the cases matched, by the table each turn
+     - `uv run --extra agents python -m agents.evals.prep`: the root's step-1 data choices, every
+       case of `agents/evals/fixtures/prep/` (100 on 2026-11-08; about $0.25 when it held 85). Its
+       gate is 80 percent of the cases matched, by the table each turn
        leaves (since 2026-11-08; the summary keeps the key `exact` for it, and `ops_exact` counts the
        cases whose operations were exactly the expected ones).
      - `uv run --extra agents python -m agents.evals.scope`: the scope judge, about $0.05. Its

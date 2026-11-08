@@ -1637,8 +1637,9 @@ def stamp(settings: AgentSettings, cases: Sequence[PrepCase]) -> dict[str, Any]:
 def check_cases(cases: Sequence[PrepCase]) -> None:
     """Every expected operation list passes the `Operation` and `Generate` models, a case's earlier changes apply to
     its dataset one after the other, and a case scored by its table gets one: its expected operations apply to the
-    version they start from (`expected_result`) and change its table, since a table they leave as it is cannot tell
-    them from no data call (such a case is `strict_operations`). Raises `SetupError` otherwise."""
+    version they start from (`expected_result`) and change its table as the scoring compares it (`table_difference`,
+    the case's `row_order`), since a table they leave as it is cannot tell them from no data call (such a case is
+    `strict_operations`). Raises `SetupError` otherwise."""
     from agents.anyplot.data.generate import GenerateError
     from agents.anyplot.data.parse import ParseError, parse_dataset
     from agents.anyplot.data.prepare import PrepareArgs, PrepareError, apply_and_parse
@@ -1668,7 +1669,12 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
         except (ValidationError, PrepareError, GenerateError, ParseError) as exc:
             raise SetupError(f"case {case.id}: expected_operations do not apply to its data: {exc}") from exc
         changes = any(item.get("op") != GAP_OP for item in case.expected_operations)
-        unchanged = made is not None and start is not None and result_table(made) == result_table(start)
+        # The scoring's own equality: a sort under `row_order: "any"`, or a change within the tolerances, is none.
+        unchanged = (
+            made is not None
+            and start is not None
+            and table_difference(result_table(start), result_table(made), any_order=case.row_order == "any") is None
+        )
         if changes and unchanged:
             raise SetupError(
                 f"case {case.id}: expected_operations leave its table as it is, so the table cannot tell them from no "
