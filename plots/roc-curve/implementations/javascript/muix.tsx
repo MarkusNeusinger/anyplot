@@ -3,225 +3,160 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
 //# anyplot-orientation: square
+
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// The ROC pipeline: lcg/randNormal synthesize classifier scores,
-// rocFromScores sweeps every threshold into an empirical (fpr, tpr, auc)
-// curve, and onGrid resamples that step function onto a shared FPR grid so
-// both models plot against one xAxis.
+// Constants
+const UNIT_TICKS = Array.from({ length: 11 }, (_, i) => i / 10); // both rates live on 0–1
+const AXIS_PAD = 0.02; // share of the 0–1 range kept free around the curves
+const RANDOM_AUC = 0.5; // the area under the diagonal of a random classifier
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 44;
+const X_AXIS_H = 64;
+const Y_AXIS_W = 72;
+const GAP = 24; // free space around the square drawing area, px
 
-// Tiny fixed-seed LCG — the browser has no seeded RNG
-function lcg(seed: number) {
-  let s = seed >>> 0;
-  return () => {
+// Columns: set these to your data's column names
+const MODEL = "Model"; // role: extra
+const FPR = "False positive rate"; // role: fpr
+const TPR = "True positive rate"; // role: tpr
+
+// Data: replace this block with your own records, one object per row
+// Biopsy classification, 500 malignant and 500 benign samples scored by two models; each row is one
+// operating point of sklearn.metrics.roc_curve, threshold swept from the highest score down.
+// Fixed-seed LCG with Box-Muller normals; the forest separates the classes by 2.3 SD, the
+// logistic model by 1.15 SD.
+const data = (() => {
+  let s = 42 >>> 0;
+  const rand = () => {
     s = (Math.imul(1664525, s) + 1013904223) >>> 0;
     return s / 4294967295;
   };
-}
-const rand = lcg(42);
-
-// Standard normal deviate via Box-Muller, driven by the LCG above.
-function randNormal(mean: number, std: number) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * std;
-}
-
-// Simulate classifier scores for malignant (positive) vs. benign (negative)
-// biopsy samples, then sweep every threshold to trace the empirical ROC
-// curve — mirrors what sklearn.metrics.roc_curve produces from real
-// predictions. AUC follows from the trapezoidal rule over the curve.
-function rocFromScores(
-  nPos: number,
-  nNeg: number,
-  meanPos: number,
-  meanNeg: number,
-  std: number,
-) {
-  const scored = [
-    ...Array.from({ length: nPos }, () => ({
-      s: randNormal(meanPos, std),
-      label: 1,
-    })),
-    ...Array.from({ length: nNeg }, () => ({
-      s: randNormal(meanNeg, std),
-      label: 0,
-    })),
-  ].sort((a, b) => b.s - a.s);
-
-  const fpr = [0];
-  const tpr = [0];
-  let tp = 0;
-  let fp = 0;
-  for (const { label } of scored) {
-    if (label === 1) tp += 1;
-    else fp += 1;
-    fpr.push(fp / nNeg);
-    tpr.push(tp / nPos);
-  }
-
-  let auc = 0;
-  for (let i = 1; i < fpr.length; i++) {
-    auc += ((fpr[i] - fpr[i - 1]) * (tpr[i] + tpr[i - 1])) / 2;
-  }
-  return { fpr, tpr, auc };
-}
-
-// Resample a step-function ROC curve onto a shared FPR grid so every series
-// (both models plus the diagonal) can be plotted against one xAxis.
-function onGrid(fpr: number[], tpr: number[], grid: number[]) {
-  return grid.map((x) => {
-    let i = 0;
-    while (i < fpr.length - 1 && fpr[i + 1] < x) i += 1;
-    const j = Math.min(i + 1, fpr.length - 1);
-    if (fpr[j] === fpr[i]) return tpr[j];
-    const frac = (x - fpr[i]) / (fpr[j] - fpr[i]);
-    return tpr[i] + frac * (tpr[j] - tpr[i]);
+  const normal = (mean) => mean + Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+  return [
+    ["Random Forest", 2.3],
+    ["Logistic Regression", 1.15],
+  ].flatMap(([model, shift]) => {
+    const scored = [
+      ...Array.from({ length: 500 }, () => ({ score: normal(shift), positive: true })),
+      ...Array.from({ length: 500 }, () => ({ score: normal(0), positive: false })),
+    ].sort((a, b) => b.score - a.score);
+    let tp = 0;
+    let fp = 0;
+    return [
+      { [MODEL]: model, [FPR]: 0, [TPR]: 0 },
+      ...scored.map((d) => {
+        if (d.positive) tp += 1;
+        else fp += 1;
+        return { [MODEL]: model, [FPR]: fp / 500, [TPR]: tp / 500 };
+      }),
+    ];
   });
-}
+})();
 
-const N_SAMPLES = 500;
-const GRID = Array.from({ length: 101 }, (_, i) => i / 100);
-
-const forest = rocFromScores(N_SAMPLES, N_SAMPLES, 2.3, 0, 1);
-const logistic = rocFromScores(N_SAMPLES, N_SAMPLES, 1.15, 0, 1);
-const forestTpr = onGrid(forest.fpr, forest.tpr, GRID);
-const logisticTpr = onGrid(logistic.fpr, logistic.tpr, GRID);
+// Plot: reads only data and the constants above
+// One curve per model, its operating points sorted by FPR, AUC by the trapezoidal rule
+const models = [...new Set(data.map((d) => d[MODEL]))];
+const curves = models.map((model) => {
+  const points = data
+    .filter((d) => d[MODEL] === model && Number.isFinite(d[FPR]) && Number.isFinite(d[TPR]))
+    .sort((a, b) => a[FPR] - b[FPR] || a[TPR] - b[TPR]);
+  const auc = points.slice(1).reduce((s, p, i) => s + ((p[FPR] - points[i][FPR]) * (p[TPR] + points[i][TPR])) / 2, 0);
+  return { model, fpr: points.map((p) => p[FPR]), tpr: points.map((p) => p[TPR]), auc };
+});
+const pointsPerCurve = Math.max(...curves.map((c) => c.fpr.length));
 
 const TITLE = "roc-curve · javascript · muix · anyplot.ai";
-const TITLE_H = 56;
-
-// --- Chart (default-exported component — the harness mounts it) -----------
+const SUBTITLE = `${models.length} classifiers · up to ${pointsPerCurve} operating points per curve · AUC by the trapezoidal rule`;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
+  const chartH = height - TITLE_H - SUBTITLE_H - LEGEND_H;
+  const side = Math.min(width - Y_AXIS_W, chartH - X_AXIS_H) - 2 * GAP;
+  const sideX = (width - Y_AXIS_W - side) / 2;
+  const sideY = (chartH - X_AXIS_H - side) / 2;
+  const unitAxis = {
+    scaleType: "linear",
+    min: -AXIS_PAD,
+    max: 1 + AXIS_PAD,
+    tickInterval: UNIT_TICKS,
+    valueFormatter: (v) => v.toFixed(1),
+  };
 
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Box
-        sx={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          px: "40px",
-          pt: "10px",
-        }}
-      >
-        <Typography
-          sx={{
-            color: t.ink,
-            fontSize: "25px",
-            fontWeight: 600,
-            lineHeight: 1,
-          }}
-        >
-          {TITLE}
-        </Typography>
-      </Box>
-
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
       <LineChart
         width={width}
-        height={height - TITLE_H}
+        height={chartH}
         skipAnimation
-        grid={{ horizontal: true }}
+        margin={{ top: sideY, bottom: sideY, left: sideX, right: sideX }}
+        grid={{ horizontal: true, vertical: true }}
         xAxis={[
-          {
-            data: GRID,
-            scaleType: "linear",
-            min: 0,
-            max: 1,
-            label: "False Positive Rate",
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
-          },
+          ...curves.map((c, i) => ({
+            ...unitAxis,
+            id: `fpr-${i}`,
+            data: c.fpr,
+            position: i === 0 ? "bottom" : "none",
+            label: FPR,
+            height: X_AXIS_H,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          })),
+          { ...unitAxis, id: "diagonal", data: [0, 1], position: "none" },
         ]}
         yAxis={[
           {
-            min: 0,
-            max: 1,
-            label: "True Positive Rate",
-            // tickFontSize drives the auto-computed label offset (see MUI X
-            // ChartsYAxis: labelRefPoint.x = -(tickFontSize + tickSize + 10));
-            // set it wide enough to clear the "0.XX"-style tick text, while
-            // tickLabelStyle.fontSize keeps the rendered tick size correct.
-            tickFontSize: 40,
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            ...unitAxis,
+            label: TPR,
+            width: Y_AXIS_W,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         series={[
-          {
-            id: "forest",
-            data: forestTpr,
-            label: `Random Forest (AUC = ${forest.auc.toFixed(2)})`,
-            color: t.palette[0],
-            showMark: false,
+          ...curves.map((c, i) => ({
+            id: `model-${i}`,
+            xAxisId: `fpr-${i}`,
+            data: c.tpr,
+            label: `${c.model} (AUC = ${c.auc.toFixed(2)})`,
+            color: t.palette[i],
             curve: "linear",
-          },
-          {
-            id: "logistic",
-            data: logisticTpr,
-            label: `Logistic Regression (AUC = ${logistic.auc.toFixed(2)})`,
-            color: t.palette[1],
             showMark: false,
-            curve: "linear",
-          },
+          })),
           {
-            // No `label`: this is the y=x reference, not a fitted model, so
-            // it's excluded from the legend (see ChartsReferenceLine below,
-            // which annotates it directly on the chart instead).
-            id: "baseline",
-            data: GRID,
+            id: "diagonal",
+            xAxisId: "diagonal",
+            data: [0, 1],
+            label: `Random classifier (AUC = ${RANDOM_AUC.toFixed(2)})`,
             color: t.inkSoft,
-            showMark: false,
             curve: "linear",
+            showMark: false,
           },
         ]}
-        margin={{ top: 20, bottom: 90, left: 130, right: 40 }}
-        sx={{
-          "& .MuiLineElement-series-forest": { strokeWidth: 3.5 },
-          "& .MuiLineElement-series-logistic": { strokeWidth: 3 },
-          "& .MuiLineElement-series-baseline": {
-            strokeDasharray: "10 6",
-            strokeWidth: 2,
-            strokeOpacity: 0.6,
-          },
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
-        }}
         slotProps={{
           legend: {
-            direction: "row",
-            position: { vertical: "bottom", horizontal: "middle" },
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink },
           },
         }}
-      >
-        {/* Annotates the dashed "baseline" series in place of a legend
-            entry — the reference line's own stroke is hidden (it would
-            otherwise duplicate the horizontal gridline); only its label
-            renders, horizontally centered above (FPR=0.5, TPR=0.5) where the
-            diagonal data series crosses, clear of the line itself. */}
-        <ChartsReferenceLine
-          y={0.6}
-          label="Random guess (AUC = 0.50)"
-          lineStyle={{ stroke: "none" }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-      </LineChart>
-    </Box>
+        sx={{
+          '& .MuiLineChart-line[data-series^="model"]': { strokeWidth: 3 },
+          '& .MuiLineChart-line[data-series="diagonal"]': { strokeWidth: 2, strokeDasharray: "10 6" },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      />
+    </div>
   );
 }
