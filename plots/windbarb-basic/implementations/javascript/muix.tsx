@@ -2,196 +2,148 @@
 // windbarb-basic: Wind Barb Plot for Meteorological Data
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-02
-//# anyplot-orientation: landscape
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "Roboto, Helvetica, Arial, sans-serif";
 
-// --- Data: synthetic surface wind observations around a low-pressure system --
-// (weather-station grid, distances in km, wind components u/v in knots).
-// A Rankine-vortex-like tangential profile with a small cross-isobar inflow
-// component — the same idealized shape used to teach cyclone wind fields.
-const CENTER = { x: 400, y: 300 };
-const PEAK_RADIUS_KM = 180;
-const PEAK_SPEED_KT = 58;
-const INFLOW_DEG = 22;
-
-// Rankine-vortex-like tangential speed profile: 0 at the core, ramping up to
-// PEAK_SPEED_KT at PEAK_RADIUS_KM, then decaying outward. Shared by the outer
-// station grid and the inner core transect below, so both draw from the same
-// physically consistent wind field. Never called with r=0 (a true center
-// point has an undefined direction), so no divide-by-zero guard is needed.
-function windAt(x, y) {
-  const dx = x - CENTER.x;
-  const dy = y - CENTER.y;
-  const r = Math.hypot(dx, dy);
-  const tangentE = -dy / r;
-  const tangentN = dx / r;
-  const inflowE = -dx / r;
-  const inflowN = -dy / r;
-  const a = (INFLOW_DEG * Math.PI) / 180;
-  const dirE = Math.cos(a) * tangentE + Math.sin(a) * inflowE;
-  const dirN = Math.cos(a) * tangentN + Math.sin(a) * inflowN;
-  const ratio = r / PEAK_RADIUS_KM;
-  const speed = PEAK_SPEED_KT * ratio * Math.exp(1 - ratio);
-  return { u: speed * dirE, v: speed * dirN };
-}
-
-const stations = [];
-for (let x = 0; x <= 800; x += 160) {
-  for (let y = 0; y <= 600; y += 150) {
-    stations.push({ x, y, ...windAt(x, y) });
-  }
-}
-
-// Inner core transect: the coarse outer grid never comes closer than ~80 km
-// to the vortex center, so every one of its stations lands in the high-wind
-// (27-58 kt) band. These four points sample small radii near the core, where
-// the same tangential profile ramps up from near-zero, so the real dataset
-// (not just the legend) demonstrates the calm circle and the simpler
-// half-barb / single-full-barb notations.
-const CORE_TRANSECT = [
-  { r: 2, angleDeg: 35 }, // ~1.7 kt -> calm circle
-  { r: 7, angleDeg: 140 }, // ~5.9 kt -> half barb
-  { r: 14, angleDeg: 235 }, // ~11.3 kt -> single full barb
-  { r: 24, angleDeg: 330 }, // ~18.4 kt -> two full barbs
-];
-for (const { r, angleDeg } of CORE_TRANSECT) {
-  const angle = (angleDeg * Math.PI) / 180;
-  const x = CENTER.x + r * Math.cos(angle);
-  const y = CENTER.y + r * Math.sin(angle);
-  stations.push({ x, y, ...windAt(x, y) });
-}
-
-// --- Wind barb geometry (standard meteorological notation) ------------------
-// Staff points toward the direction the wind blows FROM; pennant = 50 kt,
-// full barb = 10 kt, half barb = 5 kt, stacked from the staff tip inward.
-// Barbs sit on the left of the staff (Northern Hemisphere convention).
+// Constants
+// Standard barb notation, counted in knots: a half barb is 5 kt, a full barb
+// 10 kt, a pennant 50 kt; below 2.5 kt the wind is calm.
+const KNOTS = "kt";
 const CALM_KT = 2.5;
-const CALM_RADIUS = 5.5;
-const BARB_ANGLE_DEG = -112;
-const STATION_GLYPH = { staffLen: 42, barbLen: 14, barbGap: 7 };
-const LEGEND_GLYPH = { staffLen: 34, barbLen: 12, barbGap: 6 };
+const HALF_KT = 5;
+const FULL_KT = 10;
+const PENNANT_KT = 50;
+const KEY_SPEEDS = [0, HALF_KT, 2 * FULL_KT + HALF_KT, PENNANT_KT]; // key glyphs, wind from the north
+// Feather direction, turned clockwise on screen from the staff's outward
+// direction: Northern Hemisphere feathers point toward low pressure, on the
+// staff's left seen downwind (east for a north wind), and lean out to the tip.
+const BARB_ANGLE_DEG = 68;
+const STAFF_PX = 46;
+const FEATHER_PX = 16;
+const FEATHER_GAP_PX = 8;
+const LONE_HALF_GAPS = 1.5; // a lone half barb sits this many gaps in from the tip, so it is not read as a full barb
+const PENNANT_BASE_PX = 12;
+const CALM_R = 5.5;
+const POS_PAD = 0.125; // share of the station extent added on every side
+const TICK_PX = 130; // target spacing between axis ticks, the same on both axes
+const BRAND = t.palette[0];
+const TITLE = "windbarb-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+const KEY_W = 200;
+const X_AXIS_H = 72;
+const Y_AXIS_W = 88;
+const MARGIN = { top: 24, right: 24, bottom: 12, left: 24 };
 
-function rotate(dx, dy, deg) {
-  const rad = (deg * Math.PI) / 180;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return [dx * cos - dy * sin, dx * sin + dy * cos];
-}
+// Columns: set these to your data's column names
+const X = "Distance east (km)"; // role: x
+const Y = "Distance north (km)"; // role: y
+const U = "Eastward wind u (kt)"; // role: u
+const V = "Northward wind v (kt)"; // role: v
 
-function barbGlyph(key, px, py, u, v, brand, geom) {
+// Data: replace this block with your own records, one object per row
+// Surface wind observations around a low-pressure system: a 6 × 5 station
+// grid plus one station in the calm eye, from a Rankine-like vortex (58 kt
+// peak at 180 km) with 22° of cross-isobar inflow.
+const data = (() => {
+  const cx = 400;
+  const cy = 300;
+  const inflow = (22 * Math.PI) / 180;
+  const points = [];
+  for (let x = 0; x <= 800; x += 160) for (let y = 0; y <= 600; y += 150) points.push([x, y]);
+  points.push([cx + 2 * Math.cos((35 * Math.PI) / 180), cy + 2 * Math.sin((35 * Math.PI) / 180)]);
+  return points.map(([x, y]) => {
+    const r = Math.hypot(x - cx, y - cy);
+    const dirE = Math.cos(inflow) * (-(y - cy) / r) + Math.sin(inflow) * (-(x - cx) / r);
+    const dirN = Math.cos(inflow) * ((x - cx) / r) + Math.sin(inflow) * (-(y - cy) / r);
+    const speed = 58 * (r / 180) * Math.exp(1 - r / 180);
+    return {
+      [X]: Math.round(x * 10) / 10,
+      [Y]: Math.round(y * 10) / 10,
+      [U]: Math.round(speed * dirE * 100) / 100,
+      [V]: Math.round(speed * dirN * 100) / 100,
+    };
+  });
+})();
+
+// Plot: reads only data and the constants above
+const stations = data.filter((d) => d[X] != null && d[Y] != null && d[U] != null && d[V] != null);
+const xs = stations.map((d) => d[X]);
+const ys = stations.map((d) => d[Y]);
+const xMid = (Math.min(...xs) + Math.max(...xs)) / 2;
+const yMid = (Math.min(...ys) + Math.max(...ys)) / 2;
+const xNeed = (Math.max(...xs) - Math.min(...xs)) * (1 + 2 * POS_PAD);
+const yNeed = (Math.max(...ys) - Math.min(...ys)) * (1 + 2 * POS_PAD);
+
+// Glyph geometry in px around the station: the staff points into the wind,
+// and the speed, rounded to the nearest half barb, is spent from the tip
+// inward on pennants, then full barbs, then at most one half barb.
+const featherAngle = (BARB_ANGLE_DEG * Math.PI) / 180;
+const glyphs = [...stations.map((d) => [d[U], d[V]]), ...KEY_SPEEDS.map((s) => [0, -s])].map(([u, v]) => {
   const speed = Math.hypot(u, v);
-  if (speed < CALM_KT) {
-    return (
-      <circle key={key} cx={px} cy={py} r={CALM_RADIUS} fill="none" stroke={brand} strokeWidth={2.5} />
-    );
-  }
-
-  const inv = 1 / speed;
-  // East/north wind vector -> screen pixels, reversed (staff points upwind).
-  const outDx = -u * inv;
-  const outDy = v * inv;
-  const tipX = px + outDx * geom.staffLen;
-  const tipY = py + outDy * geom.staffLen;
-  const along = (d) => [tipX - outDx * d, tipY - outDy * d];
-  const [rx, ry] = rotate(outDx, outDy, BARB_ANGLE_DEG);
-
-  const rounded = Math.round(speed / 5) * 5;
-  let remaining = rounded;
-  const pennants = Math.floor(remaining / 50);
-  remaining -= pennants * 50;
-  const fullBarbs = Math.floor(remaining / 10);
-  remaining -= fullBarbs * 10;
-  const halfBarb = remaining >= 5;
-
-  const marks = [];
-  let pos = 0;
-  for (let p = 0; p < pennants; p += 1) {
-    const [nx, ny] = along(pos);
-    const [fx, fy] = along(pos + geom.barbGap);
-    const apexX = (nx + fx) / 2 + rx * geom.barbLen;
-    const apexY = (ny + fy) / 2 + ry * geom.barbLen;
-    marks.push(
-      <polygon key={`${key}-p${p}`} points={`${nx},${ny} ${fx},${fy} ${apexX},${apexY}`} fill={brand} />
-    );
-    pos += geom.barbGap;
-  }
-  for (let b = 0; b < fullBarbs; b += 1) {
-    const [bx, by] = along(pos);
-    marks.push(
-      <line
-        key={`${key}-b${b}`}
-        x1={bx}
-        y1={by}
-        x2={bx + rx * geom.barbLen}
-        y2={by + ry * geom.barbLen}
-        stroke={brand}
-        strokeWidth={3.2}
-        strokeLinecap="round"
-      />
-    );
-    pos += geom.barbGap;
-  }
-  if (halfBarb) {
-    const [bx, by] = along(pos);
-    marks.push(
-      <line
-        key={`${key}-half`}
-        x1={bx}
-        y1={by}
-        x2={bx + rx * geom.barbLen * 0.5}
-        y2={by + ry * geom.barbLen * 0.5}
-        stroke={brand}
-        strokeWidth={3.2}
-        strokeLinecap="round"
-      />
-    );
-  }
-
-  return (
-    <g key={key}>
-      <circle cx={px} cy={py} r={2.2} fill={brand} />
-      <line x1={px} y1={py} x2={tipX} y2={tipY} stroke={brand} strokeWidth={3} strokeLinecap="round" />
-      {marks}
+  if (speed < CALM_KT) return null;
+  const ox = -u / speed;
+  const oy = v / speed;
+  const fx = ox * Math.cos(featherAngle) - oy * Math.sin(featherAngle);
+  const fy = ox * Math.sin(featherAngle) + oy * Math.cos(featherAngle);
+  const tipX = ox * STAFF_PX;
+  const tipY = oy * STAFF_PX;
+  const rounded = Math.round(speed / HALF_KT) * HALF_KT;
+  const pennantCount = Math.floor(rounded / PENNANT_KT);
+  const fullCount = Math.floor((rounded - pennantCount * PENNANT_KT) / FULL_KT);
+  const hasHalf = rounded - pennantCount * PENNANT_KT - fullCount * FULL_KT >= HALF_KT;
+  const pennants = Array.from({ length: pennantCount }, (_, p) => {
+    const ax = tipX - ox * p * PENNANT_BASE_PX;
+    const ay = tipY - oy * p * PENNANT_BASE_PX;
+    const bx = tipX - ox * (p + 1) * PENNANT_BASE_PX;
+    const by = tipY - oy * (p + 1) * PENNANT_BASE_PX;
+    return `${ax},${ay} ${bx},${by} ${(ax + bx) / 2 + fx * FEATHER_PX},${(ay + by) / 2 + fy * FEATHER_PX}`;
+  });
+  const firstGap = pennantCount > 0 ? 0.5 : fullCount === 0 ? LONE_HALF_GAPS : 0;
+  const feathers = Array.from({ length: fullCount + (hasHalf ? 1 : 0) }, (_, k) => {
+    const along = pennantCount * PENNANT_BASE_PX + (k + firstGap) * FEATHER_GAP_PX;
+    const sx = tipX - ox * along;
+    const sy = tipY - oy * along;
+    const len = k < fullCount ? FEATHER_PX : FEATHER_PX / 2;
+    return [sx, sy, sx + fx * len, sy + fy * len];
+  });
+  return { tipX, tipY, pennants, feathers };
+});
+// One drawing per glyph, centered on (0, 0): the station layer and the key
+// both place these.
+const glyphMarks = glyphs.map((g, i) =>
+  g == null ? (
+    <circle key={i} r={CALM_R} fill="none" stroke={BRAND} strokeWidth={2.5} />
+  ) : (
+    <g key={i}>
+      <circle r={2.2} fill={BRAND} />
+      <line x2={g.tipX} y2={g.tipY} stroke={BRAND} strokeWidth={3} strokeLinecap="round" />
+      {g.pennants.map((points, k) => (
+        <polygon key={`p${k}`} points={points} fill={BRAND} />
+      ))}
+      {g.feathers.map(([x1, y1, x2, y2], k) => (
+        <line key={`f${k}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={BRAND} strokeWidth={3.2} strokeLinecap="round" />
+      ))}
     </g>
-  );
-}
+  ),
+);
+const keyLabels = KEY_SPEEDS.map((s) => (s < CALM_KT ? `Calm (< ${CALM_KT} ${KNOTS})` : `${s} ${KNOTS}`));
+const SUBTITLE = `${stations.length} stations · each staff points to where the wind blows from · speed rounded to ${HALF_KT} ${KNOTS}`;
 
-// --- Station layer: maps data coordinates to pixels via the chart's own scales
-function WindBarbLayer({ brand }) {
+// The community package has no barb glyph: a custom layer places each one at
+// its station through the chart's linear scales.
+function WindBarbLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  return (
-    <g>
-      {stations.map((s) =>
-        barbGlyph(`s-${s.x}-${s.y}`, xScale(s.x), yScale(s.y), s.u, s.v, brand, STATION_GLYPH)
-      )}
-    </g>
-  );
-}
 
-// --- Legend: fixed pixel row under the title, outside the data area ---------
-function legendKey(width, brand, ink) {
-  const baseY = 148;
-  const items = [
-    { cx: width * 0.34, u: 0, v: 0, label: "Calm (< 2.5 kt)" },
-    { cx: width * 0.46, u: 0, v: -5, label: "5 kt" },
-    { cx: width * 0.58, u: 0, v: -25, label: "25 kt" },
-    { cx: width * 0.7, u: 0, v: -50, label: "50 kt" },
-  ];
   return (
     <g>
-      {items.map((it, i) => (
-        <g key={`legend-${i}`}>
-          {barbGlyph(`legend-glyph-${i}`, it.cx, baseY, it.u, it.v, brand, LEGEND_GLYPH)}
-          <text x={it.cx} y={baseY + 24} textAnchor="middle" fontSize={13} fontFamily={FONT} fill={ink}>
-            {it.label}
-          </text>
+      {stations.map((d, i) => (
+        <g key={i} transform={`translate(${xScale(d[X])},${yScale(d[Y])})`}>
+          {glyphMarks[i]}
         </g>
       ))}
     </g>
@@ -199,53 +151,78 @@ function legendKey(width, brand, ink) {
 }
 
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const brand = t.palette[0];
+  const { width, height } = window.ANYPLOT_SIZE;
+  // Equal km per pixel on both axes, so distances and directions keep their
+  // shape: the binding axis fills its room, the other one shrinks to the
+  // stations' extent, and the chart and key sit centred on the page
+  const roomW = width - KEY_W - MARGIN.left - MARGIN.right - Y_AXIS_W;
+  const roomH = height - TITLE_H - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+  const kmPerPx = Math.max(xNeed / roomW, yNeed / roomH);
+  const drawW = Math.floor(xNeed / kmPerPx);
+  const drawH = Math.floor(yNeed / kmPerPx);
+  const chartW = drawW + MARGIN.left + MARGIN.right + Y_AXIS_W;
+  const chartH = drawH + MARGIN.top + MARGIN.bottom + X_AXIS_H;
 
   return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={[]}
-      margin={{ top: 182, right: 50, bottom: 74, left: 112 }}
-      xAxis={[
-        {
-          scaleType: "linear",
-          min: -100,
-          max: 900,
-          domainLimit: "strict",
-          label: "Distance east of grid origin (km)",
-          labelStyle: { fontSize: 16, fontFamily: FONT },
-          tickLabelStyle: { fontSize: 13, fontFamily: FONT },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: -90,
-          max: 690,
-          domainLimit: "strict",
-          label: "Distance north of grid origin (km)",
-          labelStyle: { fontSize: 16, fontFamily: FONT },
-          tickLabelStyle: { fontSize: 13, fontFamily: FONT },
-          // Actual tick text stays 13px (tickLabelStyle above); this
-          // deprecated prop is what ChartsYAxis uses to reserve the label
-          // offset (labelRefPoint.x = tickFontSize + tickSize + 10), so it
-          // must reflect the rendered tick label width to avoid the axis
-          // label overlapping the tick numbers.
-          tickFontSize: 30,
-        },
-      ]}
-      disableAxisListener
-      skipAnimation
-    >
-      <ChartsXAxis position="bottom" />
-      <ChartsYAxis position="left" />
-      <text x={size.width / 2} y={44} textAnchor="middle" fontSize={22} fontWeight={600} fontFamily={FONT} fill={t.ink}>
-        windbarb-basic · javascript · muix · anyplot.ai
-      </text>
-      {legendKey(size.width, brand, t.inkSoft)}
-      <WindBarbLayer brand={brand} />
-    </ChartContainer>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <ChartsContainer
+          width={chartW}
+          height={chartH}
+          series={[]}
+          skipAnimation
+          margin={MARGIN}
+          xAxis={[
+            {
+              id: "x",
+              scaleType: "linear",
+              min: xMid - (kmPerPx * drawW) / 2,
+              max: xMid + (kmPerPx * drawW) / 2,
+              tickNumber: Math.ceil(drawW / TICK_PX),
+              height: X_AXIS_H,
+              label: X,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            },
+          ]}
+          yAxis={[
+            {
+              id: "y",
+              scaleType: "linear",
+              min: yMid - (kmPerPx * drawH) / 2,
+              max: yMid + (kmPerPx * drawH) / 2,
+              tickNumber: Math.ceil(drawH / TICK_PX),
+              width: Y_AXIS_W,
+              label: Y,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            },
+          ]}
+          sx={{
+            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          }}
+        >
+          <WindBarbLayer />
+          <ChartsXAxis axisId="x" />
+          <ChartsYAxis axisId="y" />
+        </ChartsContainer>
+        <div style={{ width: KEY_W, paddingTop: MARGIN.top, display: "flex", flexDirection: "column", gap: 14 }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>Wind speed</span>
+          {keyLabels.map((label, j) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <svg width={44} height={56} style={{ overflow: "visible" }}>
+                <g transform={`translate(30,${glyphs[stations.length + j] == null ? 28 : 50})`}>{glyphMarks[stations.length + j]}</g>
+              </svg>
+              <span style={{ fontSize: 15, color: t.inkSoft }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
