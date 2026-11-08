@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-spine: Spine Plot for Two-Variable Proportions
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: pending | Updated: 2026-09-27
+// Library: highcharts 13.1.1 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 
 const t = window.ANYPLOT_TOKENS;
 
