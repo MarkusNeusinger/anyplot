@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:49:53Z'
-updated: '2026-11-08T22:33:12Z'
+updated: '2026-11-08T22:40:43Z'
 generated_by: claude-opus-5-5
 adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
 workflow_run: 42527070458
@@ -13,128 +13,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-le
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Each transition is a stem plus a filled arrowhead whose tip sits exactly on its
-    lower level, all pointing down for emission; the three series are spread into
-    their own columns so every arrow can be followed from level to level
-  - Spectral regions mapped to Imprint hues in wavelength order (blue for the ultraviolet
-    Lyman series, brand green for the visible Balmer series, matte red for the infrared
-    Paschen series), with bold region headers in the matching color acting as the
-    legend
-  - 'Nonlinear, evenly spaced energy axis is stated in the axis title and every tick
-    carries both the quantum number and the true energy (n=1: −13.60 eV … n=6: −0.38
-    eV), with a true minus sign'
-  - Dashed ionization line at 0.00 eV runs wider than the solid level lines, so the
-    limit is told apart by style and extent
-  - 'Factually correct data: E = −13.6/n² eV for n=1–6 and the ten line wavelengths
-    (Ly-α 122 nm, Hα 656 nm, Pa-α 1875 nm, …) match the hydrogen spectrum'
-  - 'Uses pygal idioms well: one XY series per family with None breaks and allow_interruptions,
-    dict-valued y_labels, print_labels with dict points, stroke_style dasharray and
-    inline css for per-series weights; HTML output keeps tooltips'
+  - 'Every level is a horizontal line at its rank on an upward energy axis. Its tick
+    label names both the quantum number and the true energy (n=1: −13.60 eV … n=6:
+    −0.38 eV), so the nonlinear scale the Notes allow shows in the ticks and in the
+    axis title (''levels evenly spaced'').'
+  - Each of the 10 emission arrows starts on its upper level and ends with a filled
+    arrowhead on its lower level. The arrows sit in one column per series (Lyman,
+    Balmer, Paschen) and are evenly spaced, so every arrow can be followed on its
+    own.
+  - 'Wavelengths are computed from the level energies (λ = 1239.84 / ΔE) and match
+    the textbook values: Ly-α 122 nm, Hα 656 nm, Hβ 486 nm, Pa-α 1875 nm. pd.cut sorts
+    them into ultraviolet, visible and infrared, and each region gets a fitting Imprint
+    hue: blue for UV, green for visible, matte red for IR.'
+  - A bold colored series header ('Balmer series · visible') stands in for a legend
+    and names the spectral region, and a muted ink tone for the level lines keeps
+    the colored arrows in front.
+  - 'The dashed ionization line at the top carries the tick label ''Ionization: 0.00
+    eV'', so it reads apart from the solid level lines.'
+  - 'Idiomatic pygal: an XY chart with allow_interruptions and None breaks draws all
+    level lines as one series, y_labels dicts place tick labels at the levels, print_labels
+    with per-point label dicts places the wavelength labels, and targeted inline CSS
+    sets stroke widths and the header font. The HTML export keeps pygal''s hover tooltips.'
   weaknesses:
-  - 'VQ-01 (both): the ten wavelength labels ("Hα 656 nm", "Pa-γ 1094 nm", …) are
-    set at 36 px, below the 44 px tick labels, and are the smallest text on the chart
-    although they carry the transition information → about 44 px (+8 px), keeping
-    the labels clear of the neighbouring stems. Likely cause: LABEL_FS = 36 feeding
-    value_label_font_size.'
-  - 'Suggestion: build the levels and transitions as a tidy DataFrame in the data
-    block and derive the pygal lists from it with .tolist(), as the library prompt''s
-    data-block convention describes.'
-  - 'Suggestion: compute the wavelengths from the level energies (λ = 1239.84 / ΔE
-    nm) instead of typing them into the labels, so the labels follow the data.'
+  - 'Suggestion: shortening the level lines so they stop just past the last arrow
+    of the outermost column would make it clearer that they span only part of the
+    plot width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1; no grid, no x-axis (horizontal position is schematic).
-      Chrome: bold dark title "Hydrogen Atom · energy-level-atomic · python · pygal · anyplot.ai" at ~75 % width; rotated y-axis title "Energy (eV, levels evenly spaced)"; dark y tick labels "n=1: −13.60 eV" … "n=6: −0.38 eV" and "Ionization: 0.00 eV"; all readable.
-      Data: six muted-gray level lines spanning ~68 % of the plot width; a dashed ink ionization line at the top, wider than the levels; ten downward arrows in three columns — Lyman in #4467A3 ending on n=1, Balmer in #009E73 ending on n=2, Paschen in #AE3030 ending on n=3 — each with a soft-ink wavelength label above its upper end; bold colored series headers above the ionization line. No text collisions.
+      Background: warm off-white #FAF8F1 across the whole canvas, no frame or grid.
+      Chrome: bold dark title 'Hydrogen Atom · energy-level-atomic · python · pygal · anyplot.ai' centred at the top (about 75 % of the width). Rotated y-axis title 'Energy (eV), levels evenly spaced'. Tick labels 'n=1: −13.60 eV' … 'n=6: −0.38 eV' and 'Ionization: 0.00 eV' in dark ink. All readable.
+      Data: six muted grey level lines, evenly spaced. A dashed ink ionization line at the top. Ten downward arrows with filled heads ending on their lower levels: three blue Lyman arrows (#4467A3) to n=1, four green Balmer arrows (#009E73) to n=2, three red Paschen arrows (#AE3030) to n=3. Grey wavelength labels ('Hα 656 nm' etc.) above each arrow's tail. Bold colored series headers above the ionization line. No overlaps, nothing clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: title, axis title and tick labels flip to light ink; wavelength labels in light soft gray; level lines in a light muted gray; dashed ionization line in light ink; no dark-on-dark text anywhere.
-      Data: arrow and header colors identical to the light render (#4467A3, #009E73, #AE3030); brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis title and tick labels flip to light ink and are clearly readable. Level lines are a light muted grey, the ionization dash is light ink. No dark-on-dark text.
+      Data: blue, green and red arrows and headers are identical to the light render. Wavelength labels are light grey and readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: All sizes set explicitly and readable in both themes; wavelength
-          labels at 36 px sit below the 44 px ticks (defect line)
+        passed: true
+        comment: Title 62 px, ticks/labels 44 px, readable in both themes and at thumbnail
+          size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; each wavelength label clears the neighbouring
-          stem
+        comment: Every wavelength label sits clear of the neighbouring stems; headers
+          clear of the ionization line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 px stems, large filled arrowheads and 3 px level lines are clearly
-          visible in both themes
+        comment: 6 px stems with ~46x52 px heads; level lines visible but muted in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Series also separated by column position and labelled headers, so
-          hue is not the only signal
+        comment: Blue/green/red are backed by series headers and per-arrow wavelength
+          text, so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, diagram fills most of the canvas, title ~75 % width
-          (expected for the mandated title)
+        comment: 3200x1800; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Energy axis titled with unit eV and the nonlinear spacing stated
+        comment: '''Energy (eV), levels evenly spaced'' with unit and scale note'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues ordered by wavelength (blue UV, green visible, red IR);
-          correct backgrounds and theme-adaptive chrome in both renders
+        comment: Imprint hues, semantic spectral order (blue UV, green visible, red
+          IR); correct backgrounds
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Bold colored series headers above the ionization line replace a legend
-          box; tick labels typeset as quantum number plus energy with true minus signs
+        passed: true
+        comment: 'Clear hierarchy: bold colored series headers, muted level lines,
+          mid-grey wavelength labels below ink tick labels'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Labels placed just above each stem top, even column spacing per series,
-          ionization line extended beyond the level span, guides and x-axis removed
-          for the schematic axis
+        passed: true
+        comment: Wavelength labels aligned on each arrow's tail; series columns separated
+          by a gap; dashed ionization line extends past the level lines
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Column grouping per series makes the convergence of each family onto
-          n=1, 2, 3 readable at a glance
+        passed: true
+        comment: Series headers name the spectral region of each series, tying each
+          series to its band beyond what the Notes require
     spec_compliance:
       score: 15
       max: 15
@@ -150,23 +145,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Partial-width labelled levels, emission arrows downward, color by
-          spectral region, grouping by series, nonlinear axis with ticks, ionization
-          reference line — all present
+        comment: Partial-width labeled levels, emission arrows downward, wavelength
+          coloring, ionization line, nonlinear scale with energy ticks; all characteristic
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Arrow ends sit on their levels; nonlinear energy scale is allowed
-          and labelled
+        comment: Arrow ends sit on their levels; horizontal position is schematic
+          per spec
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; series headers name
-          each family and region
+        comment: Prefixed mandated title; series headers in place of a legend
     data_quality:
       score: 15
       max: 15
@@ -176,21 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three series, ten transitions, six levels, ionization limit
+        comment: Three series, 10 transitions, converging levels; no absorption, which
+          the Notes leave conditional
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hydrogen atom spectral series — real, neutral science
+        comment: Real hydrogen spectrum
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: E = −13.6/n² gives −3.40, −1.51, −0.85, −0.54, −0.38 eV;
-          wavelengths Ly-α 122, Ly-β 103, Ly-γ 97, Hα 656, Hβ 486, Hγ 434, Hδ 410,
-          Pa-α 1875, Pa-β 1282, Pa-γ 1094 nm all correct'
+        comment: Checked E(n)=−13.6/n² ticks and wavelengths Ly-α 122, Ly-β 103, Hα
+          656, Hβ 486, Hδ 410, Pa-α 1875 nm, all computed from ΔE
     code_quality:
       score: 10
       max: 10
@@ -200,7 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,20 +206,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, pygal, Style all used
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Arrowheads as filled triangles are needed since pygal has no arrow
-          primitive; no dead code
+        comment: Arrowheads hand-built because pygal has no arrow primitive; pd.cut
+          for regions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
+        comment: plot-{THEME}.png and .html
     library_mastery:
       score: 7
       max: 10
@@ -234,32 +228,33 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: pygal.XY with None breaks and allow_interruptions to draw many segments
-          per series; dict-valued y_labels; print_labels with labelled points
+        passed: true
+        comment: XY chart, allow_interruptions with None breaks, y_labels dicts, Style
+          tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Inline CSS injection through the css option for per-series stroke
-          widths and label styling, stroke_style dasharray, interactive SVG/HTML tooltips
-  verdict: REJECTED
+        passed: true
+        comment: print_labels per-point label dicts, inline css injection per serie,
+          stroke_style dasharray, value_colors
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-08T21:50:11Z'
+  rendered_at: '2026-11-08T22:37:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
-  - custom-legend
+  - annotations
   - layer-composition
-  - html-export
+  - patches
+  - custom-legend
   - hover-tooltips
+  - html-export
   patterns:
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - minimal-chrome
-  - dark-theme
