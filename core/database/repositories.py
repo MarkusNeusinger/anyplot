@@ -45,6 +45,12 @@ def _spec_category_filter(category: str, tags: list[str], dialect_name: str) -> 
     return or_(*predicates)
 
 
+def _same_language(language: str) -> ColumnElement[bool]:
+    """A feedback row in `language`, or one that names none: library ids are unique across languages, so a plot vote
+    without a language is on the same image (the audit selector gives it the library's language as well)."""
+    return or_(Feedback.language == language, Feedback.language.is_(None))
+
+
 # =============================================================================
 # Field Validation - Allowed fields for update operations
 # =============================================================================
@@ -483,7 +489,8 @@ class FeedbackRepository(BaseRepository[Feedback]):
 
         One vote per image per session: the router passes the current version's start (`version_start`) as
         `since` and drops a later vote from the same session on that version silently, so a visitor cannot flip
-        up/down at will, and may rate the next version once. Without `since`, every version counts.
+        up/down at will, and may rate the next version once. Without `since`, every version counts. A row
+        without a language is on the same image (`_same_language`).
         """
         stmt = select(func.count(Feedback.id)).where(
             Feedback.session_id == session_id,
@@ -492,7 +499,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
             Feedback.reaction.in_(PLOT_VOTE_REACTIONS),
         )
         if language is not None:
-            stmt = stmt.where(Feedback.language == language)
+            stmt = stmt.where(_same_language(language))
         if since is not None:
             stmt = stmt.where(Feedback.created_at >= naive_utc(since))
         result = await self.session.execute(stmt)
@@ -517,7 +524,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
         before that guard (or without it) may repeat, so within the window only the newest row per session
         counts. A session that rated an earlier version and the current one counts once on each side. Rows
         without a session id cannot be de-duplicated and count once each. `language` narrows the lookup when the
-        same library id exists in more than one language.
+        same library id exists in more than one language; a row without a language stays in (`_same_language`).
         """
         filters = [
             Feedback.spec_id == spec_id,
@@ -525,7 +532,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
             Feedback.reaction.in_(PLOT_VOTE_REACTIONS),
         ]
         if language is not None:
-            filters.append(Feedback.language == language)
+            filters.append(_same_language(language))
         if since is not None:
             filters.append(Feedback.created_at >= naive_utc(since))
         if before is not None:

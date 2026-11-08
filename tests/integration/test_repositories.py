@@ -552,6 +552,19 @@ class TestFeedbackRepository:
         assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python", since=aware) is True
         assert await repo.has_plot_vote("s2", "scatter-basic", "matplotlib", "python", since=start) is False
 
+    async def test_a_vote_without_a_language_is_on_the_same_image(self, test_session):
+        """A row that names no language still blocks a repeat and still counts when the caller names one."""
+        repo = FeedbackRepository(test_session)
+        start = datetime(2026, 11, 8, 12, 0, 0)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": None, "session_id": "s1"}
+        await repo.create({**vote, "reaction": "thumbs_down", "created_at": start})
+
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python", since=start) is True
+        assert await repo.reaction_counts("scatter-basic", "matplotlib", "python", since=start) == {
+            "thumbs_up": 0,
+            "thumbs_down": 1,
+        }
+
     async def test_reaction_counts_split_at_the_version_start(self, test_session):
         """Votes before the last update are on an earlier version and count only there; within each side the
         newest row per session counts, so old repeated rows from before the guard count once."""
