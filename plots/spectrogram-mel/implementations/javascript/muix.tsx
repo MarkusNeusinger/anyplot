@@ -14,8 +14,7 @@ const t = window.ANYPLOT_TOKENS;
 const N_MELS = 64; // number of mel filter banks
 const N_FFT = 1024; // STFT frame length in samples (Hann window)
 const HOP = 400; // samples between frame starts
-const DYNAMIC_RANGE_DB = 80; // colour scale spans the peak down to this many dB below it
-const COLOR_GAMMA = 0.6; // < 1 stretches the quiet end of the dB range over more of the ramp
+const DYNAMIC_RANGE_DB = 70; // colour scale spans the peak down to this many dB below it; quieter cells clamp to the low end
 const TICK_EVERY_BANDS = 8; // frequency ticks at every eighth mel band edge
 const COLORBAR_TICK_TARGET = 8;
 const POWER_LABEL = "Power (dB re peak)";
@@ -108,7 +107,7 @@ const seqRgb = t.seq.map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i +
 const cells = melPower.flatMap((col, f) =>
   col.map((p, m) => {
     const db = Math.max(-DYNAMIC_RANGE_DB, 10 * Math.log10(Math.max(p, 1e-12) / peakPower));
-    const v = ((db + DYNAMIC_RANGE_DB) / DYNAMIC_RANGE_DB) ** COLOR_GAMMA;
+    const v = (db + DYNAMIC_RANGE_DB) / DYNAMIC_RANGE_DB;
     const centre = tStart + (f * HOP + N_FFT / 2) / sampleRate;
     return {
       key: `${f}-${m}`,
@@ -133,7 +132,6 @@ const rawStep = DYNAMIC_RANGE_DB / COLORBAR_TICK_TARGET;
 const stepMagnitude = 10 ** Math.floor(Math.log10(rawStep));
 const dbStep = [1, 2, 5, 10].map((mul) => mul * stepMagnitude).find((s) => s >= rawStep);
 const dbTicks = Array.from({ length: Math.floor(DYNAMIC_RANGE_DB / dbStep) + 1 }, (_, i) => -i * dbStep);
-const barStops = Array.from({ length: 21 }, (_, i) => i / 20);
 
 const TITLE = "spectrogram-mel · javascript · muix · anyplot.ai";
 const SUBTITLE = `${rows.length.toLocaleString("en-US")} samples at ${Math.round(sampleRate).toLocaleString(
@@ -171,13 +169,8 @@ function Colorbar() {
     <g>
       <defs>
         <linearGradient id="melColorbar" x1="0" y1="1" x2="0" y2="0">
-          {barStops.map((stop) => (
-            <stop
-              key={stop}
-              offset={`${stop * 100}%`}
-              stopColor={`rgb(${seqRgb[0].map((c, j) => Math.round(c + (seqRgb[1][j] - c) * stop ** COLOR_GAMMA)).join(",")})`}
-            />
-          ))}
+          <stop offset="0%" stopColor={t.seq[0]} />
+          <stop offset="100%" stopColor={t.seq[1]} />
         </linearGradient>
       </defs>
       <rect x={x} y={top} width={BAR_W} height={height} fill="url(#melColorbar)" />
