@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:50:28Z'
-updated: '2026-11-08T23:02:02Z'
+updated: '2026-11-08T23:11:28Z'
 generated_by: claude-opus-5-5
 adopted_from: ff6a046c5b8a5eacd16b4b53ee1f96e286512857 (ff6a046c5b8a5eacd16b4b53ee1f96e286512857)
 workflow_run: 42532744995
@@ -13,54 +13,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Native WMTSTileSource basemap (USGS topo) with mercator axis types gives real
-    street, boundary and water context; drawn translucent (alpha 0.55 light / 0.30
-    dark) so it takes the theme's tone and stays quieter than the markers
-  - Cluster markers sit at the mean Web-Mercator position of their member stores,
-    sized by the square root of the count, so the 43-, 39- and 38-store groups clearly
-    dominate while singletons stay at their own coordinates
-  - Bold white count labels via LabelSet are legible on every marker in both themes,
-    and the white marker rings separate neighbouring clusters
-  - Clusters are colored by their dominant store type in canonical Imprint order with
-    a 'Store Type' legend placed outside the map frame
-  - HoverTool on the cluster renderers reports store count, dominant type and neighbourhood
-    in the HTML artifact
-  - Realistic NYC coffee-chain scenario with neighbourhood-seeded store locations;
-    theme tokens threaded through every chrome element
+  - Clustering runs in the browser through a CustomJS callback bound to the x/y range
+    start/end and to DocumentReady, so the HTML genuinely re-clusters as the reader
+    zooms — the dynamic behaviour the spec describes, not a frozen snapshot
+  - TapTool callback performs an eased 600 ms animated zoom to the box around a cluster's
+    members, covering both the click-to-zoom and the smooth-transition Notes bullets
+  - Cluster markers sit at the centroid of their members, scale with sqrt(count) from
+    55 to 130 px so the 47-store Midtown cluster dominates, and carry bold white centered
+    counts readable in both themes
+  - USGS topo WMTSTileSource on mercator axes with a theme-dependent tile alpha (0.55
+    light / 0.30 dark) keeps the basemap clearly quieter than the markers on both
+    surfaces
+  - HoverTool on the cluster renderers reports store count, dominant store type and
+    dominant neighborhood in the HTML view
+  - 'Imprint palette in canonical order with Coffee (most common) in #009E73; legend
+    sits outside the map on an elevated, theme-correct box'
   weaknesses:
-  - 'SC-02 (code): the clustering is computed once in Python on a fixed 3500 m grid,
-    so the HTML artifact neither re-clusters on zoom, nor expands clusters with a
-    zoom transition, nor zooms in on a clicked cluster, as the Notes ask → recompute
-    the clusters in a CustomJS callback on x_range/y_range changes and add a TapTool
-    callback that zooms the ranges to the clicked cluster (with WheelZoomTool active).
-    Likely cause: static grid clustering at lines 83-99 with no JS callbacks.'
-  - 'Suggestion: the stores span about 0.08° of longitude but 0.12° of latitude, so
-    on the 16:9 canvas the clusters fill only the central ~45% of the map width; the
-    2400×2400 square canvas would let them fill the frame.'
-  - 'Suggestion: the off-screen phantom-point branch (lines 157-161) never runs with
-    this data and the bare try/except screenshot fallback could go, trimming a few
-    lines.'
-  - 'Suggestion: the faint individual store dots are all drawn in the first Imprint
-    color regardless of category; coloring them by store type would hint at the mix
-    inside each cluster.'
+  - 'DQ-01 (both): the category feature is barely exercised — Coffee is the dominant
+    type in 14 of 17 clusters and Express (30 % of stores) never wins a cluster, so
+    the purple legend entry has no mark on the map and only three small clusters (one
+    Reserve, two Roastery) show a non-green color → give some neighborhoods a different
+    dominant store type so several large clusters render in purple, blue and ochre.
+    Likely cause: every neighborhood draws its types from the same p=[0.5, 0.3, 0.15,
+    0.05] distribution.'
+  - 'VQ-03 (both): the individual-store underlay dots at size 8 and fill_alpha 0.20
+    are barely visible and are all drawn #009E73 whatever their type, so Roastery/Express/Reserve
+    stores show in the Coffee legend color → color each dot by its store type from
+    the palette index, or drop the underlay. Likely cause: p.scatter(... fill_color=IMPRINT_PALETTE[0],
+    fill_alpha=0.20) for store_source.'
+  - 'Suggestion: a convex hull of a cluster''s members on hover (the Notes mention
+    it as an option) would show the spread each marker stands for in the HTML view.'
+  - 'Suggestion: in the dark render the 0.30-alpha tiles turn the water and land into
+    a similar slate grey; a slightly higher tile alpha would keep the shoreline legible.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page around the frame; inside, a USGS topo street map (blue water, pink highways, grey street grid, place names) of Manhattan, Brooklyn, Queens and Jersey City at alpha 0.55.
-      Chrome: bold title "map-marker-clustered · python · bokeh · anyplot.ai" top left at ~50% width; italic "Longitude (°)" / "Latitude (°)" axis titles and degree tick labels in dark ink; "Store Type" legend in an elevated box right of the frame (Coffee, Express, Roastery, Reserve). All readable.
-      Data: 19 white-ringed circular cluster markers, sized by count (1 to 43), with bold white counts; most are green #009E73 (Coffee dominant), one large lavender #C475FD "29" in Midtown and a lavender "1" in Brooklyn, a blue #4467A3 "1" singleton on the Upper East Side and an ochre #BD8233 "1" in Hoboken. Faint green dots mark individual stores beneath the clusters.
+      Background: warm off-white #FAF8F1 around the map frame; USGS topo tiles (pale blue water, light land, pink-red highways) drawn translucent over it.
+      Chrome: title "map-marker-clustered · python · bokeh · anyplot.ai" top-left in dark bold text (~55 % of width); axis titles "Longitude (°)" / "Latitude (°)" and degree tick labels (-74.1 … -73.85, 40.68 … 40.8) in dark ink, all readable; legend "Store Type" (Coffee, Express, Roastery, Reserve) outside the map on the right on an elevated off-white box.
+      Data: 17 circular cluster markers over Manhattan/Brooklyn with white outlines and bold white counts (47, 35, 33, 31, 27, 24, 23, 14, 12, 8, 7, 4, 2, 1, 1, 1); 14 in #009E73 (Coffee), two Roastery clusters in #4467A3, one Reserve singleton in #BD8233 at Hoboken; marker size grows with count; faint small green store dots under the clusters. Express (#C475FD) appears only in the legend.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page; the same topo map at alpha 0.30 reads as a muted dark-grey map with dark-red roads, clearly quieter than the markers.
-      Chrome: title, axis titles and tick labels in light ink; legend on the dark elevated box with light labels. No dark-on-dark text in the chart chrome.
-      Data: identical marker colors, positions, sizes and counts as the light render; white counts stay legible on every marker.
+      Background: warm near-black #1A1A17 around the frame; tiles at lower alpha read as a muted slate map with dim red-brown highways, clearly quieter than the markers.
+      Chrome: title, axis titles and tick labels in light ink, all readable; legend box dark elevated with light labels — no dark-on-dark text.
+      Data: identical cluster positions, counts and colors to the light render (#009E73, #4467A3, #BD8233); white count labels remain crisp; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,35 +70,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set explicitly (50/42/34 pt, 24 pt bold counts); everything
+        comment: Title 50pt, axis titles 42pt, ticks/legend 34pt, bold 24pt counts;
           readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; neighbouring clusters (43 and 29) stay separate,
-          counts clear
+        comment: Clusters do not collide; legend outside the map; counts centered
+          on their markers
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers 55-130 px with white rings stand out over the basemap; legend
-          glyphs visible and color-matched in both themes
+        comment: Clusters prominent; individual-store underlay barely visible and
+          all green regardless of type (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint colors, white rings and counts; no red-green signal
+        comment: White outlines and labels separate markers from the basemap; categories
+          distinct without red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); nothing cut off, legend outside the
-          frame, balanced axis labels
+        comment: 3200x1800, map fills the canvas, nothing clipped, balanced axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,10 +110,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Coffee = #009E73, then canonical Imprint order; backgrounds #FAF8F1
-          / #1A1A17; both themes correct'
+        comment: 'Imprint canonical order, first category #009E73, #FAF8F1 / #1A1A17
+          backgrounds, theme-correct chrome'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -119,24 +121,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-dependent basemap alpha that tones the map to each theme, white-ringed
-          markers with bold white counts
+        comment: White-outlined translucent discs with bold centered counts; basemap
+          tone tuned per theme via tile alpha
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Legend placed outside the map so it covers no data; grid reduced
-          to alpha 0.08 so the basemap carries the geography
+        comment: Grid faded to 0.08 over the tiles, legend moved outside the data
+          area, theme-specific tile alpha
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Data displayed; size hierarchy is what the spec asks for, no further
-          focal point chosen
+        comment: Faint member dots under the clusters show the spread behind each
+          count — a choice beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,53 +146,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clustered marker map on a tile basemap
+        comment: Clustered marker map with zoom-dependent re-clustering
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Counts, dominant-category colors, legend, basemap and count-scaled
-          sizes present; zoom-dependent re-clustering, zoom transitions and click-to-zoom
-          from the Notes missing in the HTML (defect line)
+        comment: Counts on clusters, animated click-to-zoom, dominant-category colors,
+          legend, topo basemap; centroid placement; size grows with count
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Clusters at the mean of their members, singletons at their own coordinates;
-          all stores inside the view
+        comment: Correct Web Mercator conversion; clusters at member centroids
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend 'Store Type' with readable category
-          names
+        comment: Mandated title; legend titled Store Type with reader-facing entries
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Large and small clusters, singletons, all four categories represented,
-          very unequal counts
+        comment: Large and singleton clusters shown, but category coloring barely
+          exercised; Express never dominant (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Coffee-chain store locations across named NYC neighbourhoods; neutral
+        comment: Coffee-chain store types across real NYC neighborhoods; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 270 stores (within 100-5000), coordinates in NYC (lat 40.68-40.80,
-          lon -74.02 to -73.94) verified on the axes; no Check values in the spec
+        comment: 270 stores within spec range; ~900 m spread per neighborhood; coordinates
+          in NYC bounds
     code_quality:
       score: 10
       max: 10
@@ -200,7 +199,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Linear script, no Python functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -218,17 +217,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; the unused phantom branch is a few lines
-          (suggestion)
+        comment: Client-side grid clustering is needed for zoom-dependent behaviour;
+          bokeh has no native clustering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via Selenium, current
-          Bokeh 3 API
+        comment: plot-{THEME}.html + plot-{THEME}.png, current bokeh 3.10 API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -236,34 +234,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource per category, LabelSet for counts, Legend/LegendItem
-          layout outside the frame, p.add_tile
+        comment: ColumnDataSource per category, mercator axis types, add_tile with
+          WMTSTileSource, Legend/LegendItem
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: WMTSTileSource tile basemap with mercator axis types and a HoverTool
-          restricted to the cluster renderers
-  verdict: REJECTED
+        comment: CustomJS on range js_on_change + DocumentReady for live re-clustering,
+          TapTool JS callback with eased range animation, HoverTool
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-08T22:58:56Z'
+  rendered_at: '2026-11-08T23:08:14Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
   - custom-legend
   - hover-tooltips
   - html-export
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep:
   - binning
+  - groupby-aggregation
   styling:
   - alpha-blending
   - edge-highlighting
