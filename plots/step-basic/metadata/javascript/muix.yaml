@@ -2,59 +2,55 @@ library: muix
 language: javascript
 specification_id: step-basic
 created: '2026-07-25T16:00:10Z'
-updated: '2026-07-25T16:15:45Z'
-generated_by: claude-sonnet
-workflow_run: 30164530635
+updated: '2026-11-08T06:00:52Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42452754924
 issue: 956
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 85
 review:
   strengths:
-  - Both renders are pixel-clean with identical Imprint data colors and fully theme-adaptive
-    chrome — no clipping, no overlap, no light-on-light/dark-on-dark failures anywhere
-    on the canvas
-  - 'Effective data storytelling: the two largest restock jumps (day 9, day 17) get
-    larger filled markers so the chart''s narrative reads at a glance instead of a
-    uniform row of dots'
-  - Idiomatic, distinctive MUI X usage within the community surface — ChartsReferenceLine
-    for the reorder threshold, a custom slots.mark component for event emphasis, and
-    an area fill under the stepAfter line
-  - Realistic, neutral warehouse-inventory scenario with genuine step-up AND step-down
-    transitions across 24 days, including a threshold breach that gives the reorder-point
-    line real meaning
-  - All font sizes explicitly set (title 22px, axis label 16px, ticks 14px) and well
-    balanced between X/Y axes; the manual rotated y-axis-label workaround is documented
-    and solves a real MUI overlap issue
+  - 'Uses MUI X''s native `curve: "stepAfter"` interpolation for a true post-step
+    line: every value is held flat until the next day and every change is a vertical
+    jump at the data''s x value, matching the inventory semantics stated in the data
+    comment'
+  - 'Hollow circular markers (`showMark: true`, `shape: "circle"`) sit exactly on
+    each daily reading and stay small enough that the plateaus still read as lines'
+  - 'Theme tokens threaded through title, axis labels, ticks, axis lines and grid
+    (`t.ink`, `t.inkSoft`, `t.grid`); brand green #009E73 is identical in both renders'
+  - Horizontal-only grid chosen to trace stock levels across the plateaus, without
+    vertical lines competing with the step risers
+  - 'Axis bands sized explicitly (`height: 64`, `width: 80`) per the v9 sizing rule,
+    so no tick label is truncated; `skipAnimation` set and the HTML output keeps MUI
+    X''s native hover tooltip'
   weaknesses:
-  - Small default tick marks remain on both axes alongside the tick labels — the style
-    guide's decoration checklist prefers keeping only the tick labels and removing
-    the marks themselves for a cleaner L-shaped frame
-  - The 22 non-event markers are a uniform small size; since this is a sparse 24-point
-    series, slightly larger base markers (beyond the two emphasized event points)
-    would read even better at a glance
-  - Design Excellence is strong but not yet at publication-tier polish — e.g. a short
-    data-label/annotation calling out the two restock magnitudes (+270, +240 units)
-    would push the storytelling further given the chart already has room for it
+  - 'Suggestion: the zero baseline leaves the band below 400 units empty (about 40
+    % of the plot height); a y range starting near the minimum stock would give the
+    plateau differences more vertical resolution, if the empty-warehouse reference
+    is not meant to be part of the reading.'
+  - 'Suggestion: a slightly larger title (about 26 px) would carry more presence at
+    the top of the 1600 px canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "step-basic · javascript · muix · anyplot.ai" centered at top in bold dark ink, fully visible. Rotated "Units in Stock" y-axis label at left, "Day of Month" x-axis label at bottom, both dark ink and clearly legible. Tick labels on both axes in a softer dark grey. Horizontal grid lines only, subtle and non-competing. Amber dashed "Reorder Point" reference line at y=500 with matching amber label, right-aligned, fully within canvas bounds.
-      Data: Brand-green (#009E73-family) stepAfter line with a light green area fill beneath it. Small hollow green-stroked circle markers at every data point; two larger filled green circles (day 9 and day 17) highlight the biggest restock jumps. First (and only) series correctly uses the brand green.
-      Legibility verdict: PASS — all text (title, axis labels, tick labels, reference-line label) is clearly readable against the light background, no overlap or clipping anywhere.
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: bold dark title "step-basic · javascript · muix · anyplot.ai" centered at top; y-axis title "Units in stock" (rotated) and x-axis title "Day of month" in dark ink; tick labels 0–800 (step 100) and 2–24 (step 2) in soft dark grey; left and bottom axis lines in inkSoft; faint horizontal grid lines only. All readable, nothing clipped.
+      Data: a single #009E73 post-style step line over days 1–24, values 410–820, with hollow circle markers (page-colored fill, green ring) on every daily reading; risers at days 3, 6, 9 (big jump to 680), 12, 14, 17 (jump to 820), 19, 22, 24. No sloped connections.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-light grey, fully legible against the dark surface. Grid lines subtle and visible. "Reorder Point" dashed line and label still amber and clearly visible on dark background.
-      Data: Line, area fill, and marker colors are identical to the light render (brand green unchanged) — only the chrome flipped as expected. No dark-on-dark text anywhere; every label element uses a light-toned token.
-      Legibility verdict: PASS — no dark-on-dark or unreadable elements; text and data are both fully legible against the dark surface.
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: title and axis titles in light ink, tick labels in light grey, axis lines light, grid lines subtle dark grey but visible. No dark-on-dark text.
+      Data: identical #009E73 step line and marker positions as the light render; markers' fill follows the dark page. Only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,73 +58,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis label 16px, ticks
-          14px), well-proportioned, readable in both themes
+        comment: Fonts set explicitly (title 22 px, axis titles 16 px, ticks 14 px),
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, markers, or the reference-line label
+        comment: No text collisions; markers do not overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers clearly visible and event-highlighted, but the 22 non-event
-          markers are on the small side for a 24-point sparse series
+        comment: 24 sparse points with prominent ringed markers and a 3 px line; no
+          legend (single series)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line and amber dashed reference line are distinguishable by
-          hue and dash pattern, not color alone
+        comment: Single green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: 3200x1800, balanced margins, nothing cut off; small title is no deduction
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Units in Stock" and "Day of Month" are descriptive'
+        comment: '''Day of month'' and ''Units in stock'' are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; amber used correctly
-          for the semantic reorder-threshold role; both backgrounds theme-correct'
+        comment: 'Series in #009E73 (t.palette[0]); backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful color and marker-emphasis choices, clearly above library
-          defaults
+        passed: false
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid and generous whitespace, but default tick marks remain
-          on both axes
+        passed: false
+        comment: Horizontal-only grid chosen for tracing plateau levels and computed
+          2 % x padding so end markers clear the axes
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Emphasized event markers and reorder-threshold line create clear
-          visual hierarchy and guide the reader to the restock events
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step/stair chart using stepAfter (post-style, matching spec's
-          'post' definition)
+        comment: Single post-style step line; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step style, markers at data points, and grid lines to trace values
-          are all present per the spec notes
+        comment: Only horizontal/vertical segments, one step style (post) for the
+          whole series, markers on data points, grid lines; all good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=day, Y=stock level, full data range shown
+        comment: Jumps fall on the data's x values; flat segments at exact y values;
+          all data within axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; single-series legend correctly omitted
+        comment: Title matches the mandated format; legend N/A for single series (hidden)
     data_quality:
       score: 15
       max: 15
@@ -168,19 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both step-up and step-down transitions, plus a threshold breach
+        comment: Up and down jumps of different heights, plateaus of 1–3 days
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible warehouse-inventory business scenario
+        comment: Daily warehouse inventory with restocks and shipments; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and reorder-point threshold are sensible for the domain
+        comment: 24 points within the spec's 10–100 range; stock 410–820 units plausible;
+          checked y values against the axis (e.g. 820 on day 17–18, 410 on days 6–8)
     code_quality:
       score: 10
       max: 10
@@ -190,58 +184,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> component; the EventMark helper is the standard
-          MUI X slots.mark pattern, not over-engineering
+        comment: Flat module with only the required default-exported component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (LineChart, ChartsReferenceLine, Box, Typography)
+        comment: LineChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: Appropriate complexity; step drawn by the native curve, not hand-built
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized from
-          ANYPLOT_SIZE'
+        comment: Default export into the harness, skipAnimation, v9 API (hideLegend,
+          axis height/width, per-chart CSS classes)
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of LineChart, ChartsReferenceLine, grid, and axis config
-          within the community API
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine and a custom slots.mark component are genuinely
-          MUI X-distinctive, not trivially replicated elsewhere
+        comment: 'Native curve: ''stepAfter'', grid prop, axis min/max/tickNumber
+          config and v9 sx class targeting instead of manual SVG'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: MUI X's built-in step curve interpolation and MUI Typography/Box
+          composition for the title band
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:58:23Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
+  - grid-styling
+  - minimal-chrome
