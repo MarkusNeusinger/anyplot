@@ -11,7 +11,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 // The 16-point compass, clockwise from north; each sector is centred on its point.
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
-const SPEED_BINS = 5; // speed classes; the last one is open-ended
+const SPEED_BINS = 4; // speed classes, few enough that neighbouring ramp steps stay apart; the last one is open-ended
 const TOP_BIN_QUANTILE = 0.9; // the open-ended class starts near this quantile of the speeds
 const RING_COUNT = 4; // about this many frequency rings
 const NICE_STEPS = [1, 2, 2.5, 5, 10]; // round step multipliers for bin widths and rings
