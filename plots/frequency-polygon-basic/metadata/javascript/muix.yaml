@@ -2,150 +2,134 @@ library: muix
 language: javascript
 specification_id: frequency-polygon-basic
 created: '2026-09-02T00:53:50Z'
-updated: '2026-09-02T01:12:08Z'
-generated_by: claude-sonnet
-workflow_run: 33576825557
+updated: '2026-11-08T06:43:29Z'
+generated_by: claude-opus-5-5
+adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
+workflow_run: 42437792288
 issue: 3418
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Sleep-deprived condition now uses a two-component mixture (68% normal responses
-    + 32% microsleep lapses), giving a right-skewed, mildly bimodal shape that directly
-    demonstrates the skewness/modality comparison the spec calls out — a direct fix
-    of the attempt-1 weakness that all three groups were near-symmetric Gaussians
-  - showMark is now enabled, putting small circular markers at each of the ~20 bin
-    midpoints per line, making individual bins easier to read on this small-dataset
-    plot — directly addresses the attempt-1 request
-  - ChartsReferenceLine now marks each group's mean with a dashed, color-matched vertical
-    line and label — a genuinely distinctive MUI X community feature that adds real
-    data-storytelling value beyond a generic area+line chart, directly answering the
-    attempt-1 'add a MUI X-distinctive touch' suggestion
-  - 'Visual refinement was tuned point-by-point on the attempt-1 feedback: grid stroke
-    narrowed to 0.75px, the axis line color pulled from the theme''s grid token instead
-    of a hard default black, and the legend given top padding for extra breathing
-    room'
-  - 'Correct frequency-polygon construction: shared bin edges across all three groups,
-    each polygon explicitly closed to zero at both ends, and a semi-transparent area
-    fill (fillOpacity 0.14) that keeps the three-way overlap readable instead of muddy'
-  - Canonical Imprint palette (#009E73 Control, purple Caffeine, blue Sleep-deprived)
-    identical across both themes, with theme-correct chrome (background, text, grid)
-    in both renders
-  - Deterministic LCG-based Box-Muller sampling with fixed per-condition seeds (11,
-    23, 37) — fully reproducible without relying on a browser RNG
-  - Title matches the mandated format exactly and legend labels match the series ids
+  - 'Correct frequency polygon: straight linear segments (curve: "linear") join one
+    vertex per bin midpoint at the group''s count, with no smoothing, in both renders'
+  - 'Every polygon closes on zero at both ends through one empty bin added on each
+    side (BIN_COUNT + 2 vertices), on a frequency axis pinned to min: 0'
+  - One shared set of bin edges from the pooled range (valueMin, binWidth), so the
+    vertices of all three conditions sit at the same x positions
+  - 'Imprint palette in canonical order (Control #009E73, Caffeine #C475FD, Sleep-deprived
+    #4467A3), identical in both themes; chrome comes from the ink, inkSoft and grid
+    tokens and reads correctly on #FAF8F1 and #1A1A17'
+  - 'Realistic, neutral psychology-lab scenario: caffeine shifts reaction times left,
+    and the sleep-deprived lapse component produces a visible second mode near 475
+    ms that the polygons show clearly'
+  - 'Idiomatic MUI X v9: series config with area, showMark and shape: "circle", per-chart
+    CSS classes (.MuiLineChart-area/-line/-mark) for fill opacity and stroke weights,
+    explicit axis band sizes, skipAnimation, and a MUI Typography title block composed
+    around the chart; native hover tooltips in the HTML output'
   weaknesses:
-  - 'New overlap issue introduced by the ChartsReferenceLine labels: ''Caffeine mean''
-    (and to a lesser extent ''Control mean'') sits directly above the peak data-point
-    marker of its own curve in BOTH renders — the label''s bottom edge visually touches
-    the open-circle marker at the curve''s highest point (value ~73, right under the
-    y=75 gridline). Fix: either raise the y-axis max a bit (e.g. explicit max: 82-85)
-    to give the reference-line labels headroom above the tallest peaks, or nudge the
-    label vertical offset / use a smaller labelStyle fontSize so it clears the marker.'
-  - Relatedly, the chart currently relies on the default y-axis max derived from the
-    data (peaks at 73 with a top gridline at 75), leaving very little headroom at
-    the top of the plot for the three mean-line labels that are anchored near the
-    top — worth padding the axis range now that reference lines add content in that
-    zone.
+  - 'Suggestion: the three 14 % fills mix into a grey-blue in the 300–380 ms overlap,
+    which weakens the area colours; a slightly lower fill opacity would keep each
+    polygon''s hue more distinct while the lines stay the main encoding.'
+  - 'Suggestion: the legend at 15 px with short line-and-dot glyphs is small next
+    to the 16 px axis titles; about 16 px would balance the chrome.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title top-left ("frequency-polygon-basic · javascript · muix · anyplot.ai"), dark "Reaction Time (ms)" x-axis label and "Frequency" y-axis label, dark tick labels along both axes, subtle horizontal gridlines tied to the theme's grid token, bottom-center legend with three color swatches ("Control", "Caffeine", "Sleep-deprived") in dark text with generous top padding. Three dashed vertical reference lines (one per group, color-matched) mark each group's mean, each labeled near the top of the plot ("Control mean", "Caffeine mean", "Sleep-deprived mean"). All chrome elements are clearly legible against the light background, though the "Caffeine mean" and "Control mean" labels sit very close to — visually touching — the peak marker of their respective curves.
-      Data: Three overlapping filled line series with markers at each bin midpoint — green (Control), purple (Caffeine), blue (Sleep-deprived) — with semi-transparent area fills beneath each line keeping the overlap zones readable. Sleep-deprived now shows a visibly right-skewed, mildly bimodal shape (a small second hump around 440-520ms) distinct from the near-symmetric Control/Caffeine curves. All three lines close to zero at both ends, consistent with a proper frequency polygon.
+      Background: warm off-white, matches #FAF8F1; no white panel painted.
+      Chrome: bold dark title "frequency-polygon-basic · javascript · muix · anyplot.ai" top-left (~38 % of width) with a softer grey subtitle "n = 900 across 3 groups · 18 shared bins of 24.0 ms"; y-axis title "Frequency (count per bin)" (rotated), ticks 0–80 step 10; x-axis title "Reaction time (ms)", ticks 150–600 step 50; subtle horizontal grid only; horizontal legend centred at the bottom (Control, Caffeine, Sleep-deprived). All text readable, dark on light.
+      Data: three frequency polygons with straight segments and hollow circle markers at the 20 bin midpoints, each closing on the zero baseline at both ends, with a light semi-transparent fill. Control is #009E73 (peak 70 at ~308 ms), Caffeine #C475FD (peak 73 at ~284 ms, shifted left), Sleep-deprived #4467A3 (peak 51 at ~356 ms plus a second mode of 22 at ~476 ms). Lines cross clearly and stay traceable; the fills mix grey-blue where all three overlap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, tick labels, and legend text all render in light/off-white color, clearly readable against the dark background. Gridlines are subtle light horizontal lines. Reference-line labels use the same color-matched hues as light mode and remain readable. No dark-on-dark text observed anywhere.
-      Data: Same three series in the same green/purple/blue hues as the light render — data colors are identical between themes, only the chrome (background, text, grid) flipped as expected. The Sleep-deprived bimodal shape and marker positions are unchanged from the light render.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title in near-white, subtitle, tick labels and axis titles in light grey; grid lines subtle dark grey; legend text light. No dark-on-dark text anywhere.
+      Data: the same three line colours as the light render (#009E73, #C475FD, #4467A3); only the chrome flipped. Fills read as dark tinted areas; the blue Sleep-deprived line is the lowest-contrast of the three but clearly visible. Brand green is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title 22px, axis labels 16px, ticks
-          14px, legend 15px, reference-line labels 11px); readable in both themes
-          with no overflow
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14, legend 15 CSS
+          px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: '''Caffeine mean'' (and to a lesser extent ''Control mean'') reference-line
-          label sits directly above and visually touches the peak marker of its own
-          curve, in both renders'
+        passed: true
+        comment: No text collisions; crossing lines and coinciding zero-baseline segments
+          are expected for this plot type
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers now shown at bin midpoints (showMark), lines and fills clearly
-          visible
+        comment: 3 px lines and hollow circle markers suit 20 vertices per group;
+          legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue combination is CVD-safe and distinguishable even
-          where areas overlap
+        comment: Green, lavender and blue are CVD-distinct; no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; nothing clipped;
-          canvas dimension gate passed
+        comment: 3200x1800, canvas gate passed; balanced axes, nothing clipped or
+          overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Reaction Time (ms)'' has units; ''Frequency'' is descriptive'
+        comment: '''Reaction time (ms)'' and ''Frequency (count per bin)'', descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, first series brand green, identical across
-          themes, theme-correct chrome in both renders
+        comment: 'Imprint positions 1-3 in canonical order, identical across themes;
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Layered semi-transparent areas plus per-group mean reference lines
-          lift it above a raw default, but the overall composition is still a fairly
-          standard area+line combination
+        passed: true
+        comment: 'Beyond baseline: a bold title over a lighter inkSoft subtitle that
+          states n and bin width, and ink axis titles over inkSoft ticks for a clear
+          type hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid stroke narrowed to 0.75px, axis line color pulled from the theme
-          grid token instead of default black, legend given top padding — direct fixes
-          of attempt-1 feedback
+        comment: Hollow page-filled markers keep the vertices crisp over the fills;
+          x padding chosen so the closing vertices do not touch the frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Mean reference lines plus the newly skewed/bimodal Sleep-deprived
-          shape give a clearer comparative narrative than plain overlapping curves
+        comment: Data chosen so the conditions differ in centre (caffeine left) and
+          shape (sleep-deprived lapse mode), which the comparison makes readable;
+          no visual focal point beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -155,29 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct frequency polygon: binned data, midpoints connected with
-          straight segments, closed to zero at both ends'
+        comment: Frequency polygon, one per group, with no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, zero-closing, semi-transparent fill, markers,
-          and aligned bin edges across groups all present
+        comment: Distinct colours, legend, markers, zero-closed ends, aligned bins
+          and the optional fill are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction time bins, Y = frequency, all data visible within axis
-          ranges
+        comment: Vertices at bin midpoints and counts; y from 0; full range shown;
+          no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match series
-          ids
+        comment: Mandated title format; legend labels Control / Caffeine / Sleep-deprived
     data_quality:
       score: 15
       max: 15
@@ -187,24 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Now shows central tendency, spread, AND skewness/modality — Sleep-deprived
-          is a right-skewed, mildly bimodal mixture distinct from the near-symmetric
-          Control/Caffeine groups, fixing the attempt-1 gap
+        comment: Shows differences in centre, spread and modality (bimodal sleep-deprived
+          group) across 3 groups of 300
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible psychology reaction-time scenario matching
-          the spec's own suggested application
+        comment: Neutral psychology-lab reaction-time experiment
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times (150-600ms) and per-condition means/spreads are realistic
-          for a visual-stimulus reaction-time study, including a plausible microsleep
-          lapse tail
+        comment: 'Checked: means of 280/320/350 ms and a lapse mode near 475 ms are
+          plausible simple-RT values; bin width 24 ms; counts per group sum to 300
+          in the code'
     code_quality:
       score: 10
       max: 10
@@ -214,35 +194,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the small helpers needed for in-browser normal/mixture sampling
-          and binning; no unnecessary classes
+        comment: Constants -> data block -> plot code -> component; the only closure
+          is the seeded RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed per-condition LCG seeds (11, 23, 37)
+        comment: Per-condition fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart, ChartsReferenceLine, Box, Typography all used
+        comment: LineChart, Box and Typography are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Short binning written out by hand, which is allowed because MUI X
+          has no statistics helpers
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to window.ANYPLOT_SIZE with skipAnimation
-          set, matching the harness contract
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          current v9 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -250,29 +231,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of LineChart's series/area/curve API, sx overrides, and
-          slotProps.legend
+        comment: Declarative series config (area, showMark, shape, curve), per-chart
+          CSS classes, slotProps.legend, explicit axis band sizes
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: ChartsReferenceLine per-group mean annotation is a genuinely MUI
-          X-specific feature showcasing library richness beyond what a generic line
-          chart demonstrates; docked one point for the label/marker crowding
+        passed: false
+        comment: Composes MUI Box/Typography around the chart for the title block
+          and styles via the sx class selectors; native tooltip/highlight in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T02:17:24Z'
 impl_tags:
   dependencies: []
   techniques:
-  - area-fill
-  - multi-series-line
-  - reference-line
-  - legend
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
-  - histogram
   styling:
   - alpha-blending
+  - edge-highlighting

@@ -2,134 +2,117 @@ library: muix
 language: javascript
 specification_id: scatter-hr-diagram
 created: '2026-08-26T11:17:07Z'
-updated: '2026-08-26T11:37:34Z'
-generated_by: claude-sonnet
-workflow_run: 32961396043
+updated: '2026-11-08T05:02:14Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42448862337
 issue: 4558
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 90
 review:
   strengths:
-  - 'Faithful, richly detailed HR diagram: reversed log-scale temperature axis, log-scale
-    luminosity axis, four labeled regions (main sequence, red giants, supergiants,
-    white dwarfs), the Sun marked as a distinct large reference point, three real
-    named stars (Sirius A, Rigel, Betelgeuse) with astrophysically plausible temperature/luminosity
-    values, and a secondary top axis mapping spectral-class boundaries (O/B/A/F/G/K/M)'
-  - Sophisticated use of MUI X's useXScale/useYScale hooks to inject a custom SVG
-    annotation layer (ChartAnnotations/LabelWithBackdrop) precisely anchored in data
-    coordinates, with translucent page-colored backdrops that keep every label legible
-    over the dense scatter regardless of what's directly behind it
-  - Custom superscript power-of-ten formatting for the log luminosity axis plus a
-    curated set of decade-only ticks avoids the crowded default d3 log-tick behavior
-    across ~10 decades
-  - 'Both light and dark renders are fully theme-adaptive: chrome (background, ink,
-    grid, legend) flips correctly with no dark-on-dark or light-on-light failures,
-    and all data colors are identical across themes'
-  - Data is scientifically grounded across all four stellar populations, with a realistic
-    mass-luminosity relation for the main sequence and correct real-world temperature/luminosity
-    values for the notable stars and the Sun
+  - 'All six Notes requirements are met: the temperature axis is reversed with `reverse:
+    true`, luminosity uses a `scaleType: "log"` y axis with superscript decade ticks
+    (10⁻³ … 10⁶), points are colored by spectral type, the four regions are labeled
+    at their own populations, the Sun is marked, and the optional spectral class letters
+    sit on a secondary top x axis.'
+  - 'The secondary spectral-class axis is idiomatic MUI X: a second x axis with `position:
+    "top"` that shares the temperature domain and places each letter at the middle
+    of its Harvard temperature range through `tickInterval` plus a `valueFormatter`.'
+  - 'Spectral colors follow the semantic exception with documented reasoning: blue
+    O, cyan B, lavender A, lime F, ochre G, rose K, matte-red M, so the bluest colors
+    sit at the hot end and the reddest at the cool end, and every type stays distinguishable
+    in both themes.'
+  - 'The Sun stands out as a reference: a full-opacity ink dot with a thick 14 px
+    ring and a larger bold label, plus its own legend entry. Sirius A, Rigel and Betelgeuse
+    get thinner rings at their literature values.'
+  - Region and star labels sit at their populations. The labels move instead of the
+    marks, and a page-colored halo (`paintOrder="stroke"`) keeps them readable over
+    the grid in both themes.
+  - A custom SVG layer built with the `useXScale`, `useYScale` and `useDrawingArea`
+    hooks inside the `ChartsDataProvider` composition, theme tokens on every chrome
+    element, and `skipAnimation` for the harness.
   weaknesses:
-  - 'First categorical series (spectral type O) uses palette[2] (blue) instead of
-    the mandated #009E73 brand green — brand green is never used anywhere in the chart,
-    violating the hard ''first series is always #009E73'' rule even though the astronomical-color
-    rationale is a legitimate semantic exception for the remaining slots.'
-  - The amber semantic anchor (t.amber) is applied to spectral type F purely because
-    it visually resembles 'pale gold' — amber is reserved for warning/caution roles,
-    not as a decorative stand-in when the 8-color categorical pool runs short.
-  - 7 spectral-type categories are distinguished by hue alone with no redundant marker-shape/linestyle
-    encoding; the style guide flags n=7 as being at the CVD discrimination floor.
-    The x-axis temperature ordering partially compensates but doesn't fully substitute
-    for the recommended redundant encoding.
-  - At mobile scale (~400px) the dense axis tick labels (temperature ticks and power-of-ten
-    luminosity ticks) become difficult to read, though the title and region labels
-    remain legible.
-  - The Red Giants cluster shows some inherent marker overlap despite alpha blending,
-    since the underlying data is genuinely tightly clustered in that temperature/luminosity
-    region.
+  - 'Suggestion: the main sequence is sampled uniformly in temperature, so O and B
+    dwarfs outnumber G, K and M dwarfs. Weighting the samples toward cool dwarfs would
+    match the population a reader knows from real HR diagrams.'
+  - 'Suggestion: the white dwarfs fill a flat rectangle of luminosity at every temperature.
+    A narrow band sloping with T⁴ would look more like the observed white-dwarf sequence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-hr-diagram · javascript · muix · anyplot.ai" in bold dark ink top-left; a manually-built legend (colored dot + letter per spectral type O/B/A/F/G/K/M) top-right; dark-ink axis titles "Surface Temperature (K)" (bottom, reversed high→low) and "Luminosity (L / L☉, log scale)" (rotated, left); a secondary top axis labeled "Spectral Class" with O/B/A/F/G/K/M tick labels at the correct non-uniform temperature boundaries; subtle warm-grey grid lines on both axes. All chrome text reads clearly against the light background.
-      Data: ~280 stars colored by spectral type (dark blue O, cyan B, lavender A, pale gold F, ochre G, rose K, matte red M) plotted with alpha ~0.78 and a thin page-colored stroke for definition. The Sun is a large near-black marker at (5778 K, 1 L☉). Three notable stars (Sirius A, Rigel, Betelgeuse) are marked with medium markers in their spectral color and labeled. Four regions (Main Sequence, Red Giants, Supergiants, White Dwarfs) carry text labels with translucent backdrops that stay legible over the scatter.
-      Legibility verdict: PASS — all titles, axis labels, tick labels, legend, and annotation text are clearly readable against the light background; only the dense small tick labels lose some sharpness when the image is shrunk to mobile width, not a dark/light contrast failure.
+      Background: warm off-white #FAF8F1 page and plot area; subtle grey horizontal and vertical grid.
+      Chrome: bold dark title "scatter-hr-diagram · javascript · muix · anyplot.ai" with a soft-ink subtitle "284 stars across 4 regions · colour: spectral type · ringed: named stars"; a horizontal legend (O, B, A, F, G, K, M, Sun); a top axis titled "Spectral type" with bold letters O, B, A, F, G, K, M; a bottom axis "Surface temperature (K)" running from 40,000 on the left to 4,000 on the right; a left log axis "Luminosity (L/L☉)" with ticks 10⁻³ … 10⁶. All text is dark on light and readable.
+      Data: about 280 circles (alpha 0.8, page-colored outline): a diagonal main sequence from blue O stars at about 1e5 in the upper left to red M dwarfs at about 0.03 in the lower right; scattered cyan, lavender, lime and rose supergiants at 1e4–1e6 across the top; a rose/red red-giant clump at 3,400–5,200 K and 15–900 L☉; blue and cyan white dwarfs at 1e-4–0.02 along the bottom. Region labels in bold soft ink beside each population. The Sun is a black dot with a thick ring at 5,778 K, 1 L☉, labeled "Sun". Rigel, Betelgeuse and Sirius A are ringed and labeled. Brand green is not used, because the semantic spectral mapping replaces the canonical order.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render, but title, axis titles, tick labels, legend text, secondary spectral-class axis, and region-label text all render in light ink (near-white / light grey) against the dark background. Grid lines are subtle light-on-dark. The Sun marker becomes a large near-white circle for contrast against the dark page (still the same semantic "ink" token, correctly flipped).
-      Data: All spectral-type marker colors (dark blue, cyan, lavender, pale gold, ochre, rose, matte red) are pixel-identical to the light render — only the chrome (background, text, grid) flipped, exactly as required.
-      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, both axis titles, tick labels, legend, spectral-class ticks, region/star annotations) is clearly legible against the near-black background.
+      Background: warm near-black #1A1A17, with a subtle light grid.
+      Chrome: title, subtitle, legend, axis titles, ticks and spectral letters all render light on dark; no dark-on-dark text. The region labels are soft light grey with a dark halo.
+      Data: the spectral colors are identical to the light render. Only the reference star's chrome flips: the Sun dot and the rings use the near-white ink token. The dark-blue O stars are lower in contrast but clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via tickLabelStyle/labelStyle/fontSize;
-          readable at full size in both themes. Dense temperature and power-of-ten
-          luminosity tick labels lose sharpness at ~400px mobile width, though title
-          and region labels stay legible.
+        comment: Explicit font sizes (ticks at 14–15 px, axis titles at 16 px, region
+          labels at 17 px). All text is readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Region/star labels use translucent backdrops (LabelWithBackdrop)
-          that keep every label readable over the dense scatter; no text-on-text or
-          text-on-data collisions found.
+        comment: No text collides with other text or with data. The labels are placed
+          clear of the stars and rings, and the main-sequence overlap is permitted
+          by the spec.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size (7px) with alpha 0.78 and page-colored stroke suits the
-          ~280-point density; the Red Giants cluster still shows some inherent overlap
-          from genuinely clustered data.
+        comment: About 280 points at a 6 px radius with alpha 0.8 and a page-colored
+          outline. The legend glyphs, including Sun, are visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 7 spectral-type categories are distinguished by hue only, at the
-          CVD discrimination floor per the style guide's series-count table, with
-          no redundant marker-shape/linestyle encoding (temperature-axis position
-          partially mitigates this).
+        passed: true
+        comment: Neighboring spectral types differ in hue and lightness. Red-green
+          is not the only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins
-          (top 100 + 64px title bar, right 60, bottom 90, left 100); nothing cut off;
-          canvas dimension gate passed.
+        comment: 3200×1800 canvas, balanced margins, nothing clipped. The plot area
+          fills the canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Surface Temperature (K)'' and ''Luminosity (L / L☉, log scale)''
-          are descriptive with units; secondary ''Spectral Class'' axis adds further
-          context.'
+        comment: Surface temperature (K), Luminosity (L/L☉) and Spectral type are
+          descriptive and carry units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Colors are drawn from the Imprint palette/amber anchor and chrome
-          is theme-correct in both renders, but the first series (spectral type O)
-          is palette[2] (blue), not #009E73 — brand green is never used — and amber
-          is applied to type F for its hue rather than its reserved warning/caution
-          role.'
+        passed: true
+        comment: 'Semantic exception for conventional stellar colors, using only Imprint
+          members (blue, cyan, lavender, lime, ochre, rose, red). The backgrounds
+          are #FAF8F1 and #1A1A17.'
     design_excellence:
-      score: 17
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -137,26 +120,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful spectral color-coding, dual-axis composition, and annotated
-          regions/stars sit clearly above a generic library-default scatter, though
-          short of full publication polish.
+        comment: 'A typographic hierarchy decided for this chart: a subtitle that
+          explains the encodings, bold ink spectral letters, bold soft-ink region
+          labels with halos, and a larger label for the Sun.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid on both axes (correct per style guide for scatter plots),
-          generous margins, page-colored marker strokes for definition; the dual top/bottom
-          axis lines are a justified deviation from a pure L-shaped frame given the
-          secondary spectral-class axis.
+        comment: Halos keep the labels readable over the grid, the labels are placed
+          clear of the stars, and the log ticks use superscript decades.
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Region labels, a distinct Sun marker, and three real named stars
-          turn this into a genuine astrophysical narrative that immediately orients
-          the viewer to the classic HR-diagram regions.
+        comment: The Sun gets clear visual priority (a thicker ring and a larger label)
+          over the other ringed reference stars, which guides the eye to it.
     spec_compliance:
       score: 15
       max: 15
@@ -166,29 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter chart of temperature vs. luminosity.
+        comment: An HR scatter diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reversed temperature axis, log luminosity axis, spectral-type color
-          coding, all 4 labeled regions, marked Sun, and the optional secondary spectral-class
-          axis are all present.
+        comment: Reversed temperature axis, log luminosity, spectral color coding
+          in order, four labeled regions, a marked Sun, and the optional spectral
+          class top axis. Every 'A good version shows' bullet is met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = temperature, Y = luminosity, matching the spec; both axes show
-          the full data range.
+        comment: Every star sits at its own temperature and luminosity. Only labels
+          are moved, and the axes show all the data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'scatter-hr-diagram · javascript · muix · anyplot.ai';
-          legend labels (O/B/A/F/G/K/M) match the plotted spectral types.
+        comment: The title is in the mandated format. The legend entries O–M and Sun
+          match the marks.
     data_quality:
       score: 15
       max: 15
@@ -198,22 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four populations (main sequence, red giants, supergiants, white
-          dwarfs) are represented across the full O-through-M temperature range.
+        comment: All four populations, every spectral type, and named reference stars.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral astrophysics scenario grounded in real stellar classification.
+        comment: Real astrophysics with real named stars at approximate literature
+          values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sun, Sirius A, Rigel, and Betelgeuse use realistic literature temperature/luminosity
-          values; main-sequence, giant, supergiant, and white-dwarf ranges align with
-          known stellar physics.
+        comment: 'Checked off the axes: the Sun at 5,778 K and 1 L☉; Sirius A at about
+          9,940 K and 25 L☉; Rigel at about 12,100 K and 1.2e5 L☉; Betelgeuse at about
+          3,500 K and 1.3e5 L☉. The Harvard type bounds in the code are correct.'
     code_quality:
       score: 10
       max: 10
@@ -223,66 +203,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions are the idiomatic React/MUI X structure needed for
-          this dual-axis, annotated chart — no gratuitous classes or abstractions.
+        comment: A linear script. The one extra component (Annotations) is the MUI
+          X way to reach the scale hooks.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG (seed 42) generates all synthetic populations.
+        comment: A seeded LCG (seed 42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart, ChartsText, useXScale/useYScale, Box, and Typography
-          are imported, and all are used.
+        comment: Every import is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; complexity matches what the spec's multi-region,
-          dual-axis diagram requires.
+        comment: The complexity is appropriate. The label placer has no library equivalent
+          in community MUI X, and there is no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Sizes to window.ANYPLOT_SIZE, skipAnimation set, harness owns file
-          output — current MUI X community API used throughout.
+        comment: Default-exports the component for the harness, uses v9 composition
+          and skipAnimation.
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Extensive high-level ScatterChart config: multi-axis IDs, bottomAxis/topAxis/leftAxis
-          wiring, tickInterval, valueFormatter, slotProps.'
+        comment: 'ChartsDataProvider + ChartsWrapper + ChartsSurface composition,
+          axis `reverse` and `scaleType: log`, and `sx` class targeting with a `data-series`
+          selector.'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks drive a custom SVG annotation layer passed
-          as chart children — a MUI X-specific technique not easily replicated in
-          another library.
+        comment: A secondary top x axis through `tickInterval` and a `valueFormatter`
+          with the `ctx.location` context, plus a custom SVG layer through the useXScale,
+          useYScale and useDrawingArea hooks.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:58:54Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - twin-axes
   - manual-ticks
-  - custom-legend
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
