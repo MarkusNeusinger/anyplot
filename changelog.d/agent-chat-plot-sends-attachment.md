@@ -9,3 +9,4 @@
   stop) halts at the data card, and the status line says what to look at. Typing or another
   click while the reading runs ends the chain, which never plots twice. Enter still only sends.
   Until now the button stayed greyed out with an attachment in the box, and only Enter read it.
+  (#12833)
