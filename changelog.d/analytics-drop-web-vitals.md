@@ -6,9 +6,10 @@
   un-bounced its visit: visits with a vitals event bounced at 0 %, visits without at 88 %, so the
   dashboard's bounce rate of about 5 % was an artifact and rises to a realistic value from here. Core Web
   Vitals come from PageSpeed Insights when needed, and the privacy text on `/legal` no longer lists them.
+  (#12860)
 - **The automatic `Form: Submission` goal is off.** `formSubmissions: false` in the Plausible init: the
   agent chat's message box is a form, so the goal counted chat messages that the chat's own events
-  already count, 144 of its 146 events the admin's own.
+  already count, 144 of its 146 events the admin's own. (#12860)
 
 ### Fixed
 
@@ -19,4 +20,4 @@
   entry matches exactly that shape (Windows 10, Chrome 100 to 139, an anchored `Safari/537.3x` tail),
   which keeps Edge, Opera, Windows 7/8.1 and Chrome 140+ out and costs about 2 % of real visits, those on
   a pinned old Chrome. A unit test holds the map against the farm's user agents and current browsers, and
-  `docs/reference/plausible.md` carries the review rule for the version ceiling.
+  `docs/reference/plausible.md` carries the review rule for the version ceiling. (#12860)
