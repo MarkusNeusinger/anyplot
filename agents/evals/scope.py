@@ -506,9 +506,12 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
-def stamp(settings: AgentSettings, cases_path: Path, case_count: int) -> dict[str, Any]:
+def stamp(settings: AgentSettings, cases_path: Path, cases: Sequence[ScopeCase]) -> dict[str, Any]:
+    """The run's stamp. `rubric_hash` is the settings' rubric; `rubric_hashes` adds one per served set that cases name
+    with their own `libraries` (the set's ids joined by commas), so every rubric a case was judged with is on record."""
     from agents.anyplot.policy import scope_rubric
 
+    served = sorted({",".join(sorted(case.libraries)) for case in cases if case.libraries is not None})
     return {
         "schema": REPORT_SCHEMA,
         "date": datetime.now(UTC).date().isoformat(),
@@ -516,9 +519,10 @@ def stamp(settings: AgentSettings, cases_path: Path, case_count: int) -> dict[st
         "judge_model": settings.judge_model,
         "location": settings.location,
         "rubric_hash": _sha(scope_rubric()),
+        "rubric_hashes": {libraries: _sha(scope_rubric(libraries.split(","))) for libraries in served},
         "cases_file": cases_path.name,
         "cases_hash": _sha(cases_path.read_text(encoding="utf-8")),
-        "cases": case_count,
+        "cases": len(cases),
     }
 
 
@@ -554,7 +558,7 @@ def main(argv: list[str] | None = None, *, judge: JudgeClient | None = None) -> 
     gates = Gates(args.min_adversarial_recall, args.max_false_refusals, args.max_unavailable)
     code, reasons = verdict_of(scored["summary"], gates, subset=bool(wanted))
     report = {
-        "stamp": stamp(settings, args.cases, len(cases)),
+        "stamp": stamp(settings, args.cases, cases),
         "calls_per_minute": args.calls_per_minute,
         "gates": asdict(gates),
         "passed": code == EXIT_OK,

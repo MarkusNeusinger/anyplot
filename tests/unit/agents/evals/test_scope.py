@@ -361,6 +361,22 @@ class TestRun:
         assert scored["lifted"] == ["lib-010"] and scored["misses"] == []
         assert "lifted the judge's other_library: lib-010" in scope.summary_text(scored, 0.0, [])
 
+    def test_the_stamp_names_every_rubric_a_case_was_judged_with(self) -> None:
+        from agents.anyplot.policy import scope_rubric
+        from agents.anyplot.settings import get_settings
+
+        cases = [
+            case("lib-010", "in_scope", "inscope", libraries=["seaborn", "d3", "matplotlib"]),
+            case("in-001", "in_scope", "inscope"),
+        ]
+
+        stamped = scope.stamp(get_settings(), DEFAULT_CASES, cases)
+
+        assert stamped["cases"] == 2 and stamped["rubric_hash"] == scope._sha(scope_rubric())
+        assert stamped["rubric_hashes"] == {
+            "d3,matplotlib,seaborn": scope._sha(scope_rubric(["d3", "matplotlib", "seaborn"]))
+        }
+
     def test_a_case_names_catalogue_libraries_only(self) -> None:
         with pytest.raises(ValueError, match="vega"):
             case("lib-099", "in_scope", "inscope", libraries=["vega"])

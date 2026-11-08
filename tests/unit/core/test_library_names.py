@@ -80,6 +80,10 @@ def test_other_tools_and_languages_are_named_as_outside(text: str) -> None:
         "a pyecharts chart",  # pyecharts is its own library
         "let's plot this",  # the apostrophe makes it English, not lets-plot
         "a database report",
+        "in matplotlib.js",  # a suffix the name does not include: another product, not the catalogue library
+        "bokeh.js",
+        "seaborn js",
+        "ggplot2.jl",
         "",
     ],
 )

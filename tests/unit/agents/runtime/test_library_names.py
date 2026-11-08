@@ -316,3 +316,35 @@ async def test_switch_plot_takes_the_name_as_the_user_wrote_it(client: httpx.Asy
     assert await switch_plot("mpl", context) == {"status": "error", "code": "same_library"}
     assert await switch_plot("chart", context) == {"status": "error", "code": "library_unavailable"}
     assert await switch_plot("vega-lite", context) == {"status": "error", "code": "invalid_arguments"}
+
+
+@pytest.mark.parametrize(
+    ("note", "kept"),
+    [("Please make this plot in d3", True), ("Please port the d3 version to Vega-Lite", False)],
+    ids=["served", "beside_an_outside_tool"],
+)
+async def test_notes_pasted_with_the_data_get_the_same_rule(
+    client: httpx.AsyncClient, judge, served: list[str], caplog: pytest.LogCaptureFixture, note: str, kept: bool
+) -> None:
+    """The dataset route's notes screen: `other_library` for notes that name only served libraries keeps them; a
+    served name beside an outside tool keeps the judge's verdict, so the notes are dropped and nothing is lifted."""
+    from agents.anyplot.opening import NOTES_REFUSED_WARNING
+
+    from .test_service_flow import attribution_lines
+
+    caplog.set_level("INFO", logger="anyplot.agents.attribution")
+    sid = await open_confirmed(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en"), JudgeVerdict(verdict="other_library", lang="en")]
+
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": f"{note}\nhours,score\n1,50\n2,55\n3,62\n"}
+    )
+
+    assert pasted.status_code == 200, pasted.text
+    body = pasted.json()
+    verdicts = [line["verdict"] for line in attribution_lines(caplog, "notes_judge")]
+    if kept:
+        assert body["context_lines"] == [note] and verdicts == ["other_library", "served_library_in_scope"]
+    else:
+        assert body["context_lines"] == [] and body["warnings"][0] == NOTES_REFUSED_WARNING
+        assert verdicts == ["other_library"]

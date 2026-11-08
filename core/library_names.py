@@ -179,8 +179,10 @@ its context (`R Shiny`, `Observable Plot`)."""
 _SEPARATOR = r"[\s._/-]*"
 _PART = re.compile(r"[0-9a-z+#]+")
 _EDGE_BEFORE = r"(?<![^\W_])"
-_EDGE_AFTER = r"(?![^\W_])"
-"""A name starts and ends at a letter or digit that has none next to it (an underscore counts as a separator)."""
+_EDGE_AFTER = rf"(?![^\W_])(?!{_SEPARATOR}j[sl](?![^\W_]))"
+"""A name starts and ends at a letter or digit that has none next to it (an underscore counts as a separator), and
+never right before a `.js` or `.jl` it does not include: `matplotlib.js` and `bokeh.js` name no catalogue library,
+while `D3.js` and `Makie.jl` do, as names of their own."""
 
 
 def _fold(text: str) -> str:
