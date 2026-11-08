@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 88/100 | Updated: 2026-11-08
@@ -7,6 +7,7 @@ Quality: 88/100 | Updated: 2026-11-08
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 from scipy.integrate import solve_ivp
@@ -21,38 +22,50 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Imprint palette (see prompts/default-style-guide.md "Categorical Palette")
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data — Lorenz attractor trajectory (deterministic chaotic ODE, no randomness)
+# Columns: set these to your table's column names, rows in path order
+X = "X"  # role: x
+Y = "Y"  # role: y
+Z = "Z"  # role: z
+TIME = "Elapsed time (model time units)"  # role: color
+
+# Data: Lorenz attractor trajectory (deterministic chaotic ODE, no randomness);
+# replace this block with your own table, for example df = pd.read_csv("trajectory.csv")
 sigma, rho, beta = 10.0, 28.0, 8.0 / 3.0
-t_end, num_points = 30.0, 4000  # 0.0075 time units per point keeps the fast outer loops smooth
+times = np.linspace(0.0, 30.0, 4000)  # 0.0075 time units per point keeps the fast outer loops smooth
 solution = solve_ivp(
     lambda t, s: [sigma * (s[1] - s[0]), s[0] * (rho - s[2]) - s[1], s[0] * s[1] - beta * s[2]],
-    (0.0, t_end),
+    (times[0], times[-1]),
     [0.0, 1.0, 1.05],
-    t_eval=np.linspace(0.0, t_end, num_points),
+    t_eval=times,
     rtol=1e-9,
     atol=1e-9,
 )
-trajectory = solution.y.T  # columns x, y, z
+df = pd.DataFrame({X: solution.y[0], Y: solution.y[1], Z: solution.y[2], TIME: solution.t})
 
 # Plot: orthographic view from elevation 20°, azimuth -45° (world x, y, z → screen u, v), so the
 # two wings sit side by side; pygal has no 3D chart type, so axes and ticks are projected the same way
+trajectory = df[[X, Y, Z]].to_numpy(dtype=float)
+elapsed = df[TIME].to_numpy(dtype=float)
+num_points = len(df)
 ELEV, AZIM = np.radians(20), np.radians(-45)
 PROJ = np.array(
-    [
-        [np.cos(AZIM), -np.sin(AZIM), 0.0],
-        [np.sin(AZIM) * np.sin(ELEV), np.cos(AZIM) * np.sin(ELEV), np.cos(ELEV)],
-    ]
+    [[np.cos(AZIM), -np.sin(AZIM), 0.0], [np.sin(AZIM) * np.sin(ELEV), np.cos(AZIM) * np.sin(ELEV), np.cos(ELEV)]]
 )
-screen = trajectory @ PROJ.T
+screen = trajectory @ PROJ.T  # a row with a missing value projects to NaN and breaks the line there
 
-# Box around the path in world units; X and Y run along its front floor edges, Z up its left corner
-TICK = 10
-(x0, y0, z0), (x1, y1, z1) = np.floor(trajectory.min(axis=0) / TICK) * TICK, np.ceil(trajectory.max(axis=0) / TICK) * TICK
+# Box around the path in world units; X and Y run along its front floor edges, Z up its left corner.
+# One shared tick step (1, 2 or 5 × 10^k) for at most eight ticks on the longest axis keeps the box at equal scale
+lo_world, hi_world = np.nanmin(trajectory, axis=0), np.nanmax(trajectory, axis=0)
+span = (hi_world - lo_world).max()
+raw_step = (span if span > 0 else 1.0) / 8  # a single point still gets a unit box
+magnitude = 10 ** np.floor(np.log10(raw_step))
+TICK = magnitude * min((m for m in (1, 2, 5, 10) if m * magnitude >= raw_step))
+(x0, y0, z0), (x1, y1, z1) = np.floor(lo_world / TICK) * TICK, np.ceil(hi_world / TICK) * TICK
 tick_len = 0.03 * (x1 - x0 + y1 - y0)
 gap = 2.8 * tick_len
 out_x, out_y = np.array([0.0, -1.0, 0.0]), np.array([1.0, 0.0, 0.0])  # outward from the X and Y edges
 out_z = np.array([-1.0, -1.0, 0.0]) / np.sqrt(2)  # outward from the left corner, straight left on screen
-x_ticks, y_ticks, z_ticks = (np.arange(a, b + 1, TICK) for a, b in ((x0, x1), (y0, y1), (z0, z1)))
+x_ticks, y_ticks, z_ticks = (np.arange(a, b + TICK / 2, TICK) for a, b in ((x0, x1), (y0, y1), (z0, z1)))
 
 axis_world = [[(x0, y0, z0), (x1, y0, z0)], [(x1, y0, z0), (x1, y1, z0)], [(x0, y0, z0), (x0, y0, z1)]]
 tick_world = (
@@ -66,12 +79,13 @@ for segments, series in ((axis_world, axes), (tick_world, ticks)):
         series += [tuple(p) for p in np.array(segment, dtype=float) @ PROJ.T] + [None]
 
 text_world = (
-    [(np.array((t, y0, z0)) + gap * out_x, f"{t:g}") for t in x_ticks]
-    + [(np.array((x1, t, z0)) + gap * out_y, f"{t:g}") for t in y_ticks]
-    + [(np.array((x0, y0, t)) + gap * out_z, f"{t:g}") for t in z_ticks[1:]]  # the floor corner carries X's
-    + [(np.array(((x0 + x1) / 2, y0, z0)) + 2.3 * gap * out_x, "X")]
-    + [(np.array((x1, (y0 + y1) / 2, z0)) + 2.3 * gap * out_y, "Y")]
-    + [(np.array((x0, y0, z1)) + np.array((0.0, 0.0, 1.4 * gap)), "Z")]
+    # floor-edge labels sit farther out than Z's, so X's first label drops clear below the Z column
+    [(np.array((t, y0, z0)) + 1.7 * gap * out_x, f"{t:g}") for t in x_ticks]
+    + [(np.array((x1, t, z0)) + 1.7 * gap * out_y, f"{t:g}") for t in y_ticks]
+    + [(np.array((x0, y0, t)) + gap * out_z, f"{t:g}") for t in z_ticks]
+    + [(np.array(((x0 + x1) / 2, y0, z0)) + 3.0 * gap * out_x, X)]
+    + [(np.array((x1, (y0 + y1) / 2, z0)) + 3.0 * gap * out_y, Y)]
+    + [(np.array((x0, y0, z1)) + np.array((0.0, 0.0, 1.4 * gap)), Z)]
 )
 text_screen = np.array([p for p, _ in text_world], dtype=float) @ PROJ.T
 
@@ -81,8 +95,8 @@ text_screen = np.array([p for p, _ in text_world], dtype=float) @ PROJ.T
 WIDTH, HEIGHT, MARGIN, SPACING = 3200, 1800, 60, 30
 TITLE_FS, LABEL_FS = 66, 44
 extent = np.vstack([screen, text_screen])
-pad = np.array([0.06, 0.03]) * np.ptp(extent, axis=0)
-lo, hi = extent.min(axis=0) - pad, extent.max(axis=0) + pad
+pad = np.array([0.06, 0.03]) * (np.nanmax(extent, axis=0) - np.nanmin(extent, axis=0))
+lo, hi = np.nanmin(extent, axis=0) - pad, np.nanmax(extent, axis=0) + pad
 view_w, view_h = WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN - (SPACING + TITLE_FS)
 px_per_unit = min(view_w / (hi[0] - lo[0]), view_h / (hi[1] - lo[1])) / 1.04
 center = (lo + hi) / 2
@@ -93,9 +107,9 @@ num_segments = 30
 key_len, key_top = 0.16 * 2 * half[0], center[1] + 0.9 * half[1]
 key_x = np.linspace(center[0] + 0.85 * half[0] - key_len, center[0] + 0.85 * half[0], num_segments + 1)
 key_text = [
-    ((key_x[0] + key_x[-1]) / 2, key_top, "Elapsed time (model time units)"),
-    (key_x[0], key_top - 2 * LABEL_FS / px_per_unit, "0"),
-    (key_x[-1], key_top - 2 * LABEL_FS / px_per_unit, f"{t_end:g}"),
+    ((key_x[0] + key_x[-1]) / 2, key_top, TIME),
+    (key_x[0], key_top - 2 * LABEL_FS / px_per_unit, f"{np.nanmin(elapsed):.3g}"),
+    (key_x[-1], key_top - 2 * LABEL_FS / px_per_unit, f"{np.nanmax(elapsed):.3g}"),
 ]
 key_y = key_top - 1.0 * LABEL_FS / px_per_unit
 
@@ -105,16 +119,16 @@ shift = np.array([-0.26 * LABEL_FS, 0.0]) / px_per_unit
 labels = [{"value": tuple(p + shift), "label": text} for p, (_, text) in zip(text_screen, text_world, strict=True)]
 labels += [{"value": (x + shift[0], y), "label": text} for x, y, text in key_text]
 
-# imprint_seq gradient along time (brand green → blue): the path is split into equal-time segments
-# that share their end points, so the line stays continuous; each segment's colour also paints its
-# step of the key bar
+# imprint_seq gradient along time (brand green → blue): the path is split into segments of equal
+# point count that share their end points, so the line stays continuous; each segment's colour also
+# paints its step of the key bar. A point with a missing value becomes None, a break in the line
 stops = np.array([[int(h[i : i + 2], 16) for i in (1, 3, 5)] for h in (IMPRINT_PALETTE[0], IMPRINT_PALETTE[2])])
 bounds = np.linspace(0, num_points - 1, num_segments + 1).round().astype(int)
 segments, gradient_colors = [], []
 for i in range(num_segments):
     r, g, b = np.round(stops[0] + (stops[1] - stops[0]) * i / (num_segments - 1)).astype(int)
     gradient_colors.append(f"rgba({r}, {g}, {b}, 0.85)")
-    path = [tuple(p) for p in screen[bounds[i] : bounds[i + 1] + 1]]
+    path = [tuple(p) if np.isfinite(p).all() else None for p in screen[bounds[i] : bounds[i + 1] + 1]]
     segments.append(path + [None, (key_x[i], key_y), (key_x[i + 1], key_y)])
 
 custom_style = Style(
@@ -165,8 +179,9 @@ chart.add("Labels", labels, stroke=False, dots_size=0)
 chart.add("Axes", axes, show_dots=False, allow_interruptions=True)
 chart.add("Ticks", ticks, show_dots=False, allow_interruptions=True)
 for i, path in enumerate(segments):
-    t_from, t_to = t_end * bounds[i] / (num_points - 1), t_end * bounds[i + 1] / (num_points - 1)
-    chart.add(f"t = {t_from:.1f}–{t_to:.1f}", path, show_dots=False, allow_interruptions=True)
+    chart.add(
+        f"t = {elapsed[bounds[i]]:.3g}–{elapsed[bounds[i + 1]]:.3g}", path, show_dots=False, allow_interruptions=True
+    )
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
