@@ -26,14 +26,15 @@ const HOUR = "Hour of record"; // role: extra
 const TEMPERATURE = "Temperature (°C)"; // role: value
 
 // Data: replace this block with your own records, one object per row
-// Hourly station temperature as an AR(1) process: rho 0.82 around 20 °C, sigma about 5 °C.
+// Hourly station temperature as an AR(1) process: rho 0.97 around 20 °C, sigma about 5 °C,
+// so one-hour changes stay within a few degrees.
 const data = (() => {
   let seed = 42;
   const uniform = () => {
     seed = (1664525 * seed + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  const rho = 0.82;
+  const rho = 0.97;
   let state = 0;
   const rows = [];
   for (let hour = 0; hour < 200; hour += 1) {
