@@ -1,143 +1,182 @@
 // anyplot.ai
 // curve-oc: Operating Characteristic (OC) Curve
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-20
-
-import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { LineChart } from "@mui/x-charts/LineChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data -------------------------------------------------------------------
+// Constants
+const AQL = 0.02; // acceptable quality level of the contract, where the producer's risk is read
+const LTPD = 0.1; // lot tolerance percent defective, where the consumer's risk is read
+const PERCENT = "%"; // both axes show their 0–1 quantities as percentages
 
-// Binomial coefficient (n choose k)
-function binomCoeff(n: number, k: number): number {
-  if (k < 0 || k > n) return 0;
-  if (k === 0 || k === n) return 1;
-  let r = 1;
-  for (let i = 0; i < k; i++) r = (r * (n - i)) / (i + 1);
-  return r;
+// Columns: set these to your data's column names
+const FRACTION_DEFECTIVE = "Fraction defective"; // role: fraction_defective
+const ACCEPTANCE = "Probability of acceptance"; // role: probability_acceptance
+const PLAN = "Sampling plan"; // role: sample_plan
+
+// Data: replace this block with your own records, one object per plan and fraction defective
+// Three single-sample acceptance plans (sample size n, acceptance number c) over 0–15 % defective:
+// P(accept) = P(X <= c) for X ~ Binomial(n, p), at 200 values of p
+const data = (() => {
+  const plans = [
+    { n: 50, c: 1 },
+    { n: 100, c: 2 },
+    { n: 200, c: 4 },
+  ];
+  const steps = 200;
+  const pMax = 0.15;
+  return plans.flatMap(({ n, c }) =>
+    Array.from({ length: steps }, (_, i) => {
+      const p = (i * pMax) / (steps - 1);
+      let accept = 0;
+      let choose = 1;
+      for (let k = 0; k <= c; k += 1) {
+        accept += choose * p ** k * (1 - p) ** (n - k);
+        choose = (choose * (n - k)) / (k + 1);
+      }
+      return { [FRACTION_DEFECTIVE]: p, [ACCEPTANCE]: Math.min(1, Math.max(0, accept)), [PLAN]: `n = ${n}, c = ${c}` };
+    }),
+  );
+})();
+
+// Plot: reads only data and the constants above
+// One curve per plan in order of first appearance, on the shared sorted fraction-defective grid
+const plans = [...new Set(data.map((d) => d[PLAN]))];
+const fractions = [...new Set(data.map((d) => d[FRACTION_DEFECTIVE]))].sort((a, b) => a - b);
+const acceptanceAt = new Map(data.map((d) => [`${d[PLAN]}|${d[FRACTION_DEFECTIVE]}`, d[ACCEPTANCE]]));
+const curves = plans.map((plan, i) => {
+  const rows = data.filter((d) => d[PLAN] === plan).sort((a, b) => a[FRACTION_DEFECTIVE] - b[FRACTION_DEFECTIVE]);
+  // Acceptance probability at AQL and at LTPD, interpolated between the neighbouring computed points
+  const [atAql, atLtpd] = [AQL, LTPD].map((q) => {
+    const k = rows.findIndex((d) => d[FRACTION_DEFECTIVE] >= q);
+    if (k < 1) return k === 0 ? rows[0][ACCEPTANCE] : null;
+    const [a, b] = [rows[k - 1], rows[k]];
+    return a[ACCEPTANCE] + ((q - a[FRACTION_DEFECTIVE]) / (b[FRACTION_DEFECTIVE] - a[FRACTION_DEFECTIVE])) * (b[ACCEPTANCE] - a[ACCEPTANCE]);
+  });
+  return { plan, color: t.palette[i], atAql, atLtpd };
+});
+// Risk marks go on the plan that leaves the consumer the largest risk at LTPD, the weakest protection
+const covered = curves.filter((c) => c.atAql !== null && c.atLtpd !== null);
+const riskPlan = covered.reduce<(typeof curves)[number] | null>((best, c) => (best === null || c.atLtpd! > best.atLtpd! ? c : best), null);
+const xMax = fractions[fractions.length - 1];
+const percentValue = (v: number) => String(parseFloat((v * 100).toFixed(1)));
+const percent = (v: number) => `${percentValue(v)} ${PERCENT}`;
+
+const TITLE = "Incoming Inspection · curve-oc · javascript · muix · anyplot.ai";
+const subtitle = riskPlan
+  ? `${plans.length} single-sample plans · producer's and consumer's risk read off ${riskPlan.plan}, the plan with the largest consumer's risk at LTPD`
+  : `${plans.length} single-sample plans`;
+const HEADER_H = 88;
+const LEGEND_H = 44;
+
+function RiskMarks() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  if (!riskPlan) return null;
+  const xa = xScale(AQL)!;
+  const xl = xScale(LTPD)!;
+  const ya = yScale(riskPlan.atAql!)!;
+  const yl = yScale(riskPlan.atLtpd!)!;
+  return (
+    <g>
+      {/* Producer's risk: the gap between certain acceptance and the curve at AQL */}
+      <line x1={xa} y1={yScale(1)} x2={xa} y2={ya} stroke={riskPlan.color} strokeWidth={5} strokeLinecap="round" />
+      {/* Consumer's risk: the curve's height at LTPD */}
+      <line x1={xl} y1={yScale(0)} x2={xl} y2={yl} stroke={riskPlan.color} strokeWidth={5} strokeLinecap="round" />
+      {[
+        { x: xa, y: ya, text: `Producer's risk α = ${percent(1 - riskPlan.atAql!)}`, ty: (yScale(1)! + ya) / 2 },
+        { x: xl, y: yl, text: `Consumer's risk β = ${percent(riskPlan.atLtpd!)}`, ty: yl - 28 },
+      ].map((m) => (
+        <g key={m.text}>
+          <circle cx={m.x} cy={m.y} r={7} fill={riskPlan.color} stroke={t.pageBg} strokeWidth={2} />
+          <text x={m.x + 14} y={m.ty} dominantBaseline="middle" fill={t.ink} fontSize={15} fontWeight={600}>
+            {m.text}
+          </text>
+        </g>
+      ))}
+    </g>
+  );
 }
-
-// P(accept | n, c, p) = P(X ≤ c) where X ~ Binomial(n, p)
-function pAccept(n: number, c: number, p: number): number {
-  let prob = 0;
-  for (let k = 0; k <= c; k++) {
-    prob += binomCoeff(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
-  }
-  return Math.min(1, Math.max(0, prob));
-}
-
-// x-axis: fraction defective 0–15%, 200 points for a smooth S-curve
-const N_POINTS = 200;
-const P_MAX = 0.15;
-const pValues = Array.from({ length: N_POINTS }, (_, i) => (i * P_MAX) / (N_POINTS - 1));
-
-// Three sampling plans to show discrimination power with increasing n
-const plans: [number, number, string][] = [
-  [50,  1, "n=50 c=1"],
-  [100, 2, "n=100 c=2"],
-  [200, 4, "n=200 c=4"],
-];
-
-const series = plans.map(([n, c, label]) => ({
-  data: pValues.map((p) => pAccept(n, c, p)),
-  label,
-  showMark: false,
-  curve: "catmullRom" as const,
-}));
-
-// Quality thresholds
-const AQL  = 0.02;  // Acceptable Quality Level — producer's risk reference (α = 5%)
-const LTPD = 0.10;  // Lot Tolerance Percent Defective — consumer's risk reference (β = 10%)
-
-const TITLE_HEIGHT = 60;
-
-// --- Chart ------------------------------------------------------------------
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        display: "flex",
-        flexDirection: "column",
-        paddingTop: "20px",
-      }}
-    >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-        }}
-      >
-        curve-oc · javascript · muix · anyplot.ai
-      </Typography>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
+      </Box>
       <LineChart
         width={width}
-        height={height - TITLE_HEIGHT}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        colors={t.palette}
-        xAxis={[{
-          data: pValues,
-          scaleType: "linear",
-          valueFormatter: (v: number) => `${(v * 100).toFixed(0)}%`,
-          label: "Fraction Defective (p)",
-          min: 0,
-          max: P_MAX,
-          tickInterval: [0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14],
-        }]}
-        yAxis={[{
-          label: "Probability of Acceptance",
-          min: 0,
-          max: 1,
-          valueFormatter: (v: number) => `${(v * 100).toFixed(0)}%`,
-        }]}
-        series={series}
-        margin={{ left: 90, right: 60, top: 20, bottom: 80 }}
+        margin={{ top: 16, right: 48, bottom: 16, left: 24 }}
+        xAxis={[
+          {
+            data: fractions,
+            scaleType: "linear",
+            min: 0,
+            max: xMax,
+            label: `${FRACTION_DEFECTIVE} (${PERCENT})`,
+            valueFormatter: percentValue,
+            tickNumber: 8,
+            height: 64,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            max: 1,
+            label: `${ACCEPTANCE} (${PERCENT})`,
+            valueFormatter: percentValue,
+            width: 80,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        series={curves.map((c, i) => ({
+          id: `plan-${i}`,
+          label: c.plan,
+          color: c.color,
+          data: fractions.map((x) => acceptanceAt.get(`${c.plan}|${x}`) ?? null),
+          curve: "monotoneX" as const,
+          showMark: false,
+        }))}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink, gap: "28px" },
+          },
+        }}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiChartsLegend-label": { fontSize: "14px" },
-          "& .MuiLineElement-root": { strokeWidth: 3 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
       >
-        <ChartsReferenceLine
-          x={AQL}
-          label="AQL (2%)"
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-        <ChartsReferenceLine
-          x={LTPD}
-          label="LTPD (10%)"
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-        <ChartsReferenceLine
-          y={0.95}
-          label="1−α = 0.95"
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "3 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
-        />
-        <ChartsReferenceLine
-          y={0.10}
-          label="β = 0.10"
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "3 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
-        />
+        {[
+          { x: AQL, name: "AQL" },
+          { x: LTPD, name: "LTPD" },
+        ].map((r) => (
+          <ChartsReferenceLine
+            key={r.name}
+            x={r.x}
+            label={`${r.name} ${percent(r.x)}`}
+            labelAlign="start"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+            labelStyle={{ fill: t.inkSoft, fontSize: 15, fontWeight: 600 }}
+          />
+        ))}
+        <RiskMarks />
       </LineChart>
     </Box>
   );
