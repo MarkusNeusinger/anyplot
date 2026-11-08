@@ -2,61 +2,58 @@ library: muix
 language: javascript
 specification_id: timeseries-forecast-uncertainty
 created: '2026-09-02T07:58:59Z'
-updated: '2026-09-02T08:10:30Z'
-generated_by: claude-sonnet
-workflow_run: 33605079744
+updated: '2026-11-08T06:34:05Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42454989269
 issue: 3188
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - Forecast horizon extended to 12 months (from 9), now cleanly inside the spec's
-    10-50 month guidance
-  - Y-axis floor now derived from the actual plotted minimum instead of a hand-picked
-    constant, removing the previously flagged wasted margin below the data
-  - Correct theme-adaptive chrome in both light and dark renders — no dark-on-dark
-    or light-on-light legibility failures anywhere
-  - Brand green (#009E73) correctly used as the sole categorical color across historical,
-    forecast, and both bands; identical hex in both themes
-  - Nested 80%/95% confidence bands with correct opacity ordering (more opaque inner
-    80%, more translucent outer 95%), fanning out realistically with forecast horizon
-  - Clear solid-vs-dashed line distinction between historical and forecast, plus a
-    labeled vertical reference line marking the forecast start
-  - Deterministic seeded (LCG) data generation — fully reproducible
-  - Title correctly formatted with descriptive prefix plus spec-id/language/library/anyplot.ai
-    suffix, with fontsize scaled down for the long string
-  - Hand-rolled legend clearly communicates all four series/bands, compensating for
-    the native MUI X legend's inability to express nested-band + line-style distinctions
-  - The internal-DOM-class-name fragility of the stacked-band trick is now explicitly
-    documented in a code comment for future maintainers
+  - Nested 80%/95% bands are drawn as a custom SVG layer inside the MUI X composition
+    API, using the useXScale/useYScale hooks so the bands share the chart's exact
+    scales and sit beneath the LinePlot, keeping the forecast line and grid visible
+    through them
+  - The forecast starts at the last observed month (its first value repeats the last
+    actual), so the dashed forecast picks up exactly where the solid history ends,
+    and ChartsReferenceLine marks that month with a labelled dashed rule in the ink-soft
+    token
+  - Interval bounds fall out of the computation (forecast ± 1.2816σ and ± 1.96σ with
+    σ growing per horizon step), so the bands widen with the horizon and the 80% band
+    always lies inside the 95% band
+  - Title, derived subtitle (history length, last observed month, horizon) and legend
+    form a clear three-level header; the 80% legend swatch uses the composite opacity
+    of both overlapping fills, so it matches the band exactly as rendered
+  - Single-hue Imprint green with line style and fill opacity as the distinguishing
+    channels keeps the chart CVD-safe; chrome is fully theme-adaptive and both renders
+    read cleanly
+  - Axis-triggered ChartsTooltip gives month-by-month values in the HTML view; skipAnimation
+    is set and the axis bands are sized explicitly so no tick label is truncated
   weaknesses:
-  - Confidence-band rendering still depends on hiding internal MUI X DOM class names
-    via sx selectors (e.g. .MuiAreaElement-series-band95, .MuiLineElement-series-lower95-base)
-    — functional and now documented, but remains fragile across future @mui/x-charts
-    version bumps since these are not part of the public API
-  - All series (historical, forecast, both bands) share a single brand-green hue differentiated
-    only by opacity/line-style; a richer treatment (e.g. leaning further into the
-    Imprint semantic anchors for the bands) would raise the design ceiling further
-  - Title occupies roughly 45-50% of the plot width — comfortably legible with no
-    overflow, but on the lower end of the ~50-70% guidance range, leaving some unused
-    header space
+  - 'Suggestion: the bands could be native stacked area series (a transparent lower-bound
+    series with the band width stacked on top), so the native ChartsLegend and the
+    axis tooltip would cover the intervals instead of a hand-built header legend.'
+  - 'Suggestion: the 95% band at 0.18 opacity reads dim on the #1A1A17 page; a slightly
+    higher outer-band opacity (for example 0.22) would give it more presence in the
+    dark render while keeping the two bands apart in light.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Bold dark-ink title "Monthly Demand Forecast · timeseries-forecast-uncertainty · javascript · muix · anyplot.ai" is fully visible and readable, comfortably sized (no overflow/clipping). A hand-rolled legend row beneath the title shows a solid line (Historical demand), dashed line (Forecast (point estimate)), and two green fill swatches at different opacities (80% / 95% confidence interval), all in dark ink and clearly readable. Y-axis label "Demand (units / month)" (rotated) and X-axis label "Month" with date ticks (Jan 23 - Jul 27) are dark ink on the light surface, fully legible. Gridlines are subtle horizontal lines. An italic "Forecast start" label sits beside a thin dashed vertical reference line.
-      Data: A solid brand-green (#009E73) line traces 42 months of seasonal historical demand with realistic noise, transitioning at the forecast-start marker into a dashed green forecast line. Two nested translucent green bands (more opaque/darker 80% CI hugging the forecast line, more translucent/lighter 95% CI as the outer envelope) widen visibly with forecast horizon, correctly conveying growing uncertainty.
-      Legibility verdict: PASS - no readability issues found.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "Monthly Demand Forecast · timeseries-forecast-uncertainty · javascript · muix · anyplot.ai" (~62% of the width), grey subtitle "42 months of history to Jun 2026 · 12-month forecast with 80% and 95% intervals", horizontal header legend (Demand solid line, Forecast dashed line, 80% interval swatch, 95% interval swatch). Y axis "Demand (units)" with ticks 2,900–4,600, x axis "Month" with quarterly ticks Jan 2023–Apr 2027. Subtle horizontal grid only. All text dark and readable; nothing clipped.
+      Data: solid #009E73 history line Jan 2023–Jun 2026 with seasonal swings around a slight upward trend; dashed #009E73 forecast from Jun 2026 to May 2027; a darker 80% band nested inside a lighter 95% band, both widening with the horizon (roughly 3,000–4,590 at the end). A dashed ink-soft vertical line labelled "Forecast start" at Jun 2026.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title, legend text, axis labels, and tick labels all render in light ink and remain fully readable against the dark surface - no dark-on-dark failures anywhere. The "Forecast start" label and its dashed reference line are light-colored and legible. Gridlines remain subtle and low-opacity.
-      Data: The historical/forecast line color and the confidence-band hue are identical #009E73 green to the light render - only the chrome (background, text, grid) flips between themes, exactly as required. The 95% band appears visually darker relative to the 80% band on this near-black page (an artifact of low-alpha blending against a dark background rather than a color change), but the two bands remain clearly distinguishable and the nesting is still legible.
-      Legibility verdict: PASS - no dark-on-dark or unreadable elements found.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and tick labels all in light ink and clearly readable; no dark-on-dark text. Grid lines subtle but visible; the "Forecast start" rule and label flip to light grey.
+      Data: identical #009E73 lines, dash pattern and band opacities as the light render; the 80% band reads as mid green, the 95% band as a darker green halo, still distinguishable from each other and from the background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -67,51 +64,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titleFontSize scaled to string length,
-          tickLabelStyle, labelStyle); readable at full size and both themes; no overflow
-          or clipping
+        comment: Explicit sizes (22/15/16/14 px CSS), all text readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text collisions; the reference-line label sits clear of the bands
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width and band opacities well-adapted to a ~54-point monthly
-          series; bands clearly visible without obscuring the lines
+        comment: 3 px lines over semi-transparent bands; legend glyphs match the marks
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Historical vs. forecast distinguished by line style (solid/dashed)
-          and bands by opacity, not by hue alone
+        comment: Single hue; history vs forecast by dash, bands by opacity — CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the canvas with balanced margins; y-axis floor
-          now tracks the actual data minimum, removing prior wasted space
+        comment: 3200x1800, balanced margins, no overflow; title ~62% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Demand (units / month)" and "Month" are descriptive with units'
+        comment: '''Demand (units)'' and ''Month'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (and only) categorical series is #009E73 in both themes; backgrounds
-          are theme-correct #FAF8F1 / #1A1A17'
+        comment: 'Imprint #009E73 for all data; #FAF8F1 / #1A1A17 backgrounds; chrome
+          theme-correct'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -119,23 +113,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Nested translucent bands, dashed forecast line, and a purpose-built
-          legend show clear design intent beyond library defaults; single-hue palette
-          caps the ceiling
+        comment: 'Above baseline: three-level header hierarchy with a data-derived
+          subtitle; legend swatch opacity composited to match the nested band'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, spines effectively removed, and
-          the tightened y-axis floor eliminates the previously wasted vertical margin
+        comment: 'Above baseline: legend integrated into the header band, bands layered
+          under the lines, quiet labelled reference rule'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: The fanning uncertainty bands plus the labeled forecast-start marker
-          clearly guide the viewer to the key insight (uncertainty grows with horizon)
+        passed: false
+        comment: Data displayed as the Notes ask; no further focal hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series forecast chart with nested confidence bands
+        comment: Time series with forecast and nested uncertainty bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Forecast horizon fixed to 12 months, now within the spec's 10-50
-          month range; all required features (historical/forecast distinction, forecast-start
-          marker, 80%/95% bands, legend) present
+        comment: Solid history + dashed forecast continuing from it; vertical forecast-start
+          line; nested darker 80%/lighter 95% bands; semi-transparent fills; legend
+          for all four — all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, demand on Y; axes show the full historical + forecast
-          range
+        comment: Time x axis spans all data; monotoneX curve does not overshoot; bands
+          drawn between their bounds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          the series/bands
+        comment: Correct title format with descriptive prefix; legend labels readable
     data_quality:
       score: 15
       max: 15
@@ -177,21 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows seasonal historical demand, a point-estimate forecast, and
-          both nested confidence levels with horizon-growing uncertainty
+        comment: Seasonality, trend, horizon-widening bands, forecast continuity all
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible monthly product demand scenario
+        comment: Monthly product demand — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values, trend, seasonality, and growing sigma are all realistic for
-          a demand-planning forecast
+        comment: 'Checked: 80% = ±1.2816σ and 95% = ±1.96σ in code; demand ~2,970–3,840
+          history, bands to ~3,000–4,590; 42+12 points within spec range'
     code_quality:
       score: 10
       max: 10
@@ -201,63 +192,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → legend/chart, no unnecessary classes
+        comment: Only the mandatory default export and the BandLayer component the
+          scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG RNG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart and ChartsReferenceLine imported, both used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; the stacked-band trick is non-trivial
-          but well-commented
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component consumed by the harness; skipAnimation
-          set; current MUI X API
+        comment: Default-export component, skipAnimation, current v9 API
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Correct high-level LineChart/series usage, but the confidence-band
-          hiding still relies on undocumented internal MUI X CSS class names rather
-          than a public API
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of ChartsReferenceLine, stack-based band composition, and
-          monotoneX curve interpolation
+        comment: v9 composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface),
+          data-series CSS selectors for the dash
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useXScale/useYScale custom SVG layer, ChartsReferenceLine with label,
+          axis-triggered ChartsTooltip
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:31:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
   - layer-composition
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - publication-ready
+  - grid-styling
