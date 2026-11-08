@@ -1,7 +1,7 @@
 """ anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-Library: plotly 6.8.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-06-08
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 89/100 | Updated: 2026-11-08
 """
 
 import os
@@ -21,7 +21,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint sequential colorscale for continuous density data
 imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
-# Data - US states sized by population (2023 Census estimates, millions)
+# Data - US states sized by population (Census Bureau estimates of 2022-2023, millions)
 states = [
     "CA",
     "TX",
@@ -297,34 +297,64 @@ lons = np.array(
 
 density = population * 1e6 / area_sq_miles
 
-# NE state offsets fan states into distinct positions to avoid bubble overlap
-ne_offsets = {
-    "NJ": (-2.0, 3.0),  # → (38.1, -71.4) over Atlantic SE of NJ
-    "CT": (0.5, 5.0),  # → (42.1, -67.8) east of Maine coast
-    "MA": (1.5, 3.0),  # → (43.9, -68.4) NE of natural position
-    "RI": (-1.5, 4.0),  # → (40.1, -67.5) well east of CT
-    "NH": (2.5, 1.5),  # → (45.7, -70.1) north-east
-    "VT": (3.0, -0.5),  # → (47.6, -73.1) far north
-    "DE": (-3.0, 3.0),  # → (35.9, -72.5) far south over Atlantic
-    "MD": (-3.0, 0.5),  # → (36.1, -76.1) far south
-    "ME": (2.5, 2.0),  # → (47.8, -67.5) far north-east
-}
-for i, s in enumerate(states):
-    if s in ne_offsets:
-        dlat, dlon = ne_offsets[s]
-        lats[i] += dlat
-        lons[i] += dlon
-
-# Scale bubble sizes: area proportional to population
+# Bubble diameters in layout px: area exactly proportional to population, no size floor
 max_marker_size = 70
-raw_sizes = np.sqrt(population / population.max()) * max_marker_size
-sizes = np.clip(raw_sizes, 12, max_marker_size)
+sizes = np.sqrt(population / population.max()) * max_marker_size
+
+# Canvas and margins (layout px); the Dorling layout below needs the map's pixel scale
+width, height = 800, 450
+margin = {"l": 0, "r": 60, "t": 45, "b": 40}
+
+# Dorling layout: start each lower-48 bubble at its state's position on the Albers USA map
+# and push overlapping bubbles apart, with a weak pull back towards the true position.
+# Alaska and Hawaii sit alone in their insets and keep their coordinates.
+# Lower-48 projection of d3-geo's geoAlbersUsa, which plotly draws: conic equal-area,
+# standard parallels 29.5° / 45.5°, rotated by 96°, centred on (-0.6°, 38.7°).
+# plotly fits its 0.91 × 0.476 frame (in projection units) into the plot area.
+px_per_unit = min((width - margin["l"] - margin["r"]) / 0.91, (height - margin["t"] - margin["b"]) / 0.476)
+sin_p0, sin_p1 = np.sin(np.radians([29.5, 45.5]))
+cone = (sin_p0 + sin_p1) / 2
+c_const = 1 + sin_p0 * (2 * cone - sin_p0)
+rho_c = np.sqrt(c_const - 2 * cone * np.sin(np.radians(38.7))) / cone
+theta_c = cone * np.radians(-0.6)
+rho = np.sqrt(c_const - 2 * cone * np.sin(np.radians(lats))) / cone
+theta = cone * np.radians(lons + 96)
+home = px_per_unit * np.column_stack(
+    [rho * np.sin(theta) - rho_c * np.sin(theta_c), rho * np.cos(theta) - rho_c * np.cos(theta_c)]
+)  # x right, y down (screen px relative to the map centre)
+
+lower48 = ~np.isin(states, ["AK", "HI"])
+pos = home[lower48].copy()
+radius = sizes[lower48] / 2 + 1.5  # half the 1.5 px outline plus a hairline gap
+for _ in range(600):
+    delta = pos[:, None, :] - pos[None, :, :]
+    dist = np.hypot(delta[..., 0], delta[..., 1])
+    np.fill_diagonal(dist, np.inf)
+    overlap = np.clip(radius[:, None] + radius[None, :] - dist, 0, None)
+    share = radius[None, :] / (radius[:, None] + radius[None, :])  # the smaller bubble moves further
+    pos += (delta / dist[..., None] * (overlap * share)[..., None]).sum(axis=1)
+    pos += 0.01 * (home[lower48] - pos)
+
+# Back from screen px to lon/lat so plotly draws each bubble at its relaxed position
+x_cone = pos[:, 0] / px_per_unit + rho_c * np.sin(theta_c)
+y_cone = pos[:, 1] / px_per_unit + rho_c * np.cos(theta_c)
+lons[lower48] = np.degrees(np.arctan2(x_cone, y_cone) / cone) - 96
+lats[lower48] = np.degrees(np.arcsin((c_const - (np.hypot(x_cone, y_cone) * cone) ** 2) / (2 * cone)))
 
 # Log scale for density color mapping
 log_density = np.log10(density)
 
-# Labels for states >= 2M population
-label_texts = [s if p >= 2.0 else "" for s, p in zip(states, population, strict=False)]
+# Labels on the bubbles wide enough to hold two bold letters; the smallest stay unlabeled
+label_texts = [s if d >= 18 else "" for s, d in zip(states, sizes, strict=False)]
+
+# Insight callout, computed from the data
+top, densest = int(np.argmax(population)), int(np.argmax(density))
+median_pop = np.median(population)
+insight_text = (
+    f"{states[top]} has {population[top]:.1f}M people, {population[top] / median_pop:.1f}× the<br>"
+    f"median state's {median_pop:.1f}M, yet {states[densest]}<br>"
+    f"is {density[densest] / density[top]:.1f}× denser than {states[top]}"
+)
 
 # Title — mandatory format; scale fontsize to prevent overflow at this length
 title_str = "U.S. States Population Cartogram · cartogram-area-distortion · python · plotly · anyplot.ai"
@@ -365,8 +395,8 @@ fig.add_trace(
             "size": sizes,
             "color": log_density,
             "colorscale": imprint_seq,
-            "cmin": np.log10(5),
-            "cmax": np.log10(6000),
+            "cmin": log_density.min(),
+            "cmax": log_density.max(),
             "colorbar": {
                 "title": {
                     "text": "Population Density<br>(per sq mi)",
@@ -377,7 +407,7 @@ fig.add_trace(
                 "ticktext": ["10", "50", "100", "500", "1k", "5k"],
                 "len": 0.55,
                 "thickness": 20,
-                "x": 0.94,
+                "x": 0.89,
                 "outlinewidth": 0,
                 "bgcolor": ELEVATED_BG,
                 "tickcolor": INK_SOFT,
@@ -400,7 +430,8 @@ fig.add_trace(
         textfont={
             "size": [max(9, min(14, int(s / 5))) if t else 1 for s, t in zip(sizes, label_texts, strict=False)],
             "color": "#F0EFE8",
-            "family": "Arial Black",
+            "family": "Arial",
+            "weight": "bold",
         },
         hoverinfo="skip",
         showlegend=False,
@@ -413,7 +444,7 @@ fig.update_layout(
         "font": {"size": title_fontsize, "family": "Arial", "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
+        "y": 0.95,
     },
     geo={
         "scope": "usa",
@@ -421,6 +452,7 @@ fig.update_layout(
         "showcoastlines": True,
         "coastlinecolor": boundary_color,
         "coastlinewidth": 0.5,
+        "showsubunits": False,  # the reference choropleth draws the state outlines in the theme's rule color
         "showland": True,
         "landcolor": land_color,
         "showlakes": True,
@@ -431,7 +463,7 @@ fig.update_layout(
     autosize=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 20, "r": 100, "t": 70, "b": 60},
+    margin=margin,
     showlegend=False,
     annotations=[
         {
@@ -444,11 +476,14 @@ fig.update_layout(
             "font": {"size": 12, "color": INK_MUTED, "family": "Arial"},
         },
         {
-            "text": "California (39M) has 6× more people than<br>median state, yet New Jersey is 4× denser",
+            # Under the colorbar, clear of the Alaska and Hawaii insets
+            "text": insight_text,
             "xref": "paper",
             "yref": "paper",
-            "x": 0.02,
-            "y": 0.08,
+            "x": 1.079,
+            "y": 0.19,
+            "xanchor": "right",
+            "yanchor": "top",
             "showarrow": False,
             "font": {"size": 12, "color": INK_MUTED, "family": "Arial"},
             "align": "left",
@@ -459,5 +494,5 @@ fig.update_layout(
 )
 
 # Save — landscape 3200×1800 (width=800, height=450, scale=4)
-fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=width, height=height, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

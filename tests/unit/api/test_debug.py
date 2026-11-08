@@ -644,32 +644,44 @@ class TestAdminAllowedEmailsParsing:
 class TestFeedbackDebugEndpoints:
     """Coverage for /debug/feedback/* — analytics + triage (issue #5662 follow-up)."""
 
-    def test_top_pages_rejects_invalid_reaction(self, db_client) -> None:
+    def test_votes_rejects_an_unknown_sort(self, db_client) -> None:
         client, _ = db_client
-        response = client.get("/debug/feedback/top?reaction=fire")
+        response = client.get("/debug/feedback/votes?sort=fire")
         assert response.status_code == 400
 
-    def test_top_pages_rejects_out_of_range_limit(self, db_client) -> None:
+    def test_votes_rejects_out_of_range_limit(self, db_client) -> None:
         client, _ = db_client
-        response = client.get("/debug/feedback/top?reaction=thumbs_up&limit=999")
+        response = client.get("/debug/feedback/votes?sort=thumbs_up&limit=999")
         assert response.status_code == 400
 
-    def test_top_pages_returns_grouped_counts(self, db_client) -> None:
+    def test_votes_rank_per_implementation(self, db_client) -> None:
         client, _ = db_client
         repo = MagicMock()
-        repo.top_paths_by_reaction = AsyncMock(
-            return_value=[
-                {"path": "/scatter-basic", "count": 7, "last_seen": "2026-05-18T12:00:00"},
-                {"path": "/heatmap-basic", "count": 3, "last_seen": "2026-05-17T08:30:00"},
-            ]
-        )
+        entry = {
+            "spec_id": "scatter-basic",
+            "language": "python",
+            "library_id": "matplotlib",
+            "path": "/scatter-basic/python/matplotlib",
+            "thumbs_up": 1,
+            "thumbs_down": 4,
+            "earlier_thumbs_up": 2,
+            "earlier_thumbs_down": 0,
+            "last_vote": "2026-11-08T12:00:00+00:00",
+        }
+        repo.vote_counts_by_implementation = AsyncMock(return_value=[entry])
         with patch("api.routers.debug.FeedbackRepository", return_value=repo):
-            response = client.get("/debug/feedback/top?reaction=thumbs_up&limit=5")
+            response = client.get("/debug/feedback/votes?sort=total&limit=5")
         assert response.status_code == 200
-        body = response.json()
-        assert [entry["path"] for entry in body] == ["/scatter-basic", "/heatmap-basic"]
-        assert body[0]["count"] == 7
-        repo.top_paths_by_reaction.assert_awaited_once_with("thumbs_up", 5)
+        assert response.json() == [entry]
+        repo.vote_counts_by_implementation.assert_awaited_once_with("total", 5)
+
+    def test_votes_sort_by_thumbs_down_by_default(self, db_client) -> None:
+        client, _ = db_client
+        repo = MagicMock()
+        repo.vote_counts_by_implementation = AsyncMock(return_value=[])
+        with patch("api.routers.debug.FeedbackRepository", return_value=repo):
+            assert client.get("/debug/feedback/votes").json() == []
+        repo.vote_counts_by_implementation.assert_awaited_once_with("thumbs_down", 25)
 
     def test_messages_filters_by_status(self, db_client) -> None:
         client, _ = db_client

@@ -25,7 +25,12 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { longSuggestion, type tableChoice } from 'src/lib/agent';
-import { bindingHint, bindingRows, boundRoles } from 'src/sections/agent-chat/bindings';
+import {
+  bindingHint,
+  bindingRows,
+  boundRoles,
+  checkOnlyWarnings,
+} from 'src/sections/agent-chat/bindings';
 import { fileSource } from 'src/sections/agent-chat/cardLabels';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import {
@@ -88,12 +93,14 @@ export interface DataCardProps {
   onToLong?: () => void;
   onLoadData?: (signal: AbortSignal) => Promise<string>;
   onDataViewShown?: () => void;
+  /** `.change()` opened the dropdowns, or `.view_all()` the full view: the user looks at the data. */
+  onLook?: () => void;
 }
 
 export function DataCard(props: DataCardProps) {
   const { state, part, ready, working, busy, choice, viewOpen, setViewOpen, viewButtonRef } = props;
   const { onTable, onSheet, sheetLine, sheetError, onUse, onDiscardTranscription } = props;
-  const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
+  const { onBind, onUndo, onToLong, onLoadData, onDataViewShown, onLook } = props;
 
   const transcription = part === 'transcription' ? state.transcription : null;
   const dataset = part === 'data' ? state.dataset : null;
@@ -135,11 +142,16 @@ export function DataCard(props: DataCardProps) {
         });
       });
 
+  const checkOnly = dataset ? checkOnlyWarnings(state.bindingWarnings) : [];
+
   const bindingsToggle = (
     <Box
       component="button"
       type="button"
-      onClick={() => setEditing(open => !open)}
+      onClick={() => {
+        if (!editing) onLook?.();
+        setEditing(open => !open);
+      }}
       aria-expanded={editing}
       aria-controls={editing ? BINDINGS_EDITOR_ID : undefined}
       aria-label={editing ? 'Hide the bindings' : 'Change the bindings'}
@@ -153,7 +165,10 @@ export function DataCard(props: DataCardProps) {
       component="button"
       type="button"
       ref={viewButtonRef}
-      onClick={() => setViewOpen(true)}
+      onClick={() => {
+        onLook?.();
+        setViewOpen(true);
+      }}
       // The grid's chunk starts loading as the pointer or the focus reaches the button.
       onPointerEnter={preloadDataView}
       onFocus={preloadDataView}
@@ -333,6 +348,23 @@ export function DataCard(props: DataCardProps) {
                 sx={{ ...labelSx, fontSize: smallText, color: colors.warning }}
               >
                 {hint}
+              </Box>
+            ))}
+            {/* The server's binding check names more than a bound column's own warning: a key
+                whose rows repeat, another window, an inverted pair. Open or closed dropdowns,
+                they stand under the line, since no single dropdown holds them. */}
+            {checkOnly.map(line => (
+              <Box
+                key={line}
+                data-testid="binding-warning"
+                sx={{
+                  ...labelSx,
+                  fontSize: smallText,
+                  color: colors.warning,
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                {line}
               </Box>
             ))}
             {/* The phone's action line: what the desktop has beside the preview and the line. */}

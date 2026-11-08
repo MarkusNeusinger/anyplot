@@ -97,7 +97,7 @@ Combine the sources per round:
 
 | Flag | Reads | Reason codes |
 |---|---|---|
-| `--votes` | `feedback` reactions per spec × language × library, one vote per visitor session | `thumbs_down` (more down than up since the metadata's `updated`), `thumbs_down_old_version` (more down than up before it, and no more up than down since: cast on an older version) |
+| `--votes` | `feedback` reactions per spec × language × library, one vote per visitor session on each side of the metadata's `updated` (`core.plot_votes`) | `thumbs_down` (more down than up since the metadata's `updated`), `thumbs_down_old_version` (more down than up before it, and no more up than down since: cast on an older version) |
 | `--scores` | the stored review in `metadata/*.yaml` | `no_score`, `below_threshold` (`--below`, default 85), `capped` (total below the item sum), `plot_type_below_max` (SC-01), `spec_compliance_below_max`, `technical_below_max`, `residual_defects` (a kept defect line on an item below its maximum) |
 | `--stale` | `library_version` against the pins at `--ref` (`core.library_versions`) | `library_behind` (an older API level), `old_update` (with `--older-than DAYS`) |
 | `--gcs` | a HEAD on both production PNGs and both `_800.webp` variants the site shows, with `?cb=<epoch>` | `render_missing`, `render_stale` (older than `updated`), `render_unchecked` |
@@ -452,7 +452,8 @@ new OK, and the restart skips what already went out.
   a re-render, never a hand upload.
 - **Votes before the last update were cast on an older version.** The
   selector splits them at the metadata's `updated`; an old-version reason is a
-  hint to check whether the defect survived, not a defect.
+  hint to check whether the defect survived, not a defect. A visitor may rate
+  each new version once, so the same session can count on both sides.
 - **The `node_modules` link is untracked, not ignored.** The `.gitignore`
   pattern `node_modules/` does not match a symbolic link, so `git status`
   shows `?? node_modules` and `git add -A` would commit it.
