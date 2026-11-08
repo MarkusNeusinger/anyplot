@@ -3,303 +3,255 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-09
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ChartsText } from "@mui/x-charts/ChartsText";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Daily average temperature, 5 years, deterministic (in-memory) ----------
-// cycle_period = "year" — every full revolution of the spiral is one year, so
-// seasons from different years line up radially and the multi-year warming
-// trend shows up as later revolutions running consistently warmer.
-const DAYS_PER_YEAR = 365;
-const NUM_YEARS = 5;
-const TOTAL_DAYS = DAYS_PER_YEAR * NUM_YEARS; // 1825 points — within the spec's 100–3000 range
-const START_YEAR = 2020;
+// Constants
+const CYCLE_PERIOD = "year"; // one revolution of the spiral is one calendar year, subdivided into months
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const INNER_RADIUS_SHARE = 0.14; // the first cycle starts this far out, as a share of the outer radius
+const LABEL_RADIUS_SHARE = 1.1; // month labels sit just outside the outermost revolution
+const FRAME_SHARE = 1.16; // the square drawing area spans the outer radius times this, each side
+const MIN_STROKE = 2;
+const STROKE_RAMP = 3.5; // extra stroke width at the highest value, a secondary value encoding
+const COLORBAR_TICK_TARGET = 8;
 
-const BASE_TEMP_C = 14; // annual mean, mid-latitude climate
-const SEASONAL_AMPLITUDE_C = 13; // coldest ~Jan, warmest ~Jul
-const WARMING_PER_YEAR_C = 0.35; // slow trend, visible as outer revolutions running warmer
-const NOISE_AMPLITUDE_C = 3.5;
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const VALUE = "Daily mean temperature (°C)"; // role: value
 
-// Tiny fixed-seed LCG — the browser has no seeded Math.random().
-let lcgState = 42;
-function nextRandom() {
-  lcgState = (lcgState * 1103515245 + 12345) % 2147483648;
-  return lcgState / 2147483648;
-}
+// Data: replace this block with your own records, one object per row
+// Five years of daily mean temperature at a mid-latitude station: a seasonal cycle of ±13 °C
+// around 14 °C, a warming of 0.35 °C per year and day-to-day weather noise
+const data = (() => {
+  let state = 42;
+  const rand = () => {
+    state = (state * 1103515245 + 12345) % 2147483648;
+    return state / 2147483648;
+  };
+  return Array.from({ length: 365 * 5 }, (_, day) => {
+    const seasonal = -Math.cos((2 * Math.PI * (day % 365)) / 365) * 13;
+    const trend = 0.35 * Math.floor(day / 365);
+    const noise = (rand() - 0.5) * 3.5;
+    return { [DATE]: new Date(2020, 0, 1 + day), [VALUE]: Math.round((14 + seasonal + trend + noise) * 10) / 10 };
+  });
+})();
 
-const dailyTemps = [];
-for (let day = 0; day < TOTAL_DAYS; day++) {
-  const dayOfYear = day % DAYS_PER_YEAR;
-  const yearIndex = Math.floor(day / DAYS_PER_YEAR);
-  const seasonal = -Math.cos((2 * Math.PI * dayOfYear) / DAYS_PER_YEAR) * SEASONAL_AMPLITUDE_C;
-  const trend = WARMING_PER_YEAR_C * yearIndex;
-  const noise = (nextRandom() - 0.5) * NOISE_AMPLITUDE_C;
-  dailyTemps.push(BASE_TEMP_C + seasonal + trend + noise);
-}
-const V_MIN = Math.min(...dailyTemps);
-const V_MAX = Math.max(...dailyTemps);
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[DATE] - b[DATE]);
+const values = rows.map((d) => d[VALUE]);
+const vMin = Math.min(...values);
+const vMax = Math.max(...values);
+const firstYear = rows[0][DATE].getFullYear();
+const years = [...new Set(rows.map((d) => d[DATE].getFullYear()))];
+const cycleCount = rows[rows.length - 1][DATE].getFullYear() - firstYear + 1;
+const gap = (1 - INNER_RADIUS_SHARE) / cycleCount;
 
-// --- Archimedean spiral geometry (constant spacing between revolutions) -----
-// Radius grows continuously with elapsed time (not reset per cycle), so the
-// earliest data sits closest to the center and each revolution is one year.
-const R_MAX = 1;
-const R_INNER = 0.14;
-const REV_GAP = (R_MAX - R_INNER) / NUM_YEARS;
-
-const spiralPoints = dailyTemps.map((value, day) => {
-  const revolutions = day / DAYS_PER_YEAR;
-  const angle = Math.PI / 2 - 2 * Math.PI * revolutions; // day 0 at top, clockwise like a clock face
-  const radius = R_INNER + REV_GAP * revolutions;
-  return { x: radius * Math.cos(angle), y: radius * Math.sin(angle), value };
+// Archimedean spiral: elapsed cycles = whole years since the first plus the share of the
+// current year, so the same date of every year sits at the same angle, clockwise from the top
+const points = rows.map((d) => {
+  const year = d[DATE].getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const share = (d[DATE] - yearStart) / (new Date(year + 1, 0, 1) - yearStart);
+  const radius = INNER_RADIUS_SHARE + gap * (year - firstYear + share);
+  const angle = Math.PI / 2 - 2 * Math.PI * share;
+  return { x: radius * Math.cos(angle), y: radius * Math.sin(angle), value: d[VALUE] };
+});
+const seqRgb = t.seq.map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+const segments = points.slice(1).map((b, i) => {
+  const a = points[i];
+  const v = ((a.value + b.value) / 2 - vMin) / (vMax - vMin);
+  return {
+    a,
+    b,
+    width: MIN_STROKE + v * STROKE_RAMP,
+    color: `rgb(${seqRgb[0].map((c, j) => Math.round(c + (seqRgb[1][j] - c) * v)).join(",")})`,
+  };
 });
 
-// --- Imprint sequential colormap (green -> blue), value -> color ------------
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function mixColor(hexA, hexB, ratio) {
-  const [ra, ga, ba] = hexToRgb(hexA);
-  const [rb, gb, bb] = hexToRgb(hexB);
-  const clamped = Math.min(1, Math.max(0, ratio));
-  return `rgb(${Math.round(ra + (rb - ra) * clamped)}, ${Math.round(ga + (gb - ga) * clamped)}, ${Math.round(ba + (bb - ba) * clamped)})`;
-}
-function colorForValue(value) {
-  return mixColor(t.seq[0], t.seq[1], (value - V_MIN) / (V_MAX - V_MIN));
-}
-
-const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-// --- Overlay: the spiral itself, one short segment per day pair -------------
-// Community `@mui/x-charts/hooks` (useXScale/useYScale) map the spiral's
-// data-space (x, y) to pixels, same technique as the mohr-circle and
-// smith-chart-basic implementations use for parametric curves.
-function SpiralPath() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPx = (x, y) => ({ x: xScale(x), y: yScale(y) });
-
-  const segments = [];
-  for (let i = 1; i < spiralPoints.length; i++) {
-    const a = spiralPoints[i - 1];
-    const b = spiralPoints[i];
-    const pa = toPx(a.x, a.y);
-    const pb = toPx(b.x, b.y);
-    const segValue = (a.value + b.value) / 2;
-    // Color is the primary value encoding; a modest width ramp is a secondary one.
-    const width = 2 + ((segValue - V_MIN) / (V_MAX - V_MIN)) * 3.5;
-    segments.push(
-      <line
-        key={i}
-        x1={pa.x}
-        y1={pa.y}
-        x2={pb.x}
-        y2={pb.y}
-        stroke={colorForValue(segValue)}
-        strokeWidth={width}
-        strokeLinecap="round"
-      />,
-    );
-  }
-  return <g>{segments}</g>;
-}
-
-// --- Overlay: radial grid lines subdividing each cycle into months ----------
-function CycleGrid() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPx = (x, y) => ({ x: xScale(x), y: yScale(y) });
-  const originPx = toPx(0, 0);
-
-  return (
-    <g>
-      {MONTH_LABELS.map((label, m) => {
-        const angle = Math.PI / 2 - (m / 12) * 2 * Math.PI;
-        // Short tick near the outer rim (not a full-radius spoke) so the
-        // grid marks the month position without cutting across all 5
-        // spiral revolutions.
-        const tickInnerPx = toPx(R_MAX * 0.96 * Math.cos(angle), R_MAX * 0.96 * Math.sin(angle));
-        const tickOuterPx = toPx(R_MAX * 1.03 * Math.cos(angle), R_MAX * 1.03 * Math.sin(angle));
-        const labelPx = toPx(R_MAX * 1.1 * Math.cos(angle), R_MAX * 1.1 * Math.sin(angle));
-        const dx = labelPx.x - originPx.x;
-        const dy = labelPx.y - originPx.y;
-        const dist = Math.hypot(dx, dy) || 1;
-        const ux = dx / dist;
-        const uy = dy / dist;
-        return (
-          <g key={label}>
-            <line x1={tickInnerPx.x} y1={tickInnerPx.y} x2={tickOuterPx.x} y2={tickOuterPx.y} stroke={t.grid} strokeWidth={1} />
-            <ChartsText
-              x={labelPx.x}
-              y={labelPx.y}
-              text={label}
-              style={{
-                fontSize: 14,
-                fill: t.inkSoft,
-                textAnchor: ux >= 0.3 ? "start" : ux <= -0.3 ? "end" : "middle",
-                dominantBaseline: uy >= 0.3 ? "hanging" : uy <= -0.3 ? "auto" : "central",
-              }}
-            />
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Cycle-start (year) markers, as a real MUI X scatter series -------------
-// Routed through the library's own scatter series/plugin (rendered by
-// <ScatterPlot/> below) rather than hand-drawn <circle> elements, so the
-// component exercises actual MUI X charting machinery — including its
-// built-in item tooltip — not just the coordinate-scale hooks.
-const cycleStartPoints = Array.from({ length: NUM_YEARS }, (_, k) => ({
-  x: 0,
-  y: R_INNER + REV_GAP * k, // angle = top spoke, where every cycle begins
-  id: k,
-  year: START_YEAR + k,
+// Month spokes at each month's start in the first cycle's calendar, labels at the month's middle
+const refStart = new Date(firstYear, 0, 1);
+const refLength = new Date(firstYear + 1, 0, 1) - refStart;
+const monthShares = [...MONTH_NAMES.map((_, m) => (new Date(firstYear, m, 1) - refStart) / refLength), 1];
+const months = MONTH_NAMES.map((name, m) => ({
+  name,
+  spoke: Math.PI / 2 - 2 * Math.PI * monthShares[m],
+  middle: Math.PI / 2 - Math.PI * (monthShares[m] + monthShares[m + 1]),
 }));
-const cycleStartSeries = [
-  {
-    type: "scatter",
-    id: "cycle-start",
-    label: "Cycle start (year)",
-    color: t.ink,
-    markerSize: 6,
-    data: cycleStartPoints,
-    valueFormatter: (point) => `${point.year}`,
-  },
-];
+const cycleStarts = years.map((year) => ({
+  id: `cycle-${year}`,
+  x: 0,
+  y: INNER_RADIUS_SHARE + gap * (year - firstYear),
+  year,
+}));
 
-// --- Overlay: label the start of each cycle (year) for orientation ----------
-// The scatter series above draws the marker dot; this only adds the year text.
-function CycleStartLabels() {
+const rawStep = (vMax - vMin) / COLORBAR_TICK_TARGET;
+const stepMagnitude = 10 ** Math.floor(Math.log10(rawStep));
+const valueStep = [1, 2, 5, 10].map((m) => m * stepMagnitude).find((s) => s >= rawStep);
+const valueTicks = Array.from(
+  { length: Math.floor(vMax / valueStep) - Math.ceil(vMin / valueStep) + 1 },
+  (_, i) => (Math.ceil(vMin / valueStep) + i) * valueStep,
+);
+
+const dateText = (d) => d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const TITLE = "spiral-timeseries · javascript · muix · anyplot.ai";
+const SUBTITLE = `${rows.length.toLocaleString("en-US")} daily values, ${dateText(rows[0][DATE])} to ${dateText(
+  rows[rows.length - 1][DATE],
+)} · one revolution per ${CYCLE_PERIOD}, earliest at the centre`;
+const HEADER_H = 84;
+const LEGEND_W = 150;
+const BASE_MARGIN = 40;
+const BAR_W = 22;
+
+function SpiralLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const toPx = (x, y) => ({ x: xScale(x), y: yScale(y) });
-
+  const cx = xScale(0);
+  const cy = yScale(0);
+  const unit = xScale(1) - cx;
   return (
     <g>
-      {cycleStartPoints.map((point) => {
-        const pointPx = toPx(point.x, point.y);
-        return (
-          <ChartsText
-            key={point.id}
-            x={pointPx.x + 16}
-            y={pointPx.y}
-            text={String(point.year)}
-            style={{ fontSize: 15, fontWeight: 500, fill: t.ink, dominantBaseline: "central" }}
-          />
-        );
-      })}
+      {months.map((m) => (
+        <line
+          key={`spoke-${m.name}`}
+          x1={cx + unit * INNER_RADIUS_SHARE * 0.6 * Math.cos(m.spoke)}
+          y1={cy - unit * INNER_RADIUS_SHARE * 0.6 * Math.sin(m.spoke)}
+          x2={cx + unit * 1.03 * Math.cos(m.spoke)}
+          y2={cy - unit * 1.03 * Math.sin(m.spoke)}
+          stroke={t.grid}
+          strokeWidth={1.2}
+        />
+      ))}
+      {months.map((m) => (
+        <text
+          key={`label-${m.name}`}
+          x={cx + unit * LABEL_RADIUS_SHARE * Math.cos(m.middle)}
+          y={cy - unit * LABEL_RADIUS_SHARE * Math.sin(m.middle)}
+          textAnchor={Math.cos(m.middle) > 0.3 ? "start" : Math.cos(m.middle) < -0.3 ? "end" : "middle"}
+          dominantBaseline="central"
+          fontSize={15}
+          fill={t.inkSoft}
+        >
+          {m.name}
+        </text>
+      ))}
+      {segments.map((s, i) => (
+        <line
+          key={i}
+          x1={xScale(s.a.x)}
+          y1={yScale(s.a.y)}
+          x2={xScale(s.b.x)}
+          y2={yScale(s.b.y)}
+          stroke={s.color}
+          strokeWidth={s.width}
+          strokeLinecap="round"
+        />
+      ))}
+      {cycleStarts.map((c) => (
+        <text
+          key={c.id}
+          x={xScale(c.x) - 10}
+          y={yScale(c.y) - 16}
+          textAnchor="end"
+          dominantBaseline="central"
+          fontSize={15}
+          fontWeight={600}
+          fill={t.ink}
+        >
+          {c.year}
+        </text>
+      ))}
     </g>
   );
 }
 
-// --- Overlay: color legend for the value-to-color mapping -------------------
-// Drawn in the SVG's own pixel space (no data scale) inside the right margin
-// reserved by MARGIN below.
-function ColorLegend() {
-  const legendX = window.ANYPLOT_SIZE.width - LEGEND_WIDTH + 46;
-  const legendTop = BASE_MARGIN + 20;
-  const legendBottom = CHART_HEIGHT - BASE_MARGIN - 20;
-  const barWidth = 22;
-
+function Colorbar() {
+  const { width } = window.ANYPLOT_SIZE;
+  const yScale = useYScale();
+  const top = yScale(1);
+  const bottom = yScale(-1);
+  const x = width - LEGEND_W + 20;
+  const yOf = (v) => bottom - ((v - vMin) / (vMax - vMin)) * (bottom - top);
   return (
     <g>
       <defs>
-        <linearGradient id="spiralTempScale" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={t.seq[1]} />
-          <stop offset="100%" stopColor={t.seq[0]} />
+        <linearGradient id="spiralColorbar" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={t.seq[0]} />
+          <stop offset="100%" stopColor={t.seq[1]} />
         </linearGradient>
       </defs>
-      <ChartsText
-        x={legendX + barWidth / 2}
-        y={legendTop - 22}
-        text="Avg Temp"
-        style={{ fontSize: 14, fontWeight: 500, fill: t.ink, textAnchor: "middle" }}
-      />
-      <rect x={legendX} y={legendTop} width={barWidth} height={legendBottom - legendTop} fill="url(#spiralTempScale)" rx={3} />
-      <ChartsText
-        x={legendX + barWidth + 10}
-        y={legendTop}
-        text={`${Math.round(V_MAX)}°C`}
-        style={{ fontSize: 14, fill: t.inkSoft, dominantBaseline: "hanging" }}
-      />
-      <ChartsText
-        x={legendX + barWidth + 10}
-        y={(legendTop + legendBottom) / 2}
-        text={`${Math.round((V_MIN + V_MAX) / 2)}°C`}
-        style={{ fontSize: 14, fill: t.inkSoft, dominantBaseline: "central" }}
-      />
-      <ChartsText
-        x={legendX + barWidth + 10}
-        y={legendBottom}
-        text={`${Math.round(V_MIN)}°C`}
-        style={{ fontSize: 14, fill: t.inkSoft, dominantBaseline: "auto" }}
-      />
+      <rect x={x} y={top} width={BAR_W} height={bottom - top} fill="url(#spiralColorbar)" />
+      {valueTicks.map((v) => (
+        <g key={v}>
+          <line x1={x + BAR_W} x2={x + BAR_W + 6} y1={yOf(v)} y2={yOf(v)} stroke={t.inkSoft} />
+          <text x={x + BAR_W + 10} y={yOf(v)} dominantBaseline="middle" fontSize={14} fill={t.inkSoft}>
+            {v.toString().replace("-", "−")}
+          </text>
+        </g>
+      ))}
+      <text
+        x={x + BAR_W + 58}
+        y={(top + bottom) / 2}
+        textAnchor="middle"
+        fontSize={16}
+        fill={t.ink}
+        transform={`rotate(90, ${x + BAR_W + 58}, ${(top + bottom) / 2})`}
+      >
+        {VALUE}
+      </text>
     </g>
   );
 }
 
-const TITLE = "spiral-timeseries · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-const LEGEND_WIDTH = 150;
-const BASE_MARGIN = 60;
-const CHART_HEIGHT = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
-
-// Equal-size square drawing area (left/right margins absorb the legend
-// gutter) is required for the spiral to render as a true circle, not an oval.
-const AVAILABLE_WIDTH = window.ANYPLOT_SIZE.width - LEGEND_WIDTH;
-const SQUARE_SIDE = CHART_HEIGHT - 2 * BASE_MARGIN;
-const SIDE_MARGIN = (AVAILABLE_WIDTH - SQUARE_SIDE) / 2;
-const MARGIN = { top: BASE_MARGIN, bottom: BASE_MARGIN, left: SIDE_MARGIN, right: SIDE_MARGIN + LEGEND_WIDTH };
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartH = height - HEADER_H;
+  // A square drawing area keeps px per unit equal on both axes, so the spiral stays circular
+  const side = chartH - 2 * BASE_MARGIN;
+  const sideMargin = (width - LEGEND_W - side) / 2;
   return (
-    <div
-      style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
       <div
         style={{
-          height: TITLE_HEIGHT,
+          height: HEADER_H,
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
-          fontSize: 22,
-          fontWeight: 500,
-          color: t.ink,
+          alignItems: "center",
+          gap: 8,
         }}
       >
-        {TITLE}
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
-        height={CHART_HEIGHT}
-        margin={MARGIN}
-        series={cycleStartSeries}
+      <ChartsContainer
+        width={width}
+        height={chartH}
+        margin={{ top: BASE_MARGIN, bottom: BASE_MARGIN, left: sideMargin, right: sideMargin + LEGEND_W }}
         skipAnimation
-        disableVoronoi
-        xAxis={[{ scaleType: "linear", min: -R_MAX * 1.2, max: R_MAX * 1.2 }]}
-        yAxis={[{ scaleType: "linear", min: -R_MAX * 1.2, max: R_MAX * 1.2 }]}
+        series={[
+          {
+            type: "scatter",
+            id: "cycle-start",
+            label: `Start of ${CYCLE_PERIOD}`,
+            color: t.ink,
+            markerSize: 6,
+            data: cycleStarts,
+            valueFormatter: (point) => `${point.year}`,
+          },
+        ]}
+        xAxis={[{ scaleType: "linear", min: -FRAME_SHARE, max: FRAME_SHARE, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -FRAME_SHARE, max: FRAME_SHARE, position: "none" }]}
       >
-        <CycleGrid />
-        <SpiralPath />
+        <SpiralLayer />
         <ScatterPlot />
-        <CycleStartLabels />
-        <ColorLegend />
+        <Colorbar />
         <ChartsTooltip trigger="item" />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }
