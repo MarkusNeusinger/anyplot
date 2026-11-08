@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-3d: 3D Scatter Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-10
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 90/100 | Updated: 2026-11-08
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
