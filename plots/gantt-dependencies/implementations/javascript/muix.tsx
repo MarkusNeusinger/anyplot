@@ -1,7 +1,7 @@
 // anyplot.ai
 // gantt-dependencies: Gantt Chart with Dependencies
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-08-25
+// Quality: pending | Created: 2026-08-25
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
