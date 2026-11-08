@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: line-retention-cohort
 created: '2026-06-20T03:47:01Z'
-updated: '2026-06-20T04:04:53Z'
-generated_by: claude-sonnet
-workflow_run: 27859080449
+updated: '2026-11-08T08:14:46Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42442945969
 issue: 4572
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/muix/plot-light.html
@@ -15,106 +16,97 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-rete
 quality_score: 89
 review:
   strengths:
-  - All 5 cohort curves correctly start at 100% and show realistic exponential decay
-    toward distinct long-term retention floors
-  - Visual hierarchy via progressive line width (1.5→2.75) and opacity (0.45→1.0)
-    elegantly emphasises the newest cohort without cluttering
-  - Deterministic LCG (seed 42) with buildCurve provides realistic jitter and reproducible
-    data — correct approach for browser-runtime MUI X
-  - ChartsReferenceLine at 20% adds a meaningful benchmark anchor per spec requirement
-  - Legend correctly includes cohort sizes (n = X,XXX format), right-positioned with
-    ample chart margin
-  - Grid lines subtle at 0.22 opacity with dashed strokes; axis lines and ticks disabled
-    for clean minimalist look
-  - Both light (#FAF8F1) and dark (#1A1A17) themes render cleanly — all text readable
-    in both themes via ThemeProvider chrome
-  - monotoneX curve interpolation produces smooth, professional retention curves
-  - Community-only @mui/x-charts usage throughout — no Pro/Premium imports
+  - 'Uses MUI X''s composition API (ChartsDataProvider + ChartsWrapper + ChartsSurface
+    with LinePlot, ChartsGrid, ChartsReferenceLine, axes and legend), which gives
+    control over layer order: the dashed 20% target line is drawn before LinePlot,
+    so it sits behind the curves as the spec asks'
+  - 'The optional recency encoding is done carefully: older cohorts get thinner, fainter
+    strokes (1.75 to 3.25 px, opacity 0.75 to 1), recency comes from the parsed signup
+    month, and per-series sx selectors carry each line''s width and opacity into its
+    legend swatch, so the legend explains the encoding'
+  - 'All spec requirements show: five cohorts all starting at 100% at week 0, a linear
+    ''Weeks since signup'' axis (not calendar dates), a full 0–100% y axis with horizontal
+    gridlines, and legend labels like ''Jan 2025 (n = 1,245)'''
+  - 'The monotoneX interpolation smooths the curves without overshooting the weekly
+    values, and the data is deterministic (a seeded LCG) and plausible: a steep early
+    drop flattening to plateaus of 18–31%, with newer cohorts retaining better'
+  - Theme tokens are used throughout (ink, inkSoft, grid, palette), so both renders
+    are readable and the Imprint data colors are identical across themes; skipAnimation
+    is set
+  - A computed subtitle (cohort count, total users, last-week retention range) and
+    a stripped axis frame (no axis lines or ticks) give a clean, clear hierarchy
   weaknesses:
-  - 'Palette slot 5 (#AE3030, matte red) is used as the 5th cohort colour by ordinal
-    position. The style guide explicitly states: ''Slot 5 is the deferred semantic-red
-    anchor — reached intentionally for bad/loss/error roles, not by ordinal position
-    in every chart.'' May 2025 is the highest-performing cohort, so red is semantically
-    misleading. Fix: skip index 4 and assign t.palette[5] (#2ABCCD cyan) to the 5th
-    cohort instead.'
-  - Legend text font size is not explicitly set in slotProps; the ThemeProvider default
-    may render legend labels slightly small on the final 3200×1800 PNG. Consider adding
-    itemMarkHeight or labelStyle to slotProps.legend to ensure ~14px legend text.
-  - Title is rendered via a custom Typography element outside the LineChart rather
-    than using a MUI X chart slot — this is fine but means the title is not natively
-    part of the chart's SVG, which can cause subtle sizing drift on non-standard mounts.
+  - 'Suggestion: the newest and best-retaining cohort (May 2025) falls on palette
+    slot 5, the matte-red loss anchor. With five cohorts that is the canonical order,
+    but readers may take the strongest curve as ''bad''.'
+  - 'Suggestion: the x-axis band (height 64) leaves a wide gap between the tick labels
+    and ''Weeks since signup''. About 48 would tie the axis title to its ticks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Title "line-retention-cohort · javascript · muix · anyplot.ai" centred at top in dark ink, clearly readable. X-axis label "Weeks since signup" and Y-axis label "Retained users (%)" both readable in inkSoft. Tick labels for weeks 0–11 and retention 0–100 are legible.
-      Data: 5 cohort lines starting at 100% and decaying to floors between ~17–30%. Jan 2025 (index 0) correctly uses brand green (#009E73). Feb–Apr use lavender, blue, ochre (positions 2–4). May 2025 uses matte red #AE3030 (palette position 5). Older cohorts progressively faded (0.45→1.0 opacity gradient). Dashed reference line at 20% labelled "20% retention target" at right end. Right-side legend shows all 5 cohorts with sizes.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title 'line-retention-cohort · javascript · muix · anyplot.ai' at top left (about 35% of the width), a soft-ink subtitle '5 cohorts · 6,200 users · 12 observations each · last-period retention 18.2% to 31.2%', a horizontal legend at top right, y-axis title 'Retained users (%)' with ticks 0%–100% every 10%, x-axis title 'Weeks since signup' with ticks 0–11, subtle horizontal gridlines, no axis lines or tick marks. All text is dark and readable.
+      Data: five smooth lines all starting at 100% at week 0: Jan 2025 #009E73 (thinnest, faintest), Feb 2025 #C475FD, Mar 2025 #4467A3, Apr 2025 #BD8233, May 2025 #AE3030 (thickest). They decay steeply and flatten to about 18%, 21%, 25%, 27.5% and 31%. A dashed soft-ink line at 20% is labelled 'Target 20%' at the left, and Jan 2025 dips below it after week 7.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title and axis labels render in light ink (cream/off-white) against the dark background — all clearly readable. Tick labels are light-coloured and fully legible. Grid lines visible but subtle.
-      Data: All 5 cohort line colours are identical to the light render — green, lavender, blue, ochre, matte red. The opacity gradient is preserved. Reference dashed line and label "20% retention target" are readable. Legend text is light-coloured and readable on dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; brand green (#009E73) is clearly visible on dark surface; all chrome correctly flipped via ThemeProvider
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend text, axis titles and tick labels are light ink, all clearly readable; no dark-on-dark text. Gridlines are subtle but visible, and the dashed target line is light grey.
+      Data: the same five hues as the light render, the same line widths and opacities; only the chrome flips. Brand green #009E73 stays visible, though the thin, faint Jan line is a little lower in contrast; it is still clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title (22px CSS), axis labels (16px), tick labels (14px) all readable
-          in both themes. Slight concern: legend font size not explicitly set, may
-          be small at final resolution.'
+        comment: Fonts set explicitly (title 22, axis titles 16, ticks 14, legend
+          16 CSS px), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions. Lines fan out cleanly from week 0.
-          Legend well-separated with 240px right margin.
+        comment: No text collisions; the target label sits clear above its line; early
+          bunching of curves is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 cohort lines clearly visible. Opacity/width gradient intentional
-          per spec. Reference line dashed and distinct.
+        comment: Lines 1.75–3.25 px suit 12 points per cohort; the faintest (Jan)
+          is still visible in both themes; legend swatches match the strokes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. CVD-safe through positions 1–4; position 5
-          (red) against green is the known risk slot but still distinguishable.
+        comment: Five well-separated Imprint hues plus a width and opacity redundancy
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200×1800). Good proportions. Title centred,
-          legend right-aligned. No overflow or clipping detected.
+        comment: 3200x1800, balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Weeks since signup'', Y: ''Retained users (%)'' — descriptive
-          with units. Title format correct.'
+        comment: '''Weeks since signup'' and ''Retained users (%)'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series (#009E73 brand green for Jan 2025) correct. However,
-          palette slot 5 (#AE3030 matte red) is used as 5th cohort by ordinal position
-          — style guide explicitly forbids this: ''reached intentionally for bad/loss/error
-          roles, not by ordinal position.'' May 2025 (highest-retention cohort) should
-          not be red.'
+        passed: true
+        comment: 'Imprint positions 1–5 in canonical order, first series #009E73,
+          correct backgrounds and chrome in both themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -122,22 +114,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): intentional opacity/width gradient creates visual
-          hierarchy. Reference line adds analytical depth. monotoneX curves are polished.'
+        comment: A computed subtitle gives a deliberate title/subtitle/legend hierarchy
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): grid at 0.22 opacity with dashes, axis lines/ticks
-          disabled (disableLine, disableTicks), no markers — clean minimalist aesthetic.'
+        comment: Axis lines and ticks dropped, horizontal grid only, legend swatches
+          carry each line's width and opacity, headroom so the 100% starts keep their
+          full stroke
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): newest cohort (May 2025) most visually prominent,
-          tells the improving-retention story. 20% benchmark anchors the narrative.'
+        comment: The data is built so the oldest cohort dips below the 20% target
+          while newer cohorts plateau higher, which makes the improvement readable
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with multiple overlaid cohort retention curves.
+        comment: Multi-cohort retention line chart; the reference line and recency
+          fading are options the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All curves start at 100%, distinct colours, legend with cohort label+size,
-          Y-axis 0–100% with grid, X-axis = time since signup, decreasing opacity
-          for older cohorts, dashed reference line at 20%.
+        comment: 100% start, legend with cohort label and n, 0–100% y with gridlines,
+          time-since-signup x axis, optional layers kept subordinate
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 12 weeks (within 6–12 range), 5 cohorts (within 3–6 range), Y=0–100
-          retention %, X=weeks since signup.
+        comment: Lines connect weekly values in order; monotoneX does not overshoot;
+          the full 0–100 range is shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-retention-cohort · javascript · muix · anyplot.ai''
-          — correct format. Legend shows each cohort with size (n = X,XXX).'
+        comment: Mandated title format; legend entries like 'Jan 2025 (n = 1,245)'
     data_quality:
       score: 15
       max: 15
@@ -179,23 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Exponential decay curves, multi-cohort overlay, progressive retention
-          improvement, benchmark reference line — all key retention-cohort features
-          present.
+        comment: Exponential decay into plateaus, cohort differences, a curve crossing
+          the target
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS product, monthly cohorts, realistic sizes (987–1,567), plausible
-          long-term retention floors (17–30%), neutral data.
+        comment: SaaS monthly signup cohorts tracked weekly, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Y: 0–100%, X: 0–11 weeks, jitter via LCG adds realistic noise while
-          preserving determinism.'
+        comment: Retention 100% falling to an 18–31% plateau, cohort sizes 987–1,567;
+          plausible. The spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -205,37 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helpers (makeLcg, buildCurve) at module level, data defined
-          as constants, single default-exported component.
+        comment: Flat data, then plot structure; one data IIFE and a default-exported
+          component as the harness requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with fixed seed 42 provides deterministic pseudo-random data
-          — correct pattern for browser runtime.
+        comment: Seeded LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Box, Typography, LineChart, ChartsReferenceLine — all imports used.
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI. Per-series sx styling via CSS class selectors
-          is idiomatic.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Landscape orientation directive set, skipAnimation present, default-export
-          component, harness handles output filenames.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          current v9 composition API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -243,23 +231,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct series format, grid prop, margin, slotProps.legend positioning,
-          disableLine/disableTicks, curve type — well above default (3).
+        comment: The composition API, used idiomatically with axis config objects,
+          valueFormatter and theme-token styling
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine, per-series sx CSS selectors (.MuiLineElement-series-*),
-          legend slotProps customisation — genuinely MUI X-specific features.
+        comment: MUI X composition (ChartsDataProvider/ChartsSurface/ChartsWrapper)
+          with layer ordering, ChartsReferenceLine, and per-series data-series sx
+          selectors that style the legend marks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:31:10Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - reference-lines
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome

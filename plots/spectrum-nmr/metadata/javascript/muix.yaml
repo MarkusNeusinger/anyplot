@@ -2,112 +2,104 @@ library: muix
 language: javascript
 specification_id: spectrum-nmr
 created: '2026-08-24T09:47:06Z'
-updated: '2026-08-24T10:02:17Z'
-generated_by: claude-sonnet
-workflow_run: 32712881710
+updated: '2026-11-08T05:50:48Z'
+generated_by: claude-opus-5-5
+adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
+workflow_run: 42452103614
 issue: 4676
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-nmr/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Multiplet splitting patterns (CH3 triplet 1:2:1 at 1.20 ppm, CH2 quartet 1:3:3:1
-    at 3.70 ppm) are now clearly resolved into distinct sub-lines with visible saddle
-    points between them, matching the spec's well-resolved-multiplet requirement
-  - Explicit yAxis max=90 gives the tallest peak (CH3, apex ~69.5) comfortable headroom
-    instead of touching the axis boundary
-  - Relative peak heights now follow a chemically sensible order (CH3 > CH2 > OH >
-    TMS), correcting the prior inversion where the single-proton OH peak was tallest
-  - Correct reversed x-axis matching NMR convention, with a realistic chemical-shift
-    range
-  - Clean, deterministic, well-structured code (seeded LCG, small addLorentzian/addMultiplet
-    helpers, no unnecessary abstraction)
-  - Reference-line peak labels correctly identify functional groups (TMS, CH3, OH,
-    CH2), adding real analytical storytelling value
-  - Theme-adaptive chrome correctly implemented — data green identical across light/dark,
-    no dark-on-dark or light-on-light legibility failures
-  - Correct title format, and legend appropriately hidden for the single series
+  - 'Realistic first-order splitting: the CH3 triplet reads 1:2:1 (≈36/70/36) and
+    the CH2 quartet 1:3:3:1 (≈13/35/35/13), lines evenly spaced and resolved at full-spectrum
+    scale, Lorentzian line shapes on a flat low-noise baseline'
+  - 'X axis reversed natively via the axis config `reverse: true` with data-derived
+    limits (−0.5 to 4.6 ppm), TMS singlet sharp at 0.00 ppm near the right end'
+  - Peak labels are derived from the data (local-maximum detection plus multiplet
+    grouping) and drawn in chart coordinates with MUI X's `useXScale`/`useYScale`
+    hooks as a composed SVG child of LineChart, each giving δ and multiplicity (3.70
+    q, 2.60 s, 1.20 t, 0.00 s)
+  - 'Theme tokens threaded through every element: ink/inkSoft text, t.grid horizontal
+    grid, brand green #009E73 trace identical in both renders; reserved y headroom
+    (LABEL_HEADROOM_SHARE) keeps the tallest label clear of the title'
+  - Deterministic LCG seed, 6,000 points within the spec's 1000–8000 range, ethanol
+    shifts and ~7 Hz couplings plausible, CH3:CH2:OH areas scaled 3:2:1
   weaknesses:
-  - Design Excellence still reads as a solid but fairly standard MUI X LineChart composition
-    — a bespoke touch (e.g. subtle peak-area fill, varied reference-line emphasis
-    for the strongest peak) would push Aesthetic Sophistication and Visual Refinement
-    further
-  - The two central lines of the CH2 quartet (offset ±0.012 ppm) sit close enough
-    that their Lorentzian tails only partially return to baseline between them — a
-    slightly larger splitting-to-halfWidth ratio there would make all four quartet
-    lines equally crisp
-  - Library Mastery is still fairly generic LineChart usage beyond the ChartsReferenceLine
-    composition; leveraging another MUI X-distinctive feature (e.g. custom axis tick
-    formatting, chart interaction zones) would strengthen LM-02
+  - 'Suggestion: the y axis ticks every 5 units (16 gridlines) could be thinned to
+    every 10 for a calmer field behind the spectrum.'
+  - 'Suggestion: an integration trace or proton-count annotation per multiplet would
+    deepen the chemistry story in the interactive view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "spectrum-nmr · javascript · muix · anyplot.ai" is dark, centered, fully readable with comfortable margin above and below. Axis titles ("Chemical Shift (δ, ppm)", "Intensity (a.u.)") and tick labels are dark and legible. Subtle horizontal-only grid lines. Four dark-grey dashed vertical reference lines mark 3.70, 2.60, 1.20, and 0.00 ppm, each with a small dark-grey text label (CH2, OH, CH3, TMS) positioned mid-plot without overlapping data or other text.
-      Data: Single brand-green (#009E73) line traces a clean, low baseline with sharp peaks at all four labeled positions. Pixel-level inspection confirms the CH3 peak (1.20 ppm) resolves as a small–tall–small 1:2:1 triplet and the CH2 peak (3.70 ppm) resolves as a small–tall–tall–small 1:3:3:1 quartet, both with visible saddle points between sub-lines — the splitting patterns are genuinely resolved, not a single blob. Tallest peak (CH3, ~69.5) sits well below the yAxis max of 90, giving clear headroom.
+      Background: warm off-white #FAF8F1 across the whole canvas, 3200x1800.
+      Chrome: bold dark title "spectrum-nmr · javascript · muix · anyplot.ai" centered at top (~29% width) with a soft-grey subtitle "6,000 points from −0.5 to 4.6 ppm · 4 signals, 9 resolved lines · labels give δ and multiplicity"; x axis "Chemical shift δ (ppm)" reversed from 4.6 on the left to −0.4 on the right in 0.2 steps; y axis "Intensity (a.u.)" 0–75 in steps of 5; subtle horizontal grid lines; left and bottom axis lines only. All text dark on light and readable.
+      Data: one continuous #009E73 trace on a flat baseline near 0.3; CH2 quartet at 3.70 ppm (outer ≈13, inner ≈35), broader OH singlet at 2.60 (≈15), CH3 triplet at 1.20 (≈36/70/36), TMS singlet at 0.00 (≈24). Bold labels "3.70 q", "2.60 s", "1.20 t", "0.00 s" sit just above each signal, no collisions.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels render in light/white text, clearly legible against the dark background. Reference lines and their labels switch to light tones with no dark-on-dark failures.
-      Data: Data line color, peak positions, peak heights, and multiplet fine structure are pixel-identical to the light render — confirming only chrome (background, text, grid, reference-line color) flipped between themes while the data color and shape stayed constant.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels and subtitle in light grey, grid lines subtle dark grey but visible; no dark-on-dark text anywhere.
+      Data: the same #009E73 trace and peak geometry as the light render — only chrome flips; peak labels render in light ink and remain readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, axis labels 16px, tick labels
-          14px, reference labels 13px); all readable in both themes with no overflow
+        comment: Explicit sizes (title 22, ticks 15, axis titles 16, labels 15 bold
+          CSS px); readable in both themes and at thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between peak labels, axis text, or data
+        comment: Peak labels clear the peaks, title and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sharp, well-resolved peaks appropriate for a 6000-point spectrum
-          line
+        comment: 1.6 px line suits a 6,000-point continuous trace; multiplet lines
+          resolved
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe brand green against both surfaces
+        comment: Single green trace with high contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Explicit yAxis max=90 now gives the tallest peak (~69.5) clear headroom;
-          fixes the prior near-touching-top issue
+        comment: 3200x1800, balanced margins, headroom reserved for labels, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units
+        comment: '''Chemical shift δ (ppm)'' and ''Intensity (a.u.)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, theme-correct backgrounds and chrome in both
-          renders'
+        comment: 'Trace #009E73 from t.palette[0]; backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -115,21 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean spectrum layout with labeled reference lines; solid but fairly
-          standard composition
+        comment: Title/subtitle hierarchy with a data-derived summary subtitle; bold
+          labels carrying δ plus multiplicity letter
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid, generous whitespace, minimal chrome
+        comment: Y headroom sized for the tallest label, label offset chosen per peak
+          top; otherwise baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Now-resolved multiplet fine structure plus peak labels create a clear
-          visual hierarchy tying chemical shift to functional group
+        comment: Multiplicity letters (q, s, t) beyond the Notes' shift-only labels
+          guide the reader to the splitting patterns
     spec_compliance:
       score: 15
       max: 15
@@ -139,50 +132,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct NMR spectrum line plot with reversed x-axis
+        comment: Continuous 1H NMR trace
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reversed x-axis, TMS reference, peak labels, and now clearly resolved
-          splitting patterns all present
+        comment: Reversed x axis, sharp resolved peaks, s/t/q splitting, key peaks
+          labelled with shifts, TMS at 0 ppm, clean baseline — all good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Chemical shift on x, intensity on y, full range shown
+        comment: Full data range shown; labels positioned from detected peaks, marks
+          at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend correctly hidden for single series
+        comment: Mandated title format; legend hidden correctly for a single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Baseline noise, TMS reference, and now individually resolved triplet/quartet
-          lines are all shown
+        comment: Singlet, triplet and quartet with binomial intensities, broad OH
+          vs sharp lines, TMS reference
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ethanol 1H NMR is a real, neutral, educational example
+        comment: Ethanol with TMS standard, as the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak height ordering (CH3 > CH2 > OH > TMS) now matches chemically
-          sensible expectations
+        comment: 'Checked: CH3 1.20, OH 2.60, CH2 3.70, TMS 0.00 ppm read off the
+          axis; triplet 1:2:1 and quartet 1:3:3:1 heights; splitting 0.024 ppm ≈ 7
+          Hz at 300 MHz'
     code_quality:
       score: 10
       max: 10
@@ -192,55 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, purposeful helper functions, no over-engineering
+        comment: Flat module; the MultipletLabels component is required to use the
+          scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: LineChart and the two hooks, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake functionality
+        comment: Short written-out peak detection is allowed (no stats helpers in
+          MUI X)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default export, current MUI X API, skipAnimation set
+        comment: Default export, skipAnimation, hideLegend, sized to ANYPLOT_SIZE,
+          v9 axis height/width bands
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axis-level reverse, tickLabelStyle/labelStyle, per-chart sx class
+          .MuiLineChart-line, grid prop
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Standard idiomatic LineChart usage with reversed scale
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: Uses ChartsReferenceLine composition for peak annotation, a less
-          commonly exercised MUI X feature
+        comment: Composed SVG overlay inside LineChart using useXScale/useYScale to
+          place labels in data coordinates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:48:09Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

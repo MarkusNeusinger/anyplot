@@ -1,231 +1,196 @@
 // anyplot.ai
 // heatmap-calendar: Basic Calendar Heatmap
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 92/100 | Created: 2026-07-23
-
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import { ChartsText } from "@mui/x-charts/ChartsText";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Deterministic LCG — reproducible daily activity without a seeded global RNG
-function makeLcg(seed) {
-  let s = seed >>> 0;
-  return () => {
+// Constants
+const DAY_MS = 86400000;
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const NO_DATA_LABEL = "No data";
+const TITLE = "heatmap-calendar · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 64;
+const MONTH_LABEL_H = 40;
+const Y_AXIS_W = 56;
+
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const COMMITS = "Commits per day"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// One year of daily commit counts for a developer (GitHub-style): busier weekdays, a release-day
+// spike every 37 days, and a 9-day trip in August with no rows at all
+const data = (() => {
+  let s = 42 >>> 0;
+  const rng = () => {
     s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
     return s / 4294967296;
   };
-}
-const rng = makeLcg(42);
-
-const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const MONTH_LABELS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-// One full year of daily coding activity (GitHub-style contribution counts).
-// A 9-day trip in August has no commits at all — those dates are simply
-// omitted from the series, leaving the calendar cell empty (neutral).
-const YEAR = 2023;
-const TOTAL_DAYS = 365;
-const VACATION_START_DAY = 215; // day-of-year index (0-based), ~early August
-const VACATION_LENGTH = 9;
-
-const firstDay = new Date(YEAR, 0, 1);
-const firstWeekdayIdx = (firstDay.getDay() + 6) % 7; // Mon=0 .. Sun=6
-
-const points = [];
-const monthLabelByWeek = new Map();
-let lastMonth = -1;
-let maxValue = 0;
-
-for (let i = 0; i < TOTAL_DAYS; i += 1) {
-  const date = new Date(YEAR, 0, 1 + i);
-  const weekdayIdx = (date.getDay() + 6) % 7;
-  const weekIndex = Math.floor((i + firstWeekdayIdx) / 7);
-  const month = date.getMonth();
-
-  if (month !== lastMonth) {
-    if (!monthLabelByWeek.has(weekIndex)) {
-      monthLabelByWeek.set(weekIndex, MONTH_LABELS[month]);
-    }
-    lastMonth = month;
+  const rows: { [DATE]: string; [COMMITS]: number }[] = [];
+  for (let i = 0; i < 365; i += 1) {
+    const day = new Date(Date.UTC(2023, 0, 1 + i));
+    if (i >= 215 && i < 224) continue;
+    const weekend = day.getUTCDay() === 0 || day.getUTCDay() === 6;
+    let commits = weekend ? 1 + rng() * 3 : 3 + rng() * 7;
+    if (i % 37 === 17) commits += 4 + rng() * 4;
+    rows.push({ [DATE]: day.toISOString().slice(0, 10), [COMMITS]: Math.round(commits) });
   }
+  return rows;
+})();
 
-  const onVacation = i >= VACATION_START_DAY && i < VACATION_START_DAY + VACATION_LENGTH;
-  if (onVacation) continue;
+// Plot: reads only data and the constants above
+const valueByDay = new Map<number, number>();
+data.forEach((d) => {
+  const ms = Date.parse(d[DATE]);
+  if (Number.isFinite(ms) && Number.isFinite(d[COMMITS])) valueByDay.set(Math.floor(ms / DAY_MS), d[COMMITS]);
+});
+const dayNumbers = [...valueByDay.keys()].sort((a, b) => a - b);
+const firstDay = dayNumbers[0];
+const lastDay = dayNumbers[dayNumbers.length - 1];
 
-  const isWeekend = weekdayIdx >= 5;
-  let commits = isWeekend ? 1 + rng() * 3 : 3 + rng() * 7;
-  if (i % 37 === 17) commits += 10 + rng() * 8; // occasional release-day spike
-  commits = Math.round(commits);
+// Calendar grid: one column per week starting on the Monday on or before the first day, one row per weekday
+const firstMonday = firstDay - ((new Date(firstDay * DAY_MS).getUTCDay() + 6) % 7);
+const days = Array.from({ length: lastDay - firstDay + 1 }, (_, i) => {
+  const dayNumber = firstDay + i;
+  const date = new Date(dayNumber * DAY_MS);
+  return {
+    dayNumber,
+    week: Math.floor((dayNumber - firstMonday) / 7),
+    weekday: WEEKDAYS[(dayNumber - firstMonday) % 7],
+    value: valueByDay.get(dayNumber),
+    monthStart: date.getUTCDate() === 1 || i === 0,
+    newYear: date.getUTCMonth() === 0 || i === 0,
+  };
+});
+const weeks = Array.from({ length: days[days.length - 1].week + 1 }, (_, i) => i);
+const values = [...valueByDay.values()];
+const valueMin = Math.min(...values);
+const valueMax = Math.max(...values);
 
-  maxValue = Math.max(maxValue, commits);
-  points.push({
-    id: `d${i}`,
-    x: weekIndex,
-    y: WEEKDAY_LABELS[weekdayIdx],
-    z: commits,
-  });
-}
+const monthFormat = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
+const yearFormat = new Intl.DateTimeFormat("en-US", { year: "numeric", timeZone: "UTC" });
+const fullDateFormat = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+const missingDays = days.filter((d) => d.value === undefined).length;
+const subtitle = `${fullDateFormat.format(firstDay * DAY_MS)} – ${fullDateFormat.format(lastDay * DAY_MS)} · ${values.length} days with data, ${missingDays} without (empty cells) · ${values.reduce((a, b) => a + b, 0)} in total`;
 
-const weekCount = Math.max(...points.map((p) => p.x)) + 1;
-const weekIndices = Array.from({ length: weekCount }, (_, i) => i);
-
-// Custom marker: rounded rectangle cells (calendar days) instead of the
-// default circles, sized from the band scales so they tile the week/weekday
-// grid with a small gap between neighbours (from each axis's categoryGapRatio).
-function SquareCell(props) {
-  const { series, xScale, yScale, colorGetter, color } = props;
-  const xIsBand = typeof xScale.bandwidth === "function";
-  const yIsBand = typeof yScale.bandwidth === "function";
-  const cellW = xIsBand ? xScale.bandwidth() : 10;
-  const cellH = yIsBand ? yScale.bandwidth() : 10;
-
+function CalendarCells() {
+  const xScale = useXScale() as unknown as ((v: number) => number) & { bandwidth: () => number };
+  const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const colorScale = useZColorScale() as unknown as (v: number) => string;
+  const cellW = xScale.bandwidth();
+  const cellH = yScale.bandwidth();
+  const gridTop = yScale(WEEKDAYS[0]);
   return (
     <g>
-      {series.data.map((pt, i) => {
-        const cx = (xScale(pt.x) ?? 0) + (xIsBand ? cellW / 2 : 0);
-        const cy = (yScale(pt.y) ?? 0) + (yIsBand ? cellH / 2 : 0);
-        return (
-          <rect
-            key={pt.id}
-            x={cx - cellW / 2}
-            y={cy - cellH / 2}
-            width={cellW}
-            height={cellH}
-            rx={Math.min(4, cellW * 0.18)}
-            fill={colorGetter ? colorGetter(i) : color}
-          />
-        );
-      })}
+      {days.map((d) => (
+        <rect
+          key={d.dayNumber}
+          x={xScale(d.week)}
+          y={yScale(d.weekday)}
+          width={cellW}
+          height={cellH}
+          rx={3}
+          fill={d.value === undefined ? "none" : colorScale(d.value)}
+          stroke={d.value === undefined ? t.inkSoft : "none"}
+          strokeWidth={1.25}
+          strokeDasharray={d.value === undefined ? "3 3" : undefined}
+        />
+      ))}
+      {days
+        .filter((d) => d.monthStart)
+        .map((d) => (
+          <text key={`m-${d.dayNumber}`} x={xScale(d.week)} y={gridTop - 14} fontSize={15} fill={t.inkSoft}>
+            {d.newYear
+              ? `${monthFormat.format(d.dayNumber * DAY_MS)} ${yearFormat.format(d.dayNumber * DAY_MS)}`
+              : monthFormat.format(d.dayNumber * DAY_MS)}
+          </text>
+        ))}
     </g>
   );
 }
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const titleHeight = 56;
-
-  // 53 weeks x 7 weekdays is a much wider grid than the 16:9 mount, so a
-  // literal square cell would leave most of the canvas empty. Instead give
-  // the grid a deliberate, moderately tall row height (a "brick" cell rather
-  // than a pixel-perfect square) that consumes most of the space below the
-  // title, so the calendar+legend block fills the canvas tightly instead of
-  // floating in a taller centered box.
-  const LEFT_MARGIN = 68;
-  const RIGHT_MARGIN = 28;
-  const GAP_RATIO = 0.18;
-  const TOP_MARGIN = 40;
-  const GRID_HEIGHT = 560;
-  const LEGEND_SPACE = 56;
-  const chartInnerHeight = TOP_MARGIN + GRID_HEIGHT + LEGEND_SPACE;
-  // ContinuousColorLegend right-aligns flush to the chart's own width (not
-  // the margin box), so its max-value label can kiss the true canvas edge —
-  // give the chart a slightly narrower width than the mount so that label
-  // always has breathing room.
-  const LEGEND_EDGE_BUFFER = 36;
-  const chartWidth = width - LEGEND_EDGE_BUFFER;
-
+  // The grid takes all the height left under the header and above the legend, so no band of the canvas stays empty
+  const chartH = height - TITLE_H - LEGEND_H;
   return (
-    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-          pt: "16px",
-          height: titleHeight,
-          fontFamily: "inherit",
-        }}
-      >
-        heatmap-calendar · javascript · muix · anyplot.ai
-      </Typography>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
-        <ScatterChart
-          width={chartWidth}
-          height={chartInnerHeight}
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
+      </Box>
+      <Box sx={{ flex: 1 }}>
+        <ChartsDataProvider
+          width={width}
+          height={chartH}
+          series={[]}
           skipAnimation
-          disableVoronoi
-          series={[
-            {
-              id: "activity",
-              type: "scatter",
-              data: points,
-              label: "Commits per day",
-              xAxisId: "week",
-              yAxisId: "weekday",
-              zAxisId: "activity",
-            },
-          ]}
-          xAxis={[
-            { id: "week", scaleType: "band", data: weekIndices, categoryGapRatio: GAP_RATIO },
-            {
-              id: "month",
-              scaleType: "band",
-              data: weekIndices,
-              categoryGapRatio: GAP_RATIO,
-              valueFormatter: (weekIdx) => monthLabelByWeek.get(weekIdx) ?? "",
-              tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
+          margin={{ top: MONTH_LABEL_H, right: 32, bottom: 8, left: 16 }}
+          xAxis={[{ scaleType: "band", data: weeks, position: "none", categoryGapRatio: 0.14 }]}
           yAxis={[
             {
-              id: "weekday",
               scaleType: "band",
-              data: WEEKDAY_LABELS,
-              categoryGapRatio: GAP_RATIO,
-              tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
-              disableTicks: true,
+              data: WEEKDAYS,
+              width: Y_AXIS_W,
+              categoryGapRatio: 0.14,
               disableLine: true,
+              disableTicks: true,
+              tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             },
           ]}
-          zAxis={[
-            {
-              id: "activity",
-              min: 0,
-              max: maxValue,
-              colorMap: { type: "continuous", min: 0, max: maxValue, color: [t.seq[0], t.seq[1]] },
-            },
-          ]}
-          topAxis="month"
-          bottomAxis={null}
-          leftAxis="weekday"
-          rightAxis={null}
-          margin={{ top: TOP_MARGIN, right: RIGHT_MARGIN, bottom: LEGEND_SPACE, left: LEFT_MARGIN }}
-          slots={{ scatter: SquareCell }}
-          slotProps={{ legend: { hidden: true } }}
+          zAxis={[{ colorMap: { type: "continuous", min: valueMin, max: valueMax, color: [t.seq[0], t.seq[1]] } }]}
         >
-          <ChartsText
-            text="Commits per day"
-            x={chartWidth - 8}
-            y={chartInnerHeight - LEGEND_SPACE + 8}
-            style={{
-              fontSize: 14,
-              fill: t.inkSoft,
-              fontFamily: "inherit",
-              textAnchor: "end",
-              dominantBaseline: "hanging",
-            }}
-          />
-          <ContinuousColorLegend
-            axisId="activity"
-            axisDirection="z"
-            position={{ horizontal: "right", vertical: "bottom" }}
-            direction="row"
-            length="30%"
-            thickness={12}
-            labelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: "inherit" }}
-          />
-        </ScatterChart>
+          <ChartsWrapper
+            legendPosition={{ vertical: "bottom", horizontal: "end" }}
+            legendDirection="horizontal"
+            sx={{ width, height: chartH + LEGEND_H }}
+          >
+            <Box
+              sx={{
+                gridArea: "legend",
+                height: LEGEND_H,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: "16px",
+                pr: "32px",
+              }}
+            >
+              <Typography sx={{ fontSize: 15, color: t.ink }}>{COMMITS}</Typography>
+              <ContinuousColorLegend
+                direction="horizontal"
+                thickness={16}
+                labelPosition="end"
+                sx={{ width: 320, color: t.inkSoft, fontSize: 14 }}
+              />
+              <Box
+                sx={{
+                  width: 22,
+                  height: 22,
+                  ml: "20px",
+                  borderRadius: "3px",
+                  border: `1.5px dashed ${t.inkSoft}`,
+                  boxSizing: "border-box",
+                }}
+              />
+              <Typography sx={{ fontSize: 15, color: t.inkSoft }}>{NO_DATA_LABEL}</Typography>
+            </Box>
+            <ChartsSurface>
+              <CalendarCells />
+              <ChartsYAxis />
+            </ChartsSurface>
+          </ChartsWrapper>
+        </ChartsDataProvider>
       </Box>
     </Box>
   );
