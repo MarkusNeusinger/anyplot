@@ -2,10 +2,10 @@ library: muix
 language: javascript
 specification_id: smith-chart-basic
 created: '2026-09-02T06:17:08Z'
-updated: '2026-11-08T05:34:42Z'
+updated: '2026-11-08T07:24:37Z'
 generated_by: claude-opus-5-5
-adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
-workflow_run: 42451044139
+adopted_from: 7cbdd955f8a3f4ceb6f8a09193457c1c8740f96f (7cbdd955f8a3f4ceb6f8a09193457c1c8740f96f)
+workflow_run: 42458362416
 issue: 3792
 language_version: 22.23.4
 library_version: 9.17.0
@@ -16,41 +16,46 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-cha
 quality_score: 87
 review:
   strengths:
-  - Composes the Smith chart on a ChartsContainer with hidden linear axes and draws
-    every grid element in Γ coordinates through useXScale/useYScale, so the boundary
-    is a true circle and all resistance circles and reactance arcs meet exactly at
-    the open-circuit point (1, 0)
-  - Impedance is normalized to Z0 = 50 Ω and mapped with Γ = (z − 1)/(z + 1); the
-    series R-L-C antenna model resonates near 3.56 GHz, where the locus crosses the
-    real axis just left of the matched centre at r ≈ 0.85
-  - Frequency labels sit radially outside their dot markers, with anchors chosen from
-    the outward direction and a page-colored halo, so the 1 → 6 GHz sweep reads clearly
-    over the grid in both themes
-  - 'The grid is drawn in inkSoft at 0.55 opacity under a heavier ink boundary and
-    the brand-green locus: a clear three-level hierarchy that adapts to both themes'
-  - Reactance values (±j0.2 … ±j5) sit just outside the boundary at each arc's end
-    and resistance values sit on the real axis at each circle's left crossing, each
-    tied to its own grid line
+  - 'Correct Smith chart geometry computed from first principles: resistance circles
+    at center r/(1+r) with radius 1/(1+r) and reactance arcs of radius 1/|x| from
+    the open-circuit point, all converging at the right end of the real axis inside
+    a true-circle |Γ|=1 boundary held square by equal margins'
+  - Impedance normalized to Z0 = 50 Ω and mapped through Γ = (z−1)/(z+1); the series
+    R-L-C antenna model swings through resonance near 3.56 GHz, so the locus crosses
+    the real axis just left of the matched center (Γ ≈ −0.08) and runs clockwise with
+    frequency as a passive load must
+  - Six frequency labels (1–6 GHz) are each tied to an ink-ringed dot on the locus
+    and placed on the side of the curve normal that keeps them clear of the locus,
+    the rim and the grid values; a page-colored halo keeps them legible where grid
+    arcs pass behind
+  - 'Clear visual hierarchy: heavy ink rim, soft inkSoft grid at 0.55 opacity, saturated
+    #009E73 locus at 3.5 px; normalized resistance values sit beside their circles
+    on the real axis and ±jx values outside the rim at each arc''s end'
+  - 'Uses the MUI X composition API idiomatically: ChartsContainer with hidden linear
+    axes provides the coordinate system and a custom child component reads it through
+    useXScale/useYScale, with skipAnimation set'
+  - Both themes are fully theme-adaptive through ANYPLOT_TOKENS (ink, inkSoft, pageBg),
+    with identical data colors
   weaknesses:
-  - 'Suggestion: a slightly larger grid value font (14 → 15–16 px) would hold up better
-    in the 400 px thumbnail.'
-  - 'Suggestion: the 0.55-opacity grid could drop a little in the dark render, where
-    it reads slightly more prominent than in the light one.'
+  - 'Suggestion: a few more frequency points near the tightest bend (around 1.5–2.5
+    GHz) would smooth the slight polygonal kinks visible along the lower arc of the
+    locus.'
+  - 'Suggestion: native MUI X tooltips are absent from the HTML view; a hover readout
+    of frequency and Z per point would add value in the interactive detail page.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 2400×2400 square canvas.
-      Chrome: bold dark title "smith-chart-basic · javascript · muix · anyplot.ai" centered at the top (about 42 % of the width), with a gray subtitle below it: "n = 41 points · Frequency (GHz) 1 to 6 · impedance normalized to Z₀ = 50 Ω, matched point at the centre". The unit-circle boundary is drawn in heavy near-black ink. The constant-resistance circles (0.2, 0.5, 1, 2, 5) and constant-reactance arcs (±0.2 … ±5) are thin, mid-gray and subtle, and they converge at the right-hand point. Resistance labels sit along the real axis, reactance labels (+j0.2 … −j5) sit just outside the boundary. A small open ring marks the matched centre. There are no Cartesian axes. All text is readable.
-      Data: one connected #009E73 locus running from 1 GHz near the lower-right boundary (capacitive), sweeping clockwise through the lower half, crossing the real axis just left of the centre and ending at 6 GHz in the upper right (inductive). Six green dot markers with page-colored outlines carry bold dark labels "1 GHz" … "6 GHz", placed radially outward.
+      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
+      Chrome: bold dark title "smith-chart-basic · javascript · muix · anyplot.ai" (about 42% of width) with a softer subtitle "n = 41 points · Frequency (GHz) 1 to 6 · impedance normalized to Z₀ = 50 Ω, matched point at the centre"; heavy near-black rim circle; soft grey resistance circles (0.2, 0.5, 1, 2, 5) labelled on the real axis and reactance arcs (±j0.2 … ±j5) labelled outside the rim; small ink ring marks the matched center. All text readable dark-on-light.
+      Data: one connected #009E73 locus starting at 1 GHz near the lower-right rim, sweeping clockwise through the lower half, crossing the real axis just left of center, and ending at 6 GHz in the upper-right; six green dots with bold dark labels 1–6 GHz placed clear of the curve and rim.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: the title and frequency labels flip to light ink, the subtitle and grid labels to light gray, the boundary to near-white, and the grid to a subtle light gray. No text is dark on dark, and every label is readable.
-      Data: the locus and markers are the same #009E73 as in the light render, and the marker outlines follow the dark page color. The geometry is identical to the light render; only the chrome flipped.
+      Chrome: title, subtitle, grid values and frequency labels flip to light ink; rim becomes light; grid arcs light grey and subtle but traceable. No dark-on-dark text anywhere.
+      Data: locus and dots identical #009E73 to the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,52 +63,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set explicitly (title 22, subtitle 15, grid values 14,
-          frequency labels 15 bold, in CSS px at 2× scale); readable in both themes
+        comment: Title 22 px, frequency labels 15 px semibold with halo, grid values
+          14 px, per the muix sizing guide; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; frequency labels carry a page-colored halo where
-          grid lines pass behind them
+        comment: No text collisions; frequency labels clear of locus, rim and grid
+          values
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3.5 px locus and 8 px dot markers suit 41 points; grid subtle but
+        comment: 3.5 px locus and 8 px label dots clearly visible; grid subtle but
           traceable in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: A single green locus against a neutral grid; high contrast, no reliance
-          on red-green
+        comment: Single green series against neutral grid; high contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, the disc centered and filling the drawing area, the
-          title about 42 % of the width, nothing clipped
+        comment: Square canvas, disc fills the area with even margins, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for Cartesian axes (the spec permits none); the subtitle states
-          the units (GHz, Ω, Z₀)
+        comment: N/A for Cartesian axes; grid values and subtitle state normalization
+          and units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Locus is #009E73; chrome comes from the theme tokens; backgrounds
-          are #FAF8F1 and #1A1A17'
+        comment: 'Locus #009E73, backgrounds #FAF8F1/#1A1A17, theme-correct chrome'
+      score: 30
     design_excellence:
-      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,25 +114,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Three-level ink hierarchy (heavy boundary, 0.55-opacity grid, green
-          locus) and halo-stroked bold frequency labels, beyond the baseline
+        comment: 'Deliberate weight hierarchy: heavy ink rim vs 0.55-opacity grid
+          vs saturated locus; halo-backed semibold labels'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Frequency labels pushed radially outward, with anchors computed from
-          the direction; reactance values placed just outside the boundary at each
-          arc end
+        comment: Label placement searched along the locus normal to keep clearance
+          from curve, rim and grid values; reactance values set just outside the rim
+          at each arc end
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly; no focal hierarchy chosen beyond what the
-          Notes require
+        comment: Locus and required frequency labels displayed; no hierarchy chosen
+          beyond the Notes
+      score: 11
     spec_compliance:
-      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,31 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard impedance Smith chart with one locus, plus the allowed matched-centre
-          mark; no admittance grid or extra layers
+        comment: Standard impedance Smith chart, one locus, center mark only; no admittance
+          grid or extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Resistance circles and reactance arcs, normalization to Z0, a connected
-          locus in frequency order, frequency labels at key points, the |Γ| = 1 boundary
-          and the centre match: all present'
+        comment: 'Resistance circles, reactance arcs, normalization, connected locus,
+          frequency labels, |Γ|=1 boundary, matched center: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each point placed at Γ = (z − 1)/(z + 1); the circle stays true because
-          both axes share the same ±1.15 domain on a square drawing area
+        comment: Γ computed correctly; points at their normalized-impedance positions;
+          only labels are placed, marks untouched
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; a legend is N/A for a single series
-    data_quality:
+        comment: Title format correct; legend N/A for a single locus
       score: 15
+    data_quality:
       max: 15
       items:
       - id: DQ-01
@@ -169,25 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: The locus sweeps from capacitive through resonance to inductive and
-          crosses the real axis, using both halves of the chart
+        comment: Locus sweeps from capacitive through resonance to inductive, crossing
+          near the matched center
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antenna feed impedance swept 1–6 GHz from a series R-L-C model; neutral
+        comment: Antenna feed impedance 1–6 GHz from a series R-L-C model; neutral
           and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: resonance at 1/(2π√(LC)) ≈ 3.56 GHz, where the render''s
-          real-axis crossing sits at r ≈ (35 + 3·2.56)/50 ≈ 0.85; at 1 GHz, X ≈ −366
-          Ω puts Γ near the lower-right boundary, as rendered'
+        comment: R 35–50 Ω, resonance at 1/(2π√LC) ≈ 3.56 GHz; render shows the real-axis
+          crossing at Γ ≈ −0.08 as computed (z ≈ 0.85)
+      score: 15
     code_quality:
-      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,36 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'The inner SmithChart component is required because the scale hooks
-          only work inside ChartsContainer; otherwise the flow is linear: constants,
-          data, plot'
+        comment: One custom child component, required by the hook-based composition
+          API
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic analytic data
+        comment: Deterministic model data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartsContainer and the two scale hooks, all used
+        comment: ChartsContainer, useXScale, useYScale all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Compact closed-form grid geometry; no dead code
+        comment: Label placement is hand-written but no available call computes it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Default export, skipAnimation, sized from ANYPLOT_SIZE; current
-          v9 ChartsContainer and position: ''none'' API'
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          v9 API
+      score: 10
     library_mastery:
-      score: 6
       max: 10
       items:
       - id: LM-01
@@ -232,24 +232,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'MUI X composition: ChartsContainer with custom SVG children that
-          read the chart''s own scales'
+        comment: ChartsContainer with hidden linear axes as coordinate system; scale
+          hooks for custom SVG
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: useXScale/useYScale drive a fully custom coordinate layer inside
-          the MUI chart surface
+        comment: Composition hooks drive a fully custom chart type; nothing further
+      score: 6
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:32:03Z'
+  rendered_at: '2026-11-08T07:21:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
   - layer-composition
   - html-export
   patterns:
@@ -258,5 +257,4 @@ impl_tags:
   - normalization
   styling:
   - minimal-chrome
-  - edge-highlighting
   - grid-styling
