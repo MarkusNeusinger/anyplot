@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 kagi-basic: Basic Kagi Chart
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-08
@@ -35,19 +35,28 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 TREND_COLORS = {"yang": "#009E73", "yin": "#AE3030"}
 TREND_WIDTHS = {"yang": 1.5, "yin": 0.5}
 TREND_LABELS = {"yang": "Yang (bullish)", "yin": "Yin (bearish)"}
-REVERSAL = 0.04  # a 4 % move against the running extreme reverses the line
 
-# Data: synthetic daily closing prices, a random walk with a slight upward drift
+# Constants
+REVERSAL = 0.04  # a 4 % move against the running extreme reverses the line
+SEGMENT_COLUMNS = ["x", "x_end", "y", "y_end", "trend"]  # the derived Kagi segment table
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Price ($)"  # role: close
+
+# Data: synthetic daily closing prices, a random walk with a slight upward drift; replace this block with your
+# own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 np.random.seed(42)
 n_days = 250
 returns = np.random.normal(0.0005, 0.02, n_days)
-df_prices = pd.DataFrame(
-    {"date": pd.date_range("2024-01-01", periods=n_days, freq="B"), "close": 100 * np.exp(np.cumsum(returns))}
+df = pd.DataFrame(
+    {DATE: pd.date_range("2024-01-01", periods=n_days, freq="B"), CLOSE: 100 * np.exp(np.cumsum(returns))}
 )
 
+# Plot: reads only df and the constants above
 # Kagi construction: the line extends while the price keeps its direction and turns at a shoulder (top) or a
 # waist (bottom) once the price moves against the running extreme by the reversal amount
-prices = df_prices["close"].to_numpy()
+prices = df.sort_values(DATE)[CLOSE].dropna().to_numpy(dtype=float)
 direction = 1 if prices[1] > prices[0] else -1
 turns = [prices[0]]
 extreme = prices[0]
@@ -80,19 +89,20 @@ for column, (start, end) in enumerate(zip(turns[:-1], turns[1:], strict=True)):
         shoulder = end
     else:
         waist = end
-kagi_df = pd.DataFrame(segments, columns=["x", "x_end", "y", "y_end", "trend"])
+x, x_end, y, y_end, trend_col = SEGMENT_COLUMNS
+kagi_df = pd.DataFrame(segments, columns=SEGMENT_COLUMNS)
 
-# Plot: plotnine draws the groups in category order, so yang comes last and its thick line covers the
-# thin line's round caps where the two meet
-kagi_df["trend"] = pd.Categorical(kagi_df["trend"], categories=["yin", "yang"])
+# plotnine draws the groups in category order, so yang comes last and its thick line covers the thin line's
+# round caps where the two meet
+kagi_df[trend_col] = pd.Categorical(kagi_df[trend_col], categories=["yin", "yang"])
 
 # Color and width share one scale name and labels, so plotnine draws a single legend
 plot = (
-    ggplot(kagi_df, aes(x="x", xend="x_end", y="y", yend="y_end", color="trend", size="trend"))
+    ggplot(kagi_df, aes(x=x, xend=x_end, y=y, yend=y_end, color=trend_col, size=trend_col))
     + geom_segment(lineend="round")
     + scale_color_manual(name="Trend", values=TREND_COLORS, labels=TREND_LABELS, limits=list(TREND_COLORS))
     + scale_size_manual(name="Trend", values=TREND_WIDTHS, labels=TREND_LABELS, limits=list(TREND_COLORS))
-    + labs(x="Kagi Line Index", y="Price ($)", title="kagi-basic · python · plotnine · anyplot.ai")
+    + labs(x="Kagi Line Index", y=CLOSE, title="kagi-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -110,6 +120,7 @@ plot = (
         panel_grid_minor=element_blank(),
         legend_position="right",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        legend_margin=8,
         legend_key=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         legend_title=element_text(size=9, color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
