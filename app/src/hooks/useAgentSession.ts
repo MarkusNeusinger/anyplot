@@ -924,7 +924,7 @@ export interface AgentSessionState {
   /**
    * The typed turn read as an answer whose memory read after its `done` is still to come: that
    * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait, so
-   * does that read's failure (`memory_unread`), and so does the end of every later turn but the
+   * does the latest read's failure (`memory_unread`), and so does the end of every later turn but the
    * summary and example data, which cannot change the memory: a read that failed or was overtaken
    * never lands on an older question. While it waits, the thread shows the turn as no question yet
    * (`threadModel`): a turn the read moves never shows "nothing changed".
@@ -999,8 +999,9 @@ type Action =
    */
   | { type: 'memory_sync'; memory: PlotMemory; afterTurn?: boolean }
   /**
-   * The read after a turn's `done` brought no list (it failed, or the server has no memory route):
-   * the turn it would speak for waits no longer, and keeps the mark its `done` gave it.
+   * The latest memory read brought no list (it failed, or the server has no memory route), the one
+   * after a turn's `done` or one that overtook it: the turn waits no longer, and keeps the mark its
+   * `done` gave it.
    */
   | { type: 'memory_unread' }
   | { type: 'memory_busy'; busy: boolean }
@@ -2625,9 +2626,10 @@ export function useAgentSession({
    * server without the route, leaves the list as it was, and an answer that a
    * newer read or a removal overtook is dropped. The fan-out's sessions show no
    * list, so they read none. `afterTurn`: the read after a turn's `done`, whose
-   * change of the list is that turn's (`memory_sync`); when it brings no list, the
-   * turn waits for it no longer (`memory_unread`) and keeps the mark its `done`
-   * gave it, a question then on the server's word and the stream's alone.
+   * change of the list is that turn's (`memory_sync`). When the latest read brings
+   * no list, also one that overtook the turn's own (a switch's), the turn waits
+   * no longer (`memory_unread`) and keeps the mark its `done` gave it, a question
+   * then on the server's word and the stream's alone.
    */
   const refreshMemory = useCallback(
     async (afterTurn = false) => {
@@ -2644,9 +2646,10 @@ export function useAgentSession({
           safeDispatch({ type: 'memory_sync', memory, ...(afterTurn ? { afterTurn } : {}) });
         }
       } catch {
-        // Best effort: the list stays as it was. A newer read or a removal overtook a read that
-        // fails late, and its own list ends the wait.
-        if (afterTurn && seq === memorySeq.current) safeDispatch({ type: 'memory_unread' });
+        // Best effort: the list stays as it was. The latest read failing ends a turn's wait,
+        // whichever read it is: a newer one (a switch's) drops the turn's own answer, so its failure
+        // is the last word. A read a newer one or a removal overtook leaves the wait to that one.
+        if (seq === memorySeq.current) safeDispatch({ type: 'memory_unread' });
       }
     },
     [token, safeDispatch]

@@ -3398,6 +3398,36 @@ describe('useAgentSession: what a typed turn changed', () => {
     expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
   });
 
+  it("ends a question's wait when a newer memory read overtook its own and failed", async () => {
+    const own = deferred<Response>();
+    let reads = 0;
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'x is the hours.' }],
+        ['done', { turn: 'answer' }],
+      ]);
+    // The question's own read waits; the switch's read after it fails.
+    routes['GET /sessions/S1/memory'] = () => {
+      reads += 1;
+      return reads === 1 ? own.promise : json(503, { detail: 'unavailable', ref: 'r-m' });
+    };
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('what is on x?'));
+    expect(result.current.state.memoryTurn).not.toBeNull();
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(reads).toBe(2));
+    await waitFor(() => expect(result.current.state.memoryTurn).toBeNull());
+    // The question's own answer lands late and speaks for nobody: it was overtaken.
+    await act(async () => {
+      own.resolve(json(200, { entries: [], max_entries: 30, written: false }));
+    });
+    expect(result.current.state.memory).toBeNull();
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
+  });
+
   it('marks the note sent with a paste, whatever it changed, and never a forwarded text', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () =>
