@@ -123,7 +123,7 @@ export default function Chart() {
           },
         }}
         sx={{
-          "& .MuiLineChart-area": { fillOpacity: 0.92, filter: "none" },
+          "& .MuiLineChart-area": { fillOpacity: 1, filter: "none" },
           "& .MuiLineChart-line": { strokeWidth: 1.5 },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
