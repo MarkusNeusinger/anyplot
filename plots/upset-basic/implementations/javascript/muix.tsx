@@ -1,297 +1,226 @@
 // anyplot.ai
 // upset-basic: UpSet Plot for Multi-Set Intersection Analysis
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 82/100 | Created: 2026-09-09
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { BarChart } from "@mui/x-charts/BarChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Six differential-expression gene sets from independent genomic assays.
-// Each gene is assigned to sets by an LCG-driven coin flip per assay, with
-// per-assay hit rates decreasing left to right — this naturally produces the
-// realistic pattern real UpSet plots show: many genes flagged by one or two
-// assays, progressively fewer flagged by many assays at once.
-let seed = 42;
-const nextRandom = () => {
-  seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-};
+// Constants
+const MAX_COLUMNS = 15; // the largest intersections shown; smaller ones are left out
+const TITLE = "upset-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+const LEFT_W = 340; // px column for the set names and set-size bars
+const TOP_H = 380; // px row for the intersection-size bars
+const SET_AXIS_W = 150; // px band for the set names
+const COUNT_AXIS_W = 84; // px band for the intersection-count axis
+const SIZE_AXIS_H = 64; // px band for the set-size axis
+const PLOT_MARGIN = { top: 12, right: 36 };
 
-const SET_NAMES = [
-  "RNA-seq",
-  "ChIP-seq",
-  "ATAC-seq",
-  "Proteomics",
-  "Methylation",
-  "CRISPR",
-];
-const HIT_RATES = [0.38, 0.29, 0.24, 0.19, 0.14, 0.1];
-const GENE_COUNT = 2000;
+// Columns: set these to your data's column names
+const GENE = "Gene"; // role: element
+const ASSAY = "Assay"; // role: sets
 
-const setSizes = new Array(SET_NAMES.length).fill(0);
+// Data: replace this block with your own records, one object per row
+// 2,000 genes screened by six genomic assays, one row per gene and assay that
+// flags it. Each assay flags a gene with its own hit rate; a gene no assay
+// flags is assigned to the first one, so every gene sits in at least one set.
+const data = (() => {
+  let seed = 42;
+  const nextRandom = () => {
+    seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const assays = [
+    ["RNA-seq", 0.38],
+    ["ChIP-seq", 0.29],
+    ["ATAC-seq", 0.24],
+    ["Proteomics", 0.19],
+    ["Methylation", 0.14],
+    ["CRISPR screen", 0.1],
+  ];
+  const rows = [];
+  for (let i = 0; i < 2000; i += 1) {
+    const gene = `G${String(i + 1).padStart(4, "0")}`;
+    const hits = assays.filter(([, rate]) => nextRandom() < rate).map(([name]) => name);
+    (hits.length > 0 ? hits : [assays[0][0]]).forEach((assay) => rows.push({ [GENE]: gene, [ASSAY]: assay }));
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const membership = new Map();
+data.forEach((d) => {
+  if (d[GENE] == null || d[ASSAY] == null) return;
+  if (!membership.has(d[GENE])) membership.set(d[GENE], new Set());
+  membership.get(d[GENE]).add(d[ASSAY]);
+});
+
+// Matrix rows: the sets, largest first (ties keep their order of appearance)
+const appearance = [...new Set(data.map((d) => d[ASSAY]).filter((s) => s != null))];
+const sizeOf = new Map(appearance.map((s) => [s, [...membership.values()].filter((m) => m.has(s)).length]));
+const sets = [...appearance].sort((a, b) => sizeOf.get(b) - sizeOf.get(a));
+
+// Matrix columns: each exact combination of sets, largest first, then by degree
 const comboCounts = new Map();
-for (let i = 0; i < GENE_COUNT; i += 1) {
-  const memberIndices = [];
-  HIT_RATES.forEach((rate, setIndex) => {
-    if (nextRandom() < rate) memberIndices.push(setIndex);
-  });
-  if (memberIndices.length === 0) memberIndices.push(0); // every gene flagged by at least one assay
-  memberIndices.forEach((setIndex) => {
-    setSizes[setIndex] += 1;
-  });
-  const key = memberIndices.join(",");
-  comboCounts.set(key, (comboCounts.get(key) || 0) + 1);
+membership.forEach((m) => {
+  const key = sets.filter((s) => m.has(s)).join("\n");
+  comboCounts.set(key, (comboCounts.get(key) ?? 0) + 1);
+});
+const intersections = [...comboCounts.entries()]
+  .map(([key, size]) => ({ key, members: key.split("\n"), size }))
+  .sort((a, b) => b.size - a.size || a.members.length - b.members.length)
+  .slice(0, MAX_COLUMNS);
+const columnIds = intersections.map((d) => d.key);
+
+// Degree (sets per intersection) is ordered, so it takes steps of the sequential
+// ramp, spread over the degrees the shown intersections have
+const degreesShown = [...new Set(intersections.map((d) => d.members.length))].sort((a, b) => a - b);
+const [seqA, seqB] = [t.seq[0], t.seq[1]].map((hex) => [16, 8, 0].map((s) => (parseInt(hex.slice(1), 16) >> s) & 255));
+const degreeColor = new Map(
+  degreesShown.map((k, i) => {
+    const f = degreesShown.length > 1 ? i / (degreesShown.length - 1) : 0;
+    return [k, `rgb(${seqA.map((v, c) => Math.round(v + (seqB[c] - v) * f)).join(",")})`];
+  }),
+);
+
+const SUBTITLE = `${membership.size.toLocaleString("en-US")} ${GENE.toLowerCase()}s across ${sets.length} ${ASSAY.toLowerCase()}s · the ${intersections.length} largest of ${comboCounts.size} intersections, sorted by size`;
+const COUNT_LABEL = `${GENE}s per intersection`;
+const SIZE_LABEL = `${GENE}s per ${ASSAY.toLowerCase()}`;
+const MATRIX_H = window.ANYPLOT_SIZE.height - TITLE_H - TOP_H;
+
+// The dot matrix shares the band axes of both bar charts, so every column sits
+// under its intersection bar and every row beside its set-size bar.
+function DotMatrix() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const { left, width } = useDrawingArea();
+  const colCenter = (key) => xScale(key) + xScale.bandwidth() / 2;
+  const rowCenter = (set) => yScale(set) + yScale.bandwidth() / 2;
+  const rowStep = yScale.step();
+
+  return (
+    <g>
+      {sets.map((set, j) =>
+        j % 2 === 1 ? (
+          <rect key={`band-${set}`} x={left} y={rowCenter(set) - rowStep / 2} width={width} height={rowStep} fill={t.grid} opacity={0.45} />
+        ) : null,
+      )}
+      {intersections.map((inter) => {
+        const cx = colCenter(inter.key);
+        const color = degreeColor.get(inter.members.length);
+        const ys = inter.members.map((s) => rowCenter(s));
+        return (
+          <g key={`col-${inter.key}`}>
+            {sets.map((set) => (
+              <circle key={`off-${set}`} cx={cx} cy={rowCenter(set)} r={6} fill={t.inkSoft} opacity={0.28} />
+            ))}
+            {inter.members.length > 1 && (
+              <line x1={cx} x2={cx} y1={Math.min(...ys)} y2={Math.max(...ys)} stroke={color} strokeWidth={4} />
+            )}
+            {inter.members.map((set) => (
+              <circle key={`on-${set}`} cx={cx} cy={rowCenter(set)} r={10} fill={color} />
+            ))}
+          </g>
+        );
+      })}
+    </g>
+  );
 }
 
-const TOTAL_COMBOS = comboCounts.size;
-const intersections = Array.from(comboCounts.entries())
-  .map(([key, size]) => {
-    const setIndices = key.split(",").map(Number);
-    return { setIndices, size, degree: setIndices.length };
-  })
-  .sort((a, b) => b.size - a.size || a.degree - b.degree)
-  .slice(0, 15);
-
-const MEAN_SIZE =
-  intersections.reduce((sum, d) => sum + d.size, 0) / intersections.length;
-
-// --- Degree → color (Imprint sequential ramp: single-set green → all-set blue)
-const hexToRgb = (hex) => {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-};
-const mixHex = (hexA, hexB, frac) => {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  const [r, g, bl] = a.map((v, i) => Math.round(v + (b[i] - v) * frac));
-  return `rgb(${r}, ${g}, ${bl})`;
-};
-const maxDegree = SET_NAMES.length;
-const degreeColor = (degree) =>
-  mixHex(
-    t.seq[0],
-    t.seq[1],
-    maxDegree > 1 ? (degree - 1) / (maxDegree - 1) : 0,
-  );
-
-// --- Layout — title bar, then a 2x2 grid: corner / top bars / set bars / matrix
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
-const TITLE_H = 70;
-const LEFT_PANEL = 250;
-const TOP_PANEL = 330;
-const MATRIX_W = W - LEFT_PANEL;
-const MATRIX_H = H - TITLE_H - TOP_PANEL;
-
-// Shared margins: the top bar chart and the matrix columns share TOP_MARGIN's
-// left/right, and the set-size bar chart and the matrix rows share
-// LEFT_MARGIN's top/bottom — that's what keeps dots aligned under their bars.
-const TOP_MARGIN = { left: 60, right: 10, top: 50, bottom: 10 };
-const LEFT_MARGIN = { left: 130, right: 45, top: 15, bottom: 50 };
-
-const colWidth =
-  (MATRIX_W - TOP_MARGIN.left - TOP_MARGIN.right) / intersections.length;
-const colCenterX = (i) => TOP_MARGIN.left + (i + 0.5) * colWidth;
-const rowHeight =
-  (MATRIX_H - LEFT_MARGIN.top - LEFT_MARGIN.bottom) / SET_NAMES.length;
-const rowCenterY = (j) => LEFT_MARGIN.top + (j + 0.5) * rowHeight;
-
-const TITLE = "upset-basic · javascript · muix · anyplot.ai";
-const TITLE_FONTSIZE =
-  TITLE.length > 67 ? Math.round(22 * (67 / TITLE.length)) : 22;
-
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const matrixW = width - LEFT_W;
+  const axisStyle = {
+    "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+    "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+    "& .MuiChartsGrid-line": { stroke: t.grid },
+  };
+
   return (
-    <div style={{ width: W, height: H, background: t.pageBg }}>
-      <div
-        style={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: TITLE_FONTSIZE,
-          fontWeight: 600,
-          color: t.ink,
-          fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-        }}
-      >
-        {TITLE}
+    <div style={{ width, height, background: t.pageBg }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
 
-      <div
-        style={{
-          width: W,
-          height: H - TITLE_H,
-          display: "grid",
-          gridTemplateColumns: `${LEFT_PANEL}px ${MATRIX_W}px`,
-          gridTemplateRows: `${TOP_PANEL}px ${MATRIX_H}px`,
-        }}
-      >
-        <div
-          style={{
-            gridColumn: 1,
-            gridRow: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            padding: "0 12px 16px 12px",
-            boxSizing: "border-box",
-          }}
-        >
-          <div style={{ fontSize: 13, color: t.inkSoft, marginBottom: 10 }}>
-            Degree
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 16,
-            }}
-          >
-            <div
-              style={{
-                width: 70,
-                height: 8,
-                borderRadius: 4,
-                background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`,
-              }}
-            />
-            <div style={{ fontSize: 12, color: t.inkSoft }}>
-              1 &rarr; {SET_NAMES.length} sets
-            </div>
-          </div>
-          <div style={{ fontSize: 15, color: t.inkSoft }}>
-            {GENE_COUNT.toLocaleString()} genes
-          </div>
-          <div style={{ fontSize: 15, color: t.inkSoft }}>
-            {SET_NAMES.length} assays · top {intersections.length} of{" "}
-            {TOTAL_COMBOS} intersections
+      <div style={{ display: "grid", gridTemplateColumns: `${LEFT_W}px ${matrixW}px`, gridTemplateRows: `${TOP_H}px ${MATRIX_H}px` }}>
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "0 0 28px 36px" }}>
+          <div style={{ fontSize: 15, color: t.ink, marginBottom: 10 }}>Intersection degree</div>
+          <div style={{ display: "flex", gap: 14 }}>
+            {degreesShown.map((k) => (
+              <div key={`deg-${k}`} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 16, height: 16, borderRadius: 8, background: degreeColor.get(k), display: "inline-block" }} />
+                <span style={{ fontSize: 15, color: t.inkSoft }}>{k}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         <div style={{ gridColumn: 2, gridRow: 1 }}>
-          <BarChart
-            width={MATRIX_W}
-            height={TOP_PANEL}
-            skipAnimation
-            margin={TOP_MARGIN}
-            series={[
-              { data: intersections.map((d) => d.size), color: t.palette[0] },
-            ]}
-            xAxis={[
-              {
-                scaleType: "band",
-                data: intersections.map((_, i) => String(i)),
-                valueFormatter: () => "",
-                disableTicks: true,
-              },
-            ]}
-            yAxis={[
-              {
-                label: "Intersection size",
-                labelStyle: { fontSize: 15, fill: t.ink },
-                tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-              },
-            ]}
-            slotProps={{ legend: { hidden: true } }}
-            sx={{
-              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-              "& .MuiChartsGrid-line": { stroke: t.grid },
-            }}
-          >
-            <ChartsReferenceLine
-              y={MEAN_SIZE}
-              label={`Mean: ${Math.round(MEAN_SIZE)}`}
-              labelAlign="end"
-              labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-              lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4" }}
-            />
-          </BarChart>
+        <BarChart
+          width={matrixW}
+          height={TOP_H}
+          skipAnimation
+          hideLegend
+          grid={{ horizontal: true }}
+          margin={{ top: 24, right: PLOT_MARGIN.right, bottom: 4, left: 0 }}
+          series={[{ id: "intersection-size", data: intersections.map((d) => d.size), label: COUNT_LABEL, color: t.palette[0] }]}
+          xAxis={[{ id: "columns", scaleType: "band", data: columnIds, disableTicks: true, height: 4, tickLabelStyle: { display: "none" } }]}
+          yAxis={[
+            {
+              id: "count",
+              min: 0,
+              width: COUNT_AXIS_W,
+              label: COUNT_LABEL,
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 15, fill: t.ink },
+            },
+          ]}
+          sx={axisStyle}
+        />
         </div>
 
         <div style={{ gridColumn: 1, gridRow: 2 }}>
-          <BarChart
-            layout="horizontal"
-            width={LEFT_PANEL}
-            height={MATRIX_H}
-            skipAnimation
-            margin={LEFT_MARGIN}
-            series={[{ data: setSizes, color: t.palette[0] }]}
-            yAxis={[
-              {
-                scaleType: "band",
-                data: SET_NAMES,
-                tickLabelStyle: { fontSize: 14, fill: t.ink },
-                disableTicks: true,
-              },
-            ]}
-            xAxis={[
-              {
-                label: "Set size",
-                labelStyle: { fontSize: 13, fill: t.inkSoft },
-                tickLabelStyle: { fontSize: 11, fill: t.inkSoft },
-              },
-            ]}
-            slotProps={{ legend: { hidden: true } }}
-            sx={{
-              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-              "& .MuiChartsGrid-line": { stroke: t.grid },
-            }}
-          />
+        <BarChart
+          layout="horizontal"
+          width={LEFT_W}
+          height={MATRIX_H}
+          skipAnimation
+          hideLegend
+          grid={{ vertical: true }}
+          margin={{ top: PLOT_MARGIN.top, right: 20, bottom: 8, left: 24 }}
+          series={[{ id: "set-size", data: sets.map((s) => sizeOf.get(s)), label: SIZE_LABEL, color: t.palette[0] }]}
+          yAxis={[{ id: "sets", scaleType: "band", data: sets, width: SET_AXIS_W, disableTicks: true, tickLabelStyle: { fontSize: 15, fill: t.ink } }]}
+          xAxis={[
+            {
+              id: "size",
+              min: 0,
+              height: SIZE_AXIS_H,
+              tickNumber: 3,
+              label: SIZE_LABEL,
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 15, fill: t.ink },
+            },
+          ]}
+          sx={axisStyle}
+        />
         </div>
 
         <div style={{ gridColumn: 2, gridRow: 2 }}>
-          <svg width={MATRIX_W} height={MATRIX_H}>
-            {SET_NAMES.map(
-              (_, j) =>
-                j % 2 === 1 && (
-                  <rect
-                    key={`band-${j}`}
-                    x={0}
-                    y={LEFT_MARGIN.top + j * rowHeight}
-                    width={MATRIX_W}
-                    height={rowHeight}
-                    fill={t.grid}
-                  />
-                ),
-            )}
-            {intersections.map((inter, i) => {
-              const cx = colCenterX(i);
-              const color = degreeColor(inter.degree);
-              const memberRowsY = inter.setIndices.map((si) => rowCenterY(si));
-              const yTop = Math.min(...memberRowsY);
-              const yBottom = Math.max(...memberRowsY);
-              return (
-                <g key={`col-${i}`}>
-                  {inter.setIndices.length > 1 && (
-                    <line
-                      x1={cx}
-                      y1={yTop}
-                      x2={cx}
-                      y2={yBottom}
-                      stroke={color}
-                      strokeWidth={3}
-                    />
-                  )}
-                  {SET_NAMES.map((_, j) => {
-                    const active = inter.setIndices.includes(j);
-                    return (
-                      <circle
-                        key={`dot-${i}-${j}`}
-                        cx={cx}
-                        cy={rowCenterY(j)}
-                        r={active ? 9 : 5.5}
-                        fill={active ? color : t.grid}
-                      />
-                    );
-                  })}
-                </g>
-              );
-            })}
-          </svg>
+        <ChartsContainer
+          width={matrixW}
+          height={MATRIX_H}
+          series={[]}
+          skipAnimation
+          margin={{ top: PLOT_MARGIN.top, right: PLOT_MARGIN.right, bottom: 8 + SIZE_AXIS_H, left: COUNT_AXIS_W }}
+          xAxis={[{ id: "columns", scaleType: "band", data: columnIds, position: "none" }]}
+          yAxis={[{ id: "sets", scaleType: "band", data: sets, position: "none" }]}
+        >
+          <DotMatrix />
+        </ChartsContainer>
         </div>
       </div>
     </div>

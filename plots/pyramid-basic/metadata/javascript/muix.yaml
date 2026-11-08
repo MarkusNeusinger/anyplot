@@ -2,49 +2,48 @@ library: muix
 language: javascript
 specification_id: pyramid-basic
 created: '2026-09-05T12:37:20Z'
-updated: '2026-09-05T12:51:20Z'
-generated_by: claude-sonnet
-workflow_run: 33966202341
+updated: '2026-11-08T04:17:11Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42445593803
 issue: 1000
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - Symmetric axis scale (-120 to 120) with explicit 20-unit tick intervals gives
-    a fair, easy-to-compare bidirectional layout
-  - In-bar value labels (Math.abs(value)) plus a bold ChartsReferenceLine at x=0 make
-    the shared central axis unambiguous without extra chrome
-  - Categories sorted by combined magnitude (descending) produces a genuine tapering
-    pyramid silhouette -- a deliberate data-storytelling choice, not just a raw dump
-  - 'First series uses Imprint #009E73 (StreamVista), second uses #C475FD (WaveFlix),
-    identical across both themes; backgrounds are correctly #FAF8F1 / #1A1A17'
-  - All font sizes explicitly set (title 28, axis label 16, tick/legend 14 CSS px)
-    and legible in both themes with no dark-on-dark or light-on-light failures
-  - 'Distinctive MUI X usage: stacked diverging bars via shared stackId with negated
-    left-side data, custom tickInterval array, categoryGapRatio, and ChartsReferenceLine'
+  - Diverging layout built idiomatically from one shared stack with the left series
+    negated, and valueFormatter on axis and series so ticks, labels and tooltips all
+    show positive magnitudes
+  - Symmetric x domain (±max·1.08) keeps equal distances equal on both sides; central
+    axis drawn with the native ChartsReferenceLine
+  - Unordered genres ranked by combined count with the largest at the base, giving
+    a clear pyramid silhouette
+  - Bar-label ink picked per bar colour with MUI's getContrastRatio, so labels stay
+    legible on both fills in both themes
+  - Theme tokens threaded through every chrome element; light and dark renders both
+    read cleanly with identical data colours
   weaknesses:
-  - Spec note says category labels should be placed along the central axis; here they
-    sit on the far-left y-axis instead (a common and readable pyramid convention,
-    but a minor deviation from the spec's explicit guidance)
-  - Design is clean and well-configured but stops short of a truly distinctive editorial
-    treatment (e.g. no secondary emphasis on the largest asymmetry rows) -- Design
-    Excellence has headroom before it reaches publication-tier
+  - 'Suggestion: the ''Favourite genre'' axis title sits far from its tick labels;
+    a narrower y-axis band would tighten the left margin.'
+  - 'Suggestion: the column-name regex that splits name and unit adds indirection
+    a reader must decode; plain constants for the side names and unit would read more
+    directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "pyramid-basic · javascript · muix · anyplot.ai" in bold dark ink, top-left. X-axis label "Subscribers who picked this genre as their favorite" in medium-dark gray below the axis. Tick labels (-120..120) and 8 category labels (Drama, Comedy, Action & Adventure, Sci-Fi & Fantasy, Anime, Reality TV, Documentary, Kids & Family) in dark text on the left. Legend "StreamVista"/"WaveFlix" top-right with color swatches. Subtle vertical gridlines only. All chrome is clearly readable against the light background.
-      Data: StreamVista bars extend left in Imprint brand green (#009E73), WaveFlix bars extend right in Imprint lavender (#C475FD), both anchored at a bold black reference line at x=0. White in-bar value labels are legible against both colors.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title "pyramid-basic · javascript · muix · anyplot.ai", softer subtitle "400 StreamVista and 400 WaveFlix subscribers across 8 genres", horizontal legend (StreamVista green, WaveFlix purple) below it. Y-axis title "Favourite genre" rotated at left, genre tick labels in dark ink; x-axis ticks 100…0…100 and title "Subscribers (← StreamVista · WaveFlix →)". Subtle vertical grid, dark central axis line at 0. All readable.
+      Data: 8 genres, Kids & Family at top to Drama at base; green (#009E73) bars extend left, purple bars right, each with a bold dark value label centred inside.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Same title, axis label, tick labels, category labels, and legend all rendered in light/cream text -- fully readable against the dark background. No dark-on-dark instances found. Gridlines are subtle and still visible.
-      Data: StreamVista (#009E73) and WaveFlix (#C475FD) bars are pixel-identical in hue to the light render; only the chrome (text, grid, reference-line color) adapted to the dark theme. White in-bar value labels remain legible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and ticks all in light ink; grid dim but visible; central axis line flips to light. No dark-on-dark text.
+      Data: bar colours identical to the light render; dark value labels remain legible on both the green and purple fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,72 +55,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; title well
-          within proportion
+        comment: All font sizes set explicitly (title 22, subtitle 15, axis labels
+          16, ticks 14-15, bar labels 14 bold); every text element readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, ticks, legend, or bars
+        comment: No text collisions; bar labels sit centred inside their bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 sparse categories with thick, well-separated bars and clear in-bar
-          labels
+        comment: 8 categories with thick bars (categoryGapRatio 0.3); legend swatches
+          visible and match the bars in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pair is CVD-distinguishable, no red-green sole signal
+        comment: Green vs purple is CVD-safe; side is also encoded by direction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, chart fills a large share of canvas, nothing cut
-          off
+        comment: Canvas gate passed (3200x1800); balanced margins, nothing cut off,
+          axis labels balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label descriptive of the metric
+        comment: '''Subscribers (← StreamVista · WaveFlix →)'' and ''Favourite genre''
+          are reader text with direction cues'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint order); backgrounds
-          theme-correct in both renders'
+        comment: 'Imprint positions 1-2 (#009E73, purple) identical in both renders;
+          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful in-bar labels, reference-line divider, clearly above library
-          defaults
+        comment: Title/subtitle/legend hierarchy with distinct weights and ink levels;
+          bar-label ink chosen per bar colour by WCAG contrast
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle vertical-only grid, disabled y-axis ticks, generous whitespace
+        comment: Vertical-only grid matched to the value axis, tick marks disabled
+          on the category axis, labels centred in bars
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Descending-magnitude sort creates a genuine tapering pyramid silhouette
+        comment: Unordered genres ranked by combined count with the largest at the
+          base, giving a true pyramid silhouette; subtitle states both sample totals
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,51 +132,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bidirectional bar / pyramid layout
+        comment: Mirrored horizontal bars from one central axis; only the central
+          axis line, no extra layers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Shared axis, symmetric scale, distinct colors, legend all present;
-          category labels sit on the far-left axis rather than along the central axis
-          as the spec note suggests
+        comment: Symmetric scale (±limit) with positive tick labels on both sides,
+          distinct colour per side, labels along the axis level with bars, legend
+          naming the sides, meaningful order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on Y, diverging values on X, all data visible within axis
-          range
+        comment: Bars end at their values; axis covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend labels match series
+        comment: Title 'pyramid-basic · javascript · muix · anyplot.ai'; legend entries
+          StreamVista / WaveFlix
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both directions of asymmetry (some rows left>right, others
-          right>left) across varied magnitudes
+        comment: Asymmetries in both directions (Sci-Fi favours left, Reality TV right)
+          show the comparison the chart exists for
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible streaming-service genre-preference survey
+        comment: Fictional streaming-service genre survey; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Subscriber counts (10-94 out of 400 surveyed) are plausible and consistent
+        comment: 'Checked: each side sums to 400 as stated in the subtitle; 8 categories
+          within the 5-15 range'
     code_quality:
       score: 10
       max: 10
@@ -183,33 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single component, no classes, linear top-to-bottom flow
+        comment: Flat data → config → single default-export component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no RNG
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: getContrastRatio, BarChart, ChartsReferenceLine all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: export default component, sized to ANYPLOT_SIZE, skipAnimation set
+        comment: Default export, ANYPLOT_SIZE, skipAnimation, v9 API (hideLegend-era
+          slotProps.legend, labelStyle/tickLabelStyle, data-series selectors)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,22 +223,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Stacked band-scale BarChart, slotProps, sx overrides used idiomatically
+        comment: Shared stack with negated left series for the diverging layout, axis/series
+          valueFormatter for absolute values, per-series sx via [data-series] selectors
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: ChartsReferenceLine + diverging stackId + custom tickInterval array
-          are MUI X-specific, though not maximally unique
+        comment: Native barLabel callback and ChartsReferenceLine for the central
+          axis; tooltip formatters for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:14:30Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - bar-labels
   - reference-line
   patterns:
   - data-generation
   dataprep: []
   styling:
   - publication-ready
+  - grid-styling

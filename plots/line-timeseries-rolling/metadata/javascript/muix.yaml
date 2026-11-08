@@ -2,58 +2,47 @@ library: muix
 language: javascript
 specification_id: line-timeseries-rolling
 created: '2026-09-05T08:50:51Z'
-updated: '2026-09-05T09:07:37Z'
-generated_by: claude-sonnet
-workflow_run: 33956187713
+updated: '2026-11-08T03:41:50Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42443529830
 issue: 2786
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 86
 review:
   strengths:
-  - Raw data rendered as a thin, semi-transparent (alpha 0.5) green line while the
-    rolling average is a bold, contrasting purple line — exactly the visual hierarchy
-    the spec asks for
-  - Rolling average correctly starts 6 days later than raw data (nulled until a full
-    7-day window exists), visibly shorter as the spec requires
-  - Legend explicitly names the window size ('Rolling Average (7-Day)'), satisfying
-    the spec's optional guidance
-  - ChartsReferenceLine bracket annotates the viral-post surge in the amber semantic-anchor
-    color, giving the chart a clear narrative focal point without competing with the
-    two data-series colors
-  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, fully
-    legible chrome, identical data colors between light and dark'
-  - Custom hand-rotated Y-axis label sidesteps a real MUI X collision bug (documented
-    in a comment) instead of leaving overlapping text
-  - All font sizes explicitly set (title, axis labels, ticks, legend) and title fontsize
-    correctly scales down via the length-based formula for the longer, prefixed title
-    string
+  - 'Clear visual hierarchy as the spec asks: raw visitors as a 1.75 px line at 0.65
+    opacity in brand green, the 7-day mean as a 4 px purple line that tracks its level'
+  - Rolling average is null for the first six days and starts on Jan 7, so it honestly
+    covers a shorter span than the raw series
+  - Window size is derived from the data and appears in the legend ('Rolling average
+    (7-day)') and the computed subtitle
+  - Location-aware valueFormatter gives short tick dates and full dates in the HTML
+    tooltip; v9 [data-series] sx selectors style each line
+  - 'Both themes are correct: chrome from theme tokens, identical data colors, all
+    text readable'
   weaknesses:
-  - Title renders comfortably inside its budget but looks conservatively sized (roughly
-    40-45% of canvas width) rather than filling more of the available space — could
-    size up slightly for stronger visual hierarchy without risking overflow
-  - Design is polished but stays close to a well-configured MUI X default (no subtitle/source
-    note or more distinctive typographic treatment) — falls just short of a truly
-    publication-grade look
-  - The single reference-line annotation is a fairly common technique across charting
-    libraries; leaning on a more MUI X-distinctive feature (e.g. area/band shading
-    between the two series, or axis zoom) would raise Library Mastery further
+  - 'Suggestion: the rolling line could carry a direct end label at Apr 30 so the
+    reader does not need the top-right legend.'
+  - 'Suggestion: lighten the vertical grid (17 lines) so it is less busy than the
+    horizontal grid in the light render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like cream), not pure white.
-      Chrome: Title "Daily Unique Visitors · line-timeseries-rolling · javascript · muix · anyplot.ai" in bold dark text, fully readable. X-axis "Date" and Y-axis "Unique Visitors" (custom rotated label) in dark/soft-dark text, both clearly legible. Tick labels (dates, visitor counts) dark and legible. Dashed grid lines subtle on both axes. Legend ("Raw Data" green swatch, "Rolling Average (7-Day)" purple swatch) in dark text above the chart, no overlap with data. Amber dashed reference-line pair labeled "Viral post surge" clearly readable against the cream background.
-      Data: Thin, semi-transparent green (#009E73) zig-zagging raw-data line showing weekday/weekend seasonality and a mid-series surge; a thick, smooth purple (#C475FD) rolling-average line tracking the trend, with a single marked point at its last value. Colors match the Imprint palette (green first, then lavender).
-      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title "Daily Unique Visitors · line-timeseries-rolling · javascript · muix · anyplot.ai" top left with a grey subtitle (120 observations · Jan 1, 2026 to Apr 30, 2026 · trailing 7-day mean from Jan 7, 2026); legend top right; y axis "Unique visitors" 1,500-4,500, x axis "Date" with weekly ticks Jan 4 to Apr 26; subtle grey grid on both axes. All text dark and readable.
+      Data: thin semi-transparent #009E73 raw line with weekend dips and a surge peaking near 4,600 around Mar 9; thick purple 7-day rolling line starting Jan 7 near 2,050, rising to about 3,600 mid-March and ending near 2,850.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text all rendered in light/off-white color, fully readable against the dark background — no dark-on-dark failures observed. Grid lines subtle and visible. Amber reference-line label remains legible against the dark surface.
-      Data: Raw-data line and rolling-average line render in the identical green (#009E73) and purple (#C475FD) as the light render — only the chrome (background, text, grid) flipped, as required. Amber reference line also unchanged.
-      Legibility verdict: PASS — no unreadable elements in either theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, tick labels and axis titles in light ink; grid in a muted dark grey, visible but subordinate. No dark-on-dark text.
+      Data: same green raw line and purple rolling line as the light render; the raw line is dimmer on the dark surface but clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,76 +53,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title/axis/tick/legend); title correctly
-          scaled down via length formula for the longer prefixed title; no overflow,
-          readable in both themes
+        comment: Explicit sizes (title 22, subtitle 15, ticks 15, axis titles and
+          legend 16 CSS px); every label reads cleanly in both themes and at thumbnail
+          scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, title, axis labels, and reference-line label all sit clear
-          of the data and each other
+        comment: No text collisions; the legend sits in its own band above the plot
+          area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Semi-transparent thin raw line vs. bold rolling-average line is well-matched
-          to the ~120-point medium-density series
+        comment: Raw series at 1.75 px / 0.65 opacity stays visible on both surfaces
+          while the 4 px rolling line dominates; legend line samples match their series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/amber trio is CVD-safe and mutually distinguishable,
-          not red-green
+        comment: Green vs purple differ strongly in hue and lightness; width and opacity
+          also separate the series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart occupies the large majority of the canvas with balanced margins,
-          nothing cut off
+        comment: 3200x1800, canvas gate passed; plot fills the canvas, balanced axis
+          labels, title about 56 % of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Date'' and ''Unique Visitors'' are descriptive; the metric name
-          itself conveys the unit'
+        comment: '''Date'' and ''Unique visitors'' are reader text; counts need no
+          unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint canonical order),
-          amber semantic anchor for the annotation, theme-correct chrome in both renders'
+        comment: 'Raw data t.palette[0] #009E73, rolling average t.palette[1]; identical
+          in both renders; backgrounds #FAF8F1 / #1A1A17 with theme-token chrome'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful color/typography choices clearly above defaults, but stops
-          short of a fully distinctive publication-grade treatment
+        comment: A computed subtitle in inkSoft (observation count, date span, window
+          start) forms a deliberate two-level header aligned to the plot's left edge
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle dashed grid, generous whitespace, custom Y-axis label workaround;
-          near-polished throughout
+        comment: Header left-aligned with the y axis, legend right-aligned to the
+          plot edge, 6 % y padding keeps the 4,600 peak clear of the top
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Reference-line annotation names the surge event and the bold trend
-          line vs. thin raw line creates clear visual hierarchy
+        passed: false
+        comment: Hierarchy raw-vs-rolling is what the spec prescribes; no further
+          focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct raw + rolling-average overlay line chart
+        comment: Raw time series with rolling-average overlay, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent raw line, prominent smoothed line, window size in
-          legend, both-axis grid, shorter rolling-average series — all present
+        comment: Thin translucent raw line, prominent contrasting rolling line, legend
+          with '(7-day)', grid on both axes, rolling line starts Jan 7 (window filled)
+          - all Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=visitor count, full data range visible
+        comment: Time axis, raw drawn linear at its values; monotoneX on the rolling
+          line does not overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match series exactly
+        comment: '''Daily Unique Visitors · line-timeseries-rolling · javascript ·
+          muix · anyplot.ai''; legend ''Raw data · Unique visitors'' / ''Rolling average
+          (7-day)'''
     data_quality:
       score: 15
       max: 15
@@ -173,20 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Weekday/weekend seasonality, slow baseline trend, and a viral-surge
-          event all present in the raw series
+        comment: Noise, weekly seasonality, slow trend and a surge show both smoothing
+          and the lag of the average
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily blog unique-visitor traffic — neutral, plausible business scenario
+        comment: Blog unique visitors with weekend dips and a viral-post surge; neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitor counts and surge magnitude are realistic for the domain
+        comment: 120 daily points (inside 50-500), 1,300-4,600 visitors/day; rolling
+          value computed as trailing 7-day mean in code, null for the first 6 days;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -196,61 +191,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data generation → single Chart component, as required by
-          the muix harness contract
+        comment: 'Linear zones: columns, data block, plot; only the required default-exported
+          component'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG (seed=42)
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart, ChartsReferenceLine, Box, Typography — all used
+        comment: Only LineChart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; the manual Y-axis label is a documented, legitimate workaround
-          for a real MUI X layout limitation
+        comment: Appropriate complexity; window size and limits derived from the data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, sizes from window.ANYPLOT_SIZE
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 API (data-series
+          selectors, axis width/height)
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic series/xAxis/yAxis config, slotProps.legend, sx-based per-series
-          styling
+        comment: High-level LineChart with scaleType 'time', grid prop, per-series
+          curve, sx styling via v9 [data-series] selectors
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses ChartsReferenceLine and per-index showMark predicate — MUI X-specific,
-          but reference-line annotation itself is a fairly common cross-library technique
+        comment: Location-aware valueFormatter (short ticks, full date in tooltip)
+          and per-series tooltip formatters for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:39:08Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - grid-styling
