@@ -15,8 +15,8 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const FONT_MIN = 14; // px, label farthest from its cluster centroid
-const FONT_MAX = 20; // px, label at the centroid
+const FONT_MIN = 19; // px, label farthest from its cluster centroid; bold at 19 px is large text, so 3:1 contrast suffices in both themes
+const FONT_MAX = 25; // px, label at the centroid
 const X_PAD_SHARE = 0.07; // axis padding as a share of the data span, room for the text
 const Y_PAD_SHARE = 0.08;
 
