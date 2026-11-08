@@ -12,13 +12,14 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { ContinuousColorLegend, continuousColorLegendClasses } from "@mui/x-charts/ChartsLegend";
 import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const HEX_RADIUS_SHARE = 0.032; // hexagon radius as a share of the projected map width
+const AGGREGATION: "count" | "sum" | "mean" = "count"; // statistic per cell; sum and mean read the VALUE column
 const PAD_SHARE = 0.06; // map padding around the points, as a share of their extent
 const HEX_OPACITY = 0.62; // translucent cells let the base map show through
 const KM_PER_DEG_LAT = 111.2; // length of one degree of latitude
@@ -26,14 +27,16 @@ const KM_PER_DEG_LAT = 111.2; // length of one degree of latitude
 // Columns: set these to your data's column names
 const LON = "Longitude"; // role: lon
 const LAT = "Latitude"; // role: lat
+const VALUE = "Group size"; // role: value (animals per sighting, optional for count)
 
 // Data: replace this block with your own records, one object per point
 // Synthetic gray-whale and common-dolphin sighting reports off Southern
 // California: clusters offshore of three whale-watching launch points (Santa
 // Barbara Channel, Dana Point, La Jolla) plus sparse sightings up and down the
-// coast, every report at least 15 km from the shore.
-// Base map geometry: approximate real coastline vertices, north to south, and
-// the land polygon east of it.
+// coast, every report at least 15 km from the mainland shore and 4 km from the
+// islands.
+// Base map geometry: approximate real coastline vertices, north to south, the
+// land polygon east of it, and the larger offshore islands.
 const COASTLINE = [
   [-120.64, 35.14], // Pismo Beach
   [-120.64, 34.9], // Point Sal
@@ -57,6 +60,22 @@ const COASTLINE = [
   [-116.62, 31.87], // Ensenada
 ];
 const LAND = [...COASTLINE, [-114.0, 31.87], [-114.0, 35.14]];
+const ISLANDS = [
+  // San Miguel
+  [[-120.45, 34.04], [-120.36, 34.08], [-120.31, 34.04], [-120.36, 34.01], [-120.43, 34.02]],
+  // Santa Rosa
+  [[-120.24, 34.0], [-120.12, 34.03], [-119.98, 33.98], [-120.04, 33.9], [-120.17, 33.92]],
+  // Santa Cruz
+  [[-119.92, 34.07], [-119.75, 34.06], [-119.54, 34.04], [-119.55, 33.99], [-119.72, 33.96], [-119.88, 33.99]],
+  // Anacapa
+  [[-119.44, 34.02], [-119.36, 34.02], [-119.36, 34.0], [-119.44, 34.0]],
+  // San Nicolas
+  [[-119.58, 33.27], [-119.45, 33.25], [-119.42, 33.22], [-119.55, 33.21]],
+  // Santa Catalina
+  [[-118.61, 33.48], [-118.5, 33.44], [-118.31, 33.33], [-118.33, 33.3], [-118.46, 33.34], [-118.6, 33.43]],
+  // San Clemente
+  [[-118.6, 33.03], [-118.54, 33.02], [-118.35, 32.82], [-118.42, 32.81]],
+];
 
 const data = (() => {
   let seed = 42;
@@ -68,9 +87,27 @@ const data = (() => {
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
   const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
-  const minShoreKm = 15; // no report closer to the shore than this
+  const minShoreKm = 15; // no report closer to the mainland shore than this
+  const minIslandKm = 4; // nor closer to an island shore than this
   const cosRef = Math.cos((33.5 * Math.PI) / 180);
-  // Distance from a point at sea to the coastline in km; -1 for a point on land
+  // Distance from a point to a closed polygon outline in km; -1 for a point inside it
+  const islandKm = (lon: number, lat: number, ring: number[][]) => {
+    let inside = false;
+    let nearest = Infinity;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+      const [lonA, latA] = ring[j];
+      const [lonB, latB] = ring[i];
+      if (latA > lat !== latB > lat && lon < lonA + ((lat - latA) / (latB - latA)) * (lonB - lonA)) inside = !inside;
+      const dx = (lonB - lonA) * cosRef;
+      const dy = latB - latA;
+      const u = Math.min(1, Math.max(0, ((lon - lonA) * cosRef * dx + (lat - latA) * dy) / (dx * dx + dy * dy)));
+      nearest = Math.min(nearest, Math.hypot((lon - lonA) * cosRef - u * dx, lat - latA - u * dy));
+    }
+    return inside ? -1 : nearest * KM_PER_DEG_LAT;
+  };
+  const clearOfIslands = (lon: number, lat: number) => ISLANDS.every((ring) => islandKm(lon, lat, ring) >= minIslandKm);
+  const groupSize = () => Math.max(1, Math.round(Math.exp(0.9 + 0.7 * gaussian())));
+  // Distance from a point at sea to the mainland coastline in km; -1 for a point on land
   const offshoreKm = (lon: number, lat: number) => {
     let coastLon = -Infinity;
     for (let i = 0; i < COASTLINE.length - 1; i += 1) {
@@ -100,14 +137,14 @@ const data = (() => {
     { lon: -117.9, lat: 33.3, sdLon: 0.13, sdLat: 0.1, n: 380 }, // off Dana Point
     { lon: -117.47, lat: 32.8, sdLon: 0.1, sdLat: 0.1, n: 340 }, // off La Jolla
   ];
-  const rows: { [LON]: number; [LAT]: number }[] = [];
+  const rows: { [LON]: number; [LAT]: number; [VALUE]: number }[] = [];
   for (const spot of hotspots) {
     let kept = 0;
     while (kept < spot.n) {
       const lon = spot.lon + gaussian() * spot.sdLon;
       const lat = spot.lat + gaussian() * spot.sdLat;
-      if (inView(lon, lat) && offshoreKm(lon, lat) >= minShoreKm) {
-        rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)) });
+      if (inView(lon, lat) && offshoreKm(lon, lat) >= minShoreKm && clearOfIslands(lon, lat)) {
+        rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)), [VALUE]: groupSize() });
         kept += 1;
       }
     }
@@ -117,8 +154,8 @@ const data = (() => {
     const lon = -120.6 + rand() * 3.55;
     const lat = 32.45 + rand() * 2.1;
     const km = offshoreKm(lon, lat);
-    if (km >= minShoreKm && km <= minShoreKm + 40) {
-      rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)) });
+    if (km >= minShoreKm && km <= minShoreKm + 40 && clearOfIslands(lon, lat)) {
+      rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)), [VALUE]: groupSize() });
       sparse += 1;
     }
   }
@@ -159,7 +196,7 @@ const yMax = latMid + spanY / 2;
 
 // Flat-top hexagonal binning in projected units (axial coordinates, cube rounding)
 const R = spanX * HEX_RADIUS_SHARE;
-const binCounts = new Map<string, { q: number; r: number; count: number }>();
+const binCounts = new Map<string, { q: number; r: number; count: number; sum: number }>();
 for (const d of data) {
   const px = d[LON] * cosLat;
   const py = d[LAT];
@@ -175,22 +212,31 @@ for (const d of data) {
   if (dq > dr && dq > ds) q = -r - s;
   else if (dr > ds) r = -q - s;
   const key = `${q},${r}`;
-  const bin = binCounts.get(key) ?? { q, r, count: 0 };
+  const bin = binCounts.get(key) ?? { q, r, count: 0, sum: 0 };
   bin.count += 1;
+  bin.sum += d[VALUE] ?? 0;
   binCounts.set(key, bin);
 }
-const bins = [...binCounts.entries()].map(([key, { q, r, count }]) => ({
+const bins = [...binCounts.entries()].map(([key, { q, r, count, sum }]) => ({
   id: key,
   lon: (R * 1.5 * q) / cosLat,
   lat: R * Math.sqrt(3) * (r + q / 2),
   count,
+  sum,
+  mean: sum / count,
+  stat: { count, sum, mean: sum / count }[AGGREGATION],
 }));
-const countMin = Math.min(...bins.map((b) => b.count));
-const countMax = Math.max(...bins.map((b) => b.count));
+const statMin = Math.min(...bins.map((b) => b.stat));
+const statMax = Math.max(...bins.map((b) => b.stat));
 // Hexagon corners as offsets in degrees of longitude and latitude
 const HEX_CORNERS = Array.from({ length: 6 }, (_, k) => [(R * Math.cos((k * Math.PI) / 3)) / cosLat, R * Math.sin((k * Math.PI) / 3)]);
 
-const STAT_LABEL = "Count per hex cell";
+const STAT_LABEL = {
+  count: "Sightings per hex cell (count)",
+  sum: `${VALUE} per hex cell (sum)`,
+  mean: `${VALUE} per hex cell (mean)`,
+}[AGGREGATION];
+const formatStat = (v: number) => (AGGREGATION === "mean" ? v.toFixed(1) : String(Math.round(v)));
 const CLIP_ID = "hexbin-map-clip";
 const formatLon = (v: number) => `${Math.abs(v).toFixed(1)}°${v < 0 ? "W" : "E"}`;
 const formatLat = (v: number) => `${Math.abs(v).toFixed(1)}°${v < 0 ? "S" : "N"}`;
@@ -217,6 +263,15 @@ function BaseMap() {
           stroke={t.inkSoft}
           strokeWidth={1.5}
         />
+        {ISLANDS.map((ring, i) => (
+          <polygon
+            key={i}
+            points={ring.map(([lon, lat]) => `${xScale(lon)},${yScale(lat)}`).join(" ")}
+            fill={t.grid}
+            stroke={t.inkSoft}
+            strokeWidth={1.5}
+          />
+        ))}
       </g>
     </g>
   );
@@ -233,7 +288,7 @@ function HexCells() {
         <polygon
           key={b.id}
           points={HEX_CORNERS.map(([dx, dy]) => `${xScale(b.lon + dx)},${yScale(b.lat + dy)}`).join(" ")}
-          fill={colorScale(b.count)}
+          fill={colorScale(b.stat)}
           fillOpacity={HEX_OPACITY}
           stroke={t.pageBg}
           strokeWidth={1.5}
@@ -262,8 +317,10 @@ export default function Chart() {
             id: "hex-cells",
             label: STAT_LABEL,
             data: bins.map((b) => ({ id: b.id, x: b.lon, y: b.lat })),
-            valueFormatter: (_v, { dataIndex }) =>
-              `${bins[dataIndex].count} · ${formatLat(bins[dataIndex].lat)}, ${formatLon(bins[dataIndex].lon)}`,
+            valueFormatter: (_v, { dataIndex }) => {
+              const b = bins[dataIndex];
+              return `count ${b.count} · sum ${b.sum} · mean ${b.mean.toFixed(1)} · ${formatLat(b.lat)}, ${formatLon(b.lon)}`;
+            },
           },
         ]}
         xAxis={[
@@ -291,7 +348,7 @@ export default function Chart() {
             labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        zAxis={[{ colorMap: { type: "continuous", min: countMin, max: countMax, color: [t.seq[0], t.seq[1]] } }]}
+        zAxis={[{ colorMap: { type: "continuous", min: statMin, max: statMax, color: [t.seq[0], t.seq[1]] } }]}
       >
         <ChartsWrapper
           legendPosition={{ vertical: "bottom", horizontal: "center" }}
@@ -315,9 +372,10 @@ export default function Chart() {
               direction="horizontal"
               thickness={16}
               labelPosition="end"
-              minLabel={({ value }) => String(Math.round(Number(value)))}
-              maxLabel={({ value }) => String(Math.round(Number(value)))}
-              sx={{ color: t.inkSoft, fontSize: 14 }}
+              minLabel={({ value }) => formatStat(Number(value))}
+              maxLabel={({ value }) => formatStat(Number(value))}
+              // Same opacity as the cells, so the bar shows the colours as drawn
+              sx={{ color: t.inkSoft, fontSize: 14, [`& .${continuousColorLegendClasses.gradient}`]: { opacity: HEX_OPACITY } }}
             />
           </Box>
           <ChartsSurface>
