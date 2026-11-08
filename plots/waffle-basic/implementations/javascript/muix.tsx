@@ -12,9 +12,11 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const GRID_SIZE = 10; // the standard 10 × 10 waffle, one square per percentage point
 const CELL_GAP = 0.12; // share of each band left as the gap between squares
-// Semantic exception: the other/rest category takes the neutral soft ink, the
-// remaining categories the unused Imprint positions in order.
-const SEMANTIC = { Other: t.inkSoft };
+// Semantic exception: the other/rest category takes the theme-adaptive "muted"
+// anchor (not in the harness tokens), the remaining categories the unused
+// Imprint positions in order.
+const MUTED = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
+const SEMANTIC = { Other: MUTED };
 const TITLE = "waffle-basic · javascript · muix · anyplot.ai";
 const TITLE_H = 84;
 const LEGEND_H = 72;
