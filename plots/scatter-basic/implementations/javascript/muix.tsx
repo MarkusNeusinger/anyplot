@@ -12,11 +12,11 @@ const PAD_SHARE = 0.05; // axis padding on each side as a share of the data span
 const POINT_ALPHA = 0.7; // moderate transparency so overlapping points read darker
 
 // Columns: set these to your data's column names
-const HOURS = "Weekly hours on creative projects (h)"; // role: x
-const SCORE = "Innovation score (0–100)"; // role: y
+const HOURS = "Weekly study hours (h)"; // role: x
+const SCORE = "Final exam score (%)"; // role: y
 
 // Data: replace this block with your own records, one object per row
-// 120 tech-sector employees: weekly creative-project hours against an innovation score.
+// 120 university students: self-logged weekly study hours against their final exam score.
 const data = (() => {
   let seed = 42;
   const lcg = () => {
