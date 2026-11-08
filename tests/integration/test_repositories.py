@@ -520,6 +520,159 @@ class TestFeedbackRepository:
         }
         assert await repo.reaction_counts("scatter-basic", "plotly") == {"thumbs_up": 1, "thumbs_down": 0}
 
+    async def test_version_start_is_the_implementations_updated(self, test_db_with_data):
+        """The current version began at `impls.updated`; no `updated`, or no row, means one version."""
+        updated = datetime(2026, 11, 8, 4, 54, 13)
+        await ImplRepository(test_db_with_data).upsert("scatter-basic", "matplotlib", {"updated": updated})
+        repo = FeedbackRepository(test_db_with_data)
+
+        assert await repo.version_start("scatter-basic", "matplotlib") == updated
+        assert await repo.version_start("scatter-basic", "matplotlib", "python") == updated
+        assert await repo.version_start("scatter-basic", "matplotlib", "r") is None
+        assert await repo.version_start("scatter-basic", "seaborn") is None  # never regenerated
+        assert await repo.version_start("scatter-basic", "plotly") is None  # not in the table
+
+    async def test_has_plot_vote_is_per_version(self, test_session):
+        """A session that rated an earlier version may rate the current one once; old rows without a version
+        boundary still block a repeat when no `since` is given."""
+        from datetime import timedelta, timezone
+
+        repo = FeedbackRepository(test_session)
+        start = datetime(2026, 11, 8, 12, 0, 0)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": "python", "session_id": "s1"}
+        await repo.create({**vote, "reaction": "thumbs_down", "created_at": start - timedelta(days=3)})
+
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python", since=start) is False
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python") is True
+
+        await repo.create({**vote, "reaction": "thumbs_up", "created_at": start})  # in the second it began
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python", since=start) is True
+        # an aware `since` is the same moment
+        aware = start.replace(tzinfo=timezone.utc)
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python", since=aware) is True
+        assert await repo.has_plot_vote("s2", "scatter-basic", "matplotlib", "python", since=start) is False
+
+    async def test_a_vote_without_a_language_is_on_the_same_image(self, test_session):
+        """A row that names no language still blocks a repeat and still counts when the caller names one."""
+        repo = FeedbackRepository(test_session)
+        start = datetime(2026, 11, 8, 12, 0, 0)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": None, "session_id": "s1"}
+        await repo.create({**vote, "reaction": "thumbs_down", "created_at": start})
+
+        assert await repo.has_plot_vote("s1", "scatter-basic", "matplotlib", "python", since=start) is True
+        assert await repo.reaction_counts("scatter-basic", "matplotlib", "python", since=start) == {
+            "thumbs_up": 0,
+            "thumbs_down": 1,
+        }
+
+    async def test_reaction_counts_split_at_the_version_start(self, test_session):
+        """Votes before the last update are on an earlier version and count only there; within each side the
+        newest row per session counts, so old repeated rows from before the guard count once."""
+        from datetime import timedelta
+
+        repo = FeedbackRepository(test_session)
+        start = datetime(2026, 11, 8, 12, 0, 0)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": "python"}
+
+        def at(hours: float) -> datetime:
+            return start + timedelta(hours=hours)
+
+        # s1: an old row repeated before the guard (👍 then 👎), then a 👍 on the new version
+        await repo.create({**vote, "reaction": "thumbs_up", "session_id": "s1", "created_at": at(-48)})
+        await repo.create({**vote, "reaction": "thumbs_down", "session_id": "s1", "created_at": at(-47)})
+        await repo.create({**vote, "reaction": "thumbs_up", "session_id": "s1", "created_at": at(1)})
+        # s2 rated only the old version, s3 only the new one
+        await repo.create({**vote, "reaction": "thumbs_down", "session_id": "s2", "created_at": at(-2)})
+        await repo.create({**vote, "reaction": "thumbs_down", "session_id": "s3", "created_at": at(2)})
+        # a session-less row on each side
+        await repo.create({**vote, "reaction": "thumbs_up", "created_at": at(-1)})
+        await repo.create({**vote, "reaction": "thumbs_up", "created_at": at(3)})
+
+        current = await repo.reaction_counts("scatter-basic", "matplotlib", since=start)
+        earlier = await repo.reaction_counts("scatter-basic", "matplotlib", before=start)
+        assert current == {"thumbs_up": 2, "thumbs_down": 1}
+        assert earlier == {"thumbs_up": 1, "thumbs_down": 2}
+        # every vote ever cast, as before: the newest row per session across all versions
+        assert await repo.reaction_counts("scatter-basic", "matplotlib") == {"thumbs_up": 3, "thumbs_down": 2}
+
+    async def test_vote_counts_rank_the_implementations(self, test_db_with_data):
+        """One entry per implementation with the current version's 👍/👎 and the earlier ones beside them, counted
+        as `reaction_counts` counts them; sortable by thumbs down, thumbs up and total. Page reactions and other
+        reactions stay out."""
+        from datetime import timedelta
+
+        start = datetime(2026, 11, 8, 12, 0, 0)
+        await ImplRepository(test_db_with_data).upsert("scatter-basic", "matplotlib", {"updated": start})
+        repo = FeedbackRepository(test_db_with_data)
+
+        async def vote(spec, library, reaction, hours, session=None, language="python"):
+            await repo.create(
+                {
+                    "spec_id": spec,
+                    "library_id": library,
+                    "language": language,
+                    "reaction": reaction,
+                    "session_id": session,
+                    "created_at": start + timedelta(hours=hours),
+                }
+            )
+
+        # Regenerated at `start`: s1 rated the old image twice and the new one once, s3 repeats a vote from
+        # before the guard on the new one.
+        await vote("scatter-basic", "matplotlib", "thumbs_down", -30, "s1")
+        await vote("scatter-basic", "matplotlib", "thumbs_up", -20, "s1")
+        await vote("scatter-basic", "matplotlib", "thumbs_down", 1, "s1")
+        await vote("scatter-basic", "matplotlib", "thumbs_down", -10, "s2")
+        await vote("scatter-basic", "matplotlib", "thumbs_down", 2, "s3")
+        await vote("scatter-basic", "matplotlib", "thumbs_down", 3, "s3")
+        await vote("scatter-basic", "matplotlib", "thumbs_up", 1)
+        # Never regenerated: every vote is on its one version.
+        await vote("scatter-basic", "seaborn", "thumbs_up", -30, "s1")
+        await vote("scatter-basic", "seaborn", "thumbs_up", 2, "s4")
+        await vote("scatter-basic", "seaborn", "thumbs_down", 2, "s5", language=None)
+        await vote("bar-grouped", "matplotlib", "thumbs_down", 5, "s6", language=None)
+        # Not plot votes: a page reaction of the floating widget, and an idea on a plot.
+        await repo.create({"spec_id": "scatter-basic", "path": "/scatter-basic", "reaction": "thumbs_down"})
+        await vote("scatter-basic", "matplotlib", "idea", 4, "s7")
+
+        def table(entries):
+            return [
+                (e["path"], e["thumbs_up"], e["thumbs_down"], e["earlier_thumbs_up"], e["earlier_thumbs_down"])
+                for e in entries
+            ]
+
+        regenerated = ("/scatter-basic/python/matplotlib", 1, 2, 1, 1)
+        seaborn = ("/scatter-basic/python/seaborn", 2, 1, 0, 0)
+        bar = ("/bar-grouped/python/matplotlib", 0, 1, 0, 0)  # no language stored: the library's
+        # a tie on thumbs down goes to the newer vote; on total, to the one with more earlier votes
+        assert table(await repo.vote_counts_by_implementation("thumbs_down")) == [regenerated, bar, seaborn]
+        assert table(await repo.vote_counts_by_implementation("thumbs_up")) == [seaborn, regenerated, bar]
+        assert table(await repo.vote_counts_by_implementation("total")) == [regenerated, seaborn, bar]
+        assert table(await repo.vote_counts_by_implementation("thumbs_down", limit=1)) == [regenerated]
+
+        entry = (await repo.vote_counts_by_implementation())[0]
+        assert (entry["spec_id"], entry["language"], entry["library_id"]) == ("scatter-basic", "python", "matplotlib")
+        assert entry["last_vote"] == (start + timedelta(hours=3)).isoformat() + "+00:00"
+        assert set(entry) == {
+            "spec_id",
+            "language",
+            "library_id",
+            "path",
+            "thumbs_up",
+            "thumbs_down",
+            "earlier_thumbs_up",
+            "earlier_thumbs_down",
+            "last_vote",
+        }
+        # the same rule as the per-image count
+        current = await repo.reaction_counts("scatter-basic", "matplotlib", since=start)
+        earlier = await repo.reaction_counts("scatter-basic", "matplotlib", before=start)
+        assert (current["thumbs_up"], current["thumbs_down"], earlier["thumbs_up"], earlier["thumbs_down"]) == (
+            regenerated[1:]
+        )
+        with pytest.raises(ValueError):
+            await repo.vote_counts_by_implementation("thumbs_sideways")
+
 
 def _case_row(case_id: str, **overrides) -> dict:
     """An `agent_feedback` row as `core.agent_cases.row_from_manifest` returns it."""
