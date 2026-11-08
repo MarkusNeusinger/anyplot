@@ -4,8 +4,9 @@
   `generate_data` twice, `query_data` three times, `run_data_code` twice and the plot pipeline once. The call after a
   cap is refused with a fixed message that tells the assistant to answer with what it has, so the "never more than
   twice" sentences left its instructions.
-- **No plot run in a turn that changed the data, or on a paste's summary turn.** While the data is unconfirmed, the
-  server refuses the plot call before the run, keeps the first plot's wish, and records the stop as before. The chat
+- **No plot run in a turn that changed the data, or on a paste's summary turn.** The server refuses the plot call
+  before the run (on a summary turn while the data is unconfirmed), keeps the first plot's wish, and records the stop
+  as before. The chat
   shows no failed plot card for such a turn, and the daily run count no longer counts it, nor a plot call made after
   a library switch was asked for.
 - **The plot buttons' turns tell the assistant what to call.** On "create the plot" turns, the session facts say to

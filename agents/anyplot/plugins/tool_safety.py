@@ -22,8 +22,8 @@
   link rule, because the DATA validator bans URL literals and every file reader itself
   and a division (`x / 2`) reads as a path to the rule.
   The pipeline's bounds (`pipeline_bound`, which the Budget plugin reads too, so it counts no daily run for them):
-  its one call, a switch asked for in the turn (`switch_requested`), and, while the data is unconfirmed, a call
-  after the turn's own data change (`data_changed_this_turn`) or on the summary turn of a paste (`summary_turn`).
+  its one call, a switch asked for in the turn (`switch_requested`), a call after the turn's own data change
+  (`data_changed_this_turn`), and one on the summary turn of a paste while the data is unconfirmed (`summary_turn`).
   Those two stop before the run, as its own `not_ready` would (`pipeline.stop_not_ready`: the first plot's request
   kept, the `pipeline_run` line, the last run), and answer with a fixed `message`, the run's `reason` and
   `request_kept`; the page gets no `plot` event.
@@ -389,20 +389,23 @@ def pipeline_bound(ledger: RequestLedger, tool_context: ToolContext) -> ErrorCod
     daily run for it.
 
     In order: the turn's one run (`one_pipeline_per_turn`), a switch the page carries out after the turn, which plots
-    there (`switch_requested`), and, while the data is unconfirmed, the turn's own data change
-    (`data_changed_this_turn`) or the summary turn of a paste (`summary_turn`). The last two stop before the run with
-    what a run would have found (`refuse_before_run`); a summary turn on confirmed data still plots (a summary turn
-    again after a failed one, whose plot click had confirmed the data)."""
+    there (`switch_requested`), the turn's own data change (`data_changed_this_turn`), and the summary turn of a paste
+    while the data is unconfirmed (`summary_turn`). The last two stop before the run with what a run would have found
+    (`refuse_before_run`). A data change needs no look at the confirmation: a stored version is never confirmed in
+    its turn, and one still under way leaves the old version confirmed until it stores the new one, which a run in the
+    same model answer would race. A summary turn on confirmed data still plots (a summary turn again after a failed
+    one, whose plot click had confirmed the data)."""
     code = capped(ledger, PIPELINE_TOOL)
     if code is not None:
         return code
     if ledger.switch_request is not None:
         # The page switches after this turn and plots there: a run here would be thrown away.
         return "switch_requested"
-    changed = changed_data(ledger)
-    if not (changed or ledger.summary_turn) or data_confirmed(tool_context):
-        return None
-    return DATA_CHANGED if changed else SUMMARY_TURN
+    if changed_data(ledger):
+        return DATA_CHANGED
+    if ledger.summary_turn and not data_confirmed(tool_context):
+        return SUMMARY_TURN
+    return None
 
 
 def turn_bound(ledger: RequestLedger, name: str, tool_context: ToolContext) -> ErrorCode | None:
@@ -425,7 +428,8 @@ def refuse_before_run(
     the request (`request_kept`), as a `not_ready` result does; the page gets no `plot` event."""
     args = run_args(ledger, PipelineArgs.model_validate(arguments))
     view, _, reason = load_inputs(tool_context, get_services())
-    # Unconfirmed data always has a reason: `load_inputs` returns none only for confirmed data.
+    # `load_inputs` finds no reason only on confirmed data: here a data change still under way, whose new version the
+    # user has not confirmed yet.
     result = stop_not_ready(tool_context, ledger, args, view, reason or "data_unconfirmed")
     refusal: dict[str, Any] = {**tool_error(code), "message": STOP_MESSAGES[code], "reason": result.reason}
     if result.request_kept:

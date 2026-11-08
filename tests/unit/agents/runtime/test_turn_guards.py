@@ -199,6 +199,11 @@ class TestCaps:
             link = {"operations": [{"op": "rename", "column": "https://example.org/a", "name": "b"}]}
             assert await before("prepare_data", link) == {"status": "error", "code": "url_or_path_not_allowed"}
             assert (await before("prepare_data", VALID["prepare_data"]) or {}).get("code") == "too_many_prepare_calls"
+        # A bound before the run comes after the arguments too: an invalid call keeps no request and writes no run.
+        with turn(summary_turn=True) as ledger:
+            linked = {"change_request": "as on https://example.org/chart"}
+            assert await before("plot_pipeline", linked) == {"status": "error", "code": "url_or_path_not_allowed"}
+            assert ledger.kept_note is None
 
     async def test_the_pipelines_bounds_keep_their_shape(self) -> None:
         with turn(switch_request={"library": "seaborn", "plot": True}):
@@ -247,6 +252,27 @@ class TestDataChangedThisTurn:
     def test_the_marker_reads_the_record_of_the_turns_calls(self, calls: list[ToolCall], outcome: str | None) -> None:
         with turn(tool_calls=list(calls)) as ledger:
             assert pipeline_bound(ledger, FakeContext()) == outcome  # type: ignore[arg-type]
+
+    async def test_a_change_still_under_way_stops_the_plot_on_confirmed_data_too(
+        self, client: httpx.AsyncClient, services: Services
+    ) -> None:
+        """The old version stays confirmed until the change stores the new one: a run in the same model answer would
+        draw the version the change replaces (Flash review, 2026-11-08)."""
+        sid = await open_session(client)  # pasted and confirmed
+        state = await _session_state(client, sid)
+        context = FakeContext(state=state, session=FakeSession(id=sid))
+        assert read_session(state).data_confirmed  # type: ignore[union-attr]
+
+        with turn(tool_calls=[ToolCall("run_data_code")]) as ledger:
+            assert pipeline_bound(ledger, context) == DATA_CHANGED  # type: ignore[arg-type]
+            refusal = await ToolSafetyPlugin().before_tool_callback(
+                tool=FakeTool("plot_pipeline"),  # type: ignore[arg-type]
+                tool_args={},
+                tool_context=context,  # type: ignore[arg-type]
+            )
+        assert refusal is not None and (refusal["code"], refusal["reason"]) == (DATA_CHANGED, "data_unconfirmed")
+        with turn(summary_turn=True) as ledger:
+            assert pipeline_bound(ledger, context) is None  # a summary turn on confirmed data plots
 
     @pytest.mark.parametrize("change", ["prepare_data", "rebuild", "generate_data", "run_data_code"])
     async def test_a_plot_after_the_turns_own_change_is_refused_before_the_run(

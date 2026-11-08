@@ -243,7 +243,7 @@ changed view waits for the owner's approval, as on 2026-11-01; until then the fi
 ### Meanings changed on 2026-11-08
 
 ToolSafety refuses `plot_pipeline` before the run in a turn that changed the data itself, and on the summary turn of
-a paste, while the data is unconfirmed (`data_changed_this_turn`, `summary_turn`; see the agent network's
+a paste while the data is unconfirmed (`data_changed_this_turn`, `summary_turn`; see the agent network's
 [Two steps](../concepts/agent-network.md#two-steps-data-first-then-the-plot)). Before, such a call ran into the run's
 own `not_ready`. No field is new, but three readings change from that date on:
 
