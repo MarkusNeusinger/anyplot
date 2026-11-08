@@ -127,7 +127,7 @@ class TestRun:
 
     def test_the_record_carries_the_pinned_fields(self, passing_run: SmokeRun) -> None:
         record = passing_run.to_dict()
-        assert record["v"] == 1 and record["tool"] == "core.smoke_run run" and record["checker_version"] == 1
+        assert record["v"] == 1 and record["tool"] == "core.smoke_run run" and record["checker_version"] == 2
         assert (record["spec"], record["library"], record["language"], record["themes"]) == (
             "bar-grouped",
             "matplotlib",

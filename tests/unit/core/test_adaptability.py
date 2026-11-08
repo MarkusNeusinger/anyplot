@@ -31,10 +31,11 @@ from core.adaptability import (
     rewrite_constants,
     run_report,
     sample_findings,
+    spec_context,
 )
 from core.defects import DEFECT_RE, defect_ids, defect_target
 from core.palette import IMPRINT
-from core.spec_roles import Shape, parse_roles
+from core.spec_roles import COMPUTED_ROLES, Shape, parse_roles
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -859,6 +860,22 @@ class TestCatalogue:
 
     def test_map_specs_are_excluded(self) -> None:
         assert check_file(PLOTS / "choropleth-basic/implementations/python/plotly.py").status == "excluded"
+
+    def test_the_spec_context_marks_the_roles_the_plot_computes(self) -> None:
+        """The agent and the checker read one list: a computed role needs no column constant in either."""
+        for spec_id, listed in COMPUTED_ROLES.items():
+            _, roles, _ = spec_context(PLOTS / spec_id / "specification.md")
+            assert {role.name for role in roles if role.computed} == listed, spec_id
+
+    @pytest.mark.parametrize("spec_id", sorted(COMPUTED_ROLES))
+    def test_no_columns_finding_asks_for_a_computed_role(self, spec_id: str) -> None:
+        """Before, `indicator-bollinger` plotnine had "no column constant for the required roles `date`, `close`,
+        `sma`, `upper_band`, `lower_band`": three of them are bands the plot computes."""
+        paths = sorted((PLOTS / spec_id / "implementations" / "python").glob("*.py"))
+        assert paths, spec_id
+        for path in paths:
+            for finding in found(check_file(path), "columns"):
+                assert not any(f"`{name}`" in finding.observed for name in COMPUTED_ROLES[spec_id]), (path, finding)
 
     def test_every_python_implementation_is_checked_without_an_error(self) -> None:
         results = run_report(PLOTS)
