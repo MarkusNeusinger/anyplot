@@ -155,7 +155,7 @@ export default function Chart() {
             min: voltageMin,
             max: voltageMax,
             label: VOLTAGE,
-            width: 84,
+            width: 56,
             tickNumber: 8,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
