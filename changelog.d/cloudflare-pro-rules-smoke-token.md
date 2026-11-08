@@ -10,11 +10,11 @@
   Mode settings, with the switch to Managed Challenge left as an open decision;
   and the principle that no rule hard-blocks traffic that could be a human. The
   AI Crawl Control block rule was deleted the same night, so no crawler is
-  blocked at the edge; `docs/reference/seo.md` follows.
+  blocked at the edge; `docs/reference/seo.md` follows. (#12864)
 - **The site smoke gets past Super Bot Fight Mode.** With `SMOKE_TOKEN` set,
   `scripts/site-smoke.mjs` sends `X-Smoke-Token` to the site's own origin and
   nowhere else, so the Cloudflare skip rule lets the headless run through even
   if automated traffic is challenged. A page Cloudflare challenges anyway reads
   `SKIP` and the run exits 2, because a challenge page says nothing about the
   site; before, it would have read as an outage. A change to the script now also
-  runs CI's app-image smoke.
+  runs CI's app-image smoke. (#12864)
