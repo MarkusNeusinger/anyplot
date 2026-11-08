@@ -42,7 +42,7 @@ const MARKER_RADIUS = 8; // px
 // light theme's elevated surface and soft ink in either theme instead of flipping with the page
 const PITCH_SURFACE = "#FFFDF6";
 const PITCH_INK = "#4A4A44";
-const RUN_OFF_TINT = 0.15; // opacity of the ink wash that sets the run-off apart from the pitch
+const RUN_OFF_TINT = 0.15; // opacity of the ink wash that sets the theme-adaptive run-off apart from the pitch
 
 // Columns: set these to your data's column names
 const X = "x (m)"; // role: x
@@ -154,8 +154,8 @@ function PitchMarkings() {
   const midY = PITCH_WIDTH / 2;
   return (
     <g>
-      <rect x={left} y={top} width={width} height={height} fill={PITCH_SURFACE} />
-      <rect x={left} y={top} width={width} height={height} fill={PITCH_INK} fillOpacity={RUN_OFF_TINT} />
+      <rect x={left} y={top} width={width} height={height} fill={t.elevatedBg} />
+      <rect x={left} y={top} width={width} height={height} fill={t.inkSoft} fillOpacity={RUN_OFF_TINT} />
       <rect x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} fill={PITCH_SURFACE} />
       <rect {...line} x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} />
       <line {...line} x1={xs(PITCH_LENGTH / 2)} y1={ys(0)} x2={xs(PITCH_LENGTH / 2)} y2={ys(PITCH_WIDTH)} />
@@ -183,6 +183,7 @@ function PitchMarkings() {
             />
             <rect
               {...line}
+              fill={PITCH_SURFACE}
               strokeWidth={3}
               x={xs(Math.min(goalLine, goalLine - inward * GOAL_DEPTH))}
               y={ys(midY + GOAL_WIDTH / 2)}
