@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: sunburst-basic
 created: '2026-07-26T04:36:55Z'
-updated: '2026-11-08T06:20:00Z'
+updated: '2026-11-08T06:24:46Z'
 generated_by: claude-opus-5-5
 adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
 workflow_run: 42454011629
@@ -13,96 +13,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Three concentric PieChart series (one per hierarchy level) with shared branch
-    order give a true sunburst from the community surface: every child arc sits exactly
-    inside its parent''s span (Engineering and Platform both end at ~173°)'
-  - 'Branch hue follows Imprint order (Engineering #009E73, Design lavender, Marketing
-    blue, Operations ochre) and lightens per ring depth, so children carry their department''s
-    hue while staying distinguishable from their parent'
+  - Builds the sunburst natively as stacked PieChart series, one per hierarchy level,
+    with innerRadius/outerRadius per ring and a 10 px page-colored gap between rings,
+    so each department's arc spans exactly its teams and projects (every ring lists
+    segments in the same branch order)
+  - 'Branch colors follow the Imprint order (Engineering #009E73, Design #C475FD,
+    Marketing #4467A3, Operations #BD8233) and lighten per ring depth, so children
+    carry their parent''s hue and stay distinguishable through shade plus 2 px page-colored
+    separators in both themes'
   - Label ink is chosen per segment from the fill's relative luminance (white on Marketing
-    blue, dark ink elsewhere), keeping every label readable in both themes
-  - Ring gaps and 2 px separators drawn in t.pageBg separate levels and neighbours
-    in both themes; label size and weight step down by depth (18/700, 15/600, 14/600)
-    to form a hierarchy
-  - Native arcLabel + arcLabelMinAngle hides labels on thin segments (Benefits) and
-    valueFormatter feeds the HTML tooltip with the budget unit
-  - Plausible org-budget hierarchy (4 departments, 9 teams, 18 projects, total 1,000
-    thousand USD) built from records with all structure derived from the data
+    blue, near-black elsewhere), and font size and weight step down from the inner
+    to the outer ring, giving a clear typographic hierarchy that reads in both themes
+  - Native arcLabelMinAngle drops labels on slivers (only the 7° Benefits segment
+    goes unlabeled), and valueFormatter gives every segment a unit-bearing tooltip
+    in the HTML view
+  - Realistic, neutral org-budget scenario summing to exactly 1,000 thousand USD across
+    4 departments, 9 teams and 18 projects, with the unit and totals carried in the
+    subtitle
   weaknesses:
-  - 'VQ-01 (both): outer-ring project labels at 14 px are the smallest text on the
-    1200 px canvas and blur to about 4–5 px in the 400 px thumbnail → about 16 px
-    (+2 px), the size the ring comfortably holds. Likely cause: LABEL_SIZE[2] = 14.'
-  - 'Suggestion: the empty centre (26 % of the radius) could carry the total budget
-    instead of the subtitle, a common sunburst idiom.'
-  - 'Suggestion: the unlabeled Benefits sliver could get its label via a slightly
-    lower arcLabelMinAngle for the outer ring if it fits.'
+  - 'Suggestion: the hand-written relative-luminance block (lines 90–92) could use
+    `getLuminance` from `@mui/material/styles`, which computes the same WCAG value.'
+  - 'Suggestion: Benefits, the one unlabeled outer segment, could be identified in
+    the static PNG through a lower `arcLabelMinAngle` on the outer ring if its label
+    still fits inside its arc.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: bold dark title "sunburst-basic · javascript · muix · anyplot.ai" centred at top, soft-ink subtitle "Budget (thousand USD) · total 1,000 across 4 departments, 9 teams, 18 projects"; no axes or grid. All text readable.
-      Data: three concentric rings around an empty centre separated by page-coloured gaps. Inner ring: Engineering (#009E73, ~48 %), Design (lavender), Marketing (blue), Operations (ochre). Middle ring: 9 teams in lighter tints of their department hue; outer ring: 18 projects in lighter tints still. Children align within their parent arcs. Labels on all segments except the thin Benefits sliver; dark ink on light fills, white "Marketing" on blue. Thin page-colour separators between segments.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas, including the empty centre hole.
+      Chrome: bold title "sunburst-basic · javascript · muix · anyplot.ai" centered at the top in dark ink, a soft-gray subtitle "Budget (thousand USD) · total 1,000 across 4 departments, 9 teams, 18 projects" below it; no axes or grid. All text readable.
+      Data: three concentric rings separated by page-colored gaps. Inner ring: Engineering (#009E73, about half the circle), Design (lavender #C475FD), Marketing (blue #4467A3), Operations (ochre #BD8233). Middle ring: 9 teams in lighter shades of their department's hue; outer ring: 18 projects in the lightest shades. Each child sits inside its parent's angular span; thin page-colored separators split neighbors. Labels in near-black on every segment except Marketing (white); only the thin Benefits sliver is unlabeled.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title in light ink, subtitle in light soft ink, both clearly readable; no dark-on-dark text.
-      Data: identical segment colours to the light render; the ring gaps and separators now show in the dark page colour, so segments read as cleanly separated. Segment labels keep their luminance-based ink (dark on the light tints, white on Marketing) and remain readable. Brand green Engineering clearly visible.
+      Background: warm near-black #1A1A17, including the centre hole and the ring gaps.
+      Chrome: title in light ink, subtitle in light-gray soft ink; both clearly readable, no dark-on-dark text.
+      Data: segment fills identical to the light render (same three tint levels per branch); separators and ring gaps flip to the dark page color. Segment labels keep their luminance-chosen ink (near-black on the pale fills, white on Marketing) and stay readable against their fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; outer-ring labels at 14 px blur
-          in the thumbnail (defect line)
+        comment: Title 22 px, subtitle 15 px, ring labels 18/17/16 px explicitly set;
+          readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Every label sits inside its own segment; no collisions
+        comment: No label collides with another label or a separator; every label
+          sits inside its own segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All segments visible with clear separators in both themes; legend
-          N/A
+        comment: All 31 segments clearly visible with page-colored separators in both
+          themes; no legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct Imprint hues per branch, every segment labelled, label ink
-          chosen by luminance
+        comment: Four distinct Imprint hue families; per-segment ink keeps label contrast;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, circle fills the area under the header with balanced
-          margins; title ~50 % width
+        comment: Square 2400x2400 canvas; the sunburst fills the area under the header
+          with balanced margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design; subtitle names the value and unit (thousand USD)
+        comment: No axes by design (N/A); the subtitle carries the value unit 'thousand
+          USD'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First branch #009E73, then lavender, blue, ochre in Imprint order;
-          tints identical in both themes; backgrounds correct'
+        comment: 'Branches in canonical Imprint order starting with #009E73; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
       score: 13
       max: 20
@@ -112,22 +114,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Depth-graded tints per branch, luminance-driven label ink, label
-          size and weight stepped by ring depth
+        comment: 'Beyond baseline: luminance-chosen label ink per segment, font size
+          and weight stepping down per ring, per-depth tints toward the page tone'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Page-coloured ring gaps and 2 px separators chosen for this chart,
-          labels centred in segments, thin-segment labels suppressed
+        comment: 'Beyond baseline: a tuned centre hole share, 10 px ring gaps and
+          2 px separators in the page color for each theme, an empty-margin layout
+          under a centered header'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Saturated inner ring with bold labels anchors the read at department
-          level; subtitle gives totals and counts
+        comment: The weight and size hierarchy leads from departments outward, and
+          the subtitle's totals frame the part-to-whole reading; no focal point beyond
+          that
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True sunburst, no additions beyond segment labels
+        comment: True three-level sunburst; no unasked encodings, reference lines
+          or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Branch-consistent colours, labelled major segments, ring separation,
-          children within parent spans; all good-version bullets met
+        comment: Consistent branch colors, major segments labeled, visible ring separation,
+          parents encompass their children; all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angles proportional to values; parent ends align with last child
-          (Engineering/Platform ~173°)
+        comment: Segment angles proportional to budget; each ring sums to the same
+          total, so child arcs align inside their parents
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend N/A, segments labelled directly
+        comment: Title matches the mandated format; no legend needed with in-segment
+          labels (N/A)
     data_quality:
       score: 15
       max: 15
@@ -167,20 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 3 levels, 18 leaves, varied branch sizes and fan-outs
+        comment: Three levels, 18 leaves (inside 10–50), unequal branch sizes from
+          480 to 120
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral org budget by department/team/project
+        comment: Plausible, neutral org budget with real-sounding teams and projects
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budgets 20–120 thousand USD summing to 1,000; checked ring sums (480/220/180/120)
-          against arc angles
+        comment: Department totals 480/220/180/120 sum to the stated 1,000 thousand
+          USD; project budgets 20–120 are plausible
     code_quality:
       score: 10
       max: 10
@@ -190,32 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the required default-exported component
+        comment: Module-level data and ring construction; only the mandatory default-export
+          component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: PieChart, Box, Typography all used
+        comment: PieChart, Box, Typography, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Colour mixing and luminance written out; no library helper exists
+        comment: Compact ring construction; the short luminance block is a suggestion
+          only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 hideLegend
-          and class names
+        comment: Default export, skipAnimation, hideLegend, sized from ANYPLOT_SIZE;
+          current v9 API and class names
     library_mastery:
       score: 7
       max: 10
@@ -225,29 +234,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Multi-series PieChart with innerRadius/outerRadius per ring, data-series
-          sx selectors, valueFormatter
+        comment: Multi-series PieChart with per-series radii, arcLabel and data-series-scoped
+          sx selectors, the v9 way to compose rings
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: arcLabel with arcLabelMinAngle, MUI Typography header and Box layout,
-          native tooltip formatting
-  verdict: REJECTED
+        comment: Uses MUI X's native arcLabelMinAngle, valueFormatter tooltips and
+          MUI Typography/Box for the header
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T06:17:05Z'
+  rendered_at: '2026-11-08T06:22:08Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
-  - iteration-over-groups
   - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
   - edge-highlighting
+  - publication-ready
