@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-basic
 created: '2026-06-25T01:47:57Z'
-updated: '2026-11-08T04:49:37Z'
+updated: '2026-11-08T04:54:13Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42448086433
@@ -13,43 +13,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - 'Single-series ScatterChart with 120 points, all in Imprint #009E73 at fillOpacity
-    0.7, so the positive trend, spread and a few outliers read at a glance and overlapping
-    points read darker'
-  - 'Theme tokens threaded through every chrome element (page background, title ink,
-    tick inkSoft, grid stroke, axis lines): both renders are fully legible, data color
-    identical across themes'
-  - Axis bands sized explicitly (x height 72, y width 76) per the v9 truncation gotcha,
-    so no tick label or axis title is clipped
-  - Native valueFormatter supplies a descriptive hover tooltip in the HTML output,
-    and skipAnimation plus hideLegend follow the v9 API
-  - Seeded LCG + Box-Muller generator makes the data deterministic, with descriptive
-    unit-bearing axis titles held in column constants
+  - 'One series of 120 points at their exact (x, y) values in brand green #009E73
+    with fillOpacity 0.7, so the few overlapping pairs read darker; no jitter or nudge'
+  - Chrome threaded fully through ANYPLOT_TOKENS (title in ink, axis titles in ink,
+    ticks and axis lines in inkSoft, grid in the grid token), so both themes read
+    cleanly
+  - Axis domains come from the data with a 5 % pad instead of typed numbers, and the
+    readable axis titles carry units (h, %)
+  - Native ScatterChart props (grid, hideLegend, skipAnimation, tickNumber, per-axis
+    height/width bands) and a per-series valueFormatter that gives the HTML tooltip
+    both labelled values
   weaknesses:
-  - 'DQ-02 (both): the y variable ''Innovation score (0–100)'' is a vague invented
-    index with no recognisable measurement behind it, so the scenario reads as plausible
-    but generic → a concretely measured outcome (e.g. exam score in % against study
-    hours, or monthly sales revenue against marketing spend). Likely cause: the SCORE
-    column name and the data-block comment.'
-  - 'Suggestion: the generated correlation is about r≈0.8 (slope 1.45/h over a 36
-    h range against noise σ=11); raising the noise to about σ=14 would land nearer
-    the spec''s r~0.7 example.'
-  - 'Suggestion: a slightly sparser vertical grid (e.g. tickNumber 6 on x) would quiet
-    the chart without losing value estimation.'
+  - 'DQ-01 (code): the sample correlation is r = 0.84, a strong rather than the moderate
+    r~0.7 the spec''s Data example asks for → about r = 0.70 (−0.14). Likely cause:
+    noise SD of 11 against a slope of 58/40 over 2–38 h in `randn() * 11`; raise the
+    noise to about 16 or flatten the slope.'
+  - 'Suggestion: a slightly heavier title weight or size would give the header more
+    presence against the full-width plot area.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, including the HTML title band.
-      Chrome: bold dark title "scatter-basic · javascript · muix · anyplot.ai" centered at top (~28% of width); y-axis title "Innovation score (0–100)" rotated on the left, x-axis title "Weekly hours on creative projects (h)" at the bottom; tick labels 20–100 and 5–35 in soft dark ink; subtle light-grey horizontal and vertical grid; left and bottom axis lines only. All text readable, nothing clipped.
-      Data: ~120 circular markers in #009E73 at 0.7 opacity forming a clear positive cloud from (~3 h, ~15–55) to (~38 h, ~75–98) with visible noise and a few outliers (e.g. ~21 h / 81, ~5 h / 56). Overlapping pairs read slightly darker.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: centered bold title "scatter-basic · javascript · muix · anyplot.ai" in dark ink; y-axis title "Final exam score (%)" rotated on the left, x-axis title "Weekly study hours (h)" below; ticks 20–100 and 5–35 in soft ink; light gray horizontal and vertical grid; left and bottom axis lines only. All text readable.
+      Data: 120 circular markers in #009E73 at ~0.7 opacity forming a positive cloud from low-left to upper-right, with visible spread and a few outliers (e.g. ~5 h / 56 %, ~37 h / 98 %); a few overlapping pairs read darker.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 throughout.
-      Chrome: title and axis titles in light ink, tick labels in light soft ink, grid lines subtle grey, axis lines light. No dark-on-dark text anywhere.
-      Data: identical #009E73 markers at identical positions and opacity; only chrome flipped. Brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light soft ink, grid subtle gray lines, axis lines light. No dark-on-dark text.
+      Data: identical #009E73 markers and positions as the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,72 +55,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22px, axis titles 16px, ticks 14px CSS); all
-          text readable in both themes
+        comment: Fonts set explicitly (title 22, axis titles 16, ticks 14 CSS px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; point overlap is the permitted dense-cloud overlap,
-          handled with alpha
+        comment: No text collisions; marker overlap limited and handled by alpha
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: '120 points at markerSize 7 with 0.7 opacity: prominent, appropriate
-          for density'
+        comment: 120 points at markerSize 7 with 0.7 opacity suit the density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue with strong contrast on both surfaces; no color-only encoding
+        comment: Single hue, strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off; small mandated title
-          is no deduction
+        comment: 3200x1800, balanced margins, nothing clipped; short title is no deduction
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (h, 0–100)
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Series uses Imprint #009E73 via t.palette[0]; backgrounds #FAF8F1
-          / #1A1A17; both renders theme-correct'
+        comment: 'Series in #009E73, theme-correct backgrounds'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: 'Style-guide baseline: tokens, explicit font sizes, bold title; nothing
-          beyond'
+        passed: false
+        comment: 'Style-guide baseline: token typography and palette, nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: true
-        comment: Spine and grid rules met, nothing beyond (full default-density grid
-          both directions)
+        passed: false
+        comment: Data-derived 5 % domain padding and chosen tick density (8 x / 6
+          y) keep the cloud framed without dead space
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes (correct for
+          a -basic spec)
     spec_compliance:
       score: 15
       max: 15
@@ -136,52 +126,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic scatter, x and y only; no color/size channel, fit line, highlights
-          or annotations
+        comment: Basic scatter, x and y only, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alpha 0.7, axis labels, title, grid, balanced point size; all 'A
-          good version shows' bullets met
+        comment: Alpha ~0.7, axis labels, title, grid, balanced point size; all good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their exact values, 5% padding shows all data, no jitter
-          or nudge
+        comment: Marks at exact values; axes cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in mandated format; legend N/A for single series and hidden
+        comment: Mandated title format; legend hidden for single series (N/A)
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Positive correlation, noise, spread and a few outliers all visible
+        passed: false
+        comment: Shows direction, spread and outliers, but r = 0.84 is stronger than
+          the spec's moderate r~0.7 (defect line)
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Neutral, but 'Innovation score' is a vague invented index (defect
-          line)
+        comment: Study hours vs exam score for 120 students, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hours 2–38/week and scores clamped to 12–98 on a 0–100 scale are
-          sensible; no Check values in the spec
+        comment: Hours 2–38 per week, scores clamped to 12–98 %; sensible for the
+          domain (no Check values in spec)
     code_quality:
       score: 10
       max: 10
@@ -191,34 +179,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; only the mandated default-export component and an
-          inline seeded RNG
+        comment: Columns, data block, plot zones; the seeded LCG is the required browser
+          RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42)
+        comment: Fixed-seed LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart imported
+        comment: Only ScatterChart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; RNG written out because no stats helper is
-          available
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export into the harness mount, skipAnimation, v9 API (hideLegend,
-          axis height/width, MuiScatterChart-marker)
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          v9 API
     library_mastery:
       score: 6
       max: 10
@@ -227,19 +214,19 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: High-level ScatterChart with grid prop, per-axis min/max/tickNumber
-          and chart-scoped sx class styling
+        passed: false
+        comment: High-level ScatterChart with declarative grid, axis bands, sx targeting
+          .MuiScatterChart-marker
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Series valueFormatter for a descriptive MUI tooltip in the HTML output
-  verdict: REJECTED
+        passed: false
+        comment: Per-series valueFormatter for the MUI tooltip with point ids
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T04:46:56Z'
+  rendered_at: '2026-11-08T04:51:36Z'
 impl_tags:
   dependencies: []
   techniques:
