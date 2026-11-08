@@ -12,11 +12,11 @@ const t = window.ANYPLOT_TOKENS;
 const FONT = "Inter, system-ui, -apple-system, sans-serif";
 const FONT_MIN = 22; // px, the least frequent term
 const FONT_MAX = 118; // px, the most frequent term
-const SHRINK_FLOOR = 16; // px, a term that finds no free spot shrinks down to this size at most
+const FIT_FACTOR = 0.92; // when a term finds no free spot, every size shrinks by this factor and the layout reruns
+const MIN_TEXT = 14; // px, the smallest term never goes below this, the layout drops terms instead
 const BOX_PAD = 5; // px of clearance around every word
 const ANGLE_STEP = 0.16; // spiral step, radians
 const RADIUS_STEP = 1.6; // spiral growth per turn, px
-const MAX_STEPS = 24000; // spiral steps tried per word and size
 const TITLE = "wordcloud-basic · javascript · muix · anyplot.ai";
 const TITLE_H = 80;
 const INSET = 26;
@@ -80,38 +80,37 @@ const aspect = cloudH / cloudW;
 
 // Archimedean-spiral layout in px: the most frequent term first, each one
 // spiralling out from the centre until its measured box is clear of every box
-// placed so far; a term that finds no spot shrinks step by step down to the
-// floor. Font size follows the square root of the count, so area tracks it.
+// placed so far. The spiral runs out to the cloud's corners. Font size follows
+// the square root of the count, so area tracks it; when any term finds no spot,
+// all sizes shrink by one common factor and the whole layout reruns, so the
+// size order always matches the counts. Only once the smallest term would drop
+// under MIN_TEXT does the last pass leave the terms without a spot out.
 const measure = document.createElement("canvas").getContext("2d");
-const placed = [];
-[...rows]
-  .sort((a, b) => b[MENTIONS] - a[MENTIONS])
-  .forEach((d) => {
-    let fontSize = FONT_MIN + (FONT_MAX - FONT_MIN) * Math.sqrt((d[MENTIONS] - countMin) / (countMax - countMin || 1));
+const ordered = [...rows].sort((a, b) => b[MENTIONS] - a[MENTIONS]);
+const maxRadius = Math.hypot(cloudW / 2, cloudH / (2 * aspect));
+let placed = [];
+for (let scale = 1; placed.length < ordered.length && FONT_MIN * scale >= MIN_TEXT; scale *= FIT_FACTOR) {
+  placed = [];
+  for (const d of ordered) {
+    const fontSize = scale * (FONT_MIN + (FONT_MAX - FONT_MIN) * Math.sqrt((d[MENTIONS] - countMin) / (countMax - countMin || 1)));
+    measure.font = `600 ${fontSize}px ${FONT}`;
+    const boxW = measure.measureText(d[TERM]).width + 2 * BOX_PAD;
+    const boxH = fontSize * 1.15 + 2 * BOX_PAD;
     let spot = null;
-    while (spot == null) {
-      measure.font = `600 ${fontSize}px ${FONT}`;
-      const boxW = measure.measureText(d[TERM]).width + 2 * BOX_PAD;
-      const boxH = fontSize * 1.15 + 2 * BOX_PAD;
-      let angle = 0;
-      let radius = 0;
-      for (let step = 0; step < MAX_STEPS && spot == null; step += 1) {
-        const cx = cloudW / 2 + radius * Math.cos(angle);
-        const cy = cloudH / 2 + radius * Math.sin(angle) * aspect;
-        const box = { left: cx - boxW / 2, right: cx + boxW / 2, top: cy - boxH / 2, bottom: cy + boxH / 2 };
-        const inside = box.left >= 0 && box.right <= cloudW && box.top >= 0 && box.bottom <= cloudH;
-        const clear = placed.every(
-          (p) => box.right < p.box.left || box.left > p.box.right || box.bottom < p.box.top || box.top > p.box.bottom,
-        );
-        if (inside && clear) spot = { term: d[TERM], fontSize, x: cx, y: cy, box };
-        angle += ANGLE_STEP;
-        radius += (RADIUS_STEP * ANGLE_STEP) / (2 * Math.PI);
-      }
-      if (spot == null && fontSize <= SHRINK_FLOOR) break;
-      if (spot == null) fontSize = Math.max(SHRINK_FLOOR, fontSize * 0.85);
+    for (let angle = 0, radius = 0; radius <= maxRadius && spot == null; angle += ANGLE_STEP) {
+      const cx = cloudW / 2 + radius * Math.cos(angle);
+      const cy = cloudH / 2 + radius * Math.sin(angle) * aspect;
+      const box = { left: cx - boxW / 2, right: cx + boxW / 2, top: cy - boxH / 2, bottom: cy + boxH / 2 };
+      const inside = box.left >= 0 && box.right <= cloudW && box.top >= 0 && box.bottom <= cloudH;
+      const clear = placed.every(
+        (p) => box.right < p.box.left || box.left > p.box.right || box.bottom < p.box.top || box.top > p.box.bottom,
+      );
+      if (inside && clear) spot = { term: d[TERM], fontSize, x: cx, y: cy, box };
+      radius += (RADIUS_STEP * ANGLE_STEP) / (2 * Math.PI);
     }
     if (spot != null) placed.push(spot);
-  });
+  }
+}
 
 // Centre the finished cloud on its own bounding box
 const shiftX = cloudW / 2 - (Math.min(...placed.map((p) => p.box.left)) + Math.max(...placed.map((p) => p.box.right))) / 2;
