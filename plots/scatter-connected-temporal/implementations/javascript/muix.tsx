@@ -30,7 +30,7 @@ const PATH_ROOM = 9; // px a label box keeps from every segment, the direction c
 const MARKER_ROOM = 26; // px a label box keeps from any other point's marker centre
 // The direction cue is an open chevron drawn on the path in the line's own stroke, well below marker
 // size and unfilled, so it reads as part of the line and never as a further observation
-const CHEVRON_ARM = 7; // px, the length of each arm
+const CHEVRON_ARM = 11; // px, the length of each arm
 const CHEVRON_SPREAD = (35 * Math.PI) / 180; // the angle between each arm and the path
 const LINE_WIDTH = 2.5; // px
 const MARK_SCALE = 1.6; // the default mark symbol is too small a bead for a few dozen sparse points
