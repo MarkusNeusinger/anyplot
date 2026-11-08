@@ -1,7 +1,7 @@
 // anyplot.ai
 // star-chart-constellation: Star Chart with Constellations
 // Library: muix 9.17.0 | JavaScript 22.22.3
-// Quality: 94/100 | Created: 2026-06-17
+// Quality: pending | Created: 2026-06-17
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
