@@ -22,7 +22,6 @@ const TITLE_H = 84;
 const LEGEND_H = 64;
 const MONTH_LABEL_H = 40;
 const Y_AXIS_W = 56;
-const MAX_CELL_ASPECT = 2.8; // a day cell is at most this many times taller than wide
 
 // Columns: set these to your data's column names
 const DATE = "Date"; // role: date
@@ -122,17 +121,15 @@ function CalendarCells() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  // Rows fill the free height up to a cap on the cell's height-to-width ratio; the block is centred vertically
-  const weekStep = (width - 16 - Y_AXIS_W - 32) / weeks.length;
-  const gridH = Math.min(height - TITLE_H - LEGEND_H - MONTH_LABEL_H - 8, WEEKDAYS.length * weekStep * MAX_CELL_ASPECT);
-  const chartH = gridH + MONTH_LABEL_H + 8;
+  // The grid takes all the height left under the header and above the legend, so no band of the canvas stays empty
+  const chartH = height - TITLE_H - LEGEND_H;
   return (
     <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
       <Box sx={{ height: TITLE_H, pt: "20px", textAlign: "center", boxSizing: "border-box" }}>
         <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
         <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
       </Box>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
+      <Box sx={{ flex: 1 }}>
         <ChartsDataProvider
           width={width}
           height={chartH}
