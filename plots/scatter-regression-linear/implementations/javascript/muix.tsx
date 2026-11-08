@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-regression-linear: Scatter Plot with Linear Regression
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-08-05
+// Quality: pending | Created: 2026-08-05
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
