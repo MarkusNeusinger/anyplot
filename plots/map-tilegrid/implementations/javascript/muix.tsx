@@ -2,119 +2,91 @@
 // map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-05
-
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
-const tokens = window.ANYPLOT_TOKENS;
+const t = window.ANYPLOT_TOKENS;
 
-// --- Data: renewable electricity share (%) by European country, placed on an
-// approximate compass tile grid (row 0 = north, col 0 = west). Every country
-// gets one equally-sized tile, so a small nation (Estonia) reads with the
-// same visual weight as a large one (France) — the point of a tile grid. ----
-const countries = [
-  { abbr: "IS", name: "Iceland", row: 0, col: 0, value: 85 },
-  { abbr: "NO", name: "Norway", row: 0, col: 3, value: 98 },
-  { abbr: "SE", name: "Sweden", row: 0, col: 5, value: 65 },
-  { abbr: "FI", name: "Finland", row: 0, col: 7, value: 55 },
-  { abbr: "IE", name: "Ireland", row: 1, col: 0, value: 40 },
-  { abbr: "GB", name: "United Kingdom", row: 1, col: 1, value: 43 },
-  { abbr: "DK", name: "Denmark", row: 1, col: 4, value: 62 },
-  { abbr: "EE", name: "Estonia", row: 1, col: 8, value: 32 },
-  { abbr: "NL", name: "Netherlands", row: 2, col: 2, value: 37 },
-  { abbr: "DE", name: "Germany", row: 2, col: 4, value: 46 },
-  { abbr: "PL", name: "Poland", row: 2, col: 6, value: 18 },
-  { abbr: "LT", name: "Lithuania", row: 2, col: 8, value: 28 },
-  { abbr: "BE", name: "Belgium", row: 3, col: 1, value: 24 },
-  { abbr: "CZ", name: "Czechia", row: 3, col: 4, value: 17 },
-  { abbr: "SK", name: "Slovakia", row: 3, col: 5, value: 23 },
-  { abbr: "UA", name: "Ukraine", row: 3, col: 8, value: 9 },
-  { abbr: "FR", name: "France", row: 4, col: 1, value: 25 },
-  { abbr: "CH", name: "Switzerland", row: 4, col: 3, value: 72 },
-  { abbr: "AT", name: "Austria", row: 4, col: 4, value: 78 },
-  { abbr: "HU", name: "Hungary", row: 4, col: 5, value: 14 },
-  { abbr: "RO", name: "Romania", row: 4, col: 7, value: 43 },
-  { abbr: "PT", name: "Portugal", row: 5, col: 0, value: 61 },
-  { abbr: "ES", name: "Spain", row: 5, col: 1, value: 46 },
-  { abbr: "IT", name: "Italy", row: 5, col: 4, value: 35 },
-  { abbr: "HR", name: "Croatia", row: 5, col: 5, value: 55 },
-  { abbr: "RS", name: "Serbia", row: 5, col: 6, value: 30 },
-  { abbr: "BG", name: "Bulgaria", row: 5, col: 7, value: 19 },
-  { abbr: "GR", name: "Greece", row: 6, col: 6, value: 40 },
-];
+// Constants
+const TILE_GAP_SHARE = 0.08; // share of the tile pitch left open between neighbouring tiles
+const INK_SWITCH = 0.19; // relative luminance where #1A1A17 and #FAF8F1 reach equal contrast on a tile
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
 
-const N_COLS = Math.max(...countries.map((c) => c.col)) + 1;
-const N_ROWS = Math.max(...countries.map((c) => c.row)) + 1;
-const colCategories = Array.from({ length: N_COLS }, (_, i) => String(i));
-const rowCategories = Array.from({ length: N_ROWS }, (_, i) => String(i));
+// Columns: set these to your data's column names
+const COUNTRY = "Country"; // role: region
+const SHARE = "Renewable electricity share (%)"; // role: value
+const ROW = "Grid row"; // role: row
+const COL = "Grid column"; // role: col
 
-const points = countries.map((c) => ({
-  id: c.abbr,
-  x: String(c.col),
-  y: String(c.row),
-  z: c.value,
-}));
+// Data: replace this block with your own records, one object per row
+// Renewable share of electricity by European country on a compass tile grid (row 0 = north, col 0 = west).
+const data = [
+  ["IS", 0, 0, 85], ["NO", 0, 3, 98], ["SE", 0, 5, 65], ["FI", 0, 7, 55],
+  ["IE", 1, 0, 40], ["GB", 1, 1, 43], ["DK", 1, 4, 62], ["EE", 1, 8, 32],
+  ["NL", 2, 2, 37], ["DE", 2, 4, 46], ["PL", 2, 6, 18], ["LT", 2, 8, 28],
+  ["BE", 3, 1, 24], ["CZ", 3, 4, 17], ["SK", 3, 5, 23], ["UA", 3, 8, 9],
+  ["FR", 4, 1, 25], ["CH", 4, 3, 72], ["AT", 4, 4, 78], ["HU", 4, 5, 14], ["RO", 4, 7, 43],
+  ["PT", 5, 0, 61], ["ES", 5, 1, 46], ["IT", 5, 4, 35], ["HR", 5, 5, 55], ["RS", 5, 6, 30], ["BG", 5, 7, 19],
+  ["GR", 6, 6, 40],
+].map(([country, row, col, share]) => ({ [COUNTRY]: country, [ROW]: row, [COL]: col, [SHARE]: share }));
 
-const shares = countries.map((c) => c.value);
+// Plot: reads only data and the constants above
+const tiles = data.filter((d) => d[ROW] != null && d[COL] != null);
+const nCols = Math.max(...tiles.map((d) => d[COL])) + 1;
+const nRows = Math.max(...tiles.map((d) => d[ROW])) + 1;
+const shares = tiles.map((d) => d[SHARE]).filter((v) => v != null);
 const minShare = Math.min(...shares);
 const maxShare = Math.max(...shares);
+const unit = SHARE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const lowest = tiles.find((d) => d[SHARE] === minShare);
+const highest = tiles.find((d) => d[SHARE] === maxShare);
 
-// Perceived luminance of the tile fill decides whether the abbreviation reads
-// better in dark or light ink — the fill itself always comes from the
-// continuous Imprint scale, never a custom hex.
-function textColorFor(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  const toLinear = (c) => {
-    const cs = c / 255;
-    return cs <= 0.03928 ? cs / 12.92 : ((cs + 0.055) / 1.055) ** 2.4;
-  };
-  const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-  return luminance > 0.45 ? "#1A1A17" : "#F0EFE8";
-}
+const TITLE = "map-tilegrid · javascript · muix · anyplot.ai";
+const SUBTITLE = `${tiles.length} countries, one equal tile each · ${SHARE} from ${minShare}${unit} (${lowest[COUNTRY]}) to ${maxShare}${unit} (${highest[COUNTRY]})`;
+const HEADER_H = 80;
+const LEGEND_W = 190;
+const PAD = 24;
 
-// Custom scatter mark: opaque square tiles (instead of the default circles)
-// sized from the band scales' own bandwidth, so every tile is identical in
-// area regardless of how few or many neighbors share its row/column.
-function CountryTile(props) {
-  const { series, xScale, yScale, colorGetter, color } = props;
-  const cellWidth = xScale.bandwidth();
-  const cellHeight = yScale.bandwidth();
-  const tileSize = Math.min(cellWidth, cellHeight);
-  const fontSize = tileSize * 0.32;
-
+function Tiles() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const colorScale = useZColorScale();
+  const pitch = xScale(1) - xScale(0);
+  const gap = pitch * TILE_GAP_SHARE;
+  const size = pitch - gap;
   return (
     <g>
-      {series.data.map((point, i) => {
-        const cx = (xScale(point.x) ?? 0) + cellWidth / 2;
-        const cy = (yScale(point.y) ?? 0) + cellHeight / 2;
-        const fill = colorGetter ? colorGetter(i) : color;
+      {tiles.map((d) => {
+        const x = xScale(d[COL]) + gap / 2;
+        const y = yScale(d[ROW]) + gap / 2;
+        const fill = d[SHARE] == null ? t.elevatedBg : colorScale(d[SHARE]);
+        // Fixed ink by the tile's relative luminance, so the label stays legible in both themes
+        const channels = fill.startsWith("#")
+          ? [1, 3, 5].map((i) => parseInt(fill.slice(i, i + 2), 16))
+          : fill.match(/\d+/g).slice(0, 3).map(Number);
+        const luminance = channels
+          .map((c) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4))
+          .reduce((sum, v, k) => sum + v * [0.2126, 0.7152, 0.0722][k], 0);
+        const ink = d[SHARE] == null ? t.inkSoft : luminance > INK_SWITCH ? DARK_INK : LIGHT_INK;
         return (
-          <g key={point.id}>
-            <rect
-              x={cx - tileSize / 2}
-              y={cy - tileSize / 2}
-              width={tileSize}
-              height={tileSize}
-              rx={tileSize * 0.1}
-              fill={fill}
-              stroke={tokens.pageBg}
-              strokeWidth={3}
-            />
+          <g key={d[COUNTRY]}>
+            <rect x={x} y={y} width={size} height={size} rx={size * 0.1} fill={fill} />
             <text
-              x={cx}
-              y={cy}
+              x={x + size / 2}
+              y={y + size * 0.44}
               textAnchor="middle"
               dominantBaseline="central"
-              fontSize={fontSize}
-              fontWeight={600}
-              fill={textColorFor(fill)}
+              fontSize={Math.max(14, size * 0.3)}
+              fontWeight={700}
+              fill={ink}
             >
-              {point.id}
+              {d[COUNTRY]}
+            </text>
+            <text x={x + size / 2} y={y + size * 0.76} textAnchor="middle" dominantBaseline="central" fontSize={15} fill={ink}>
+              {d[SHARE] == null ? "–" : `${d[SHARE]}${unit}`}
             </text>
           </g>
         );
@@ -125,113 +97,64 @@ function CountryTile(props) {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_BLOCK_HEIGHT = 100;
-  const chartWidth = width;
-  const chartHeight = height - TITLE_BLOCK_HEIGHT;
-
-  // ContinuousColorLegend positions its bounding box (bar + both labels)
-  // flush against the *full* width passed to ScatterChart — it ignores
-  // margin.right entirely, so the tile grid's margin math can't push it
-  // inward. Render the chart itself slightly narrower than the mount so a
-  // safety strip of true background is always left between the legend's
-  // rightmost label glyph and the physical canvas edge.
-  const RIGHT_SAFETY = 12;
-  const renderWidth = chartWidth - RIGHT_SAFETY;
-
-  // Reserve a slice on the right for the continuous colorbar legend, then
-  // fit the largest uniform tile pitch that keeps every tile the same size
-  // (the "equal area" rule the spec calls out as the whole point of a tile
-  // grid map) inside whatever space remains. The legend itself is only as
-  // wide as its longest label (its bar and labels are stacked, not summed),
-  // so the reserve only needs to cover that plus a small gap.
-  const PAD = 28;
-  const LEGEND_RESERVE = 64;
-  const availW = renderWidth - PAD * 2 - LEGEND_RESERVE;
-  const availH = chartHeight - PAD * 2;
-  const cellPitch = Math.min(availW / N_COLS, availH / N_ROWS);
-  const gridWidth = cellPitch * N_COLS;
-  const gridHeight = cellPitch * N_ROWS;
-
-  const marginLeft = PAD + (availW - gridWidth) / 2;
-  const marginTop = PAD + (availH - gridHeight) / 2;
-  const marginRight = renderWidth - marginLeft - gridWidth;
-  const marginBottom = chartHeight - marginTop - gridHeight;
+  const bodyH = height - HEADER_H;
+  // One pitch on both axes keeps every tile square; the grid sits centred left of the colour bar
+  const pitch = Math.floor(Math.min((width - LEGEND_W - 3 * PAD) / nCols, (bodyH - 2 * PAD) / nRows));
+  const gridW = pitch * nCols;
+  const gridH = pitch * nRows;
+  const left = Math.round((width - LEGEND_W - PAD - gridW) / 2);
+  const top = Math.round((bodyH - gridH) / 2);
+  const margin = { top, left, right: width - left - gridW, bottom: bodyH - top - gridH };
 
   return (
-    <Box sx={{ width, height, bgcolor: tokens.pageBg, display: "flex", flexDirection: "column" }}>
-      <Box
-        sx={{
-          height: TITLE_BLOCK_HEIGHT,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Typography sx={{ color: tokens.ink, fontSize: 22, fontWeight: 500, lineHeight: 1.2, fontFamily: "inherit" }}>
-          map-tilegrid · javascript · muix · anyplot.ai
-        </Typography>
-        <Typography sx={{ color: tokens.inkSoft, fontSize: 13, lineHeight: 1.2, fontFamily: "inherit", pt: "4px" }}>
-          Renewable electricity share by country — equal tile weight, not land area
-        </Typography>
-      </Box>
-      <Box sx={{ flex: 1, display: "flex" }}>
-        <ScatterChart
-          width={renderWidth}
-          height={chartHeight}
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: `16px 40px 0 ${left}px`, boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
+      <div style={{ position: "relative", width, height: bodyH }}>
+        <ChartsDataProvider
+          width={width}
+          height={bodyH}
+          margin={margin}
+          series={[]}
           skipAnimation
-          disableVoronoi
-          series={[
-            {
-              id: "renewables",
-              type: "scatter",
-              data: points,
-              label: "Renewable electricity share",
-              xAxisId: "col",
-              yAxisId: "row",
-              zAxisId: "share",
-              valueFormatter: (value, { dataIndex }) =>
-                `${countries[dataIndex].name}: ${value.z}% renewable`,
-            },
-          ]}
-          xAxis={[{ id: "col", scaleType: "band", data: colCategories, categoryGapRatio: 0.12 }]}
-          yAxis={[{ id: "row", scaleType: "band", data: rowCategories, categoryGapRatio: 0.12 }]}
+          xAxis={[{ id: "col", scaleType: "linear", min: 0, max: nCols, position: "none" }]}
+          yAxis={[{ id: "row", scaleType: "linear", min: 0, max: nRows, reverse: true, position: "none" }]}
           zAxis={[
             {
               id: "share",
-              min: minShare,
-              max: maxShare,
-              colorMap: { type: "continuous", min: minShare, max: maxShare, color: [tokens.seq[0], tokens.seq[1]] },
+              colorMap: { type: "continuous", min: minShare, max: maxShare, color: [t.seq[0], t.seq[1]] },
             },
           ]}
-          bottomAxis={null}
-          leftAxis={null}
-          margin={{ top: marginTop, right: marginRight, bottom: marginBottom, left: marginLeft }}
-          slots={{ scatter: CountryTile }}
-          slotProps={{ legend: { hidden: true } }}
         >
-          <ContinuousColorLegend
-            axisId="share"
-            axisDirection="z"
-            position={{ horizontal: "right", vertical: "middle" }}
-            direction="column"
-            length="55%"
-            thickness={14}
-            minLabel={({ formattedValue }) => `${formattedValue}%`}
-            maxLabel={({ formattedValue }) => `${formattedValue}%`}
-            // MUI X measures this label off-screen against `document.body`
-            // (not `#container`), so "inherit" would pick up the browser's
-            // default serif font instead of the sans-serif stack the label
-            // actually renders in — an explicit family keeps the measured
-            // and rendered widths in sync.
-            labelStyle={{
-              fontSize: 13,
-              fill: tokens.inkSoft,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          <ChartsSurface>
+            <Tiles />
+          </ChartsSurface>
+          <div
+            style={{
+              position: "absolute",
+              left: left + gridW + 2 * PAD,
+              top: top + gridH * 0.2,
+              width: LEGEND_W,
+              height: gridH * 0.6,
+              display: "flex",
+              flexDirection: "column",
             }}
-          />
-        </ScatterChart>
-      </Box>
-    </Box>
+          >
+            <div style={{ fontSize: 16, fontWeight: 500, color: t.ink, marginBottom: 12 }}>{SHARE}</div>
+            <ContinuousColorLegend
+              axisDirection="z"
+              axisId="share"
+              direction="vertical"
+              thickness={20}
+              minLabel={`${minShare}${unit}`}
+              maxLabel={`${maxShare}${unit}`}
+              sx={{ flex: 1, color: t.inkSoft, "& *": { fontSize: 15 } }}
+            />
+          </div>
+        </ChartsDataProvider>
+      </div>
+    </div>
   );
 }
