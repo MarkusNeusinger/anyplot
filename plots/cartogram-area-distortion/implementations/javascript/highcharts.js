@@ -11,59 +11,59 @@ const t = window.ANYPLOT_TOKENS;
 // tile, and the tiles of neighbouring states touch; the circle drawn inside
 // each tile has area ∝ population, so its size against the tile is the area
 // distortion. Fill encodes a GDP-per-capita tier. population in millions
-// (2023 est.), gdpPerCapita in thousand USD.
+// (2023 est.), gdpPerCapita in thousand USD, landArea in thousand sq mi.
 const states = [
-  { name: "AK", col: 0, row: 0, population: 0.7, gdpPerCapita: 80 },
-  { name: "ME", col: 10, row: 0, population: 1.4, gdpPerCapita: 56 },
-  { name: "WI", col: 5, row: 1, population: 5.9, gdpPerCapita: 65 },
-  { name: "VT", col: 9, row: 1, population: 0.6, gdpPerCapita: 57 },
-  { name: "NH", col: 10, row: 1, population: 1.4, gdpPerCapita: 71 },
-  { name: "WA", col: 0, row: 2, population: 7.9, gdpPerCapita: 87 },
-  { name: "ID", col: 1, row: 2, population: 2.0, gdpPerCapita: 52 },
-  { name: "MT", col: 2, row: 2, population: 1.1, gdpPerCapita: 62 },
-  { name: "ND", col: 3, row: 2, population: 0.8, gdpPerCapita: 78 },
-  { name: "MN", col: 4, row: 2, population: 5.7, gdpPerCapita: 77 },
-  { name: "IL", col: 5, row: 2, population: 12.6, gdpPerCapita: 79 },
-  { name: "MI", col: 6, row: 2, population: 10.0, gdpPerCapita: 60 },
-  { name: "NY", col: 8, row: 2, population: 19.6, gdpPerCapita: 96 },
-  { name: "MA", col: 9, row: 2, population: 7.0, gdpPerCapita: 91 },
-  { name: "OR", col: 0, row: 3, population: 4.2, gdpPerCapita: 71 },
-  { name: "NV", col: 1, row: 3, population: 3.2, gdpPerCapita: 66 },
-  { name: "WY", col: 2, row: 3, population: 0.6, gdpPerCapita: 74 },
-  { name: "SD", col: 3, row: 3, population: 0.9, gdpPerCapita: 68 },
-  { name: "IA", col: 4, row: 3, population: 3.2, gdpPerCapita: 65 },
-  { name: "IN", col: 5, row: 3, population: 6.8, gdpPerCapita: 63 },
-  { name: "OH", col: 6, row: 3, population: 11.8, gdpPerCapita: 64 },
-  { name: "PA", col: 7, row: 3, population: 13.0, gdpPerCapita: 65 },
-  { name: "NJ", col: 8, row: 3, population: 9.3, gdpPerCapita: 74 },
-  { name: "CT", col: 9, row: 3, population: 3.6, gdpPerCapita: 82 },
-  { name: "RI", col: 10, row: 3, population: 1.1, gdpPerCapita: 61 },
-  { name: "CA", col: 0, row: 4, population: 39.0, gdpPerCapita: 91 },
-  { name: "UT", col: 1, row: 4, population: 3.4, gdpPerCapita: 70 },
-  { name: "CO", col: 2, row: 4, population: 5.9, gdpPerCapita: 75 },
-  { name: "NE", col: 3, row: 4, population: 2.0, gdpPerCapita: 72 },
-  { name: "MO", col: 4, row: 4, population: 6.2, gdpPerCapita: 60 },
-  { name: "KY", col: 5, row: 4, population: 4.5, gdpPerCapita: 53 },
-  { name: "WV", col: 6, row: 4, population: 1.8, gdpPerCapita: 51 },
-  { name: "VA", col: 7, row: 4, population: 8.7, gdpPerCapita: 69 },
-  { name: "MD", col: 8, row: 4, population: 6.2, gdpPerCapita: 70 },
-  { name: "DE", col: 9, row: 4, population: 1.0, gdpPerCapita: 78 },
-  { name: "AZ", col: 1, row: 5, population: 7.4, gdpPerCapita: 55 },
-  { name: "NM", col: 2, row: 5, population: 2.1, gdpPerCapita: 55 },
-  { name: "KS", col: 3, row: 5, population: 2.9, gdpPerCapita: 65 },
-  { name: "AR", col: 4, row: 5, population: 3.0, gdpPerCapita: 50 },
-  { name: "TN", col: 5, row: 5, population: 7.1, gdpPerCapita: 60 },
-  { name: "NC", col: 6, row: 5, population: 10.8, gdpPerCapita: 63 },
-  { name: "SC", col: 7, row: 5, population: 5.4, gdpPerCapita: 52 },
-  { name: "DC", col: 8, row: 5, population: 0.7, gdpPerCapita: 220 },
-  { name: "OK", col: 3, row: 6, population: 4.0, gdpPerCapita: 58 },
-  { name: "LA", col: 4, row: 6, population: 4.6, gdpPerCapita: 58 },
-  { name: "MS", col: 5, row: 6, population: 2.9, gdpPerCapita: 44 },
-  { name: "AL", col: 6, row: 6, population: 5.1, gdpPerCapita: 51 },
-  { name: "GA", col: 7, row: 6, population: 11.0, gdpPerCapita: 64 },
-  { name: "HI", col: 0, row: 7, population: 1.4, gdpPerCapita: 63 },
-  { name: "TX", col: 3, row: 7, population: 30.5, gdpPerCapita: 74 },
-  { name: "FL", col: 8, row: 7, population: 22.6, gdpPerCapita: 60 },
+  { name: "AK", col: 0, row: 0, population: 0.7, gdpPerCapita: 80, landArea: 571 },
+  { name: "ME", col: 10, row: 0, population: 1.4, gdpPerCapita: 56, landArea: 30.8 },
+  { name: "WI", col: 5, row: 1, population: 5.9, gdpPerCapita: 65, landArea: 54.2 },
+  { name: "VT", col: 9, row: 1, population: 0.6, gdpPerCapita: 57, landArea: 9.2 },
+  { name: "NH", col: 10, row: 1, population: 1.4, gdpPerCapita: 71, landArea: 9.0 },
+  { name: "WA", col: 0, row: 2, population: 7.9, gdpPerCapita: 87, landArea: 66.5 },
+  { name: "ID", col: 1, row: 2, population: 2.0, gdpPerCapita: 52, landArea: 82.6 },
+  { name: "MT", col: 2, row: 2, population: 1.1, gdpPerCapita: 62, landArea: 145.5 },
+  { name: "ND", col: 3, row: 2, population: 0.8, gdpPerCapita: 78, landArea: 69.0 },
+  { name: "MN", col: 4, row: 2, population: 5.7, gdpPerCapita: 77, landArea: 79.6 },
+  { name: "IL", col: 5, row: 2, population: 12.6, gdpPerCapita: 79, landArea: 55.5 },
+  { name: "MI", col: 6, row: 2, population: 10.0, gdpPerCapita: 60, landArea: 56.5 },
+  { name: "NY", col: 8, row: 2, population: 19.6, gdpPerCapita: 96, landArea: 47.1 },
+  { name: "MA", col: 9, row: 2, population: 7.0, gdpPerCapita: 91, landArea: 7.8 },
+  { name: "OR", col: 0, row: 3, population: 4.2, gdpPerCapita: 71, landArea: 96.0 },
+  { name: "NV", col: 1, row: 3, population: 3.2, gdpPerCapita: 66, landArea: 109.8 },
+  { name: "WY", col: 2, row: 3, population: 0.6, gdpPerCapita: 74, landArea: 97.1 },
+  { name: "SD", col: 3, row: 3, population: 0.9, gdpPerCapita: 68, landArea: 75.8 },
+  { name: "IA", col: 4, row: 3, population: 3.2, gdpPerCapita: 65, landArea: 55.9 },
+  { name: "IN", col: 5, row: 3, population: 6.8, gdpPerCapita: 63, landArea: 35.8 },
+  { name: "OH", col: 6, row: 3, population: 11.8, gdpPerCapita: 64, landArea: 40.9 },
+  { name: "PA", col: 7, row: 3, population: 13.0, gdpPerCapita: 65, landArea: 44.7 },
+  { name: "NJ", col: 8, row: 3, population: 9.3, gdpPerCapita: 74, landArea: 7.4 },
+  { name: "CT", col: 9, row: 3, population: 3.6, gdpPerCapita: 82, landArea: 4.8 },
+  { name: "RI", col: 10, row: 3, population: 1.1, gdpPerCapita: 61, landArea: 1.0 },
+  { name: "CA", col: 0, row: 4, population: 39.0, gdpPerCapita: 91, landArea: 155.8 },
+  { name: "UT", col: 1, row: 4, population: 3.4, gdpPerCapita: 70, landArea: 82.2 },
+  { name: "CO", col: 2, row: 4, population: 5.9, gdpPerCapita: 75, landArea: 103.6 },
+  { name: "NE", col: 3, row: 4, population: 2.0, gdpPerCapita: 72, landArea: 76.8 },
+  { name: "MO", col: 4, row: 4, population: 6.2, gdpPerCapita: 60, landArea: 68.7 },
+  { name: "KY", col: 5, row: 4, population: 4.5, gdpPerCapita: 53, landArea: 39.5 },
+  { name: "WV", col: 6, row: 4, population: 1.8, gdpPerCapita: 51, landArea: 24.0 },
+  { name: "VA", col: 7, row: 4, population: 8.7, gdpPerCapita: 69, landArea: 39.5 },
+  { name: "MD", col: 8, row: 4, population: 6.2, gdpPerCapita: 70, landArea: 9.7 },
+  { name: "DE", col: 9, row: 4, population: 1.0, gdpPerCapita: 78, landArea: 1.9 },
+  { name: "AZ", col: 1, row: 5, population: 7.4, gdpPerCapita: 55, landArea: 113.6 },
+  { name: "NM", col: 2, row: 5, population: 2.1, gdpPerCapita: 55, landArea: 121.3 },
+  { name: "KS", col: 3, row: 5, population: 2.9, gdpPerCapita: 65, landArea: 81.8 },
+  { name: "AR", col: 4, row: 5, population: 3.0, gdpPerCapita: 50, landArea: 52.0 },
+  { name: "TN", col: 5, row: 5, population: 7.1, gdpPerCapita: 60, landArea: 41.2 },
+  { name: "NC", col: 6, row: 5, population: 10.8, gdpPerCapita: 63, landArea: 48.6 },
+  { name: "SC", col: 7, row: 5, population: 5.4, gdpPerCapita: 52, landArea: 30.1 },
+  { name: "DC", col: 8, row: 5, population: 0.7, gdpPerCapita: 220, landArea: 0.06 },
+  { name: "OK", col: 3, row: 6, population: 4.0, gdpPerCapita: 58, landArea: 68.6 },
+  { name: "LA", col: 4, row: 6, population: 4.6, gdpPerCapita: 58, landArea: 43.2 },
+  { name: "MS", col: 5, row: 6, population: 2.9, gdpPerCapita: 44, landArea: 46.9 },
+  { name: "AL", col: 6, row: 6, population: 5.1, gdpPerCapita: 51, landArea: 50.6 },
+  { name: "GA", col: 7, row: 6, population: 11.0, gdpPerCapita: 64, landArea: 57.5 },
+  { name: "HI", col: 0, row: 7, population: 1.4, gdpPerCapita: 63, landArea: 6.4 },
+  { name: "TX", col: 3, row: 7, population: 30.5, gdpPerCapita: 74, landArea: 261.2 },
+  { name: "FL", col: 8, row: 7, population: 22.6, gdpPerCapita: 60, landArea: 53.6 },
 ];
 
 // --- Layout ------------------------------------------------------------------
@@ -83,6 +83,16 @@ const marginSide = (window.ANYPLOT_SIZE.width - cell * cols) / 2;
 const maxPopulation = Math.max(...states.map((s) => s.population));
 const MAX_RADIUS = cell * 0.47;
 const LABEL_INSIDE_RADIUS = 15; // smaller circles carry their label below them
+
+// The undistorted reference: an inset of the same grid in the empty south-east
+// corner where each state's square has area ∝ its land area, so the reader
+// sees how big each state is on a normal map next to how big it is by people.
+const INSET_CELL = 32;
+const INSET_RIGHT = window.ANYPLOT_SIZE.width - 16;
+const INSET_BOTTOM = window.ANYPLOT_SIZE.height - MARGIN_BOTTOM;
+const insetLeft = INSET_RIGHT - INSET_CELL * cols;
+const insetTop = INSET_BOTTOM - INSET_CELL * rows;
+const maxLandArea = Math.max(...states.map((s) => s.landArea));
 
 // The core bundle has no colorAxis module, so the GDP-per-capita tiers are
 // three ordinary series: ordered steps of imprint_seq (low → high), each with
@@ -112,7 +122,7 @@ const series = tiers.map((tier, i) => ({
         x: s.col,
         y: s.row,
         marker: { radius },
-        custom: { population: s.population, gdpPerCapita: s.gdpPerCapita },
+        custom: { population: s.population, gdpPerCapita: s.gdpPerCapita, landArea: s.landArea },
         dataLabels: inside
           ? { verticalAlign: "middle", style: { color: tier.label } }
           : { verticalAlign: "top", distance: radius + 3, style: { color: t.ink } },
@@ -120,9 +130,9 @@ const series = tiers.map((tier, i) => ({
     }),
 }));
 
-// Legend entry for the reference tiles, which the SVG renderer draws below.
+// Legend entry for the equal-area tiles, which the SVG renderer draws below.
 series.push({
-  name: "Equal-area reference tile, one per state",
+  name: "Equal-area tile, one per state",
   color: t.grid,
   marker: { symbol: "square", radius: 8, fillColor: t.grid, lineWidth: 0 },
   enableMouseTracking: false,
@@ -143,21 +153,39 @@ Highcharts.chart("container", {
     style: { fontFamily: "inherit" },
     events: {
       // One equal-area tile per state, exactly one grid cell in size, so the
-      // tiles of neighbouring states share their edges: the undistorted
-      // baseline each population-scaled circle is measured against. A
-      // page-coloured hairline keeps the individual tiles readable. Redrawn on
-      // every render because the pixel positions follow the axes.
+      // tiles of neighbouring states share their edges: the baseline each
+      // population-scaled circle is measured against. A page-coloured hairline
+      // keeps the individual tiles readable. The land-area inset follows in the
+      // same group. Redrawn on every render because the pixel positions follow
+      // the axes.
       render: function () {
         if (this.tileGroup) this.tileGroup.destroy();
-        this.tileGroup = this.renderer.g("reference-tiles").attr({ zIndex: 1 }).add();
+        const r = this.renderer;
+        this.tileGroup = r.g("reference-tiles").attr({ zIndex: 1 }).add();
         const xa = this.xAxis[0];
         const ya = this.yAxis[0];
         states.forEach((s) => {
           const x0 = xa.toPixels(s.col - 0.5);
           const y0 = ya.toPixels(s.row - 0.5);
-          this.renderer
-            .rect(x0, y0, xa.toPixels(s.col + 0.5) - x0, ya.toPixels(s.row + 0.5) - y0)
+          r.rect(x0, y0, xa.toPixels(s.col + 0.5) - x0, ya.toPixels(s.row + 0.5) - y0)
             .attr({ fill: t.grid, stroke: t.pageBg, "stroke-width": 1.5 })
+            .add(this.tileGroup);
+        });
+
+        // Inset: square side ∝ sqrt(land area), centred in its cell, so the
+        // square areas compare like the states on an ordinary map.
+        r.text("Undistorted: square area ∝ land area", insetLeft, insetTop - 10)
+          .css({ color: t.inkSoft, fontSize: "13px", fontWeight: "600" })
+          .add(this.tileGroup);
+        states.forEach((s) => {
+          const side = INSET_CELL * 0.96 * Math.sqrt(s.landArea / maxLandArea);
+          const cx = insetLeft + (s.col + 0.5) * INSET_CELL;
+          const cy = insetTop + (s.row + 0.5) * INSET_CELL;
+          r.rect(cx - INSET_CELL / 2, cy - INSET_CELL / 2, INSET_CELL, INSET_CELL)
+            .attr({ fill: t.grid, stroke: t.pageBg, "stroke-width": 1 })
+            .add(this.tileGroup);
+          r.rect(cx - side / 2, cy - side / 2, side, side)
+            .attr({ fill: t.inkSoft })
             .add(this.tileGroup);
         });
       },
@@ -173,7 +201,7 @@ Highcharts.chart("container", {
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   caption: {
-    text: "Circle area ∝ population (millions, 2023) · fill = GDP-per-capita tier · grey tile = undistorted reference, the same size for every state · tile position follows rough state geography",
+    text: "Circle area ∝ population (millions, 2023) · fill = GDP-per-capita tier · inset = the same grid sized by land area, the undistorted geography · tile position follows rough state geography",
     align: "center",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
@@ -219,7 +247,7 @@ Highcharts.chart("container", {
   },
   tooltip: {
     pointFormat:
-      "Population: {point.custom.population}M<br/>GDP per capita: ${point.custom.gdpPerCapita}k",
+      "Population: {point.custom.population}M<br/>GDP per capita: ${point.custom.gdpPerCapita}k<br/>Land area: {point.custom.landArea}k sq mi",
   },
   series,
 });
