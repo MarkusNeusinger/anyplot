@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: phase-diagram-pt
 created: '2026-08-20T22:06:27Z'
-updated: '2026-11-08T04:02:54Z'
+updated: '2026-11-08T04:07:51Z'
 generated_by: claude-opus-5-5
 adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
 workflow_run: 42444879163
@@ -13,42 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Physically grounded water data: Wagner-Pruss vaporization ending exactly at 647.096
-    K / 22.064 MPa, Simon-Glatzel melting with the negative slope up to the ice Ih-III
-    limit, Clausius-Clapeyron sublimation'
-  - Annotations drawn as SVG children in data coordinates through useXScale/useYScale,
-    so labels track the scales
-  - Native log pressure axis with one tick per decade and superscript exponent formatting
-  - Distinct ink-colored circle and diamond for triple and critical points with two-tier
-    labels (name, coordinates)
-  - All region labels placed in their correct areas, supercritical region bounded
-    by dashed guides beyond the critical point
-  - 'Clean theme adaptation: chrome tokens flip, Imprint curve colors identical in
-    both renders'
+  - 'Real water data computed rather than placed: the Wagner-Pruss saturation equation
+    (IAPWS 1992) for vaporization, the Simon-Glatzel melting equation for ice Ih up
+    to the ice Ih-III-liquid point at 209.9 MPa (ending at about 251 K), and Clausius-Clapeyron
+    sublimation down to about 0.16 Pa at 200 K'
+  - 'Water''s anomalous negative solid-liquid slope is visible: the green melting
+    curve rises almost vertically from the triple point and leans toward lower temperature
+    at high pressure'
+  - Triple point (round marker) and critical point (diamond) are drawn in ink, apart
+    from the palette lines, with two-level annotations (bold name, soft coordinates
+    with units read from the column names)
+  - The liquid-gas curve stops exactly at the critical point; dashed Tc/Pc guides
+    enclose a labeled supercritical-fluid region, which has room because of the asymmetric
+    right padding
+  - Log pressure axis with one tick per decade, labeled as 10 with superscript exponents,
+    so the 10-decade range reads at a glance
+  - 'MUI X composition idiom: a custom SVG layer rendered as a LineChart child that
+    uses the useXScale/useYScale hooks, so every annotation sits in data coordinates;
+    one hidden x axis per series lets each curve have its own temperature samples'
+  - Theme tokens are threaded through every element; chrome flips cleanly between
+    light and dark while the three Imprint line colors stay identical
   weaknesses:
-  - 'SC-02 (both): the boundary curves carry 36 (melting), 41 (vaporization) and 30
-    (sublimation) points, below the spec''s 50-200 per curve; the melting curve shows
-    visible corners between 10^8 and 2x10^8 Pa → at least 50 points per curve (+14,
-    +9, +20). Likely cause: Array.from length 36 / 41 / 30.'
-  - 'CQ-04 (code): the triple and critical coordinates are aliased twice, TT/PT/TC/PC
-    at lines 44-47 and tt/tc/logPt/logPc at lines 85-88 → keep one set of aliases.
-    Likely cause: the region-anchor block redefining constants already declared above.'
-  - 'Suggestion: the subtitle recites point counts and the decade span; a line on
-    water''s negative melting slope would tell the reader something the axes do not.'
+  - 'Suggestion: the solid-liquid line is squeezed into a near-vertical stroke on
+    the log axis; a small inset or a second linear-pressure view of the melting curve
+    could show its negative slope more clearly'
+  - 'Suggestion: the bottom legend repeats the boundary names that the region labels
+    already imply; direct labels along each curve could replace it'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: centered bold title "Water · phase-diagram-pt · javascript · muix · anyplot.ai", soft subtitle "107 boundary points on 3 curves · pressure on a log scale over 10 decades"; x axis "Temperature (K)" 200-700 every 20 K; y axis "Pressure (Pa), log scale" with decade ticks 10⁻¹ to 10⁸; subtle horizontal grid; bottom legend with three line glyphs. All text dark and readable.
-      Data: green #009E73 melting curve rising almost vertically from the triple point and leaning left to ~251 K at 2x10^8 Pa; lavender #C475FD vaporization curve from the triple point to the critical point; blue #4467A3 sublimation curve from 200 K / ~0.17 Pa to the triple point. Black circle at the triple point (273.16 K, 611.657 Pa) and black diamond at the critical point (647.096 K, 22,064,000 Pa), each annotated. Bold region labels Solid (left), Liquid (top centre), Gas (bottom centre); dashed guides up and right from the critical point bound "Supercritical fluid".
+      Background: warm off-white #FAF8F1, landscape 3200x1800.
+      Chrome: bold dark title "Water · phase-diagram-pt · javascript · muix · anyplot.ai", soft-ink subtitle (180 boundary points on 3 curves, log scale over 10 decades), y axis "Pressure (Pa), log scale" with decade ticks 10^-1 to 10^8, x axis "Temperature (K)" with ticks from 200 to 700, subtle horizontal grid, bottom legend. All text is dark on light and readable.
+      Data: green #009E73 solid-liquid curve rising almost vertically from the triple point and leaning toward lower temperature up to about 251 K / 2x10^8 Pa; lavender #C475FD liquid-gas curve from the triple point up to the critical point at 647 K / 22 MPa; blue #4467A3 sublimation curve from 200 K / 0.16 Pa up to the triple point. A dark round marker for the triple point (273.16 K, 611.657 Pa) and a dark diamond for the critical point (647.096 K, 22,064,000 Pa), both annotated; dashed Tc/Pc guides enclose the "Supercritical fluid" label. Solid, Liquid and Gas labels sit in their regions.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles, ticks and legend text all in light ink; grid subtle but visible; no dark-on-dark text.
-      Data: curve colors identical to the light render; triple/critical markers flip to light ink with a dark outline, dashed guides light.
+      Chrome: title, axis labels and annotation names in light ink; ticks, subtitle, region labels and coordinates in light soft ink; grid subtle but visible; dashed guides light. No dark-on-dark text.
+      Data: the three line colors are identical to the light render; the triple- and critical-point markers flip to light ink with a page-colored outline. Brand green is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,36 +64,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, region labels 24, ticks 14-15, axis titles
-          16, legend 15 CSS px); all text readable in both themes
+        comment: Explicit sizes (title 22, region labels 24, axis titles 16, ticks
+          14-15 CSS px), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Annotations, region labels and the dashed supercritical guides stay
-          clear of each other and of the curves
+        comment: Annotations clear of the curves and markers; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3.5 px lines, distinct circle (triple) and diamond (critical) markers
-          with page-color outline; legend line glyphs visible in both themes
+        comment: 3.5 px boundary lines, 18 px point markers; legend line samples visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are CVD-separable; curves also identified by
-          position and legend
+        comment: Green/lavender/blue are CVD-distinct; points use shape (circle vs
+          diamond) as well as ink
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, plot fills the canvas, title ~36% width (no deduction),
-          balanced axis labels, no overflow
+        comment: 3200x1800, balanced margins, nothing cut off, title at about 36 %
+          of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -101,11 +104,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-3 in canonical order (#009E73 first); backgrounds
-          #FAF8F1 / #1A1A17; key-point markers use ink tokens; data colors identical
-          across themes'
+        comment: Imprint positions 1-3 in canonical order, correct page backgrounds
+          in both themes
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -113,24 +115,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Deliberate type hierarchy: bold 24 px region names in inkSoft, bold
-          ink point names over soft coordinate lines, a quiet subtitle'
+        comment: 'Typographic hierarchy chosen beyond the baseline: large soft region
+          labels, bold-name/soft-coordinate point annotations, ink markers set apart
+          from the palette lines'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Asymmetric x padding (12% right) chosen to give the supercritical
-          region room; annotation offsets placed away from the curves
+        comment: Asymmetric x padding that gives the supercritical region room, data-derived
+          label anchors at log midpoints, superscript decade tick labels
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Triple and critical points drawn in ink above the colored curves,
-          making the two invariant points the focal hierarchy
+        comment: The critical point and the dashed Tc/Pc guides make the end of the
+          liquid-gas distinction the focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,30 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: P-T phase diagram with three boundaries meeting at the triple point
+        comment: P-T phase diagram with three boundary curves
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All Notes and good-version bullets met (regions labeled, points marked
-          and annotated, liquid-gas ends at critical point, log axis with decade ticks,
-          negative water melting slope); but curves carry 36/41/30 points against
-          the spec's 50-200 per curve (defect line)
+        comment: Regions labeled, distinct annotated triple and critical points, curve
+          ends at the critical point, supercritical region labeled, log axis with
+          decade ticks, water's negative melting slope shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: T on x, P on y, all data visible, marks at their values (linear segments,
-          no smoothing overshoot)
+        comment: Temperature on x, pressure on y; all curves meet at the triple point;
+          marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: '''Water · phase-diagram-pt · javascript · muix · anyplot.ai''; legend
-          entries are reader text'
+        comment: Title matches the format with a 'Water' prefix; legend names the
+          three boundaries
     data_quality:
       score: 15
       max: 15
@@ -172,24 +174,23 @@ review:
         max: 6
         passed: true
         comment: All three boundaries, both special points, supercritical region and
-          water's anomalous slope
+          the negative-slope anomaly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Water from IAPWS Wagner-Pruss, Simon-Glatzel and Clausius-Clapeyron;
-          neutral
+        comment: Water, using IAPWS reference values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: triple point 273.16 K / 611.657 Pa (IAPWS value), critical
-          point 647.096 K / 22.064 MPa where the vaporization curve ends, melting
-          curve reaching ~251 K at 209.9 MPa, sublimation ~0.17 Pa at 200 K'
+        comment: 'Checked: triple point 273.16 K / 611.657 Pa (IAPWS), critical point
+          647.096 K / 22.064 MPa, melting end about 251 K at 209.9 MPa, sublimation
+          about 0.16 Pa at 200 K; values computed from the equations'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,14 +198,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One child component, required to call the scale hooks inside the
-          chart context
+        comment: Linear data/plot blocks; the one helper component is the MUI hook
+          idiom needed for scale access
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic equations
+        comment: Deterministic equations, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,18 +214,17 @@ review:
         comment: LineChart, useXScale, useYScale all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Triple/critical coordinates aliased twice (TT/PT/TC/PC at lines 44-47
-          and tt/tc at lines 85-86) (defect line)
+        passed: true
+        comment: No available call replaces the saturation equations; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          harness writes PNG+HTML
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE;
+          MUI X 9 API
     library_mastery:
       score: 7
       max: 10
@@ -234,29 +234,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Native log scaleType with tickInterval and valueFormatter, per-series
-          xAxisId for curves with different x samples, sized axis bands
+        comment: Per-series x axes with xAxisId, log yAxis with tickInterval and valueFormatter,
+          sx class selectors for line, grid and axis styling
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Composes custom SVG children inside LineChart via useXScale/useYScale
-          so annotations sit in data coordinates
-  verdict: REJECTED
+        comment: Custom SVG layer composed into the chart through the useXScale/useYScale
+          hooks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T03:59:52Z'
+  rendered_at: '2026-11-08T04:04:54Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
   - manual-ticks
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
