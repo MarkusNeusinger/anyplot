@@ -1,197 +1,169 @@
 // anyplot.ai
 // swarm-basic: Basic Swarm Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
+// Library: muix 9.17.0 | JavaScript 22.23.1
 // Quality: 90/100 | Created: 2026-07-26
-//# anyplot-orientation: landscape
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
-import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Deterministic PRNG (LCG) + Box-Muller for approx-normal samples --------
-let seed = 42;
-function nextUniform() {
-  seed = (seed * 1664525 + 1013904223) % 4294967296;
-  return seed / 4294967296;
-}
-function nextNormal(mean, stdDev) {
-  const u1 = Math.max(nextUniform(), 1e-9);
-  const u2 = nextUniform();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * stdDev;
-}
+// Constants
+const PAD_SHARE = 0.06; // room above and below the outermost scores
+const SLOT_PAD = 0.5; // half a category slot of room beside the outer swarms
+const MARKER_R = 8; // point radius (px)
+const MARKER_GAP = 1.5; // clear space between two neighbouring points (px)
+const MEDIAN_HALF = 0.3; // half-width of the median marker as a share of a category slot
+const HEADER_H = 78;
+const MARGIN = { top: 16, right: 40, bottom: 16, left: 24 };
+const X_AXIS_H = 64;
+const Y_AXIS_W = 80;
 
-// --- Data: quarterly performance review scores by department ---------------
-const DEPARTMENTS = ["Engineering", "Sales", "Marketing", "Support"];
-const MEANS = [78, 70, 74, 83];
-const STD_DEVS = [8, 12, 9, 6];
-const POINTS_PER_DEPT = 40;
+// Columns: set these to your data's column names
+const DEPARTMENT = "Department"; // role: category
+const SCORE = "Performance score"; // role: value
 
-const rawPoints = DEPARTMENTS.flatMap((department, categoryIndex) =>
-  Array.from({ length: POINTS_PER_DEPT }, () => ({
-    department,
-    categoryIndex,
-    score: Math.min(99, Math.max(45, nextNormal(MEANS[categoryIndex], STD_DEVS[categoryIndex]))),
-  })),
-);
+// Data: replace this block with your own records, one object per row
+// Quarterly performance review scores of 40 employees in each of four departments
+const data = (() => {
+  let seed = 42;
+  const uniform = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+  const departments = [
+    { name: "Engineering", mean: 78, sd: 8 },
+    { name: "Sales", mean: 70, sd: 12 },
+    { name: "Marketing", mean: 74, sd: 9 },
+    { name: "Support", mean: 83, sd: 6 },
+  ];
+  return departments.flatMap((dep) =>
+    Array.from({ length: 40 }, () => {
+      const u1 = Math.max(uniform(), 1e-9);
+      const u2 = uniform();
+      const normal = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      return { [DEPARTMENT]: dep.name, [SCORE]: Number(Math.min(99, Math.max(45, dep.mean + normal * dep.sd)).toFixed(1)) };
+    }),
+  );
+})();
 
-const median = (values) => {
-  const sorted = [...values].sort((a, b) => a - b);
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => Number.isFinite(d[SCORE]));
+const categories = [...new Set(rows.map((d) => d[DEPARTMENT]))];
+const scoreMin = Math.min(...rows.map((d) => d[SCORE]));
+const scoreMax = Math.max(...rows.map((d) => d[SCORE]));
+const yLo = scoreMin - (scoreMax - scoreMin) * PAD_SHARE;
+const yHi = scoreMax + (scoreMax - scoreMin) * PAD_SHARE;
+
+// Beeswarm layout in screen px: each point keeps its score and moves sideways only
+// to the offset nearest the category centre that clears every point placed before it
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const plotW = W - MARGIN.left - MARGIN.right - Y_AXIS_W;
+const plotH = H - HEADER_H - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+const pxPerScore = plotH / (yHi - yLo);
+const pxPerSlot = plotW / (categories.length - 1 + 2 * SLOT_PAD);
+const clearance = 2 * MARKER_R + MARKER_GAP;
+const swarm = categories.flatMap((category, ci) => {
+  const placed: { v: number; off: number }[] = [];
+  rows
+    .filter((d) => d[DEPARTMENT] === category)
+    .map((d) => d[SCORE])
+    .sort((a, b) => a - b)
+    .forEach((v) => {
+      const blocked = placed
+        .filter((p) => Math.abs(v - p.v) * pxPerScore < clearance)
+        .map((p) => {
+          const half = Math.sqrt(clearance ** 2 - ((v - p.v) * pxPerScore) ** 2);
+          return [p.off - half, p.off + half];
+        });
+      const candidates = [0, ...blocked.flat()].sort((a, b) => Math.abs(a) - Math.abs(b));
+      const off = candidates.find((c) => blocked.every(([lo, hi]) => c <= lo + 1e-6 || c >= hi - 1e-6)) ?? 0;
+      placed.push({ v, off });
+    });
+  return placed.map((p, j) => ({ id: `${ci}-${j}`, x: ci + p.off / pxPerSlot, y: p.v }));
+});
+
+// Median score per category, drawn as a short bar across its swarm
+const medians = categories.map((category) => {
+  const sorted = rows
+    .filter((d) => d[DEPARTMENT] === category)
+    .map((d) => d[SCORE])
+    .sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-};
+});
 
-const medianByDept = DEPARTMENTS.map((_, i) =>
-  median(rawPoints.filter((p) => p.categoryIndex === i).map((p) => p.score)),
-);
+const TITLE = "swarm-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${rows.length} scores across ${categories.length} ${DEPARTMENT.toLowerCase()}s · bar = median`;
 
-// --- Layout geometry — must stay in sync with the ChartContainer margin ----
-const MARGIN = { left: 110, right: 60, top: 80, bottom: 100 };
-const SCORE_MIN = 40;
-const SCORE_MAX = 100;
-const X_MIN = -0.6;
-const X_MAX = DEPARTMENTS.length - 1 + 0.6;
-const MARKER_SIZE = 6; // circle radius, px
-const MARKER_DIAMETER_PX = MARKER_SIZE * 2 + 1;
-
-// --- Beeswarm packing: spread points horizontally within each department so
-// none overlap. Collisions are resolved in on-screen pixels (rather than data
-// units) so the spread looks even regardless of the score axis' range. Each
-// point keeps its true score on the y-axis; only the x-offset is adjusted.
-function layoutSwarm(plotWidthPx, plotHeightPx) {
-  const pxPerScore = plotHeightPx / (SCORE_MAX - SCORE_MIN);
-  const pxPerX = plotWidthPx / (X_MAX - X_MIN);
-
-  return DEPARTMENTS.flatMap((department, categoryIndex) => {
-    const points = rawPoints
-      .filter((p) => p.categoryIndex === categoryIndex)
-      .sort((a, b) => a.score - b.score);
-
-    const placed = [];
-    points.forEach((point) => {
-      const nearby = placed.filter(
-        (p) => Math.abs((point.score - p.score) * pxPerScore) < MARKER_DIAMETER_PX,
-      );
-      let offsetPx = 0;
-      if (nearby.length > 0) {
-        const step = MARKER_DIAMETER_PX * 0.92;
-        let k = 0;
-        let resolved = false;
-        while (!resolved && k < 200) {
-          const candidate = k === 0 ? 0 : (k % 2 === 1 ? Math.ceil(k / 2) : -Math.ceil(k / 2)) * step;
-          if (
-            nearby.every(
-              (p) => Math.hypot(candidate - p.offsetPx, (point.score - p.score) * pxPerScore) >= MARKER_DIAMETER_PX * 0.95,
-            )
-          ) {
-            offsetPx = candidate;
-            resolved = true;
-          }
-          k += 1;
-        }
-      }
-      placed.push({ ...point, offsetPx });
-    });
-
-    return placed.map((p) => ({
-      id: `${department}-${p.score.toFixed(3)}-${p.offsetPx.toFixed(2)}`,
-      x: categoryIndex + p.offsetPx / pxPerX,
-      y: p.score,
-    }));
-  });
-}
-
-// Short reference ticks at each department's median score. Rendered inside
-// ChartContainer so it can read the live D3 scales.
-function MedianTicks() {
+function MedianLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const halfWidth = 0.34;
-
   return (
     <g>
-      {DEPARTMENTS.map((department, i) => {
-        const x1 = xScale(i - halfWidth) ?? 0;
-        const x2 = xScale(i + halfWidth) ?? 0;
-        const y = yScale(medianByDept[i]) ?? 0;
-        return (
-          <line
-            key={department}
-            x1={x1}
-            y1={y}
-            x2={x2}
-            y2={y}
-            stroke={t.ink}
-            strokeWidth={2.5}
-            strokeOpacity={0.75}
-          />
-        );
-      })}
+      {medians.map((m, i) => (
+        <line
+          key={categories[i]}
+          x1={xScale(i - MEDIAN_HALF)}
+          x2={xScale(i + MEDIAN_HALF)}
+          y1={yScale(m)}
+          y2={yScale(m)}
+          stroke={t.inkSoft}
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
+      ))}
     </g>
   );
 }
 
-const TITLE = "swarm-basic · javascript · muix · anyplot.ai";
-
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const plotWidthPx = W - MARGIN.left - MARGIN.right;
-  const plotHeightPx = H - MARGIN.top - MARGIN.bottom;
-  const scoreData = layoutSwarm(plotWidthPx, plotHeightPx);
-
   return (
-    <ChartContainer
-      width={W}
-      height={H}
-      skipAnimation
-      series={[
-        {
-          type: "scatter",
-          id: "scores",
-          label: "Performance Score",
-          data: scoreData,
-          color: t.palette[0],
-          markerSize: MARKER_SIZE,
-        },
-      ]}
-      xAxis={[
-        {
-          id: "xAxis",
-          min: X_MIN,
-          max: X_MAX,
-          tickMinStep: 1,
-          valueFormatter: (v) => DEPARTMENTS[Math.round(v)] ?? "",
-          tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-          label: "Department",
-          labelStyle: { fontSize: 16, fill: t.ink },
-        },
-      ]}
-      yAxis={[
-        {
-          id: "yAxis",
-          min: SCORE_MIN,
-          max: SCORE_MAX,
-          label: "Performance Score",
-          tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-          labelStyle: { fontSize: 16, fill: t.ink },
-        },
-      ]}
-      margin={MARGIN}
-    >
-      <ChartsGrid horizontal />
-      <ScatterPlot />
-      <MedianTicks />
-      <ChartsXAxis axisId="xAxis" />
-      <ChartsYAxis axisId="yAxis" />
-      <text x={W / 2} y={42} textAnchor="middle" fontSize={22} fontFamily="sans-serif" fontWeight="500" fill={t.ink}>
-        {TITLE}
-      </text>
-    </ChartContainer>
+    <Box sx={{ width: W, height: H, bgcolor: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{SUBTITLE}</Typography>
+      </Box>
+      <ScatterChart
+        width={W}
+        height={H - HEADER_H}
+        skipAnimation
+        hideLegend
+        grid={{ horizontal: true }}
+        margin={MARGIN}
+        series={[{ id: "scores", label: SCORE, data: swarm, color: t.palette[0], markerSize: MARKER_R }]}
+        xAxis={[
+          {
+            min: -SLOT_PAD,
+            max: categories.length - 1 + SLOT_PAD,
+            tickInterval: categories.map((_, i) => i),
+            valueFormatter: (v: number) => categories[Math.round(v)] ?? "",
+            disableTicks: true,
+            label: DEPARTMENT,
+            height: X_AXIS_H,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: yLo,
+            max: yHi,
+            label: SCORE,
+            width: Y_AXIS_W,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      >
+        <MedianLayer />
+      </ScatterChart>
+    </Box>
   );
 }
