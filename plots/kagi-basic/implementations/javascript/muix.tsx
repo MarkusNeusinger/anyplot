@@ -1,258 +1,209 @@
 // anyplot.ai
 // kagi-basic: Basic Kagi Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-09-02
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "kagi-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
 
-// --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
-function lcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const REVERSAL_SHARE = 0.04; // a move of 4 % against the running extreme turns the line
+const Y_PAD_SHARE = 0.06; // share of the price range added above and below the outermost turn
+const X_PAD_LINES = 0.5; // half a column of room beside the first and the last vertical line
+const YANG = "Yang: thick, rising above the previous shoulder";
+const YIN = "Yin: thin, falling below the previous waist";
+
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const CLOSE = "Close (USD)"; // role: close
+
+// Data: replace this block with your own records, one object per observation
+// 240 weekday closes of a mid-cap stock from 2 Jan 2024: a random walk of daily returns
+// with a mild upward drift and a daily volatility of 1.6 %.
+const data = (() => {
+  let state = 42;
+  const rand = () => {
     state = (state * 1664525 + 1013904223) % 4294967296;
     return state / 4294967296;
   };
-}
-
-function randomNormal(rand, mean, stdDev) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * stdDev;
-}
-
-// Daily closing prices for a mid-cap stock over ~1 trading year, generated as
-// a log-return random walk (mild upward drift, realistic daily volatility).
-const OBSERVATIONS = 240;
-const rand = lcg(42);
-let price = 180;
-const closingPrices = [price];
-for (let i = 1; i < OBSERVATIONS; i++) {
-  const dailyReturn = randomNormal(rand, 0.0006, 0.016);
-  price *= 1 + dailyReturn;
-  closingPrices.push(price);
-}
-
-// Kagi construction: track a running extreme in the current direction and
-// only flip once price reverses by the threshold — this is what filters
-// time-based noise and keeps only the meaningful swings as turning points.
-const REVERSAL_PCT = 0.04;
-
-function buildKagiTurningPoints(prices, reversalPct) {
-  const turningPoints = [prices[0]];
-  let direction = null;
-  let extreme = prices[0];
-  for (let i = 1; i < prices.length; i++) {
-    const priceNow = prices[i];
-    if (direction === null) {
-      const change = (priceNow - extreme) / extreme;
-      if (change >= reversalPct) {
-        direction = "up";
-        extreme = priceNow;
-        turningPoints.push(extreme);
-      } else if (change <= -reversalPct) {
-        direction = "down";
-        extreme = priceNow;
-        turningPoints.push(extreme);
+  const records: { [DATE]: string; [CLOSE]: number }[] = [];
+  const cursor = new Date(Date.UTC(2024, 0, 2));
+  let price = 180;
+  while (records.length < 240) {
+    if (cursor.getUTCDay() % 6 !== 0) {
+      if (records.length > 0) {
+        const z = Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+        price *= 1 + 0.0006 + 0.016 * z;
       }
-    } else if (direction === "up") {
-      if (priceNow > extreme) {
-        extreme = priceNow;
-        turningPoints[turningPoints.length - 1] = extreme;
-      } else if ((extreme - priceNow) / extreme >= reversalPct) {
-        direction = "down";
-        extreme = priceNow;
-        turningPoints.push(extreme);
-      }
-    } else {
-      if (priceNow < extreme) {
-        extreme = priceNow;
-        turningPoints[turningPoints.length - 1] = extreme;
-      } else if ((priceNow - extreme) / extreme >= reversalPct) {
-        direction = "up";
-        extreme = priceNow;
-        turningPoints.push(extreme);
-      }
+      records.push({ [DATE]: cursor.toISOString().slice(0, 10), [CLOSE]: Math.round(price * 100) / 100 });
     }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
-  return turningPoints;
-}
+  return records;
+})();
 
-const turningPoints = buildKagiTurningPoints(closingPrices, REVERSAL_PCT);
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => Date.parse(a[DATE]) - Date.parse(b[DATE]));
+const closes = rows.map((d) => d[CLOSE]).filter((v) => v != null);
 
-// Kagi thickness rule: a segment turns yang (thick) once price breaks above
-// the PREVIOUS shoulder (an earlier peak) and yin (thin) once it breaks below
-// the previous waist (an earlier trough) — thickness only flips on those
-// breakouts, not on every reversal. That's what lets a sustained trend render
-// as several consecutive same-thickness columns even while the path itself
-// keeps zig-zagging shoulder/waist to shoulder/waist.
-function classifyKagiThickness(points) {
-  const thickness = [];
-  let priorPeak = null;
-  let priorTrough = null;
-  let current = points[1] > points[0] ? "yang" : "yin";
-  for (let k = 1; k < points.length; k++) {
-    const isPeak = points[k] > points[k - 1];
-    if (isPeak) {
-      if (priorPeak !== null && points[k] > priorPeak) current = "yang";
-      priorPeak = points[k];
-    } else {
-      if (priorTrough !== null && points[k] < priorTrough) current = "yin";
-      priorTrough = points[k];
+// Turning points: the line extends while the price keeps its direction and turns only
+// after a move of REVERSAL_SHARE against the running extreme
+const turns = [closes[0]];
+let direction = 0;
+let extreme = closes[0];
+for (const price of closes.slice(1)) {
+  if (direction === 0) {
+    const change = (price - extreme) / extreme;
+    if (Math.abs(change) >= REVERSAL_SHARE) {
+      direction = Math.sign(change);
+      extreme = price;
+      turns.push(price);
     }
-    thickness.push(current);
-  }
-  return thickness;
-}
-
-const segmentThickness = classifyKagiThickness(turningPoints);
-
-// The single largest turning-point move, called out with a reference-line
-// annotation so the chart's standout swing doesn't go unlabeled.
-let breakoutIndex = 1;
-let breakoutMove = turningPoints[1] - turningPoints[0];
-for (let k = 2; k < turningPoints.length; k++) {
-  const move = turningPoints[k] - turningPoints[k - 1];
-  if (Math.abs(move) > Math.abs(breakoutMove)) {
-    breakoutMove = move;
-    breakoutIndex = k;
+  } else if ((price - extreme) * direction > 0) {
+    extreme = price;
+    turns[turns.length - 1] = price;
+  } else if (Math.abs(price - extreme) / extreme >= REVERSAL_SHARE) {
+    direction = -direction;
+    extreme = price;
+    turns.push(price);
   }
 }
-const breakoutLabel = `${breakoutMove >= 0 ? "+" : "-"}$${Math.round(Math.abs(breakoutMove))} move`;
-const startPrice = Math.round(closingPrices[0]);
+const lineCount = turns.length - 1;
 
-// Rectilinear Kagi path: each turn contributes a horizontal shoulder/waist
-// (connecting the previous column to the new one) followed by the vertical
-// line itself — the right-angle geometry a Kagi chart is drawn with. The
-// x-axis is the line index, not time, per the spec.
-const vertices = [{ x: 0, y: turningPoints[0] }];
-for (let k = 1; k < turningPoints.length; k++) {
-  vertices.push({ x: k, y: turningPoints[k - 1] });
-  vertices.push({ x: k, y: turningPoints[k] });
+// Path: vertical line k runs from turn k to turn k + 1 in column k, and a horizontal
+// shoulder or waist joins it to column k + 1. The line turns yang where a rise passes the
+// previous shoulder and yin where a fall passes the previous waist, so a vertical that
+// breaks out is split at that level.
+const pathX = [0];
+const pathY = [turns[0]];
+const edgeYang: boolean[] = [];
+let yang = turns[1] > turns[0];
+let priorShoulder: number | null = null;
+let priorWaist: number | null = null;
+for (let k = 0; k < lineCount; k += 1) {
+  const from = turns[k];
+  const to = turns[k + 1];
+  const rising = to > from;
+  const level = rising ? priorShoulder : priorWaist;
+  if (level != null && yang !== rising && (rising ? to > level : to < level)) {
+    pathX.push(k);
+    pathY.push(level);
+    edgeYang.push(yang);
+    yang = rising;
+  }
+  pathX.push(k);
+  pathY.push(to);
+  edgeYang.push(yang);
+  if (rising) priorShoulder = to;
+  else priorWaist = to;
+  if (k < lineCount - 1) {
+    pathX.push(k + 1);
+    pathY.push(to);
+    edgeYang.push(yang);
+  }
 }
-const lineIndex = vertices.map((v) => v.x);
-const priceMin = Math.min(...turningPoints);
-const priceMax = Math.max(...turningPoints);
-const pricePadding = (priceMax - priceMin) * 0.08;
 
-// Split the rectilinear path into two series by Kagi thickness so each can
-// carry its own line width (thick yang / thin yin). Null gaps keep unrelated
-// segments apart, while shared boundary vertices let a segment's series
-// also carry the turning point it starts or ends on, so the two colors
-// visually meet exactly at each reversal.
-const yangPrice = new Array(vertices.length).fill(null);
-const yinPrice = new Array(vertices.length).fill(null);
-for (let k = 1; k < turningPoints.length; k++) {
-  const startIdx = 2 * (k - 1);
-  const midIdx = 2 * k - 1;
-  const endIdx = 2 * k;
-  const target = segmentThickness[k - 1] === "yang" ? yangPrice : yinPrice;
-  target[startIdx] = vertices[startIdx].y;
-  target[midIdx] = vertices[midIdx].y;
-  target[endIdx] = vertices[endIdx].y;
-}
+// One series per state; a vertex carries a value when an edge of that state touches it, so
+// the thick and the thin line meet at every change
+const yangY = pathY.map((y, i) => (edgeYang[i - 1] === true || edgeYang[i] === true ? y : null));
+const yinY = pathY.map((y, i) => (edgeYang[i - 1] === false || edgeYang[i] === false ? y : null));
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+const yLow = Math.min(...turns);
+const yHigh = Math.max(...turns);
+const yPad = (yHigh - yLow) * Y_PAD_SHARE;
+
+const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+const TITLE = "kagi-basic · javascript · muix · anyplot.ai";
+const SUBTITLE =
+  `${closes.length} closes, ${dateFormat.format(new Date(rows[0][DATE]))} – ` +
+  `${dateFormat.format(new Date(rows[rows.length - 1][DATE]))} · reversal amount ${REVERSAL_SHARE * 100} % · ` +
+  `${lineCount} vertical lines`;
+const HEADER_H = 84;
+const LEGEND_H = 48;
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
 
   return (
-    <Box sx={{ width, height, bgcolor: t.pageBg }}>
-      <Box sx={{ height: TITLE_HEIGHT, display: "flex", alignItems: "center", px: "40px" }}>
-        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1 }}>
-          {TITLE}
-        </Typography>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.6 }}>{SUBTITLE}</Typography>
       </Box>
       <LineChart
         width={width}
-        height={chartHeight}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        colors={[t.palette[0], t.palette[4]]}
         grid={{ horizontal: true }}
+        margin={{ top: 16, right: 40, bottom: 8, left: 20 }}
+        axisHighlight={{ x: "none" }}
+        series={[
+          {
+            id: "yang",
+            data: yangY,
+            label: YANG,
+            color: t.palette[0],
+            curve: "linear",
+            showMark: false,
+            labelMarkType: "line",
+          },
+          {
+            id: "yin",
+            data: yinY,
+            label: YIN,
+            color: t.palette[4],
+            curve: "linear",
+            showMark: false,
+            labelMarkType: "line",
+          },
+        ]}
         xAxis={[
           {
-            data: lineIndex,
+            data: pathX,
             scaleType: "linear",
-            label: "Kagi Line Index",
-            valueFormatter: (v) => Math.round(v).toString(),
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
-            tickSize: 0,
+            min: -X_PAD_LINES,
+            max: lineCount - 1 + X_PAD_LINES,
+            tickMinStep: 1,
+            valueFormatter: (v: number) => String(Math.round(v) + 1),
+            label: "Kagi line (one column per reversal)",
+            height: 64,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Closing Price ($)",
-            min: priceMin - pricePadding,
-            max: priceMax + pricePadding,
-            valueFormatter: (v) => `$${Math.round(v)}`,
-            // ChartsYAxis: labelRefPoint.x = -(tickFontSize + tickSize + 10).
-            // Set it wide enough to clear the "$277"-style tick text, while
-            // tickLabelStyle.fontSize keeps the rendered tick size correct.
-            tickFontSize: 40,
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
-            tickSize: 0,
+            min: yLow - yPad,
+            max: yHigh + yPad,
+            width: 84,
+            label: CLOSE,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        series={[
-          {
-            id: "yang",
-            data: yangPrice,
-            label: "Yang (uptrend)",
-            curve: "linear",
-            showMark: false,
-          },
-          {
-            id: "yin",
-            data: yinPrice,
-            label: "Yin (downtrend)",
-            curve: "linear",
-            showMark: false,
-          },
-        ]}
-        margin={{ top: 24, bottom: 90, left: 130, right: 40 }}
-        sx={{
-          "& .MuiLineElement-series-yang": { strokeWidth: 6 },
-          "& .MuiLineElement-series-yin": { strokeWidth: 2 },
-          "& .MuiChartsAxis-line": { stroke: t.grid },
-          "& .MuiChartsAxis-tick": { stroke: t.grid },
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 0.75 },
-          "& .MuiChartsLegend-label": { fontSize: "15px" },
-        }}
         slotProps={{
           legend: {
-            position: { vertical: "bottom", horizontal: "middle" },
-            itemMarkWidth: 24,
-            itemMarkHeight: 6,
-            padding: { top: 16 },
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: {
+              fontSize: 15,
+              color: t.ink,
+              gap: "36px",
+              pt: "8px",
+              "& .MuiChartsLabelMark-line": { width: 28, height: 10 },
+              '& [data-series="yang"] path': { strokeWidth: 6 },
+              '& [data-series="yin"] path': { strokeWidth: 2 },
+            },
           },
         }}
-      >
-        <ChartsReferenceLine
-          y={startPrice}
-          label={`Start $${startPrice}`}
-          labelAlign="start"
-          spacing={{ x: 8, y: 6 }}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1 }}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-        />
-        <ChartsReferenceLine
-          x={breakoutIndex}
-          label={breakoutLabel}
-          labelAlign="start"
-          spacing={{ x: -96, y: 8 }}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1 }}
-          labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.ink }}
-        />
-      </LineChart>
+        sx={{
+          '& .MuiLineChart-line[data-series="yang"]': { strokeWidth: 6 },
+          '& .MuiLineChart-line[data-series="yin"]': { strokeWidth: 2 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      />
     </Box>
   );
 }

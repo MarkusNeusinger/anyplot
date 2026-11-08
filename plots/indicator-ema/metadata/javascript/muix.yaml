@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: indicator-ema
 created: '2026-09-02T01:54:01Z'
-updated: '2026-09-02T02:09:02Z'
-generated_by: claude-sonnet
-workflow_run: 33580807677
+updated: '2026-11-08T07:31:28Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42440494369
 issue: 3652
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/muix/plot-light.html
@@ -15,101 +16,82 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator
 quality_score: 88
 review:
   strengths:
-  - 'The CRITICAL y-axis title / tick-label overlap flagged in the previous review
-    is fully fixed: a dedicated column now renders the rotated "Price (USD)" title
-    well clear of the $-formatted tick labels, verified via zoomed crops of both the
-    light and dark renders around the former collision point ($158).'
-  - 'Correct Imprint palette usage: Close Price uses brand green #009E73 (position
-    1), EMA (12-day) and EMA (26-day) use canonical positions 2 and 3 (lavender, blue),
-    and the crossover reference lines correctly apply the semantic exception (green
-    for bullish "Golden cross", matte red for bearish "Death cross"), each reinforced
-    with a text label so meaning isn''t color-alone.'
-  - Idiomatic use of ChartsReferenceLine for crossover annotations with a sensible
-    cap (max 4 highlighted crossovers) and a minimum day-gap rule so neighboring crossover
-    labels never collide with each other.
-  - Deterministic LCG-seeded random-walk price series plus a correctly implemented
-    recursive EMA produce a realistic, feature-complete technical-indicator dataset
-    showing both a bearish (death cross) and bullish (golden cross) signal.
-  - 'Line-weight hierarchy matches the spec: Close Price at 3.5px is visually prominent
-    while both EMA lines are thinner at 2px.'
+  - 'Price line clearly dominates (3.5 px vs 2 px EMAs) and the EMAs behave like their
+    periods: the 12-day turns quickly, the 26-day is smoother and lags'
+  - Crossover triangles sit exactly where the EMAs meet (segment intersection computed,
+    not snapped to a day), small and outlined in the page colour so the lines stay
+    visible
+  - Idiomatic MUI X v9 composition (ChartsDataProvider/ChartsWrapper/ChartsSurface)
+    with a custom marker layer drawn through useXScale/useYScale, plus ChartsAxisHighlight
+    and an axis tooltip for the interactive HTML
+  - Theme tokens threaded through every chrome element; data colours identical in
+    both renders
   weaknesses:
-  - The y-axis title is rendered via a hand-rolled column outside <LineChart> rather
-    than MUI X's built-in yAxis label prop — a functional and well-reasoned workaround
-    for the library's fixed label-offset behavior, but non-idiomatic; also the y-axis
-    uses 20 one-dollar gridlines over a $19 range, which is denser than needed — coarser
-    $2 ticks would read cleaner.
-  - 'Design polish is solid but stays close to a well-configured default: grid/spine
-    treatment and typography don''t go much beyond the baseline. More visual hierarchy
-    (e.g. a subtle shaded band around the EMA pair, or de-emphasizing the noisiest
-    early stretch) would strengthen Design Excellence further.'
+  - 'Suggestion: the y-axis title "Close (USD)" also carries the two EMAs; a "Price
+    (USD)" title would describe the whole axis.'
+  - 'Suggestion: a stock ticker or company context in the subtitle would make the
+    scenario more concrete.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - correct, not pure white.
-      Chrome: Title "indicator-ema · javascript · muix · anyplot.ai" in bold dark ink, top-left, clearly readable, occupying well under half the canvas width. X-axis "Trading Date" and Y-axis "Price (USD)" labels present with units; the y-axis title now sits in its own column, fully clear of the $-formatted tick labels (verified via a zoomed crop around the former $158 collision point - no overlap). Horizontal-only grid lines, subtle gray, non-competing with data. Legend row (Close Price / EMA 12-day / EMA 26-day) at top with correct color swatches, followed by "Death cross" (red) and "Golden cross" (green) labels tied to dashed vertical reference lines - no collision between legend and crossover labels.
-      Data: Close Price line in brand green (#009E73, thick 3.5px), EMA (12-day) in lavender (#C475FD, 2px), EMA (26-day) in blue (#4467A3, 2px) - thickness hierarchy matches the spec's "EMA lines should be slightly thinner" requirement. Crossover reference lines correctly colored per bearish/bullish semantics.
-      Legibility verdict: PASS (previous critical overlap is resolved; all text readable)
+      Background: warm off-white #FAF8F1
+      Chrome: bold dark title "indicator-ema · javascript · muix · anyplot.ai", soft-ink subtitle with date range and crossover key, centred horizontal legend, y axis "Close (USD)" ticks 148-166, x axis "Trading date" monthly ticks Feb 1-Jun 1, subtle horizontal grid; all readable
+      Data: thick #009E73 close line, thinner lavender #C475FD 12-day EMA and blue #4467A3 26-day EMA; four small dark crossover triangles (2 down, 2 up) on the EMA intersections in Apr-May
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - correct, not pure black.
-      Chrome: Title in light ink (near-white), fully readable. Axis labels and tick labels rendered in light ink, all legible; the y-axis title/tick-label separation holds identically to the light render - re-verified via the same zoomed crop, no dark-on-dark or overlap issues. Grid lines subtle light gray. Legend and crossover labels legible with the same layout as the light render.
-      Data: Confirmed identical data colors to the light render (brand green, lavender, blue) - only chrome flipped as required. Crossover lines and labels correctly colored and positioned identically to the light render.
-      Legibility verdict: PASS (all text readable, no dark-on-dark failures)
+      Background: warm near-black #1A1A17
+      Chrome: title, subtitle, legend, axis titles and ticks in light ink; dim grid; no dark-on-dark text
+      Data: identical green/lavender/blue lines; crossover triangles flip to light ink with page-coloured outline
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis label 16px, tick/legend
-          14px); previous critical y-axis-title/tick overlap is fixed; readable in
-          both themes
+        comment: Explicit font sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap in either render; the axis-title/tick
-          collision from the prior review is resolved
+        comment: No text collisions; triangles keep lines visible
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Close price line clearly dominant at 3.5px; EMA lines at 2px are
-          distinguishable by color even where they run close together
+        comment: Price 3.5 px dominant, EMAs 2 px; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues; crossover semantics reinforced with text labels,
-          not color alone
+        comment: Hue and lightness differ; crossover direction carried by shape
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: 3200x1800, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Price (USD)'', ''Trading Date'''
+        comment: Trading date / Close (USD) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green, canonical order for EMAs, correct semantic
-          exception for crossovers, correct theme backgrounds in both renders
+        comment: Imprint positions 1-3 in order, neutral ink markers, correct backgrounds
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -117,22 +99,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color use for crossover events beyond generic
-          defaults, but overall styling stays close to a well-configured default
+        comment: Title/subtitle/legend hierarchy; subtitle doubles as crossover key
+          and date range
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Minimal spines, subtle horizontal-only grid, generous whitespace;
-          dense one-dollar y-tick spacing keeps it from feeling fully refined
+        comment: Horizontal-only grid, page-coloured outline on triangles, data-derived
+          y padding
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Crossover annotations create clear focal points highlighting the
-          two trading signals
+        comment: Crossovers encoded by direction with counts in subtitle
     spec_compliance:
       score: 15
       max: 15
@@ -142,26 +123,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with EMA overlay
+        comment: Price line with EMA overlays on one price axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price line prominent, distinct EMA colors, crossovers highlighted,
-          legend labeled by period
+        comment: All Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price, full data range shown
+        comment: Linear curves at computed values; markers at true intersections
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match series
+        comment: Mandated title; period-labelled legend
     data_quality:
       score: 15
       max: 15
@@ -171,21 +151,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Close price, both EMAs, and both bullish and bearish crossovers all
-          shown
+        comment: Trend, sideways stretch, both crossover directions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible stock-price range ($148-$167), neutral synthetic data
+        comment: 120 trading days of a stock in USD, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 trading days, sensible EMA periods (12/26), realistic day-to-day
-          volatility
+        comment: Checked EMA recursion k=2/(n+1) seeded with first close; plausible
+          price range
     code_quality:
       score: 10
       max: 10
@@ -195,7 +174,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small focused helper functions (lcg, ema), no unnecessary classes
+        comment: One helper component required for scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,19 +186,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, clear comments explaining the y-axis workaround
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the harness contract, skipAnimation set
+        comment: Default export, skipAnimation, v9 API
     library_mastery:
       score: 7
       max: 10
@@ -229,24 +208,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine, slotProps.legend, sx-based series targeting;
-          the hand-rolled y-axis-label column is a deliberate, documented workaround
-          rather than idiomatic API usage
+        comment: v9 composition API, [data-series] CSS, time scale valueFormatter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine crossover annotations are a distinctive MUI X
-          feature, well applied
+        comment: Custom SVG layer via useXScale/useYScale, ChartsAxisHighlight + axis
+          tooltip
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T02:56:16Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
-  - rolling-window
-  - time-series
-  styling: []
+  - moving-average
+  styling:
+  - publication-ready

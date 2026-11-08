@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: shap-summary
 created: '2026-09-09T07:37:56Z'
-updated: '2026-09-09T07:49:16Z'
-generated_by: claude-sonnet
-workflow_run: 34324268019
+updated: '2026-11-08T05:24:26Z'
+generated_by: claude-opus-5-5
+adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
+workflow_run: 42450381761
 issue: 2923
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/muix/plot-light.html
@@ -15,100 +16,94 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 quality_score: 87
 review:
   strengths:
-  - Correct diverging blue-to-red color encoding for feature value (t.div[2] -> t.div[0]),
-    matching the spec exactly and fixing the sequential green-blue scale from the
-    previous attempt; low=blue, high=red confirmed identical between light and dark
-    renders.
-  - Custom pixel-based beeswarm collision-avoidance algorithm (layoutBeeswarm) genuinely
-    spreads overlapping samples within each feature row instead of naive random jitter,
-    producing a proper beeswarm distribution shape.
-  - Features correctly sorted by mean |SHAP value| with the most influential feature
-    at the top row; dashed reference line at x=0 clearly separates positive and negative
-    impact as required.
-  - Title matches the mandated format exactly, x-axis label is descriptive with domain
-    context ('impact on predicted churn risk'), and both renders are fully legible
-    with correct theme-adaptive chrome.
+  - Beeswarm layout keeps every dot at its exact SHAP value on x and only offsets
+    it vertically within its own row (±0.4 row height), so density piles up honestly
+    and rows never bleed into each other
+  - Features are sorted by computed mean |SHAP| (not a typed order), top-20 cap via
+    MAX_FEATURES matches the Notes, and the dashed zero reference line (ChartsReferenceLine,
+    inkSoft) sits under the dots in both themes
+  - Color uses the Imprint diverging endpoints (div[2] blue → div[0] red) through
+    a zAxis continuous colorMap, so mid-scale purple dots stay visible on both page
+    colors; ContinuousColorLegend with Low/High extremes and a 'Feature value' title
+    acts as the color bar
+  - 'Idiomatic MUI X v9 composition: ChartsDataProvider + ChartsWrapper + ChartsSurface
+    with ScatterPlot, ChartsGrid (vertical only), axes and an HTML legend in the wrapper''s
+    legend grid area; skipAnimation set'
+  - Signed tick formatter (+0.10 / -0.10) and a two-tier header (ink title, inkSoft
+    subtitle that explains the encoding) give a clear typographic hierarchy
+  - Plausible churn-model scenario with feature names in real units and a deterministic
+    LCG with Box-Muller noise
   weaknesses:
-  - In the densest clusters (e.g. near x=0 for lower-importance features like Onboarding
-    Sessions and Team Size), many points visibly overlap/touch despite the beeswarm
-    packing -- no alpha blending is used to soften overplotting. Consider alpha ~0.85
-    on the scatter fill, or slightly smaller markers for features with tight distributions,
-    to keep individual dots distinguishable in dense regions.
-  - The beeswarm layout logic (layoutBeeswarm / meanAbsShap, nested collision-retry
-    loop) is fairly elaborate for a KISS-scored implementation; the complexity is
-    largely justified by the spec's explicit request to jitter points and reduce overlap,
-    but a simpler fixed-offset stacking approach could achieve a similar look with
-    less code.
+  - 'Suggestion: one feature with a non-monotonic or bimodal effect (e.g. both low
+    and high values pushing churn up) would showcase the interaction/non-linearity
+    reading the spec''s Applications describe.'
+  - 'Suggestion: the vertical grid at every 0.05 (23 lines) could be thinned to every
+    0.10 so the dots carry more of the visual weight.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "shap-summary · javascript · muix · anyplot.ai" is bold, dark, centered, fully readable (~35% of plot width, comfortably within bounds, not clipped). X-axis label "SHAP value (impact on predicted churn risk)" and 9 y-axis feature names (Support Tickets (30d) down to Onboarding Sessions, most-important first) render in dark-ink and soft-ink respectively, all legible. Subtle vertical grid lines every 0.05. Dashed reference line at x=0 in soft ink. "Feature value" legend title plus a vertical continuous color bar labeled "Low" (bottom, blue) / "High" (top, red) sits fully within the right margin, not clipped.
-      Data: Beeswarm scatter of 720 dots (80 samples x 9 features), colored on a diverging blue-to-red scale keyed to each sample's normalized feature value -- blue = low feature value, red = high feature value, matching the SHAP convention. Points fan out vertically within each feature row via a collision-avoidance algorithm; in the densest low-importance rows (near x=0) some dots visibly touch/overlap due to no alpha blending, a minor readability point but not a legibility failure.
-      Legibility verdict: PASS -- all text is clearly readable against the light background, no dark-on-light or light-on-light issues.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "shap-summary · javascript · muix · anyplot.ai" centred at top with a grey subtitle explaining samples/features/ranking/color; 9 feature names on the y axis in dark ink (Support tickets (30 d) at top down to Onboarding sessions); x ticks -0.55 … +0.55 with signed labels; x-axis title "SHAP value (impact on churn risk)"; subtle vertical grid; L-shaped axis lines. All readable.
+      Data: 80 dots per row in a beeswarm, colored from Imprint blue (#4467A3, low) through purple to matte red (#AE3030, high); dashed vertical zero line visible behind the dots; top rows widely spread, bottom rows clumped near zero. Vertical color bar on the right titled "Feature value" with High (red, top) / Low (blue, bottom). Single continuous encoding, so no categorical #009E73 series applies.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Same title, axis labels, and 9 feature names now render in light ink / soft light-gray ink, fully legible against the dark surface. Grid lines and the x=0 reference line are visible but subtle. Legend title and Low/High labels are legible light text, colorbar not clipped.
-      Data: Same beeswarm layout and the SAME blue-to-red data colors as the light render (colors are identical between themes -- only chrome flipped), confirming the marks are theme-invariant as required.
-      Legibility verdict: PASS -- no dark-on-dark failures; all text/tick labels are clearly visible against the dark background.
-
-    Cross-render check: the diverging blue-to-red feature-value scale (Imprint imprint_div) is correctly used in both renders and matches the spec's explicit "low=blue to high=red" requirement, resolving the sequential green-to-blue issue flagged in the prior review attempt.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, feature names, tick labels, axis title and color-bar labels all flip to light ink; grid lines dark grey and subtle; zero line light dashed. No dark-on-dark text.
+      Data: dot positions and colors identical to the light render; mid-scale purple dots remain clearly visible on the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes explicit and appropriately
-          scaled.
+        comment: Explicit sizes (title 22, subtitle 15, ticks 14–15, axis title 16);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Beeswarm packing avoids most collisions but points still touch in
-          the densest low-importance rows near x=0.
+        comment: No text collisions; dot overlap minimal thanks to the beeswarm
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Markers appropriately sized for sparse rows, but no alpha blending
-          to combat overplotting in dense clusters.
+        comment: r=5 px dots suit 80 points per row; color bar clearly visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging blue-red scale offers adequate contrast and is not reliant
-          on a red-green-only signal.
+        comment: Blue–red diverging is CVD-safe, no red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions, nothing clipped, title well
-          within bounds.
+        comment: 3200x1800, balanced margins, nothing clipped, title width appropriate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-axis label with domain context; feature names as y-axis
-          labels.
+        comment: '''SHAP value (impact on churn risk)'' and readable feature names
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct diverging Imprint scale (t.div), theme-correct backgrounds
-          in both renders.
+        comment: Imprint div endpoints via zAxis colorMap; correct page colors; chrome
+          flips, data colors identical
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -116,21 +111,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom collision-avoidance beeswarm layout shows real design effort
-          beyond defaults.
+        comment: Two-tier header hierarchy (ink title / inkSoft subtitle explaining
+          the encoding), signed tick formatter, stacked legend title
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clean MUI X chrome, subtle grid, generous whitespace, no spines.
+        comment: Vertical-only grid chosen for a horizontal-value chart, tick marks
+          removed on the categorical axis, dashed zero line under the dots
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Importance-sorted rows plus color-direction split creates a clear,
-          guided narrative.
+        passed: false
+        comment: Data displayed as the Notes ask; no hierarchy beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -140,26 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SHAP beeswarm summary plot.
+        comment: Beeswarm SHAP summary plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted by mean |SHAP|, diverging blue-red scale, x=0 reference line,
-          vertical jitter all present.
+        comment: Sorted by mean |SHAP| top-down, blue-red diverging color, color bar
+          Low/High, zero line, vertical jitter within rows, top-20 cap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=SHAP value, y=feature row, color=feature value; correct.
+        comment: x is the exact SHAP value; vertical offset is permitted layout within
+          the row
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; color legend present and labeled.
+        comment: Mandated title format; color bar titled 'Feature value' with Low/High
     data_quality:
       score: 15
       max: 15
@@ -169,58 +165,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 9 features, 80 samples each, full distribution shown.
+        comment: Wide vs tight rows, positive and negative directions, mixed colors
+          near zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral churn-risk model features.
+        comment: Gradient-boosted churn model with plausible SaaS features
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SHAP value range and per-feature amplitudes are sensible and consistent
-          with the importance ranking.
+        comment: SHAP magnitudes up to ~±0.5 plausible for log-odds; feature ranges
+          realistic (NPS 0–10, contract 1–36 months); no Check values in spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Several helper functions for the beeswarm algorithm; justified by
-          the spec's overlap-reduction requirement but adds complexity.
+        comment: Flat module-level script, default-exported component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG + Box-Muller.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports from @mui/x-charts.
+        comment: All nine imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity for the collision-avoidance
-          task.
+        comment: Beeswarm placement is short and necessary; no available call computes
+          it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, harness contract respected.
+        comment: Harness contract, skipAnimation, v9 composition API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,24 +224,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ScatterChart with zAxis continuous colorMap for feature-value
-          encoding.
+        comment: ChartsDataProvider/ChartsWrapper/ChartsSurface composition with ScatterPlot,
+          ChartsGrid, ChartsReferenceLine
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ContinuousColorLegend, ChartsReferenceLine, and custom ChartsText
-          overlays used deliberately.
+        comment: zAxis continuous colorMap driving per-point color plus ContinuousColorLegend
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:21:45Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
+  - layer-composition
+  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
+  - grid-styling

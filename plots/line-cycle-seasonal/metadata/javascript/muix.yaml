@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: line-cycle-seasonal
 created: '2026-06-15T04:15:21Z'
-updated: '2026-06-15T04:35:06Z'
-generated_by: claude-sonnet
-workflow_run: 27523028322
+updated: '2026-11-08T07:54:34Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42441792475
 issue: 8658
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-cycle-seasonal/javascript/muix/plot-light.html
@@ -15,105 +16,91 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-cycl
 quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: correct cycle plot with 12 month groups, rising subseries
-    trend lines, horizontal seasonal-mean reference lines (lavender), null-gap visual
-    separation, and calendar ordering'
-  - 'Palette now fully correct (attempt 2 fix): palette[0]=#009E73 for Monthly Sales
-    and palette[1]=#C475FD for Seasonal Mean — canonical Imprint order with correct
-    first series as brand green'
-  - Y-axis min fixed to 2, eliminating wasted empty lower quarter and allowing within-group
-    slope detail to be clearly visible
-  - 'Visual refinements added: sx-based spine removal, tick mark removal, and subtle
-    horizontal grid using t.grid token — clean frameless aesthetic'
-  - 'Excellent data quality: 10 years of monthly retail sales with realistic 8% annual
-    growth, deterministic noise, plausible holiday peak in December (1.45× multiplier)'
-  - 'Strong code quality: KISS structure, deterministic pseudo-noise formula, single
-    clean import, correct skipAnimation and window.ANYPLOT_SIZE usage'
+  - 'Single shared panel built on one linear x axis with null breaks (connectNulls:
+    false), so no line joins neighbouring months and all twelve mean levels compare
+    on one y scale'
+  - Mean lines are thick round-capped lavender bars that overhang each group slightly,
+    clearly distinct from the thin green subseries in both themes
+  - Location-aware valueFormatter shows month names on the ticks and 'Month Year'
+    labels in the HTML tooltip
+  - Computed subtitle (observation count, year span, range of group means) adds context
+    derived from the data rather than typed numbers
+  - 'Clean v9 API use: [data-series] CSS selectors, slotProps.legend.sx, explicit
+    axis height/width, skipAnimation'
   weaknesses:
-  - Mean reference lines (lavender) are the same stroke weight as the data subseries
-    lines — consider making them thicker (strokeWidth 2.5–3px via sx or slotProps)
-    or using a dashed style to visually distinguish reference lines from data trend
-    lines
-  - 'DE-03: No additional visual emphasis to guide the viewer — December''s dramatic
-    peak could be highlighted via a slightly different treatment or annotation indicating
-    holiday seasonality; the cycle plot tells a good story inherently but no extra
-    visual hierarchy is added'
-  - 'LM-02: The implementation uses MUI X''s tickInterval and connectNulls features
-    well but doesn''t leverage any advanced community features like reference lines
-    API (if available), custom mark rendering, or area bands that could further distinguish
-    this as a MUI X showcase'
+  - 'Suggestion: the legend''s mean entry uses MUI X''s default thin line sample,
+    but the mean bars are drawn at 4.5 px; a thicker legend mark would match the plotted
+    weight.'
+  - 'Suggestion: the 64 px x-axis band leaves the "Month" title a little far from
+    the tick labels; a tighter band would bring it closer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "Monthly Retail Sales · line-cycle-seasonal · javascript · muix · anyplot.ai" at 20px CSS, dark ink, bold — clearly readable at ~60% of canvas width. Y-axis label "Online Retail Sales ($ billion)" rotated vertically, readable. X-axis shows month abbreviations (Jan–Dec) at group centers. Y-axis tick labels (2, 4, 6, 8, 10) readable at 13px. Legend shows green swatch "Monthly Sales" and lavender swatch "Seasonal Mean". Axis spine lines and tick marks removed for clean frameless look. Subtle horizontal grid lines visible.
-      Data: 12 month groups (Jan–Dec) arranged left to right, each containing a rising green (#009E73) subseries line over 10 years and a flat lavender (#C475FD) horizontal mean reference line at each group's seasonal average. Null gaps between groups create clean visual separation. Y-axis starts at 2 (not 0), correctly using the data range. December clearly dominates with values reaching ~7.5–10.5B, emphasizing the holiday seasonal peak.
-      Legibility verdict: PASS — all text clearly readable on warm off-white background.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "Monthly Retail Sales · line-cycle-seasonal · javascript · muix · anyplot.ai" (~53% width) with a soft-ink subtitle "120 observations in 12 month groups · Year 2014–2023 · group means 3.68 to 7.36"; y axis "Online retail sales ($ billion)" ticks 2.0–10.5; x axis "Month" with Jan–Dec tick labels centred under each group; subtle horizontal grid; legend top right. All text readable.
+      Data: twelve thin #009E73 subseries (10 yearly points each, rising within every month), separated by gaps with no connecting segments; a thick round-capped lavender #C475FD mean bar across each group, climbing from ~3.7 (Jan) to ~7.4 (Dec) with the holiday peak in Nov/Dec.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text all appear in light cream/off-white — clearly readable against the dark background. No dark-on-dark issues detected. ThemeProvider correctly flips all chrome elements to light colors.
-      Data: Green (#009E73) subseries lines and lavender (#C475FD) mean reference lines are identical in color to the light render — only the chrome flipped. Both series are clearly distinguishable from the dark background. December's peak remains the most prominent visual feature. Grid lines subtle and visible.
-      Legibility verdict: PASS — all text readable on near-black background; no dark-on-dark failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, tick labels, axis titles and legend all flip to light ink and read clearly; grid subtle but visible; no dark-on-dark text.
+      Data: identical green subseries and lavender mean bars as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 20px, axis label 14px, tick
-          labels 13px). Text readable in both themes at full and mobile scale. Minor:
-          y-axis rotated label could benefit from slightly larger size.'
+        comment: Explicit sizes (title 22, ticks 14-15, axis titles 16, legend 15
+          CSS px); all text reads cleanly in both themes, ink/inkSoft tokens threaded
+          through
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Month labels centered at group midpoints
-          with adequate spacing. Legend positioned cleanly in upper area.
+        comment: No text collisions; subseries crossing their own mean line is inherent
+          to the chart type
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Green subseries lines and lavender mean reference lines visible in
-          both themes. Lines slightly thin; thicker mean lines would better visually
-          distinguish reference from data series.
+        comment: Thin 2.25 px subseries and 4.5 px rounded mean bars are both clearly
+          visible; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe Imprint palette
-          members with sufficient contrast on both backgrounds.
+        comment: Green vs lavender is CVD-safe and the two roles also differ by stroke
+          width
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Y-axis starts at 2 (fixed from repair). Plot
-          fills canvas proportionally. Margins are balanced.
+        comment: 3200x1800, canvas gate passed; plot fills the canvas, title ~53%
+          width, balanced axis labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Online Retail Sales ($ billion)'' — descriptive with units.
-          Title follows {Descriptive} · {spec-id} · {language} · {library} · anyplot.ai
-          format correctly.'
+        comment: '''Online retail sales ($ billion)'' with units; x ''Month'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series t.palette[0]=#009E73 correct. Second series t.palette[1]=#C475FD
-          (lavender) correct canonical order (fixed from attempt 1). Backgrounds #FAF8F1
-          and #1A1A17 theme-correct in both renders.'
+        comment: 'Subseries #009E73 (Imprint 1), means #C475FD (Imprint 2); backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -121,26 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above well-configured defaults. Spines removed, tick marks removed,
-          custom grid, proper color hierarchy. Professional but not publication-ready
-          with full visual sophistication.
+        comment: Bold title over a soft-ink computed subtitle (observation count,
+          year span, range of group means) gives a typographic hierarchy beyond the
+          baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Genuine refinements: MuiChartsAxis-line hidden, MuiChartsAxis-tick
-          hidden, horizontal grid styled with t.grid token. Clearly above library
-          defaults.'
+        comment: 'Deliberate spacing constants: mean lines overhang their group by
+          0.45 slots with round caps, 3-slot gaps, padded x ends, 6% y padding'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: 'Cycle plot structure inherently tells a good story: rising slopes
-          show growth, mean lines show seasonal differences, December peak is visually
-          dominant. Two-color hierarchy (green data vs lavender reference) guides
-          the reader. No added annotations or emphasis.'
+        comment: Subtitle states the seasonal-mean range (3.68 to 7.36) so the December
+          peak reads as the focal point; otherwise the Notes' structure
     spec_compliance:
       score: 15
       max: 15
@@ -150,31 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cycle plot with seasonal groups, within-group trend lines,
-          and horizontal mean reference lines.
+        comment: Correct cycle plot in one shared panel; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: seasonal groups left-to-right (Jan-Dec), chronological
-          subseries lines, horizontal mean per group, shared y-axis, null-gap separation,
-          calendar ordering.'
+        comment: Jan-Dec calendar order; chronological thin subseries; per-group mean
+          line spanning the group; shared y axis in a single panel; gaps with null
+          breaks so no line joins groups; consistent mean style distinct from subseries
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: seasonal months. Y-axis: retail sales. 12 months × 10 years
-          all represented.'
+        comment: Linear (not curved) segments at the data values; y range covers all
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Monthly Retail Sales · line-cycle-seasonal · javascript ·
-          muix · anyplot.ai' matches required format. Legend labels 'Monthly Sales'
-          and 'Seasonal Mean' are clear.
+        comment: '''Monthly Retail Sales · line-cycle-seasonal · javascript · muix
+          · anyplot.ai''; legend entries are reader text'
     data_quality:
       score: 15
       max: 15
@@ -184,23 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all cycle plot aspects: seasonal pattern (different mean heights),
-          within-season trend (rising slopes), and clear seasonal outlier (December
-          peak). Both what the chart reveals: seasonal effect AND trend-within-season.'
+        comment: Clear seasonal mean differences (holiday peak in Nov/Dec, low Jan/Feb)
+          plus visible within-month growth and noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly online retail sales in USD billions (2014-2023). Realistic,
-          neutral business domain.
+        comment: Monthly online retail sales 2014-2023, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2.5–10.5B range with ~8% annual growth and realistic seasonal multipliers
-          (Dec at 1.45×). Plausible for US e-commerce.
+        comment: 120 points in 12 groups of 10, inside the spec range; ~8% yearly
+          growth and a ~1.45x December peak are plausible; checked the mean range
+          in the subtitle is computed from the data
     code_quality:
       score: 10
       max: 10
@@ -210,38 +191,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: data setup → component export. No unnecessary
-          abstractions.'
+        comment: Flat module-level flow; only the mandatory default component and
+          the seeded data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: formula-based pseudo-noise using (m*7 + yi*13)
-          % 17.'
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Single import: LineChart from @mui/x-charts/LineChart. No unused
-          imports.'
+        comment: Only LineChart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic React/MUI X. Null-gap technique for visual separation
-          is clever. No fake functionality.
+        comment: Slot construction is the minimum needed for a single-panel cycle
+          plot in MUI X; nothing replaceable by a library call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export component, skipAnimation set, window.ANYPLOT_SIZE
-          used, community @mui/x-charts only.
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 API (data-series
+          selectors, slotProps.legend.sx, axis height/width)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -249,26 +228,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic MUI X: band scale, tickInterval for selective labels,
-          valueFormatter, connectNulls:false, grid prop, sx for CSS customization,
-          skipAnimation, ANYPLOT_SIZE.'
+        comment: Linear x axis with null gaps and connectNulls:false, tickInterval
+          array for group-centred ticks, per-series styling via [data-series] selectors
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: tickInterval with custom positions is MUI X-specific and cleverly
-          used for group-centered labels. sx/CSS-in-JS approach is distinctively MUI.
-          connectNulls handling is idiomatic. Doesn't push advanced MUI X-specific
-          capabilities further.
+        comment: 'Location-aware axis valueFormatter: month names on ticks, ''Month
+          Year'' labels in the tooltip'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:14:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - groupby-aggregation
+  dataprep:
+  - time-series
   styling:
-  - minimal-chrome
+  - grid-styling

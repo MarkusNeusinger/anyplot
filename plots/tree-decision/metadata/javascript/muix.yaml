@@ -2,138 +2,134 @@ library: muix
 language: javascript
 specification_id: tree-decision
 created: '2026-08-26T17:14:05Z'
-updated: '2026-08-26T17:23:58Z'
-generated_by: claude-sonnet
-workflow_run: 32992014980
+updated: '2026-11-08T06:39:01Z'
+generated_by: claude-opus-5-5
+adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
+workflow_run: 42455281675
 issue: 4569
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/muix/plot-dark.html
-quality_score: 95
+quality_score: 88
 review:
   strengths:
-  - 'Mathematically correct EMV rollback with accurate pruning: chance nodes keep
-    both branches live while decision nodes correctly prune every non-optimal child
-    (verified against the tree by hand: Launch $453 > Don''t Launch $0; Expand $655
-    > Don''t Expand $500; Discount $150 > Hold Price $80).'
-  - Distinctive, idiomatic MUI X usage — custom SVG marks built on ChartContainer's
-    useXScale/useYScale hooks, the library's documented pattern for chart types the
-    built-in components can't express.
-  - 'Clear visual storytelling: the solid, full-opacity optimal path is immediately
-    distinguishable from the dashed, muted, cross-marked pruned branches, so the viewer
-    sees the optimal decision path at a glance.'
-  - Correct node semantics (square/circle/right-pointing-triangle for decision/chance/terminal)
-    plus a self-arranging tree layout (child-average y-positioning) that avoids overlap
-    without hardcoded coordinates.
-  - Realistic, neutral business scenario (product-launch investment) with internally
-    consistent probabilities (each chance node's branches sum to 1.0) and payoffs.
-  - Theme-correct rendering in both light and dark renders — identical data colors,
-    fully legible chrome, warm off-white/near-black backgrounds.
+  - 'EMV rollback is computed from the records (deepest nodes first: probability-weighted
+    mean at chance nodes, best branch at decision nodes), so every EMV label and every
+    pruned mark falls out of the data rather than being typed: C2 655, D1 655, D2
+    150, C1 453, root 453, all checked.'
+  - All three node shapes match the Notes (green squares for decisions, purple circles
+    for chance, right-pointing outlined triangles for terminals), with decision and
+    chance in the first two Imprint positions and identical data colors in both themes.
+  - 'Pruned branches carry both marks the spec asks for: a dashed, thinner, 0.55-opacity
+    line plus a double-strike at the midpoint, and the rejected terminal and its payoff
+    fade with it, so the optimal path reads as the solid route.'
+  - Branch labels are placed along each edge's normal with an offset derived from
+    the label width and the edge angle, so no label is struck through by its branch
+    in either render.
+  - Composes a custom SVG layer inside ChartsContainer and positions it with the useXScale/useYScale
+    hooks on hidden linear axes (reversed y), the documented MUI X v9 extension pattern
+    for a chart type the community package lacks.
+  - 'Clear typographic hierarchy: bold node questions in ink, semibold EMV labels
+    in soft ink, bold payoffs, and a subtitle that names the unit and the root EMV.'
   weaknesses:
-  - Edge probability/option labels at 13.5px are the smallest text in the diagram
-    and the first to lose crispness at reduced sizes — bump to ~14-15px to match the
-    weight of the EMV/payoff text.
-  - The tree has only 11 nodes (spec range is 10-30) and every internal node has exactly
-    2 children — a 3-outcome chance node or a 3rd decision stage would better showcase
-    the diagram's scalability.
-  - The pruned-branch cross mark is two plain crossed lines; a slightly thicker or
-    rounded stroke would read a touch more polished at full resolution.
+  - 'Suggestion: a tooltip on the node marks (via MUI X''s interaction layer) could
+    expose the node id, type and probability in the HTML view.'
+  - 'Suggestion: the 15 px regular-weight branch labels are the lightest text on the
+    canvas; a 16 px size would bring them level with the question and payoff labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "tree-decision · javascript · muix · anyplot.ai" centered at top in dark bold text, fully legible. Legend top-left (Decision node / Chance node / Terminal payoff / Pruned branch) with matching swatches, all readable. Node titles ("Launch Product?", "Discount Price?", "Expand Capacity?", "Initial Demand", "Sustained Demand") in bold dark ink, EMV values below each in slightly softer dark ink, edge/branch labels (option names and "· p=0.XX" probabilities) in small soft-ink text along each connector. All text reads clearly against the light background.
-      Data: Decision nodes are green (#009E73-class) squares, chance nodes are violet/purple circles (Imprint palette position 2), terminal nodes are outlined triangles pointing right with payoff values beside them. Chosen-path edges are solid dark lines; pruned edges are dashed, muted gray, reduced opacity, and marked with an "X" cross at the midpoint.
-      Legibility verdict: PASS — no light-on-light or unreadable text observed.
+      Background: warm off-white #FAF8F1 across the whole canvas, no axes or grid.
+      Chrome: title "tree-decision · javascript · muix · anyplot.ai" top-left in dark ink, a soft-ink subtitle (11 nodes, 6 terminal payoffs, USD thousand, root EMV 453), and an HTML legend row (Decision node square, Chance node circle, Terminal payoff triangle, Pruned branch dashed double-strike). All readable.
+      Data: left-to-right tree from "Launch product?" (green #009E73 square, EMV 453) through "Initial demand" (purple circle, EMV 453) to "Expand capacity?" (EMV 655) and "Discount price?" (EMV 150), then "Sustained demand" (purple circle, EMV 655) to terminals 850 and 200. Branch labels show option names on decision branches and "name · p = 0.xx" on chance branches. Pruned branches (Don't launch → 0, Don't expand → 500, Hold price → 80) are dashed, faded and carry a double-strike; their triangles and payoffs are greyed. No text collisions.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, node titles, EMV values, and edge labels as the light render, all rendered in light ink and clearly visible against the dark background. No dark-on-dark text observed anywhere (titles, EMV, edge/branch labels, legend text all flip to light ink correctly).
-      Data: Decision-node green and chance-node violet are visually identical to the light render (only the chrome — text, muted-gray tone, page background — adapts to the theme). Terminal triangles use the dark theme's elevated-surface fill with light ink strokes, remaining clearly visible.
-      Legibility verdict: PASS — all text and shapes remain legible in dark mode, confirming correct theme-adaptive chrome with identical data colors.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, node questions, EMV labels, branch labels and payoffs all flip to light ink and are clearly readable; no dark-on-dark text. Edges render in light soft ink; terminal triangles are light-outlined.
+      Data: green decision squares and purple chance circles are identical to the light render; pruned branches keep the same dashed, faded, double-struck treatment.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (13.5-22px), readable in both themes
-          and at 400px thumbnail; smallest edge labels (13.5px) are slightly below
-          the rest of the type scale.
+        comment: Explicit sizes in CSS px (title 22, questions/payoffs 16, branch/EMV
+          labels 15) per the muix sizing guidance; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Self-arranging tree layout keeps all node/edge labels clear of each
-          other; closest pair ('High Demand · p=0.60' / 'Expand Capacity?') stays
-          separated.
+        comment: No text collisions; edge labels are offset along the edge normal
+          and clear their branches
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Square/circle/triangle marks sized appropriately for an 11-node tree;
-          pruned marks legibly dimmed but not invisible.
+        comment: Node marks 36 px, edges 2.6 px; pruned edges and terminals faded
+          but visible; all legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. violet nodes plus distinct shapes give CVD-safe, non-hue-only
-          distinction.
+        comment: Green vs purple plus distinct shapes per node type; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Tree spans nearly full canvas width and most of the height; nothing
-          cut off, legend anchored near content.
+        comment: Tree fills the canvas left-to-right; empty corners are permitted
+          by the spec; nothing clipped; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A as a Cartesian axis chart (tree diagram) — no generic 'x'/'y'
-          labels present, full credit.
+        comment: No axes by design; unit (USD thousand) stated in the subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Decision nodes use Imprint brand green (palette[0]); chance nodes
-          use palette[1] violet; identical across themes; backgrounds theme-correct.
+        comment: 'Decision #009E73 (palette[0]), chance palette[1]; theme-correct
+          backgrounds; data colors identical across themes'
     design_excellence:
-      score: 17
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Fully custom illustration (not a library default look) with intentional
-          shape/color hierarchy; short of publication-grade polish.
+        comment: 'Raised for a chosen typographic hierarchy: bold questions in ink,
+          semibold EMV in soft ink, bold payoffs, a subtitle carrying the root EMV'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No grid/spines, generous whitespace, perpendicular label offsets
-          and halo strokes around markers; the pruned cross-mark stroke is a bit plain.
+        comment: Raised for label placement computed from label width and edge angle,
+          and question labels lifted above the steepest incident edge
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Solid/opaque optimal path vs. dashed/muted/cross-marked pruned branches
-          makes the insight (optimal decision path) immediately visible.
+        comment: 'Raised slightly: rejected terminals and their payoffs fade with
+          the pruned branch and the subtitle states the root EMV, beyond the Notes''
+          pruning marks'
     spec_compliance:
       score: 15
       max: 15
@@ -143,53 +139,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision-tree diagram with square/circle/triangle node types.
+        comment: Decision tree with squares, circles, right-pointing triangles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: EMV rollback, pruning marks, probability/option branch labels, left-to-right
-          layout all present.
+        comment: 'All Notes and ''A good version shows'' bullets met: shapes and colors,
+          left-to-right layout without axes, labeled branches, EMV at every non-terminal
+          and payoff at every terminal, pruned branches dashed+faded+double-struck'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth-to-x and rollup-y positioning correctly represent the tree
-          structure with no missing nodes.
+        comment: Positions come from the tree layout (layout-positioned type); EMVs
+          computed by rollback
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'tree-decision · javascript · muix · anyplot.ai';
-          legend labels match the four visual conventions used.
+        comment: Title in the mandated format; legend entries read as text for a reader
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows decision/chance/terminal nodes, pruned and live branches, multi-stage
-          rollback; every internal node has exactly 2 children (tree is at the low
-          end of the 10-30 node spec range).
+        comment: Two-stage tree with decision, chance and terminal nodes, pruning
+          at three decisions, unequal depths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible product-launch investment scenario.
+        comment: Product launch / capacity expansion with plausible payoffs in USD
+          thousand; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probabilities sum to 1.0 per chance node; payoffs and resulting EMVs
-          are internally consistent and plausible.
+        comment: 'Checked: probabilities sum to 1.0 at C1 (0.6+0.4) and C2 (0.7+0.3);
+          EMVs C2 655, D1 655, D2 150, C1 453, D0 453 computed in code and match the
+          render'
     code_quality:
       score: 10
       max: 10
@@ -199,62 +196,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Component/helper functions are the idiomatic React structure; layout/rollback
-          logic is necessary complexity, not over-engineering.
+        comment: One layer component, required because the scale hooks must run inside
+          ChartsContainer; otherwise flat module code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no RNG.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, useXScale, useYScale imported, all used.
+        comment: ChartsContainer, useXScale, useYScale all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex for a custom diagram; no fake UI.
+        comment: Tree layout and rollback are short and no available call computes
+          them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default-exported component, skipAnimation
-          set, no manual save/mount code.'
+        comment: 'Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 ChartsContainer
+          and axis position: ''none'''
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ChartContainer + useXScale/useYScale is MUI X's documented pattern
-          for building custom chart types beyond the built-in components.
+        comment: 'Raised for the v9 composition idiom: custom SVG layer inside ChartsContainer
+          driven by hidden linear axes'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Custom SVG marks driven by the library's own coordinate-system hooks
-          — a feature genuinely distinctive to MUI X, not easily replicated in another
-          library.
+        passed: false
+        comment: Raised for useXScale/useYScale hooks with a reversed y axis to map
+          tree slots; little else of MUI X is exercised
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:35:35Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
-  patterns:
-  - data-generation
-  dataprep:
-  - expected-value-rollback
+  - custom-legend
+  - layer-composition
+  - html-export
+  patterns: []
+  dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
