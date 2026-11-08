@@ -6,6 +6,7 @@ Quality: 84/100 | Updated: 2026-06-08
 
 import os
 
+import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
@@ -16,14 +17,16 @@ from lets_plot import (
     element_text,
     geom_path,
     geom_point,
-    geom_polygon,
     geom_text,
     ggplot,
     ggsize,
+    guide_legend,
+    guides,
     labs,
     layer_tooltips,
+    scale_color_identity,
     scale_fill_gradient,
-    scale_size,
+    scale_size_area,
     theme,
     theme_minimal,
 )
@@ -43,6 +46,11 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint sequential colormap: brand green (#009E73) → blue (#4467A3)
 CMAP_LOW = "#009E73"
 CMAP_HIGH = "#4467A3"
+
+# Constants
+POPULATION_KEYS = [5, 20, 40, 80]  # population (millions) shown in the size legend
+LARGE_POP = 30  # millions: bold large labels above this
+SMALL_POP = 12  # millions: bubbles at or below this are too small for two letters; their label sits beside them
 
 # Data: 20 European countries — population (millions) and GDP per capita (thousands USD)
 # NL/BE positions spread further apart to reduce label crowding in Central Europe
@@ -183,19 +191,28 @@ countries_data = {
 }
 df = pd.DataFrame(countries_data)
 df["highlight"] = (df["population"] < 15) & (df["gdp_per_capita"] > 50)
+df["size_key"] = np.sqrt(df["population"])
 
-# Stars shifted +1.8° north so they sit above country abbreviation labels
+# Stars shifted +1.8° north so they sit above their bubbles
 df_stars = df[df["highlight"]].copy()
 df_stars["lat"] = df_stars["lat"] + 1.8
 
-# Simplified European coastline polygon for outer geographic boundary
-europe_outline = pd.DataFrame(
-    {
-        "lon": [-12, -10, -5, 0, 5, 10, 15, 20, 25, 30, 32, 30, 28, 25, 28, 32, 30, 25, 20, 15, 10, 5, 0, -5, -10, -12],
-        "lat": [43, 36, 36, 38, 37, 36, 36, 35, 36, 38, 42, 45, 45, 50, 55, 60, 65, 70, 68, 62, 58, 52, 50, 48, 44, 43],
-        "group": ["outline"] * 26,
-    }
+# Label color per bubble: ink or page color, whichever contrasts more with the bubble's
+# fill on the green-to-blue gradient, so every abbreviation reads in both themes
+DARK_TEXT, LIGHT_TEXT = "#1A1A17", "#FAF8F1"
+low_rgb, high_rgb, dark_rgb, light_rgb = (
+    np.array([int(color[i : i + 2], 16) for i in (1, 3, 5)]) / 255
+    for color in (CMAP_LOW, CMAP_HIGH, DARK_TEXT, LIGHT_TEXT)
 )
+gdp = df["gdp_per_capita"].to_numpy()
+share = (gdp - gdp.min()) / (gdp.max() - gdp.min())
+rgb = np.vstack([low_rgb + share[:, None] * (high_rgb - low_rgb), dark_rgb, light_rgb])
+# WCAG relative luminance of every fill and of the two text colors
+luminance = np.where(rgb <= 0.04045, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4) @ [0.2126, 0.7152, 0.0722]
+fill_lum, dark_lum, light_lum = luminance[:-2], luminance[-2], luminance[-1]
+dark_contrast = (fill_lum + 0.05) / (dark_lum + 0.05)
+light_contrast = (light_lum + 0.05) / (fill_lum + 0.05)
+df["label_color"] = np.where(dark_contrast >= light_contrast, DARK_TEXT, LIGHT_TEXT)
 
 # Simplified individual country border outlines — closed polygons (last pt = first pt)
 # These show each country's approximate geographic footprint alongside its bubble
@@ -232,55 +249,58 @@ title = "European Population Cartogram · cartogram-area-distortion · python ·
 n = len(title)
 title_size = max(11, round(16 * 67 / n))
 
+# Map frame from the data: every bubble and the full reference outlines, with a margin
+lat_min = min(country_borders["lat"].min(), df["lat"].min()) - 1
+lat_max = max(country_borders["lat"].max(), df_stars["lat"].max()) + 1
+
 plot = (
     ggplot()
-    # Faint European coastline for outer geographic context
-    + geom_polygon(
-        aes(x="lon", y="lat", group="group"), data=europe_outline, fill=PAGE_BG, color=INK_MUTED, size=0.5, alpha=0.4
-    )
     # Individual country border outlines — makes area distortion legible vs actual footprints
     + geom_path(aes(x="lon", y="lat", group="group"), data=country_borders, color=INK_MUTED, size=0.35, alpha=0.5)
-    # Non-highlighted countries: bubble area ∝ population, fill color = GDP per capita
+    # Bubble area ∝ population, fill color = GDP per capita. lets-plot sizes a marker by its
+    # diameter, so the size scale reads the square root of population and maps zero to zero.
+    # Every bubble has the same thin page-colored rim, so no outline adds to its drawn area
     + geom_point(
-        aes(x="lon", y="lat", size="population", fill="gdp_per_capita"),
-        data=df[~df["highlight"]],
+        aes(x="lon", y="lat", size="size_key", fill="gdp_per_capita"),
+        data=df,
         shape=21,
-        color=INK_SOFT,
-        stroke=0.5,
-        alpha=0.82,
+        color=PAGE_BG,
+        stroke=0.3,
         tooltips=layer_tooltips()
         .title("@country")
         .line("Population|@population M")
         .line("GDP/capita|$@gdp_per_capita K"),
     )
-    # Highlighted small-but-wealthy nations — bold border for storytelling emphasis
-    + geom_point(
-        aes(x="lon", y="lat", size="population", fill="gdp_per_capita"),
-        data=df[df["highlight"]],
-        shape=21,
-        color=INK,
-        stroke=1.6,
-        alpha=0.95,
-        tooltips=layer_tooltips()
-        .title("@country")
-        .line("Population|@population M")
-        .line("GDP/capita|$@gdp_per_capita K"),
-    )
-    # Stars nudged +1.8° north so they sit above abbreviation labels, not on top of them
-    + geom_point(aes(x="lon", y="lat"), data=df_stars, shape=8, size=3.0, color=INK)
-    + scale_size(range=[8, 26], name="Population (M)", breaks=[5, 20, 40, 80])
+    # Small-but-wealthy nations marked with a star above their bubbles, the same glyph as the key
+    + geom_text(aes(x="lon", y="lat"), data=df_stars, label="★", size=7, color=INK)
+    + scale_size_area(max_size=26, name="Population (M)", breaks={f"{p}": np.sqrt(p) for p in POPULATION_KEYS})
+    + guides(size=guide_legend(override_aes={"fill": INK_MUTED, "color": PAGE_BG}))
     + scale_fill_gradient(low=CMAP_LOW, high=CMAP_HIGH, name="GDP/capita (USD K)")
-    # Three-tier label hierarchy: large bold, medium, small — all inside bubbles
+    # Three-tier label hierarchy: large and medium labels inside their bubbles, each in the
+    # text color that contrasts most with the bubble's fill; the smallest bubbles cannot hold
+    # two letters, so their labels sit just right of them in ink
     + geom_text(
-        aes(x="lon", y="lat", label="abbr"), data=df[df["population"] > 30], size=12, color=INK, fontface="bold"
+        aes(x="lon", y="lat", label="abbr", color="label_color"),
+        data=df[df["population"] > LARGE_POP],
+        size=12,
+        fontface="bold",
+    )
+    + geom_text(
+        aes(x="lon", y="lat", label="abbr", color="label_color"),
+        data=df[(df["population"] > SMALL_POP) & (df["population"] <= LARGE_POP)],
+        size=7,
+        fontface="bold",
     )
     + geom_text(
         aes(x="lon", y="lat", label="abbr"),
-        data=df[(df["population"] > 10) & (df["population"] <= 30)],
-        size=9,
+        data=df[df["population"] <= SMALL_POP],
+        size=7,
+        fontface="bold",
         color=INK,
+        hjust=0,
+        nudge_x=1.0,
     )
-    + geom_text(aes(x="lon", y="lat", label="abbr"), data=df[df["population"] <= 10], size=8, color=INK_SOFT)
+    + scale_color_identity()
     # Annotation near Atlantic/Nordic highlighted cluster (IE/NO/DK area)
     + geom_text(
         aes(x="x", y="y"),
@@ -292,7 +312,7 @@ plot = (
         hjust=0,
     )
     + labs(title=title, subtitle="Bubble size = population  |  Color = GDP per capita  |  ★ = small but wealthy")
-    + coord_cartesian(xlim=[-16, 33], ylim=[34, 67])
+    + coord_cartesian(xlim=[-16, 33], ylim=[lat_min, lat_max])
     + ggsize(800, 450)
     + theme_minimal()
     + theme(
