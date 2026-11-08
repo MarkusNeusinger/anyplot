@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: climograph-walter-lieth
 created: '2026-06-15T01:19:39Z'
-updated: '2026-11-08T22:30:00Z'
+updated: '2026-11-08T22:36:46Z'
 generated_by: claude-opus-5-5
 adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
 workflow_run: 42526900811
@@ -13,50 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Walter-Lieth 1:2 scaling is done with pygal's native secondary axis (secondary_range
-    = 2 × the primary tick span), so 10 °C, 20 °C and 30 °C sit exactly on 20, 40
-    and 60 mm with both zeros on one baseline, and the precipitation series keeps
-    its real mm values for the tooltips
-  - Humid and arid fills are polygons split at the exact linear crossings of the two
-    curves (Mar/Apr and Sep/Oct), so the blue and red periods switch precisely where
-    the curves meet in both themes
-  - 'Two-tier header via injected CSS: bold mandated title over a lighter station
-    line with name, elevation, annual mean 18.4 °C and total 343 mm computed from
-    the data'
-  - Realistic Athens Mediterranean normals give a clear summer arid period and winter
-    humid period, the canonical example the spec names
-  - Per-series formatters give °C / mm tooltips in the interactive HTML output
+  - 'Correct Walter-Lieth 1:2 scaling: secondary_range is derived from the temperature
+    ticks (MM_PER_DEGREE * temp_ticks), so 10/20/30 °C line up exactly with 20/40/60
+    mm and both zeros share one baseline'
+  - Humid/arid fills are computed as polygons between the straight month-to-month
+    segments and split at the exact crossing points (Mar–Apr and Sep–Oct), so blue
+    and red switch precisely where the curves cross in both renders
+  - 'Two-line header: bold mandated title over a normal-weight station line with name,
+    elevation, annual mean 18.4 °C and total 343 mm, both computed from the data'
+  - Semantic red (temperature) / blue (precipitation) from the Imprint palette, with
+    legend entries that name the axis each curve belongs to ('left axis' / 'right
+    axis') and the curve swatches restyled into opaque line strokes via injected CSS
+  - Native pygal XY chart with secondary=True axis, per-series value formatters ('°C'
+    / 'mm') for the HTML tooltips, and both PNG and interactive HTML output
+  - Realistic Athens 1991–2020 normals showing the textbook Mediterranean summer drought;
+    theme tokens threaded through Style so chrome flips cleanly between light and
+    dark
   weaknesses:
-  - 'VQ-03 (both): the legend shows the Temperature and Precipitation lines as translucent
-    filled squares identical to the Arid and Humid period swatches, so the line entries
-    cannot be told apart from the fill entries → line-like glyphs (opaque stroke,
-    no fill) or a visibly different swatch for the two curve series. Likely cause:
-    pygal''s default legend box for every series under the shared opacity=0.45/0.6
-    style.'
-  - 'VQ-05 (both): the left tick labels (''0 °C'' … ''30 °C'') end right on the y-axis
-    spine with no gap, the ''°C'' of ''0 °C'' touching the line → a few px clearance
-    between label and spine. Likely cause: label text width at label_font_size=44
-    against pygal''s default left-label offset.'
-  - 'Suggestion: a ''Precipitation (mm)'' title on the right axis would mirror the
-    left ''Temperature (°C)'' title instead of relying on the legend.'
+  - 'Suggestion: the code handles neither the >100 mm compression nor frost-month
+    marks; Athens needs neither, but a user swapping in a wet or continental station
+    would get neither the solid-blue perhumid band nor the baseline frost blocks.'
+  - 'Suggestion: the legend labels start flush against their swatches; a few pixels
+    of gap would let them breathe.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: bold title "climograph-walter-lieth · python · pygal · anyplot.ai" with a second header line "Athens, Greece · 107 m a.s.l. · mean 18.4 °C · total 343 mm"; left axis "Temperature (°C)" with ticks 0–30 °C, right axis ticks 0–60 mm aligned to them, x axis "Month" Jan–Dec; subtle horizontal grid; 2-column legend at bottom. All dark text, readable.
-      Data: red temperature line (#AE3030) and blue precipitation line (#4467A3) with dots; translucent blue humid fill Jan–Mar and Oct–Dec, translucent red arid fill Apr–Sep, switching at the curve crossings. No frost months, no month > 100 mm.
+      Chrome: bold title "climograph-walter-lieth · python · pygal · anyplot.ai" with a normal-weight header line "Athens, Greece · 107 m a.s.l. · mean 18.4 °C · total 343 mm"; left axis "Temperature (°C)" with ticks 0/10/20/30 °C, right ticks 0/20/40/60 mm aligned to the same gridlines, x-axis "Month" with Jan–Dec; subtle horizontal guides; two-column legend at the bottom. All text dark and readable.
+      Data: red #AE3030 temperature line with dots, blue #4467A3 precipitation line with dots; translucent blue humid fill Jan–Mar and Oct–Dec, translucent red arid fill Apr–Sep, switching at the curve crossings. No frost months and no month above 100 mm (permitted).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, header line, tick labels, axis titles and legend text in light ink, all readable; no dark-on-dark text; grid subtle but visible.
-      Data: same red and blue line colors as light; fills use the same hues at higher opacity, clearly visible on the dark surface.
+      Chrome: title, header line, axis titles, tick labels and legend text in light ink, all clearly readable; no dark-on-dark text; guides subtle.
+      Data: identical red and blue line colors; fills use the same hues at higher opacity, which reads as darker navy/maroon on the dark page and stays clearly distinguishable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -64,45 +60,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Explicit font sizes (56/44/42 px), title, ticks and legend readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions
+        comment: No text collisions; tick labels offset from the spine
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend line entries drawn as fill swatches identical to the period
-          swatches (defect line)
+        comment: 12 points with prominent dots, 5 px curves, fills visible in both
+          themes; legend glyphs match marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue pair with lightness difference; CVD-safe
+        comment: Red/blue pair is CVD-distinguishable; fills also separated by position
+          relative to curves
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Left tick labels butt against the y spine (defect line)
+        comment: 3200x1800, balanced plot area, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C), Month, mm tick units
+        comment: Temperature (°C), Month, mm-unit right ticks; legend names each curve's
+          axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Semantic red temperature / blue precipitation from Imprint; correct
-          backgrounds in both themes
+        comment: 'Semantic exception: Imprint red for temperature, Imprint blue for
+          precipitation; correct backgrounds in both themes'
     design_excellence:
       score: 10
       max: 20
@@ -112,20 +111,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Two-tier header with bold title and lighter station line via CSS
+        comment: 'Header hierarchy chosen beyond baseline: bold title over a smaller
+          normal-weight station line'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: X padding around Jan/Dec and right edge closed by an unlabelled last
-          tick; x guides off
+        comment: Curve legend boxes restyled to line strokes, y tick labels pulled
+          off the spine, stray December guide turned into a clean right axis
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Fills prescribed by the spec; no further hierarchy
+        comment: Displays what the spec prescribes; no extra hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Walter-Lieth climograph
+        comment: Walter-Lieth climograph with dual 1:2 axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 1:2 scaling, fills, header with station/elevation/means; frost and
-          >100 mm band N/A for this station
+        comment: Scaling, red/blue curves, humid/arid fills switching at crossings,
+          header with all four fields, conventional ticks; frost and >100 mm band
+          conditional and not triggered
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every month at its own scale position, zeros shared
+        comment: Every value at its scale position, both zeros on one baseline, no
+          smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend labels descriptive
+        comment: Mandated title; legend entries readable and correct
     data_quality:
       score: 15
       max: 15
@@ -170,14 +172,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Athens 1991-2020 normals, neutral
+        comment: Athens 1991-2020 normals, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked 20/40/60 mm on 10/20/30 °C, Dec 57 mm at 28.5 °C level; mean
-          18.4 and total 343 computed
+        comment: 'Checked: annual mean 220.9/12 = 18.4 °C and total 343 mm computed
+          from the data match the header; 57 mm Dec plotted at 28.5 °C level; no Check
+          values in Notes'
     code_quality:
       score: 10
       max: 10
@@ -187,13 +190,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hard-coded normals
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -205,15 +208,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Crossing split needed since pygal has no fill-between
+        comment: Crossing-split polygon construction is compact; no library call replaces
+          it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html
+        comment: plot-{THEME}.png and .html, pygal 3 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -221,30 +225,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: XY chart, Style object, dict x/y labels, secondary=True
+        comment: XY chart with secondary=True, secondary_range, dict x/y labels, per-series
+          formatters, Style tokens
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: secondary_range for aligned dual axis and inline CSS injection
-  verdict: REJECTED
+        passed: true
+        comment: pygal's inline CSS injection to restyle legend swatches and fill
+          strokes; formatters for interactive HTML tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-08T21:48:04Z'
+  rendered_at: '2026-11-08T22:33:57Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
-  - layer-composition
   - manual-ticks
+  - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - interpolation
+  - normalization
   styling:
   - alpha-blending
-  - minimal-chrome
+  - grid-styling
