@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-multi
 created: '2026-08-05T07:53:20Z'
-updated: '2026-11-08T08:07:02Z'
+updated: '2026-11-08T08:11:52Z'
 generated_by: claude-opus-5-5
 adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
 workflow_run: 42442523523
@@ -13,41 +13,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mult
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-multi/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Four real cities in distinct climate zones (Reykjavik, Berlin, Dubai, Singapore)
-    give very different levels and volatilities — flat tropical Singapore against
-    strongly seasonal Dubai — so the comparison the chart exists for reads at a glance
-  - Each series carries its own Imprint color (#009E73 first) plus a distinct MUI
-    X mark shape (circle, square, diamond, cross), and the legend uses labelMarkType
-    "line+mark" so every swatch matches its line and marker exactly
-  - monotoneX curves pass smoothly through every monthly value without overshoot,
-    and the small x padding keeps the January and December markers whole
-  - Chrome is fully theme-adaptive through ANYPLOT_TOKENS (ink, inkSoft, grid); both
-    renders are clean and readable, and the series valueFormatter adds the °C unit
-    to the HTML tooltips
+  - Legend uses MUI X's labelMarkType 'line+mark', so every swatch repeats its line's
+    color and marker shape
+  - Per-series marker shapes (circle, square, diamond, cross) add a non-color channel
+    for CVD readers
+  - Linear index x axis with valueFormatter and a data-derived padding keeps the first
+    and last markers whole
+  - Monotone curve interpolation joins the points without overshooting the values
+  - Realistic, neutral climate data that shows flat vs seasonal series and two real
+    crossings
+  - Theme tokens threaded through title, subtitle, axes and grid; both renders read
+    cleanly
   weaknesses:
-  - 'SC-01 (both): two dashed vertical reference lines labelled "Dubai and Singapore
-    cross" and the "· 2 crossovers" subtitle segment form an annotation layer the
-    spec neither requires nor offers → remove the ChartsReferenceLine children, the
-    crossings computation and the crossover count from the subtitle. Likely cause:
-    the crossings loop and crossings.map(<ChartsReferenceLine …>) inside <LineChart>.'
-  - 'Suggestion: an optional dashed or dotted line style on one or two series (the
-    Notes say "consider") would add a redundant cue alongside color and marker shape.'
-  - 'Suggestion: the mandated title at 22 px spans about a third of the width; a slightly
-    larger title would give the header more presence.'
+  - 'Suggestion: a focal cue for the Dubai/Singapore crossings (e.g. a subtitle phrasing
+    the crossover months) would give the chart a storyline beyond plain comparison.'
+  - 'Suggestion: varying the line dash per series would add a third channel alongside
+    color and marker shape.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1; 3200x1800 canvas.
-      Chrome: bold dark title "line-multi · javascript · muix · anyplot.ai" top-left with a grey subtitle "4 series × 12 months · range 0 to 38 °C · 2 crossovers"; y-axis title "Average temperature (°C)" with ticks 0–40 by 5; x-axis title "Month" with Jan–Dec ticks; subtle horizontal grid; horizontal legend top-right (Reykjavik, Berlin, Dubai, Singapore) with line+mark swatches. All text dark and readable.
-      Data: four lines with markers — Reykjavik #009E73 circles (0–13 °C), Berlin purple squares (1–21 °C), Dubai blue diamonds (19–38 °C), Singapore ochre crosses (flat 27–28 °C). Two dashed vertical reference lines at about late March and late October labelled "Dubai and Singapore cross" where Dubai crosses Singapore.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: bold near-black title "line-multi · javascript · muix · anyplot.ai" top-left with a grey subtitle "4 series × 12 months · range 0 to 38 °C"; horizontal legend top-right; y axis "Average temperature (°C)" with ticks 0-40 step 5; x axis "Month" with Jan-Dec ticks; subtle horizontal grid. All text readable.
+      Data: four lines with hollow markers — Reykjavik #009E73 green circles (0-13 °C), Berlin lavender squares (1-21), Dubai blue diamonds (19-38), Singapore ochre crosses (flat 27-28). Dubai crosses Singapore between Mar/Apr and Oct/Nov.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17.
-      Chrome: title, subtitle, axis titles, tick labels, legend text and reference-line labels all render in light ink; grid lines subtle dark grey; axis lines light. No dark-on-dark text.
-      Data: line and marker colors identical to the light render (green, purple, blue, ochre); brand green clearly visible. Reference lines switch to light dashed strokes.
+      Background: warm near-black #1A1A17.
+      Chrome: title and legend in light ink, subtitle, ticks and axis lines in lighter grey; grid dim but visible. No dark-on-dark text.
+      Data: identical colors and marker shapes to the light render; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,48 +54,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts set explicitly (ticks 14–15 px, axis titles 16 px, legend
-          16 px, title 22 px CSS); readable in both themes and at thumbnail size
+        comment: Explicit sizes (title 22, ticks 14-15, axis titles 16, legend 16
+          CSS px); ink/inkSoft tokens keep every label readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; reference-line labels sit above the data
+        comment: No text collisions; the Dubai/Singapore crossings are the comparison
+          the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 points per series with prominent 3 px lines and outlined marks;
-          legend glyphs match in both themes
+        comment: 3 px lines with hollow markers sized for 12 points per series; legend
+          glyphs show line+mark in each series color in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint colors plus per-series mark shapes give a redundant CVD-safe
-          cue
+        comment: Four Imprint hues plus a distinct marker shape per series (circle,
+          square, diamond, cross), so color is not the only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off; small title is no deduction
+        comment: 3200x1800 canvas, plot fills the frame, x padding keeps end markers
+          whole, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Average temperature (°C)'' and ''Month'' are descriptive with
-          units'
+        comment: '''Month'' and ''Average temperature (°C)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint order, correct backgrounds in both
-          themes'
+        comment: 'First series #009E73, then Imprint order from t.palette; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
       score: 10
       max: 20
@@ -109,54 +105,55 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Header with a title/subtitle hierarchy in ink and inkSoft, chosen
-          beyond the baseline
+        passed: true
+        comment: Title/subtitle hierarchy in a header left-aligned with the plot area,
+          softened subtitle in inkSoft, heavier 3 px data strokes against hairline
+          grid
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: x padding keeps end markers whole; legend aligned to the plot's right
-          edge; horizontal-only grid
+        passed: true
+        comment: Index x axis padded by a share of the range so first/last markers
+          are not clipped; legend right-aligned with the plot edge; horizontal-only
+          grid
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: The crossover focus is an unrequested annotation layer and earns
-          no credit; otherwise data displayed plainly
+        comment: Data displayed clearly; no focal point chosen beyond the Notes (default)
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct multi-line chart, but crossover reference lines and the crossover
-          count are an unrequested annotation layer (defect line)
+        passed: true
+        comment: Multi-line comparison on shared axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, full legend, markers at data points, consistent
-          per-series style, 4 series — all good-version bullets met
+        comment: Distinct colors, legend naming all series with matching line+mark
+          swatches, markers at sparse points, 4 series; each line keeps one style
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Index axis maps months correctly; monotoneX does not overshoot; all
-          data visible
+        comment: Marks at their values; monotoneX curve does not overshoot (Singapore
+          plateau stays at 27-28); full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend names every city
+        comment: Title 'line-multi · javascript · muix · anyplot.ai'; legend entries
+          are city names
     data_quality:
       score: 15
       max: 15
@@ -166,20 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows crossings, near-parallel lines, very different levels and volatility
+        comment: Different levels, a flat series vs strongly seasonal ones, two crossings
+          (Dubai/Singapore in Apr and Nov), near-parallel Reykjavik/Berlin
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real city monthly mean temperatures; neutral
+        comment: Monthly mean temperatures of four real cities in distinct climate
+          zones, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible per city (Reykjavik 0–13, Berlin 1–21, Dubai 19–38,
-          Singapore 27–28 °C); no Check values in spec
+        comment: 'Values plausible: Reykjavik 0-13 °C, Berlin 1-21, Dubai 19-38, Singapore
+          27-28; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -189,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module plus the required default-exported component
+        comment: Constants, data block, plot zone, one default-exported component
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,21 +200,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Both imports used
+        comment: Only LineChart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the chart; the crossings code goes with
-          the SC-01 removal
+        comment: Appropriate complexity, limits derived from data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 API (classes,
-          axis height/width, labelMarkType)
+        comment: Default export into the harness, skipAnimation, v9 API (axis height/width,
+          slotProps.legend.sx, per-chart classes)
     library_mastery:
       score: 6
       max: 10
@@ -224,32 +222,29 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Declarative series config with valueFormatter, linear x axis with
-          tickInterval and valueFormatter for month names, per-chart sx classes
+        passed: true
+        comment: High-level LineChart with series config, axis valueFormatter + tickInterval
+          for month labels on a linear index axis, sx targeting v9 classes
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Legend labelMarkType 'line+mark' and MUI X's per-series mark-shape
-          cycling; ChartsReferenceLine serves the unrequested layer and earns no credit
-  verdict: REJECTED
+        comment: labelMarkType 'line+mark' legend glyphs and MUI's per-series mark-shape
+          cycle; series valueFormatter for °C tooltips in the HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T03:25:00Z'
+  rendered_at: '2026-11-08T08:09:01Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - wide-to-long
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
-  - theme-adaptive
-  - minimal-chrome
+  - publication-ready
