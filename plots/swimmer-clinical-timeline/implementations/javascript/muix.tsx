@@ -187,7 +187,7 @@ export default function Chart() {
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: "22px", mt: "14px", alignItems: "center" }}>
           {legendItems.map((item) => (
             <Box key={item.key} sx={{ display: "flex", alignItems: "center", gap: "7px" }}>
-              <svg width={22} height={20} viewBox="-11 -10 22 20">
+              <svg width={26} height={20} viewBox="-11 -10 26 20">
                 {item.path ? (
                   <path d={item.path} transform="scale(7.5)" fill={item.color} />
                 ) : (
