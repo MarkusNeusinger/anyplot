@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-multi: Multi-Line Comparison Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-08-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 84/100 | Updated: 2026-11-08
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
