@@ -1,397 +1,276 @@
 // anyplot.ai
 // psychrometric-basic: Psychrometric Chart for HVAC
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 90/100 | Created: 2026-06-16
-//# anyplot-orientation: landscape
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
-// Imprint palette roles (data colours are theme-independent) ------------------
-const C_SAT = t.palette[0]; // brand green  — saturation (100% RH), first series
-const C_RH = t.palette[2]; // blue          — relative-humidity curves
-const C_WB = t.palette[5]; // cyan          — wet-bulb lines
-const C_ENT = t.palette[3]; // ochre         — enthalpy lines
-const C_VOL = t.palette[1]; // lavender      — specific-volume lines
-const C_PROC = t.palette[4]; // matte red     — example HVAC process path
-const INK = t.ink;
-const INK_SOFT = t.inkSoft;
-
-// --- Psychrometrics @ sea level (ASHRAE, 101.325 kPa) -----------------------
-const P_PA = 101325; // total pressure, Pa
-const Y_MAX = 30; // humidity-ratio axis ceiling, g/kg dry air
-const X_MIN = -10;
-const X_MAX = 50;
-
-// Saturation vapour pressure over water (Alduchov–Eskridge), Pa
-const pws = (tc) => 610.94 * Math.exp((17.625 * tc) / (tc + 243.04));
-// Humidity ratio (kg/kg) at dry-bulb tc and relative humidity rh (fraction)
-const wFrac = (tc, rh) => {
-  const pw = rh * pws(tc);
-  return (0.621945 * pw) / (P_PA - pw);
+// Constants
+const SATURATION_RH = 100; // percent; this relative-humidity level is the saturation curve
+const COMFORT = { tMin: 20, tMax: 26, rhMin: 30, rhMax: 60 }; // comfort zone the spec names, °C and % RH
+const GRID_POINTS = 241; // dry-bulb samples per property line
+const X_LABEL = "Dry-bulb temperature (°C)";
+const Y_LABEL = "Humidity ratio (g water / kg dry air)";
+const FAMILY = {
+  rh: { color: t.palette[0], dash: "none", width: 1.8, key: "Relative humidity (%)" },
+  wb: { color: t.palette[1], dash: "8 5", width: 1.6, key: "Wet-bulb temperature (°C)" },
+  h: { color: t.palette[2], dash: "12 4 3 4", width: 1.6, key: "Enthalpy (kJ/kg dry air)" },
+  v: { color: t.palette[3], dash: "2 3", width: 2.4, key: "Specific volume (m³/kg dry air)" },
 };
-const wSat = (tc) => wFrac(tc, 1); // kg/kg on the saturation line
-const gkg = (wkg) => wkg * 1000; // kg/kg → g/kg
+const SATURATION_KEY = "Saturation (100 % RH)";
+const COMFORT_KEY = "Comfort zone";
+const PROCESS_COLOR = t.palette[5]; // cyan reads as cooling; red is reserved for bad / loss
+const TITLE_H = 48;
+const SUBTITLE_H = 26;
+const KEY_H = 40;
+const MARGIN = { top: 30, right: 72, bottom: 8, left: 16 };
+const LABEL_GAP = 18; // minimum px between stacked edge labels
 
-// Humidity ratio along a constant wet-bulb line (ASHRAE), kg/kg
-const wWetBulb = (tc, twb) => {
-  const wStar = wSat(twb);
-  const num = (2501 - 2.326 * twb) * wStar - 1.006 * (tc - twb);
-  const den = 2501 + 1.86 * tc - 4.186 * twb;
-  return num / den;
-};
-// Humidity ratio along a constant moist-air enthalpy line (kJ/kg), kg/kg
-const wEnthalpy = (tc, h) => (h - 1.006 * tc) / (2501 + 1.86 * tc);
-// Humidity ratio along a constant specific-volume line (m3/kg dry air), kg/kg
-const wVolume = (tc, v) => {
-  const tk = tc + 273.15;
-  return ((v * 101.325) / (0.287042 * tk) - 1) / 1.607858;
-};
+// Data: replace these parameters with your own pressure, chart range, property levels and process
+const PRESSURE_KPA = 101.325; // standard sea-level pressure
+const DRY_BULB_MIN = -10; // role: dry_bulb_temp, °C
+const DRY_BULB_MAX = 50; // °C
+const HUMIDITY_MAX = 30; // role: humidity_ratio, g/kg dry air at the top of the chart
+const RH_LEVELS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]; // role: relative_humidity, %
+const WB_LEVELS = [5, 10, 15, 20, 25, 30]; // role: wet_bulb_temp, °C
+const ENTHALPY_LEVELS = [20, 40, 60, 80, 100]; // role: enthalpy, kJ/kg dry air
+const VOLUME_LEVELS = [0.8, 0.85, 0.9, 0.95]; // role: specific_volume, m³/kg dry air
+const PROCESS = { name: "Cooling & dehumidification", fromT: 30, fromRh: 50, toT: 14, toRh: 90 };
 
-// --- Shared dry-bulb grid (the line series' common x positions) -------------
-const temps = [];
-for (let tc = X_MIN; tc <= X_MAX + 1e-9; tc += 0.5) temps.push(Math.round(tc * 2) / 2);
+// Plot: reads only the parameters and the constants above
+// ASHRAE moist-air relations; saturation pressure from Alduchov-Eskridge, all w in g/kg
+const pa = PRESSURE_KPA * 1000;
+const temps = Array.from({ length: GRID_POINTS }, (_, i) => DRY_BULB_MIN + (i * (DRY_BULB_MAX - DRY_BULB_MIN)) / (GRID_POINTS - 1));
+const pws = temps.map((tc) => 610.94 * Math.exp((17.625 * tc) / (tc + 243.04)));
+const wSat = pws.map((p) => (621.945 * p) / (pa - p));
 
-// Clip a g/kg value to the visible, physically-valid envelope (below
-// saturation, inside the axis box) — otherwise NaN/null breaks the line.
-const clip = (wg, tc) => {
-  if (!Number.isFinite(wg) || wg < 0 || wg > Y_MAX) return null;
-  if (wg > gkg(wSat(tc)) + 1e-6) return null; // never above the saturation curve
-  return wg;
-};
-const lineFor = (fn) => temps.map((tc) => clip(gkg(fn(tc)), tc));
+// Lines that are not RH curves stop at the saturation curve; the plot area clips the rest
+const lines = [
+  ...RH_LEVELS.map((rh) => ({
+    family: "rh",
+    level: rh,
+    w: pws.map((p) => (621.945 * (p * rh) / 100) / (pa - (p * rh) / 100)),
+  })),
+  ...WB_LEVELS.map((twb) => {
+    const pStar = 610.94 * Math.exp((17.625 * twb) / (twb + 243.04));
+    const wStar = (0.621945 * pStar) / (pa - pStar);
+    return {
+      family: "wb",
+      level: twb,
+      w: temps.map((tc, i) => {
+        const w = (1000 * ((2501 - 2.326 * twb) * wStar - 1.006 * (tc - twb))) / (2501 + 1.86 * tc - 4.186 * twb);
+        return tc >= twb && w <= wSat[i] ? w : null;
+      }),
+    };
+  }),
+  ...ENTHALPY_LEVELS.map((h) => ({
+    family: "h",
+    level: h,
+    w: temps.map((tc, i) => {
+      const w = (1000 * (h - 1.006 * tc)) / (2501 + 1.86 * tc);
+      return w <= wSat[i] ? w : null;
+    }),
+  })),
+  ...VOLUME_LEVELS.map((v) => ({
+    family: "v",
+    level: v,
+    w: temps.map((tc, i) => {
+      const w = (1000 * ((v * PRESSURE_KPA) / (0.287042 * (tc + 273.15)) - 1)) / 1.607858;
+      return w <= wSat[i] ? w : null;
+    }),
+  })),
+].map((line) => ({ ...line, id: `${line.family}-${String(line.level).replace(".", "_")}` }));
 
-// --- Build the property-line series -----------------------------------------
-const RH_LEVELS = [10, 20, 30, 40, 50, 60, 70, 80, 90]; // %, saturation drawn separately
-const WB_LEVELS = [5, 10, 15, 20, 25, 30]; // °C
-const ENT_LEVELS = [20, 40, 60, 80, 100]; // kJ/kg
-const VOL_LEVELS = [0.8, 0.85, 0.9, 0.95]; // m³/kg dry air
-
-const mk = (id, color, data) => ({
-  id,
-  type: "line",
-  data,
-  color,
-  curve: "monotoneX",
-  showMark: false,
-  disableHighlight: true,
-  connectNulls: false,
+// Direct labels: wet-bulb values where each line leaves the saturation curve, every
+// other line where it leaves the plot area (top or right for RH, bottom or right otherwise)
+const lastIndex = GRID_POINTS - 1;
+const labels = lines.flatMap((line) => {
+  const spec = FAMILY[line.family];
+  const text = line.family === "v" ? line.level.toFixed(2) : line.family === "rh" ? `${line.level}%` : `${line.level}`;
+  if (line.family === "wb") {
+    const start = line.w.findIndex((w) => w !== null);
+    return start >= 0 && line.w[start] <= HUMIDITY_MAX ? [{ id: line.id, text: `${text}°`, x: temps[start], y: line.w[start], side: "start", color: spec.color }] : [];
+  }
+  const rising = line.family === "rh";
+  let i = -1;
+  for (let k = 0; k <= lastIndex; k++) {
+    if (line.w[k] !== null && line.w[k] >= 0 && line.w[k] <= HUMIDITY_MAX) i = k;
+  }
+  if (i < 0) return [];
+  if (i === lastIndex) return [{ id: line.id, text, x: DRY_BULB_MAX, y: line.w[i], side: "right", color: spec.color }];
+  const edge = rising ? HUMIDITY_MAX : 0;
+  const x = temps[i] + ((edge - line.w[i]) / (line.w[i + 1] - line.w[i])) * (temps[i + 1] - temps[i]);
+  return [{ id: line.id, text, x, y: edge, side: rising ? "top" : "bottom", color: spec.color }];
 });
 
-const series = [
-  // Saturation curve (100% RH) — visually dominant, brand green, drawn first.
-  mk("sat", C_SAT, lineFor((tc) => wSat(tc))),
-  ...RH_LEVELS.map((rh) => mk(`rh-${rh}`, C_RH, lineFor((tc) => wFrac(tc, rh / 100)))),
-  ...WB_LEVELS.map((twb) =>
-    mk(`wb-${twb}`, C_WB, temps.map((tc) => (tc < twb ? null : clip(gkg(wWetBulb(tc, twb)), tc)))),
-  ),
-  ...ENT_LEVELS.map((h) => mk(`ent-${h}`, C_ENT, lineFor((tc) => wEnthalpy(tc, h)))),
-  ...VOL_LEVELS.map((v) => mk(`vol-${v}`, C_VOL, lineFor((tc) => wVolume(tc, v)))),
-];
-
-// Per-family stroke styling (MUI X has no per-series dash prop → target the
-// generated `.MuiLineElement-series-<id>` classes via the chart `sx`).
-const familyStyle = {
-  sat: { strokeWidth: 3.6 },
-  rh: { strokeWidth: 1.7, opacity: 0.9 },
-  wb: { strokeWidth: 1.3, opacity: 0.8, strokeDasharray: "8 5" },
-  ent: { strokeWidth: 1.3, opacity: 0.8, strokeDasharray: "12 4 3 4" },
-  vol: { strokeWidth: 1.1, opacity: 0.75, strokeDasharray: "2 5" },
-};
-const lineSx = { "& .MuiMarkElement-root": { display: "none" } };
-for (const s of series) {
-  const fam = s.id.split("-")[0];
-  lineSx[`& .MuiLineElement-series-${s.id}`] = familyStyle[fam];
-}
-
-// --- Direct-on-chart labels (data-space coords; positioned via the scales) ---
-// Find the dry-bulb temperature where a curve reaches a target humidity ratio.
-const tempForW = (rhFrac, targetWg) => {
-  let best = X_MIN;
-  let bestD = Infinity;
-  for (let tc = X_MIN; tc <= X_MAX; tc += 0.25) {
-    const d = Math.abs(gkg(wFrac(tc, rhFrac)) - targetWg);
-    if (d < bestD) {
-      bestD = d;
-      best = tc;
-    }
-  }
-  return best;
-};
-
-// RH curve labels, spread vertically so they sit along their own curve.
-const RH_LABELS = [
-  { rh: 80, w: 23 },
-  { rh: 60, w: 18 },
-  { rh: 40, w: 12 },
-  { rh: 20, w: 6.5 },
-].map(({ rh, w }) => ({
-  tc: tempForW(rh / 100, w),
-  w,
-  text: `${rh}%`,
-  color: C_RH,
-  anchor: "middle",
-  dx: 0,
-  dy: -7,
-  fs: 14,
-  weight: 600,
-}));
-
-// Wet-bulb values, placed at each line's origin on the saturation curve.
-const WB_LABELS = [10, 15, 20, 25].map((twb) => ({
-  tc: twb,
-  w: gkg(wSat(twb)),
-  text: `${twb}°`,
-  color: C_WB,
-  anchor: "end",
-  dx: -6,
-  dy: -3,
-  fs: 13.5,
-  weight: 600,
-}));
-
-// Enthalpy values, offset further up-left of the saturation curve so they read
-// as the outer oblique enthalpy scale (the classic psychrometric convention).
-const ENT_LABELS = [40, 60, 80].map((h) => {
-  // origin on the saturation curve: solve h_sat(tc) = h by scanning
-  let originT = 0;
-  let bestD = Infinity;
-  for (let tt = X_MIN; tt <= X_MAX; tt += 0.1) {
-    const hSat = 1.006 * tt + wSat(tt) * (2501 + 1.86 * tt);
-    const d = Math.abs(hSat - h);
-    if (d < bestD) {
-      bestD = d;
-      originT = tt;
-    }
-  }
-  return {
-    tc: originT,
-    w: gkg(wSat(originT)),
-    text: `${h}`,
-    color: C_ENT,
-    anchor: "end",
-    dx: -16,
-    dy: -11,
-    fs: 13.5,
-    weight: 600,
-  };
+// Comfort zone polygon and the process states, from the RH relation
+const comfortT = Array.from({ length: 13 }, (_, i) => COMFORT.tMin + (i * (COMFORT.tMax - COMFORT.tMin)) / 12);
+const [comfortUpper, comfortLower] = [COMFORT.rhMax, COMFORT.rhMin].map((rh) =>
+  comfortT.map((tc) => {
+    const p = (610.94 * Math.exp((17.625 * tc) / (tc + 243.04)) * rh) / 100;
+    return { x: tc, y: (621.945 * p) / (pa - p) };
+  }),
+);
+const comfortPolygon = [...comfortUpper, ...[...comfortLower].reverse()];
+const states = [
+  [PROCESS.fromT, PROCESS.fromRh],
+  [PROCESS.toT, PROCESS.toRh],
+].map(([tc, rh]) => {
+  const p = (610.94 * Math.exp((17.625 * tc) / (tc + 243.04)) * rh) / 100;
+  return { x: tc, y: (621.945 * p) / (pa - p) };
 });
 
-// Specific-volume values, placed at each line's lower-right visible end.
-const VOL_LABELS = VOL_LEVELS.slice(1).map((v) => {
-  // last temperature on the grid where the volume line is still inside the box
-  let endT = X_MAX;
-  for (let i = temps.length - 1; i >= 0; i--) {
-    const wg = clip(gkg(wVolume(temps[i], v)), temps[i]);
-    if (wg != null) {
-      endT = temps[i];
-      break;
-    }
-  }
-  return {
-    tc: endT,
-    w: clip(gkg(wVolume(endT, v)), endT) ?? 0,
-    text: `${v.toFixed(2)}`,
-    color: C_VOL,
-    anchor: "start",
-    dx: 5,
-    dy: 13,
-    fs: 13,
-    weight: 600,
-  };
-});
-
-// One green caption sits directly on the saturation curve; the per-family
-// colour meanings are clarified by the compact key (see KEY_ITEMS / Overlay).
-const SAT_LABEL = {
-  tc: tempForW(0.96, 25),
-  w: 25.5,
-  text: "Saturation · 100% RH",
-  color: C_SAT,
-  anchor: "end",
-  dx: -8,
-  dy: 0,
-  fs: 15,
-  weight: 700,
-};
-
-const ALL_LABELS = [...RH_LABELS, ...WB_LABELS, ...ENT_LABELS, ...VOL_LABELS, SAT_LABEL];
-
-// Compact colour key, drawn in the empty upper-left wedge above the saturation
-// curve. Each property line is *also* labelled directly with its value on-chart.
+const TITLE = "psychrometric-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `ASHRAE moist-air relations at ${PRESSURE_KPA} kPa · dry bulb ${DRY_BULB_MIN} to ${DRY_BULB_MAX} °C · ${lines.length} property lines`;
 const KEY_ITEMS = [
-  { color: C_SAT, dash: null, text: "Saturation (100% RH)" },
-  { color: C_RH, dash: null, text: "Relative humidity" },
-  { color: C_WB, dash: "8 5", text: "Wet-bulb (°C)" },
-  { color: C_ENT, dash: "12 4 3 4", text: "Enthalpy (kJ/kg)" },
-  { color: C_VOL, dash: "2 5", text: "Specific volume (m³/kg)" },
+  { text: SATURATION_KEY, color: FAMILY.rh.color, dash: "none", width: 3.6 },
+  ...Object.values(FAMILY).map((f) => ({ text: f.key, color: f.color, dash: f.dash, width: f.width + 0.6 })),
+  { text: PROCESS.name, color: PROCESS_COLOR, dash: "none", width: 3 },
 ];
 
-// --- Comfort zone (≈20–26 °C, 30–60 % RH) as a smooth filled polygon --------
-const comfortTemps = [];
-for (let tc = 20; tc <= 26 + 1e-9; tc += 0.5) comfortTemps.push(tc);
-const comfortTop = comfortTemps.map((tc) => ({ tc, w: gkg(wFrac(tc, 0.6)) }));
-const comfortBot = comfortTemps.map((tc) => ({ tc, w: gkg(wFrac(tc, 0.3)) })).reverse();
-const comfortPoly = [...comfortTop, ...comfortBot];
-const comfortCenter = { tc: 23, w: gkg(wFrac(23, 0.45)) };
+function Overlays() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const { left, top, width, height } = useDrawingArea();
+  const [p1, p2] = states.map((s) => ({ x: xScale(s.x), y: yScale(s.y) }));
+  const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+  const halo = { stroke: t.pageBg, strokeWidth: 4, paintOrder: "stroke", strokeLinejoin: "round" };
+  const comfortMid = comfortUpper[Math.floor(comfortT.length / 2)];
+  const comfortLow = comfortLower[Math.floor(comfortT.length / 2)];
 
-// --- Example HVAC process: cooling & dehumidification (state 1 → state 2) ----
-const P1 = { tc: 30, w: gkg(wFrac(30, 0.5)) };
-const P2 = { tc: 14, w: gkg(wFrac(14, 0.9)) };
-
-// X-axis ticks every 5 °C.
-const xTicks = temps.filter((tc) => Number.isInteger(tc) && tc % 5 === 0);
-
-// ---------------------------------------------------------------------------
-// Overlay drawn inside the chart SVG: comfort zone, process path, direct
-// labels and title. Uses the chart scales so everything tracks the axes.
-function Overlay() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const area = useDrawingArea();
-
-  const px = (d) => xs(d.tc);
-  const py = (d) => ys(d.w);
-
-  const polyPts = comfortPoly.map((d) => `${px(d)},${py(d)}`).join(" ");
-
-  // Process arrow geometry (pixel space).
-  const x1 = px(P1);
-  const y1 = py(P1);
-  const x2 = px(P2);
-  const y2 = py(P2);
-  const ang = Math.atan2(y2 - y1, x2 - x1);
-  const ah = 16;
-  const aw = 8;
-  const head = [
-    [x2, y2],
-    [x2 - ah * Math.cos(ang) + aw * Math.sin(ang), y2 - ah * Math.sin(ang) - aw * Math.cos(ang)],
-    [x2 - ah * Math.cos(ang) - aw * Math.sin(ang), y2 - ah * Math.sin(ang) + aw * Math.cos(ang)],
-  ]
-    .map((p) => p.join(","))
-    .join(" ");
-
-  // Colour key anchored in the empty upper-left wedge (data-space top-left).
-  const keyX = xs(X_MIN) + 14;
-  const keyY0 = ys(28.5);
-  const keyDY = 22;
+  // Right-edge labels keep a minimum vertical gap, pushed downward from the top; the lines stay put
+  const rightLabelY = new Map();
+  let previousY = -Infinity;
+  for (const l of labels.filter((d) => d.side === "right").sort((a, b) => b.y - a.y)) {
+    previousY = Math.max(yScale(l.y) + 5, previousY + LABEL_GAP);
+    rightLabelY.set(l.id, previousY);
+  }
 
   return (
     <g>
-      {/* Colour key */}
-      {KEY_ITEMS.map((k, i) => {
-        const ky = keyY0 + i * keyDY;
+      <polygon
+        points={comfortPolygon.map((d) => `${xScale(d.x)},${yScale(d.y)}`).join(" ")}
+        fill={t.inkSoft}
+        fillOpacity={0.16}
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        strokeDasharray="6 4"
+      />
+      <text x={xScale(comfortMid.x)} y={(yScale(comfortMid.y) + yScale(comfortLow.y)) / 2} fill={t.ink} fontSize={14} fontWeight={700} textAnchor="middle" dominantBaseline="central" {...halo}>
+        {COMFORT_KEY}
+      </text>
+
+      {labels.map((l) => {
+        const x = xScale(l.x);
+        const y = yScale(l.y);
+        const place = {
+          start: { x: x - 6, y: y - 6, anchor: "end" },
+          right: { x: left + width + 6, y: rightLabelY.get(l.id), anchor: "start" },
+          top: { x, y: top - 8, anchor: "middle" },
+          bottom: { x: x + 5, y: top + height - 8, anchor: "start" },
+        }[l.side];
         return (
-          <g key={`key-${i}`}>
-            <line
-              x1={keyX}
-              y1={ky}
-              x2={keyX + 30}
-              y2={ky}
-              stroke={k.color}
-              strokeWidth={k.dash ? 2.4 : 3.4}
-              strokeDasharray={k.dash ?? undefined}
-              strokeLinecap="round"
-            />
-            <text x={keyX + 38} y={ky + 4.5} fill={INK_SOFT} fontSize={13.5} fontWeight={500} textAnchor="start">
-              {k.text}
-            </text>
-          </g>
+          <text key={l.id} x={place.x} y={place.y} fill={l.color} fontSize={14} fontWeight={700} textAnchor={place.anchor} {...halo}>
+            {l.text}
+          </text>
         );
       })}
 
-      {/* Comfort zone */}
-      <polygon points={polyPts} fill={C_SAT} fillOpacity={0.16} stroke={C_SAT} strokeOpacity={0.55} strokeWidth={1.5} strokeDasharray="6 4" />
-      <text x={xs(comfortCenter.tc)} y={ys(comfortCenter.w)} fill={INK} fontSize={13} fontWeight={700} textAnchor="middle">
-        Comfort
-      </text>
-      <text x={xs(comfortCenter.tc)} y={ys(comfortCenter.w) + 16} fill={INK_SOFT} fontSize={11.5} textAnchor="middle">
-        20–26 °C · 30–60% RH
-      </text>
-
-      {/* Direct property-line labels */}
-      {ALL_LABELS.map((l, i) => (
-        <text
-          key={i}
-          x={xs(l.tc) + l.dx}
-          y={ys(l.w) + l.dy}
-          fill={l.color}
-          fontSize={l.fs}
-          fontWeight={l.weight}
-          textAnchor={l.anchor}
-        >
-          {l.text}
-        </text>
+      <line x1={p1.x} y1={p1.y} x2={p2.x - 14 * Math.cos(angle)} y2={p2.y - 14 * Math.sin(angle)} stroke={PROCESS_COLOR} strokeWidth={3.5} strokeLinecap="round" />
+      <path d="M 0 0 L -18 -9 L -18 9 Z" transform={`translate(${p2.x},${p2.y}) rotate(${(angle * 180) / Math.PI})`} fill={PROCESS_COLOR} />
+      {[p1, p2].map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r={6.5} fill={PROCESS_COLOR} stroke={t.pageBg} strokeWidth={2} />
+          <text x={p.x} y={p.y + (i === 0 ? -14 : 26)} fill={PROCESS_COLOR} fontSize={15} fontWeight={700} textAnchor="middle" {...halo}>
+            {i + 1}
+          </text>
+        </g>
       ))}
-
-      {/* HVAC process path: cooling & dehumidification */}
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={C_PROC} strokeWidth={3} strokeLinecap="round" />
-      <polygon points={head} fill={C_PROC} />
-      <circle cx={x1} cy={y1} r={5.5} fill={C_PROC} stroke={t.pageBg} strokeWidth={1.5} />
-      <circle cx={x2} cy={y2} r={5.5} fill={C_PROC} stroke={t.pageBg} strokeWidth={1.5} />
-      <text x={x1 + 10} y={y1 - 8} fill={C_PROC} fontSize={13} fontWeight={700} textAnchor="start">
-        1
-      </text>
-      <text x={x2 - 10} y={y2 + 18} fill={C_PROC} fontSize={13} fontWeight={700} textAnchor="end">
-        2
-      </text>
-      <text x={(x1 + x2) / 2 + 14} y={(y1 + y2) / 2 - 6} fill={C_PROC} fontSize={12.5} fontWeight={600} textAnchor="start">
-        Cooling &amp; dehumidification
-      </text>
-
-      {/* Title */}
-      <text x={area.left + area.width / 2} y={area.top - 26} fill={INK} fontSize={23} fontWeight={700} textAnchor="middle">
-        psychrometric-basic · javascript · muix · anyplot.ai
+      <text x={p1.x + 14} y={p1.y + 5} fill={PROCESS_COLOR} fontSize={15} fontWeight={700} textAnchor="start" {...halo}>
+        {PROCESS.name}
       </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
   return (
-    <LineChart
-      width={SIZE.width}
-      height={SIZE.height}
-      margin={{ top: 72, right: 108, bottom: 70, left: 64 }}
-      skipAnimation
-      disableAxisListener
-      series={series}
-      grid={{ horizontal: true, vertical: true }}
-      leftAxis={null}
-      rightAxis="hum"
-      slotProps={{ legend: { hidden: true }, tooltip: { trigger: "none" } }}
-      sx={lineSx}
-      xAxis={[
-        {
-          data: temps,
-          scaleType: "linear",
-          min: X_MIN,
-          max: X_MAX,
-          domainLimit: "strict",
-          tickInterval: xTicks,
-          valueFormatter: (v) => `${v}`,
-          label: "Dry-Bulb Temperature (°C)",
-          labelStyle: { fontSize: 18, fill: INK, fontWeight: 600 },
-          tickLabelStyle: { fontSize: 14, fill: INK_SOFT },
-        },
-      ]}
-      yAxis={[
-        {
-          id: "hum",
-          min: 0,
-          max: Y_MAX,
-          domainLimit: "strict",
-          tickInterval: [0, 5, 10, 15, 20, 25, 30],
-          label: "Humidity Ratio (g water / kg dry air)",
-          labelStyle: { fontSize: 18, fill: INK, fontWeight: 600 },
-          tickLabelStyle: { fontSize: 14, fill: INK_SOFT },
-        },
-      ]}
-    >
-      <Overlay />
-    </LineChart>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
+      <div style={{ height: KEY_H, display: "flex", alignItems: "center", justifyContent: "center", gap: 22, fontSize: 14, color: t.inkSoft }}>
+        {KEY_ITEMS.map((k) => (
+          <span key={k.text} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <svg width={30} height={10}>
+              <line x1={1} y1={5} x2={29} y2={5} stroke={k.color} strokeWidth={k.width} strokeDasharray={k.dash} />
+            </svg>
+            {k.text}
+          </span>
+        ))}
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 22, height: 14, background: t.grid, border: `1.5px dashed ${t.inkSoft}` }} />
+          {COMFORT_KEY}
+        </span>
+      </div>
+      <LineChart
+        width={width}
+        height={height - TITLE_H - SUBTITLE_H - KEY_H}
+        margin={MARGIN}
+        skipAnimation
+        hideLegend
+        disableAxisListener
+        grid={{ horizontal: true, vertical: true }}
+        series={lines.map((line) => ({
+          id: line.id,
+          data: line.w,
+          color: FAMILY[line.family].color,
+          curve: "linear",
+          showMark: false,
+          disableHighlight: true,
+        }))}
+        xAxis={[
+          {
+            data: temps,
+            scaleType: "linear",
+            min: DRY_BULB_MIN,
+            max: DRY_BULB_MAX,
+            label: X_LABEL,
+            height: 64,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            max: HUMIDITY_MAX,
+            label: Y_LABEL,
+            width: 72,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        sx={{
+          "& .MuiLineChart-line[data-series^='rh-']": { strokeWidth: FAMILY.rh.width },
+          [`& .MuiLineChart-line[data-series='rh-${SATURATION_RH}']`]: { strokeWidth: 3.6 },
+          "& .MuiLineChart-line[data-series^='wb-']": { strokeWidth: FAMILY.wb.width, strokeDasharray: FAMILY.wb.dash },
+          "& .MuiLineChart-line[data-series^='h-']": { strokeWidth: FAMILY.h.width, strokeDasharray: FAMILY.h.dash },
+          "& .MuiLineChart-line[data-series^='v-']": { strokeWidth: FAMILY.v.width, strokeDasharray: FAMILY.v.dash },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      >
+        <Overlays />
+      </LineChart>
+    </div>
   );
 }
