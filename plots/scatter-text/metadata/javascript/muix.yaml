@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-text
 created: '2026-09-02T06:12:59Z'
-updated: '2026-11-08T05:22:19Z'
+updated: '2026-11-08T05:26:48Z'
 generated_by: claude-opus-5-5
 adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
 workflow_run: 42450244100
@@ -13,42 +13,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Every word is drawn as the mark itself, centered with textAnchor=middle and dominantBaseline=central
-    on its exact (x, y), so the text pins the position
-  - A custom SVG layer composed into ChartsSurface through the useXScale/useYScale
-    hooks, alongside ChartsGrid, ChartsXAxis/YAxis and an HTML ChartsLegend in ChartsWrapper,
-    is idiomatic MUI X v9 composition for a mark type MUI X has no built-in for
-  - A page-colored halo (paintOrder=stroke, stroke=pageBg) keeps every label crisp
-    over the grid lines in both themes
-  - Four topic clusters in Imprint order (green, lavender, blue, ochre) with a legend
-    for the cluster color, identical in both renders; only the chrome flips
-  - Bold labels at 19 to 25 px stay legible in both themes, and no label collides
-    with another, with the legend, or with the axes
+  - 'Every word is the mark itself: a bold <text> centered on its exact (x, y) via
+    textAnchor middle and dominantBaseline central, drawn through useXScale/useYScale
+    in a custom SVG layer inside the MUI X composition API (ChartsDataProvider + ChartsSurface)'
+  - Category color is explained by the native ChartsLegend, driven from scatter series
+    in the data provider, with all four Imprint colors legible as text on both backgrounds
+  - A page-colored halo (paintOrder stroke, stroke = pageBg) keeps words readable
+    where they cross grid lines, in both themes
+  - 'Chrome is threaded through theme tokens: ink title, inkSoft subtitle and ticks,
+    axis lines and tick marks removed, subtle grid; readable in light and dark'
+  - Deterministic LCG seed and a clean column/data/plot split; skipAnimation set and
+    the component is default-exported per the harness contract
   weaknesses:
-  - 'SC-01 (both): font size encodes each word''s distance to its cluster centroid.
-    That is a derived fourth variable the spec neither requires nor offers; the Notes
-    tie font size only to the number of labels → use one font size for all labels,
-    sized for the 32 labels. Likely cause: the `size: Math.round(FONT_MIN + (FONT_MAX
-    - FONT_MIN) * (1 - dists[i] / maxDist))` mapping and the subtitle clause describing
-    it.'
-  - 'Suggestion: add ChartsTooltip so the HTML view can show each word''s exact coordinates
-    on hover.'
-  - 'Suggestion: a slightly denser data layout inside each cluster would exercise
-    the spec''s translucency or smaller-text handling for overlapping labels.'
+  - 'Suggestion: the 32 words sit on a fixed eight-slot offset template per cluster,
+    so all four clusters share the same shape; varying the per-cluster spread would
+    read more like a real t-SNE projection.'
+  - 'Suggestion: the legend glyphs are circles while the marks are words; a short
+    colored sample word or text-style swatch would tie the legend closer to the marks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full canvas, with no white chart panel.
-      Chrome: centered bold title "scatter-text · javascript · muix · anyplot.ai" with a soft-ink subtitle under it; horizontal legend at top right (Animals, Food & drink, Technology, Sports); axis titles "Embedding dimension 1" and "Embedding dimension 2"; ticks 0–100 on x and 0–80 on y; subtle gray grid in both directions, no axis lines. All text is dark ink and readable.
-      Data: 32 bold words in four clusters. Animals are #009E73 green at top left, Food & drink #C475FD lavender at top right, Technology #4467A3 blue at bottom left, Sports #BD8233 ochre at bottom right. The words near each cluster's center are drawn larger (sparrow, chutney, endpoint, dugout). No labels overlap.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: dark bold title "scatter-text · javascript · muix · anyplot.ai" centered at top with a soft-ink subtitle "32 labels in 4 clusters · each word is centered on its (x, y)"; horizontal legend top-right (Animals, Food & drink, Technology, Sports); axis titles "Embedding dimension 1" / "Embedding dimension 2"; ticks 0–100 and 0–80; subtle vertical and horizontal grid, no axis lines or tick marks. All text readable.
+      Data: 32 bold words in four clusters — Animals in #009E73 green (top-left), Food & drink in purple (top-right), Technology in blue (bottom-left), Sports in ochre (bottom-right). No labels overlap; a page-colored halo separates words from grid lines. Empty middle band between clusters.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend text, axis titles and tick labels all flip to light ink and are clearly readable, with no dark-on-dark text. Grid lines are subtle dark gray but visible.
-      Data: the same four colors as the light render, identical in hue and position. Green and lavender stand out well; the blue Technology words have the lowest contrast but are still readable at bold 19 px or more.
+      Chrome: title, subtitle, legend text, axis titles and tick labels all render in light ink and are clearly readable; grid lines subtle but visible. No dark-on-dark text.
+      Data: identical word positions and identical palette colors to the light render (green, purple, blue, ochre); only chrome flipped. The blue Technology words have the lowest contrast but are bold 22 px and still clearly legible; brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,50 +55,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All labels are bold and 19–25 px, ticks 14 px, axis titles 16 px;
-          readable in both themes
+        comment: All fonts set explicitly (labels 22 px bold, ticks 14, axis titles
+          16, legend 16); every element readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No label collides with another label, the legend or the axes
+        comment: No word collides with another word, the legend or axis text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 32 sparse text marks are prominent; the page-colored halo separates
-          them from the grid; legend dots match
+        comment: 32 bold words at one size fitting the count; legend circles visible
+          in both themes and match the word colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct Imprint hue families are CVD-safe; the blue on dark
-          still reaches large-text contrast
+        comment: Four Imprint hues, distinct under CVD; cluster also separated spatially
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced margins and padded domains, nothing
-          clipped
+        comment: 3200x1800, nothing clipped; balanced axis titles and tick labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles 'Embedding dimension 1/2' (unitless by nature)
+        comment: Readable axis titles 'Embedding dimension 1/2' (dimensionless embedding
+          axes)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1–4 in canonical order, first series #009E73;
-          backgrounds are #FAF8F1 and #1A1A17'
+        comment: 'First series #009E73, Imprint order, correct #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -111,54 +104,53 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title and soft-ink subtitle hierarchy, bold text weight chosen for
-          text-as-mark, a legend in the top-right header band
+        comment: Title/subtitle hierarchy with an informative subtitle and bold text
+          marks beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Page-colored halo (paint-order stroke) over the grid, axis lines
-          and ticks disabled, domain padding sized for the text width
+        comment: Page-colored text halo against the grid, axis lines and ticks removed,
+          padding chosen to keep words inside the frame
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: The size hierarchy rests on an unasked derived channel (SC-01) and
-          earns no credit; clusters separate by color only
+        comment: Four quadrant clusters make topic separation the focal point; subtitle
+          states the encoding
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Correct text-as-marker scatter; font size encodes a derived centroid-distance
-          variable the spec does not ask for (defect line)
+        passed: true
+        comment: Text labels replace markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels centered on exact (x, y), legible size, color explained by
-          a legend; the overlap handling is not triggered by this data
+        comment: Centered anchoring on exact (x, y), legible size fitted to 32 labels,
+          color explained by a legend; no dense regions in this data, so translucency
+          is not needed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks sit at their data values, with no nudge or declutter pass;
-          the axes show all data
+        comment: Words drawn at xScale(x), yScale(y); jitter is part of data generation,
+          no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: The title matches the required format; the legend shows reader-facing
-          cluster names
+        comment: Mandated title format; legend entries are readable topic names
     data_quality:
       score: 15
       max: 15
@@ -168,22 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Text marks, a categorical color encoding and empty space between
-          clusters; little overlap is permitted
+        comment: Named entities in 2D with a categorical color channel the Notes allow
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible word-embedding projection with four neutral topic clusters
-          and real words
+        comment: Word-embedding projection with four plausible topic clusters, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: A 0–100 embedding coordinate range is sensible for a projection;
-          the spec has no Check values
+        comment: Coordinates 0–100 typical for a rescaled projection; no Check values
+          in spec
     code_quality:
       score: 10
       max: 10
@@ -193,20 +183,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data and plot zones; the one TextLabels component is required
-          because it calls the scale hooks
+        comment: Single small TextLabels component needed for the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: A fixed-seed LCG makes the jitter deterministic
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -218,8 +207,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, current v9
-          composition API
+        comment: Default export, skipAnimation, ANYPLOT_SIZE, v9 composition API
     library_mastery:
       score: 7
       max: 10
@@ -229,19 +217,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses v9 ChartsDataProvider, ChartsWrapper and ChartsSurface composition,
-          with the series registered so the native legend is driven by it
+        comment: MUI X v9 composition API with ChartsDataProvider/ChartsWrapper/ChartsSurface
+          and axis config
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses the useXScale/useYScale hooks to inject a custom SVG mark layer
-          into the MUI X surface
-  verdict: REJECTED
+        comment: Custom SVG layer via useXScale/useYScale hooks, native ChartsLegend
+          fed from series that are never drawn as markers
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:19:39Z'
+  rendered_at: '2026-11-08T05:24:24Z'
 impl_tags:
   dependencies: []
   techniques:
