@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-adjacency: Network Adjacency Matrix Heatmap
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
