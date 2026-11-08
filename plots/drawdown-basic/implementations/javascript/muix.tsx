@@ -70,7 +70,9 @@ if (open !== null) episodes.push(open);
 
 const worst = episodes.reduce((a, b) => (drawdown[b.trough] < drawdown[a.trough] ? b : a));
 const maxDrawdown = drawdown[worst.trough];
-const marked = episodes.filter((e) => e.recovery > -1 && drawdown[e.trough] <= maxDrawdown * RECOVERY_MARK_SHARE);
+// The marking threshold is rounded once, so the legend states exactly the rule the marks follow
+const markDepth = Math.round(-maxDrawdown * RECOVERY_MARK_SHARE * 10) / 10;
+const marked = episodes.filter((e) => e.recovery > -1 && -drawdown[e.trough] >= markDepth);
 
 const fmtDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format;
 const declineDays = Math.round((dates[worst.trough] - dates[worst.peak]) / DAY_MS);
@@ -188,7 +190,7 @@ export default function Chart() {
             id: "recovery",
             yAxisId: "drawdown",
             data: recoverySeries,
-            label: "Recovery to a new high",
+            label: `Recovery from a drawdown of ${markDepth.toFixed(1)}% or more`,
             color: t.ink,
             showMark: true,
             shape: "circle",
