@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-08
+Quality: 88/100 | Updated: 2026-11-08
 """
 
 import json
