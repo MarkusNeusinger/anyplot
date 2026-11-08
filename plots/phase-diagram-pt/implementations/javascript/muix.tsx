@@ -2,315 +2,226 @@
 // phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-20
-
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
-const TITLE_H = 60;
 
-// ChartsYAxis places the rotated axis label at `tickFontSize + tickSize + 10`
-// px from the axis line (its only lever for that offset, independent of the
-// actual rendered tick fontSize, which tickLabelStyle controls below) — sized
-// to clear the widest pressure tick label ("100 kPa").
-const Y_AXIS_LABEL_OFFSET_PX = 85;
+// Constants
+const PHASE_LABELS = { solid: "Solid", liquid: "Liquid", gas: "Gas", supercritical: ["Supercritical", "fluid"] };
+const TRIPLE_LABEL = "Triple point";
+const CRITICAL_LABEL = "Critical point";
+const SUPERSCRIPT = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+const X_PAD_LEFT = 0.04; // share of the temperature span
+const X_PAD_RIGHT = 0.12; // wider on the right, where the supercritical region lies
+const Y_PAD_DECADES = 0.05; // share of the log-pressure span
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 40;
 
-// --- Data (representative water phase diagram, deterministic) --------------
-// Boundary curves follow the Clausius-Clapeyron relation (sublimation,
-// vaporization) and the Simon-Glatzel equation (melting, which captures
-// water's anomalous negative solid-liquid slope), each anchored to the
-// real IAPWS triple point and critical point of water.
+// Columns: set these to your data's column names
+const TEMPERATURE = "Temperature (K)"; // role: temperature
+const PRESSURE = "Pressure (Pa)"; // role: pressure
+const BOUNDARY = "Phase boundary"; // role: phase_boundary
 
-const R = 8.314; // J / (mol K)
-const TRIPLE_T = 273.16; // K
-const TRIPLE_P = 611.657; // Pa
-const CRITICAL_T = 647.1; // K
-const CRITICAL_P = 22.064e6; // Pa
+// Data: replace the two points and the records with your own, one object per row
+// Water (IAPWS triple and critical point). Vaporization follows the Wagner-Pruss saturation
+// equation (IAPWS 1992), smooth from the triple point and exact at the critical point;
+// sublimation follows Clausius-Clapeyron; the Simon-Glatzel melting equation for ice Ih, whose
+// negative slope is water's anomaly, runs up to 209.9 MPa, where ice Ih gives way to ice III
+const TRIPLE_POINT = { [TEMPERATURE]: 273.16, [PRESSURE]: 611.657 }; // role: triple_point
+const CRITICAL_POINT = { [TEMPERATURE]: 647.096, [PRESSURE]: 22.064e6 }; // role: critical_point
+const GAS_CONSTANT = 8.314; // J/(mol K)
+const ICE_IH_LIMIT = 209.9e6; // Pa, the ice Ih–ice III–liquid triple point
+const WAGNER_PRUSS = [
+  [-7.85951783, 1],
+  [1.84408259, 1.5],
+  [-11.7866497, 3],
+  [22.6807411, 3.5],
+  [-15.9618719, 4],
+  [1.80122502, 7.5],
+]; // [coefficient, exponent of 1 − T/Tc]
+const TT = TRIPLE_POINT[TEMPERATURE];
+const PT = TRIPLE_POINT[PRESSURE];
+const TC = CRITICAL_POINT[TEMPERATURE];
+const PC = CRITICAL_POINT[PRESSURE];
+const melting = Array.from({ length: 36 }, (_, i) => {
+  const p = 10 ** (Math.log10(PT) + (i * (Math.log10(ICE_IH_LIMIT) - Math.log10(PT))) / 35);
+  return { [BOUNDARY]: "Solid–liquid (melting)", [TEMPERATURE]: TT * (1 + (p - PT) / -395.2e6) ** (1 / 9), [PRESSURE]: p };
+});
+const vaporization = Array.from({ length: 41 }, (_, i) => {
+  const temp = TT + (i * (TC - TT)) / 40;
+  const tau = Math.max(0, 1 - temp / TC); // never below 0, where the fractional powers are undefined
+  const lnRatio = (TC / temp) * WAGNER_PRUSS.reduce((sum, [a, e]) => sum + a * tau ** e, 0);
+  return { [BOUNDARY]: "Liquid–gas (vaporization)", [TEMPERATURE]: temp, [PRESSURE]: PC * Math.exp(lnRatio) };
+});
+const sublimation = Array.from({ length: 30 }, (_, i) => {
+  const temp = 200 + (i * (TT - 200)) / 29;
+  return { [BOUNDARY]: "Solid–gas (sublimation)", [TEMPERATURE]: temp, [PRESSURE]: PT * Math.exp((-51000 / GAS_CONSTANT) * (1 / temp - 1 / TT)) };
+});
+const data = [...melting, ...vaporization, ...sublimation];
 
-function makeSublimation() {
-  // Solid-gas boundary: L_sub ≈ 51 kJ/mol
-  const LR = 51000 / R;
-  const n = 30;
-  const T = [];
-  const P = [];
-  for (let i = 0; i < n; i += 1) {
-    const temp = 200 + (i * (TRIPLE_T - 200)) / (n - 1);
-    T.push(temp);
-    P.push(TRIPLE_P * Math.exp(-LR * (1 / temp - 1 / TRIPLE_T)));
-  }
-  return { T, P };
-}
+// Plot: reads only data and the constants above
+const boundaryNames = [...new Set(data.map((d) => d[BOUNDARY]))];
+const boundaries = boundaryNames.map((name) => {
+  const rows = data.filter((d) => d[BOUNDARY] === name).sort((a, b) => a[TEMPERATURE] - b[TEMPERATURE]);
+  return { name, temperature: rows.map((d) => d[TEMPERATURE]), pressure: rows.map((d) => d[PRESSURE]) };
+});
 
-function makeVaporization() {
-  // Liquid-gas boundary, two Clausius-Clapeyron segments (triple->boiling,
-  // boiling->critical) so the curve passes through the normal boiling point.
-  const BOIL_T = 373.15;
-  const BOIL_P = 101325;
-  const LR1 = 43364 / R;
-  const LR2 = 39448 / R;
-  const n1 = 18;
-  const n2 = 24;
-  const T = [];
-  const P = [];
-  for (let i = 0; i < n1; i += 1) {
-    const temp = TRIPLE_T + (i * (BOIL_T - TRIPLE_T)) / (n1 - 1);
-    T.push(temp);
-    P.push(TRIPLE_P * Math.exp(-LR1 * (1 / temp - 1 / TRIPLE_T)));
-  }
-  for (let i = 1; i < n2; i += 1) {
-    const temp = BOIL_T + (i * (CRITICAL_T - BOIL_T)) / (n2 - 1);
-    T.push(temp);
-    P.push(BOIL_P * Math.exp(-LR2 * (1 / temp - 1 / BOIL_T)));
-  }
-  T[T.length - 1] = CRITICAL_T;
-  P[P.length - 1] = CRITICAL_P;
-  return { T, P };
-}
+const allT = [...data.map((d) => d[TEMPERATURE]), TRIPLE_POINT[TEMPERATURE], CRITICAL_POINT[TEMPERATURE]];
+const allLogP = [...data.map((d) => d[PRESSURE]), TRIPLE_POINT[PRESSURE], CRITICAL_POINT[PRESSURE]].map((p) => Math.log10(p));
+const tSpan = Math.max(...allT) - Math.min(...allT);
+const xMin = Math.min(...allT) - tSpan * X_PAD_LEFT;
+const xMax = Math.max(...allT) + tSpan * X_PAD_RIGHT;
+const logSpan = Math.max(...allLogP) - Math.min(...allLogP);
+const logMin = Math.min(...allLogP) - logSpan * Y_PAD_DECADES;
+const logMax = Math.max(...allLogP) + logSpan * Y_PAD_DECADES;
+const decades = Array.from({ length: Math.floor(logMax) - Math.ceil(logMin) + 1 }, (_, i) => 10 ** (Math.ceil(logMin) + i));
 
-function makeMelting() {
-  // Solid-liquid boundary via the Simon-Glatzel equation for ice Ih, whose
-  // negative "a" reproduces water's anomalous negative melting slope.
-  const a = -395.2e6;
-  const c = 9;
-  const n = 36;
-  const pMax = 2.4e8;
-  const logLo = Math.log10(TRIPLE_P);
-  const logHi = Math.log10(pMax);
-  const T = [];
-  const P = [];
-  for (let i = 0; i < n; i += 1) {
-    const p = Math.pow(10, logLo + (i * (logHi - logLo)) / (n - 1));
-    const temp = TRIPLE_T * Math.pow(1 + (p - TRIPLE_P) / a, 1 / c);
-    T.push(temp);
-    P.push(p);
-  }
-  return { T: T.reverse(), P: P.reverse() };
-}
+const tUnit = (TEMPERATURE.match(/\(([^)]+)\)/) ?? ["", ""])[1];
+const pUnit = (PRESSURE.match(/\(([^)]+)\)/) ?? ["", ""])[1];
 
-const melting = makeMelting();
-const vaporization = makeVaporization();
-const sublimation = makeSublimation();
+// Region label anchors from the two points and the axis extents (log midpoints in pressure)
+const tt = TRIPLE_POINT[TEMPERATURE];
+const tc = CRITICAL_POINT[TEMPERATURE];
+const logPt = Math.log10(TRIPLE_POINT[PRESSURE]);
+const logPc = Math.log10(CRITICAL_POINT[PRESSURE]);
+const regionAnchors = [
+  { text: PHASE_LABELS.solid, t: (xMin + tt) / 2, p: 10 ** ((logPt + logMax) / 2) },
+  { text: PHASE_LABELS.liquid, t: (tt + tc) / 2, p: 10 ** ((logPc + logMax) / 2) },
+  { text: PHASE_LABELS.gas, t: (tt + tc) / 2, p: 10 ** ((logMin + logPt) / 2) },
+];
 
-const X_MIN = 190;
-const X_MAX = 700;
-const Y_MIN = 0.1;
-const Y_MAX = 3e8;
-
-const formatPressure = (v) => {
-  if (v >= 1e6) return `${v / 1e6} MPa`;
-  if (v >= 1e3) return `${v / 1e3} kPa`;
-  return `${v} Pa`;
-};
-
-// --- Phase-region labels, point markers and the supercritical guide --------
-// (annotations are explicitly required by the spec: triple/critical points
-// marked + annotated, phase regions clearly labeled)
+const TITLE = "Water · phase-diagram-pt · javascript · muix · anyplot.ai";
+const SUBTITLE = `${data.length} boundary points on ${boundaries.length} curves · pressure on a log scale over ${Math.round(logMax - logMin)} decades`;
 
 function PhaseAnnotations() {
-  const xScale = useXScale("x-melt");
+  const xScale = useXScale("x-0");
   const yScale = useYScale("pressure");
-
-  const tripleX = xScale(TRIPLE_T);
-  const tripleY = yScale(TRIPLE_P);
-  const criticalX = xScale(CRITICAL_T);
-  const criticalY = yScale(CRITICAL_P);
-  const topY = yScale(Y_MAX);
-  const rightX = xScale(X_MAX);
-
-  const guide = {
-    stroke: t.inkSoft,
-    strokeDasharray: "8 6",
-    strokeWidth: 1.5,
-    opacity: 0.55,
-  };
-  const regionLabel = {
-    fill: t.ink,
-    fontSize: 22,
-    fontWeight: 600,
-    opacity: 0.5,
-    textAnchor: "middle",
-  };
+  const tripleX = xScale(TRIPLE_POINT[TEMPERATURE]);
+  const tripleY = yScale(TRIPLE_POINT[PRESSURE]);
+  const criticalX = xScale(CRITICAL_POINT[TEMPERATURE]);
+  const criticalY = yScale(CRITICAL_POINT[PRESSURE]);
+  const guide = { stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.5 };
+  const superX = (criticalX + xScale(xMax)) / 2;
+  const superY = yScale(10 ** ((logPc + logMax) / 2));
 
   return (
     <g>
-      {/* Supercritical-fluid boundary, extending from the critical point */}
-      <line x1={criticalX} x2={criticalX} y1={criticalY} y2={topY} {...guide} />
-      <line x1={criticalX} x2={rightX} y1={criticalY} y2={criticalY} {...guide} />
+      <line x1={criticalX} x2={criticalX} y1={criticalY} y2={yScale(10 ** logMax)} {...guide} />
+      <line x1={criticalX} x2={xScale(xMax)} y1={criticalY} y2={criticalY} {...guide} />
 
-      {/* Phase region labels */}
-      <text x={xScale(235)} y={yScale(2e5)} {...regionLabel}>
-        Solid
-      </text>
-      <text x={xScale(460)} y={yScale(8e6)} {...regionLabel}>
-        Liquid
-      </text>
-      <text x={xScale(430)} y={yScale(30)} {...regionLabel}>
-        Gas
-      </text>
-      <text
-        x={xScale(678)}
-        y={yScale(8e7)}
-        fill={t.inkSoft}
-        fontSize={17}
-        fontWeight={500}
-        textAnchor="middle"
-      >
-        <tspan x={xScale(678)} dy="0">
-          Supercritical
-        </tspan>
-        <tspan x={xScale(678)} dy="1.2em">
-          fluid
-        </tspan>
+      {regionAnchors.map((r) => (
+        <text key={r.text} x={xScale(r.t)} y={yScale(r.p)} fill={t.inkSoft} fontSize={24} fontWeight={600} textAnchor="middle">
+          {r.text}
+        </text>
+      ))}
+      <text x={superX} y={superY} fill={t.inkSoft} fontSize={17} fontWeight={600} textAnchor="middle">
+        <tspan x={superX} dy="0">{PHASE_LABELS.supercritical[0]}</tspan>
+        <tspan x={superX} dy="1.2em">{PHASE_LABELS.supercritical[1]}</tspan>
       </text>
 
-      {/* Triple point */}
       <circle cx={tripleX} cy={tripleY} r={9} fill={t.ink} stroke={t.pageBg} strokeWidth={2} />
-      <text x={tripleX + 16} y={tripleY - 10} fill={t.ink} fontSize={16} fontWeight={600}>
-        Triple point
+      <text x={tripleX + 16} y={tripleY + 24} fill={t.ink} fontSize={16} fontWeight={600}>
+        {TRIPLE_LABEL}
       </text>
-      <text x={tripleX + 16} y={tripleY + 10} fill={t.inkSoft} fontSize={14}>
-        273.16 K, 611.7 Pa
+      <text x={tripleX + 16} y={tripleY + 44} fill={t.inkSoft} fontSize={14}>
+        {TRIPLE_POINT[TEMPERATURE]} {tUnit}, {TRIPLE_POINT[PRESSURE].toLocaleString("en-US")} {pUnit}
       </text>
 
-      {/* Critical point — both lines sit above the point, clear of the
-          incoming vaporization curve and the vertical supercritical guide */}
-      <circle cx={criticalX} cy={criticalY} r={10} fill={t.ink} stroke={t.pageBg} strokeWidth={2} />
-      <text
-        x={criticalX - 18}
-        y={criticalY - 34}
+      <rect
+        x={criticalX - 9}
+        y={criticalY - 9}
+        width={18}
+        height={18}
+        transform={`rotate(45 ${criticalX} ${criticalY})`}
         fill={t.ink}
-        fontSize={16}
-        fontWeight={600}
-        textAnchor="end"
-      >
-        Critical point
+        stroke={t.pageBg}
+        strokeWidth={2}
+      />
+      <text x={criticalX - 18} y={criticalY - 36} fill={t.ink} fontSize={16} fontWeight={600} textAnchor="end">
+        {CRITICAL_LABEL}
       </text>
-      <text
-        x={criticalX - 18}
-        y={criticalY - 14}
-        fill={t.inkSoft}
-        fontSize={14}
-        textAnchor="end"
-      >
-        647.1 K, 22.06 MPa
+      <text x={criticalX - 18} y={criticalY - 16} fill={t.inkSoft} fontSize={14} textAnchor="end">
+        {CRITICAL_POINT[TEMPERATURE]} {tUnit}, {CRITICAL_POINT[PRESSURE].toLocaleString("en-US")} {pUnit}
       </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
-
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: t.pageBg,
-      }}
-    >
-      <Typography
-        sx={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: t.ink,
-          fontSize: 34,
-          fontWeight: 500,
-          flexShrink: 0,
-        }}
-      >
-        phase-diagram-pt · javascript · muix · anyplot.ai
-      </Typography>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
       <LineChart
-        width={W}
-        height={H - TITLE_H}
+        width={width}
+        height={height - TITLE_H - SUBTITLE_H - LEGEND_H}
         skipAnimation
+        margin={{ top: 16, right: 48, bottom: 8, left: 16 }}
         grid={{ horizontal: true }}
-        xAxis={[
-          {
-            id: "x-melt",
-            data: melting.T,
-            scaleType: "linear",
-            min: X_MIN,
-            max: X_MAX,
-            label: "Temperature (K)",
-            labelStyle: { fontSize: 18 },
-            tickLabelStyle: { fontSize: 15 },
-            tickNumber: 9,
-          },
-          { id: "x-vap", data: vaporization.T, scaleType: "linear", min: X_MIN, max: X_MAX },
-          { id: "x-sub", data: sublimation.T, scaleType: "linear", min: X_MIN, max: X_MAX },
-        ]}
+        xAxis={boundaries.map((b, i) => ({
+          id: `x-${i}`,
+          data: b.temperature,
+          scaleType: "linear",
+          min: xMin,
+          max: xMax,
+          position: i === 0 ? "bottom" : "none",
+          label: TEMPERATURE,
+          height: 64,
+          labelStyle: { fontSize: 16, fill: t.ink },
+          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+        }))}
         yAxis={[
           {
             id: "pressure",
             scaleType: "log",
-            min: Y_MIN,
-            max: Y_MAX,
-            label: "Pressure (Pa, log scale)",
-            labelStyle: { fontSize: 18 },
-            tickLabelStyle: { fontSize: 15 },
-            tickFontSize: Y_AXIS_LABEL_OFFSET_PX,
-            tickInterval: [1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8],
-            valueFormatter: formatPressure,
+            min: 10 ** logMin,
+            max: 10 ** logMax,
+            tickInterval: decades,
+            valueFormatter: (v) =>
+              `10${String(Math.round(Math.log10(v)))
+                .split("")
+                .map((ch) => SUPERSCRIPT[ch])
+                .join("")}`,
+            label: `${PRESSURE}, log scale`,
+            width: 84,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
           },
         ]}
-        series={[
-          {
-            id: "melting",
-            xAxisId: "x-melt",
-            yAxisId: "pressure",
-            data: melting.P,
-            label: "Solid–Liquid boundary (melting)",
-            color: t.palette[0],
-            showMark: false,
-            curve: "monotoneX",
-          },
-          {
-            id: "vaporization",
-            xAxisId: "x-vap",
-            yAxisId: "pressure",
-            data: vaporization.P,
-            label: "Liquid–Gas boundary (vaporization)",
-            color: t.palette[1],
-            showMark: false,
-            curve: "monotoneX",
-          },
-          {
-            id: "sublimation",
-            xAxisId: "x-sub",
-            yAxisId: "pressure",
-            data: sublimation.P,
-            label: "Solid–Gas boundary (sublimation)",
-            color: t.palette[2],
-            showMark: false,
-            curve: "monotoneX",
-          },
-        ]}
+        series={boundaries.map((b, i) => ({
+          id: `boundary-${i}`,
+          xAxisId: `x-${i}`,
+          yAxisId: "pressure",
+          data: b.pressure,
+          label: b.name,
+          color: t.palette[i],
+          showMark: false,
+          curve: "linear",
+        }))}
         slotProps={{
           legend: {
-            position: { vertical: "bottom", horizontal: "middle" },
-            direction: "row",
-            labelStyle: { fontSize: 15 },
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 15, color: t.inkSoft },
           },
         }}
         sx={{
-          ".MuiLineElement-series-melting": { strokeWidth: 3.5 },
-          ".MuiLineElement-series-vaporization": { strokeWidth: 3.5 },
-          ".MuiLineElement-series-sublimation": { strokeWidth: 3.5 },
+          "& .MuiLineChart-line": { strokeWidth: 3.5 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
-        margin={{ left: 165, right: 60, top: 30, bottom: 120 }}
       >
         <PhaseAnnotations />
       </LineChart>
-    </Box>
+    </div>
   );
 }
