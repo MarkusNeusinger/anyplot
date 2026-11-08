@@ -23,6 +23,9 @@ const Y_PAD_LOW_SHARE = 0.3; // room below the price for downward flags
 const Y_PAD_HIGH_SHARE = 0.3; // room above the price for upward flags
 const FLAG_GAP_PX = 24; // clearance between a flag and the price line or a neighbouring flag
 const FLAG_H = 56;
+// Palette positions event types never take: brand green carries the price, and matte red is the
+// semantic anchor for loss and error, which no event category means
+const RESERVED_SLOTS = [0, 4];
 
 // Columns: set these to your data's column names
 const DATE = "Trading date"; // role: date
@@ -85,6 +88,8 @@ const YEAR_FORMAT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric"
 
 // Each event snaps to the first trading day on or after its date; flags alternate above and below
 const eventTypes = [...new Set(events.map((e) => e[EVENT_TYPE] as string))];
+// Event types are unordered categories: the free palette positions in canonical order, by first appearance
+const typeColors = t.palette.filter((_, i) => !RESERVED_SLOTS.includes(i));
 const flags = events
   .filter((e) => e[EVENT_DATE] != null)
   .sort((a, b) => (a[EVENT_DATE] as Date).getTime() - (b[EVENT_DATE] as Date).getTime())
@@ -102,7 +107,7 @@ const flags = events
       label,
       detail,
       icon: EVENT_ICONS[type] ?? ICON_FALLBACK,
-      color: t.palette[1 + eventTypes.indexOf(type)],
+      color: typeColors[eventTypes.indexOf(type)],
       width: 54 + Math.max(label.length * 8.6, detail.length * 7.6),
     };
   });
@@ -253,7 +258,7 @@ export default function Chart() {
             }}
           >
             <svg width={16} height={16} viewBox="0 0 16 16">
-              <path d={EVENT_ICONS[type] ?? ICON_FALLBACK} fill="none" stroke={t.palette[1 + i]} strokeWidth={2.2} strokeLinejoin="round" />
+              <path d={EVENT_ICONS[type] ?? ICON_FALLBACK} fill="none" stroke={typeColors[i]} strokeWidth={2.2} strokeLinejoin="round" />
             </svg>
             <Typography sx={{ color: t.inkSoft, fontSize: 15, fontWeight: 500 }}>{type}</Typography>
           </Box>
