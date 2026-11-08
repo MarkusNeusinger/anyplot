@@ -7,9 +7,16 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
 
 * `DATASET_ID` is the current version; `DATASET_HISTORY` holds the ids of the versions
   before it, oldest first, at most `MAX_DATASET_HISTORY` (a version pushed out at the
-  front is deleted from the store); `DATASET_VERSION` numbers the current version
-  (1 for a paste, one more per `prepare_data`, one less per undo), so a number above
-  1 means there is a version to undo. A new paste starts over (`IngestedDataset`).
+  front is deleted from the store), and there is a version to undo while it holds one
+  (`SessionView.can_undo`). A new paste starts the history over (`IngestedDataset`).
+* One numbering per session (owner decision of 2026-11-07): every version the session
+  stores gets the next number (`SessionView.next_version`, kept on the version as
+  `StoredDataset.number`), a paste, an opened file, a copy or a computed table as much as
+  a change, and no number is given twice. An undo makes the version it restores current
+  with its own number: paste, change, undo, change is 1, 2, 1, 3. The page's card shows
+  this number (`data v3`), the session block lists it and `from_version` takes it, so
+  "v2" names the same table to the user and to the root. `DATASET_VERSION` is the current
+  version's number, `DATASET_TOP` the highest the session gave.
 * The bindings follow the data through `carry_bindings`: the ones still valid for the
   new profile stay, the roles left without one get the defaults. A generated table
   (`generate_data`) replaces the data rather than changing it, so its version starts
@@ -26,8 +33,8 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
   persona tests of that day had the chat send users to `.undo()` or a new paste: "the
   first 20 after all" after a top 10, the pace per run after a weekly sum. `prepare_data`
   and `query_data` take `from_version` (`FromVersion`): `current` (the default),
-  `original` (version 1 of the current data: the paste, the opened file, the copy or a
-  table computed in a session without data) or a number the session block lists
+  `original` (the first version of the current data: the paste, the opened file, the copy
+  or a table computed in a session without data) or a number the session block lists
   (`kept_versions`, `version_lines`). A rebuild applies its operations to that version
   and stores the result as the next version on top, like any change: the history is
   never rewritten, the user confirms the new data, and `.undo()` steps back one version
@@ -35,14 +42,14 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
   original table: kept the first 20 of 487 rows, 467 dropped"). The original stays in
   the store also after the history cap pushed it out of `DATASET_HISTORY`
   (`DATASET_ORIGINAL`), so it can always be read, though undo never reaches it there.
-  A number that is gone is refused with a closed code (`resolve_version`): one above
-  every version this data reached is a version of earlier data, which a new paste
-  replaced (`other_paste`), one up to it was undone or left the history
+  A number that is gone is refused with a closed code (`resolve_version`): one below
+  the original's is a version of earlier data, which a new paste replaced
+  (`other_paste`); one from it up was undone, left the history or was never given
   (`version_not_kept`).
 
-`dataset_payload` is the shape every dataset answer shares: the `/dataset` and
-`/dataset/undo` routes (plus `roles`) and the `done` event's `dataset` (plus
-`changes`). No ADK import.
+`dataset_payload` is the shape every dataset answer shares: the `/dataset/undo`,
+`/dataset/to_long` and `/dataset/copy` routes (plus `roles`) and the `done` event's
+`dataset` (plus `changes`); the paste route answers the same fields. No ADK import.
 """
 
 from collections.abc import Mapping, Sequence
@@ -76,8 +83,9 @@ the original, the `MAX_DATASET_HISTORY` versions of the history and the current 
 ORIGINAL_WORDS = "from your original table"
 """How the change lines of a version rebuilt from the original start (`rebuilt_changes`)."""
 VersionRefusal = Literal["other_paste", "version_not_kept"]
-"""Why `from_version` names no version the session keeps: a number above every version the current data reached
-belongs to earlier data, which a paste replaced; one up to it was undone (there is no redo) or left the history."""
+"""Why `from_version` names no version the session keeps: a number below the current data's original belongs to
+earlier data, which a paste replaced; one from it up was undone (there is no redo), left the history or was never
+given."""
 
 
 class VersionRefused(Exception):
@@ -99,62 +107,59 @@ class KeptVersion:
 
 
 def _original_id(view: SessionView) -> str | None:
-    """The id of version 1 of the current data: `DATASET_ORIGINAL`, or for state from before the key the current
-    version when it is version 1, or the history entry that is version 1 while it is still there."""
+    """The id of the first version of the current data (`DATASET_ORIGINAL`). Every route that stores new data writes
+    the key; a view built without it takes the current version while nothing stands before it."""
     if view.dataset_original:
         return view.dataset_original
-    if view.dataset_version == 1:
-        return view.dataset_id
-    if view.dataset_history and view.dataset_version - len(view.dataset_history) == 1:
-        return view.dataset_history[0]
-    return None
+    return view.dataset_id if not view.dataset_history else None
+
+
+def original_number(store: DatasetStore, session_id: str, view: SessionView) -> int:
+    """The session's number of the current data's original, the version `from_version` `original` reads; the current
+    number when the store no longer holds it (it was emptied behind the state)."""
+    original = _original_id(view)
+    stored = store.get(original, session_id) if original else None
+    return stored.number if stored is not None else view.dataset_version
 
 
 def kept_versions(store: DatasetStore, session_id: str, view: SessionView) -> list[KeptVersion]:
-    """Every version of the current data the store still holds, oldest first and the current last: the original
-    (version 1), the history (the current number less its place from the end) and the current version.
+    """Every version of the current data the store still holds, oldest first and the current last: the original,
+    the history and the current version, each under its number in the session (`StoredDataset.number`).
 
-    The numbers are the ones the data panel shows: one more per new version, one less per undo, so the history's
-    entries sit one apart below the current one. Nothing that left the store is listed.
+    The numbers are the ones the data panel's card shows. They grow in the order the versions were made, so the
+    oldest comes first also after an undo; an undone number is missing, and nothing that left the store is listed.
     """
     if not view.dataset_id:
         return []
-    numbered: dict[int, str] = {}
-    for place, dataset_id in enumerate(reversed(view.dataset_history), start=1):
-        number = view.dataset_version - place
-        if number < 1:
-            break
-        numbered[number] = dataset_id
     original = _original_id(view)
-    if original is not None:
-        numbered[1] = original
-    numbered[view.dataset_version] = view.dataset_id
-    kept = []
-    for number in sorted(numbered):
-        stored = store.get(numbered[number], session_id)
+    kept: dict[int, KeptVersion] = {}
+    for dataset_id in (*view.earlier_datasets, view.dataset_id):
+        stored = store.get(dataset_id, session_id)
         if stored is not None:
-            kept.append(KeptVersion(number, stored, number == view.dataset_version, number == 1))
-    return kept
+            current = dataset_id == view.dataset_id
+            kept[stored.number] = KeptVersion(stored.number, stored, current, dataset_id == original)
+    return [kept[number] for number in sorted(kept)]
 
 
-def resolve_version(kept: Sequence[KeptVersion], view: SessionView, from_version: FromVersion) -> KeptVersion:
+def resolve_version(kept: Sequence[KeptVersion], from_version: FromVersion) -> KeptVersion:
     """The version `from_version` names among `kept`; raises `VersionRefused`.
 
-    `current` is the current version and `original` version 1; a number names its version. A number the session no
-    longer keeps is `version_not_kept` up to the highest number the current data reached (`DATASET_TOP`): it was
-    undone or left the history. Above it, `other_paste`: no version of this data had it, so it was one of the data a
-    paste replaced, which starts its numbers again at 1 and is gone with its versions.
+    `current` is the current version and `original` the current data's first; a number names its version. A number
+    the session no longer keeps is `other_paste` below the original's number: it was a version of data a paste
+    replaced, which is gone with its versions. From the original's number up it is `version_not_kept`: undone, out
+    of the history, or a number the session never gave.
     """
     if isinstance(from_version, int):
-        number = from_version
+        found = next((version for version in kept if version.number == from_version), None)
     elif from_version == ORIGINAL_VERSION:
-        number = 1
+        found = next((version for version in kept if version.original), None)
     else:  # `CURRENT_VERSION`, the one other value the type admits
-        number = view.dataset_version
-    for version in kept:
-        if version.number == number:
-            return version
-    raise VersionRefused("other_paste" if number > view.dataset_top else "version_not_kept")
+        found = next((version for version in kept if version.current), None)
+    if found is not None:
+        return found
+    first = next((version.number for version in kept if version.original), None)
+    earlier = isinstance(from_version, int) and first is not None and from_version < first
+    raise VersionRefused("other_paste" if earlier else "version_not_kept")
 
 
 def _count(number: int, noun: str) -> str:
@@ -203,22 +208,39 @@ class DatasetVersion:
     stored: StoredDataset
     bindings: list[Binding]
     version: int
+    """Its number in the session (`StoredDataset.number`)."""
     delta: dict[str, Any]
+    can_undo: bool
+    """Whether an undo can follow it: the history it leaves holds a version."""
+    original_version: int
+    """The number of the current data's original (`original_number`)."""
 
     def payload(self) -> dict[str, Any]:
-        return dataset_payload(self.stored, self.bindings, self.version)
+        return dataset_payload(
+            self.stored, self.bindings, can_undo=self.can_undo, original_version=self.original_version
+        )
 
 
-def dataset_payload(stored: StoredDataset, bindings: list[Binding], version: int) -> dict[str, Any]:
-    """`{preview, profile, bindings, warnings, context_lines, version}`: a dataset as the routes and `done` answer it,
-    plus `code` for a version `run_data_code` computed (the Python that ran)."""
+def dataset_payload(
+    stored: StoredDataset, bindings: list[Binding], *, can_undo: bool, original_version: int
+) -> dict[str, Any]:
+    """`{preview, profile, bindings, warnings, context_lines, version, can_undo, original_version}`: a dataset as the
+    routes and `done` answer it, plus `code` for a version `run_data_code` computed (the Python that ran).
+
+    `version` is the version's number in the session (`StoredDataset.number`), which the page's card shows;
+    `can_undo` whether `POST .../dataset/undo` has a version to restore (`SessionView.can_undo`), so no client reads
+    it from the number; `original_version` the number of the current data's first version, from which the page
+    counts how far an undo went back (its `agent_data_undo` bucket).
+    """
     payload: dict[str, Any] = {
         "preview": [list(row) for row in stored.preview],
         "profile": stored.profile.model_dump(mode="json"),
         "bindings": [binding.model_dump() for binding in bindings],
         "warnings": list(stored.profile.warnings),
         "context_lines": list(stored.context_lines),
-        "version": version,
+        "version": stored.number,
+        "can_undo": can_undo,
+        "original_version": original_version,
     }
     if stored.code is not None:
         payload["code"] = stored.code
@@ -244,7 +266,8 @@ def push_version(
     changes: Sequence[str] = (),
     made_from: StoredDataset | None = None,
 ) -> DatasetVersion:
-    """Store `parsed` as the session's next dataset version; raises `StoreFull` (nothing changes then).
+    """Store `parsed` as the session's next dataset version, under the session's next number; raises `StoreFull`
+    (nothing changes then).
 
     The current dataset joins the history; the oldest entries past `MAX_DATASET_HISTORY`
     leave the store, except the original, which stays for `from_version` (`DATASET_ORIGINAL`).
@@ -278,9 +301,13 @@ def push_version(
         file_name = origin.file_name if source is None else None
         if source is None:
             source = origin.source
+    version = view.next_version
     # `code` (`run_data_code`'s Python) belongs to this version only, never carried to the next.
-    dataset_id = store.put(session_id, parsed, code=code, source=source, file_name=file_name, changes=changes)
+    dataset_id = store.put(
+        session_id, parsed, code=code, source=source, file_name=file_name, changes=changes, number=version
+    )
     original = _original_id(view)
+    kept_original = store.get(original, session_id) if original else None
     history = [*view.dataset_history, view.dataset_id] if view.dataset_id else list(view.dataset_history)
     for old in history[:-MAX_DATASET_HISTORY]:
         if old != original:  # past the undo history, but still the version `from_version` `original` reads
@@ -308,11 +335,11 @@ def push_version(
         bindings = default_bindings(roles, stored.profile)
     else:
         bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted, row_numbers, splits)
-    version = view.dataset_version + 1
-    delta = {**_delta(dataset_id, bindings, history, version), DATASET_TOP: max(view.dataset_top, version)}
+    delta = {**_delta(dataset_id, bindings, history, version), DATASET_TOP: version}
     if original is not None:
         delta[DATASET_ORIGINAL] = original
-    return DatasetVersion(dataset_id, stored, bindings, version, delta)
+    original_version = kept_original.number if kept_original is not None else version
+    return DatasetVersion(dataset_id, stored, bindings, version, delta, bool(history), original_version)
 
 
 def undo_version(
@@ -323,29 +350,29 @@ def undo_version(
     The current version leaves the store (there is no redo). The idle sweep takes a
     session's history only together with its current version (`DatasetStore.sweep`),
     so an entry missing from the store means the store was emptied behind the state (a
-    restart keeps neither): such an entry is skipped, and the version number drops once
-    more for it, so the numbers stay one apart. The restored version is unconfirmed even when the user
-    confirmed it before the change it undoes (the fingerprint would match again): what
+    restart keeps neither): such an entry is skipped. The restored version is current again under its own number
+    (`StoredDataset.number`): after paste, change, undo the card reads `data v1` again. It is unconfirmed even when the
+    user confirmed it before the change it undoes (the fingerprint would match again): what
     is on the screen changed, so the user confirms what they see, as after a paste. The
     original kept past the history (`DATASET_ORIGINAL`) is no step of the undo, and the
-    highest number reached (`DATASET_TOP`) stays, so an undone number reads as gone.
+    highest number given (`DATASET_TOP`) stays, so the undone number is never given again and reads as gone.
     """
     history = list(view.dataset_history)
-    skipped = 0
     while history:
         dataset_id = history.pop()
         stored = store.get(dataset_id, session_id)
         if stored is not None:
             break
-        skipped += 1
     else:
         return None
-    if view.dataset_id and view.dataset_id != _original_id(view):
+    original = _original_id(view)
+    if view.dataset_id and view.dataset_id != original:
         store.delete(view.dataset_id, session_id)
     bindings = carry_bindings(view.bindings, snapshot.roles(), stored.profile)
-    version = max(1, view.dataset_version - 1 - skipped)
-    delta = {**_delta(dataset_id, bindings, history, version), CONFIRMED: None}
-    return DatasetVersion(dataset_id, stored, bindings, version, delta)
+    delta = {**_delta(dataset_id, bindings, history, stored.number), CONFIRMED: None}
+    kept_original = store.get(original, session_id) if original else None
+    original_version = kept_original.number if kept_original is not None else stored.number
+    return DatasetVersion(dataset_id, stored, bindings, stored.number, delta, bool(history), original_version)
 
 
 def _delta(dataset_id: str, bindings: list[Binding], history: list[str], version: int) -> dict[str, Any]:

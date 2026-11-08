@@ -405,31 +405,215 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
+      # The PR is merged by now, so main already carries its code: production
+      # has to get this PR's renders, or the site shows the previous code's
+      # images under the new review. #12800 merged that way while the step
+      # passed: the copy failed with its stderr thrown away, the step deleted
+      # staging anyway and announced "Promoted images to production".
+      # Nothing here is swallowed now: gsutil's stderr reaches the log, a
+      # failure sets `failure` for "Report a failed promotion", and staging is
+      # deleted only after a successful copy, so a failed transfer stays
+      # recoverable by a re-dispatch (as for #11295).
       - name: Promote GCS images to production
+        id: promote
         if: steps.check.outputs.should_run == 'true'
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUM: ${{ steps.check.outputs.pr_number }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
           LANGUAGE: ${{ steps.extract.outputs.language }}
           LIBRARY: ${{ steps.extract.outputs.library }}
         run: |
           STAGING="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
           PRODUCTION="gs://anyplot-images/plots/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+          PAIR="${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
 
-          # Copy from staging to production: the renders only (`plot-*`, no
-          # recursion). staging/.../adapt/ holds the smoke runs and the
-          # predecessor's raw renders that impl-generate staged for
-          # impl-review; they stay private, and the cleanup below removes
-          # them with the rest.
-          gsutil -m -h "Cache-Control:public, max-age=604800" cp "${STAGING}/plot-*" "${PRODUCTION}/" 2>/dev/null || echo "No staging files to promote"
+          # The renders are the `plot-*` objects at the top of staging (one
+          # `*` does not cross `/`). staging/.../adapt/ holds the smoke runs
+          # and the predecessor's raw renders that impl-generate staged for
+          # impl-review; they stay private, and the cleanup removes them with
+          # the rest. "No match" is an answer (empty staging); any other
+          # error is retried and then reported as a transfer failure.
+          STAGED=""
+          LISTED=""
+          for attempt in 1 2 3; do
+            if STAGED=$(gsutil ls "${STAGING}/plot-*" 2> "$RUNNER_TEMP/promote-ls.err"); then
+              LISTED=yes
+              break
+            fi
+            if grep -qE 'matched no objects|No URLs matched' "$RUNNER_TEMP/promote-ls.err"; then
+              STAGED=""
+              LISTED=yes
+              break
+            fi
+            echo "::warning::Listing ${STAGING} failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/promote-ls.err" | tr '\n' ' ')"
+            STAGED=""
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
+          if [ -z "$LISTED" ]; then
+            echo "failure=transfer" >> "$GITHUB_OUTPUT"
+            echo "::error::Could not list ${STAGING} after 3 attempts. Nothing was promoted and staging is kept: re-dispatch impl-merge.yml -f pr_number=${PR_NUM}"
+            exit 1
+          fi
+          COUNT=0
+          if [ -n "$STAGED" ]; then
+            COUNT=$(printf '%s\n' "$STAGED" | wc -l)
+          fi
 
-          # Make production files public
-          gsutil -m acl ch -r -u AllUsers:R "${PRODUCTION}/" 2>/dev/null || true
+          # Both theme renders, or nothing: copying half a pair would put one
+          # new theme next to one old one. impl-review checked both before
+          # it scored, so a gap here means staging changed after the review.
+          MISSING=""
+          for name in plot-light.png plot-dark.png; do
+            case $'\n'"${STAGED}"$'\n' in
+              *$'\n'"${STAGING}/${name}"$'\n'*) ;;
+              *) MISSING="${MISSING} ${name}" ;;
+            esac
+          done
 
-          # Clean up staging
-          gsutil -m rm -r "${STAGING}/" 2>/dev/null || true
+          if [ -n "$MISSING" ]; then
+            # Stale only if the code changed. Every implementation PR changes
+            # its file (the review rewrites the header), but one that changed
+            # none still matches production's renders and passes. A file
+            # list that cannot be read counts as changed: an API blip must
+            # not pass a stale pair.
+            FILES=""
+            FILES_READ=""
+            for attempt in 1 2 3; do
+              if FILES=$(gh pr view "$PR_NUM" --repo "$GH_REPO" --json files -q '.files[].path' 2> "$RUNNER_TEMP/promote-files.err"); then
+                FILES_READ=yes
+                break
+              fi
+              echo "::warning::gh pr view (files) failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/promote-files.err" | tr '\n' ' ')"
+              FILES=""
+              if [ "$attempt" -lt 3 ]; then
+                sleep $((attempt * 5))
+              fi
+            done
+            IMPL_CHANGED=yes
+            if [ -n "$FILES_READ" ]; then
+              case $'\n'"${FILES}" in
+                *$'\n'"plots/${SPEC_ID}/implementations/"*) ;;
+                *) IMPL_CHANGED=no ;;
+              esac
+            fi
+            if [ "$IMPL_CHANGED" = "no" ]; then
+              echo "::notice::Nothing promoted: staging lacks${MISSING}, and PR #${PR_NUM} changed no file under plots/${SPEC_ID}/implementations/, so production's renders of ${PAIR} still match its code"
+              exit 0
+            fi
+            echo "failure=missing" >> "$GITHUB_OUTPUT"
+            echo "::error::Staging lacks${MISSING} for ${PAIR} (${COUNT} plot-* object(s) staged), but merged PR #${PR_NUM} changed its implementation: production still serves the previous renders. Nothing was promoted or deleted; the merged code needs a new render (the comment on PR #${PR_NUM} names the command)."
+            exit 1
+          fi
 
-          rm -f /tmp/gcs-key.json
-          echo "::notice::Promoted images to production"
+          COPIED=""
+          for attempt in 1 2 3; do
+            if gsutil -m -h "Cache-Control:public, max-age=604800" cp "${STAGING}/plot-*" "${PRODUCTION}/" 2> "$RUNNER_TEMP/promote-cp.err"; then
+              COPIED=yes
+              break
+            fi
+            # gsutil -m puts its progress on stderr and the error last.
+            echo "::warning::Copying ${STAGING}/plot-* to ${PRODUCTION} failed (attempt ${attempt}/3): $(tail -c 300 "$RUNNER_TEMP/promote-cp.err" | tr '\n' ' ')"
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
+          if [ -z "$COPIED" ]; then
+            echo "failure=transfer" >> "$GITHUB_OUTPUT"
+            echo "::error::Copying ${COUNT} render file(s) of ${PAIR} to production failed after 3 attempts. Staging is kept: re-dispatch impl-merge.yml -f pr_number=${PR_NUM}"
+            exit 1
+          fi
+
+          # No ACL call: the bucket has uniform bucket-level access, so its
+          # IAM policy makes every object public and `gsutil acl ch` can only
+          # fail (the step used to run it and hide the error).
+
+          if ! gsutil -m rm -r "${STAGING}/" 2> "$RUNNER_TEMP/promote-rm.err"; then
+            echo "::warning::Could not remove ${STAGING}/ after the promotion: $(tail -c 300 "$RUNNER_TEMP/promote-rm.err" | tr '\n' ' ') (the pair's next generation overwrites its renders and clears adapt/)"
+          fi
+
+          echo "::notice::Promoted images to production: ${COUNT} file(s) of ${PAIR}"
+
+      # The merge is done, so a failed promotion leaves main's code next to
+      # production's previous renders until someone acts, and the steps below
+      # are skipped: no impl:{library}:done and no "Complete" comment for a
+      # pair whose images are wrong (the push to main has already started
+      # the database sync). This comment on the merged PR says what to run.
+      # Missing renders need a new render of main's file: adopt mode
+      # (source_ref=main) renders it and takes it through review and merge;
+      # R and Julia have no adopt render, so their pair takes a forced
+      # regeneration. A failed transfer kept staging, so a re-dispatch of
+      # this workflow promotes it (its merged-PR path validates against
+      # main). No retry label: the watchdog's generation rescues scan open
+      # spec issues only, a regeneration's spec issue is usually closed, and
+      # the rescue they dispatch is a gated regeneration, which can keep the
+      # live code with its stale renders.
+      - name: Report a failed promotion
+        if: failure() && steps.promote.outputs.failure != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          FAILURE: ${{ steps.promote.outputs.failure }}
+          PR_NUM: ${{ steps.check.outputs.pr_number }}
+          SPEC_ID: ${{ steps.extract.outputs.specification_id }}
+          LANGUAGE: ${{ steps.extract.outputs.language }}
+          LIBRARY: ${{ steps.extract.outputs.library }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          PAIR="${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+          NOTE=""
+          if [ "$FAILURE" = "transfer" ]; then
+            WHAT="GCS could not be read or written while this run promoted the renders of \`${PAIR}\`, so production still shows the previous ones. Staging is kept, and a re-dispatch promotes it:"
+            CMD="gh workflow run impl-merge.yml -f pr_number=${PR_NUM}"
+          else
+            WHAT="staging lacked this PR's renders of \`${PAIR}\` (both theme PNGs are needed) when the promotion ran, so production still shows the previous implementation's images next to this code and its review. Nothing was promoted. Render the merged code again:"
+            case "$LANGUAGE" in
+              python|javascript)
+                # source_model keeps the author in generated_by, which adopt
+                # mode would otherwise record as adopted:main. Only a value
+                # impl-generate accepts as source_model is passed on.
+                MODEL=""
+                META="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
+                if git fetch -q origin main 2>/dev/null; then
+                  MODEL=$(git show "origin/main:${META}" 2>/dev/null | sed -n "s/^generated_by: *['\"]\{0,1\}\([^'\"]*\)['\"]\{0,1\} *$/\1/p" || true)
+                fi
+                if ! [[ "$MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$ ]]; then
+                  MODEL=""
+                fi
+                CMD="gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f source_ref=main${MODEL:+ -f source_model=${MODEL}}"
+                NOTE="Adopt mode takes the file from main as it is, renders it, and sends it through review and merge, which promotes the new renders."
+                ;;
+              *)
+                CMD="gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f regen_gate=false"
+                NOTE="Adopt mode renders Python and JavaScript only, so this is a forced regeneration: new code, reviewed and repaired as usual, and promoted on merge."
+                ;;
+            esac
+          fi
+
+          BODY="**Promotion failed:** ${WHAT}
+
+          \`\`\`bash
+          ${CMD}
+          \`\`\`
+
+          ${NOTE}
+
+          ---
+          :robot: *[impl-merge](${RUN_URL})*"
+
+          echo "::error::Promotion of ${PAIR} failed (${FAILURE}); to fix it: ${CMD}"
+          {
+            echo "### Promotion failed: ${PAIR}"
+            echo
+            echo '```bash'
+            echo "${CMD}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          gh pr comment "$PR_NUM" --repo "$GH_REPO" --body "$BODY" \
+            || echo "::warning::Could not comment on PR #${PR_NUM}; the command is in this run's summary"
 
       - name: Update issue labels
         if: steps.check.outputs.should_run == 'true' && steps.issue.outputs.number != ''

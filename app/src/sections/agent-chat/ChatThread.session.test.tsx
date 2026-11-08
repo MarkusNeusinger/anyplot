@@ -49,10 +49,17 @@ const parsed = (rows: number, names: string[], extra: object = {}) =>
       { name: 'y', kinds: [], required: true, variadic: false, description: '' },
     ],
     version: 1,
+    can_undo: false,
     ...extra,
   }) as DatasetParsed;
+/** A change the server stored under the session's `version`, with the version before it to undo. */
 const changed = (rows: number, names: string[], changes: string[], version: number) =>
-  ({ ...parsed(rows, names, { file_name: 'Bericht.xlsx' }), changes, version }) as DatasetChanged;
+  ({
+    ...parsed(rows, names, { file_name: 'Bericht.xlsx' }),
+    changes,
+    version,
+    can_undo: true,
+  }) as DatasetChanged;
 const workbook = (sheet: string): ConvertedFile => ({
   name: 'Bericht.xlsx',
   base64: 'UEs=',
@@ -133,7 +140,11 @@ const STEPS: [string, Action[]][] = [
       { type: 'parse_start' },
       {
         type: 'parse_done',
-        parsed: parsed(12, ['Region', 'Q1', 'Q2', 'Q3', 'Q4'], { file_name: 'Bericht.xlsx' }),
+        // Another sheet is a new paste on the server, under the session's next number.
+        parsed: parsed(12, ['Region', 'Q1', 'Q2', 'Q3', 'Q4'], {
+          file_name: 'Bericht.xlsx',
+          version: 2,
+        }),
         bytes: 420,
         file: workbook('2026'),
       },
@@ -147,7 +158,7 @@ const STEPS: [string, Action[]][] = [
       {
         type: 'data_prepared',
         toLong: true,
-        dataset: changed(48, ['Region', 'Quarter', 'Sales'], ['made long'], 2),
+        dataset: changed(48, ['Region', 'Quarter', 'Sales'], ['made long'], 3),
       },
     ],
   ],
@@ -182,7 +193,7 @@ const STEPS: [string, Action[]][] = [
       reply('Kept the 2026 rows.'),
       {
         type: 'data_prepared',
-        dataset: changed(24, ['Region', 'Quarter', 'Sales'], ['dropped 24 rows'], 3),
+        dataset: changed(24, ['Region', 'Quarter', 'Sales'], ['dropped 24 rows'], 4),
       },
       { type: 'server_sync', bindings: { x: 'Quarter', y: 'Sales' }, dataConfirmed: false },
       { type: 'turn_outcome', outcome: 'data' },
@@ -195,7 +206,12 @@ const STEPS: [string, Action[]][] = [
       { type: 'undo_start' },
       {
         type: 'undo_done',
-        parsed: parsed(48, ['Region', 'Quarter', 'Sales'], { version: 2 }),
+        // Back to the long table under its own number; the sheet's version is still there to undo.
+        parsed: parsed(48, ['Region', 'Quarter', 'Sales'], {
+          version: 3,
+          can_undo: true,
+          original_version: 2,
+        }),
       },
     ],
   ],
@@ -207,7 +223,7 @@ const STEPS: [string, Action[]][] = [
       {
         type: 'data_prepared',
         toLong: true,
-        dataset: changed(48, ['Region', 'Quarter', 'Sales'], ['made long'], 3),
+        dataset: changed(48, ['Region', 'Quarter', 'Sales'], ['made long'], 5),
       },
       ...confirm,
     ],
@@ -230,7 +246,12 @@ const STEPS: [string, Action[]][] = [
     'a second paste',
     [
       { type: 'parse_start' },
-      { type: 'parse_done', parsed: parsed(4, ['a', 'b']), bytes: 46, chip: SECOND },
+      {
+        type: 'parse_done',
+        parsed: parsed(4, ['a', 'b'], { version: 6 }),
+        bytes: 46,
+        chip: SECOND,
+      },
       ...summary('seaborn', '4 rows.'),
     ],
   ],
@@ -258,7 +279,7 @@ const STEPS: [string, Action[]][] = [
       { type: 'parse_start' },
       {
         type: 'parse_done',
-        parsed: parsed(1, ['animal', 'count']),
+        parsed: parsed(1, ['animal', 'count'], { version: 7 }),
         bytes: 30,
         fromTranscription: true,
       },
@@ -270,7 +291,7 @@ const STEPS: [string, Action[]][] = [
       { type: 'run_start', kind: 'message' },
       item({ kind: 'user', text: 'y = sin(x) instead' }),
       reply('Computed 200 rows.'),
-      { type: 'data_prepared', dataset: changed(200, ['x', 'y'], ['generated 200 rows'], 2) },
+      { type: 'data_prepared', dataset: changed(200, ['x', 'y'], ['generated 200 rows'], 8) },
       { type: 'turn_outcome', outcome: 'data' },
       { type: 'run_end' },
     ],
@@ -369,19 +390,21 @@ describe('ChatThread: the data versions of a long session', () => {
       'Bigger now.',
       // A data request after the plot: a new data chapter, the version before folded where the
       // card stood (above, in the first chapter), the card right after the request, before its
-      // reply; its `.undo()` then took the card on to the end again.
+      // reply; its `.undo()` then took the card on to the end again, under the number of the
+      // version it went back to: the server's own, the one the assistant's session block lists.
       '# data',
       '❯only the 2026 rows',
       '▸ data v4 · changed · 24 rows × 3 cols',
       'Kept the 2026 rows.',
-      '▸ data v5 · undone · 48 rows × 3 cols',
+      '▸ data v3 · back to v3 · 48 rows × 3 cols',
       '# plot',
       '❯.update_plot() →# matplotlib',
       '▸ plot v3 · matplotlib',
       'Plot 3.',
       // `.to_long()` on the card above the plot: the card went on below the plot, a new chapter.
+      // The undone v4 is never given again: the next version is v5.
       '# data',
-      '▸ data v6 · made long · 48 rows × 3 cols',
+      '▸ data v5 · made long · 48 rows × 3 cols',
       '· plotting in seaborn from here, 2 decisions kept',
       '# plot',
       '❯.update_plot() →# seaborn',
@@ -389,10 +412,10 @@ describe('ChatThread: the data versions of a long session', () => {
       'Plot 4.',
       '# data',
       `❯${SECOND}`,
-      '▸ data v7 · pasted · 4 rows × 2 cols',
+      '▸ data v6 · pasted · 4 rows × 2 cols',
       '4 rows.',
       `❯${TEXT}`,
-      '▸ data v8 · read from text · 1 row × 2 cols',
+      '▸ data v7 · read from text · 1 row × 2 cols',
       '❯y = sin(x) instead',
       'data card #1',
       'Computed 200 rows.',
@@ -433,7 +456,7 @@ describe('ChatThread: the data versions of a long session', () => {
     const shown = rows(view.container);
     expect(shown.slice(-8)).toEqual([
       'Kept the 2026 rows.',
-      '▸ data v5 · undone · 48 rows × 3 cols',
+      '▸ data v3 · back to v3 · 48 rows × 3 cols',
       '# plot',
       '❯.update_plot() →# matplotlib',
       'plot v3 · matplotlib ▾',

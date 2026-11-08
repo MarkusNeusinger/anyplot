@@ -22,7 +22,8 @@ The rules (`RULE_CLASSES`; the design's numbering):
    unknown role (`# role: extra` marks a column no spec role names); every value is
    a string, or a list of strings for a variadic family. A matrix role, a network's
    node and edge tables and every role of a generated spec need no constant
-   (`spec_roles.is_structure_role`).
+   (`spec_roles.is_structure_role`), and neither does a role the plot computes
+   (`DataRole.computed`, with `spec_roles.COMPUTED_ROLES` applied by `spec_context`).
 3. Interface (`interface`): no name bound in the block other than `df` (and a
    network's `nodes`) is read below it before the plot code rebinds it.
 4. Literals below the block: a string equal to a column constant's value or a column
@@ -91,10 +92,21 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from core.spec_roles import DataRole, Shape, color_role, data_bullets, is_structure_role, parse_roles, spec_shape
+from core.spec_roles import (
+    DataRole,
+    Shape,
+    color_role,
+    data_bullets,
+    is_structure_role,
+    mark_computed,
+    parse_roles,
+    spec_shape,
+)
 
 
-CHECKER_VERSION = 1
+CHECKER_VERSION = 2
+"""Goes up when the same source can get another record: version 2 reads the roles `COMPUTED_ROLES` lists as
+computed (`spec_context`), so their missing column constants are no `columns` finding any more."""
 DEFECT_ID = "CQ-01"
 CODE_RENDER = "code"
 DEFECT_ARROW = "→"
@@ -2313,9 +2325,10 @@ def library_of(path: Path) -> str | None:
 
 
 def spec_context(spec_path: Path, spec_id: str | None = None) -> tuple[str, list[DataRole], Shape]:
-    """The spec id, parsed roles and shape of a `specification.md`."""
+    """The spec id, parsed roles and shape of a `specification.md`, with the roles the plot computes marked
+    (`mark_computed`), as the agent reads them: a computed role needs no column constant."""
     spec_id = spec_id or spec_path.parent.name
-    roles = parse_roles(data_bullets(spec_path.read_text(encoding="utf-8")))
+    roles = mark_computed(parse_roles(data_bullets(spec_path.read_text(encoding="utf-8"))), spec_id)
     return spec_id, roles, spec_shape(spec_id, roles)
 
 

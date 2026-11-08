@@ -30,7 +30,7 @@ CATALOGUE = REPO_ROOT / "plots" / "bar-grouped" / "implementations" / "python" /
 SPEC = REPO_ROOT / "plots" / "bar-grouped" / "specification.md"
 SOURCE = '"""anyplot.ai\nbar-grouped: Grouped Bar Chart\nQuality: pending | Created: 2026-10-23\n"""\n\nimport os\n'
 STATIC_PASS = {
-    "version": 1,
+    "version": 2,
     "status": "pass",
     "shape": "table",
     "color_role": "group",
@@ -202,7 +202,7 @@ class TestStatic:
     def test_the_mirrors_record_verbatim_plus_exit(self, tmp_path):
         record = _record(tmp_path, smoke=_smoke(SOURCE))
         assert record["static"] == {**STATIC_PASS, "exit": 0}
-        assert record["checker_version"] == 1
+        assert record["checker_version"] == 2
 
     @pytest.mark.parametrize(
         ("static", "exit_code"),
@@ -355,7 +355,7 @@ class TestRecord:
             "matplotlib",
             "python",
         )
-        assert record["checker_version"] == 1
+        assert record["checker_version"] == 2
         assert record["status"] in ar.STATUSES
         assert record["static"]["status"] == "pass"
         assert record["smoke"]["status"] == "pass"
@@ -387,7 +387,7 @@ class TestRecord:
         assert (record["status"], record["why"]) == ("pass", "-")
         assert ar.notice_line(record) == (
             "::notice::adapt_check spec=bar-grouped lib=matplotlib side=new status=pass static=pass smoke=pass "
-            "rules=- advisory=data-coordinate perturbations=- advisory_perturbations=missing_nullable version=1 "
+            "rules=- advisory=data-coordinate perturbations=- advisory_perturbations=missing_nullable version=2 "
             f"lines={len(SOURCE.splitlines())} selfcheck_attempts=2 selfcheck_first=fail why=-"
         )
 
@@ -409,7 +409,7 @@ class TestRecord:
         assert (record["status"], record["why"]) == ("fail", "static_fail")
         assert ar.notice_line(record) == (
             "::notice::adapt_check spec=bar-grouped lib=matplotlib side=prev status=fail static=fail smoke=skipped "
-            "rules=layout,columns,interface,palette advisory=- perturbations=- advisory_perturbations=- version=1 "
+            "rules=layout,columns,interface,palette advisory=- perturbations=- advisory_perturbations=- version=2 "
             f"lines={len(SOURCE.splitlines())} why=static_fail"
         )
 
