@@ -1,7 +1,7 @@
 // anyplot.ai
 // windrose-basic: Wind Rose Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 86/100 | Updated: 2026-11-08
+// Quality: 87/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";

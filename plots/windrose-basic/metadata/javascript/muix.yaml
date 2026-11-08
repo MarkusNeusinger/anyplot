@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: windrose-basic
 created: '2026-08-05T15:46:25Z'
-updated: '2026-11-08T07:11:05Z'
+updated: '2026-11-08T07:16:06Z'
 generated_by: claude-opus-5-5
 adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
 workflow_run: 42457434295
@@ -13,123 +13,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windrose-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windrose-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Builds a real polar stacked histogram on the community package: a custom SVG
-    layer inside ChartsContainer reads useDrawingArea() and draws 16 equal-width annular
-    wedges, north at the top and clockwise in compass order'
-  - Speed bins and frequency rings are computed from the data (nice step from the
-    90th speed percentile, ring step from the largest spoke), giving meaningful 0–2.5
-    / 2.5–5 / 5–7.5 / ≥ 7.5 m/s classes and 5 % rings from zero at the center
-  - 'Ordered speed bins use four discrete steps of imprint_seq (#009E73 → #4467A3)
-    in natural order, identical in both themes, with a legend that names each range'
-  - Compass labels carry a three-level hierarchy (bold cardinals, semibold intercardinals,
-    soft-ink secondary points), and wedges are separated by page-colored strokes and
-    small sector gaps
-  - Ring labels sit along the quietest sector boundary with a page-colored halo, so
-    they never collide with data
-  - Chrome is threaded from ANYPLOT_TOKENS (ink, inkSoft, grid, pageBg), and both
-    themes read cleanly
+  - 'Correct 16-sector wind rose: north at the top, compass order clockwise, equal
+    sector widths, sectors centred on their compass points (Math.round binning)'
+  - Speed bins of a round width (2.5 m/s) derived from the 90th percentile of the
+    speeds, giving four meaningful classes with an open-ended ≥ 7.5 m/s top class
+  - Speed classes colored in four discrete steps of imprint_seq interpolated from
+    the theme tokens, identical in both renders, with a legend that gives each range
+  - Three-level compass typography (cardinal bold ink, intercardinal semibold ink,
+    secondary regular ink-soft) gives the rim a clear hierarchy
+  - Frequency ring labels are placed along the sector boundary with the fewest observations
+    and carry a page-colored halo, so they never collide with spokes
+  - Page-colored separators between stacked segments and small sector gaps keep every
+    segment readable in both themes
+  - Uses the ChartsContainer + useDrawingArea custom-layer pattern the library prompt
+    recommends for a chart type MUI X community lacks, with skipAnimation and all
+    chrome threaded through ANYPLOT_TOKENS
   weaknesses:
-  - 'VQ-01 (both): ring labels ("5 %" … "20 %") and the secondary compass points (NNE,
-    ENE, …) at 14–15 px in soft ink shrink to about 5 px in the 400 px thumbnail and
-    blur into the grid → about 17–18 px (+3 px). Likely cause: ring label fontSize={15}
-    and the secondary rank of [16, 15, 14] in WindRoseLayer.'
-  - 'Suggestion: a tooltip on each wedge (direction, speed bin, share) would add value
-    to the HTML view.'
-  - 'Suggestion: the two middle ramp steps (2.5–5 and 5–7.5 m/s) are close in lightness;
-    interpolating in a perceptual space instead of RGB would separate them a little
-    more.'
+  - 'Suggestion: the legend repeats the unit in every entry although its title already
+    says (m/s); bare ranges (0–2.5, 2.5–5, …) would read lighter.'
+  - 'Suggestion: the 2.5–5 and 5–7.5 m/s steps are close in hue; a slightly lighter
+    first or darker last step within imprint_seq would widen the middle contrast.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: title "windrose-basic · javascript · muix · anyplot.ai" bold dark ink centered at top, a soft-ink subtitle (4,380 observations · 16 sectors of 22.5° · spoke length: share of all observations (%)); four subtle grey frequency rings labelled 5 % – 20 % along the NE/ENE boundary; 16 compass labels around the rim (bold N/E/S/W, semibold NE/SE/SW/NW, soft secondary points); legend band at the bottom "Wind speed (m/s)" with four swatches. All text is readable.
-      Data: 16 equal-width stacked wedges, north at top, clockwise. Prevailing SW/SSW spokes reach about 17 %, a secondary NW/WNW lobe reaches about 10–12 %, and the east side is almost empty. Speed bins use the imprint_seq steps: brand green #009E73 (0–2.5), teal, steel teal, blue #4467A3 (≥ 7.5), separated by thin page-colored strokes.
+      Background: warm off-white #FAF8F1 across the whole square 2400x2400 canvas.
+      Chrome: title "windrose-basic · javascript · muix · anyplot.ai" bold dark ink at top centre, ink-soft subtitle "4,380 observations · 16 sectors of 22.5° · spoke length: share of all observations (%)"; 16 compass labels around the rim (N/E/S/W bold, NE/SE/SW/NW semibold, secondary points regular ink-soft); four light-grey frequency rings labelled 5 %, 10 %, 15 %, 20 % along the quiet ENE–NE boundary; HTML legend at the bottom "Wind speed (m/s)" with four swatches. All text readable.
+      Data: 16 stacked spokes, longest at SW (~17 %), then SSW and WSW, a secondary NW/WNW lobe, near-empty E/NE sectors; segments step from brand green #009E73 (0–2.5 m/s) through teal and slate to blue #4467A3 (≥ 7.5 m/s), separated by thin page-colored strokes.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, cardinal labels and legend text in light ink; subtitle, ring labels and secondary compass points in light soft ink; rings dark grey but visible. No dark-on-dark text.
-      Data: wedge geometry and the four bin colors are identical to the light render; only the separator stroke flips to the dark page color. Brand green stays clearly visible.
+      Chrome: title, subtitle, compass labels, ring labels and legend text flip to light ink / light ink-soft; rings are subtle dark-grey; no dark-on-dark text anywhere.
+      Data: segment colors identical to the light render (same four imprint_seq steps); separators now in the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Readable at full size in both themes; ring labels and secondary compass
-          points at 14–15 px blur in the 400 px thumbnail (defect line)
+        comment: Title 22 px, compass 18–20 px, ring labels 18 px, legend 16 px CSS
+          (2x device scale); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ring labels run along the quietest sector boundary
-          with a halo
+        comment: Ring labels sit on the quietest sector boundary with a halo; no text
+          collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wedges well separated by page-colored strokes; thin rare-direction
-          segments are permitted by the spec
+        comment: Segments separated by page-colored strokes; thin segments in rare
+          sectors are permitted by the spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monotone green-to-blue lightness ramp, no red-green signal
+        comment: Single-hue-shift sequential ramp green→blue, ordered, no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, the rose is centered with balanced margins, title
-          ~45 % of the width, no overflow
+        comment: Square 2400x2400, rose centred, title/legend bands balanced, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Subtitle states the radial unit (%), legend title 'Wind speed (m/s)'
+        comment: Legend title 'Wind speed (m/s)' with unit; rings in %, subtitle states
+          what spoke length means
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ordered speed bins in four imprint_seq steps from #009E73 to #4467A3;
-          correct backgrounds in both themes'
+        comment: 'Ordered speed classes in discrete imprint_seq steps starting at
+          #009E73; correct theme backgrounds'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Three-level compass typography (bold cardinals, semibold intercardinals,
-          soft secondary points) and an explanatory subtitle with weight and color
-          hierarchy
+        comment: Three-level compass typography (weight and ink tier by point rank)
+          and haloed ring labels go beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Sector gaps plus page-colored segment strokes, haloed ring labels
-          placed on the quietest sector boundary, a ring count chosen from the data
+        comment: Ring labels placed on the computed quietest boundary, page-colored
+          segment separators and sector gaps
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
+        passed: true
+        comment: Subtitle spells out sample size, sector width and the radial encoding;
+          prevailing SW with secondary NW regime reads at once
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard wind rose; no reference rings, highlights or callouts
+        comment: Standard stacked wind rose, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: '16 sectors, north on top clockwise, compass labels, rings from zero
-          in %, stacked speed bins in fixed order, legend with ranges: all characteristic
-          bullets met'
+        comment: North up, clockwise compass, labelled frequency rings from zero,
+          stacked speed bins, legend with ranges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Wedge radii are cumulative bin shares on a linear radial scale; sectors
-          centered on their compass points
+        comment: Segment radial lengths equal bin shares; rings start at zero at the
+          centre
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend entries give each speed range
+        comment: Mandated title format; legend entries match the bins
     data_quality:
       score: 15
       max: 15
@@ -170,21 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Prevailing direction, a secondary regime, near-empty sectors and
-          all four speed bins are visible
+        comment: Lopsided rose with prevailing and secondary directions, all four
+          speed classes present in main sectors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Half a year of hourly readings at a coastal weather station, neutral
+        comment: Half a year of hourly coastal station readings, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Speeds from exponential distributions with 1.7–3.4 m/s scales, top
-          class ≥ 7.5 m/s, spokes up to ~17 %: plausible; no Check values in the spec'
+        comment: Speeds exponential with means ~2–3 m/s, plausible; shares sum to
+          100 % (counts / n); 4,380 observations within the 500–50,000 range
     code_quality:
       score: 10
       max: 10
@@ -194,14 +190,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the only component besides Chart is the layer that
-          needs the useDrawingArea hook
+        comment: Linear data → bins → wedges flow; the only components are the required
+          layer and Chart
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded PRNG (seed 42)
+        comment: Seeded mulberry32 PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,51 +209,50 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No polar bar in the community package, so the hand-drawn arcs are
-          necessary; binning and nice steps are short
+        comment: Short written-out binning, allowed by the library prompt's Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          square directive present
+        comment: Default-export Chart sized from ANYPLOT_SIZE, skipAnimation, v9 import
+          paths
     library_mastery:
       score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Composition API used correctly; the legend is hand-built HTML rather
-          than a library legend
+        comment: ChartsContainer composition with a custom SVG layer positioned through
+          useDrawingArea, the recommended v9 pattern for a missing chart type
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Custom SVG layer composed inside ChartsContainer through the useDrawingArea
-          hook
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T07:08:17Z'
+  rendered_at: '2026-11-08T07:13:21Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-svg
-  - polar-coordinates
-  - legend
+  - polar-projection
+  - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep:
   - binning
   - normalization
   - cumulative-sum
   styling:
-  - custom-colormap
   - minimal-chrome
+  - publication-ready
