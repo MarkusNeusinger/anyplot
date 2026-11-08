@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:18:53Z'
-updated: '2026-11-08T22:24:52Z'
+updated: '2026-11-08T22:30:45Z'
 generated_by: claude-opus-5-5
 adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
 workflow_run: 42526571739
@@ -16,42 +16,40 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/
 quality_score: 89
 review:
   strengths:
-  - Both panels live in one pygal.XY chart with the ACF shifted up by a computed offset,
-    so every lag lines up vertically on one shared lag axis, and each panel gets its
-    own y tick labels (1, 0.5, 0, -0.5) through dict-valued y_labels
-  - Thin stems drawn as interrupted XY line segments (allow_interruptions with None
-    breaks) from each panel's zero baseline to the value, with a small dot at each
-    head; ACF includes lag 0 at 1.0 and PACF starts at lag 1
-  - ACF and PACF are computed with statsmodels acf/pacf, and the 1.96/sqrt(N) bound
-    is computed and printed in the axis title (±0.139 for N=200)
-  - Stems outside the 95% bounds are brand green and stems inside are muted ink, a
-    hierarchy that makes the significant lags (seasonal oscillation in ACF, cutoff
-    after lag 11 in PACF) read at a glance
-  - Theme tokens are threaded through Style and the injected CSS (zero baselines in
-    INK, guides in RULE), so both renders are fully legible; the HTML export keeps
-    per-point tooltips with signed values via a custom formatter
+  - Computes ACF and PACF with statsmodels (acf with fft, pacf with method='ywm')
+    and the bound as 1.96/sqrt(N) = ±0.139, so every stem ends at its computed value
+    and the dashed bounds sit symmetrically about zero in both panels
+  - Builds two stacked panels on one pygal XY chart sharing a single lag axis, so
+    each lag lines up vertically between ACF (lag 0 to 36, lag 0 = 1.0) and PACF (lag
+    1 to 36), with the panel names ACF and PACF placed as the y labels at each zero
+    line
+  - 'Thin stems drawn as one interrupted series per color (allow_interruptions with
+    None breaks) plus small head dots, with stems outside the bounds in brand green
+    #009E73 and those inside in muted ink, a hierarchy that makes the significant
+    lags and the 12-month seasonal pattern read at a glance'
+  - 'Theme tokens threaded through Style and inline CSS: warm backgrounds, light ink
+    in dark mode, and dashed bounds readable in both renders; vertical guides and
+    the x-axis line are switched off so nothing cuts through the lag-0 stem'
+  - 'Library-native interactivity: per-point formatters show the un-offset correlation
+    value (for example +0.833) in the HTML tooltips'
   weaknesses:
-  - 'SC-02 (both): the y axis carries one shared title ''Correlation'' and the panels
-    are named only by bold corner labels, while the spec asks for y axes labeled ACF
-    and PACF respectively → make each panel''s y labeling read ACF / PACF (for example
-    drop the generic ''Correlation'' y_title and fold the panel name into the y labeling
-    of each panel, such as ''ACF'' and ''PACF'' as the panel''s axis label text at
-    its zero line). Likely cause: y_title=''Correlation'' with the panel names only
-    in print_labels.'
-  - 'Suggestion: the gap between the ACF''s lowest stem (about -0.62) and the PACF
-    label is wider than the gap above the ACF; a slightly smaller GAP would tighten
-    the two panels.'
+  - 'Suggestion: the ACF and PACF panels share one y-axis track, so each panel''s
+    zero tick is replaced by its name; a small ''0'' beside the panel name would keep
+    the zero line labelled numerically.'
+  - 'Suggestion: the x-axis title carries the bound value as well as the lag unit;
+    a shorter ''Lag (months)'' with the ±0.139 note in a subtitle would leave the
+    axis title lighter.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
-      Chrome: bold dark title "acf-pacf · python · pygal · anyplot.ai" centered at top (~42% width); y-axis title "Correlation" rotated at left; x-axis title "Lag (months) · dashed lines: 95% confidence bounds ±0.139" at bottom; x ticks 0–36 every 6; per-panel y ticks (1, 0.5, 0, -0.5 for ACF; 0.5, 0, -0.5 for PACF); bold "ACF" and "PACF" labels at each panel's top right. Subtle horizontal guides, dark zero baselines, black dashed 95% bound lines in both panels. All text dark and readable.
-      Data: thin vertical stems with small head dots; stems outside the bounds in #009E73, inside the bounds in muted gray #6B6A63. ACF starts at 1.0 at lag 0 and oscillates with a 12-month period (peaks near lags 12, 24, 36, troughs near 6, 18, 30); PACF starts at lag 1 (~0.83), negative spikes at lags 2–4, positive at 6–11, then inside the bounds.
+      Background: warm off-white #FAF8F1 across the whole canvas, 3200x1800 landscape.
+      Chrome: bold dark title "acf-pacf · python · pygal · anyplot.ai" centered at top (about 42% of the width); y tick labels 1, 0.5, -0.5 for the ACF panel and 0.5, -0.5 for the PACF panel in dark ink, with "ACF" and "PACF" as the labels at each panel's zero line; x ticks 0 to 36 every 6 lags; x-axis title "Lag (months) · dashed lines: 95% confidence bounds ±0.139". Subtle horizontal guides. All text readable.
+      Data: top panel ACF lags 0-36 as thin vertical stems with head dots, lag 0 at 1.0, a sinusoidal 12-month pattern with peaks near lags 12, 24, 36 and troughs near 6, 18, 30; bottom panel PACF lags 1-36, lag 1 about 0.83, lags 2-3 near -0.48, then significant stems through lag 11 and small stems inside the bounds afterwards. Stems outside the bounds are #009E73 green, those inside muted grey. Black dashed lines at ±0.139 in each panel, a solid zero baseline per panel.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles, tick labels and panel labels in light ink; zero baselines light; dashed bound lines light; guides subtle but visible. No dark-on-dark text anywhere.
-      Data: stem colors identical to the light render (#009E73 significant); only the muted insignificant stems flip to the theme's light muted tone (#A8A79F), as the INK_MUTED chrome token does. Same layout and values.
+      Background: warm near-black #1A1A17.
+      Chrome: title, tick labels, panel names and x-axis title in light ink (#F0EFE8 / #B8B7B0) on the dark surface; dashed bounds and zero lines flip to light; guides subtle but visible. No dark-on-dark text.
+      Data: identical stems and dots, the same #009E73 green for significant lags; insignificant stems use the lighter muted token so they stay visible. Layout identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,50 +61,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 66, ticks 44, axis titles 52); all text
-          readable in both themes
+        comment: Title 66, ticks and labels 44 set explicitly; readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; panel labels sit above the tallest stems
+        comment: No text collisions; stems and head dots well separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems and head dots clearly visible for 37+36 lags; dashed bounds
-          visible in both themes
+        comment: 37 + 36 stems at 5 px with 9 px head dots, appropriate for sparse
+          lags; muted stems still visible in dark mode
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs muted gray differs in luminance, and significance is also
-          readable from position vs the dashed bounds
+        comment: Green vs neutral grey plus position relative to the dashed bounds;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off
+        comment: 3200x1800, balanced panels with a clear gap, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Lag (months)'' with unit and the bound value; ''Correlation''
-          descriptive'
+        comment: x 'Lag (months)', y panels labelled ACF and PACF
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary series #009E73, muted anchor from INK_MUTED, correct backgrounds
-          in both themes'
+        comment: 'Significant stems #009E73, neutral muted ink for the rest; correct
+          backgrounds in both themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -114,24 +111,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bold title and bold corner panel labels give a clear typographic
-          hierarchy beyond the baseline
+        comment: Bold title, panel names set at each zero line as the y label, and
+          a two-tone green/muted hierarchy chosen beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Per-panel tick ranges, x-axis line removed, per-panel ink zero baselines,
-          thinner dashed bounds than stems
+        comment: Vertical guides and the x-axis line removed so nothing crosses the
+          lag-0 stem, CI lines thinner than stems, bound value folded into the axis
+          title
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Self-chosen significance coloring (green outside bounds, muted inside)
-          makes the seasonal ACF and the PACF cutoff the focal points
+        comment: Muting stems inside the bounds makes significant lags and the 12-month
+          seasonality the focal point, a hierarchy the Notes do not prescribe
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked ACF/PACF stem plots on a shared lag axis
+        comment: Stacked ACF/PACF stem plots
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Stems, dashed ±1.96/sqrt(N) bounds, lag 0 in ACF only, 36 lags, x
-          labeled Lag all present; y axes are titled 'Correlation' instead of ACF
-          / PACF (defect line)
+        comment: ACF top, PACF bottom, shared lag axis, thin stems, dashed ±1.96/sqrt(N)
+          bounds, ACF from lag 0, PACF from lag 1, 36 lags, labels Lag/ACF/PACF
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every stem at its own lag, ending at its computed value; ranges include
-          negative values and the lower bound
+        comment: Each stem at its lag and computed value; both panels' ranges include
+          negatives and the lower bound
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend hidden, N/A (bounds explained in the
-          axis title)
+        comment: Mandated title format; legend N/A (hidden, panel names label the
+          series)
     data_quality:
       score: 15
       max: 15
@@ -171,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Slowly decaying, seasonal ACF with many significant lags; PACF with
-          a few significant lags then inside the bounds
+        comment: Slow oscillating ACF with seasonal spikes, PACF cutting into the
+          bounds after a few lags, stems inside and outside the bounds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly airline-style passenger series with trend and 12-month seasonality,
+        comment: Monthly airline passenger counts with trend and 12-month seasonality,
           neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: ACF lag 0 = 1.0; bound 1.96/sqrt(200)=0.1386, computed
-          and shown as ±0.139; 200 obs within 100–500; 36 lags within 30–40'
+        comment: ACF lag 0 = 1.0 read off the axis; bound 1.96/sqrt(200) = 0.139 computed
+          in code and shown; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -214,14 +211,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: statsmodels acf/pacf used rather than hand-rolled; the offset layout
-          is the necessary stand-in for subplots pygal lacks
+        comment: ACF/PACF from statsmodels rather than written out; panel offset logic
+          is compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with pygal 3 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
       score: 7
       max: 10
@@ -231,32 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: XY with allow_interruptions for stems, per-point dict values carrying
-          color, dict y_labels for per-panel ticks
+        comment: pygal.XY with allow_interruptions for stem segments, Style tokens,
+          custom y_labels dicts for per-panel ticks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: print_labels for in-plot panel names, inline CSS injection, stroke_style
-          dasharray, per-series value formatter for tooltips in the HTML
-  verdict: REJECTED
+        comment: Per-point color dicts, per-series formatter for tooltips, stroke_style
+          dasharray and inline CSS injection
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-08T21:44:10Z'
+  rendered_at: '2026-11-08T22:28:08Z'
 impl_tags:
   dependencies:
   - statsmodels
   techniques:
-  - manual-ticks
+  - subplots
+  - custom-css
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
+  - autocorrelation
   styling:
   - minimal-chrome
-  - grid-styling
+  - theme-adaptive

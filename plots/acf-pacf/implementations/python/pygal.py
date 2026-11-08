@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 89/100 | Updated: 2026-11-08
