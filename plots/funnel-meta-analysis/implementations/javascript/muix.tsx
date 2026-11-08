@@ -147,7 +147,7 @@ export default function Chart() {
             x={NULL_EFFECT}
             label={`Null effect ${NULL_EFFECT}`}
             labelAlign="end"
-            lineStyle={{ stroke: t.inkSoft, strokeWidth: 2, strokeDasharray: "3 5" }}
+            lineStyle={{ stroke: t.inkSoft, strokeWidth: 2, strokeDasharray: "8 6" }}
             labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
           />
         )}
