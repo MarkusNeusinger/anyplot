@@ -159,10 +159,10 @@ class ToolCall:
     """One root tool call of the turn: its name, the guards' verdict and what it did, closed codes only.
 
     `tool` is a root tool's name or `other` (a name the model made up); `verdict` a `GuardVerdict`; `outcome` a
-    `CallOutcome`. Never an argument, a result or a word of the user: what the feedback case bundle and the turn's
-    outcome (`stream.turn_outcome`) read. The record keeps the order the guards saw the calls in; a call the Budget
-    plugin answered first goes in when it closes, which under parallel calls of one model answer can be after a call
-    the model made later."""
+    `CallOutcome`. Never an argument, a result or a word of the user: what the turn's outcome
+    (`stream.turn_outcome`) reads, and what the feedback case bundle is to carry once it keeps a turn's calls (backend
+    PR B6; the record lives with the request and is not stored yet). The record keeps the order the guards saw the
+    calls in: ToolSafety notes each call before it runs, and the Budget plugin a pipeline run it refuses first."""
 
     tool: str
     verdict: GuardVerdict = TOOL_ALLOWED
@@ -281,10 +281,10 @@ class RequestLedger:
     tools: list[str] = field(default_factory=list)
     """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
     tool_calls: list[ToolCall] = field(default_factory=list)
-    """Every root tool call of the turn in the order the root made them, refused ones too, each with the guards'
-    verdict and what it did (`ToolCall`), written by ToolSafety (`open_call`, `close_call`): the turn's `done.turn`
-    (`stream.turn_outcome`) and the feedback case bundle's record of the root's calls read it. `tools` stays the
-    allowed names alone, which the usage telemetry and EmptyReply read."""
+    """Every root tool call of the turn in the order the guards saw them, refused ones too, each with the guards'
+    verdict and what it did (`ToolCall`), written by ToolSafety and, for a pipeline run it refuses first, the Budget
+    plugin (`open_call`, `close_call`): the turn's `done.turn` (`stream.turn_outcome`) reads it, and the feedback case
+    bundle is to carry it (B6). `tools` stays the allowed names alone, which the usage telemetry and EmptyReply read."""
     open_calls: dict[str, list[int]] = field(default_factory=dict, repr=False)
     """The `tool_calls` indexes still waiting for their answer, by ADK's function call id (the tool's name for a call
     without one): parallel calls of one model answer close in any order. Never logged or sent."""
@@ -365,10 +365,9 @@ class RequestLedger:
         self.open_calls.setdefault(key, []).append(len(self.tool_calls) - 1)
 
     def close_call(self, key: str, tool: str, outcome: CallOutcome, *, early_verdict: str) -> None:
-        """Note what an opened call did; a refused call stays `refused`. A call no `open_call` noted and whose
-        answer is an error was answered before ToolSafety saw it (the Budget plugin's refusal of a pipeline run): it
-        goes in as refused by `early_verdict`. One that answered otherwise ran (its note failed): it goes in as
-        allowed, with what it did, so a change it stored still counts."""
+        """Note what an opened call did; a refused call stays `refused`. A call no `open_call` noted (its note
+        failed) goes in when it closes: refused by `early_verdict` when its answer is an error, which a plugin before
+        ToolSafety may have given, else allowed with what it did, so a change it stored still counts."""
         waiting = self.open_calls.get(key)
         if not waiting:
             if outcome == "error":

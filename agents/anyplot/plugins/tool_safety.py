@@ -48,9 +48,9 @@
   with a fixed code; the exception text never reaches the model.
 * The turn's record of the root's calls (`RequestLedger.tool_calls`): `before_tool_callback` notes each call with its
   verdict, `after_tool_callback` what it did (`call_outcome`, read from the tool's own answer, so a change stored
-  before the checks above refused the result still counts; a reader's answer they refused is an `error`), a call the
-  Budget plugin answered first as refused by `budget`. Closed names and codes only, never an
-  argument or a result: the `done` event's `turn` and the feedback case bundle read it.
+  before the checks above refused the result still counts; a reader's answer they refused is an `error`); the Budget
+  plugin notes a pipeline run it refuses before this plugin sees it, refused by `budget`. Closed names and codes only,
+  never an argument or a result: the `done` event's `turn` reads it, and the feedback case bundle is to carry it.
 
 Every refusal is `{"status": "error", "code": <enum>}`. The plugin never raises.
 """

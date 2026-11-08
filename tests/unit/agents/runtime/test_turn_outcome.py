@@ -126,6 +126,8 @@ class TestRecord:
             tool_context=context,  # type: ignore[arg-type]
         )
         assert refusal == {"status": "error", "code": "budget"}  # the chain ends: ToolSafety's before never runs
+        # A parallel call of the same model answer that closes first stays after it, where the root made it.
+        await call(ToolSafetyPlugin(), "set_language", {"language": "de"}, {"status": "ok"}, call_id="c2")
 
         await ToolSafetyPlugin().after_tool_callback(
             tool=FakeTool("plot_pipeline"),
@@ -134,8 +136,12 @@ class TestRecord:
             result=refusal,  # type: ignore[arg-type]
         )
 
-        assert ledger.tool_calls == [ToolCall("plot_pipeline", "budget", "refused")]
-        assert ledger.tools == []
+        assert ledger.tool_calls == [
+            ToolCall("plot_pipeline", "budget", "refused"),
+            ToolCall("set_language", "allowed", "changed"),
+        ]
+        assert ledger.tools == ["set_language"]
+        assert ledger.open_calls == {}
 
     async def test_a_name_the_model_made_up_is_kept_as_other(self, ledger: RequestLedger) -> None:
         await call(ToolSafetyPlugin(), "mail_my_boss@example.com", {}, {})
