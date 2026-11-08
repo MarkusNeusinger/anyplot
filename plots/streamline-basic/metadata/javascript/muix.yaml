@@ -2,136 +2,137 @@ library: muix
 language: javascript
 specification_id: streamline-basic
 created: '2026-09-09T19:17:51Z'
-updated: '2026-09-09T19:30:55Z'
-generated_by: claude-sonnet
-workflow_run: 34393092107
+updated: '2026-11-08T06:15:28Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42453311976
 issue: 2861
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - Physically accurate electric dipole field lines traced with RK4 arc-length integration
-    of the normalized field direction, matching the spec's electromagnetic-field-line
-    application and showing both closed (looping +/- to -) and open (escaping) topology
-  - Axis labels fixed from the previous generic 'x'/'y' to descriptive 'x (normalized
-    distance)' / 'y (normalized distance)', resolving the prior review's VQ-06 weakness
-  - Grid refined to horizontal-only with a lighter stroke, giving the field-line curves
-    a cleaner, less cluttered backdrop than the previous attempt
-  - Direction arrows increased from 2 to 3 per field line, better reinforcing flow
-    direction and the magnitude-color gradient
-  - Creative, idiomatic use of MUI X's compositional API (ChartContainer + useXScale/useYScale/useDrawingArea)
-    to build a custom SVG overlay for charge markers, direction arrowheads, and a
-    manual field-strength gradient legend
-  - 'Both renders remain theme-correct: identical data colors between light/dark,
-    chrome (background, ink, legend, charge-marker fill/text) flips appropriately
-    with no dark-on-dark or light-on-light failures'
+  - Streamlines are traced from the bilinear-interpolated (u, v) grid with mask-based
+    seeding from the border inward, giving smooth, non-crossing curves across the
+    whole domain at a balanced density (54 lines)
+  - Equal pixels per data unit on both axes keeps the dipole's geometry undistorted
+  - Field magnitude is encoded with imprint_seq through a MUI X zAxis colorMap; the
+    custom line layer reads useZAxis().colorScale and the same z axis drives a ContinuousColorLegend
+    titled "log₁₀ magnitude"
+  - One arrowhead per line, filled in the line's local color, shows flow direction
+    without competing with the curves
+  - Composition API (ChartsDataProvider + ChartsSurface + useXScale/useYScale) lets
+    the hand-drawn streamlines share the library's axes and grid; all chrome uses
+    theme tokens and reads well in both themes
+  - 'Physically correct dipole field: lines leave the + charge, enter the - charge,
+    symmetric about both axes'
   weaknesses:
-  - 'New overlap regression introduced by the axis-label fix: the rotated y-axis label
-    ''y (normalized distance)'' visually crosses through the ''0.5'', ''0.0'', and
-    ''-0.5'' tick labels in BOTH renders (letters overstrike the digits) — increase
-    the left margin or shift the axis-label offset further left so the longer descriptive
-    label no longer collides with the tick-label column'
-  - Direction arrows are still only 3 per field line — a bit more density, or the
-    spec's optional field-strength-driven line-width emphasis near the charges, would
-    reinforce flow further
+  - 'Suggestion: the magnitude color varies only subtly along most lines (nearly all
+    read as green); a color range clipped to the percentiles of the plotted values
+    would let the blue end of imprint_seq show where the field is strong.'
+  - 'Suggestion: the color-bar title could name the field ("log₁₀ |E|") so the reader
+    does not have to infer what magnitude is meant.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white and not dark.
-      Chrome: Title "Electric Dipole Field Lines · streamline-basic · javascript · muix · anyplot.ai" is dark ink, centered, and clearly readable. X-axis label "x (normalized distance)" is dark-on-light and clearly readable below the x-axis ticks. Y-axis label "y (normalized distance)" is dark-on-light but rotated and positioned so its glyphs directly overstrike the "0.5", "0.0", and "-0.5" y-axis tick labels — those three tick numbers are visually crossed-out by the label text, a real (non-severe) overlap defect. All other tick labels, the "Field strength" gradient legend (weak/strong), and the title are unaffected and fully legible. Horizontal grid lines are light gray and subtle; no vertical grid lines (improved from the previous attempt).
-      Data: Field lines run from a black "+" marker to a black "−" marker (two point charges), colored on a teal-to-blue gradient (imprint_seq) keyed to local field-strength magnitude. Three small triangular arrowheads per line (up from two in the previous attempt) show flow direction from + to −.
-      Legibility verdict: PASS overall, with one localized FAIL — the y-axis label overlaps three of its own tick labels (0.5 / 0.0 / -0.5), reducing their individual legibility even though every other text element is clean.
+      Background: warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: bold dark title "streamline-basic · javascript · muix · anyplot.ai" centered at top, softer subtitle "54 streamlines traced through a 50 × 28 grid of (Ex, Ey), normalized field"; top-right color bar (green to blue, -1.5 to 1.4) labelled "log₁₀ magnitude"; x axis -4.5..4.5 and y axis -2.5..2.5 with 0.5 ticks, axis titles "x (normalized distance)" / "y (normalized distance)"; subtle gray grid both ways. All text dark and readable.
+      Data: 54 smooth, non-crossing streamlines of a dipole field: lines fan out of the source at x≈-1.1 to the left/top/bottom edges, enter the sink at x≈+1.1 from the right, and nested arcs connect the two through the center. One arrowhead per line, pointing away from the source and into the sink. Lines are mostly #009E73 green, shading toward teal-blue near the charges (imprint_seq). Small empty patches around the two charges.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black and not light.
-      Chrome: Title, x-axis label, and tick labels all render in light ink, clearly readable against the dark background. The same y-axis label/tick-label overlap present in the light render recurs identically here — "y (normalized distance)" overstrikes "0.5", "0.0", and "-0.5". Charge markers flip to a light (cream) fill with dark +/− glyphs, consistent with chrome-only theme adaptation. Horizontal grid lines are dark gray and subtle; no vertical grid lines.
-      Data: The field-line gradient (teal-to-blue) is visually identical to the light render — only chrome (background, text, marker fill) flipped, not the data-encoding colors. Arrowheads remain the same per-segment color as their parent line.
-      Legibility verdict: PASS overall, with the same localized y-axis-label overlap FAIL as the light render — no dark-on-dark failures beyond that pre-existing overlap.
+      Background: warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: title, subtitle, color-bar label and min/max values, tick labels and axis titles all in light ink; grid subtle gray; no dark-on-dark text.
+      Data: identical streamlines, arrowheads and green-to-blue colors to the light render; only the chrome flipped. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout and readable in both themes, but the
-          y-axis label overstriking its own tick labels reduces legibility of those
-          three numbers
+        comment: All sizes set explicitly (title 22, subtitle 15, axis labels 16,
+          ticks 14, color-bar 14-15 CSS px, per the muix sizing guidance); readable
+          in both themes, balanced x/y labels and ticks
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Rotated y-axis label 'y (normalized distance)' visually overlaps
-          the 0.5 / 0.0 / -0.5 tick labels in both renders; main content elsewhere
-          is unaffected
+        passed: true
+        comment: No text collisions; arrowheads sit on their own lines; streamlines
+          never cross
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 16 field lines at 2.75px stroke with 3 direction arrows per line
-          read clearly without clutter; density well balanced
+        comment: '54 lines at 2.2 px with round caps and 10 px arrowheads: clearly
+          visible, curves stay the main mark, arrows sparse (one per line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal-to-blue gradient plus directional arrows avoid relying on hue
-          alone; good contrast
+        comment: Single continuous green-to-blue ramp, no red-green signal; lines
+          contrast well with both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; legend sits
-          near the plot, not isolated
+        comment: Canvas gate passed (3200x1800); equal-aspect plot area fills ~78%
+          of width and most of the height, color bar right-aligned with the plot edge,
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels now descriptive ('x (normalized distance)' / 'y (normalized
-          distance)'), fixing the prior generic 'x'/'y'
+        comment: '"x (normalized distance)" / "y (normalized distance)": descriptive
+          with (dimensionless) unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous magnitude encoding uses imprint_seq; theme-correct backgrounds
-          and chrome in both renders
+        comment: 'Continuous magnitude on imprint_seq (t.seq[0] #009E73 -> t.seq[1]
+          #4467A3) via zAxis colorMap; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct;
+          data colors identical across themes'
     design_excellence:
-      score: 17
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom charge markers, gradient legend, and arrowheads remain clearly
-          above library defaults
+        comment: 'Beyond baseline: equal pixels per data unit so the dipole''s geometry
+          is undistorted; a title/subtitle hierarchy (600 weight ink over inkSoft
+          subtitle); color bar with its quantity label set as a compact header row
+          aligned to the plot''s right edge'
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Grid switched to horizontal-only and lightened per prior feedback,
-          giving a cleaner, more polished composition
+        comment: Round caps/joins and arrowheads filled in their line's local color;
+          plot area centered by computed margins; grid is full both ways (baseline),
+          so only a modest raise
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Color-by-magnitude plus directional arrows and charge markers guide
-          the viewer to the field topology
+        comment: Data displayed clearly; the magnitude color varies only subtly along
+          most lines, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +142,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine streamline/field-line plot via RK4 numerical integration,
-          not a quiver approximation
+        comment: Streamline plot of a single vector field; only the Notes-allowed
+          color encoding and direction arrows, no quiver, background field, charge
+          markers or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Balanced density, magnitude-encoded color, well-distributed seed
-          points
+        comment: Smooth non-crossing curves; seeds across the whole domain (border-inward
+          mask seeding) tracing source, sink and the connecting arcs at balanced density;
+          sparse arrows pointing with the field; color bar names the encoded scalar
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correctly mapped; display domain deliberately cropped where the
-          field is empty
+        comment: x/y correct, axes span the full grid -4.5..4.5 x -2.5..2.5; lines
+          traced from the bilinear-interpolated field, no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format with descriptive prefix; legend
-          labels correct
+        comment: Title "streamline-basic · javascript · muix · anyplot.ai" correct;
+          color-bar title "log₁₀ magnitude" is reader text with min/max labels
     data_quality:
       score: 15
       max: 15
@@ -173,58 +176,63 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both closed and open field-line topology, direction, and magnitude
-          variation
+        comment: 'Dipole shows a source, a sink, lines connecting them and lines leaving
+          through the domain edge: the field structures a streamline plot is meant
+          to reveal'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible physics scenario (electric dipole)
+        comment: 'Electric field of a +/- unit-charge dipole: a real, neutral physics
+          scenario named in the spec''s Applications'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Field topology and curvature are physically accurate for a dipole
+        comment: 'Checked: E = sum q (r - r_c)/|r - r_c|^3 (lines 45-49); render shows
+          lines leaving the + charge at x=-1.1 and entering the - charge at x=+1.1,
+          mirror symmetry about x=0 and y=0, center arcs pointing +x as expected'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Several helper functions, but each is justified by the RK4 integration
-          and segment-coloring the spec requires
+        comment: Module-level data -> plot computation; the one inner component (Streamlines)
+          exists because the scale hooks must run inside ChartsDataProvider
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic closed-form field, no randomness
+        comment: Fully deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used MUI X components and hooks are imported
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the visualization; no fake interactivity
+        comment: Hand-written streamline integration and mask seeding; nothing available
+          in @mui/x-charts computes it, so no leanness deduction
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component per the harness contract; skipAnimation
-          set; current MUI X API
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 composition API (ChartsDataProvider/ChartsSurface)
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,26 +240,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ChartContainer + scale/drawing-area hooks, the recommended composition
-          pattern for custom overlays
+        comment: 'Composition API: ChartsDataProvider + ChartsSurface with ChartsGrid/ChartsXAxis/ChartsYAxis
+          and a custom layer reading useXScale/useYScale, so axes, grid and marks
+          share one scale'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: The scale-hook-driven overlay (charge markers, arrows, manual gradient
-          legend) leverages MUI X internals that aren't easily replicated in another
-          library
+        comment: 'zAxis continuous colorMap consumed by a custom SVG layer through
+          useZAxis().colorScale, and the same z axis feeding ContinuousColorLegend:
+          MUI X''s z-axis/legend plumbing'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:12:03Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - patches
+  - colorbar
+  - layer-composition
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - interpolation
   styling:
-  - gradient-fill
+  - custom-colormap

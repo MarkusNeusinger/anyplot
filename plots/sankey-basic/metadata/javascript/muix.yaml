@@ -2,73 +2,58 @@ library: muix
 language: javascript
 specification_id: sankey-basic
 created: '2026-07-25T12:21:06Z'
-updated: '2026-07-25T12:40:29Z'
-generated_by: claude-sonnet
-workflow_run: 30157585528
+updated: '2026-11-08T04:48:03Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42447687119
 issue: 810
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - 'Both attempt-1 findings were properly fixed: Wind+Solar are merged into a single
-    "Renewables" source node so only canonical palette positions 1-4 are used (the
-    reserved semantic-red anchor #AE3030 at position 5 is no longer spent on a non-error
-    category), and a genuine Sugiyama-style barycenter node-reordering pass (4 alternating
-    sweeps) was added, visibly cutting ribbon crossings between the Sources and Carriers
-    columns'
-  - 'Exact flow conservation is preserved after the data change: 42+46+22+27 = 137
-    TWh in, 116+21 = 137 TWh through carriers, 30+12+47+48 = 137 TWh out'
-  - 'Clever, well-executed escape hatch for a chart type MUI X community doesn''t
-    ship: hand-rolled node stacking and cubic-bezier ribbon geometry built entirely
-    on `ChartContainer` + `useXScale`/`useYScale`, no Pro imports, no second charting
-    library'
-  - Both renders are fully theme-adaptive; categorical data colors stay pixel-identical
-    between light and dark, only chrome (background/text/grid) flips
-  - '`skipAnimation` set, chart sized from `window.ANYPLOT_SIZE`, deterministic in-memory
-    data — meets every harness contract requirement'
+  - 'Correct three-stage Sankey: every link keeps its value''s width end to end on
+    one shared px-per-unit scale, and every bar is as tall as its larger of in- and
+    outflow (Electricity 116 = 116, Heat 21 = 21 TWh)'
+  - Links stack along each node edge in the order of the nodes at their other end,
+    and barycentre sweeps order each stage, so only two crossings remain and both
+    stay easy to follow
+  - 'Links carry their sender''s Imprint hue at 0.45 opacity, Coal first in brand
+    green #009E73, and the matte-red slot is skipped; sink nodes stay neutral in the
+    inkSoft token, so the colors name the sources'
+  - 'Two-level node labels (16 px bold name in ink, 14 px total in inkSoft) with a
+    page-colored halo stroke: they sit left of stage 0, right of the last stage and
+    above the middle bars, clear of every link in both themes'
+  - 'Uses MUI X composition idiomatically: a custom SVG layer inside ChartsContainer
+    reads useDrawingArea, the axes are hidden with position: ''none'', and skipAnimation
+    is set'
+  - Native SVG <title> tooltips on every link and node give source → target values
+    in the interactive HTML
   weaknesses:
-  - 'PIPELINE ALERT (not a code defect): the plot_images/plot-light.png and plot-dark.png
-    supplied for this review were stale, still showing the pre-repair 5-node version
-    (Coal/Gas/Nuclear/Wind/Solar as five separate sources) rather than the current
-    HEAD commit (ffdc08fd0), which merges Wind+Solar into "Renewables". I regenerated
-    plot-light.png/plot-dark.png locally from the exact committed .tsx via `node automation/js-render/render.mjs`
-    to confirm the real current output and scored against those. Maintainers should
-    check why impl-review.yml served an out-of-date render for this repair attempt
-    so future reviews aren''t silently scored against the wrong artifact.'
-  - 'LM-02: hover affordances still use plain SVG <title> elements rather than MUI
-    X''s own <ChartsTooltip>/highlight props (noted in attempt 1, not addressed) —
-    leaves the interactive/HTML output feeling generic rather than distinctively MUI
-    X'
-  - A small residual ribbon crossing remains on the right half, where Electricity→Residential
-    crosses Heat→Industrial, producing a faint dark overlap blend in both themes —
-    largely unavoidable with only 2 carrier nodes feeding overlapping sector sets,
-    but still the busiest spot in the diagram
-  - 'DE-03: no single flow/pathway is visually emphasized as a focal point (e.g. highlighting
-    the largest flow); hierarchy relies solely on value labels and column headers'
+  - 'Suggestion: the Imprint canonical order puts Coal in brand green and Renewables
+    in ochre; the semantic-exception order (Renewables in green) would match readers''
+    color expectations for energy sources.'
+  - 'Suggestion: about 90 px of empty band between the subtitle and the top nodes
+    could be reduced to give the diagram a little more height.'
   image_description: |-
-    NOTE ON ARTIFACTS: The plot_images/plot-light.png and plot-dark.png files provided for this review attempt were stale — they rendered the pre-repair code (5 separate source nodes: Coal, Gas, Nuclear, Wind, Solar), not the current HEAD commit (ffdc08fd0), which merges Wind+Solar into "Renewables" per the attempt-1 fix. I confirmed this by diffing the committed .tsx (matches HEAD exactly, md5 identical) against the data implied by the stale PNGs, then re-ran the harness locally (`ANYPLOT_THEME=light/dark node automation/js-render/render.mjs plots/sankey-basic/implementations/javascript/muix.tsx --library=muix`) to produce accurate renders. The description below is of those freshly-regenerated, code-accurate renders.
-
-    Light render (plot-light.png, regenerated):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Bold dark title "sankey-basic · javascript · muix · anyplot.ai" and a gray subtitle are clearly readable. Three uppercase gray column headers (PRIMARY SOURCES / ENERGY CARRIERS / END-USE SECTORS) sit above each node column. A footnote at the bottom explains the width/height encoding. All chrome text is dark-on-light and fully legible.
-      Data: Four source nodes — Coal (green #009E73, 42 TWh), Nuclear (blue, 22 TWh), Renewables (ochre/tan, 27 TWh), Gas (lavender, 46 TWh) — reordered top-to-bottom by a barycenter heuristic rather than input order, feeding two carrier nodes (Electricity cyan 116 TWh, Heat maroon 21 TWh), which fan out to four muted-gray end-use nodes (Commercial 30, Transport 12, Industrial 47, Residential 48 TWh). Ribbons are alpha-blended (~42% opacity) and scaled to flow value. Palette position 5 (#AE3030, reserved for error/loss) is not used anywhere. Every node carries a bold name + gray value label.
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1, no frame and no axes.
+      Chrome: centred bold title "sankey-basic · javascript · muix · anyplot.ai" in dark ink, with an inkSoft subtitle "Link width and bar height proportional to Energy flow (TWh) · 12 flows across 3 stages". Node names in bold dark ink with totals in soft gray: Coal 42, Nuclear 22, Renewables 27, Gas 46 to the left of the stage-0 bars; Electricity 116 and Heat 21 above the middle bars; Commercial 30, Transport 12, Industrial 47, Residential 48 to the right of the sink bars. All readable.
+      Data: source bars and links in Imprint order: Coal #009E73 green, Gas #C475FD lavender, Nuclear #4467A3 blue, Renewables #BD8233 ochre, Electricity #2ABCCD cyan, Heat #954477 rose. Links at 0.45 opacity. The sink bars are a neutral dark gray. There are two visible crossings: Renewables→Heat over Gas→Electricity, and Heat→Industrial over Electricity→Residential.
       Legibility verdict: PASS
 
-    Dark render (plot-dark.png, regenerated):
-      Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Title, subtitle, column headers, and every node label switch to light-colored text and stay fully legible — no dark-on-dark failures anywhere, including inside the busiest ribbon-crossing zone (right-half Electricity/Heat overlap).
-      Data: Identical categorical hues to the light render (green/lavender/blue/ochre/cyan/maroon); only the alpha-blended ribbons read visually darker against the black background, which is expected compositing, not a palette change. End-use nodes correctly switch to the theme-adaptive muted-gray anchor.
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17.
+      Chrome: title and node names in light ink, subtitle and totals in light gray. No dark-on-dark text; the halo stroke switches to the dark page color.
+      Data: bar colors are identical to the light render. Translucent links blend toward the dark page (deeper green, navy, brown, purple, teal and maroon) but stay distinct, and the crossings remain distinguishable. The sink bars switch to light gray (inkSoft). Brand green is clearly visible.
       Legibility verdict: PASS
-
-    Both renders pass the readability check; both are theme-correct and AR-09 clipping-free (title, all node labels, and the footnote all have visible margin from every canvas edge).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -76,75 +61,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes (title 27px,
-          node labels 16/13px, headers 13px)
+        comment: Explicit sizes (title 22, names 16 bold, totals 14, subtitle 15 CSS
+          px), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions in either render
+        comment: All labels clear of links and of each other; Heat label sits between
+          the Electricity bar and the Heat bar without touching links
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Crossing between Sources/Carriers greatly reduced by the new barycenter
-          reorder pass, but a residual crossing remains between Electricity->Residential
-          and Heat->Industrial on the right half
+        comment: Bars 26 px wide, smallest link (3 TWh) still visible; links visible
+          on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues throughout, not reliant on red-green as sole signal
+        comment: CVD-safe Imprint hues; direct labels carry identity, so there is
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped at canvas edges, title well within
-          bounds
+        comment: 3200x1800, canvas gate passed; balanced three columns, title about
+          28% width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Column headers descriptive, every node labeled with value + unit
-          (TWh)
+        comment: No axes; the unit TWh appears on every node total and in the subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; sources use canonical positions 1-4 only,
-          reserved red anchor (position 5) correctly avoided; backgrounds theme-correct
-          in both renders'
+        comment: 'Imprint canonical order with the first sender in #009E73, red slot
+          skipped, correct backgrounds in both themes'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Creative, well-executed hand-rolled Sankey with intentional typographic
-          hierarchy and thoughtful palette-position reasoning
+        comment: Two-tier label hierarchy (bold ink name over an inkSoft total), page-colored
+          halo strokes, rounded bars, neutral sinks
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: No axis/grid chrome, generous whitespace; small residual crossing
-          keeps it just short of top marks
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Column headers + per-node values give structure, but no single flow
-          is emphasized as a focal point
+        comment: Crossing-reducing barycentre ordering, per-edge link stacking, stage-dependent
+          label placement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Neutral sink nodes leave color to the sources, so the eye follows
+          each source into the Electricity hub
     spec_compliance:
       score: 15
       max: 15
@@ -154,27 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram
+        comment: Single basic Sankey, no highlights, reference lines or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct source colors, no circular flows, non-overlapping labels,
-          link opacity used for crossings, per spec notes
+        comment: No self-links (filtered), labels clear of links, distinct source
+          colors carried by links, opacity used; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value correctly mapped, no source==target links
+        comment: Widths and bar heights on one value scale; node order is layout,
+          as the spec allows
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title exactly matches required format: sankey-basic · javascript
-          · muix · anyplot.ai'
+        comment: Title format correct; direct labels replace a legend (legend N/A)
     data_quality:
       score: 15
       max: 15
@@ -184,83 +168,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 3-stage flow (sources -> carriers -> end-use) shows full breadth
-          of Sankey capability
+        comment: Multi-stage flow, splits and merges, crossings, wide and hair-thin
+          links, send-only and receive-only nodes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible national energy-flow scenario, neutral framing
+        comment: National energy flow from primary sources through carriers to sectors,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh magnitudes (9-46) sensible for country-scale energy accounting
+        comment: 12 flows within 5-50; TWh magnitudes plausible for a small country;
+          flow conservation checked (Electricity 116 in and out, Heat 21 in and out)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: No classes; functions are justified by the hand-rolled layout algorithm,
-          though the 4-pass barycenter reorder adds real complexity beyond a minimal
-          Sankey
+        comment: One layer component, required by the useDrawingArea hook, plus the
+          default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no RNG
+        comment: Hard-coded data, deterministic layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer + useXScale/useYScale imported, both used
+        comment: ChartsContainer and useDrawingArea both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Real computation throughout, no fake UI/interactivity
+        comment: Sankey is Pro-only in MUI X, so a written-out layout is the only
+          option; the layout is compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, sized from window.ANYPLOT_SIZE
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 API, community
+          surface only
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct community-only composition (ChartContainer + scale hooks)
-          for an unsupported chart type, clearly documented reasoning
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Hook-based coordinate integration is library-specific; tooltip still
-          uses plain SVG <title> instead of ChartsTooltip (unaddressed from attempt
-          1)
+        comment: ChartsContainer composition is the right v9 pattern; the marks themselves
+          are raw SVG
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: A custom layer driven by the useDrawingArea hook inside ChartsContainer
+          (MUI X composition API)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:40:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - annotations
-  patterns:
-  - iteration-over-groups
+  - hover-tooltips
+  - html-export
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending

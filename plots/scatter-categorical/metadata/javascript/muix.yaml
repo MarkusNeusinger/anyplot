@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: scatter-categorical
 created: '2026-09-05T13:41:08Z'
-updated: '2026-09-05T13:53:56Z'
-generated_by: claude-sonnet
-workflow_run: 33969250408
+updated: '2026-11-08T04:51:16Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42448219390
 issue: 2597
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/muix/plot-light.html
@@ -15,117 +16,113 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 quality_score: 86
 review:
   strengths:
-  - Thoughtful marker styling (page-background-colored stroke + fillOpacity 0.82)
-    keeps overlapping Adelie/Chinstrap points individually distinguishable in both
-    themes instead of merging into solid blobs.
-  - Manually positioned y-axis title (rotated <text> element, independent of MUI X's
-    tick-fontsize-based offset heuristic) avoids collision with tick labels regardless
-    of digit count — a real MUI X layout gotcha handled correctly.
-  - Realistic, neutral penguin body-measurement dataset with three genuinely overlapping-but-separable
-    clusters is a strong, on-spec choice for demonstrating a categorical scatter plot.
-  - Deterministic seeded LCG (no Math.random()) for reproducibility, correct skipAnimation,
-    and correct harness contract usage (default-exported component sized to window.ANYPLOT_SIZE).
+  - 'One MUI X scatter series per species built from the records (new Set order),
+    each with t.palette[i]: Adelie #009E73, Chinstrap #C475FD, Gentoo #4467A3, identical
+    in both renders'
+  - Overlap between Adelie and Chinstrap is handled with fillOpacity 0.82 plus a 1.5
+    px page-coloured marker edge via the v9 .MuiScatterChart-marker class, so points
+    of one species stay visible inside the other's cloud without moving any mark
+  - Realistic penguin morphometrics (flipper 180-233 mm, mass 2.5-6.1 kg, unequal
+    group sizes 40/34/38) with a seeded LCG for determinism
+  - 'Correct v9 API: axis bands sized with height/width, tickLabelStyle/labelStyle,
+    slotProps.legend.sx, skipAnimation; axis limits derived from the data span'
+  - highlightScope series highlight with global fade gives a useful per-species focus
+    on hover in the HTML output
   weaknesses:
-  - 'Duplicate/stale file header: two stacked ''anyplot.ai'' comment blocks at the
-    top of the file (lines 1-4 and 6-10) with conflicting metadata — one says ''Library:
-    muix 7.29.1 | JavaScript 22.23.2'' / ''Quality: 85/100'', the other says ''Library:
-    MUI X Charts | React | Node 22'' / ''Quality: pending''. Remove the leftover first
-    block and keep a single canonical header matching the muix.md skeleton, with the
-    ''//# anyplot-orientation'' directive (if kept) as the very first line.'
-  - Design excellence is fairly generic beyond the marker/legend polish — no additional
-    data-storytelling emphasis (e.g., annotating the body-mass gap between Gentoo
-    and the other two species, or highlighting the densest overlap region) to guide
-    the viewer's eye.
-  - In the densest cluster (~190mm flipper length, Adelie/Chinstrap overlap around
-    3.5-3.9kg), several points still visually merge despite the alpha/stroke treatment
-    — a slightly smaller marker size or lower fillOpacity there would improve separability.
+  - 'Suggestion: varying marker shape per species (the Notes allow it) would add a
+    redundant, print-safe encoding next to colour.'
+  - 'Suggestion: the 170 px legend band leaves a wide empty strip on the right; a
+    slightly narrower band would give the data area more width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches spec — not pure white, not dark.
-      Chrome: Title "scatter-categorical · javascript · muix · anyplot.ai" is bold, centered, dark ink, clearly readable. X-axis title "Flipper Length (mm)" and rotated y-axis title "Body Mass (kg)" are both dark ink and legible. Tick labels on both axes are soft dark gray, small but readable. Gridlines are light gray, subtle but visible. Legend ("Adelie", "Chinstrap", "Gentoo") sits at middle-right with square swatches and dark text, no overlap with data or axes.
-      Data: Three color groups — Adelie (teal/brand green #009E73), Chinstrap (light purple/magenta), Gentoo (steel blue-gray) — spread across three roughly separable, slightly overlapping clusters of circular markers with a thin edge stroke and slight fill transparency, which keeps overlapping points distinguishable. First series (Adelie) correctly uses the brand green.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: bold dark title "scatter-categorical · javascript · muix · anyplot.ai" centred at the top (~32% width); y-axis "Body mass (kg)" with ticks 2.5-6.0, x-axis "Flipper length (mm)" with ticks 180-230, all in dark ink and readable; subtle grey grid on both axes; left and bottom axis lines only; vertical legend at middle-right (Adelie, Chinstrap, Gentoo) with circle glyphs matching the marks.
+      Data: ~112 circular markers. Adelie brand green #009E73 and Chinstrap lavender #C475FD overlap in the lower-left (flipper 180-208 mm, 2.5-4.6 kg); Gentoo blue #4467A3 forms a separate cloud upper-right (202-233 mm, 4.4-6.1 kg). Translucent fill plus a page-coloured edge keep overlapping points distinguishable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches spec — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels have all flipped to light/white ink and remain clearly legible against the dark background. Gridlines are a muted light gray, subtle but visible. Legend text and swatches are equally legible with light text on the dark surface. No dark-on-dark text anywhere.
-      Data: Same three marker colors (brand green, purple, blue-gray) as the light render — confirmed identical data colors, only the chrome (background, text, grid) flipped as expected.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and tick labels flip to light ink and are clearly readable; grid lines subtle light grey; legend text light; no dark-on-dark text anywhere.
+      Data: marker positions and colours identical to the light render (#009E73, #C475FD, #4467A3); the blue Gentoo points remain visible against the dark page; marker edges switch to the dark page colour.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes, including at 400px thumbnail scale
+        comment: Title 22 px, axis labels 16 px, ticks 14 px, legend 16 px, all set
+          explicitly and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data/legend collisions in either render
+        comment: No text collisions; data-mark overlap between Adelie and Chinstrap
+          is permitted by the spec and handled with alpha + edge
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers sized appropriately for ~112 points; stroke + fillOpacity
-          aid overlap in most areas, but densest cluster (~190mm) still partially
-          merges
+        comment: 112 points at markerSize 7 with 0.82 opacity and page-coloured edge;
+          legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct, CVD-safe Imprint palette colors, not sole red-green signal
+        comment: Green / lavender / blue Imprint slots, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Title ~55-60% width, nothing cut off, balanced margins and legend
-          placement
+        comment: 3200x1800, canvas gate passed; nothing cut off; balanced axis label
+          and tick sizes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (mm, kg)
+        comment: 'Flipper length (mm), Body mass (kg): descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, backgrounds match #FAF8F1/#1A1A17,
-          data colors identical across themes'
+        comment: 'Imprint slots 1-3 in canonical order, first series #009E73; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Some polish (marker stroke, opacity, manual label placement) but
-          overall a fairly standard MUI X scatter look
+        passed: true
+        comment: 'Raised one: a dedicated weight-600 title header above the chart
+          and a vertical, middle-right legend with spacing give a clear typographic
+          hierarchy beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: No visible chart border, subtle grid, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Clusters are visible via color but no additional emphasis or annotation
-          guides the viewer
+        passed: true
+        comment: 'Raised one: axis padding computed as 8% of the data span keeps edge
+          points off the axis lines; legend sits outside the data area'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: 'Default: data displayed, no hierarchy or focal point beyond what
+          the spec asks'
     spec_compliance:
       score: 15
       max: 15
@@ -135,89 +132,86 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Categorical scatter, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colorblind-safe colors per category, legend present; marker-shape
-          variation is optional per spec and was skipped in favor of color+alpha
+        comment: Colorblind-safe distinct colours, legend naming every category, alpha
+          for overlap; all three 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y continuous variables correctly mapped, full data range shown
-          with padding
+        comment: Points at exact (x, y) values, no jitter; axes span all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match species
-          names
+        comment: Title in mandated format; legend entries are the species names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three overlapping-but-separable clusters exercise the categorical-scatter
-          concept well
+        comment: Shows two overlapping groups and one separated cluster, unequal group
+          sizes and a stray Gentoo point near the other clouds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Penguin flipper length vs. body mass by species is realistic and
-          neutral
+        comment: Penguin species morphometrics, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are sensible for real penguin measurements
+        comment: Flipper 180-233 mm and mass 2.5-6.1 kg match real Adelie/Chinstrap/Gentoo
+          ranges; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes, but duplicate stacked header comment
-          blocks are clutter
+        comment: Columns / Data / Plot zones; only the required default-export component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG, no Math.random()
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart imported
+        comment: Only ScatterChart imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-commented, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract usage, skipAnimation set, current API
+        comment: Harness mount contract, skipAnimation, current v9 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -225,22 +219,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ScatterChart, axis, and legend configuration
+        comment: 'Raised one: series-per-group with per-series color, y-axis valueFormatter,
+          styling via the v9 .MuiScatterChart-marker / .MuiChartsGrid-line classes
+          in sx'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Uses highlightScope cross-series fade and custom sx marker styling
-          — genuine MUI X-specific features
+        comment: 'Raised one: highlightScope series highlight with global fade for
+          interactive species focus'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:48:44Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
