@@ -14,7 +14,7 @@ const MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
 const HIST_BINS = 12; // histogram bins per diagonal cell, spanning the variable's padded domain
 const EXTENT_PAD_SHARE = 0.08; // room beyond each variable's extreme values, as a share of its span
 const EDGE_TICK_COUNT = 4; // about this many tick labels per edge axis, so neighbouring cells stay apart
-const POINT_OPACITY = 0.7;
+const POINT_OPACITY = 0.55;
 const HISTOGRAM_OPACITY = 0.5; // diagonal distributions stay quieter than the scatter cells
 
 // Columns: set these to your data's column names
@@ -172,7 +172,7 @@ export default function Chart() {
               id: `group-${i}`,
               label: g,
               color: t.palette[i],
-              markerSize: focal ? 4 : 3,
+              markerSize: 3,
               data: groupRows[i].map((d, k) => ({ id: `${i}-${k}`, x: d[VARIABLES[col]], y: d[VARIABLES[row]] })),
             }))}
             sx={chartSx}
