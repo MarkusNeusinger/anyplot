@@ -16,9 +16,6 @@ const TAIL_BANDWIDTHS = 2; // each violin ends this many bandwidths past its out
 const Y_PAD = 0.04; // share of the violins' value range added above and below them
 const VIOLIN_SPAN = 0.8; // share of a category band the widest violin fills
 const MARKER_R = 5; // swarm point radius, px
-const PEAK_MIN_HEIGHT = 0.25; // a density peak below this share of the violin's maximum is noise
-const PEAK_MIN_SEPARATION = 2; // two peaks closer than this many bandwidths are one mode
-const PEAK_VALLEY_RATIO = 0.85; // a valley above this share of the lower peak does not split two modes
 const TITLE = "violin-swarm · javascript · muix · anyplot.ai";
 const TITLE_H = 80;
 
@@ -57,7 +54,7 @@ const categories = [...new Set(rows.map((d) => d[CONDITION]))];
 // Per category: sorted values, median and a Gaussian KDE (Silverman bandwidth)
 // normalized to its own peak, so width encodes shape rather than sample count.
 // The grid ends a few bandwidths past the data, so each violin tapers near its
-// own range. Density modes are the local maxima that survive a valley test.
+// own range.
 const violins = categories.map((cat) => {
   const values = rows
     .filter((d) => d[CONDITION] === cat)
@@ -79,34 +76,13 @@ const violins = categories.map((cat) => {
   );
   const medianDensity = values.reduce((sum, v) => sum + Math.exp(-0.5 * ((median - v) / bandwidth) ** 2), 0) / peak;
 
-  const modes = [];
-  for (let k = 1; k < GRID_N - 1; k += 1) {
-    if (density[k] < PEAK_MIN_HEIGHT || density[k] < density[k - 1] || density[k] < density[k + 1]) continue;
-    const close = modes.find((m) => Math.abs(m.value - grid[k]) < PEAK_MIN_SEPARATION * bandwidth);
-    if (!close) modes.push({ idx: k, value: grid[k], height: density[k] });
-    else if (density[k] > close.height) Object.assign(close, { idx: k, value: grid[k], height: density[k] });
-  }
-  modes.sort((a, b) => a.idx - b.idx);
-  let merged = true;
-  while (merged && modes.length > 1) {
-    merged = false;
-    for (let i = 0; i < modes.length - 1 && !merged; i += 1) {
-      const valley = Math.min(...density.slice(modes[i].idx, modes[i + 1].idx + 1));
-      if (valley / Math.min(modes[i].height, modes[i + 1].height) > PEAK_VALLEY_RATIO) {
-        modes.splice(modes[i].height >= modes[i + 1].height ? i + 1 : i, 1);
-        merged = true;
-      }
-    }
-  }
-  const minorMode = modes.length > 1 ? [...modes].sort((a, b) => a.height - b.height)[0] : null;
-
-  return { values, valueDensity, median, medianDensity, grid, density, minorMode };
+  return { values, valueDensity, median, medianDensity, grid, density };
 });
 const gridMin = Math.min(...violins.map((v) => v.grid[0]));
 const gridMax = Math.max(...violins.map((v) => v.grid[GRID_N - 1]));
 const yMin = gridMin - (gridMax - gridMin) * Y_PAD;
 const yMax = gridMax + (gridMax - gridMin) * Y_PAD;
-const SUBTITLE = `${rows.length} observations in ${categories.length} groups · bar: median${violins.some((v) => v.minorMode) ? " · dashed leader: second density mode" : ""}`;
+const SUBTITLE = `${rows.length} observations in ${categories.length} groups · bar: median`;
 
 // The community package has no violin or swarm component: a custom layer
 // draws both through the chart's band and linear scales.
@@ -148,7 +124,6 @@ function ViolinSwarm() {
         });
 
         const medianHalf = v.medianDensity * halfWidth * 0.85;
-        const modeY = v.minorMode ? yScale(v.minorMode.value) : 0;
 
         return (
           <g key={cat}>
@@ -174,22 +149,6 @@ function ViolinSwarm() {
               strokeWidth={3}
               strokeLinecap="round"
             />
-            {v.minorMode && (
-              <g>
-                <line
-                  x1={center + halfWidth * v.minorMode.height + 3}
-                  x2={center + halfWidth + 16}
-                  y1={modeY}
-                  y2={modeY}
-                  stroke={t.inkSoft}
-                  strokeWidth={1.25}
-                  strokeDasharray="3,3"
-                />
-                <text x={center + halfWidth + 20} y={modeY} dy="0.32em" fontSize={15} fill={t.inkSoft}>
-                  second mode
-                </text>
-              </g>
-            )}
           </g>
         );
       })}
