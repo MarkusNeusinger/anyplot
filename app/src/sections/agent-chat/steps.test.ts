@@ -206,6 +206,22 @@ describe('stepOneLine', () => {
     expect(plotButtonKind(step1({ versions: plotted }), true)).toBe('all');
   });
 
+  it('names the plot the click makes of new data in the box: the first plot, or the new data', () => {
+    const plotted = {
+      1: { version: 1, library: 'matplotlib' },
+    } as unknown as AgentSessionState['versions'];
+    expect(plotButtonKind(step1({ dataset: null }), false, true)).toBe('create');
+    // On a current plot the button would update it; with data in the box it plots that data.
+    const current = step1({ dataConfirmed: true, versions: plotted });
+    expect(plotButtonKind(current)).toBe('update');
+    expect(plotButtonKind(current, false, true)).toBe('new_data');
+    expect(plotButtonLabel(current, true)).toBe('plot the new data');
+    expect(plotButtonKind(current, true, true)).toBe('all');
+    expect(plotButtonKind(step1({ versions: plotted, library: 'seaborn' }), false, true)).toBe(
+      'create'
+    );
+  });
+
   it('leads to .plot_all() while all is pressed, where no .create_plot() shows', () => {
     expect(stepOneLine(step1(), '.plot_all()')).toBe(
       'check the data and the bindings above, then .plot_all()'
@@ -285,6 +301,28 @@ describe('statusLine', () => {
     expect(
       statusLine(confirmed, { ...options, attachmentLine: 'the attached table is read' }).text
     ).toBe('step 2 of 2 · the attached table is read');
+  });
+
+  it("puts the one click's reading before everything, and where it stopped in step 1's place", () => {
+    const readingLine = 'reading your data';
+    const stopLine = 'the assistant asked a question · answer it in the box, or .create_plot()';
+    expect(
+      statusLine(ready({ dataset }), { ...options, readingLine, attachmentLine: 'attached' }).text
+    ).toBe('step 1 of 2 · reading your data');
+    expect(statusLine(ready({ dataset }), { ...options, stopLine }).text).toBe(
+      `step 1 of 2 · ${stopLine}`
+    );
+    // A new attachment and a plot that runs come first; in step 2 the stop is over.
+    expect(
+      statusLine(ready({ dataset }), { ...options, stopLine, attachmentLine: 'attached' }).text
+    ).toBe('step 1 of 2 · attached');
+    const run = queued('create_plot');
+    expect(
+      statusLine(ready({ dataset, run, items: running(run).items }), { ...options, stopLine }).text
+    ).toBe('step 1 of 2 · drawing your plot · usually 1–3 min');
+    expect(statusLine(ready({ dataset, dataConfirmed: true }), { ...options, stopLine }).text).toBe(
+      'step 2 of 2 · create the plot as it is, or say first what it should do differently'
+    );
   });
 
   it("says in step 2 what the plot button does before the library's first plot, then the data", () => {

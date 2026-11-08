@@ -1,96 +1,129 @@
 // anyplot.ai
 // climograph-walter-lieth: Walter-Lieth Climate Diagram
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-15
+// Library: highcharts 13.1.1 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: Seville climate normals (1991–2020) --------------------------------
-// Classic Mediterranean station with pronounced summer arid period
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+// Semantic colors follow the meteorological convention of Walter-Lieth
+// diagrams: blue for precipitation and the humid period, red for temperature
+// and the arid period. The two pastel fills are fixed tints of those colors,
+// so they read the same on the light and the dark page.
+const PRECIP_COLOR = t.palette[2]; // Imprint blue
+const TEMP_COLOR = t.palette[4]; // Imprint matte red
+const PRECIP_TINT = Highcharts.color(PRECIP_COLOR).tweenTo(Highcharts.color("#FFFFFF"), 0.5);
+const ARID_TINT = Highcharts.color(TEMP_COLOR).tweenTo(Highcharts.color("#FFFFFF"), 0.5);
 
-const temperature   = [10.3, 12.0, 14.5, 16.5, 20.3, 25.0, 28.2, 28.4, 25.3, 20.2, 14.7, 11.2];
-const precipitation = [66,   61,   49,   53,   34,   11,    1,    5,   21,   70,   68,   72];
+// Columns: set these to your data's column names
+const MONTH = "Month"; // role: month
+const TEMPERATURE = "Temperature (°C)"; // role: temperature
+const PRECIPITATION = "Precipitation (mm)"; // role: precipitation
+const STATION = "Station"; // role: station_name
+const ELEVATION = "Elevation (m a.s.l.)"; // role: elevation
 
-const stationName       = "Seville (Aeropuerto)";
-const elevation         = 34;
-const annualMeanTemp    = 18.9;
-const annualPrecipTotal = 511;
+// Data: replace this block with your own records, one object per month
+// Seville (Aeropuerto) climate normals 1991–2020, a Mediterranean station
+// with a pronounced summer arid period.
+const data = [
+  { [MONTH]: "Jan", [TEMPERATURE]: 10.3, [PRECIPITATION]: 66, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Feb", [TEMPERATURE]: 12.0, [PRECIPITATION]: 61, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Mar", [TEMPERATURE]: 14.5, [PRECIPITATION]: 49, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Apr", [TEMPERATURE]: 16.5, [PRECIPITATION]: 53, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "May", [TEMPERATURE]: 20.3, [PRECIPITATION]: 34, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Jun", [TEMPERATURE]: 25.0, [PRECIPITATION]: 11, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Jul", [TEMPERATURE]: 28.2, [PRECIPITATION]: 1, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Aug", [TEMPERATURE]: 28.4, [PRECIPITATION]: 5, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Sep", [TEMPERATURE]: 25.3, [PRECIPITATION]: 21, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Oct", [TEMPERATURE]: 20.2, [PRECIPITATION]: 70, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Nov", [TEMPERATURE]: 14.7, [PRECIPITATION]: 68, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+  { [MONTH]: "Dec", [TEMPERATURE]: 11.2, [PRECIPITATION]: 72, [STATION]: "Seville (Aeropuerto)", [ELEVATION]: 34 },
+];
 
-// Walter-Lieth scaling: 10 °C ≡ 20 mm → right-axis max = 2 × left-axis max
-// Humid:  P > T×2  →  lighter-blue top stacked segment (humid excess above T×2 line)
-// Arid:   T×2 > P  →  red SVG fill between temperature line and precipitation bar top
+// Plot: reads only data and the constants above
+const months = data.map((d) => d[MONTH]);
+const temp = data.map((d) => d[TEMPERATURE]);
+const precip = data.map((d) => d[PRECIPITATION]);
+const n = data.length;
+const annualMeanTemp = temp.reduce((sum, v) => sum + v, 0) / n;
+const annualPrecipTotal = precip.reduce((sum, v) => sum + v, 0);
 
-// Semantic colors follow universal meteorological convention for Walter-Lieth diagrams
-const PRECIP_COLOR = t.palette[2];  // "#4467A3" — Imprint blue (precipitation)
-const TEMP_COLOR   = t.palette[4];  // "#AE3030" — Imprint matte-red (temperature)
+// Walter-Lieth scaling: 10 °C ≡ 20 mm, so the precipitation axis spans twice
+// the temperature axis and both zeros share one baseline.
+const tempMin = Math.min(0, Math.floor(Math.min(...temp) / 10) * 10);
+const precipMax = Math.ceil(Math.max(...precip, 2 * Math.max(...temp)) / 20) * 20;
+const tempTicks = Array.from({ length: (precipMax / 2 - tempMin) / 10 + 1 }, (_, k) => tempMin + 10 * k);
+
+// The temperature line is straight between monthly means, so the fills can
+// follow it exactly. The year is a cycle: at the outer bar edges the line
+// ends at the December–January midpoint.
+const yearEdge = (temp[n - 1] + temp[0]) / 2;
+const tempLine = [
+  { x: -0.5, y: yearEdge, marker: { enabled: false } },
+  ...temp.map((y, x) => ({ x, y })),
+  { x: n - 0.5, y: yearEdge, marker: { enabled: false } },
+];
+
+// The fills between the temperature line (as 2T in mm) and the bar tops are
+// three stacked areas over the same x positions: a transparent base up to the
+// lower of the two, then the humid band (P > 2T) and the arid band (2T > P).
+// The positions are each bar's edges and centre plus every point where the
+// line crosses the bar top, so a band switches exactly at a crossing. A tiny
+// inset at the inner bar edges lets the bar top step there.
+const EDGE_INSET = 1e-3;
+const fillBase = [];
+const fillHumid = [];
+const fillArid = [];
+precip.forEach((p, i) => {
+  const knots = [
+    [i - 0.5 + (i > 0 ? EDGE_INSET : 0), temp[(i + n - 1) % n] + temp[i]],
+    [i, 2 * temp[i]],
+    [i + 0.5 - (i < n - 1 ? EDGE_INSET : 0), temp[i] + temp[(i + 1) % n]],
+  ];
+  knots
+    .flatMap(([x, v], k) => {
+      const [x0, v0] = knots[Math.max(k - 1, 0)];
+      const crosses = (v0 - p) * (v - p) < 0;
+      return crosses ? [[x0 + ((p - v0) / (v - v0)) * (x - x0), p], [x, v]] : [[x, v]];
+    })
+    .forEach(([x, v]) => {
+      fillBase.push([x, Math.min(p, v)]);
+      fillHumid.push([x, Math.max(p - v, 0)]);
+      fillArid.push([x, Math.max(v - p, 0)]);
+    });
+});
 
 const titleText = "Seville Climate · climograph-walter-lieth · javascript · highcharts · anyplot.ai";
-const titleFs   = Math.max(14, Math.round(22 * 67 / titleText.length));
+const titleFs = Math.max(14, Math.round((22 * 67) / titleText.length));
+const fillSeries = { type: "area", yAxis: 1, lineWidth: 0, enableMouseTracking: false, zIndex: 1 };
 
-// Split precipitation into stacked columns that expose the humid/arid boundary.
-// Bottom segment: the portion up to the T×2 threshold (present in all months).
-// Top segment: the "humid excess" above T×2 (non-zero only in humid months).
-const precipBase  = temperature.map((temp, i) => Math.min(precipitation[i], temp * 2));
-const precipHumid = precipitation.map((p, i)  => Math.max(0, p - temperature[i] * 2));
-
-// Draw arid SVG fills (red, between temperature line and small bars in summer)
-// and frost-period indicators at the 0 °C baseline.
-// Arid fills render in the empty space above the summer bars — no z-index issues.
-function drawOverlays(chart) {
-  if (chart.wlOverlayGroup) chart.wlOverlayGroup.destroy();
-  chart.wlOverlayGroup = chart.renderer.g().attr({ zIndex: 2 }).add();
-
-  const xAxis      = chart.xAxis[0];
-  const tempAxis   = chart.yAxis[0];   // left: 0–40 °C
-  const precipAxis = chart.yAxis[1];   // right: 0–80 mm
-
-  // Pixel step between adjacent category centers (equals the category cell width)
-  const step = xAxis.toPixels(1, false) - xAxis.toPixels(0, false);
-
-  // Arid fills: red rectangle from precipitation bar top up to temperature line.
-  // Both axes share proportional range (0–40 °C ↔ 0–80 mm), so pixel Y is comparable.
-  for (let i = 0; i < 12; i++) {
-    if (precipitation[i] >= temperature[i] * 2) continue;  // skip humid months
-    const cx  = xAxis.toPixels(i, false);
-    const tY  = tempAxis.toPixels(temperature[i], false);   // temperature line (higher on screen)
-    const pY  = precipAxis.toPixels(precipitation[i], false); // bar top (lower on screen)
-    chart.renderer
-      .path(['M', cx - step / 2, tY, 'L', cx + step / 2, tY,
-             'L', cx + step / 2, pY, 'L', cx - step / 2, pY, 'Z'])
-      .attr({ fill: TEMP_COLOR, 'fill-opacity': 0.28 })
-      .add(chart.wlOverlayGroup);
-  }
-
-  // Frost-period indicators: solid colored band at the 0 °C baseline for months
-  // with mean temperature below 0 °C. Seville has none; structure required by spec.
-  const baseY = tempAxis.toPixels(0, false);
-  for (let i = 0; i < 12; i++) {
-    if (temperature[i] >= 0) continue;
-    const cx = xAxis.toPixels(i, false);
-    chart.renderer
-      .rect(cx - step / 2, baseY, step, 12)
-      .attr({ fill: PRECIP_COLOR, 'fill-opacity': 0.65 })
-      .add(chart.wlOverlayGroup);
-  }
-}
-
-// --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
+  palette: { colorScheme: t.theme },
   chart: {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
     marginTop: 100,
-    marginBottom: 65,
-    marginLeft: 80,
-    marginRight: 90,
-    plotBorderWidth: 0,
+    marginBottom: 110,
+    marginLeft: 90,
+    marginRight: 100,
     events: {
-      render: function () { drawOverlays(this); },
+      // Frost months (mean below 0 °C) as blocks just beneath the baseline.
+      // Seville has none, so nothing is drawn for this station.
+      render: function () {
+        if (this.frostGroup) this.frostGroup.destroy();
+        this.frostGroup = this.renderer.g("frost").attr({ zIndex: 4 }).add();
+        const xa = this.xAxis[0];
+        temp.forEach((v, i) => {
+          if (v >= 0) return;
+          const x0 = xa.toPixels(i - 0.5);
+          this.renderer
+            .rect(x0, this.plotTop + this.plotHeight, xa.toPixels(i + 0.5) - x0, 8)
+            .attr({ fill: PRECIP_COLOR })
+            .add(this.frostGroup);
+        });
+      },
     },
   },
   credits: { enabled: false },
@@ -103,7 +136,7 @@ Highcharts.chart("container", {
   },
 
   subtitle: {
-    text: `${stationName}  ·  ${elevation} m a.s.l.  ·  T̄: ${annualMeanTemp}°C  ·  P: ${annualPrecipTotal} mm/yr`,
+    text: `${data[0][STATION]}  ·  ${data[0][ELEVATION]} m a.s.l.  ·  T̄: ${annualMeanTemp.toFixed(1)} °C  ·  P: ${Math.round(annualPrecipTotal)} mm/yr`,
     align: "left",
     x: 80,
     y: 44,
@@ -112,121 +145,97 @@ Highcharts.chart("container", {
 
   xAxis: {
     categories: months,
+    min: 0,
+    max: n - 1,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-    crosshair: false,
   },
 
+  // The axis lines carry the series colours; text stays in the theme ink.
   yAxis: [
-    // Left: Temperature (°C)
     {
-      id: "temp",
-      title: {
-        text: "Temperature (°C)",
-        style: { color: TEMP_COLOR, fontSize: "16px" },
-      },
-      labels: {
-        format: "{value} °C",
-        style: { color: TEMP_COLOR, fontSize: "14px" },
-      },
-      tickPositions: [0, 10, 20, 30, 40],
-      min: 0,
-      max: 40,
+      title: { text: TEMPERATURE, style: { color: t.inkSoft, fontSize: "16px" } },
+      labels: { format: "{value} °C", style: { color: t.inkSoft, fontSize: "14px" } },
+      tickPositions: tempTicks,
       lineColor: TEMP_COLOR,
-      lineWidth: 1,
+      lineWidth: 2,
       gridLineColor: t.grid,
       gridLineWidth: 1,
     },
-    // Right: Precipitation (mm) — 2:1 scale relative to temperature axis
     {
-      id: "precip",
-      title: {
-        text: "Precipitation (mm)",
-        style: { color: PRECIP_COLOR, fontSize: "16px" },
-      },
+      title: { text: PRECIPITATION, style: { color: t.inkSoft, fontSize: "16px" } },
       labels: {
-        format: "{value} mm",
-        style: { color: PRECIP_COLOR, fontSize: "14px" },
+        formatter: function () {
+          return this.value < 0 ? "" : `${this.value} mm`;
+        },
+        style: { color: t.inkSoft, fontSize: "14px" },
       },
-      tickPositions: [0, 20, 40, 60, 80],
-      min: 0,
-      max: 80,
+      tickPositions: tempTicks.map((v) => 2 * v),
       opposite: true,
+      reversedStacks: false,
       lineColor: PRECIP_COLOR,
-      lineWidth: 1,
+      lineWidth: 2,
       gridLineWidth: 0,
     },
   ],
 
   legend: {
     enabled: true,
-    align: "right",
-    verticalAlign: "top",
-    layout: "vertical",
-    x: -10,
-    y: 110,
-    itemStyle: { color: t.inkSoft, fontSize: "14px" },
+    align: "center",
+    verticalAlign: "bottom",
+    layout: "horizontal",
+    itemDistance: 28,
+    itemStyle: { color: t.inkSoft, fontSize: "14px", fontWeight: "400" },
     itemHoverStyle: { color: t.ink },
     symbolWidth: 28,
-    backgroundColor: t.elevatedBg,
-    borderColor: t.grid,
-    borderWidth: 1,
-    padding: 10,
+    symbolHeight: 14,
+    symbolRadius: 2,
   },
+
+  tooltip: { shared: true },
 
   plotOptions: {
     series: { animation: false },
     column: {
-      stacking: "normal",
-      borderWidth: 0,
-      groupPadding: 0.05,
-      pointPadding: 0.02,
+      pointPadding: 0,
+      groupPadding: 0,
+      borderWidth: 1,
+      borderColor: t.pageBg,
     },
-    spline: {
-      lineWidth: 3,
-      marker: {
-        enabled: true,
-        radius: 4,
-        symbol: "circle",
-        lineWidth: 1.5,
-        lineColor: "transparent",
-      },
+    area: {
+      stacking: "normal",
+      fillOpacity: 1,
+      marker: { enabled: false },
+      states: { hover: { enabled: false } },
     },
   },
 
   series: [
-    // Bottom segment: precipitation up to the T×2 threshold (always present)
     {
       type: "column",
       name: "Precipitation",
-      data: precipBase,
-      color: PRECIP_COLOR,
-      opacity: 0.85,
+      data: precip,
+      color: PRECIP_TINT,
       yAxis: 1,
-      zIndex: 1,
+      zIndex: 0,
+      legendIndex: 1,
+      tooltip: { valueSuffix: " mm" },
     },
-    // Top segment: humid excess above the T×2 line (non-zero only in humid months)
-    // Shown at lower opacity so the two segments are visually distinct
+    { ...fillSeries, name: "Below both curves", data: fillBase, fillOpacity: 0, showInLegend: false },
+    { ...fillSeries, name: "Humid period (P > 2T)", data: fillHumid, color: PRECIP_COLOR, legendIndex: 2 },
+    { ...fillSeries, name: "Arid period (2T > P)", data: fillArid, color: ARID_TINT, legendIndex: 3 },
     {
-      type: "column",
-      name: "Humid excess",
-      data: precipHumid,
-      color: PRECIP_COLOR,
-      opacity: 0.42,
-      yAxis: 1,
-      zIndex: 1,
-      showInLegend: false,
-      linkedTo: ":previous",
-    },
-    {
-      type: "spline",
+      type: "line",
       name: "Temperature",
-      data: temperature,
+      data: tempLine,
       color: TEMP_COLOR,
+      lineWidth: 3,
       yAxis: 0,
       zIndex: 3,
-      marker: { fillColor: TEMP_COLOR, lineColor: "transparent" },
+      legendIndex: 0,
+      marker: { enabled: true, radius: 5, symbol: "circle", fillColor: TEMP_COLOR, lineWidth: 0 },
+      tooltip: { valueSuffix: " °C" },
     },
   ],
 });
