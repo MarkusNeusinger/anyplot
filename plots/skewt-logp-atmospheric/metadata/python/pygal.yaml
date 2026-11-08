@@ -2,54 +2,53 @@ library: pygal
 language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:27:06Z'
-updated: '2026-05-21T00:11:32Z'
-generated_by: claude-sonnet
-workflow_run: 26196463829
+updated: '2026-11-08T23:00:17Z'
+generated_by: claude-opus-5-5
+adopted_from: 30372b6d2c5e21b714255261a2b28be58f039168 (30372b6d2c5e21b714255261a2b28be58f039168)
+workflow_run: 42532116454
 issue: 3802
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Physics-accurate moist adiabatic lapse rate integration using proper thermodynamic
-    constants (MALR, latent heat, gas constants)
-  - 'Excellent dual-encoding strategy: both color (Okabe-Ito) and dash patterns distinguish
-    all 7 series — critical for CVD accessibility on a crowded Skew-T'
-  - 'Perfect palette compliance: brand green first, full Okabe-Ito order, adaptive
-    neutral correctly replaces yellow (prohibited for thin lines on light surfaces)'
-  - Both light and dark themes render cleanly with no dark-on-dark failures; adaptive
-    neutral for series 7 correctly flips between themes
-  - Coordinate transformation (log-pressure Y-axis, 45° skew applied to X) is correctly
-    implemented and produces a visually accurate Skew-T layout
+  - A true skew-T frame computed in data space (x = T + SKEW·log10(1000/p)) with SKEW
+    derived from the plot-box aspect, so the isotherms rise at 45° in the render
+  - 'Physically computed reference families: dry adiabats from Poisson''s equation,
+    moist adiabats integrated from the saturated lapse rate, mixing-ratio lines from
+    the inverted Magnus formula'
+  - 'Clear hierarchy: 7 px temperature (solid red) and dewpoint (dashed green) on
+    top of thin, distinctly dashed reference families'
+  - Uses pygal XY allow_interruptions to draw each whole reference family as one series,
+    and a per-series formatter so HTML tooltips show the real (unskewed) temperature
+  - Theme tokens threaded through Style and css; both renders fully readable
   weaknesses:
-  - Only 1 dry adiabat (θ=300K), 1 moist adiabat, and 1 mixing ratio line — a proper
-    Skew-T shows a family of reference lines at regular intervals (e.g., dry adiabats
-    every 10K from 270-320K, mixing ratios at 4, 8, 12, 16 g/kg)
-  - Only 2 temperature isotherms vs the traditional full isotherm grid — add isotherms
-    at every 10°C from -40°C to 30°C to create the hallmark Skew-T diagonal background
-    grid
-  - No annotations for key meteorological features (LCL level where temperature and
-    dewpoint profiles intersect, CAPE region, or tropopause indicator) — viewer must
-    self-interpret without guidance
+  - 'VQ-01 (both): the in-plot mixing-ratio labels (1, 2, 4, 8, 16 g/kg) render at
+    34 px, below the 44 px tick-label size, and blur at the 400 px mobile width →
+    about 44 px (+10 px). Likely cause: LABEL_FS = 34 feeding value_label_font_size.'
+  - 'Suggestion: optional wind barbs in a column along the right edge would add the
+    diagram''s usual wind information.'
+  - 'Suggestion: a sounding with 20 or more levels, the Data section''s typical resolution,
+    would show finer kinks than the 11 mandatory levels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title 'skewt-logp-atmospheric · python · pygal · anyplot.ai' dark and readable. Y-axis label 'Pressure (hPa)' and X-axis label 'Temperature (°C, skewed 45°)' dark and proportionate. Tick labels (pressure: 100, 200, 300, 500, 700, 850, 1000; temperature: -50 to 40) all readable in dark ink. Seven-item legend at bottom in two rows is compact but legible.
-      Data: Temperature profile in #009E73 (brand green, 7px, solid, with dots). Dewpoint in #D55E00 (vermillion, 6px, dashed, with dots). Dry adiabat in #0072B2 (blue, 3px, dashed, no dots). Moist adiabat in #CC79A7 (reddish purple, 3px, dashed). Mixing ratio in #E69F00 (orange, 2px, dashed). 0°C isotherm in #56B4E9 (sky blue, 2px, dashed). -20°C isotherm in near-black adaptive neutral (~#1A1A1A), 2px dashed.
-      Legibility verdict: PASS — all text dark on light background, no light-on-light failures
+      Background: warm off-white #FAF8F1 across canvas and plot box.
+      Chrome: bold dark title "skewt-logp-atmospheric · python · pygal · anyplot.ai" at top; y axis "Pressure (hPa)" with ticks 100, 150, 200, 300, 400, 500, 700, 850, 1000 on a log scale with 1000 at the bottom; x axis "Temperature at 1000 hPa (°C) — isotherms run diagonally at 45°" with ticks -50 to 40; faint horizontal isobar guides; six-entry legend in three columns at the bottom. All text dark and readable; the small mixing-ratio labels 1, 2, 4, 8, 16 are readable at full size.
+      Data: gray isotherms at 45° rising to the right, dense solid ochre dry adiabats curving up-left, dashed blue moist adiabats, dotted lavender mixing-ratio lines below 400 hPa; temperature as a heavy solid red #AE3030 line with dots, dewpoint as a heavy dashed brand-green #009E73 line, always left of temperature, converging near the surface and 700-850 hPa.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, tick labels, and legend text all light-colored (#F0EFE8 range) and clearly readable against dark background. No dark-on-dark failures detected. Grid lines are subtle and visible.
-      Data: All data colors identical to light render — #009E73 temperature, #D55E00 dewpoint, #0072B2 dry adiabat, #CC79A7 moist adiabat, #E69F00 mixing ratio, #56B4E9 0°C isotherm. -20°C isotherm correctly adapts to light neutral (~#E8E8E0) against dark background — appropriate theme-adaptive behavior. Brand green #009E73 clearly visible on dark surface.
-      Legibility verdict: PASS — all text light on dark background, no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink, all readable; no dark-on-dark text; grid guides subtle.
+      Data: identical red and green profile colors and the same ochre/blue/lavender families (moist adiabat alpha raised for the dark surface); isotherms in a lighter gray; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,172 +56,173 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). Readable in both themes. 7-item legend compact but legible.
+        comment: Title 60, axis titles and ticks 44, legend 40 are readable in both
+          themes; the in-plot mixing-ratio labels (1, 2, 4, 8, 16) at 34 px sit below
+          the tick-label floor and blur at mobile width (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap. Data lines converge at upper atmosphere (expected
-          Skew-T behavior). Minor visual density at 100-200 hPa.
+        comment: No text collisions; mixing-ratio labels are placed clear of the moist
+          adiabats and both profiles
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line widths well-differentiated (7/6/3/2 px). Selective dots on primary
-          profiles. Good dash pattern differentiation.
+        comment: 11 sounding levels drawn with prominent 9 px dots on 7 px lines;
+          reference families thin and visible; legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette. Dual-encoding (color + dash) ensures
-          distinguishability without hue alone.
+        comment: Temperature (red, solid) and dewpoint (green, dashed) differ by line
+          style as well as hue, so red-green is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Bottom legend area creates some wasted space.
-          No clipping.
+        comment: 3200x1800, plot box fills the canvas, legend in three columns below,
+          nothing cut off; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Pressure (hPa)'', ''Temperature
-          (°C, skewed 45°)''. Correct title format.'
+        comment: '''Pressure (hPa)'' and ''Temperature at 1000 hPa (°C) — isotherms
+          run diagonally at 45°'' carry units and explain the skewed reading'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓. Full Okabe-Ito order ✓. Adaptive neutral
-          replaces yellow for series 7 ✓. Correct backgrounds ✓. Both themes pass.'
+        comment: 'Semantic exception: temperature in Imprint matte red #AE3030, dewpoint
+          in brand green #009E73; reference families in Imprint ochre, blue and lavender
+          tints; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Well-configured: Okabe-Ito palette, theme-adaptive tokens, explicit
-          font hierarchy. Professional but not FiveThirtyEight-level polish.'
+        comment: 'A deliberate weight hierarchy: profiles at 7 px, adiabats 2.5 px,
+          isotherms 2 px, three distinct dash patterns per family, bold title'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Explicit refinements: selective dots on primary only, five distinct
-          stroke widths, dasharray patterns, foreground_subtle for muted grid, generous
-          margins.'
+        comment: Isobar ticks only at the mandatory levels, the upright x guides suppressed
+          because the skewed isotherms are the temperature grid, mixing-ratio values
+          printed inline at the spot farthest from other lines
       - id: DE-03
         name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Partial visual hierarchy through line weight contrast. No annotations
-          for LCL, CAPE, or tropopause. Data displayed with partial hierarchy but
-          not interpreted.
+        score: 2
+        max: 2
+        passed: true
+        comment: The sounding is displayed with the profiles on top; no focal point
+          chosen beyond the spec
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct Skew-T Log-P structure. Only 2 temperature isotherms vs traditional
-          full isotherm grid — minor shortcoming.
+        comment: 'A true skew-T log-p frame: x = T + SKEW·log10(1000/p), y = log10(1000/p)'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Dry adiabat, moist adiabat (MALR), mixing ratio, isotherms all present.
-          Only 1 each instead of multiple (spec uses plural forms). Wind barbs omitted
-          (optional).
+        comment: Log pressure inverted (1000 at bottom), isotherms at 45°, dry adiabats,
+          moist adiabats and mixing-ratio lines each told apart by color and dash,
+          temperature solid and dewpoint dashed as the two most prominent lines; wind
+          barbs optional and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Log-pressure Y-axis inverted ✓. 45° skewed temperature X-axis ✓.
-          Profiles span 100-1000 hPa ✓.
+        comment: Every level sits at its pressure and its temperature along the skewed
+          isotherms; straight segments, no spline overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'skewt-logp-atmospheric · python · pygal · anyplot.ai' correct
-          format. All 7 series labeled correctly.
+        comment: Title 'skewt-logp-atmospheric · python · pygal · anyplot.ai'; legend
+          entries are reader text with units and spacings
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Temperature, dewpoint, dry adiabat, moist adiabat (physics-accurate),
-          mixing ratio, two isotherms. Good coverage but single reference line per
-          type.
+        comment: Moist lower layer, drying aloft, a tropopause near 200 hPa and stratospheric
+          warming to 100 hPa; dewpoint left of temperature at every level
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic mid-latitude sounding: T=25°C/Td=18°C at surface (RH≈69%),
-          credible lapse rates, stratospheric warming at 100 hPa.'
+        comment: Mid-latitude summer radiosonde sounding, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All pressure-temperature values physically accurate. Temperature
-          inversion at 100 hPa correctly represents lower stratosphere.
+        comment: 'Checked: 25 °C surface, -15 °C at 500 hPa, -58 °C near the tropopause
+          are plausible; SKEW = 90·1360/2906 ≈ 42 gives a 45° isotherm in the render
+          (an isotherm from -10 °C at 1000 hPa reaches about 32 °C on the x scale
+          at 100 hPa); dry adiabats from Poisson''s equation, moist adiabats integrated
+          from the saturated lapse rate, mixing ratios from the Magnus inverse'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: One utility function moist_adiabat() for MALR integration. Justified
-          by physics complexity but deviates from flat script pattern.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: Deterministic data table
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, Style — all used.
+        comment: os, sys, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean structure, well-named constants, documented sys.path manipulation.
-          No fake UI.
+        comment: Vectorised reference families; the label-placement search is short
+          and serves a visible purpose
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the pygal 3 API
     library_mastery:
       score: 7
       max: 10
@@ -232,27 +232,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY() correct chart type. Custom y_labels dict format for non-uniform
-          pressure axis. Per-series stroke_style and show_dots. Style object for all
-          theming.
+        comment: pygal.XY with allow_interruptions (None breaks) to draw whole line
+          families as one series, dict y_labels for the mandatory levels, Style tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output (pygal's distinguishing feature). y_labels
-          dict format for custom axis labeling. dasharray in stroke_style for per-series
-          dash patterns.
+        comment: Inline css injection to set per-series stroke widths and hide guides,
+          per-series stroke_style dasharrays, a per-series formatter so tooltips show
+          the unskewed temperature, value dicts with print_labels for the inline mixing-ratio
+          labels
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-08T22:57:14Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - normalization
+  - coordinate-transform
+  - numerical-integration
   styling:
+  - publication-ready
   - alpha-blending
