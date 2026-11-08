@@ -2,99 +2,105 @@ library: muix
 language: javascript
 specification_id: residual-plot
 created: '2026-09-05T12:38:55Z'
-updated: '2026-09-05T12:49:47Z'
-generated_by: claude-sonnet
-workflow_run: 33966466905
+updated: '2026-11-08T04:31:02Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42446863624
 issue: 2332
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint palette handling: brand green first series, matte-red semantic
-    anchor correctly reserved for the outlier/error role instead of spent as an ordinal
-    color'
-  - Outlier status is redundantly encoded via both color and marker size, a good colorblind-safety
-    practice beyond the base palette
-  - Theme-adaptive reference lines and marker edge strokes keep chrome correct in
-    both themes with zero dark-on-dark/light-on-light issues
-  - Realistic, deterministic synthetic regression scenario (house price vs. square
-    footage) that naturally produces the heteroscedastic pattern a residual plot is
-    meant to surface
+  - Residuals are computed from an actual OLS fit (slope and intercept from the generated
+    data), so the cloud is mean-zero by construction and every point sits at its computed
+    fitted value and residual
+  - 'The ±2σ bands come from the plotted residuals'' SD and are drawn symmetric about
+    zero; outliers beyond them are split into their own series in the Imprint semantic
+    red #AE3030, while the bulk keeps brand green #009E73'
+  - 'Native ChartsReferenceLine composition: the zero line is a solid ink line and
+    the bands are dashed inkSoft lines, and their labels carry a page-colored halo
+    (paintOrder stroke) so they stay legible over the grid in both themes'
+  - Inliers at 0.6 fill opacity with a page-colored marker outline keep the dense
+    middle readable; the heteroscedastic widening toward larger homes is clearly visible
+  - 'Uses the MUI X v9 API correctly: explicit axis band sizes (height 64, width 92),
+    slotProps.legend.sx, [data-series] CSS selectors, skipAnimation, and the native
+    tooltip in the HTML output'
   weaknesses:
-  - Title renders proportionally small (~33% of canvas width vs. the ~50-70% guideline)
-    - increase the Typography fontSize from 26 to roughly 34-36 CSS px so the title
-    carries appropriate visual weight and stays legible when scaled down to mobile
-    widths
+  - 'Suggestion: a LOWESS line, which the Notes allow, would make it easy to confirm
+    that the residuals show no curvature.'
+  - 'Suggestion: the inlier green at 0.6 opacity reads somewhat muddy on the dark
+    surface; a slightly higher opacity in dark would keep more of the brand green.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white.
-      Chrome: Bold dark title "residual-plot · javascript · muix · anyplot.ai" centered at top; axis labels "Fitted Price ($)" / "Residual ($)" in dark ink; tick labels in soft grey-ink; solid dark reference line at residual=0 labeled "Perfect fit: residual = 0"; two dashed grey ±2σ lines labeled with numeric values. All fully readable.
-      Data: ~220 semi-transparent brand-green (#009E73, alpha 0.55) points for in-band residuals; 12 larger, opaque matte-red (#AE3030) points for outliers beyond ±2σ. First series confirmed as #009E73.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold title "residual-plot · javascript · muix · anyplot.ai" centered at top; a softer subtitle "220 observations · residual = observed − predicted · SD 40,507 USD · 14 beyond ±2σ"; a horizontal legend (green "Residuals within ±2σ", red "Outliers beyond ±2σ"); y axis "Residual (USD)" with ticks -120,000 to 120,000; x axis "Predicted price (USD)" with ticks 150,000 to 450,000; a subtle grid on both axes. All text is dark on light and readable.
+      Data: about 206 semi-transparent brand-green #009E73 points with page-colored outlines; 14 larger matte-red #AE3030 outliers beyond the dashed ±2σ lines (labeled "+2σ = 81,014" and "−2σ = −81,014"); a solid dark zero line labeled "Perfect prediction: residual = 0" spans the full x range. The spread widens from left to right (heteroscedasticity).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black.
-      Chrome: Title, axis labels, and tick labels flip to light/white ink and remain fully legible; the y=0 reference line flips to white/ink; ±2σ dashed lines use light muted grey. No dark-on-dark failures found.
-      Data: Colors identical to light render - green residuals, red outliers, unchanged across themes as required.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: the title, subtitle, legend, axis titles and ticks flip to light ink; the grid is a subtle gray; the zero line is light ink and the band lines light dashed. No dark-on-dark text.
+      Data: the same green and red as in the light render; only the chrome flips. Green inliers at 0.6 opacity look darker on the dark surface but stay clearly distinguishable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All text legible in both themes, but title spans only ~33% of canvas
-          width - undersized relative to the ~50-70% guideline
+        comment: Explicit font sizes (title 22, axis 16, ticks 14, legend 15 CSS px),
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, reference-line labels, or data
+        comment: No text collisions; the reference-line labels have halos and sit
+          clear of the points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizes and alpha well-matched to ~220-point density; outliers
-          pop via size + color
+        comment: 220 points at size 6 with alpha 0.6 and outlines; outliers larger;
+          legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Outlier status redundantly encoded via color AND size
+        comment: Green vs red is backed by position beyond the dashed bands and by
+          marker size
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing clipped, generous margins, but undersized title is a proportional
-          layout miss
+        comment: 3200x1800; balanced axis labels; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units
+        comment: '''Predicted price (USD)'' and ''Residual (USD)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; outliers correctly use matte-red semantic
-          anchor; both renders theme-correct'
+        comment: 'Brand green first; semantic red #AE3030 for outliers; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -102,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful alpha-blending, semantic red for outliers, annotated bands,
-          but small title undercuts visual weight
+        comment: Title/subtitle hierarchy with weight and ink contrast; the subtitle
+          reports the computed SD and the outlier count
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, clean layout, theme-adaptive marker edge stroke for
-          definition
+        comment: Halo-stroked reference-line labels, page-colored marker outlines,
+          axis padding computed to include the bands
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: ±2σ bands plus distinctly colored/sized outliers create a clear diagnostic
-          focal point
+        comment: The subtitle summary (n, SD, number of outliers) guides reading beyond
+          the Notes; outlier coloring itself is prescribed
     spec_compliance:
       score: 15
       max: 15
@@ -127,49 +133,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual-vs-fitted scatter plot
+        comment: Residuals vs fitted values scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: y=0 line, alpha transparency, ±2σ bands, differently-colored outliers
-          all present
+        comment: 'Zero line across the full range, alpha, ±2σ bands, colored outliers:
+          all Notes and good-version bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=fitted price, y=residual, computed as y_true - y_pred
+        comment: x = predicted, y = observed − predicted; no displacement; axes show
+          all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend labels match spec
+        comment: Correct title format; legend entries read for a human
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Demonstrates heteroscedasticity and outliers well; optional LOWESS
-          trend omitted
+        comment: Shows the mean-zero cloud, heteroscedastic widening and outliers
+          on both sides
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House-price-from-square-footage OLS regression is realistic and neutral
+        comment: Home prices regressed on floor area; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price/residual magnitudes are sensible for the domain
+        comment: Prices of about 110k–455k USD and residual SD of about 40k are plausible;
+          no Check values given
     code_quality:
       score: 10
       max: 10
@@ -179,33 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Linear script; the only closure is the seeded data IIFE
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: ScatterChart and ChartsReferenceLine are both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Short OLS and SD computation, which the library prompt allows
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export contract, skipAnimation set, sized from ANYPLOT_SIZE
+        comment: Default export, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -213,27 +221,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ScatterChart + ChartsReferenceLine + slotProps.legend +
-          grid configuration
+        comment: ScatterChart with ChartsReferenceLine children, [data-series] sx
+          selectors, axis valueFormatter
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Three ChartsReferenceLine instances well applied to the diagnostic-plot
-          use case
+        passed: false
+        comment: Labeled ChartsReferenceLine with labelAlign/spacing; native tooltip
+          in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:28:20Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - regression
   dataprep:
   - regression
   styling:
   - alpha-blending
   - edge-highlighting
-  - publication-ready
+  - grid-styling
