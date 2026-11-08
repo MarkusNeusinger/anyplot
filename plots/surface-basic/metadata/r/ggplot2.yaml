@@ -2,191 +2,189 @@ library: ggplot2
 language: r
 specification_id: surface-basic
 created: '2026-09-10T01:03:13Z'
-updated: '2026-09-10T01:23:10Z'
-generated_by: claude-sonnet
-workflow_run: 34423473149
+updated: '2026-11-08T20:55:35Z'
+generated_by: claude-opus
+workflow_run: 42521391770
 issue: 1013
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - Gridlines are now pre-blended to a subtle ~20% opacity (`adjustcolor(INK, alpha.f
-    = 0.2)`), fixing the full-opacity issue flagged in attempt 2 — the mesh now reads
-    cleanly without a competing gridline overlay in either theme.
-  - 'Preview images now reflect the current commit exactly: the longer subtitle ("...vertical
-    axis blends Y-depth and Z-height") and y-axis title ("Y-depth + Height (z), projected")
-    both render correctly and without crowding, resolving the attempt-2 pipeline mismatch.'
-  - Creative, well-documented hand-rolled isometric 3D-to-2D projection using painter's-algorithm
-    depth-sorted geom_polygon quads — a legitimate native-ggplot2 technique given
-    the library has no 3D device, per library policy of not falling back to another
-    backend.
-  - 'Height is redundantly encoded via visual elevation AND fill color (imprint_seq
-    #009E73 to #4467A3), matching the style guide''s sequential-colormap rule exactly
-    and staying colorblind-safe.'
-  - 'Correct 3200x1800 canvas, correct #FAF8F1/#1A1A17 backgrounds in both themes,
-    spines removed, title format matches the mandated pattern, colorbar clearly labeled
-    "Height (z)", 45x45 grid within the spec''s requested density.'
+  - A 45x45 bimodal Gaussian surface drawn entirely in ggplot2 as one depth-sorted
+    geom_polygon per grid cell; the painter's ordering is correct, so the surface
+    reads as one continuous sheet without holes, tears or wrongly overlapping facets
+    in either render
+  - A projected 3D axis box with x, y and z ticks in data units, a faint pane grid
+    on the floor and back walls, and axis titles rotated along their edges gives a
+    proper oblique view that shows both peaks and the saddle between them
+  - 'Fill follows height through the imprint_seq two-stop gradient (#009E73 to #4467A3)
+    with a matching ''Height (z)'' color bar whose breaks equal the z-axis ticks,
+    so color and height tell the same story'
+  - 'All chrome is threaded through the theme tokens: page background, INK and INK_SOFT
+    text, the mesh outline and the ELEVATED_BG legend box flip correctly between light
+    and dark while the data colors stay identical'
+  - Mesh lines are thin and translucent (linewidth 0.07, alpha 0.45), so they trace
+    the curvature without hiding the color
   weaknesses:
-  - The vertical axis still blends Y-depth and Z-height into one composite scale,
-    so only X and true Z (via the colorbar) are independently labeled — Y has no standalone
-    scale. This is an inherent trade-off of the isometric 2D projection and is already
-    mitigated by the explanatory subtitle clause, but a fully independent Y encoding
-    isn't possible without ggplot2 native 3D support.
-  - Title occupies roughly 35-40% of the plot width at the current fontsize (size=12),
-    noticeably below the 50-70% guideline range — consider a slightly larger plot.title
-    size now that the gridlines free up visual space, as long as it doesn't crowd
-    the subtitle beneath it.
-  - LM-02 is capped by the fact that the painter's-algorithm mesh is a workaround
-    for missing native 3D support rather than a distinctive built-in ggplot2 feature
-    — this is the best available option within the library's grammar, not a deduction
-    against the implementation's craftsmanship.
+  - 'DQ-02 (both): the axes are labelled only ''X'', ''Y'' and ''Z (height)'' while
+    the code comment describes a yield surface from two process settings, so the render
+    reads as an abstract function → name the two inputs and the output after that
+    scenario (for example ''Temperature (°C)'', ''Pressure (bar)'', ''Yield''), with
+    matching tick ranges. Likely cause: the title labels c("X", "Y", "Z (height)")
+    in text_df and the fill-scale name.'
+  - 'Suggestion: the subtitle says ''Isometric projection'', but elevation 30° and
+    azimuth -35° is a general orthographic view; ''Orthographic view'' would be exact.'
+  - 'Suggestion: the 44x44 quad loop with a list of lists plus bind_rows could be
+    built vectorised from index grids (expand.grid over i and j), which would shorten
+    the mesh block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Dark title "surface-basic · r · ggplot2 · anyplot.ai" top-left; grey subtitle "Isometric projection · elevation 30° · azimuth -35° · vertical axis blends Y-depth and Z-height" beneath it (matches current source, not the stale attempt-2 string); dark axis titles "X (projected)" and "Y-depth + Height (z), projected"; grey tick labels; subtle, low-opacity dark gridlines (no longer full-opacity/bold as in attempt 2) — all clearly readable against the light background.
-      Data: Isometrically-projected mesh surface shows a bimodal terrain — a dominant peak (upper right, blue) and a smaller secondary bump (left, green), colored with the Imprint sequential green-to-blue gradient (#009E73 -> #4467A3). Legend box on the right, "Height (z)", shows the colorbar with 0.25/0.50/0.75 ticks, fully visible and not clipped.
+      Background: warm off-white #FAF8F1 across the whole canvas; the legend box uses the slightly lighter elevated surface.
+      Chrome: title "surface-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, grey subtitle "Isometric projection · elevation 30° · azimuth -35°". A projected 3D axis box: z axis on the left with ticks 0.0–1.0 and rotated title "Z (height)", x axis along the front-left floor edge (-4…4, title "X" rotated along the edge), y axis along the front-right floor edge (-4…4, title "Y"). Faint grid on the two back walls, thin grey box edges. All text dark on light and clearly readable; no overlap, nothing clipped.
+      Data: a continuous 45x45 surface with a dominant peak (z≈1.0) toward the back right and a smaller peak (z≈0.6) at front left, flat low regions in brand green #009E73 rising to blue #4467A3 at the summit; thin dark translucent mesh lines trace the curvature. Color bar "Height (z)" 0.0–1.0 on the right in a framed box.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: White title and axis titles, light-grey subtitle and tick labels, subtle low-opacity light gridlines — all legible against the dark background; no dark-on-dark failures found. Subtitle/y-axis title text matches the current source (same longer strings as the light render).
-      Data: Same green-to-blue gradient and mesh geometry as the light render — confirms only chrome (background/text/grid/legend frame) flipped between themes, not the data colors. Legend fully visible, not clipped.
+      Background: warm near-black #1A1A17; legend box on the #242420 elevated surface.
+      Chrome: title and axis titles in light ink, tick labels and subtitle in light grey #B8B7B0, box edges and wall grid in light translucent grey. No dark-on-dark text anywhere; all text readable.
+      Data: identical green→blue surface fill and identical geometry to the light render; only the mesh outline flips to light translucent grey. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title fontsize slightly conservative
-          relative to guideline width
+        comment: Title 12 pt, axis titles 3.5 mm (~10 pt), ticks 2.8 mm (~8 pt) per
+          the ggplot2 sizing; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or legend
+        comment: Tick labels, axis titles and the color bar are all clear of each
+          other and of the surface
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 45x45 mesh density appropriate, borders now subtle after alpha fix
+        comment: Surface, mesh, axis box and color bar visible in both themes; mesh
+          light enough not to hide color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue gradient, colorblind-safe, redundant elevation+color
-          encoding
+        comment: Height is double-encoded by elevation and fill; green-to-blue ramp
+          is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; gridline opacity fix resolves prior layout
-          deduction; no clipping
+        comment: 3200x1800 canvas, surface fills the plot area, legend balanced on
+          the right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Merged Y-depth+Z-height vertical axis isn't self-explanatory from
-          the axis title alone, mitigated only by subtitle
+        passed: true
+        comment: All three axes titled; the spec asks for x, y, z labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: scale_fill_gradient(low=#009E73, high=#4467A3) exactly matches imprint_seq;
-          correct theme backgrounds both renders
+        comment: 'imprint_seq #009E73 to #4467A3 for continuous height; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Sophisticated hand-rolled isometric projection, custom gradient,
-          intentional hierarchy
+        comment: 'Beyond baseline: a projected axis box with pane grid on the back
+          walls, axis titles rotated along their edges, title/subtitle hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed, gridlines now subtle (0.2 alpha), generous whitespace
+        comment: 'Layering chosen for this chart: back panes behind the surface, front
+          axes and outward ticks on top, mesh at alpha 0.45'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Bimodal surface with clear dominant + secondary optimum draws the
-          eye
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Legitimate 2D isometric-projection workaround for ggplot2's lack
-          of native 3D, per library policy
+        comment: A single 3D surface with a color bar; no extra layers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colorbar + smooth sequential colormap present; only 2 of 3 dims get
-          standalone axis titles
+        comment: 'Smooth colormap, x/y/z labels, color bar, oblique view showing peaks
+          and valley, 45x45 smooth grid, light mesh: all characteristic bullets met'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: X and Z directly readable; Y folded into the merged vertical axis,
-          clarified via subtitle
+        comment: Each quad sits at its grid z values; z ticks span the full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend label matches data
-          domain
+        comment: Title in the mandated format; color bar titled 'Height (z)'
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bimodal surface with dominant + secondary optimum
+        comment: Two peaks of different height and a saddle show the full range of
+          surface features
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Framed as a process-yield response surface; plausible and neutral
+        comment: Neutral, but the labels X/Y/Z read as an abstract function although
+          the code describes a yield surface (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible domain/range for a normalized response surface
+        comment: z in 0-1.0, grid -4..4; no Check values in the spec; peak z≈1.0 matches
+          the color bar top
     code_quality:
       score: 10
       max: 10
@@ -196,14 +194,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; loop is necessary for painter's-algorithm depth
-          sort
+        comment: Linear script, no named functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present, deterministic Gaussian surface
+        comment: Deterministic analytic surface; set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -215,42 +212,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; complexity is justified by the projection
-          technique
+        comment: The projection has no available call that reproduces it; complexity
+          matches the task
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves via ggsave + ragg::agg_png to plot-{THEME}.png
+        comment: ggsave to plot-{THEME}.png via ragg; current ggplot2 4 API (linewidth)
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: geom_polygon + scale_fill_gradient used idiomatically within ggplot2's
-          grammar-of-graphics constraints
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Depth-sorted painter's algorithm is distinctive but is a workaround,
-          not a native ggplot2 3D feature
+        comment: Grammar layers (geom_polygon with group, geom_segment, geom_text,
+          coord_fixed) at the default; the projection itself is hand math
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-195cdba0ef
+  rendered_at: '2026-11-08T20:52:27Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
+  - layer-composition
+  - manual-ticks
+  - patches
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
+  - minimal-chrome
   - alpha-blending
+  - grid-styling
