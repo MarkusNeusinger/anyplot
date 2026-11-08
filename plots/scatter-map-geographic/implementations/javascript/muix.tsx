@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-map-geographic: Scatter Map with Geographic Points
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 90/100 | Updated: 2026-11-08
+// Quality: 88/100 | Updated: 2026-11-08
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
@@ -17,6 +17,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const WORLD = { lonMin: -180, lonMax: 180, latMin: -90, latMax: 90 }; // the whole globe, in degrees
+const PAD_SHARE = 0.025; // map padding on each side as a share of the globe's span, so markers on its edge stay inside
 const GRATICULE_LON_STEP = 60; // degrees between meridians
 const GRATICULE_LAT_STEP = 30; // degrees between parallels
 const MARKER_RADIUS = [4, 16]; // px for the smallest and the largest size value
@@ -389,9 +390,20 @@ const Y_AXIS_WIDTH = 72;
 const chartWidth = window.ANYPLOT_SIZE.width;
 const chartHeight = window.ANYPLOT_SIZE.height - HEADER_HEIGHT - LEGEND_HEIGHT;
 
+// The axes run a padded share past the globe, so a marker centred on the antimeridian or a pole stays
+// clear of the axis lines and their tick labels
+const lonPad = (WORLD.lonMax - WORLD.lonMin) * PAD_SHARE;
+const latPad = (WORLD.latMax - WORLD.latMin) * PAD_SHARE;
+const extent = {
+  lonMin: WORLD.lonMin - lonPad,
+  lonMax: WORLD.lonMax + lonPad,
+  latMin: WORLD.latMin - latPad,
+  latMax: WORLD.latMax + latPad,
+};
+
 // Equirectangular: px per degree of latitude = px per degree of longitude / cos(mean latitude)
-const meanLatitude = ((WORLD.latMin + WORLD.latMax) / 2) * (Math.PI / 180);
-const mapAspect = ((WORLD.lonMax - WORLD.lonMin) * Math.cos(meanLatitude)) / (WORLD.latMax - WORLD.latMin);
+const meanLatitude = ((extent.latMin + extent.latMax) / 2) * (Math.PI / 180);
+const mapAspect = ((extent.lonMax - extent.lonMin) * Math.cos(meanLatitude)) / (extent.latMax - extent.latMin);
 const mapHeight = Math.min(chartHeight - X_AXIS_HEIGHT - 28, (chartWidth - Y_AXIS_WIDTH - 48) / mapAspect);
 const mapWidth = mapHeight * mapAspect;
 const marginX = (chartWidth - Y_AXIS_WIDTH - mapWidth) / 2;
@@ -455,8 +467,8 @@ export default function Chart() {
           {
             id: "lon",
             scaleType: "linear",
-            min: WORLD.lonMin,
-            max: WORLD.lonMax,
+            min: extent.lonMin,
+            max: extent.lonMax,
             label: LONGITUDE,
             height: X_AXIS_HEIGHT,
             tickInterval: lonTicks,
@@ -469,8 +481,8 @@ export default function Chart() {
           {
             id: "lat",
             scaleType: "linear",
-            min: WORLD.latMin,
-            max: WORLD.latMax,
+            min: extent.latMin,
+            max: extent.latMax,
             label: LATITUDE,
             width: Y_AXIS_WIDTH,
             tickInterval: latTicks,
