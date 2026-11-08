@@ -2,141 +2,137 @@ library: muix
 language: javascript
 specification_id: bullet-basic
 created: '2026-08-24T19:13:50Z'
-updated: '2026-08-24T19:29:47Z'
-generated_by: claude-sonnet
-workflow_run: 32766311204
+updated: '2026-11-08T01:30:37Z'
+generated_by: claude-opus-5-5
+adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
+workflow_run: 42434282308
 issue: 999
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - Clever compositing of two absolutely-positioned BarChart layers (grayscale range
-    bands + a slim green measure bar with a ChartsReferenceLine target marker) authentically
-    replicates Stephen Few's bullet-chart convention, which MUI X has no native component
-    for.
-  - Range-band grays are derived from the theme ink token via alpha blending (hexToRgba(t.ink,
-    alpha)) rather than hardcoded hex values, so the bands automatically stay theme-correct
-    in both light and dark renders.
-  - Four KPIs span different domains (currency, headcount, percentage x2) and different
-    actual-vs-target outcomes (below, above, and near target), giving strong feature
-    and data coverage across the sample.
-  - Explicit, theme-token-driven font sizing throughout (title 22px, row label 16px,
-    value 15px, legend key 13px) keeps every text element legible and theme-adaptive
-    in both renders.
-  - skipAnimation set on both layered BarChart instances and export default component
-    correctly follow the muix harness contract.
+  - 'Composes the bullet natively in MUI X: ChartsContainer with a stacked horizontal
+    BarPlot for the qualitative bands, plus a small custom SVG layer that reads useXScale/useDrawingArea
+    so the measure bar and target marker sit exactly at their data values on the chart''s
+    own linear scale'
+  - 'Grayscale bands are derived from the ink token at falling opacity, so they form
+    a steady poor-to-good progression and stay distinguishable from each other and
+    from the page in both themes, while the measure bar keeps Imprint #009E73 identical
+    across renders'
+  - Measure bar is 36 % of the band height and the target marker 72 %, drawn in the
+    ink token (near-black on light, near-white on dark), so the target contrasts with
+    bar and bands in both themes, including where it crosses the green bar (New Customers,
+    SLA)
+  - 'Clear typographic hierarchy in the side columns: right-aligned metric labels,
+    a bold actual value with a softer target figure, all aligned in one column for
+    quick scanning'
+  - Realistic, neutral KPI dashboard data with two metrics beating the target and
+    two falling short; axis limits come from the data (max of actual, target, ranges),
+    not typed numbers
+  - Per-bullet scales are a justified choice since the four metrics are in different
+    units ($M, count, %), and the subtitle states it explicitly; skipAnimation is
+    set on chart and BarPlot
   weaknesses:
-  - Target-value labels (e.g. '90', '130') render at fontSize 11 CSS px, noticeably
-    smaller than the 14-16px axis/legend guidance in prompts/library/muix.md — bump
-    to ~13-14px so they stay legible when the PNG is scaled to mobile width.
-  - The green measure bar uses identical brand green regardless of whether the KPI
-    is above or below its target, so the chart doesn't visually flag misses vs. beats
-    beyond the target line itself — a subtle secondary cue (e.g. bolding the value
-    text) could strengthen the data storytelling.
-  - The canvas stays fairly plain (flat cream/near-black background, no subtle row
-    banding or elevated surface for the legend) — there's room for another pass of
-    visual refinement toward more editorial polish.
+  - 'Suggestion: the ''Target 90'' text beside each actual value repeats what the
+    target marker already shows; dropping it would leave the actual-value label the
+    Notes allow as the single text annotation per bullet.'
+  - 'Suggestion: the subtitle partly repeats the band legend (''bands Poor / Satisfactory
+    / Good''); trimming it to the scale note would tighten the header.'
+  - 'Suggestion: the key row starts at the chart''s left edge while the title is centered;
+    aligning both on one axis would make the header read as one block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — matches spec.
-      Chrome: Title "bullet-basic · javascript · muix · anyplot.ai" in dark ink, top-left, clearly readable. A small legend row (Poor / Satisfactory / Good swatches + Target line) sits below the title, all in soft dark gray text. Four stacked KPI rows follow, each with a right-aligned dark-ink label on the left, a bullet graphic in the middle, and a lighter "actual / target" value on the right. All text renders crisply against the light background.
-      Data: Each row shows three grayscale background bands (darkest = Poor, lightest = Good) with a slim, bright #009E73 (brand green) bar overlaid showing the actual value, and a thin black vertical target line with a small numeric label. First (and only) data series correctly uses #009E73.
-      Legibility verdict: PASS — all text (title, row labels, values, legend, target labels) is clearly readable against the light background; no light-on-light issues observed. The target-line numeric labels (e.g. "90", "130") are small but legible due to bold weight.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: centered bold title "bullet-basic · javascript · muix · anyplot.ai" in dark ink, a soft-ink subtitle "4 metrics · bands Poor / Satisfactory / Good · each bullet on its own scale from 0", and a key row (Poor/Satisfactory/Good gray swatches, green Actual swatch, black Target tick). Four rows, each with a right-aligned metric label (Quarterly Revenue ($M), New Customers Acquired, Support SLA Compliance (%), Project Milestones (%)), its own x axis with dark tick labels (0–100, 0–160, 0–100, 0–100), and a value column on the right ("82 Target 90", "145 Target 130", "96 Target 95", "68 Target 80"). All text crisp and readable; no overlap, no clipping.
+      Data: three grayscale bands per row, darkest for Poor, lightest for Good, each ending at its threshold; a narrower #009E73 measure bar from 0 to the actual value; a thin near-black vertical target marker at the target value, crossing the green bar where the actual exceeds the target.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — matches spec.
-      Chrome: Same title and legend layout, now rendered in light ink/off-white text, clearly visible against the dark background. Row labels and values also flip to light text tones.
-      Data: The grayscale range bands flip to lighter grays appropriate for the dark surface (bands are still darkest→lightest for Poor→Good, now using lighter ink-with-alpha values against black). The green measure bar is unchanged — #009E73, identical to the light render. The target line and its numeric label flip to white for contrast against the dark bands.
-      Legibility verdict: PASS — no dark-on-dark text found; all title/label/value/legend text is light-colored and reads clearly. Brand green remains vivid and distinguishable from both the dark background and the gray bands.
-
-    Both renders confirm the data color (brand green #009E73) is identical between themes, while all chrome (background, text, range-band grays, target-line color) correctly flips per theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, labels, subtitle, key and tick labels switch to light ink / soft light ink and are all clearly readable; no dark-on-dark text. Axis lines and ticks are light.
+      Data: measure bars are the identical #009E73 green; bands are built from the light ink at the same opacities, so Poor is the lightest gray and Good the darkest, still distinguishable from each other and from the page; the target marker flips to near-white and contrasts with the green bar and the gray bands.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set and readable in both themes; target-line
-          numeric labels at 11px are smaller than the 14-16px guidance and could be
-          bumped for mobile legibility.
+        comment: Explicit font sizes (title 22, labels 16, ticks 14, values 20 px
+          CSS); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements observed in either render.
+        comment: No text collisions; target marker over the bar is permitted by the
+          spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (4 KPIs) rendered with a prominent, appropriately-sized
-          measure bar against the range bands.
+        comment: Bars, bands and target markers clearly visible; key glyphs match
+          the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Grayscale bands + single bright green bar + high-contrast target
-          line give strong CVD-safe contrast; no red-green reliance.
+        comment: Green against grayscale bands plus ink target; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot elements use a large majority of the canvas,
-          nothing cut off.
+        comment: 3200x1800, evenly spaced rows, balanced label/value columns, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes are intentionally hidden; row labels carry units ($M, %) and
-          target/value labels are numeric and descriptive.
+        comment: Metric labels carry units ($M, %), readable text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) categorical series is #009E73, identical across themes;
-          backgrounds match #FAF8F1/#1A1A17; all chrome theme-correct.'
+        comment: 'Measure bar #009E73 in both themes, bands grayscale from ink as
+          the spec asks, correct backgrounds'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful ink-derived grayscale bands and clean typography hierarchy,
-          clearly above library defaults, though not yet at full publication-level
-          polish.
+        comment: 'Typographic hierarchy beyond baseline: bold actual value with softer
+          target figure, weighted metric labels'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines and axes fully removed, no grid, generous whitespace between
-          rows; only the small target-label size holds this back from perfect.
+        comment: Right-aligned label column and aligned value column, chosen measure/target
+          proportions (36 %/72 %)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Visual hierarchy via color contrast (green bar vs. gray bands vs.
-          target line) guides the reader; the four KPIs' mixed above/below-target
-          outcomes add narrative variety, though the measure bar doesn't itself change
-          color on miss vs. beat.
+        comment: Data displayed clearly; no focal hierarchy beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bullet-chart type with all Stephen Few elements: qualitative
-          range bands, measure bar, target marker.'
+        comment: 'Basic bullet chart: bands, measure bar, target marker only'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: actual bar, target marker, range bands, and category label all present
-          and working per spec's Data section.
+        comment: Grayscale bands, thin contrasting target, horizontal, narrower bar
+          from zero, stacked bullets with labels beside them, actual value label
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Horizontal orientation with actual/target/ranges correctly mapped
-          to the shared linear scale per row.
+        comment: Marks at their values on linear scales from 0; per-bullet scales
+          justified since metrics differ in units
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; legend labels
-          (Poor/Satisfactory/Good/Target) correctly correspond to the bands and marker.
+        comment: Mandated title format; key labels match the marks
     data_quality:
       score: 15
       max: 15
@@ -178,22 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four KPIs cover different units and different actual-vs-target relationships
-          (below, above, near target).
+        comment: Measures both above and below target, across different band positions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Business KPI dashboard (revenue, customer acquisition, SLA compliance,
-          project milestones) — real, neutral, comprehensible scenario.
+        comment: Neutral quarterly KPI dashboard
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values (82/90 $M, 145/130 customers, 96/95% SLA, 68/80% milestones)
-          are realistic and internally consistent with their ranges.
+        comment: Plausible values and thresholds; no Check values in the Notes; axes
+          read 0-100/0-160 matching data max
     code_quality:
       score: 10
       max: 10
@@ -203,34 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data -> layout constants -> Bullet component -> Chart
-          component structure, appropriate for a React/muix entry.
+        comment: Linear zones; the small MeasureAndTarget component is required to
+          call the MUI X scale hooks inside the chart context
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data array.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart and ChartsReferenceLine imported, both used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; appropriate complexity for compositing a bullet
-          chart from primitives.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly follows the muix harness contract: default export, skipAnimation
-          on both chart layers, sized from window.ANYPLOT_SIZE.'
+        comment: Default-exported component, v9 ChartsContainer, skipAnimation; harness
+          writes outputs
     library_mastery:
       score: 7
       max: 10
@@ -240,26 +231,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct, well-structured use of BarChart's stacking/band-scale API
-          and ChartsReferenceLine; the layered-BarChart compositing is a reasonable
-          workaround given MUI X has no native bullet component.
+        comment: ChartsContainer composition with BarPlot and ChartsXAxis, stacked
+          band series, sx axis styling
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine and stacked-band BarChart layering are MUI X-specific
-          techniques not trivially replicated in another library.
+        comment: Custom SVG layer through useXScale/useDrawingArea hooks inside the
+          composed chart
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:28:02Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - annotations
   - custom-legend
+  - layer-composition
+  - small-multiples
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
