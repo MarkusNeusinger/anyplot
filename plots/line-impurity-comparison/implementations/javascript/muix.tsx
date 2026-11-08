@@ -115,7 +115,15 @@ export default function Chart() {
           legend: {
             direction: "horizontal",
             position: { vertical: "top", horizontal: "center" },
-            sx: { fontSize: 16, color: t.ink, columnGap: 4 },
+            sx: {
+              fontSize: 16,
+              color: t.ink,
+              columnGap: 4,
+              // The peak marks are filled with their series colour, so the legend glyphs are filled too
+              ...Object.fromEntries(
+                curves.map((c) => [`& .MuiChartsLegend-item[data-series="${c.id}"] .MuiChartsLegend-mark path:last-of-type`, { fill: c.color }]),
+              ),
+            },
           },
         }}
         sx={{
