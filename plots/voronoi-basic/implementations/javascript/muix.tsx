@@ -24,8 +24,8 @@ const Y_AXIS_W = 80;
 const MARGIN = { top: 16, bottom: 16, left: 32 };
 
 // Columns: set these to your data's column names
-const X = "X coordinate (km)"; // role: x
-const Y = "Y coordinate (km)"; // role: y
+const X = "Easting (km)"; // role: x
+const Y = "Northing (km)"; // role: y
 
 // Data: replace this block with your own records, one object per row
 // Eighteen retail store locations scattered across a city grid.
@@ -103,7 +103,7 @@ cells.forEach((_, i) => {
   while (taken.has(k)) k += 1;
   colorIndex.push(k);
 });
-const SUBTITLE = `${sites.length} seed points · cells clipped at a box ${BOX_PAD * 100} % beyond the outermost seeds · neighbouring cells differ in color`;
+const SUBTITLE = `Service areas of ${sites.length} retail stores across a city grid · each cell holds the locations nearest its store · neighbouring cells differ in color`;
 
 // The community package has no Voronoi component: a custom layer draws the
 // cells and seeds through the chart's linear scales.
