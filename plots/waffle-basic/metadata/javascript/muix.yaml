@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: waffle-basic
 created: '2026-09-09T22:15:10Z'
-updated: '2026-11-08T07:02:26Z'
+updated: '2026-11-08T07:06:46Z'
 generated_by: claude-opus-5-5
 adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
 workflow_run: 42456874609
@@ -16,43 +16,42 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-ba
 quality_score: 86
 review:
   strengths:
-  - 'Correct 10x10 waffle: 100 equal rounded squares with even gaps, no axes or grid
-    lines, one contiguous block per department filled row by row from the top left'
-  - Largest-remainder rounding guarantees the blocks fill exactly 100 squares with
-    no partly filled square, and the legend percentages are computed from the data
-    rather than typed in
-  - 'Idiomatic MUI X composition: ChartsContainer with two hidden band axes and a
-    custom layer that positions every square through useXScale/useYScale, so the gap
-    and sizing come from the library''s band scales'
-  - Imprint palette in canonical order (brand green first, lavender, blue, ochre)
-    with the catch-all 'Other' in a neutral, data colors identical between light and
-    dark
-  - Plausible, neutral budget-allocation scenario ordered largest share first, legend
-    titled 'Department' with each category and its percentage, readable in both themes
+  - 'Composes the waffle from MUI X building blocks: a ChartsContainer with two hidden
+    band axes (position: "none") and a custom layer that reads useXScale/useYScale,
+    so square size and the even 12 % gaps come from the library''s band scales rather
+    than hand-computed coordinates'
+  - Largest-remainder rounding (lines 50–58) turns the shares into whole squares that
+    always fill the 10 × 10 grid exactly, with no partial squares
+  - One contiguous block per category, filled row by row from the top left in data
+    order, so each share can be counted
+  - 'Imprint palette in canonical order (#009E73, #C475FD, #4467A3, ochre), and the
+    ''Other'' rest category takes the theme-adaptive muted anchor (#6B6A63 / #A8A79F)
+    as the semantic exception allows; data colors are identical in both themes'
+  - Legend names every department with its percentage under a bold 'Department' title,
+    with swatches clearly visible on both backgrounds
+  - Square canvas sized from ANYPLOT_SIZE, theme tokens on all chrome, skipAnimation
+    set, and a plausible, neutral budget-allocation scenario
   weaknesses:
-  - 'VQ-07 (both): the ''Other'' block is filled with the secondary-text chrome token
-    inkSoft (#4A4A44 light / #B8B7B0 dark), which is not one of the Imprint colors
-    or anchors → use the ''muted'' anchor the style guide reserves for other/rest
-    (#6B6A63 light / #A8A79F dark). Likely cause: SEMANTIC = { Other: t.inkSoft }.'
-  - 'Suggestion: the legend text at 16 CSS px is small in the 400 px thumbnail; 18
-    px would read better there while still fitting on one row.'
-  - 'Suggestion: the header line reads ''muix 7.29.1'' while the code is written against
-    the pinned MUI X 9 API; keep the header version in step with the harness.'
+  - 'Suggestion: for the HTML view, a per-square <title> or MUI tooltip showing the
+    department and its share would add hover inspection without changing the static
+    render.'
+  - 'Suggestion: the legend row could sit a little closer to the grid to tighten the
+    vertical rhythm at the bottom of the canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: centered bold title "waffle-basic · javascript · muix · anyplot.ai" in dark ink, a soft-ink subtitle "100 squares, one per 1 % of the total · shares rounded to whole squares", and a single-row legend below the grid ("Department" in bold, then Engineering 34 %, Sales 21 %, Marketing 17 %, Operations 16 %, Other 12 %) in dark ink. No axes or grid lines. All text readable.
-      Data: a 10x10 grid of equal rounded squares with even gaps, filled row by row: 34 brand green #009E73 (Engineering), 21 lavender #C475FD (Sales), 17 blue #4467A3 (Marketing), 16 ochre #BD8233 (Operations), 12 dark gray #4A4A44 (Other). Each block contiguous; counts match the legend.
+      Background: warm off-white, sampled #FAF8F1 (250,248,241).
+      Chrome: bold dark title "waffle-basic · javascript · muix · anyplot.ai" centered at the top, with a soft-ink subtitle "100 squares, one per 1 % of the total · shares rounded to whole squares" below it; a bottom legend with a bold "Department" title and five entries (Engineering 34 %, Sales 21 %, Marketing 17 %, Operations 16 %, Other 12 %). No axes or grid lines. All text is dark and readable.
+      Data: a 10 × 10 grid of rounded squares with even gaps, filled row by row: 34 green (#009E73), 21 lavender (#C475FD), 17 blue (#4467A3), 16 ochre and 12 muted grey (#6B6A63) for Other. Each block is contiguous and the grid is completely filled.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and legend text flip to light ink, subtitle to light soft ink; no dark-on-dark text anywhere.
-      Data: green, lavender, blue and ochre are identical to the light render; the 'Other' block flips to light gray #B8B7B0 because it uses the theme-adaptive inkSoft token. All squares stand out against the background.
+      Background: warm near-black, sampled #1A1A17 (26,26,23).
+      Chrome: the title and legend text flip to light ink and the subtitle to soft light ink; all readable, no dark-on-dark text.
+      Data: green, lavender, blue and ochre are identical to the light render; only the 'Other' muted anchor flips to its dark-theme value #A8A79F, as that anchor is designed to. All squares stand out clearly against the page.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,49 +59,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, subtitle 15, legend 16 CSS px, per
-          the library prompt); readable in both themes
+        comment: Title 22 px, subtitle 15 px, legend 16 px set explicitly, matching
+          the library prompt's sizes; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; squares separated by even gaps
+        comment: No text collisions; the squares are separated by even gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large squares and legend swatches visible against both backgrounds
-          and matching the blocks
+        comment: Large squares and legend swatches clearly visible against both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues are CVD-separated; no red-green signal
+        comment: Four distinct hue families plus a muted grey; no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400); grid centered and dominant, nothing
-          clipped
+        comment: 2400×2400 square canvas; the centered grid fills the space with balanced
+          margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (none by design); subtitle explains the unit of a square
+        comment: 'N/A: a waffle has no axes; the legend title ''Department'' and the
+          subtitle explain the encoding'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Canonical Imprint order and correct backgrounds, but 'Other' uses
-          the inkSoft chrome token instead of the muted anchor (defect line)
+        passed: true
+        comment: 'Imprint in canonical order starting with #009E73; ''Other'' uses
+          the muted semantic anchor; correct backgrounds in both themes'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -110,22 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle/legend hierarchy with a bold legend title and rounded
-          square corners matched by rounded legend swatches
+        comment: Rounded squares (rx 14 % of the cell) and a two-tier title/subtitle
+          hierarchy, beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid side derived from the canvas so the waffle fills the space with
-          balanced margins and a 12 % band gap
+        comment: Grid sized from the space left after the title and legend bands,
+          with even 12 % gaps and a centered legend that has a bold title
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Departments ordered largest first with the catch-all 'Other' recessed
-          in a neutral at the end
+        passed: false
+        comment: Data shown clearly; muting 'Other' follows the style guide's semantic
+          exception, and the implementation chooses no focal point of its own
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single basic 10x10 waffle, no extra layers
+        comment: A single 10×10 waffle grid; no axes, reference lines or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 10x10 grid, whole-square rounding, distinct colors, legend with percentages,
-          contiguous row-by-row blocks
+        comment: 10×10 grid, squares rounded to whole counts, contrasting colors,
+          a legend with percentages, contiguous blocks filled row by row
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Square counts 34/21/17/16/12 match the data and fill the grid
+        comment: The square counts 34/21/17/16/12 match the data and total 100
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend names each category with its percentage
+        comment: Title in the mandated format; legend entries read as text with percentages
     data_quality:
       score: 15
       max: 15
@@ -164,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five shares of different size, blocks ending mid-row, exact fill
-          of the grid
+        comment: Five categories of different sizes, with blocks that end partway
+          through a row
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department budget allocation, neutral and plausible
+        comment: 'Department budget allocation: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Shares sum to 100; checked square counts per block in the render
-          against the data
+        comment: The shares sum to 100 %; the spec has no 'Check values' bullets to
+          verify
     code_quality:
       score: 10
       max: 10
@@ -188,14 +187,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data prep; the only extra component is the layer the scale
-          hooks require
+        comment: Flat module; the only function besides the default export is the
+          custom layer component that the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -207,14 +206,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Largest-remainder rounding is short and has no library equivalent
+        comment: The rounding is short and no library call computes it; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
-          v9 position: ''none'' axes'
+        comment: Default-exported component, skipAnimation, MUI X v9 ChartsContainer
+          API
     library_mastery:
       score: 6
       max: 10
@@ -224,28 +223,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API with band-scale axes and categoryGapRatio for the
-          square gaps instead of hand-computed pixel positions
+        comment: Composition with ChartsContainer plus band-scale axes is the v9 pattern
+          for custom marks
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Custom SVG layer driven by useXScale/useYScale, MUI X's extension
-          point for marks it does not ship
-  verdict: REJECTED
+        passed: false
+        comment: Custom chart layer via useXScale/useYScale hooks on hidden band axes
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T06:59:42Z'
+  rendered_at: '2026-11-08T07:04:14Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
-  - data-generation
-  - matrix-construction
+  - groupby-aggregation
   dataprep:
   - normalization
   styling:
