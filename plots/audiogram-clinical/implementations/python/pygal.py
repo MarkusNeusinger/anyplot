@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 audiogram-clinical: Clinical Audiogram
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-08
+Quality: 87/100 | Updated: 2026-11-08
 """
 
 import os
