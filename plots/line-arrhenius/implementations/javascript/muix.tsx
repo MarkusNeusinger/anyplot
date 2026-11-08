@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-arrhenius: Arrhenius Plot for Reaction Kinetics
 // Library: muix 9.17.0 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-24
+// Quality: pending | Created: 2026-06-24
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
