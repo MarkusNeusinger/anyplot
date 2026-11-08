@@ -4,7 +4,7 @@
 // Quality: 89/100 | Created: 2026-07-24
 //# anyplot-orientation: square
 
-import { RadarChart, RadarAxis } from "@mui/x-charts/RadarChart";
+import { RadarChart, RadarAxis, RadarSeriesArea, RadarSeriesMarks } from "@mui/x-charts/RadarChart";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -73,7 +73,9 @@ export default function Chart() {
         }}
         sx={{
           "& .MuiRadarChart-gridRadial, & .MuiRadarChart-gridDivider": { stroke: t.grid, strokeOpacity: 1, strokeWidth: 1.5 },
-          "& .MuiRadarChart-seriesArea": { fillOpacity: 0.25, strokeWidth: 3, strokeLinejoin: "round" },
+          // The chart's own areas carry only the fills; the outlines are drawn in a second pass
+          // above every fill, so no series' fill tints another series' outline
+          "& .MuiRadarChart-seriesArea": { fillOpacity: 0.25, strokeWidth: 0 },
           "& .MuiRadarChart-seriesMark": { r: 6, stroke: t.pageBg, strokeWidth: 2 },
           "& .MuiRadarChart-axisLine": { stroke: "none" },
           "& .MuiRadarChart-axisLabel": { fontSize: 15, fill: t.inkSoft, transform: "translateX(8px)" },
@@ -81,6 +83,8 @@ export default function Chart() {
           "& .MuiChartsSvgLayer-root > text": { fontSize: "18px !important", fontWeight: "600 !important" },
         }}
       >
+        <RadarSeriesArea className="radar-outline" fill="none" strokeWidth={3} strokeLinejoin="round" />
+        <RadarSeriesMarks />
         <RadarAxis metric={attributes[0]} divisions={RINGS} labelOrientation="horizontal" textAnchor="start" />
       </RadarChart>
     </div>
