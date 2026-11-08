@@ -53,14 +53,14 @@ const data = (() => {
     close.push(round2(price));
   }
 
-  const emaFor = (period: number) => {
-    const k = 2 / (period + 1);
-    const out = [close[0]];
-    for (let i = 1; i < periods; i += 1) out.push(close[i] * k + out[i - 1] * (1 - k));
-    return out;
-  };
-  const short = emaFor(12);
-  const long = emaFor(26);
+  const kShort = 2 / (12 + 1);
+  const kLong = 2 / (26 + 1);
+  const short = [close[0]];
+  const long = [close[0]];
+  for (let i = 1; i < periods; i += 1) {
+    short.push(close[i] * kShort + short[i - 1] * (1 - kShort));
+    long.push(close[i] * kLong + long[i - 1] * (1 - kLong));
+  }
 
   return days.map((day, i) => ({
     [DATE]: day,
@@ -79,9 +79,10 @@ const closes = rows.map((d) => d[CLOSE] ?? null);
 const shorts = rows.map((d) => d[EMA_SHORT] ?? null);
 const longs = rows.map((d) => d[EMA_LONG] ?? null);
 
-// A crossover is a change of side between two consecutive days; its mark sits where the two
-// straight segments between those days meet
+// A crossover is a change of side against the last day on which the two EMAs differed; its
+// mark sits where the two straight segments meet, or on the day they were equal
 const crossovers: { time: number; value: number; bullish: boolean }[] = [];
+let side = 0; // sign of the last non-zero difference short - long
 for (let i = 1; i < n; i += 1) {
   const s0 = shorts[i - 1];
   const l0 = longs[i - 1];
@@ -90,8 +91,9 @@ for (let i = 1; i < n; i += 1) {
   if (s0 == null || l0 == null || s1 == null || l1 == null) continue;
   const before = s0 - l0;
   const after = s1 - l1;
-  if (before * after >= 0) continue;
-  const f = before / (before - after);
+  if (before !== 0) side = Math.sign(before);
+  if (after === 0 || side === 0 || Math.sign(after) === side) continue;
+  const f = before / (before - after); // 0 when the two were equal on the day before
   crossovers.push({
     time: dates[i - 1].getTime() + f * (dates[i].getTime() - dates[i - 1].getTime()),
     value: s0 + f * (s1 - s0),
