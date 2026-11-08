@@ -1,7 +1,7 @@
 // anyplot.ai
 // band-basic: Basic Band Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-08-24
+// Quality: pending | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
