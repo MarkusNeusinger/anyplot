@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:54:48Z'
-updated: '2026-11-08T22:58:15Z'
+updated: '2026-11-08T23:03:24Z'
 generated_by: claude-opus-5-5
 adopted_from: ae75eb4427c022069c41b1b5b2989e51a63bfe4e (ae75eb4427c022069c41b1b5b2989e51a63bfe4e)
 workflow_run: 42532540774
@@ -13,45 +13,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Correct Kagi construction: the line steps one even column right only at a 4 %
-    reversal of the running extreme, giving 22 columns from 250 daily closes, with
-    shoulders and waists as short horizontal segments joining one unbroken line'
-  - Thickness changes exactly where the line crosses the previous shoulder (thin to
-    thick) or waist (thick to thin), splitting a vertical segment at that level (e.g.
-    columns 2, 5, 8, 9, 20); color agrees with thickness at every point
-  - Yang (#009E73, 1.5) and yin (#AE3030, 0.5) are clearly different in weight in
-    both themes, so the state reads without color as well
-  - Color and size scales share one name and labels, so plotnine merges them into
-    one legend whose line samples show both weight and color
-  - Grid kept to y-major only and x grid removed, which suits an x-axis that is a
-    construction index rather than a quantity; tick marks removed, theme tokens threaded
-    through all chrome
+  - 'Correct Kagi construction: a 4 % reversal against the running extreme; verticals
+    split at the previous shoulder or waist, so thickness changes exactly where the
+    rule says (columns 1, 5, 9 thicken; 2, 8, 20 thin out).'
+  - Color and thickness agree at every point; thickness alone also separates the states,
+    so the red/green pair is not the only signal.
+  - Mapping both color and size to the trend with the same scale name and labels gives
+    plotnine one merged legend whose samples match the marks.
+  - Categorical order draws yang last, so the thick line's round caps cover the thin
+    line's joints.
+  - Theme tokens threaded through every chrome element; both renders are correct.
   weaknesses:
-  - 'VQ-05 (both): the legend''s text sits about 2–3 px from its frame ("Trend" touches
-    the left edge, "Yang (bullish)" nearly reaches the right edge), so the box looks
-    cramped → at least about 6 px of inner padding (+4 px). Likely cause: no legend_box_margin/legend_margin
-    set while legend_background draws a framed box.'
-  - 'Suggestion: the first column''s thin vertical segment (101.0 → 100.8) is almost
-    invisible; a seed or start where the first move is larger would show the opening
-    line more clearly.'
+  - 'Suggestion: a slightly heavier yin line (about 0.7) would read more firmly in
+    the 400 px thumbnail on the dark page while keeping the weight contrast.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and panel.
-      Chrome: title "kagi-basic · python · plotnine · anyplot.ai" centered at top (~43 % width), axis titles "Kagi Line Index" and "Price ($)" in dark INK, tick labels 0–20 and 80–110 in INK_SOFT, subtle y-only grid, left and bottom axis lines only; framed legend "Trend" on the right on #FFFDF6 with "Yang (bullish)" and "Yin (bearish)". All text readable.
-      Data: one Kagi line of 22 columns; thick green #009E73 yang segments and thin red #AE3030 yin segments, joined by horizontal shoulders/waists; thickness and color switch at previous shoulder/waist levels (columns 1, 2, 5, 8, 9, 20). Price range ~80–118 with a rising trend after column 9.
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title "kagi-basic · python · plotnine · anyplot.ai" and axis titles "Kagi Line Index" / "Price ($)" in dark ink, tick labels in soft ink, subtle horizontal grid only, left and bottom axis lines, framed "Trend" legend on an elevated background at the right. All readable.
+      Data: one unbroken Kagi line over 22 columns ($80-$118); thick #009E73 yang and thin #AE3030 yin with horizontal shoulders and waists; thickness switches inside the verticals at the previous shoulder/waist (columns 1, 5, 9 thicken; 2, 8, 20 thin out); the last column is open and thin.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 across canvas and panel.
-      Chrome: title and axis titles in light INK, tick labels in light INK_SOFT, faint grid, light axis lines; legend on #242420 with light text. No dark-on-dark text.
-      Data: identical green #009E73 and red #AE3030 lines and widths as the light render; only chrome flipped.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, ticks and legend text #B8B7B0, faint light grid, legend box #242420 with a soft outline. No dark-on-dark text.
+      Data: colors and line weights identical to the light render; the thin red yin line stays visible, brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,68 +51,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12, axis titles 10, ticks 8 pt set explicitly; readable in
-          both themes
+        comment: Explicit sizes (title 12, axis 10, ticks 8); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or data
+        comment: No text collisions; legend clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick and thin lines clearly visible; legend samples match marks
-          in both themes
+        comment: Thick yang and thin yin both visible in both themes; legend samples
+          match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red is backed by thickness, so not the sole signal
+        comment: Thickness doubles the red/green signal, so color is not the sole
+          cue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800; legend text nearly touches its frame (defect line)
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Kagi Line Index'', ''Price ($)'' with unit'
+        comment: '''Kagi Line Index'' and ''Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Yang #009E73, yin #AE3030 semantic pair; correct backgrounds both
-          themes'
+        comment: 'Green #009E73 yang, red #AE3030 yin as the semantic pair; correct
+          backgrounds'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: true
-        comment: Style-guide baseline typography and palette, nothing beyond
+        passed: false
+        comment: Round line ends give clean joins where thick meets thin; elevated
+          framed legend
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: y-only grid chosen for an index x-axis, tick marks removed
+        passed: false
+        comment: x grid and ticks dropped because the index carries no value; only
+          the price-reading grid kept
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed as the Notes prescribe, no further hierarchy
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single basic Kagi line, no extra layers
+        comment: Correct basic Kagi chart, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick/thin yang/yin, shoulders and waists, reversal threshold, line
-          index x-axis, color agrees with thickness
+        comment: Thick/thin, green/red, shoulders and waists, line index x-axis, reversal
+          threshold; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Verticals run between turn prices; columns step only at reversals
+        comment: Verticals run between turn prices; thickness switches at the previous
+          shoulder/waist
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title; merged legend 'Trend' with Yang/Yin entries
+        comment: Mandated title; one merged legend with readable labels
     data_quality:
       score: 15
       max: 15
@@ -159,20 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both transitions mid-segment, long runs, open last segment
+        comment: Both transitions yin to yang and yang to yin, mid-vertical splits,
+          long and short verticals, open last segment
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 250 business-day closes of a stock with 4 % reversal, neutral
+        comment: 250 business days of daily closing prices with a 4 % reversal, as
+          the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices ~80–118 $, 4 % reversal from the running extreme verified
-          in code; no Check values in spec
+        comment: Prices $80-$118 from $100 start with 2 % daily volatility; 22 columns
+          from 250 days is plausible at 4 %
     code_quality:
       score: 10
       max: 10
@@ -200,13 +197,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Kagi construction has no library call; compact loops
+        comment: Kagi construction has no library call; loops are compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 3200x1800, current API
+        comment: Saves plot-{THEME}.png at 3200x1800 with current API
     library_mastery:
       score: 6
       max: 10
@@ -215,27 +212,27 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: geom_segment with mapped color and size, categorical ordering controls
-          draw order
+        passed: false
+        comment: geom_segment with x/xend/y/yend from a tidy table, manual scales
+          with limits, categorical order controls drawing order
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Shared scale name merges color and size into one grammar-of-graphics
-          legend
-  verdict: REJECTED
+        comment: Shared scale name merges color and size into one legend, a grammar-of-graphics
+          idiom
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
-  rendered_at: '2026-11-08T22:55:28Z'
+  rendered_at: '2026-11-08T23:00:55Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
-  - cumulative-sum
-  - time-series
+  - kagi-construction
   styling:
-  - grid-styling
+  - publication-ready
