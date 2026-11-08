@@ -3,192 +3,90 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 89/100 | Created: 2026-07-24
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { useDrawingArea } from "@mui/x-charts/hooks";
 
-// @mui/x-charts 7.x community has no RadarChart component (added in v8), so the
-// radar is composed on MUI X's own charting surface: ChartContainer provides the
-// sized <svg> + drawing area, and useDrawingArea() gives the plot rect we map the
-// polar geometry onto. Everything is real data drawn to scale — no faked chrome.
+import { RadarChart, RadarAxis, RadarSeriesArea, RadarSeriesMarks } from "@mui/x-charts/RadarChart";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
 
-// Theme-adaptive chrome (ThemeProvider handles MUI text; these are for our SVG).
-const INK = t.ink;
-const INK_SOFT = t.inkSoft;
-const GRID = t.grid;
-const PAGE_BG = t.pageBg;
+// Constants
+const SCALE_MAX = 100; // the 0–100 rating scale the spec recommends
+const RINGS = 5; // gridlines at every fifth of the scale: 20, 40, 60, 80, 100
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 48;
 
-// --- Data (in-memory, deterministic) — basketball player scouting report ------
-const axes = ["Speed", "Shooting", "Passing", "Defense", "Rebounding", "Stamina"];
-const series = [
-  { label: "Guard", color: t.palette[0], values: [90, 84, 92, 68, 52, 86] },
-  { label: "Forward", color: t.palette[1], values: [70, 76, 62, 85, 90, 80] },
+// Columns: set these to your data's column names
+const ATTRIBUTE = "Attribute"; // role: category
+const PLAYERS = ["Guard", "Forward"]; // role: value
+
+// Data: replace this block with your own records, one object per row
+// Basketball scouting report: two player profiles rated 0–100 on six attributes
+const data = [
+  { [ATTRIBUTE]: "Speed", [PLAYERS[0]]: 90, [PLAYERS[1]]: 70 },
+  { [ATTRIBUTE]: "Shooting", [PLAYERS[0]]: 84, [PLAYERS[1]]: 76 },
+  { [ATTRIBUTE]: "Passing", [PLAYERS[0]]: 92, [PLAYERS[1]]: 62 },
+  { [ATTRIBUTE]: "Defense", [PLAYERS[0]]: 68, [PLAYERS[1]]: 85 },
+  { [ATTRIBUTE]: "Rebounding", [PLAYERS[0]]: 52, [PLAYERS[1]]: 90 },
+  { [ATTRIBUTE]: "Stamina", [PLAYERS[0]]: 86, [PLAYERS[1]]: 80 },
 ];
-const MAX = 100;
-const RINGS = [20, 40, 60, 80, 100];
-const N = axes.length;
 
-// Axis i points from the top (-90°) going clockwise; SVG y grows downward.
-const angleOf = (i) => (-90 + (i * 360) / N) * (Math.PI / 180);
+// Plot: reads only data and the constants above
+const attributes = [...new Set(data.map((d) => d[ATTRIBUTE]))];
+const series = PLAYERS.map((player, i) => ({
+  id: `player-${i}`,
+  label: player,
+  data: attributes.map((a) => data.find((d) => d[ATTRIBUTE] === a)?.[player] ?? null),
+  fillArea: true,
+}));
 
-// --- Radar layer: rendered as children inside MUI X's ChartsSurface -----------
-function RadarLayer() {
-  const area = useDrawingArea();
-  const cx = area.left + area.width / 2;
-  const cy = area.top + area.height / 2;
-  const half = Math.min(area.width, area.height) / 2;
-  const R = half - 54; // data radius; the margin between R and half holds labels
-  const labelR = half - 4;
+const TITLE = "radar-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${PLAYERS.length} series on ${attributes.length} axes · shared scale 0–${SCALE_MAX}`;
 
-  const point = (frac, i) => {
-    const a = angleOf(i);
-    return [cx + frac * R * Math.cos(a), cy + frac * R * Math.sin(a)];
-  };
-  const polygon = (frac) =>
-    axes.map((_, i) => point(frac, i).join(",")).join(" ");
-
-  return (
-    <g>
-      {/* Concentric grid rings at each value level — outer ring solid, inner
-          rings lighter/thinner so the nested grid stays subtle at the center */}
-      {RINGS.map((level) => (
-        <polygon
-          key={`ring-${level}`}
-          points={polygon(level / MAX)}
-          fill="none"
-          stroke={GRID}
-          strokeWidth={level === MAX ? 2 : 1}
-          strokeOpacity={level === MAX ? 1 : 0.6}
-        />
-      ))}
-
-      {/* Radial spokes + outer axis labels */}
-      {axes.map((label, i) => {
-        const [ox, oy] = point(1, i);
-        const a = angleOf(i);
-        const lx = cx + labelR * Math.cos(a);
-        const ly = cy + labelR * Math.sin(a);
-        const cos = Math.cos(a);
-        const anchor = cos > 0.15 ? "start" : cos < -0.15 ? "end" : "middle";
-        const sin = Math.sin(a);
-        const baseline = sin > 0.5 ? "hanging" : sin < -0.5 ? "auto" : "central";
-        return (
-          <g key={`axis-${label}`}>
-            <line x1={cx} y1={cy} x2={ox} y2={oy} stroke={GRID} strokeWidth={1.25} />
-            <text
-              x={lx}
-              y={ly}
-              fill={INK}
-              fontSize={18}
-              fontWeight={600}
-              textAnchor={anchor}
-              dominantBaseline={baseline}
-            >
-              {label}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Value tick labels, offset off the top spoke so they read on their own */}
-      {RINGS.map((level) => (
-        <text
-          key={`tick-${level}`}
-          x={cx + 12}
-          y={cy - (level / MAX) * R}
-          fill={INK_SOFT}
-          fontSize={15}
-          textAnchor="start"
-          dominantBaseline="central"
-        >
-          {level}
-        </text>
-      ))}
-
-      {/* Series polygons: translucent fill + solid outline + vertex markers */}
-      {series.map((s) => (
-        <g key={`series-${s.label}`}>
-          <polygon
-            points={axes.map((_, i) => point(s.values[i] / MAX, i).join(",")).join(" ")}
-            fill={s.color}
-            fillOpacity={0.25}
-            stroke={s.color}
-            strokeWidth={3}
-            strokeLinejoin="round"
-          />
-          {axes.map((_, i) => {
-            const [px, py] = point(s.values[i] / MAX, i);
-            return (
-              <circle
-                key={`pt-${s.label}-${i}`}
-                cx={px}
-                cy={py}
-                r={6}
-                fill={s.color}
-                stroke={PAGE_BG}
-                strokeWidth={2}
-              />
-            );
-          })}
-        </g>
-      ))}
-    </g>
-  );
-}
-
-// --- Title + legend drawn on the surface, then the radar layer ----------------
-function Chrome() {
-  const legendGap = 240;
-  const legendStart = size.width / 2 - ((series.length - 1) * legendGap) / 2;
-  const legendY = size.height - 44;
-  return (
-    <g>
-      <text
-        x={size.width / 2}
-        y={52}
-        fill={INK}
-        fontSize={28}
-        fontWeight={700}
-        textAnchor="middle"
-      >
-        radar-basic · javascript · muix · anyplot.ai
-      </text>
-      {series.map((s, i) => {
-        const x = legendStart + i * legendGap;
-        return (
-          <g key={`legend-${s.label}`}>
-            <rect x={x - 84} y={legendY - 13} width={26} height={26} rx={5} fill={s.color} />
-            <text
-              x={x - 50}
-              y={legendY}
-              fill={INK}
-              fontSize={17}
-              textAnchor="start"
-              dominantBaseline="central"
-            >
-              {s.label}
-            </text>
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ----------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
   return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={[]}
-      margin={{ top: 84, bottom: 84, left: 96, right: 96 }}
-      skipAnimation
-    >
-      <Chrome />
-      <RadarLayer />
-    </ChartContainer>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
+      <RadarChart
+        width={width}
+        height={height - TITLE_H - SUBTITLE_H - LEGEND_H}
+        skipAnimation
+        colors={t.palette}
+        margin={{ top: 64, right: 120, bottom: 64, left: 120 }}
+        radar={{ metrics: attributes, max: SCALE_MAX, labelGap: 22 }}
+        divisions={RINGS}
+        shape="sharp"
+        stripeColor={null}
+        series={series}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 16, color: t.ink },
+          },
+        }}
+        sx={{
+          "& .MuiRadarChart-gridRadial, & .MuiRadarChart-gridDivider": { stroke: t.grid, strokeOpacity: 1, strokeWidth: 1.5 },
+          // The chart's own areas carry only the fills; the outlines are drawn in a second pass
+          // above every fill, so no series' fill tints another series' outline
+          "& .MuiRadarChart-seriesArea": { fillOpacity: 0.25, strokeWidth: 0 },
+          "& .MuiRadarChart-seriesMark": { r: 6, stroke: t.pageBg, strokeWidth: 2 },
+          "& .MuiRadarChart-axisLine": { stroke: "none" },
+          "& .MuiRadarChart-axisLabel": { fontSize: 15, fill: t.inkSoft, transform: "translateX(8px)" },
+          // The metric labels carry an inline 12 px caption style, which only an !important rule outranks
+          "& .MuiChartsSvgLayer-root > text": { fontSize: "18px !important", fontWeight: "600 !important" },
+        }}
+      >
+        <RadarSeriesArea className="radar-outline" fill="none" strokeWidth={3} strokeLinejoin="round" />
+        <RadarSeriesMarks />
+        <RadarAxis metric={attributes[0]} divisions={RINGS} labelOrientation="horizontal" textAnchor="start" />
+      </RadarChart>
+    </div>
   );
 }
