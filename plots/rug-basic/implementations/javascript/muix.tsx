@@ -1,7 +1,7 @@
 // anyplot.ai
 // rug-basic: Basic Rug Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-25
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 85/100 | Updated: 2026-11-08
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
