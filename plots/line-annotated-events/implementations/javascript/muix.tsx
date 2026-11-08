@@ -23,7 +23,8 @@ const EVENT_LABEL = "Event"; // role: event_label
 // Data: replace this block with your own records: one object per day of the series
 // (date and value) and one per event (event date and label); other cells stay null
 // Daily active users of a SaaS product from 1 Jan to 27 Sep 2025: a slow upward drift with
-// daily noise, plus a one-time step on each product event (the outage steps it down).
+// daily noise, a lasting step up on each launch, and a sharp dip on the outage day that
+// halves every day after as users come back.
 const data = (() => {
   let seed = 42;
   const rand = () => {
@@ -32,18 +33,21 @@ const data = (() => {
   };
   const isoDay = (i: number) => new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10);
   const events = [
-    { day: 34, label: "Beta launch", step: 6 },
-    { day: 96, label: "Mobile app release", step: 13 },
-    { day: 130, label: "Service outage", step: -15 },
-    { day: 162, label: "API v2 launch", step: 9 },
-    { day: 228, label: "Enterprise tier", step: 17 },
+    { day: 34, label: "Beta launch", step: 6, dip: 0 },
+    { day: 96, label: "Mobile app release", step: 13, dip: 0 },
+    { day: 130, label: "Service outage", step: 0, dip: -15 },
+    { day: 162, label: "API v2 launch", step: 9, dip: 0 },
+    { day: 228, label: "Enterprise tier", step: 17, dip: 0 },
   ];
   const series = [];
   let level = 42;
+  let dip = 0;
   for (let i = 0; i < 270; i += 1) {
-    const step = events.find((e) => e.day === i)?.step ?? 0;
-    level = Math.max(5, level + 0.11 + (rand() - 0.5) * 1.6 + step);
-    series.push({ [DATE]: isoDay(i), [VALUE]: Math.round(level * 10) / 10, [EVENT_DATE]: null, [EVENT_LABEL]: null });
+    const event = events.find((e) => e.day === i);
+    level = Math.max(5, level + 0.11 + (rand() - 0.5) * 1.6 + (event?.step ?? 0));
+    dip = dip / 2 + (event?.dip ?? 0);
+    const users = Math.max(5, level + dip);
+    series.push({ [DATE]: isoDay(i), [VALUE]: Math.round(users * 10) / 10, [EVENT_DATE]: null, [EVENT_LABEL]: null });
   }
   const marks = events.map((e) => ({ [DATE]: null, [VALUE]: null, [EVENT_DATE]: isoDay(e.day), [EVENT_LABEL]: e.label }));
   return [...series, ...marks];
