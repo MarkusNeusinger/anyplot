@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-retention-cohort: User Retention Curve by Cohort
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-20
+// Quality: pending | Created: 2026-06-20
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
