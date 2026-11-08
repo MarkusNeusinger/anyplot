@@ -135,15 +135,18 @@ for (const path of pages) {
     status = response ? response.status() : status;
     // Cloudflare marks its challenge pages; such a page says nothing about the site behind it.
     challenge = response?.headers()['cf-mitigated'] === 'challenge';
-    // The app renders client-side: wait for #root to fill, bounded, then read it.
-    await page
-      .waitForFunction((min) => (document.getElementById('root')?.innerText.length ?? 0) >= min, MIN_TEXT, {
-        timeout: 15000,
-      })
-      .catch(() => {});
-    // The layout chrome alone can pass the text threshold while the route's lazy chunk still
-    // loads, so let the network settle (bounded) before the route is judged.
-    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    // A challenge page never grows the app's #root, so waiting for it would only burn the timeouts.
+    if (!challenge) {
+      // The app renders client-side: wait for #root to fill, bounded, then read it.
+      await page
+        .waitForFunction((min) => (document.getElementById('root')?.innerText.length ?? 0) >= min, MIN_TEXT, {
+          timeout: 15000,
+        })
+        .catch(() => {});
+      // The layout chrome alone can pass the text threshold while the route's lazy chunk still
+      // loads, so let the network settle (bounded) before the route is judged.
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    }
   } catch (e) {
     pageErrors.push(`navigation: ${e.message.split('\n')[0]}`);
   }
