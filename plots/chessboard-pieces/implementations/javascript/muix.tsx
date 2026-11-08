@@ -131,7 +131,8 @@ function PieceLayer() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const containerSide = Math.min(width, height - HEADER_H);
+  // The rank labels take an axis band on the left only; a matching right margin keeps the board centered
+  const containerSide = Math.min(width - AXIS_SIZE, height - HEADER_H);
 
   return (
     <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -140,9 +141,9 @@ export default function Chart() {
         <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
       </div>
       <ChartsContainer
-        width={containerSide}
+        width={containerSide + AXIS_SIZE}
         height={containerSide}
-        margin={{ top: PAD, right: PAD, bottom: PAD, left: PAD }}
+        margin={{ top: PAD, right: PAD + AXIS_SIZE, bottom: PAD, left: PAD }}
         skipAnimation
         series={[]}
         xAxis={[
