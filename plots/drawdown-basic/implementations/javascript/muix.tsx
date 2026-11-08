@@ -152,6 +152,9 @@ export default function Chart() {
             id: "value",
             position: "right",
             label: NAV,
+            // Anchored at zero so the value line rides above the deep end of the drawdown instead of on top of it
+            min: 0,
+            max: Math.max(...values) * (1 + Y_PAD),
             width: 84,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
