@@ -2,114 +2,106 @@ library: muix
 language: javascript
 specification_id: contour-basic
 created: '2026-06-25T04:09:57Z'
-updated: '2026-06-25T04:40:35Z'
-generated_by: claude-sonnet
-workflow_run: 28145550483
+updated: '2026-11-08T01:47:50Z'
+generated_by: claude-opus-5-5
+adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
+workflow_run: 42435004762
 issue: 855
-language_version: 22.23.0
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint sequential colormap (t.seq[0]→t.seq[1]) for continuous elevation
-    data with first band at #009E73'
-  - Marching squares algorithm produces proper contour isolines — now both filled
-    regions AND level curves are present
-  - Creative useDrawingArea hook usage for SVG isoline overlay is a truly distinctive
-    MUI X community feature
-  - Fully deterministic two-Gaussian-peak topology creates compelling real-world-plausible
-    topographic data
-  - 'Both themes handled correctly: t.pageBg, t.ink, t.inkSoft throughout; data colors
-    identical across both renders'
-  - 'Perfect spec compliance: colorbar legend, filled regions, isolines, 60x60 grid
-    — all features present'
+  - A zAxis piecewise colorMap drives both the band fills (via useZColorScale) and
+    the PiecewiseColorLegend colour bar, so fills and legend cannot drift apart
+  - Custom contour layer composed inside ChartsDataProvider/ChartsSurface using the
+    library's useXScale/useYScale hooks, with native MUI X axes
+  - Equal px per km layout keeps the terrain undistorted; the 100x100 grid gives smooth,
+    evenly stepped isolines that close around both summits and form a clear saddle
+  - Imprint sequential ramp (t.seq) in discrete steps; chrome is fully theme-adaptive
+    and data colours are identical in both renders
   weaknesses:
-  - Scatter proxy creates jagged/serrated pixel edges at contour band boundaries and
-    at chart border — inherent limitation of the approach but detracts from visual
-    refinement
-  - Default MUI X chart border frame retained — removing or softening it (transparent
-    background / no border) would improve visual cleanliness
-  - 'DE-01 ceiling: the rough scatter edges prevent publication-ready polish even
-    though the algorithmic work is sophisticated'
-  - 'CQ-01: Module-level helper functions and a React sub-component (IsolineOverlay)
-    add necessary complexity but move away from flat KISS structure'
+  - 'SC-02 (both): the innermost ring around the south summit (about -1.0, -1.0) is
+    a small, visibly faceted polygon only a few grid cells across, against the spec''s
+    ''smooth curves, never angular'' property → a ring wide enough to look round,
+    e.g. raise the south summit slightly (amplitude 0.75 → about 0.8) so the top level
+    it crosses is not just grazed. Likely cause: the southSummit amplitude puts its
+    peak barely above the 0.89 level.'
+  - 'Suggestion: labels on a few key levels (the Notes allow them) would let the map
+    be read without the colour bar.'
+  - 'Suggestion: neighbouring low bands (0.00–0.13 and 0.13–0.25) are close in tone
+    in the colour bar; fewer levels would widen each step.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) page background fills the outer padding area — correct theme surface. The chart area is transparent, showing the page bg through.
-      Chrome: Title "contour-basic · javascript · muix · anyplot.ai" centered at top in dark ink (#1A1A17) at 22px CSS — clearly readable. X-axis label "X" and rotated Y-axis label "Y" in dark ink at 15px CSS. Tick labels (-3 to 3 on both axes) at 14px CSS in inkSoft (#4A4A44) — readable at full resolution. Six-item legend with value-range labels on the right side in inkSoft at 13px.
-      Data: Brand green (#009E73) fills the outer/lowest-elevation band across most of the plot area. Two circular peak regions visible (upper-right taller, lower-left shorter), progressing through intermediate teal/teal-blue intermediate bands to deep blue (#4467A3) at the highest-elevation cores. Isoline level curves appear as thin dark hairlines (stroke: t.ink, opacity 0.5) overlaid on the filled bands — five isolines visible marking the five band boundaries. A diagonal ridge connecting the two peaks is clearly visible. Scatter proxy creates slightly jagged edges at band transitions and at chart border boundaries.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1 page around a square 6 x 6 km map.
+      Chrome: bold title "Survey Terrain · contour-basic · javascript · muix · anyplot.ai" and grey subtitle "100 × 100 grid points · 9 levels evenly stepped by 0.13" at top; axis titles "Easting (km)" and "Northing (km)", ticks -3.0..3.0 every 0.5 in soft ink; colour bar at right titled "Elevation (km)" with 9 square swatches, 1.02–1.15 at top down to 0.00–0.13. All readable, dark text on light page.
+      Data: filled bands stepped along imprint_seq from brand green #009E73 (low ground) to blue #4467A3 (summits), dark isolines at 0.6 opacity. Two summits (larger NE near (1, 0.5), smaller SW near (-1, -1)) joined by a diagonal ridge with a saddle hourglass; lines crowd on the steep summit flanks and run off the edges along the ridge. Innermost south-summit ring is small and slightly faceted.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) fills the outer padding area — correct theme surface.
-      Chrome: Title, axis labels, and tick labels rendered in light ink tones (t.ink = #F0EFE8, t.inkSoft = #B8B7B0) — all clearly readable against the dark background. No dark-on-dark failures. Legend labels readable on dark surface.
-      Data: Data colors are visually identical to the light render — brand green (#009E73) for base elevation, transitioning to blue (#4467A3) at peak cores. Isoline hairlines are light-colored (t.ink on dark bg) and clearly visible. Only the page background and axis chrome flipped between themes; both Gaussian elevation peaks remain clearly visible.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues observed.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, ticks, axis lines and legend text all switch to light ink; no dark-on-dark text.
+      Data: band fills, isolines and legend swatches identical to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, labels 15px, ticks 14px,
-          legend 13px). Readable in both themes at full res. Minor deduction: tick
-          label font size at 14px CSS is on the smaller side at mobile scale.'
+        comment: 'Explicit sizes (title 22, subtitle 15, axis titles 16, ticks and
+          legend 14 px CSS); all text readable on #FAF8F1 and #1A1A17, theme tokens
+          threaded through ticks, axis titles, legend'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Title, legend, axis labels, and tick labels all
-          clearly separated.
+        comment: No text collisions; legend sits clear of the map
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Two Gaussian peaks clearly visible with clean color gradient. Isoline
-          hairlines visible. Minor deduction: scatter proxy creates jagged/serrated
-          edges at band transitions and chart boundary.'
+        comment: 1.5 px isolines at 0.6 opacity read on every band in both themes;
+          legend swatches visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential palette (green to blue) is CVD-safe with strong
-          luminance contrast across the gradient.
+        comment: Green-to-blue ramp is CVD-safe, and isolines separate neighbouring
+          bands
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Chart occupies good canvas area with well-placed
-          right legend. Minor deduction for rough scatter boundary at chart edges
-          creating a slightly untidy frame appearance.
+        comment: Canvas gate passed (2400x2400); equal px per km, map centred with
+          the colour bar beside it, balanced axis labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X and Y are appropriate and descriptive labels for a mathematical
-          2D function (the spec literally uses x and y as variable names). Title format
-          correct.
+        comment: Easting (km), Northing (km), Elevation (km)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses t.seq[0] (#009E73) to t.seq[1] (#4467A3) — correct Imprint sequential
-          colormap for continuous elevation data. Background is t.pageBg. Chrome uses
-          t.ink / t.inkSoft. Both renders theme-correct.
+        comment: 'Bands are discrete steps of imprint_seq (t.seq #009E73 -> #4467A3);
+          backgrounds correct in both themes; data colours identical across themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -117,28 +109,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Creative marching squares + scatter band workaround shows real algorithmic
-          sophistication well above defaults. Isoline overlay is elegant. The rough
-          scatter proxy edges prevent full publication-ready polish.
+        comment: 'Raised: a deliberate title/subtitle/legend-title weight hierarchy
+          and a fixed-ink isoline at 0.6 opacity that reads on every band in both
+          themes'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Axis lines disabled (disableLine: true). No grid (appropriate for
-          filled contour). Legend cleanly styled. However: default MUI X chart border
-          frame retained and rough scatter edges at band transitions detract from
-          overall refinement.'
+        passed: true
+        comment: 'Raised: the layout computes equal px per km so the terrain is not
+          distorted, and centres the map vertically in the spare height'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Two-peaked topography with connecting ridge creates clear visual
-          focal points. Color gradient naturally guides eye from low (green) to high
-          (blue). Viewer immediately identifies the two elevation summits.
+        comment: 'Raised: the subtitle states the level step, so line spacing reads
+          directly as slope; the terrain shows two unequal summits and a saddle'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,34 +135,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Full contour plot: both filled contour regions (scatter proxy) AND
-          isoline level curves (marching squares + SVG overlay). All defining elements
-          of a contour plot present.'
+        comment: Filled contour bands with isolines and a colour bar; no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sequential colormap ✓; colorbar legend with value ranges ✓; contour
-          isolines overlaid on filled regions ✓; 60x60 grid resolution ✓; diverging/sequential
-          colormap per spec note ✓.
+        comment: Colour bar, filled regions, smooth evenly stepped isolines all present;
+          the innermost ring of the south summit is visibly faceted, against the 'smooth
+          curves, never angular' bullet (defect line). Level labels are optional ('when
+          practical') and not drawn, so no deduction for that
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes span -3 to 3. Z encoded as color through both fill bands
-          and isolines. All data visible, no clipping.
+        comment: Axes span the full -3..3 grid; bands and lines come straight from
+          the grid values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'contour-basic · javascript · muix · anyplot.ai' matches required
-          format exactly. Legend labels 6 elevation bands with numeric ranges showing
-          the value scale.
+        comment: '''Survey Terrain · contour-basic · javascript · muix · anyplot.ai'';
+          legend titled Elevation (km) with level ranges in order'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -181,66 +168,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 2D scalar field, two distinct peaks of different
-          heights, diagonal ridge feature, elevation gradient, filled contour regions,
-          AND isoline level curves. Comprehensive demonstration.'
+        comment: Closed rings around peaks, crowding on steep slopes, wide spacing
+          on flat ground, a saddle hourglass, lines running to the edge
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Two Gaussian peaks + diagonal ridge is a realistic, neutral mathematical
-          elevation surface (classic test case for contour visualization). Slightly
-          abstract (pure math function) but clearly applicable to topographic contexts.
+        comment: Terrain of a 6x6 km survey square, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 60x60 = 3600 points for smooth coverage. Z range 0–1.15 appropriate
-          for normalized elevation function. Grid spans -3 to 3 on both axes.
+        comment: 'Elevations 0-1.15 km over 6 km are plausible hill terrain; checked:
+          100x100 grid inside the spec''s 20-100 range, 9 levels stepped by 0.13 computed
+          from zMin/zMax. No Check values in the spec'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Multiple module-level helper functions (elevation, seqColor, marchingSquares)
-          and a React sub-component (IsolineOverlay). Complexity is justified by the
-          visualization approach but moves away from flat KISS.
+        comment: Flat script; the only components are the default export and the ContourLayer
+          that the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: fixed mathematical function, no RNG.'
+        comment: Deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ScatterChart, useDrawingArea, Box, Typography — all imported and
-          used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Marching squares algorithm cleanly implemented. Array.from pipelines,
-          filter/map chains, seqColor interpolation all elegant. IsolineOverlay component
-          is a clean React pattern.
+        comment: 'Written-out marching triangles is allowed: muix has no contour helper
+          (library prompt: Computation)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports component, sizes from window.ANYPLOT_SIZE, skipAnimation
-          set, tooltip disabled, harness handles output files.
+        comment: Default-exports a component, sized to ANYPLOT_SIZE, skipAnimation,
+          v9 ChartsDataProvider/ChartsWrapper API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -248,29 +230,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: useDrawingArea hook, slotProps.legend for legend positioning, margin
-          configuration, xAxis/yAxis with labelStyle/tickLabelStyle — all standard
-          MUI X patterns correctly applied. Proper window.ANYPLOT_TOKENS integration.
+        comment: 'Raised: composed chart via ChartsDataProvider + ChartsSurface, with
+          a custom SVG layer reading useXScale/useYScale'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: useDrawingArea hook for custom SVG overlay (IsolineOverlay) is a
-          genuinely distinctive MUI X community feature — provides precise drawing-area
-          coordinate mapping for custom children injected into the chart. This approach
-          is unique to MUI X's composition model.
+        comment: 'Raised: a zAxis piecewise colorMap is the single source for both
+          the band fills (useZColorScale) and the PiecewiseColorLegend colour bar'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:44:41Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - patches
+  - layer-composition
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - custom-colormap
   - alpha-blending
