@@ -2,235 +2,228 @@ library: muix
 language: javascript
 specification_id: surface-basic
 created: '2026-09-10T01:13:45Z'
-updated: '2026-09-10T01:29:39Z'
-generated_by: claude-sonnet
-workflow_run: 34424011769
+updated: '2026-11-08T06:28:39Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42454149474
 issue: 1013
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Isometric hand-rolled surface projection (following the scatter-3d precedent)
-    reads as a genuine 3D surface despite MUI X community having no native 3D chart
-    type
-  - Diverging Imprint colormap (matte red -> theme-adaptive midpoint -> blue) is the
-    semantically correct choice for sin(x)*cos(y), which has a real zero baseline,
-    and is built exactly per the style guide's imprint_div recipe
-  - ContinuousColorLegend with descriptive 'valley'/'peak' min/max labels satisfies
-    the spec's colorbar suggestion and is legible in both themes
-  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, fully
-    legible chrome, and identical data colors between light and dark (only the diverging
-    midpoint shifts, which is the intended theme-adaptive behavior)'
-  - Deterministic, seed-free data generation and correct 30x30 grid size per spec
-  - Idiomatic low-level MUI X usage via useXScale/useYScale hooks to draw a custom
-    reference frame inside ChartContainer, entirely within the community package surface
+  - 'Builds the 3D surface inside MUI X''s composition API: ChartsDataProvider with
+    position-none iso axes, a custom SurfaceLayer in ChartsSurface reading useXScale/useYScale,
+    and quad fills from useZColorScale on a continuous zAxis colorMap built from the
+    Imprint imprint_seq stops (t.seq).'
+  - The same zAxis drives a native ContinuousColorLegend titled 'Elevation (m)', so
+    color bar and surface colors come from one scale.
+  - Native pointer-drag rotation (azimuth on horizontal drag, tilt clamped to 10-60
+    degrees on vertical drag) fulfils the spec's rotation note in the HTML output.
+  - Mesh lines are drawn in the page color at 0.35 opacity, so they read as light
+    highlights in light mode and dark seams in dark mode without hiding the colormap.
+  - Tick labels on the ground axes are pushed outward along the projected edge normal,
+    so labels never sit on the surface; the opening oblique view shows the hills and
+    basins together.
+  - 'Clear typographic hierarchy: 22 px semibold title, 15 px inkSoft subtitle with
+    grid size and range, 16 px semibold axis titles over 14 px inkSoft ticks.'
   weaknesses:
-  - 'Duplicate/stale header block: lines 1-4 are leftover boilerplate from a prior
-    attempt (''Library: muix 7.29.1 | JavaScript 22.23.2'', ''Quality: 77/100''),
-    immediately followed by a second, differently-formatted canonical header at lines
-    6-10. Remove the stale lines 1-4 entirely and move ''//# anyplot-orientation:
-    landscape'' to line 1 as the library rules require (''keep it on its own line
-    at the very top'').'
-  - 'No real rotation/interactivity: the spec asks interactive libraries to ''enable
-    rotation to explore the surface from different angles'', but this is a static
-    isometric SVG projection with no camera controls in either the PNG or the emitted
-    HTML. This is an accepted MUI X community limitation (same as scatter-3d''s precedent)
-    rather than an implementation oversight, but it''s a genuine spec gap worth acknowledging
-    in a code comment.'
-  - The reference frame (z-axis line, dashed ground-plane edges) is drawn by IsoFrame
-    strictly after SurfaceMesh with no depth test against the mesh, so the solid z-axis
-    line and dashed ground lines visibly cut across surface peaks instead of being
-    occluded by nearer geometry — a minor depth-ordering artifact in both renders.
+  - 'DQ-02 (both): the terrain is a textbook egg-crate, 420 + 80·sin((x−6)/2)·cos((y−6)/2),
+    with every hill and basin exactly ±80 m around 420 m, which reads as a math function
+    relabelled as elevation rather than surveyed ground → give the hills and basins
+    unequal heights and widths (e.g. a sum of two or three Gaussian hills and basins
+    of different amplitude, or a gentle regional slope), keeping one surface. Likely
+    cause: the single sin·cos expression in the z data line.'
+  - 'Suggestion: the color bar shows only its min and max (340.4, 499.6); a few intermediate
+    ticks at the z-axis values (350, 400, 450) would tie it to the z axis.'
+  - 'Suggestion: the z axis ends near 500 m without a top tick label; extending the
+    tick set to the axis top would close the scale.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "surface-basic · javascript · muix · anyplot.ai" centered top, fully readable. Axis reference labels "y · [-3, 3]" (left) and "x · [-3, 3]" (right) at the ground plane, and "z = sin(x)·cos(y)" floating above with a vertical line down to the height axis — all dark text on the light background, clearly legible. Dashed gray ground-plane lines and a solid dark z-axis reference line are visible crossing the surface. Bottom-center ContinuousColorLegend reads "-0.99 (valley)" to "0.99 (peak)" with a red-to-blue gradient bar, legible dark text.
-      Data: A hand-projected isometric surface (30x30 quad mesh) showing two blue peaks and two red valleys (sin(x)*cos(y) over [-3,3]x[-3,3]), diverging Imprint colormap (matte red -> near-white midpoint -> blue), quads outlined with thin page-background strokes for separation.
-      Legibility verdict: PASS — all title, axis, and legend text is clearly readable against the light background; no light-on-light text found.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: centered title "surface-basic · javascript · muix · anyplot.ai" in dark semibold ink, subtitle "30 × 30 grid · Elevation (m) from 340.4 to 499.6" in softer ink. Three axes drawn as dark lines: Easting (km) along the front-left ground edge (ticks 0-12 every 2), Northing (km) along the front-right edge (0-12), a vertical Elevation (m) axis at the left corner (ticks 350, 400, 450). The far base edges are a faint grid-colored outline. All text dark on light and readable; nothing clipped.
+      Data: one continuous 30 × 30 surface in an oblique view (azimuth 45°, tilt 25°): a tall hill at the back, a hill right of center, a partial hill at the left edge, a deep basin at the front corner and a basin in the middle. Fill runs brand green #009E73 (low) to blue #4467A3 (high) per imprint_seq; mesh lines are thin light page-colored lines. No holes or tears. Vertical continuous color bar on the right titled "Elevation (m)" labelled 340.4 to 499.6.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title and axis reference labels, now rendered in light/off-white text, fully legible against the dark background. Dashed ground-plane lines and the z-axis line render in a lighter gray, still visible but subtle. Bottom-center legend text switches to light-colored digits/words, clearly readable, with the same red-to-blue gradient bar (its near-white midpoint replaced by a near-black midpoint, which is the theme-adaptive behavior the imprint_div recipe calls for).
-      Data: Same two peaks/two valleys, same red/blue extremes as the light render — the actual data-color hues (matte red, blue) are visually identical between renders; only the theme-adaptive midpoint and all chrome flipped, as required.
-      Legibility verdict: PASS — no dark-on-dark text found; all chrome elements (title, axis reference text, legend labels) use light ink against the dark surface.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, subtitle, axis titles and tick labels flip to light ink and are all readable; axis lines light gray; far base outline subtle gray. No dark-on-dark text.
+      Data: identical surface geometry and identical green→blue fills as the light render; only the mesh lines flip to dark page-colored seams. Color bar identical, labels light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis reference labels, and legend text are all clearly readable
-          in both themes at explicitly set font sizes
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14 CSS px); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap, but the z-axis line and
-          dashed ground lines are drawn on top of the mesh without depth occlusion,
-          visually cutting across surface peaks
+        comment: Ground tick labels pushed outward, nothing collides; the two '12'
+          labels at the front corner stay apart
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 30x30 quad mesh at an appropriate cell size for this density; thin
-          page-bg strokes separate cells cleanly
+        comment: Surface fully visible, mesh light enough to show curvature, color
+          bar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale, not red-green; adequate contrast on both
-          surfaces
+        comment: Green to blue sequential ramp, CVD-safe, height also carried by geometry
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, no clipping at any edge (verified title, right-edge
-          axis label, and bottom legend), good margins
+        comment: Surface fills the canvas, color bar beside it, balanced margins,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x/y domain and z formula clearly labeled; title matches mandated
-          format exactly
+        comment: Easting (km), Northing (km), Elevation (m) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_div stops (matte red / theme-adaptive midpoint /
-          blue) per style guide; both renders theme-correct
+        comment: 'imprint_seq from t.seq; backgrounds #FAF8F1 / #1A1A17; data colors
+          identical across themes'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom isometric projection and diverging palette read as genuinely
-          3D and intentional, well beyond generic defaults
+        comment: 'Raised: four-level type hierarchy (semibold ink title and axis titles,
+          inkSoft subtitle and ticks) and an informative subtitle with grid size and
+          range'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minimal chrome, subtle dashed ground reference, generous whitespace;
-          docked one point for the frame/mesh depth-ordering artifact
+        comment: 'Raised: mesh in page color at 0.35 opacity adapting per theme, far
+          base edges in the faint grid tone, tick labels offset along the projected
+          edge normal, chart width fitted so the color bar sits next to the surface'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Peak/valley color coding and labeled legend extremes give the surface
-          a clear, readable narrative
+        comment: 'Default: the surface is displayed well, no hierarchy chosen beyond
+          the spec'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Hand-projected isometric surface is a reasonable community-package
-          analog of a 3D surface plot, not a literal 3D scene
+        comment: Single 3D surface plus color bar, no extra layers
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing spec-requested rotation/interactivity to explore the surface
-          from different angles — static isometric SVG only, in both PNG and HTML
+        passed: true
+        comment: Smooth colormap following height, three labeled axes with z ticks,
+          named color bar, oblique view, 30x30 grid reads smooth, drag rotation enabled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z correctly mapped; grid covers full domain
+        comment: Each vertex at its x, y, z; back-to-front painting with no visible
+          sort artifacts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels ('valley'/'peak') match
-          the data semantics
+        comment: Mandated title format; color bar titled Elevation (m)
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 30x30 grid within spec's requested range, full height and color encoding
-          shown
+        comment: Peaks, basins and saddles all shown; color and height agree
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Neutral mathematical function, explicitly suggested by the spec itself
+        comment: Terrain survey is plausible and neutral, but the exact sin·cos egg-crate
+          with symmetric ±80 m relief reads synthetic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible [-3, 3] domain; HEIGHT_SCALE exaggeration is explained and
-          visually justified
+        comment: Elevation 340-500 m over a 12 x 12 km area is sensible; subtitle
+          and color bar range match zMin/zMax computed from the data
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Necessary helper functions for projection/color math are reasonable,
-          but the file currently has a duplicate/stale header block (see weaknesses)
-          that needs cleanup
+        passed: true
+        comment: Default-exported component and the SurfaceLayer component are required
+          by the harness and MUI hooks; buildScene is needed to recompute on rotation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Deterministic closed-form data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the imports actually used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity claims; appropriate complexity for the projection
-          technique
+        comment: The 3D projection is not available in community MUI X, so the hand-roll
+          is warranted
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract; current community API
-          only
+        comment: 'Default export, skipAnimation, v9 API (ChartsDataProvider/ChartsWrapper/ChartsSurface,
+          position: ''none'')'
     library_mastery:
       score: 7
       max: 10
@@ -240,25 +233,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale + ChartContainer custom-overlay pattern is a
-          legitimate, documented MUI X technique
+        comment: 'Raised: composition API with ChartsDataProvider, ChartsWrapper grid
+          areas, and useXScale/useYScale scale hooks for the custom layer'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Low-level scale hooks and zAxis colorMap + ContinuousColorLegend
-          wiring go beyond a basic chart call
+        comment: 'Raised: zAxis continuous colorMap consumed by both useZColorScale
+          and the native ContinuousColorLegend'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:25:43Z'
 impl_tags:
   dependencies: []
   techniques:
-  - 3d-projection
   - colorbar
-  - annotations
+  - 3d-projection
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
+  - edge-highlighting
