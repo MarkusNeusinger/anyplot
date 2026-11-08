@@ -31,16 +31,15 @@ const EVENT = "Milestone"; // role: event
 const CATEGORY = "Mission phase"; // role: category
 
 // Data: replace this block with your own records, one object per row
-// Milestones of NASA's Perseverance rover mission (public mission dates)
+// Milestones of NASA's Perseverance rover mission, dates from NASA/JPL releases
 const data = [
-  { [DATE]: new Date(2020, 6, 30), [EVENT]: "Launch from Cape Canaveral", [CATEGORY]: "Launch" },
+  { [DATE]: new Date(2020, 6, 30), [EVENT]: "Launch on Atlas V", [CATEGORY]: "Launch" },
   { [DATE]: new Date(2021, 1, 18), [EVENT]: "Landing in Jezero Crater", [CATEGORY]: "Landing" },
-  { [DATE]: new Date(2021, 3, 19), [EVENT]: "First Powered Flight", [CATEGORY]: "Exploration" },
-  { [DATE]: new Date(2021, 8, 6), [EVENT]: "First Rock Sample Collected", [CATEGORY]: "Science" },
-  { [DATE]: new Date(2022, 0, 27), [EVENT]: "10th Sample Cached", [CATEGORY]: "Science" },
-  { [DATE]: new Date(2022, 7, 8), [EVENT]: "Reached River Delta Region", [CATEGORY]: "Exploration" },
-  { [DATE]: new Date(2023, 2, 22), [EVENT]: "Sample Depot Completed", [CATEGORY]: "Science" },
-  { [DATE]: new Date(2023, 6, 18), [EVENT]: "Crater Rim Ascent Begins", [CATEGORY]: "Exploration" },
+  { [DATE]: new Date(2021, 3, 19), [EVENT]: "Ingenuity's First Flight", [CATEGORY]: "Exploration" },
+  { [DATE]: new Date(2021, 8, 1), [EVENT]: "First Rock Sample", [CATEGORY]: "Science" },
+  { [DATE]: new Date(2022, 3, 13), [EVENT]: "Arrival at the Delta Front", [CATEGORY]: "Exploration" },
+  { [DATE]: new Date(2023, 0, 28), [EVENT]: "Sample Depot Completed", [CATEGORY]: "Science" },
+  { [DATE]: new Date(2024, 0, 18), [EVENT]: "Ingenuity's Final Flight", [CATEGORY]: "Exploration" },
 ];
 
 // Plot: reads only data and the constants above
