@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 // Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
