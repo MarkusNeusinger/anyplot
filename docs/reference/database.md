@@ -169,7 +169,8 @@ CREATE TABLE feedback
     contact     VARCHAR(255),
     path        VARCHAR(500),
     spec_id     VARCHAR(100),
-    library_id  VARCHAR(50),                -- set only by a plot vote
+    library_id  VARCHAR(50),                -- set only by a plot vote; a vote belongs to the version it was cast on:
+                                            -- before or after impls.updated (core/plot_votes.py)
     language    VARCHAR(50),                -- the programming language of a plot vote
     user_agent  VARCHAR(500),
     viewport    VARCHAR(20),

@@ -2,150 +2,112 @@ library: highcharts
 language: javascript
 specification_id: climograph-walter-lieth
 created: '2026-06-15T01:31:58Z'
-updated: '2026-06-15T02:18:20Z'
-generated_by: claude-sonnet
-workflow_run: 27517972970
+updated: '2026-11-08T22:12:27Z'
+generated_by: claude-opus-5-5
+adopted_from: 0a8ab9db5e7d36bda98987ebd21c9555562e6ed4 (0a8ab9db5e7d36bda98987ebd21c9555562e6ed4)
+workflow_run: 42528689965
 issue: 8656
-language_version: 22.22.3
-library_version: 12.6.0
+language_version: 22.23.4
+library_version: 13.1.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/highcharts/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/climograph-walter-lieth/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correct Walter-Lieth dual-axis setup with 2:1 temperature/precipitation scaling
-    (10°C ≡ 20mm) implemented accurately
-  - 'Semantic color choices are fully justified by meteorological convention: Imprint
-    blue (#4467A3) for precipitation, Imprint matte-red (#AE3030) for temperature
-    — valid palette-compliant semantic exceptions'
-  - Arid period SVG overlay fills (red semi-transparent rectangles between temperature
-    spline and precipitation bar tops) are drawn correctly and cleanly via Highcharts
-    renderer API
-  - Stacked column design elegantly splits precipitation into 'base' (up to T×2) at
-    0.85 opacity and 'humid excess' (above T×2) at 0.42 opacity, providing visual
-    distinction without requiring an area chart
-  - Station metadata (name, elevation, annual mean T, annual total P) surfaced as
-    subtitle in the canonical WL header position
-  - Frost-month indicator code is present and structurally complete; Seville has no
-    sub-0°C months so nothing renders — this is correct
-  - 'Highly idiomatic Highcharts: dual yAxis, stacking, spline, linkedTo, renderer.g/path/rect,
-    events.render, animation:false in both locations, credits disabled, transparent
-    background'
-  - Custom SVG renderer usage (chart.renderer.path, chart.renderer.g with zIndex)
-    for arid fills and frost bands is a genuinely advanced Highcharts technique that
-    redraw-safe via events.render
-  - Title uses optional descriptive prefix ('Seville Climate · ') plus the required
-    anyplot format; font size scaled via formula to avoid overflow
-  - Chrome correctly adapts between themes via t.ink / t.inkSoft / t.grid / t.elevatedBg
-    tokens; no dark-on-dark text failures for chrome elements
+  - 'Walter-Lieth scaling computed from the data: the right-axis tickPositions are
+    exactly 2× the left-axis ticks, so 10 °C lines up with 20 mm and both zeros share
+    one baseline'
+  - The humid (P > 2T) and arid (2T > P) fills are stacked areas over knots that include
+    every exact crossing of the temperature line with a bar top, so the fills switch
+    precisely where the curves cross
+  - The temperature line closes the annual cycle at the outer bar edges with the December–January
+    midpoint, so the fills cover the full year without a gap
+  - Axis lines carry the series colours (red temperature, blue precipitation) while
+    labels stay in the theme ink, making each series attributable to its axis in both
+    themes
+  - 'Header subtitle derived from the records: station, elevation, annual mean temperature
+    and annual precipitation total'
+  - Frost blocks are drawn with the SVG renderer in chart.events.render (redraw-safe
+    group destroy/re-add) and would mark sub-zero months for user data; correctly
+    absent for frost-free Seville
+  - Real Seville 1991–2020 normals give a pronounced, plausible Mediterranean summer
+    arid period
+  - 'Native Highcharts interactivity: a shared tooltip with °C / mm value suffixes
+    in the HTML output'
   weaknesses:
-  - 'Explicit humid-period fill is absent: the spec requires ''Fill the area between
-    the curves: blue/hatched where precipitation > temperature curve (humid period)''.
-    The implementation shows humid excess only via the lighter stacked bar segment;
-    there is no blue fill drawn between the temperature spline and the top of the
-    precipitation bars in humid months. Fix: in drawOverlays(), add a renderer.path()
-    SVG fill (using PRECIP_COLOR with ~0.3 opacity) that spans from the temperature
-    Y-pixel down to the bar-top Y-pixel for each month where precipitation[i] > temperature[i]
-    * 2.'
-  - 'Dark-mode arid fill has very poor visibility: fill-opacity 0.28 applied to #AE3030
-    on the #1A1A17 background produces approximately #43201E — a very dark brownish-maroon
-    that is barely distinguishable from the near-black background. The arid period
-    is the defining visual feature of a Walter-Lieth diagram; it must be clearly visible
-    in both themes. Fix: increase fill-opacity to at least 0.5 (or ideally 0.6-0.65)
-    in dark mode. Branch on window.ANYPLOT_THEME: const ARID_OPACITY = window.ANYPLOT_THEME
-    === ''dark'' ? 0.55 : 0.28.'
-  - Axis line colors (temperature axis line in TEMP_COLOR red, precipitation axis
-    line in PRECIP_COLOR blue) are aesthetically purposeful but the matte-red (#AE3030)
-    left axis and tick labels have marginal contrast in dark mode against the near-black
-    background. Not a hard failure, but consider using t.inkSoft for tick labels with
-    only the axis title styled in the series color.
-  - 'Missing perhumid (>100 mm) scale compression and solid blue band: the spec explicitly
-    calls for compressed 10:1 scale above 100 mm and a solid blue fill in that band.
-    Seville''s max is 72 mm so it doesn''t trigger here, but the structure is entirely
-    absent. This limits reuse with wetter stations. Fix: if any precipitation value
-    exceeds 100 mm, switch the right-axis max to accommodate and fill the perhumid
-    band.'
-  - 'DE-01/DE-02: Visual refinement is competent but not highly polished — no spine
-    removal equivalent (Highcharts still shows the full plot-area box), and the arid
-    fill opacity difference between themes reveals that the overlays were not explicitly
-    designed for dark-mode contrast.'
+  - 'Suggestion: the grid lines at 10, 20 and 30 °C disappear behind the opaque fills
+    across most of the plot; a grid drawn above the fills (yAxis gridZIndex) would
+    keep the scale readable inside the fills.'
+  - 'Suggestion: the humid band in full-strength blue outweighs the precipitation
+    bars in the 50 % tint; a closer pairing would keep the bars as the primary precipitation
+    mark.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme surface. Clean and bright.
-      Chrome: Title "Seville Climate · climograph-walter-lieth · javascript · highcharts · anyplot.ai" in bold dark text (#1A1A17), clearly readable. Subtitle "Seville (Aeropuerto) · 34 m a.s.l. · T̄: 18.9°C · P: 511 mm/yr" in smaller secondary text, readable. Left y-axis "Temperature (°C)" label in matte-red; right y-axis "Precipitation (mm)" label in Imprint blue; both readable against the cream background. Month tick labels (Jan–Dec) along x-axis in soft ink color, all readable. Legend box (upper right, framed with elevated background) shows blue dot for Precipitation and red line+dot for Temperature, clearly legible.
-      Data: Stacked blue (#4467A3) bars for precipitation — darker base segment (up to T×2) and lighter blue top segment (humid excess above T×2). Red (#AE3030) spline with circular markers for temperature. In summer months (May–Sep), a pinkish-red semi-transparent SVG fill is clearly visible between the temperature spline (above) and the short precipitation bar tops (below), showing the arid period. In winter months, bars tower above the temperature line, correctly indicating humid periods. The arid fill color is distinctly visible against the cream background.
-      First series color: Imprint blue (#4467A3) for precipitation — semantic exception justified by universal meteorological convention (water/rain → blue). Temperature uses Imprint matte-red (#AE3030). Both are valid Imprint palette members.
-      Legibility verdict: PASS — all title, axis label, tick label, and legend text is clearly readable. No dark-on-light failures.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: left-aligned bold title "Seville Climate · climograph-walter-lieth · javascript · highcharts · anyplot.ai" (~46 % width) in dark ink; subtitle header "Seville (Aeropuerto) · 34 m a.s.l. · T̄: 18.9 °C · P: 511 mm/yr"; left axis "Temperature (°C)" 0–40 °C, right axis "Precipitation (mm)" 0–80 mm, month ticks Jan–Dec; legend at bottom (Temperature, Precipitation, Humid period (P > 2T), Arid period (2T > P)). All text dark and clearly readable. Left axis line red, right axis line blue.
+      Data: precipitation as light-blue tinted columns with page-colored separators; temperature as a red (#AE3030) line with markers; area above the temperature line up to each bar top filled Imprint blue #4467A3 (Jan–Apr, Oct–Dec humid); area between bar tops and the temperature line filled light red (May–Sep arid), switching at the crossings. No months > 100 mm and no frost months (both permitted). No brand-green series: semantic red/blue exception per spec.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct dark theme surface.
-      Chrome: Title in light ink (#F0EFE8) clearly readable against near-black background. Subtitle in secondary light text, readable. Left y-axis labels (matte-red, #AE3030) and right y-axis labels (Imprint blue, #4467A3) remain visible against the dark background — marginal contrast for these semantic-color axis labels but not a legibility failure. Month tick labels and numeric tick labels are all in the soft-ink light token and readable.
-      Data: Blue bars for precipitation are clearly visible against the dark background. The temperature red spline is visible. HOWEVER, the arid fills (rendered as SVG rectangles with fill-opacity: 0.28 of #AE3030 on #1A1A17) result in approximately #43201E — a very dark brownish-maroon that is barely distinguishable from the near-black background. The arid period is still detectable on close inspection but significantly less prominent than in the light render. Data colors (blue bars, red spline) are identical to the light render as required; only chrome adapts.
-      Legibility verdict: PASS for text/chrome elements (no dark-on-dark text failures). FAIL for the arid fill visual feature — the fill is near-invisible against the dark background due to insufficient opacity, undermining the chart's primary storytelling element in dark mode.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles, tick and legend labels in light ink, all clearly readable; no dark-on-dark text. Grid lines subtle grey, visible above 70 mm. Column separators now dark (page color).
+      Data: colors identical to the light render (same red line, same blue humid fill, same tints for bars and arid fill); only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All chrome text readable in both themes. Minor concern: matte-red
-          (#AE3030) axis labels on dark background have lower-than-ideal contrast
-          but pass readability.'
+        comment: Explicit sizes (title ~18 px, axis titles 16 px, ticks/legend 14
+          px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlaps in either render. Legend
-          well-positioned in upper right with clear separation.
+        comment: No text collisions; header, legend and axes clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 'Precipitation bars and temperature spline are clearly visible in
-          both themes. Arid fill is bright pink-red in light mode but near-invisible
-          dark maroon in dark mode (fill-opacity 0.28 on #1A1A17 yields ~#43201E).
-          Significant dark-mode visibility failure for a key chart element.'
+        comment: 12 markers at radius 5 with a 3 px line; bars and fills clearly visible;
+          legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic color choices (blue precipitation, red temperature) use
-          CVD-safe Imprint palette members. Bars vs line provides redundant encoding
-          beyond color.
+        comment: Blue vs red fills differ strongly in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No canvas gate failure. Good proportions. Title fills ~60-65% of
-          width. Generous margins. No overflow or clipping.
+        comment: 3200x1800, plot fills the canvas, balanced axes, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units (°C and mm). Title has descriptive prefix
-          plus required anyplot format. Subtitle has all required station metadata.
+        comment: Temperature (°C) and Precipitation (mm), unit-suffixed ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint blue (#4467A3) for precipitation and Imprint matte-red (#AE3030)
-          for temperature are valid semantic exceptions per meteorological convention.
-          Both renders use identical data colors. Background transparent → theme page
-          surface shows through correctly.
+        comment: 'Semantic exception: Imprint blue #4467A3 for precipitation/humid,
+          matte red #AE3030 for temperature, tints derived from them; identical across
+          themes; backgrounds correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -153,93 +115,76 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): semantic axis color coding (temp axis in red,
-          precip axis in blue), dual-opacity stacked bars for humid distinction, framed
-          legend with elevated background, SVG renderer overlays. Below max: no explicit
-          blue humid fill; overall feel is functional rather than polished.'
+        comment: Axis lines coloured per series while text stays theme ink; computed
+          title fontsize; header set as a quiet subtitle
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): right-axis grid disabled, left-axis grid subtle,
-          plotBorderWidth 0, no Highcharts branding. Below max: Highcharts default
-          chart area border still visible; no further spine-equivalents removed.'
+        comment: Page-colored column separators and cyclic year-edge closure of the
+          temperature line beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Above default (2): Mediterranean summer drought story is immediately
-          legible from the red arid fill and short summer bars vs tall winter bars.
-          Temperature arc over the summer drought area creates clear focal point.
-          Missing blue humid fill weakens the full visual narrative.'
+        passed: false
+        comment: Humid/arid contrast is what the spec prescribes; no hierarchy chosen
+          beyond it
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correctly implements Walter-Lieth climograph: dual-axis layout,
-          2:1 T/P scaling, temperature line, precipitation bars, arid fills, metadata
-          subtitle. Missing the explicit humid-period blue fill.'
+        comment: Walter-Lieth climograph with bars + line on dual axes
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Present: 2:1 axis scaling, temperature line+left axis, precipitation
-          bars+right axis, arid SVG fills, station metadata subtitle, frost indicator
-          structure (Seville has no frost months). Missing: explicit blue/hatched
-          fill between temperature line and bar tops in humid months.'
+        comment: 1:2 scaling, humid/arid fills switching at crossings, header with
+          station/elevation/annual values, frost logic present (none in data), compression
+          N/A (no month > 100 mm)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months on x-axis. Temperature left y-axis, precipitation right
-          y-axis. 2:1 ratio maintained. Tick positions follow spec conventions.
+        comment: Every monthly value at its scale position; shared zero baseline
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Seville Climate · climograph-walter-lieth · javascript
-          · highcharts · anyplot.ai'' ✓. Legend: Precipitation + Temperature with
-          correct series colors ✓. Subtitle has station name, elevation, annual T
-          mean, annual P total ✓.'
+        comment: Descriptive prefix + mandated title; readable legend entries
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates arid period, humid period, dual-axis comparison, monthly
-          temperature cycle, Mediterranean climate pattern. Missing: explicit humid
-          fill visualization reduces full feature coverage.'
+        comment: Humid and arid periods with four crossings; frost and perhumid band
+          absent as permitted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Seville (Aeropuerto) is a real AEMET station. 1991-2020 normals cited.
-          Values (18.9°C annual mean, 511mm/yr) are plausible and match known Mediterranean
-          climate data. Classic Mediterranean pattern with summer drought is correctly
-          represented.
+        comment: Seville airport 1991–2020 normals, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 10.3–28.4°C and precipitation 1–72mm are climatically
-          appropriate for Seville. Axis ranges (0–40°C, 0–80mm) cover the data with
-          headroom.
+        comment: Values plausible (28 °C summer, 1 mm July); header 18.9 °C / 511
+          mm computed from the records; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -249,69 +194,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: drawOverlays() is the single helper function and it's necessary for
-          SVG renderer usage with redraw events. All other logic is flat. Clean structure.
+        comment: Flat script; only the required render-event callback
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded as literals. Fully deterministic.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports/requires in JS global pattern. Uses only the Highcharts
-          global as intended.
+        comment: No imports; Highcharts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: precipBase/precipHumid computed elegantly with map(). drawOverlays
-          is well-structured for the SVG API. No fake interactivity.
+        comment: Crossing-knot fill computation is the necessary work; no available
+          call replaces it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Highcharts.chart(''container'', ...) pattern correct. No explicit
-          width/height. animation:false in both required locations. credits disabled.
-          //# anyplot-orientation: landscape present.'
+        comment: Mount-node contract, palette.colorScheme pinned, animation disabled
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Exemplary Highcharts usage: dual yAxis with opposite:true, stacking:normal,
-          spline type, linkedTo:'':previous'' for legend grouping, showInLegend:false,
-          renderer.g/path/rect, events.render for redraw-safe overlays, all required
-          Highcharts flags set correctly.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: SVG renderer API (chart.renderer.path, chart.renderer.rect, chart.renderer.g)
-          for custom fill overlays is a genuinely Highcharts-distinctive technique.
-          events.render ensures overlays persist through redraws. linkedTo groups
-          series in the legend natively.
+        comment: 'Stacked areas on the secondary axis, tickPositions, legendIndex,
+          enableMouseTracking: false on fill helpers'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Highcharts.color().tweenTo for tints, SVG renderer group in chart.events.render
+          for frost blocks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-24d0f11364
+  rendered_at: '2026-11-08T22:09:31Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
+  - manual-ticks
+  - layer-composition
+  - hover-tooltips
   - html-export
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - patches
+  patterns: []
+  dataprep:
+  - interpolation
   styling:
-  - alpha-blending
-  - grid-styling
+  - edge-highlighting

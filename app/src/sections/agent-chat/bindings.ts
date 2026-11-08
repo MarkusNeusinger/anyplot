@@ -164,6 +164,26 @@ export function bindingHint(
   );
 }
 
+/**
+ * The server's sign and wide-table lines (`signs.sign_line`, `bindings.sibling_line`, as the
+ * service's `warning_codes` reads them): the card shows those at the bound column already
+ * (`bindingHint`), in its own words.
+ */
+const HINTED_LINES = [
+  /^.*: column '.*' has negative values \(down to .*\); this role needs values of 0 or more$/s,
+  /^.*: bound to '.*', one of [0-9]+ number columns .* turn the columns into rows first \(\.to_long\(\)\)$/s,
+];
+
+/**
+ * The binding check's warnings (`bindingWarnings`) that no bound column's own warning shows: a
+ * role left open because every fitting column is negative, a computed role on a column of another
+ * window, a lower bound above its upper one, a key whose rows repeat, and any line the page does
+ * not know. None while the check's word is unknown (`null`).
+ */
+export function checkOnlyWarnings(lines: readonly string[] | null): string[] {
+  return (lines ?? []).filter(line => !HINTED_LINES.some(pattern => pattern.test(line)));
+}
+
 /** One role of the bindings line: its name, and its columns (several for a family) or none yet. */
 export interface BoundRole {
   name: string;

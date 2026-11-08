@@ -449,6 +449,51 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ---
 
+## Feedback endpoints
+
+### POST `/feedback`
+
+**Purpose**: The site's feedback widget and the 👍/👎 on a plot page (`api/routers/feedback.py`)
+
+The body is `{message?, reaction?, contact?, path?, spec_id?, library_id?, language?, viewport?, session_id?, website}`; at least one of `message` (500 characters at most) and `reaction` (`thumbs_up`, `thumbs_down`, `bug` or `idea`) is required, and `website` is the honeypot. The answer is `{"status": "ok"}`, also for an entry the spam filters drop silently. A call needs the bot check's `X-Turnstile-Token` (see [Bot check](#bot-check)). An address may send 5 messages a minute; a reaction without a message is refused once the address has sent 30 entries in the last minute. Both limits answer `429`.
+
+A plot vote is a `thumbs_up` or `thumbs_down` that names `spec_id` and `library_id`. It belongs to the version of the image it was cast on: the implementation's current version began at its `updated` (`impls.updated`, the metadata's `updated`), and a regeneration starts a new one (`core/plot_votes.py`). The API drops a second vote from the same `session_id` on the same version silently, so a visitor can't flip a vote, and lets the same session rate each new version once. A regeneration deletes no row.
+
+The page keeps your own vote in `localStorage` under `anyplot_plot_votes`, keyed `spec/language/library@updated`, so a vote on an earlier version doesn't ink the thumbs of the new image. A key from before votes were kept per version has no `@`: it inks nothing and blocks nothing, and the API still drops a repeat on the same version.
+
+### GET `/debug/feedback/votes`
+
+**Purpose**: The "feedback · votes per plot" list on `/debug`, behind the admin gate. It replaces `GET /debug/feedback/top`, which grouped the rows of one reaction by page path.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sort` | string | `thumbs_down` | `thumbs_down`, `thumbs_up` or `total`: the current version's count to rank by |
+| `limit` | int | 25 | Number of plots (1-100) |
+
+Returns the plots with the most votes, one entry per implementation:
+
+```json
+[
+  {
+    "spec_id": "scatter-basic",
+    "language": "python",
+    "library_id": "matplotlib",
+    "path": "/scatter-basic/python/matplotlib",
+    "thumbs_up": 1,
+    "thumbs_down": 4,
+    "earlier_thumbs_up": 6,
+    "earlier_thumbs_down": 2,
+    "last_vote": "2026-11-08T12:00:00+00:00"
+  }
+]
+```
+
+`thumbs_up` and `thumbs_down` count the votes on the current version, and the `earlier_*` fields the votes on the versions before the last regeneration. They are counted the way `FeedbackRepository.reaction_counts` counts them with `since` and with `before`: on each side, one vote per visitor session, the newest. `total` ranks by both current counts together. A tie goes to the earlier versions' count of the same kind, then to the newer `last_vote` (UTC). The response holds counts only: no message, contact, or session id. Page reactions from the floating widget name no implementation and aren't in the list.
+
+`GET /debug/feedback/messages` and `PATCH /debug/feedback/{id}` serve the messages list and its triage status on the same page.
+
+---
+
 ## Agent chat
 
 > **Status (2026-11-06):** the admin routes under `/debug/agent` are live, and

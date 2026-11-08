@@ -85,7 +85,11 @@
  * the frame's foot, its description, names what it waits for (a table read from
  * text to decide on, a required role without a column) or what to check. Enter,
  * and on a touch screen the `↵` in the box, sends a turn and never confirms. The
- * server's `data_unconfirmed` stays the backstop. At the status line's end stand
+ * server's `data_unconfirmed` stays the backstop. With data in the box (a file, a
+ * pasted or typed table), the plot button sends it as Enter would, with the typed
+ * text as its note, and once the reading comes back clean goes on by itself with
+ * the confirmation and the plot; else it stops at the data card, where the
+ * status line says what to look at (`plotChain.ts`, owner decision of 2026-11-08). At the status line's end stand
  * `.stop()` while a run is in progress, `.start_over()` once the library has a
  * plot, and `.feedback()` before the first plot.
  *
@@ -155,9 +159,11 @@ import { CONFIG } from 'src/global-config';
 import { useAgentAdmin } from 'src/hooks/useAgentAdmin';
 import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
 import {
+  type AgentSessionState,
   type BindingMap,
   carryDecisions,
   type DatasetUpload,
+  type ParseResult,
   sessionBusy,
   sessionHoldsWork,
   useAgentSession,
@@ -191,12 +197,23 @@ import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
 import {
   attachmentWaitLine,
+  CHAIN_READING_TEXT,
+  chainStopText,
   describeDataFailure,
   DROP_HINT_TEXT,
   ERROR_TEXT,
   LEAVE_TEXT,
   VIEW_SWITCH_TEXT,
 } from 'src/sections/agent-chat/messages';
+import {
+  boxData,
+  type ChainStep,
+  chainStep,
+  type ChainStop,
+  sameStopMark,
+  type StopMark,
+  stopMark,
+} from 'src/sections/agent-chat/plotChain';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { previewsByLibrary } from 'src/sections/agent-chat/specReference';
@@ -528,6 +545,40 @@ function AgentChat({
     feedbackFocus.current = false;
     return take;
   }, []);
+  // The plot button's one click on data in the box (`plotChain.ts`): the chain in flight (its
+  // number, which a newer chain or the user's next step replaces), and for the status line that
+  // it reads, or where it stopped at the card and on which state.
+  const chainRef = useRef<number | null>(null);
+  const chainSeq = useRef(0);
+  const [chainView, setChainView] = useState<
+    { kind: 'reading' } | { kind: 'stopped'; stop: ChainStop; mark: StopMark } | null
+  >(null);
+  // The page as it last rendered, which the chain reads after its awaits: the session, what the
+  // page adds, and the plot click on the data as it is then.
+  const chainPage = useRef<{
+    state: AgentSessionState;
+    plotAll: boolean;
+    attachment: boolean;
+    plot: () => void;
+  } | null>(null);
+  // The chain waits for the next commit while the session settles: every commit lets it read on.
+  const commitWaiters = useRef<(() => void)[]>([]);
+  useEffect(() => {
+    if (commitWaiters.current.length === 0) return;
+    const waiting = commitWaiters.current;
+    commitWaiters.current = [];
+    for (const resolve of waiting) resolve();
+  });
+  // A page that goes ends its chain: a waiting one reads on once more, finds it ended, and stops.
+  useEffect(
+    () => () => {
+      chainRef.current = null;
+      const waiting = commitWaiters.current;
+      commitWaiters.current = [];
+      for (const resolve of waiting) resolve();
+    },
+    []
+  );
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
   // catalogue API; the enabled libraries from the agents service. Both are best effort.
@@ -636,9 +687,9 @@ function AgentChat({
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
   // Step 2: the data and its bindings are confirmed, and no table read from text waits.
   const step2 = inStep2(state);
-  // A plot button may start once there is data with every required role bound and nothing in
-  // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`). While
-  // an attachment waits it would plot the data before it, or none: Enter reads it first.
+  // A plot button may start on stored data once every required role is bound and nothing is in
+  // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`). Data
+  // waiting in the box goes first instead (`sendsFirst`), never the data before it.
   const canCreate =
     state.phase === 'ready' &&
     !!state.dataset &&
@@ -673,10 +724,25 @@ function AgentChat({
   // while anything is in flight.
   const exampleActive =
     state.phase === 'ready' && !state.dataset && !state.transcription && !attachment && !busy;
+  // What the box holds that the plot button sends before it plots (`plotChain.ts`): an
+  // attachment, or a table typed into the box. Not with the admin's fan-out, whose `.plot_all()`
+  // copies data already stored.
+  const boxSends = useMemo(() => boxData(attachment, draft), [attachment, draft]);
+  // New data in the box, or on its way after the click: the button names the plot it makes.
+  const boxHoldsData = !!attachment || boxSends === 'typed' || chainView?.kind === 'reading';
   // The plot button in its fixed place: what it is, and the label the status line, the card's
   // own step-1 line and the thread name it by.
-  const plotKind = plotButtonKind(state, plotAll);
-  const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state);
+  const plotKind = plotButtonKind(state, plotAll, boxHoldsData);
+  const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state, boxHoldsData);
+  // One click sends the box's data as Enter would, then plots once the reading comes back clean
+  // (owner decision of 2026-11-08), whenever nothing runs.
+  const sendsFirst =
+    boxSends !== null &&
+    plotKind !== 'all' &&
+    state.phase === 'ready' &&
+    !!state.sessionId &&
+    !busy &&
+    !fanOut;
   // `.update_plot() →` on confirmed data whose plot is current sends the box's text, a change of
   // the latest version: with an empty box there is nothing to update. On data or bindings
   // changed since, and with a switch's offer, it plots with an empty box too.
@@ -684,22 +750,32 @@ function AgentChat({
   const plotText = draft.trim();
   // Text over the cap is never cut and never goes, also not as a plot's request.
   const plotActive =
-    canCreate &&
-    (plotKind === 'all'
-      ? !fanOut
-      : plotText.length <= MAX_MESSAGE_CHARS && (!plotNeedsText || plotText !== ''));
+    plotKind === 'all'
+      ? canCreate && !fanOut
+      : sendsFirst ||
+        (canCreate && plotText.length <= MAX_MESSAGE_CHARS && (!plotNeedsText || plotText !== ''));
   // The click starts from the catalogue plot although the library has one: data or bindings
-  // changed since, so the plot is made anew, with the remembered decisions.
-  const plotFresh = hasPlot && !step2 && plotKind !== 'all';
+  // changed since, or new data in the box, so the plot is made anew, with the remembered decisions.
+  const plotFresh = hasPlot && (!step2 || boxHoldsData) && plotKind !== 'all';
   // The status line at the frame's foot, the plot button's description: the step, then what the
   // button waits for (an attachment, a pending table read from text, a required role without a
   // column, a run), what to check, or what the click does.
   const status = statusLine(state, {
     action: plotAction,
-    // With data, the line says the attachment replaces it.
+    // With data, the line says the attachment replaces it; it names the plot button that takes
+    // it along, unless only Enter sends it.
     attachmentLine: attachment
-      ? attachmentWaitLine(state.dataset ? state.dataset.parsed.profile.rows : null)
+      ? attachmentWaitLine(
+          state.dataset ? state.dataset.parsed.profile.rows : null,
+          boxSends === 'attachment' && plotKind !== 'all' ? plotAction : null
+        )
       : null,
+    readingLine: chainView?.kind === 'reading' ? CHAIN_READING_TEXT : null,
+    // Where the one click stopped, while nothing changed since.
+    stopLine:
+      chainView?.kind === 'stopped' && sameStopMark(chainView.mark, state)
+        ? chainStopText(chainView.stop, plotAction)
+        : null,
     carry: carry ? { library: carry.target.library, decisions: carryCount } : null,
     lockedLibraries: chatLocked ? libraries.length : null,
   });
@@ -748,6 +824,7 @@ function AgentChat({
    */
   const handleSend = (event?: React.FormEvent) => {
     event?.preventDefault();
+    cancelChain();
     if (attachment) {
       void sendAttachment(attachment);
       return;
@@ -790,6 +867,7 @@ function AgentChat({
 
   /** ×: the attachment goes; a typed table goes back into the box, since nothing else holds it. */
   const handleRemoveAttachment = () => {
+    cancelChain();
     if (attachment?.via === 'typed') restoreText(attachment.text);
     attach.remove();
   };
@@ -801,13 +879,18 @@ function AgentChat({
    * chat, a refusal, nothing started), the note goes back into it, before anything typed since.
    * A refused attachment stays red with the reason, for Enter to try again or × to drop it.
    * `ownNote` replaces the box's text as the note: a typed table was that text, and goes alone.
+   * Resolves to how the parse and its turn ended (the plot button's one click reads on from it),
+   * or null when nothing started.
    */
-  const sendAttachment = async (sent: Attachment, ownNote?: string) => {
-    if (busy || (sent.status !== 'ready' && sent.status !== 'failed')) return;
+  const sendAttachment = async (
+    sent: Attachment,
+    ownNote?: string
+  ): Promise<ParseResult | null> => {
+    if (busy || (sent.status !== 'ready' && sent.status !== 'failed')) return null;
     // Also while `all` holds the box in step 2: an attachment opens the box for its note, since
     // the new data takes the session back to step 1, where the chat about the data goes on.
     const note = ownNote ?? draft.trim();
-    if (note.length > MAX_MESSAGE_CHARS) return;
+    if (note.length > MAX_MESSAGE_CHARS) return null;
     if (note) setDraft(current => (current.trim() === note ? '' : current));
     attach.settle(sent.id, 'sending');
     const result = await session.parseData(sent.text, false, sent.source, undefined, {
@@ -837,6 +920,86 @@ function AgentChat({
     // Nothing was stored and nothing went to the chat: the note waits in the box again.
     const kept = result.outcome === 'stored' || result.outcome === 'forwarded';
     if (note && !kept) restoreText(note);
+    return result;
+  };
+
+  /** The user's own next step (typing, a paste, Enter, a click) ends the one click's chain. */
+  const cancelChain = () => {
+    if (chainRef.current === null) return;
+    chainRef.current = null;
+    setChainView(null);
+  };
+
+  /**
+   * The plot button's click on data in the box (`plotChain.ts`): it goes as Enter sends it, with
+   * the box's text as its note (`sendAttachment`). Once the reading ends, the chain reads the page
+   * after each render (`chainPage`) until `chainStep` decides, then acts once: it plots as a click
+   * on the plot button would on that data, or keeps where it stopped for the status line. A chain
+   * the user's next step ended (`cancelChain`), or a newer one, does nothing more; the page never
+   * restores a chain, so a reload or a closed tab ends it with the session.
+   */
+  const plotChain = async (sent: Attachment, ownNote?: string) => {
+    chainSeq.current += 1;
+    const id = chainSeq.current;
+    chainRef.current = id;
+    // The reading's items come after these; the state at the click is the one not to decide on.
+    const since = state.nextItemId;
+    let seen: AgentSessionState = state;
+    setChainView({ kind: 'reading' });
+    try {
+      const result = await sendAttachment(sent, ownNote);
+      let rechecked = false;
+      while (chainRef.current === id) {
+        const page = chainPage.current;
+        // Until the page rendered after the last await, it shows what the chain already decided
+        // on. A send that stored nothing ends the chain at once: it may have changed no session
+        // state.
+        const step: ChainStep =
+          !result || !page || result.outcome !== 'stored'
+            ? { kind: 'stop', stop: null }
+            : page.state === seen
+              ? { kind: 'wait' }
+              : chainStep(page.state, { result, since, rechecked }, page);
+        if (step.kind === 'wait') {
+          await new Promise<void>(resolve => commitWaiters.current.push(resolve));
+          continue;
+        }
+        if (step.kind === 'recheck' && page) {
+          rechecked = true;
+          seen = page.state;
+          if (await session.checkBindings()) continue;
+        }
+        chainRef.current = null;
+        if (step.kind === 'plot' && page) {
+          setChainView(null);
+          page.plot();
+        } else if (step.kind === 'stop' && step.stop && page) {
+          setChainView({ kind: 'stopped', stop: step.stop, mark: stopMark(page.state) });
+        } else {
+          setChainView(null);
+        }
+        return;
+      }
+    } finally {
+      // A failure on the way the session did not catch itself: the chain ends, and the status
+      // line no longer says that it reads.
+      if (chainRef.current === id) {
+        chainRef.current = null;
+        setChainView(null);
+      }
+    }
+  };
+
+  /** The plot button with data in the box: the attachment, or the table typed there, goes first. */
+  const sendAndPlot = () => {
+    if (attachment) {
+      void plotChain(attachment);
+      return;
+    }
+    const typed = attach.attachTyped(draft.trim());
+    if (!typed) return;
+    setDraft('');
+    void plotChain(typed, '');
   };
 
   /**
@@ -848,20 +1011,14 @@ function AgentChat({
    * switch's offer (`carry_plot`), under `label`, the button as it read, which the thread shows
    * for the turn. The confirmation's busy state and the session's own guards hold back a second
    * click, also one before the state caught up. The button stays where it is, inert while the
-   * plot runs, so the focus stays on it. A table typed into the box is data, as on Enter: it
-   * goes to the dataset route, and nothing is confirmed or plotted.
+   * plot runs, so the focus stays on it. A table typed into the box never comes here: it is data,
+   * which the click reads first (`sendAndPlot`).
    */
   const startPlot = async (kind: 'create' | 'carry', withText: boolean, label: string) => {
     if (!canCreate) return;
     const text = withText ? draft.trim() : '';
     // The turn would refuse it after the box let go of it: nothing confirms, nothing is lost.
     if (text.length > MAX_MESSAGE_CHARS) return;
-    const typed = text ? attach.attachTyped(text) : null;
-    if (typed) {
-      setDraft('');
-      void sendAttachment(typed, '');
-      return;
-    }
     if (!state.dataConfirmed && !(await session.confirmData())) return;
     if (text) {
       // Only the text that went: an edit made while the confirmation ran stays in the box. The
@@ -873,6 +1030,14 @@ function AgentChat({
       void (kind === 'carry' ? session.carryPlot(label) : session.createPlot(label));
     }
   };
+  // The one click's chain reads the page from here after its awaits: its plot is this render's
+  // click on the plot button with an empty box, the switch's offer when there is one.
+  chainPage.current = {
+    state,
+    plotAll,
+    attachment: !!attachment,
+    plot: () => void startPlot(carry ? 'carry' : 'create', false, plotButtonLabel(state)),
+  };
 
   /**
    * A library picked in the menu. While the fan-out is on, any pick turns it
@@ -882,6 +1047,11 @@ function AgentChat({
    */
   const handlePick = useCallback(
     async (next: string) => {
+      // The user's own step: the one click's chain plots nothing after it.
+      if (chainRef.current !== null) {
+        chainRef.current = null;
+        setChainView(null);
+      }
       if (plotAll) {
         setAllPressed(false);
         if (next === state.library) return;
@@ -940,17 +1110,26 @@ function AgentChat({
    * `.start_over()` at the status line's end: the fresh plot from the catalogue code, with the
    * remembered decisions, without a switch's carry; text in the box stays there.
    */
-  const handleStartOver = () => void startPlot('create', false, '.start_over()');
+  const handleStartOver = () => {
+    cancelChain();
+    void startPlot('create', false, '.start_over()');
+  };
 
   /**
-   * The plot button. `.plot_all()` opens the fan-out; `.update_plot() →` on a current plot sends
-   * the box's text as Enter does; every other click plots, with the box's text as the request:
-   * the switch's offer with the remembered decisions when there is one (`carry_plot`), else the
+   * The plot button. `.plot_all()` opens the fan-out; with data in the box the click reads it and
+   * plots it once it reads clean (`sendAndPlot`); `.update_plot() →` on a current plot sends the
+   * box's text as Enter does; every other click plots, with the box's text as the request: the
+   * switch's offer with the remembered decisions when there is one (`carry_plot`), else the
    * catalogue plot. The thread names the turn as the button read.
    */
   const handlePlot = (event: React.MouseEvent) => {
+    cancelChain();
     if (plotKind === 'all') {
       void handlePlotAll(event);
+      return;
+    }
+    if (sendsFirst) {
+      sendAndPlot();
       return;
     }
     if (plotNeedsText) {
@@ -1184,20 +1363,42 @@ function AgentChat({
                     state={state}
                     part={part}
                     version={version}
-                    onParse={(text, source, table, file) =>
-                      void session.parseData(text, false, source, table, { file })
-                    }
+                    // Every control of the card is the user's own step: the one click's chain
+                    // plots nothing after it (`cancelChain`).
+                    onParse={(text, source, table, file) => {
+                      cancelChain();
+                      void session.parseData(text, false, source, table, { file });
+                    }}
                     onConfirmTranscription={() => {
+                      cancelChain();
                       transcribedFrom.current = null;
                       void session.confirmTranscription();
                     }}
                     onTrack={trackEvent}
                     // The sheet picker's read holds the composer back until its parse starts.
-                    onConvert={session.readSheet}
-                    onDiscardTranscription={handleDiscard}
-                    onBind={session.setBinding}
-                    onUndo={() => void session.undoData()}
-                    onToLong={() => void session.toLongData()}
+                    onConvert={(dataBase64, sheet) => {
+                      cancelChain();
+                      return session.readSheet(dataBase64, sheet);
+                    }}
+                    onDiscardTranscription={() => {
+                      cancelChain();
+                      handleDiscard();
+                    }}
+                    onBind={(name, column) => {
+                      cancelChain();
+                      session.setBinding(name, column);
+                    }}
+                    onUndo={() => {
+                      cancelChain();
+                      void session.undoData();
+                    }}
+                    onToLong={() => {
+                      cancelChain();
+                      void session.toLongData();
+                    }}
+                    // A look at the data (`.change()`, `.view_all()`) ends the chain too: the
+                    // plot never starts while the user checks the card.
+                    onLook={cancelChain}
                     // Not while the fan-out's panel is open: its sessions copy this session's data.
                     locked={!!fanOut}
                     onLoadData={session.fetchDataCsv}
@@ -1267,10 +1468,15 @@ function AgentChat({
                 <Composer
                   draft={draft}
                   onDraftChange={event => {
+                    // Typed while the one click reads: it plots nothing after that.
+                    cancelChain();
                     // A paste the browser inserted itself, when its event hid the text: routed now.
                     if (!attach.handleInput(event, draft)) setDraft(event.target.value);
                   }}
-                  onPaste={event => void attach.handlePaste(event)}
+                  onPaste={event => {
+                    cancelChain();
+                    void attach.handlePaste(event);
+                  }}
                   attachment={attachment}
                   attachmentNotice={attach.notice}
                   onRemoveAttachment={handleRemoveAttachment}

@@ -307,5 +307,80 @@ describe('SpecDetailView', () => {
         'true'
       );
     });
+
+    describe('per version', () => {
+      const v1 = makeImpl({ updated: '2026-11-01T03:00:00' });
+      const v2 = makeImpl({ updated: '2026-11-08T04:54:13' });
+
+      it('stores the vote under the version the visitor saw', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse());
+        const user = userEvent.setup();
+        render(<SpecDetailView {...defaultProps} currentImpl={v1} />);
+
+        await user.click(screen.getByRole('button', { name: /thumbs up/i }));
+        await waitFor(() =>
+          expect(JSON.parse(localStorage.getItem('anyplot_plot_votes') ?? '{}')).toEqual({
+            'scatter-basic/python/matplotlib@2026-11-01T03:00:00': 'thumbs_up',
+          })
+        );
+      });
+
+      it('leaves a regenerated plot unrated, so the visitor can rate the new image once', async () => {
+        // A fresh Response per call: a body can be read only once.
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => okResponse());
+        const user = userEvent.setup();
+        const { rerender, unmount } = render(<SpecDetailView {...defaultProps} currentImpl={v1} />);
+
+        await user.click(screen.getByRole('button', { name: /thumbs up/i }));
+        await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+        expect(screen.getByRole('button', { name: /thumbs down/i })).toBeDisabled();
+
+        // The page now serves the regenerated implementation: a new `updated`.
+        rerender(<SpecDetailView {...defaultProps} currentImpl={v2} />);
+        const up = screen.getByRole('button', { name: /thumbs up/i });
+        const down = screen.getByRole('button', { name: /thumbs down/i });
+        expect(up).toHaveAttribute('aria-pressed', 'false');
+        expect(down).toHaveAttribute('aria-pressed', 'false');
+        expect(down).toBeEnabled();
+
+        await user.click(down);
+        await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
+        expect(down).toHaveAttribute('aria-pressed', 'true');
+        expect(up).toBeDisabled();
+
+        // Each version keeps its own vote, also after a full remount.
+        unmount();
+        render(<SpecDetailView {...defaultProps} currentImpl={v2} />);
+        expect(screen.getByRole('button', { name: /thumbs down/i })).toHaveAttribute(
+          'aria-pressed',
+          'true'
+        );
+        expect(JSON.parse(localStorage.getItem('anyplot_plot_votes') ?? '{}')).toEqual({
+          'scatter-basic/python/matplotlib@2026-11-01T03:00:00': 'thumbs_up',
+          'scatter-basic/python/matplotlib@2026-11-08T04:54:13': 'thumbs_down',
+        });
+      });
+
+      it('neither inks nor blocks a thumb for a vote stored before versions were kept', async () => {
+        localStorage.setItem(
+          'anyplot_plot_votes',
+          JSON.stringify({ 'scatter-basic/python/matplotlib': 'thumbs_down' })
+        );
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse());
+        const user = userEvent.setup();
+        render(<SpecDetailView {...defaultProps} currentImpl={v2} />);
+
+        const up = screen.getByRole('button', { name: /thumbs up/i });
+        const down = screen.getByRole('button', { name: /thumbs down/i });
+        expect(up).toHaveAttribute('aria-pressed', 'false');
+        expect(down).toHaveAttribute('aria-pressed', 'false');
+        expect(up).toBeEnabled();
+        expect(down).toBeEnabled();
+
+        await user.click(up);
+        await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+        expect(up).toHaveAttribute('aria-pressed', 'true');
+      });
+    });
   });
 });

@@ -14,7 +14,7 @@ import type { FeedbackMessageFilter, FeedbackStatus } from 'src/sections/debug/c
 import { DailyActivityChart, type DailyImplPoint } from 'src/sections/debug/DailyActivityChart';
 import { countImpls } from 'src/sections/debug/debugFormat';
 import { FeedbackSection } from 'src/sections/debug/FeedbackSection';
-import type { FeedbackTopPage } from 'src/sections/debug/FeedbackTopList';
+import type { FeedbackVoteItem, VoteSort } from 'src/sections/debug/FeedbackTopList';
 import { KPIGrid } from 'src/sections/debug/KPIGrid';
 import { LibraryCoverage, type LibraryStats } from 'src/sections/debug/LibraryCoverage';
 import { ProblemAreas, type ProblemSpec } from 'src/sections/debug/ProblemAreas';
@@ -132,8 +132,8 @@ export function DebugPage() {
   const [pings, setPings] = useState<Array<{ ms: number; ok: boolean }>>([]);
   const [prevFetchKey, setPrevFetchKey] = useState({ adminToken, reloadCounter });
 
-  const [topThumbsUp, setTopThumbsUp] = useState<FeedbackTopPage[]>([]);
-  const [topThumbsDown, setTopThumbsDown] = useState<FeedbackTopPage[]>([]);
+  const [votes, setVotes] = useState<FeedbackVoteItem[]>([]);
+  const [voteSort, setVoteSort] = useState<VoteSort>('thumbs_down');
   const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessageItem[]>([]);
   const [feedbackStatusFilter, setFeedbackStatusFilter] =
     useState<FeedbackMessageFilter>(DEFAULT_MESSAGE_FILTER);
@@ -221,25 +221,27 @@ export function DebugPage() {
   useEffect(() => {
     if (authRequired) return;
     let cancelled = false;
+    fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/votes?sort=${voteSort}&limit=25`, adminToken)
+      .then(r => (r.ok ? (r.json() as Promise<FeedbackVoteItem[]>) : []))
+      .then(rows => {
+        if (!cancelled) setVotes(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        /* /debug/status useEffect already surfaces auth/network errors */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminToken, authRequired, reloadCounter, voteSort]);
+
+  useEffect(() => {
+    if (authRequired) return;
+    let cancelled = false;
     const qs = feedbackStatusFilter ? `?status=${feedbackStatusFilter}&limit=50` : '?limit=50';
-    Promise.all([
-      fetchWithAuth(
-        `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_up&limit=15`,
-        adminToken
-      ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
-      fetchWithAuth(
-        `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_down&limit=15`,
-        adminToken
-      ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
-      fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken).then(r =>
-        r.ok ? (r.json() as Promise<FeedbackMessageItem[]>) : []
-      ),
-    ])
-      .then(([up, down, msgs]) => {
-        if (cancelled) return;
-        setTopThumbsUp(Array.isArray(up) ? up : []);
-        setTopThumbsDown(Array.isArray(down) ? down : []);
-        setFeedbackMessages(Array.isArray(msgs) ? msgs : []);
+    fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken)
+      .then(r => (r.ok ? (r.json() as Promise<FeedbackMessageItem[]>) : []))
+      .then(msgs => {
+        if (!cancelled) setFeedbackMessages(Array.isArray(msgs) ? msgs : []);
       })
       .catch(() => {
         /* /debug/status useEffect already surfaces auth/network errors */
@@ -465,8 +467,9 @@ export function DebugPage() {
         oldestSpecs={data.oldest_specs}
       />
       <FeedbackSection
-        topThumbsUp={topThumbsUp}
-        topThumbsDown={topThumbsDown}
+        votes={votes}
+        voteSort={voteSort}
+        setVoteSort={setVoteSort}
         feedbackStatusFilter={feedbackStatusFilter}
         setFeedbackStatusFilter={setFeedbackStatusFilter}
         feedbackMessages={feedbackMessages}
