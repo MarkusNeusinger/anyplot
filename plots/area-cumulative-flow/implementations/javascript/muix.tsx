@@ -3,192 +3,143 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-08-19
 import { LineChart } from "@mui/x-charts/LineChart";
-import { Box, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// A support-ticket board with four workflow stages, earliest to latest:
-// New -> Triaged -> In Progress -> Resolved. Each stage's cumulative count is
-// simulated as a queue: every day it can move at most its daily capacity of
-// tickets out of the backlog handed to it by the previous stage. That keeps
-// every curve monotonically non-decreasing and guarantees an earlier stage's
-// cumulative count never dips below a later stage's — the CFD invariant.
-const NUM_DAYS = 70;
-const START_DATE = new Date(2026, 3, 1);
+// Constants
+const TITLE = "area-cumulative-flow · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 44;
 
-const dates = Array.from({ length: NUM_DAYS }, (_, day) => {
-  const d = new Date(START_DATE);
-  d.setDate(d.getDate() + day);
-  return d;
-});
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const STAGE = "Stage"; // role: stage
+const COUNT = "Cumulative tickets"; // role: count
 
-// Daily new-ticket arrivals: a steady baseline plus a late-quarter surge.
-const arrivalsPerDay = Array.from(
-  { length: NUM_DAYS },
-  (_, day) => 9 + Math.round(2 * Math.sin(day / 8)) + (day >= 45 ? 4 : 0)
+// Data: replace this block with your own records, one object per row
+// A support-ticket board over 70 days from 1 Apr 2026, stages in workflow order.
+// Each stage is a queue that moves at most its daily capacity out of the backlog
+// the previous stage hands it, so every cumulative count is non-decreasing and an
+// earlier stage never falls below a later one. Development capacity drops for
+// three weeks, then a staffing boost drains the backlog.
+const data = (() => {
+  const stageNames = ["New", "Triaged", "In Progress", "Resolved"];
+  const start = new Date(2026, 3, 1);
+  const totals = stageNames.map(() => 0);
+  const rows: { [DATE]: Date; [STAGE]: string; [COUNT]: number }[] = [];
+  for (let day = 0; day < 70; day += 1) {
+    const date = new Date(start);
+    date.setDate(date.getDate() + day);
+    totals[0] += 9 + Math.round(2 * Math.sin(day / 8)) + (day >= 45 ? 4 : 0);
+    const capacity = [14, day < 20 ? 9 : day < 42 ? 4 : 12, 8];
+    for (let s = 1; s < stageNames.length; s += 1) {
+      totals[s] += Math.min(capacity[s - 1], totals[s - 1] - totals[s]);
+    }
+    stageNames.forEach((stage, s) => rows.push({ [DATE]: date, [STAGE]: stage, [COUNT]: totals[s] }));
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const stages = [...new Set(data.map((d) => d[STAGE]))];
+const dates = [...new Map(data.map((d) => [d[DATE].getTime(), d[DATE]])).values()].sort(
+  (a, b) => a.getTime() - b.getTime(),
+);
+const countByKey = new Map(data.map((d) => [`${d[STAGE]}|${d[DATE].getTime()}`, d[COUNT]]));
+const cumulative = stages.map((stage) => dates.map((dt) => countByKey.get(`${stage}|${dt.getTime()}`) ?? null));
+
+// Band thickness: items currently in a stage, its cumulative count minus the next
+// stage's; the last stage's band is its whole cumulative count
+const bands = cumulative.map((row, i) =>
+  row.map((v, k) => {
+    if (i === stages.length - 1 || v == null) return v;
+    const next = cumulative[i + 1][k];
+    return next == null ? null : v - next;
+  }),
 );
 
-// Per-stage daily processing capacity. Development capacity tightens for
-// three weeks, then a staffing boost drains the backlog — the bottleneck
-// this chart tells the story of.
-const triageCapacityForDay = () => 14;
-const devCapacityForDay = (day) => (day < 20 ? 9 : day < 42 ? 4 : 12);
-const releaseCapacityForDay = () => 8;
+// Largest work-in-progress band of any stage but the last, named in the subtitle
+let peak = { stage: -1, day: -1, wip: -Infinity };
+bands.slice(0, -1).forEach((row, i) =>
+  row.forEach((v, k) => {
+    if (v != null && v > peak.wip) peak = { stage: i, day: k, wip: v };
+  }),
+);
+const fmtDay = (v: Date) => v.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const SUBTITLE = [
+  `${dates.length} days · ${stages.length} stages, earliest on top`,
+  peak.stage >= 0 ? `widest band: ${stages[peak.stage]}, ${peak.wip} on ${fmtDay(dates[peak.day])}` : null,
+]
+  .filter(Boolean)
+  .join(" · ");
 
-const advanceQueue = (previousCumulative, capacityForDay) => {
-  const cumulative = [];
-  let processedTotal = 0;
-  for (let day = 0; day < previousCumulative.length; day += 1) {
-    const waiting = previousCumulative[day] - processedTotal;
-    processedTotal += Math.min(capacityForDay(day), waiting);
-    cumulative.push(processedTotal);
-  }
-  return cumulative;
-};
-
-const newCumulative = [];
-arrivalsPerDay.reduce((total, arrivals, day) => {
-  const next = total + arrivals;
-  newCumulative[day] = next;
-  return next;
-}, 0);
-
-const triagedCumulative = advanceQueue(newCumulative, triageCapacityForDay);
-const inProgressCumulative = advanceQueue(triagedCumulative, devCapacityForDay);
-const resolvedCumulative = advanceQueue(inProgressCumulative, releaseCapacityForDay);
-
-// Band widths (work-in-progress per stage) fed to the stacked areas.
-const wipNew = newCumulative.map((v, i) => v - triagedCumulative[i]);
-const wipTriaged = triagedCumulative.map((v, i) => v - inProgressCumulative[i]);
-const wipInProgress = inProgressCumulative.map((v, i) => v - resolvedCumulative[i]);
-const wipResolved = resolvedCumulative;
-
-const TITLE = "area-cumulative-flow · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const padding = { top: 28, right: 40, bottom: 24, left: 40 };
-  const titleBlockHeight = 56;
-  // MUI X's y-axis `label` prop offsets itself from a hardcoded `tickFontSize`
-  // guess rather than the tick labels' real measured width, so with a 3-digit
-  // axis it collides with the tick numbers. A hand-rotated label in its own
-  // flex column sidesteps that and gives predictable, collision-free spacing.
-  const yLabelWidth = 32;
-  const chartWidth = size.width - padding.left - padding.right - yLabelWidth;
-  const chartHeight = size.height - padding.top - padding.bottom - titleBlockHeight;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: size.width,
-        height: size.height,
-        boxSizing: "border-box",
-        padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", mb: "20px", lineHeight: 1 }}>
-        {TITLE}
-      </Typography>
-      <Box sx={{ display: "flex", flexDirection: "row", height: chartHeight }}>
-        <Box sx={{ width: yLabelWidth, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography
-            sx={{
-              fontSize: 16,
-              color: "text.secondary",
-              whiteSpace: "nowrap",
-              transform: "rotate(-90deg)",
-            }}
-          >
-            Cumulative ticket count
-          </Typography>
-        </Box>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          series={[
-            {
-              id: "new",
-              label: "New",
-              data: wipNew,
-              stack: "flow",
-              stackOrder: "reverse",
-              area: true,
-              showMark: false,
-              color: t.palette[0],
-              valueFormatter: (v) => `${v} tickets waiting`,
-            },
-            {
-              id: "triaged",
-              label: "Triaged",
-              data: wipTriaged,
-              stack: "flow",
-              stackOrder: "reverse",
-              area: true,
-              showMark: false,
-              color: t.palette[1],
-              valueFormatter: (v) => `${v} tickets waiting`,
-            },
-            {
-              id: "in-progress",
-              label: "In Progress",
-              data: wipInProgress,
-              stack: "flow",
-              stackOrder: "reverse",
-              area: true,
-              showMark: false,
-              color: t.palette[2],
-              valueFormatter: (v) => `${v} tickets waiting`,
-            },
-            {
-              id: "resolved",
-              label: "Resolved",
-              data: wipResolved,
-              stack: "flow",
-              stackOrder: "reverse",
-              area: true,
-              showMark: false,
-              color: t.palette[3],
-              valueFormatter: (v) => `${v} tickets`,
-            },
-          ]}
-          xAxis={[
-            {
-              data: dates,
-              scaleType: "time",
-              label: "Date",
-              valueFormatter: (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-              tickLabelStyle: { fontSize: 14 },
-              labelStyle: { fontSize: 16 },
-            },
-          ]}
-          yAxis={[
-            {
-              valueFormatter: (value) => value.toLocaleString("en-US"),
-              tickLabelStyle: { fontSize: 14 },
-            },
-          ]}
-          grid={{ horizontal: true }}
-          slotProps={{
-            legend: {
-              direction: "row",
-              labelStyle: { fontSize: 14 },
-              itemMarkWidth: 18,
-              itemMarkHeight: 10,
-              markGap: 8,
-            },
-          }}
-          sx={{
-            "& .MuiLineElement-root": { strokeWidth: 2.5 },
-            "& .MuiAreaElement-root": { fillOpacity: 0.85 },
-            "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
-          }}
-        />
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
+        </Typography>
       </Box>
+      <LineChart
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
+        skipAnimation
+        grid={{ horizontal: true }}
+        xAxis={[
+          {
+            data: dates,
+            scaleType: "time",
+            label: DATE,
+            valueFormatter: fmtDay,
+            tickNumber: 10,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            label: COUNT,
+            width: 84,
+            valueFormatter: (v: number) => v.toLocaleString("en-US"),
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={stages.map((stage, i) => ({
+          id: `stage-${i}`,
+          label: stage,
+          data: bands[i],
+          color: t.palette[i],
+          stack: "flow",
+          stackOrder: "reverse" as const,
+          area: true,
+          showMark: false,
+          labelMarkType: "square" as const,
+        }))}
+        margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
+        slotProps={{
+          legend: {
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink },
+          },
+        }}
+        sx={{
+          "& .MuiLineChart-area": { fillOpacity: 0.85, filter: "none" },
+          "& .MuiLineChart-line": { strokeWidth: 2.5 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      />
     </Box>
   );
 }
