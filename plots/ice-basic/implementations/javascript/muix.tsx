@@ -9,15 +9,17 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-// Individual curves stay translucent so dense stretches read darker; the alpha
-// (30 %) is baked into the colour so the legend swatches match the lines
-const ICE_ALPHA_HEX = "4D";
+// Individual curves stay translucent so dense stretches read darker; the opacity
+// is set on the line paths only, so the legend swatches keep the full colour
+const ICE_OPACITY = 0.5;
 
 // Columns: set these to your data's column names
 const HOUSE = "House ID"; // role: observation_id
 const SQFT = "Square Footage (sq ft)"; // role: feature_value
 const PRICE = "Predicted Price (USD)"; // role: prediction
 const SEGMENT = "Year built"; // role: extra
+// Natural order of the segment levels, oldest first; unlisted levels follow
+const SEGMENT_ORDER = ["Before 1960", "1960 or later"];
 
 // Data: replace this block with your own records, one object per observation and grid value
 // ICE curves of a gradient-boosting house-price model: for each of 70 houses the
@@ -61,12 +63,22 @@ const data = (() => {
 // Plot: reads only data and the constants above
 const rows = data.filter((d) => d[SQFT] != null && d[PRICE] != null);
 const grid = [...new Set(rows.map((d) => d[SQFT]))].sort((a, b) => a - b);
-const segments = [...new Set(rows.map((d) => d[SEGMENT]))];
-const curves = [...new Set(rows.map((d) => d[HOUSE]))].map((id) => {
-  const own = rows.filter((d) => d[HOUSE] === id);
-  const byX = new Map(own.map((d) => [d[SQFT], d[PRICE]]));
-  return { id, segment: own[0][SEGMENT], data: grid.map((x) => byX.get(x) ?? null) };
-});
+const rank = (s) => (SEGMENT_ORDER.includes(s) ? SEGMENT_ORDER.indexOf(s) : SEGMENT_ORDER.length);
+const segments = [...new Set(rows.map((d) => d[SEGMENT]))].sort((a, b) => rank(a) - rank(b));
+// Ordered levels take evenly spaced steps of the Imprint sequential ramp, oldest → newest
+const mix = (a: string, b: string, f: number) =>
+  `#${[1, 3, 5]
+    .map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - f) + parseInt(b.slice(i, i + 2), 16) * f))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("")}`;
+const segmentColor = new Map(segments.map((s, i) => [s, mix(t.seq[0], t.seq[1], segments.length > 1 ? i / (segments.length - 1) : 0)]));
+const curves = [...new Set(rows.map((d) => d[HOUSE]))]
+  .map((id) => {
+    const own = rows.filter((d) => d[HOUSE] === id);
+    const byX = new Map(own.map((d) => [d[SQFT], d[PRICE]]));
+    return { id, segment: own[0][SEGMENT], data: grid.map((x) => byX.get(x) ?? null) };
+  })
+  .sort((a, b) => segments.indexOf(a.segment) - segments.indexOf(b.segment));
 // Partial dependence: the mean prediction over all observations at each grid value
 const partialDependence = grid.map((_, k) => {
   const at = curves.map((c) => c.data[k]).filter((v) => v != null);
@@ -101,7 +113,7 @@ export default function Chart() {
           ...curves.map((c) => ({
             id: `obs-${c.id}`,
             data: c.data,
-            color: `${t.palette[segments.indexOf(c.segment)]}${ICE_ALPHA_HEX}`,
+            color: segmentColor.get(c.segment),
             showMark: false,
             labelMarkType: "line",
             label: labelled.has(c.id) ? `${SEGMENT}: ${c.segment}` : undefined,
@@ -140,8 +152,8 @@ export default function Chart() {
           tooltip: { trigger: "item" },
         }}
         sx={{
-          "& .MuiLineChart-line": { strokeWidth: 1.5 },
-          '& .MuiLineChart-line[data-series="pdp"]': { strokeWidth: 4 },
+          "& .MuiLineChart-line": { strokeWidth: 1.5, strokeOpacity: ICE_OPACITY },
+          '& .MuiLineChart-line[data-series="pdp"]': { strokeWidth: 4, strokeOpacity: 1 },
           "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       />
