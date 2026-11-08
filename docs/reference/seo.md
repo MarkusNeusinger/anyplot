@@ -588,22 +588,21 @@ The edge can be stricter than this file and answers blocked agents with `HTTP
 `robots.txt` that the dashboard still blocks is a published lie**. Keep the two
 in step.
 
-Measured on the live zone 2026-08-18 (zone `anyplot.ai` → **AI Crawl Control** →
-Security):
-
-The dashboard was brought in line with the open policy on 2026-08-18. State
-after that change:
+The dashboard (zone `anyplot.ai` → **AI Crawl Control** → Security) was
+brought in line with the open policy on 2026-08-18, and on 2026-11-09 its block
+rule was narrowed to the two ByteDance crawlers. State after that change:
 
 | State | Agents |
 |---|---|
-| Blocked at the edge | `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, `Timpibot` |
-| Passing | everything else, including `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Google-CloudVertexBot`, `PetalBot`, `FacebookBot`, `Arquivo Web Crawler`, and every retrieval agent |
+| Blocked at the edge | `Bytespider`, `TikTok Spider` |
+| Passing | everything else, including `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Google-CloudVertexBot`, `PetalBot`, `FacebookBot`, `Arquivo Web Crawler`, every retrieval agent, and `Anchor Browser`, `Novellum AI Crawl`, and `Timpibot`, which were blocked until 2026-11-09 |
 
 `Bytespider` and `TikTok Spider` are both ByteDance; the first is documented as
-ignoring robots.txt, and the second shares its operator. The remaining three are
-blocked for a weaker reason — no vendor documentation of their crawling
-behaviour could be found, so their rule-compliance is unverified rather than
-disproven. Revisit if that changes.
+ignoring robots.txt, and the second shares its operator. The other three were
+blocked for a weaker reason: no vendor documentation of their crawling
+behaviour could be found. The zone's other security rules, and the principle
+that no rule hard-blocks traffic that could be a human, are in
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#security-rules-pro-since-2026-11-09).
 
 Cloudflare is **not** prepending a managed robots.txt block: the live file is
 byte-identical to this repo's, and enforcement is purely the 403. That was

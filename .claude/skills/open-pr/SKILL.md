@@ -386,12 +386,20 @@ source ~/.nvm/nvm.sh && nvm use 24 >/dev/null   # harness shells may still start
 SCRATCH=<the session scratchpad>
 [ -d "$SCRATCH/node_modules/playwright-core" ] || \
   (cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1)
-NODE_PATH="$SCRATCH/node_modules" node scripts/site-smoke.mjs
+MAIN=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")   # .env lives in the shared checkout
+SMOKE_TOKEN="$(grep -E '^SMOKE_TOKEN=' "$MAIN/.env" | cut -d= -f2-)" \
+  NODE_PATH="$SCRATCH/node_modules" node scripts/site-smoke.mjs
 ```
 
+The token is read from the shared checkout because a worktree may have no
+`.env`. Without it, Cloudflare's Super Bot Fight Mode challenges the headless
+run as definitely automated, and every page comes back as a challenge instead
+of the site (`infra/cloudflare/README.md`, "Security rules"). The value is
+never printed; don't echo it to check it.
+
 It loads `/`, `/plots` and `/scatter-basic` in headless Chromium,
-checks `api.anyplot.ai/health`, and prints one `OK` or `FAIL` line per
-check, with the entry bundle (`bundle=index-*.js`) that answered; it
+checks `api.anyplot.ai/health`, and prints one `OK`, `FAIL`, or `SKIP`
+line per check, with the entry bundle (`bundle=index-*.js`) that answered; it
 never downloads a browser. A failed route counts too: the app's error
 boundary ("Something went wrong") keeps the masthead and footer, so
 the script looks for its text, not only for an empty page.
@@ -410,6 +418,11 @@ rather than passed.
 - **Exit 2** means no browser was found, so nothing was checked: say
   so, then load `/` and a spec page with the Playwright MCP and read
   its console errors instead.
+- **Exit 2 with a `SKIP` line** marked `challenged by Cloudflare` means
+  Cloudflare answered that page with a challenge, so the site behind it
+  was never reached. Check that `SMOKE_TOKEN` is in the shared
+  checkout's `.env` and that the bypass rule still exists, then run the
+  smoke again; until it passes, report the check as unconfirmed.
 
 **Finally, clean up without asking** (owner, 2026-10-22: a merge should
 take its branch with it). GitHub deletes the remote branch on merge
