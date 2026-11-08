@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { render, screen } from 'src/test-utils';
 
-// Mock the utils module
-vi.mock('src/utils', () => ({
+// Mock the search helpers; the counter's formatter stays real
+vi.mock('src/utils', async importOriginal => ({
+  ...(await importOriginal<typeof import('src/utils')>()),
   getAvailableValues: vi.fn(() => [
     ['scatter', 10],
     ['bar', 5],
@@ -37,9 +38,11 @@ const defaultProps = {
     prep: {},
     style: {},
   },
+  globalCounts: null,
   orCounts: [] as Record<string, number>[],
   specTitles: {},
   currentTotal: 100,
+  currentSpecTotal: 7,
   displayedCount: 20,
   randomAnimation: null,
   imageSize: 'normal' as const,
@@ -48,6 +51,7 @@ const defaultProps = {
   onAddValueToGroup: vi.fn(),
   onRemoveFilter: vi.fn(),
   onRemoveGroup: vi.fn(),
+  onClearFilters: vi.fn(),
   onTrackEvent: vi.fn(),
 };
 
@@ -70,9 +74,11 @@ describe('FilterBar', () => {
     expect(screen.getByText('lib:matplotlib')).toBeInTheDocument();
   });
 
-  it('shows counter text with total', () => {
-    render(<FilterBar {...defaultProps} currentTotal={42} displayedCount={20} />);
-    expect(screen.getByText(/42/)).toBeInTheDocument();
+  it('shows the counter with its units, specs and plots', () => {
+    render(
+      <FilterBar {...defaultProps} currentTotal={42} currentSpecTotal={8} displayedCount={20} />
+    );
+    expect(screen.getByText(/8 specs · 42 plots/)).toBeInTheDocument();
   });
 
   it('renders chip for each filter group', () => {
