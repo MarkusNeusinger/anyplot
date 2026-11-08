@@ -13,6 +13,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const AQL = 0.02; // acceptable quality level of the contract, where the producer's risk is read
 const LTPD = 0.1; // lot tolerance percent defective, where the consumer's risk is read
+const PERCENT = "%"; // both axes show their 0–1 quantities as percentages
 
 // Columns: set these to your data's column names
 const FRACTION_DEFECTIVE = "Fraction defective"; // role: fraction_defective
@@ -64,7 +65,8 @@ const curves = plans.map((plan, i) => {
 const covered = curves.filter((c) => c.atAql !== null && c.atLtpd !== null);
 const riskPlan = covered.reduce<(typeof curves)[number] | null>((best, c) => (best === null || c.atLtpd! > best.atLtpd! ? c : best), null);
 const xMax = fractions[fractions.length - 1];
-const percent = (v: number) => `${parseFloat((v * 100).toFixed(1))} %`;
+const percentValue = (v: number) => String(parseFloat((v * 100).toFixed(1)));
+const percent = (v: number) => `${percentValue(v)} ${PERCENT}`;
 
 const TITLE = "Incoming Inspection · curve-oc · javascript · muix · anyplot.ai";
 const subtitle = riskPlan
@@ -121,8 +123,8 @@ export default function Chart() {
             scaleType: "linear",
             min: 0,
             max: xMax,
-            label: FRACTION_DEFECTIVE,
-            valueFormatter: (v: number) => percent(v),
+            label: `${FRACTION_DEFECTIVE} (${PERCENT})`,
+            valueFormatter: percentValue,
             tickNumber: 8,
             height: 64,
             labelStyle: { fontSize: 16, fill: t.ink },
@@ -133,8 +135,8 @@ export default function Chart() {
           {
             min: 0,
             max: 1,
-            label: ACCEPTANCE,
-            valueFormatter: (v: number) => percent(v),
+            label: `${ACCEPTANCE} (${PERCENT})`,
+            valueFormatter: percentValue,
             width: 80,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
