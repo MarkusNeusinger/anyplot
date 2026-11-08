@@ -504,7 +504,8 @@ def test_catalogue_corpus() -> None:
     rule): 6 files have findings. The 4 map specs that install or load geodata packages
     (flowmap-origin-destination, heatmap-geographic, map-connection-lines, map-projections; the other 9 map specs
     pass SECURITY and are blocked by name), qrcode-basic (a URL and the qrcode package) and maze-circular's `<<-`.
-    The 7 flow files that name a column `source` and the 2 dataset-package files pass SECURITY now."""
+    The 7 flow files that name a column `source` and the 2 dataset-package files pass SECURITY now. Since #12862
+    regenerated flowmap-origin-destination without a geodata package (2026-11-09), 5 files have findings."""
     flagged: dict[str, Counter[str]] = {}
     for path in R_CATALOGUE_FILES:
         findings = validate_security(normalise(path.read_text(encoding="utf-8")))
@@ -512,7 +513,6 @@ def test_catalogue_corpus() -> None:
             flagged[path.parts[-4]] = Counter(finding.rule for finding in findings)
 
     assert sorted(flagged) == [
-        "flowmap-origin-destination",
         "heatmap-geographic",
         "map-connection-lines",
         "map-projections",
