@@ -74,6 +74,9 @@ export function FeedbackTopList({
           ...listTextSx,
           textAlign: 'right',
           p: 0,
+          // WCAG 2.5.8: a 24 px target even in the phone's 28 px column
+          minHeight: 24,
+          minWidth: 24,
           border: 'none',
           bgcolor: 'transparent',
           cursor: 'pointer',
