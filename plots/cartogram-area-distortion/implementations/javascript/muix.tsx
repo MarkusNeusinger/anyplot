@@ -224,9 +224,8 @@ export default function Chart() {
                   cy={sizeRefRadii[i] + 1}
                   r={sizeRefRadii[i]}
                   fill={t.inkSoft}
-                  fillOpacity={0.3}
-                  stroke={t.inkSoft}
-                  strokeWidth={1.2}
+                  stroke={t.pageBg}
+                  strokeWidth={1.5}
                 />
               </svg>
               <span style={{ fontSize: 15, color: t.inkSoft }}>{v}</span>
