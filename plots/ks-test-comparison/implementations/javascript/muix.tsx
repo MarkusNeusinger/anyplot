@@ -11,7 +11,6 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const MEASURE = "Credit score"; // the quantity both samples measure, the x-axis title
 const CDF_MIN = 0; // a cumulative proportion runs from 0 to 1
 const CDF_MAX = 1;
 const CDF_TICKS = 10; // tick steps between CDF_MIN and CDF_MAX
@@ -22,6 +21,7 @@ const KOLMOGOROV_TERMS = 100; // terms of the alternating series for the asympto
 // Columns: set these to your data's column names
 const GOOD = "Good-standing customers"; // role: sample1
 const BAD = "Bad-standing customers"; // role: sample2
+const MEASURE = "Credit score (points)"; // the quantity both sample columns hold, with its unit: the x-axis title
 
 // Data: replace this block with your own records, one object per row; a shorter sample
 // leaves its cells null
