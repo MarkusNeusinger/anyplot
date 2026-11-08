@@ -167,6 +167,11 @@ interface DataPanelProps {
   onLoadData?: (signal: AbortSignal) => Promise<string>;
   /** The full view showed its rows, once per opening: the `opened_data_view` beacon. */
   onDataViewShown?: () => void;
+  /**
+   * The user opened `.change()` or `.view_all()` to look at the data: the page's one click on
+   * the plot button plots nothing after that (`plotChain.ts`).
+   */
+  onLook?: () => void;
 }
 
 export function DataPanel({
@@ -184,6 +189,7 @@ export function DataPanel({
   locked = false,
   onLoadData,
   onDataViewShown,
+  onLook,
 }: DataPanelProps) {
   // The focus follows the live card to its new version, wherever the version put it.
   const follow = useFollowFocus(part === 'data' ? version : undefined);
@@ -284,6 +290,7 @@ export function DataPanel({
       onToLong={onToLong}
       onLoadData={onLoadData}
       onDataViewShown={onDataViewShown}
+      onLook={onLook}
     />
   );
 

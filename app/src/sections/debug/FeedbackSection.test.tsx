@@ -3,17 +3,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FEEDBACK_STATUS_OPTIONS } from 'src/sections/debug/constants';
 import { CopyClaudePromptButton } from 'src/sections/debug/CopyClaudePromptButton';
 import { type FeedbackMessage, FeedbackSection } from 'src/sections/debug/FeedbackSection';
-import { FeedbackTopList, type FeedbackTopPage } from 'src/sections/debug/FeedbackTopList';
+import { FeedbackTopList, type FeedbackVoteItem } from 'src/sections/debug/FeedbackTopList';
 import { act, fireEvent, render, screen, userEvent, within } from 'src/test-utils';
-import { colors } from 'src/theme';
 
-const TOP_UP: FeedbackTopPage[] = [
-  { path: '/scatter-basic', count: 14, last_seen: '2026-05-20T10:00:00Z' },
-  { path: '/bar-grouped', count: 5, last_seen: null },
-];
+const vote = (overrides: Partial<FeedbackVoteItem> = {}): FeedbackVoteItem => ({
+  spec_id: 'scatter-basic',
+  language: 'python',
+  library_id: 'matplotlib',
+  path: '/scatter-basic/python/matplotlib',
+  thumbs_up: 0,
+  thumbs_down: 0,
+  earlier_thumbs_up: 0,
+  earlier_thumbs_down: 0,
+  last_vote: null,
+  ...overrides,
+});
 
-const TOP_DOWN: FeedbackTopPage[] = [
-  { path: '/heatmap-annotated', count: 3, last_seen: '2026-05-19T08:00:00Z' },
+const VOTES: FeedbackVoteItem[] = [
+  vote({ thumbs_up: 1, thumbs_down: 4, earlier_thumbs_up: 6, earlier_thumbs_down: 2 }),
+  vote({
+    library_id: 'seaborn',
+    path: '/scatter-basic/python/seaborn',
+    thumbs_up: 3,
+    last_vote: '2026-05-20T10:00:00Z',
+  }),
 ];
 
 const INITIAL_MESSAGES: FeedbackMessage[] = [
@@ -76,24 +89,54 @@ describe('FeedbackTopList', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows empty state when no entries exist and renders links and counts when populated', () => {
+  it('shows an empty state, then one linked row per plot', () => {
     const { rerender } = render(
-      <FeedbackTopList title="👍 thumbs up" items={[]} accent={colors.success} />
+      <FeedbackTopList items={[]} sort="thumbs_down" onSortChange={vi.fn()} />
     );
-    expect(screen.getByText('👍 thumbs up')).toBeInTheDocument();
-    expect(screen.getByText('no entries yet')).toBeInTheDocument();
+    expect(screen.getByText('no votes yet')).toBeInTheDocument();
 
-    rerender(<FeedbackTopList title="👍 thumbs up" items={TOP_UP} accent={colors.success} />);
-    expect(screen.queryByText('no entries yet')).not.toBeInTheDocument();
-    expect(screen.getByText('14')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '/scatter-basic' })).toHaveAttribute(
+    rerender(<FeedbackTopList items={VOTES} sort="thumbs_down" onSortChange={vi.fn()} />);
+    expect(screen.queryByText('no votes yet')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('vote-row')).toHaveLength(2);
+    expect(screen.getByRole('link', { name: '/scatter-basic/python/seaborn' })).toHaveAttribute(
       'href',
-      '/scatter-basic'
+      '/scatter-basic/python/seaborn'
     );
-    expect(screen.getByRole('link', { name: '/bar-grouped' })).toHaveAttribute(
-      'href',
-      '/bar-grouped'
+  });
+
+  it('shows the current version’s thumbs, their total, and the earlier ones beside them', () => {
+    render(<FeedbackTopList items={VOTES} sort="thumbs_down" onSortChange={vi.fn()} />);
+
+    const [regenerated, unchanged] = screen.getAllByTestId('vote-row');
+    // 👍 1 · 👎 4 · total 5 · earlier 6 up, 2 down
+    expect(
+      within(regenerated)
+        .getAllByText(/^[\d·– ]+$/)
+        .map(cell => cell.textContent)
+    ).toEqual(['1', '4', '5', '6 · 2']);
+    expect(within(regenerated).getByTitle('6 up, 2 down on earlier versions')).toBeInTheDocument();
+    expect(
+      within(unchanged)
+        .getAllByText(/^[\d·– ]+$/)
+        .map(cell => cell.textContent)
+    ).toEqual(['3', '0', '3', '–']);
+  });
+
+  it('sorts by thumbs down, thumbs up or total from the headers', async () => {
+    const user = userEvent.setup();
+    const onSortChange = vi.fn();
+    render(<FeedbackTopList items={VOTES} sort="thumbs_down" onSortChange={onSortChange} />);
+
+    const down = screen.getByRole('button', { name: /sort by thumbs down/i });
+    expect(down).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /sort by thumbs up/i })).toHaveAttribute(
+      'aria-pressed',
+      'false'
     );
+
+    await user.click(screen.getByRole('button', { name: /sort by thumbs up/i }));
+    await user.click(screen.getByRole('button', { name: /sort by all thumbs/i }));
+    expect(onSortChange.mock.calls).toEqual([['thumbs_up'], ['total']]);
   });
 });
 
@@ -176,8 +219,9 @@ describe('FeedbackSection', () => {
 
     const { rerender } = render(
       <FeedbackSection
-        topThumbsUp={TOP_UP}
-        topThumbsDown={TOP_DOWN}
+        votes={VOTES}
+        voteSort="thumbs_down"
+        setVoteSort={vi.fn()}
         feedbackStatusFilter="open"
         setFeedbackStatusFilter={setFeedbackStatusFilter}
         feedbackMessages={INITIAL_MESSAGES}
@@ -191,12 +235,14 @@ describe('FeedbackSection', () => {
     expect(screen.getByText('Colors are hard to distinguish')).toBeInTheDocument();
     expect(screen.getByText('General note without reaction')).toBeInTheDocument();
 
-    // Reaction glyphs rendered
-    expect(screen.getByText('🪲')).toBeInTheDocument();
-    expect(screen.getByText('💡')).toBeInTheDocument();
-    expect(screen.getByText('👍')).toBeInTheDocument();
-    expect(screen.getByText('👎')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    // Reaction glyphs rendered (the vote list's 👍/👎 headers sit outside the messages)
+    const messages = within(screen.getByTestId('feedback-messages'));
+    expect(messages.getByText('🪲')).toBeInTheDocument();
+    expect(messages.getByText('💡')).toBeInTheDocument();
+    expect(messages.getByText('👍')).toBeInTheDocument();
+    expect(messages.getByText('👎')).toBeInTheDocument();
+    expect(messages.getByText('—')).toBeInTheDocument();
+    expect(screen.getAllByTestId('vote-row')).toHaveLength(2);
 
     // Find fb-1's status select within its message row instead of by index
     const fb1Message = screen.getByText('Axis labels overlap on mobile');
@@ -216,8 +262,9 @@ describe('FeedbackSection', () => {
     // Empty state with specific status filter
     rerender(
       <FeedbackSection
-        topThumbsUp={TOP_UP}
-        topThumbsDown={TOP_DOWN}
+        votes={VOTES}
+        voteSort="thumbs_down"
+        setVoteSort={vi.fn()}
         feedbackStatusFilter="done"
         setFeedbackStatusFilter={setFeedbackStatusFilter}
         feedbackMessages={[]}
@@ -229,8 +276,9 @@ describe('FeedbackSection', () => {
     // Empty state with all statuses ('')
     rerender(
       <FeedbackSection
-        topThumbsUp={TOP_UP}
-        topThumbsDown={TOP_DOWN}
+        votes={VOTES}
+        voteSort="thumbs_down"
+        setVoteSort={vi.fn()}
         feedbackStatusFilter=""
         setFeedbackStatusFilter={setFeedbackStatusFilter}
         feedbackMessages={[]}
