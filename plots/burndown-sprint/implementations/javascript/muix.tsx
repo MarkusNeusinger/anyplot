@@ -17,9 +17,12 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const DAY_MS = 24 * 60 * 60 * 1000;
 const Y_PAD_SHARE = 0.12; // headroom above the largest value, as a share of it
-const BEHIND = t.palette[4]; // semantic: matte red where the actual line runs above the ideal
-const AHEAD = t.palette[0]; // semantic: brand green where it runs below
-const STATUS_OPACITY = 0.2;
+// Schedule states: the poles of the diverging ramp, red for behind and blue for ahead, so neither
+// fill shares a color with the remaining-work series (brand green) or the ideal line (inkSoft)
+const BEHIND = { id: "behind", label: "Behind: above the ideal line", color: t.div[0] };
+const AHEAD = { id: "ahead", label: "Ahead: below the ideal line", color: t.div[2] };
+// the fills keep their hues in both themes; on the dark page they need more opacity to stay visible
+const STATUS_OPACITY = window.ANYPLOT_THEME === "dark" ? 0.4 : 0.22;
 
 // Columns: set these to your data's column names
 const DAY = "Day"; // role: day
@@ -67,10 +70,30 @@ const scopeEvents = rows
   .filter((d) => d[SCOPE_CHANGE])
   .map((d) => ({ day: d[DAY], label: `${scopeName} ${d[SCOPE_CHANGE] > 0 ? "+" : "−"}${Math.abs(d[SCOPE_CHANGE])} ${unit}` }));
 
+// Between consecutive days the actual line holds its value while the ideal falls linearly; the gap
+// is split where the two cross, and each piece is behind (actual above ideal) or ahead (below).
+// A point is [share of the way from its day to the next, value].
+const pieces: { day: number; points: number[][]; state: string }[] = [];
+for (let i = 0; i < rows.length - 1; i += 1) {
+  const a = remaining[i] - ideal[i];
+  const b = remaining[i] - ideal[i + 1];
+  if (a * b < 0) {
+    const c = a / (a - b);
+    pieces.push({ day: i, points: [[0, remaining[i]], [c, remaining[i]], [0, ideal[i]]], state: a > 0 ? BEHIND.id : AHEAD.id });
+    pieces.push({ day: i, points: [[c, remaining[i]], [1, remaining[i]], [1, ideal[i + 1]]], state: b > 0 ? BEHIND.id : AHEAD.id });
+  } else if (a !== 0 || b !== 0) {
+    pieces.push({ day: i, points: [[0, remaining[i]], [1, remaining[i]], [1, ideal[i + 1]], [0, ideal[i]]], state: a + b > 0 ? BEHIND.id : AHEAD.id });
+  }
+}
+// The legend names only the states that occur; each one is a series without values, so the legend
+// shows its fill swatch next to the two lines
+const states = [BEHIND, AHEAD].filter((s) => pieces.some((p) => p.state === s.id));
+
 const yMax = Math.max(...remaining, ...ideal) * (1 + Y_PAD_SHARE);
 const totalAdded = rows.reduce((s, d) => s + (d[SCOPE_CHANGE] || 0), 0);
+const behindDays = rows.filter((d) => d[REMAINING] > d[IDEAL]).length;
 const TITLE = "burndown-sprint · javascript · muix · anyplot.ai";
-const subtitle = `${remaining[0]} ${unit} committed · ${totalAdded >= 0 ? "+" : "−"}${Math.abs(totalAdded)} added during the sprint · ${remaining[remaining.length - 1]} left on ${formatDay(days[days.length - 1])} · red: behind the ideal line, green: ahead`;
+const subtitle = `${remaining[0]} ${unit} committed · ${totalAdded >= 0 ? "+" : "−"}${Math.abs(totalAdded)} added during the sprint · ${remaining[remaining.length - 1]} left on ${formatDay(days[days.length - 1])} · above the ideal line on ${behindDays} of ${rows.length} days`;
 const TITLE_H = 80;
 
 function WeekendBands() {
@@ -91,36 +114,24 @@ function WeekendBands() {
   );
 }
 
-// Between consecutive days the actual line holds its value while the ideal falls
-// linearly; the gap is split where the two cross and colored by its sign
 function ScheduleFill() {
   const xScale = useXScale();
   const yScale = useYScale();
   const half = xScale.bandwidth() / 2;
-  const pieces: { points: number[][]; behind: boolean }[] = [];
-  for (let i = 0; i < rows.length - 1; i += 1) {
-    const x0 = xScale(days[i]) + half;
-    const x1 = xScale(days[i + 1]) + half;
-    const a = remaining[i] - ideal[i];
-    const b = remaining[i] - ideal[i + 1];
-    if (a * b < 0) {
-      const xc = x0 + (a / (a - b)) * (x1 - x0);
-      pieces.push({ points: [[x0, remaining[i]], [xc, remaining[i]], [x0, ideal[i]]], behind: a > 0 });
-      pieces.push({ points: [[xc, remaining[i]], [x1, remaining[i]], [x1, ideal[i + 1]]], behind: b > 0 });
-    } else {
-      pieces.push({ points: [[x0, remaining[i]], [x1, remaining[i]], [x1, ideal[i + 1]], [x0, ideal[i]]], behind: a + b > 0 });
-    }
-  }
   return (
     <g>
-      {pieces.map((p, i) => (
-        <polygon
-          key={i}
-          points={p.points.map(([x, v]) => `${x},${yScale(v)}`).join(" ")}
-          fill={p.behind ? BEHIND : AHEAD}
-          fillOpacity={STATUS_OPACITY}
-        />
-      ))}
+      {pieces.map((p, i) => {
+        const x0 = xScale(days[p.day]) + half;
+        const x1 = xScale(days[p.day + 1]) + half;
+        return (
+          <polygon
+            key={i}
+            points={p.points.map(([share, v]) => `${x0 + share * (x1 - x0)},${yScale(v)}`).join(" ")}
+            fill={p.state === BEHIND.id ? BEHIND.color : AHEAD.color}
+            fillOpacity={STATUS_OPACITY}
+          />
+        );
+      })}
     </g>
   );
 }
@@ -159,6 +170,7 @@ export default function Chart() {
         series={[
           { type: "line", id: "actual", label: REMAINING, data: remaining, color: t.palette[0], curve: "stepAfter", strictStepCurve: true, showMark: true, shape: "circle" },
           { type: "line", id: "ideal", label: IDEAL, data: ideal, color: t.inkSoft, curve: "linear", showMark: false },
+          ...states.map((s) => ({ type: "line" as const, id: s.id, label: s.label, data: days.map(() => null), color: s.color, showMark: false, labelMarkType: "square" as const })),
         ]}
         xAxis={[
           {
@@ -192,6 +204,7 @@ export default function Chart() {
               pr: 5,
               '& [data-series="ideal"] .MuiChartsLabelMark-root': { width: 28 },
               '& [data-series="ideal"] .MuiChartsLabelMark-fill': { strokeDasharray: "6 4", strokeLinecap: "butt" },
+              ...Object.fromEntries(states.map((s) => [`& [data-series="${s.id}"] .MuiChartsLabelMark-fill`, { fillOpacity: STATUS_OPACITY }])),
             }}
           />
           <ChartsSurface
