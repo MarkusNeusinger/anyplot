@@ -148,7 +148,15 @@ function ProfileAnnotations() {
           </g>
         );
       })}
-      <line x1={sx + 4} x2={sx + 4} y1={startTop - 10} y2={sy} stroke={t.inkSoft} strokeWidth={1.5} />
+      <line
+        x1={sx + 12}
+        x2={sx}
+        y1={startTop - 10}
+        y2={sy}
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        strokeDasharray="5 4"
+      />
       <circle cx={sx} cy={sy} r={5} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
       <text x={sx + 12} y={startTop - 34} textAnchor="start" fontSize={15} fontWeight={700} fill={t.ink}>
         {start[PLACE]}
@@ -156,7 +164,15 @@ function ProfileAnnotations() {
       <text x={sx + 12} y={startTop - 15} textAnchor="start" fontSize={14} fill={t.inkSoft}>
         {fmtElev(start[ELEVATION])}
       </text>
-      <line x1={ex - 4} x2={ex - 4} y1={endTop - 10} y2={ey} stroke={t.inkSoft} strokeWidth={1.5} />
+      <line
+        x1={ex - 12}
+        x2={ex}
+        y1={endTop - 10}
+        y2={ey}
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        strokeDasharray="5 4"
+      />
       <circle cx={ex} cy={ey} r={5} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
       <text x={ex - 12} y={endTop - 34} textAnchor="end" fontSize={15} fontWeight={700} fill={t.ink}>
         {end[PLACE]}
