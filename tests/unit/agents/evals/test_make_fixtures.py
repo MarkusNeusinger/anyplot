@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from agents.anyplot.code.profiles.javascript.allowlist import REMOVED_EXPORTS
 from agents.anyplot.data.bindings import check_bindings
 from agents.anyplot.data.parse import RESPELLED, parse_dataset
 from agents.anyplot.dev_fixture import CASES_DIR, snapshot_from_repo
@@ -204,6 +205,11 @@ def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture
 
 MUIX_7 = re.compile(r"^// Library: muix 7\.", re.MULTILINE)
 """The header line of a MUI X file written for MUI X 7."""
+MUIX_7_IMPORT = re.compile(
+    r'"@mui/x-charts/ChartContainer"'
+    rf'|import\s*\{{[^}}]*\b(?:{"|".join(REMOVED_EXPORTS)})\b[^}}]*\}}\s*from\s*"@mui/x-charts"'
+)
+"""An import MUI X 9 lacks: the module `@mui/x-charts/ChartContainer`, or a removed name from the package root."""
 
 
 def test_the_muix_files_split_by_the_version_they_were_written_for() -> None:
@@ -215,14 +221,17 @@ def test_the_muix_files_split_by_the_version_they_were_written_for() -> None:
     settings = AgentSettings(libraries=list(LIBRARIES))
     plots = Path(__file__).parents[4] / "plots"
     texts: dict[str, str] = {}
+    statuses: set[str] = set()
     for spec in SPECS:
         text = (plots / spec.spec_id / "implementations" / "javascript" / "muix.tsx").read_text(encoding="utf-8")
         texts[spec.spec_id] = text
         eligibility, _ = assess(snapshot_from_repo(spec.spec_id, "muix"), "muix", settings)
+        statuses.add(eligibility.status)
         deprecated = any(reason.startswith("deprecated-api") for reason in eligibility.reasons)
         assert eligibility.status in ("clean", "coupled"), (spec.spec_id, eligibility.status)
-        assert deprecated == ('"@mui/x-charts/ChartContainer"' in text), spec.spec_id
+        assert deprecated == bool(MUIX_7_IMPORT.search(text)), spec.spec_id
         assert not MUIX_7.search(text) or eligibility.status == "coupled", spec.spec_id
+    assert "clean" in statuses  # the clean class occurs at all
     assert not MUIX_7.search(texts[LIBRARY_SMOKE["muix"][0]])
 
 

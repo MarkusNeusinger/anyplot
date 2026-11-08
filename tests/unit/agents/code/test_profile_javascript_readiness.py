@@ -6,7 +6,7 @@ from collections import Counter
 
 import pytest
 
-from agents.anyplot.code.profiles.javascript.allowlist import mui_version
+from agents.anyplot.code.profiles.javascript.allowlist import REMOVED_EXPORTS, mui_version
 from agents.anyplot.code.profiles.javascript.coupling import coupling, is_layout_complete, structure_reasons
 from agents.anyplot.code.profiles.javascript.normalise import normalise
 from agents.anyplot.code.profiles.javascript.readiness import scan
@@ -186,6 +186,24 @@ BLOCKING = frozenset({"map-spec", "library-disabled", "syntax", "security", "no-
 """The reason categories of `blocked` (`readiness.scan`); a clean or coupled file carries none of them."""
 MUIX_7 = re.compile(r"^// Library: muix 7\.", re.MULTILINE)
 """The header line of a MUI X file written for MUI X 7."""
+MUIX_7_IMPORT = re.compile(
+    r'"@mui/x-charts/ChartContainer"'
+    rf'|import\s*\{{[^}}]*\b(?:{"|".join(REMOVED_EXPORTS)})\b[^}}]*\}}\s*from\s*"@mui/x-charts"'
+)
+"""An import MUI X 9 lacks: the module `@mui/x-charts/ChartContainer`, or a removed name from the package root."""
+DATA_LINE = re.compile(r"^// Data\b", re.MULTILINE)
+PLOT_LINE = re.compile(r"^// Plot\b", re.MULTILINE)
+COLUMN_LINE = re.compile(r'^const [A-Z][A-Z0-9_]*(?::\s*string)? = "[^"\n]*";\s*// role: \w+\s*$', re.MULTILINE)
+ANY_DATA_MARKER = re.compile(r"^//.*\bData\b", re.MULTILINE)
+
+
+def layout_in_text(text: str) -> bool | None:
+    """The adaptable-code layout read from the text alone: True for a canonical `// Data` line, a later `// Plot`
+    line and a canonical column constant, False with no `// ... Data ...` comment at column 0, else None."""
+    data, plot = DATA_LINE.search(text), PLOT_LINE.search(text)
+    if data and plot and data.start() < plot.start() and COLUMN_LINE.search(text):
+        return True
+    return False if not ANY_DATA_MARKER.search(text) else None
 
 
 def test_catalogue_corpus() -> None:
@@ -195,9 +213,9 @@ def test_catalogue_corpus() -> None:
 
     The rules: blocked are exactly the map specs a library has and `SECURITY_BLOCKED`; a clean file has the
     adaptable-code layout and no reason; a coupled file has one hint per reason, and the `data-block` hint exactly
-    when its layout is incomplete; and the `deprecated-api` hint appears only in a file written for MUI X 7, and in
-    every one that imports `@mui/x-charts/ChartContainer`, which MUI X 9 lacks (owner decision of 2026-10-30: such a
-    file is coupled, never blocked for its version)."""
+    when its layout is incomplete, which a plain reading of the text confirms where it can; the `deprecated-api`
+    hint appears only in a file written for MUI X 7, and in every one with an import MUI X 9 lacks (owner decision
+    of 2026-10-30: such a file is coupled, never blocked for its version); and all three classes occur."""
     statuses: Counter[str] = Counter()
     blocked: dict[str, str] = {}
     for path in JS_CATALOGUE_FILES:
@@ -218,11 +236,12 @@ def test_catalogue_corpus() -> None:
         assert (readiness.status == "clean") == (not readiness.reasons), name
         complete = is_layout_complete(find_regions(normalised, library=library))
         assert ("data-block" in categories) == (not complete), name
+        assert layout_in_text(normalised) in (None, complete), name  # the same answer from the text alone
         deprecated = "deprecated-api" in categories
         assert not deprecated or (library == "muix" and MUIX_7.search(text)), name
-        assert deprecated or '"@mui/x-charts/ChartContainer"' not in text, name
+        assert deprecated or not MUIX_7_IMPORT.search(text), name
 
-    assert sum(statuses.values()) == len(JS_CATALOGUE_FILES) and set(statuses) <= {"clean", "coupled", "blocked"}
+    assert sum(statuses.values()) == len(JS_CATALOGUE_FILES) and set(statuses) == {"clean", "coupled", "blocked"}
     maps = {f"{path.parts[-4]}/{js_library(path)}" for path in JS_CATALOGUE_FILES if path.parts[-4] in MAP_SPECS}
     present = {f"{path.parts[-4]}/{js_library(path)}" for path in JS_CATALOGUE_FILES}
     assert {name for name, reason in blocked.items() if reason.startswith("map-spec:")} == maps
