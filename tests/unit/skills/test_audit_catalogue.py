@@ -153,6 +153,9 @@ def test_round_files_stay_outside_checkouts_and_private(mods, tmp_path: Path) ->
     catalogue.write_private(target, "{}")
     assert stat.S_IMODE(target.stat().st_mode) == 0o600
     assert stat.S_IMODE(target.parent.stat().st_mode) == 0o700
+    target.chmod(0o644)  # a file an earlier run or another tool left readable
+    catalogue.write_private(target, "[]")
+    assert stat.S_IMODE(target.stat().st_mode) == 0o600 and target.read_text(encoding="utf-8") == "[]"
 
 
 # --- select_candidates.py ---------------------------------------------------------------------------------------
@@ -211,6 +214,8 @@ def test_gcs_reasons(mods) -> None:
     stale = sc.gcs_reasons({"light": (200, datetime(2026, 8, 4, tzinfo=UTC)), "dark": (404, None)}, UPDATED)
     assert _codes(stale) == ["render_stale", "render_missing"]
     assert _codes(sc.gcs_reasons({"light": (None, None)}, UPDATED)) == ["render_unchecked", "render_unchecked"]
+    # a 200 without Last-Modified proves nothing about freshness
+    assert _codes(sc.gcs_reasons({"light": (200, None), "dark": (200, fresh)}, UPDATED)) == ["render_unchecked"]
 
 
 def test_votes_split_at_the_last_update(mods) -> None:
@@ -249,9 +254,18 @@ def test_old_version_votes_count_only_while_this_version_draws_no_net_thumbs_up(
 
 
 async def test_the_vote_query_counts_as_the_repository_does(mods, test_session) -> None:
-    """One vote per session and image, the newest; a session-less row counts once; page feedback never counts."""
+    """One vote per session and image, the newest; a session-less row counts once; page feedback never counts; a row
+    without a language is the same image, so its session still counts once."""
     base = datetime(2026, 11, 8, 10, 0, 0)
     rows = [
+        Feedback(
+            reaction="thumbs_down",
+            spec_id="a-spec",
+            library_id="d3",
+            language=None,
+            session_id="s1",
+            created_at=base + timedelta(minutes=5),
+        ),
         Feedback(
             reaction="thumbs_down",
             spec_id="a-spec",
@@ -319,9 +333,13 @@ async def test_the_vote_query_counts_as_the_repository_does(mods, test_session) 
     repository = FeedbackRepository(test_session)
     for library in ("muix", "d3"):
         mine = [v[3] for v in votes if v[1] == library]
-        theirs = await repository.reaction_counts("a-spec", library, "javascript")
+        theirs = await repository.reaction_counts("a-spec", library)
         assert {"thumbs_up": mine.count("thumbs_up"), "thumbs_down": mine.count("thumbs_down")} == theirs
     assert all(len(vote) == 5 for vote in votes)  # spec, library, language, reaction, time: no session id
+    # s1's newest d3 row has no language: it replaces the older thumbs up, and still lands on the JavaScript pair
+    pair = mods["catalogue"].Pair.parse("a-spec/d3")
+    counts = mods["select_candidates"].aggregate_votes(votes, {pair: None})
+    assert counts[pair] == mods["select_candidates"].VoteCounts(up=0, down=1, up_since_update=0, down_since_update=1)
 
 
 def test_ranked_and_the_universe(mods) -> None:
@@ -403,11 +421,12 @@ def test_validator_problems(mods) -> None:
 def test_a_render_inherits_no_secret_of_the_shell(mods, monkeypatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://x")
     monkeypatch.setenv("GH_TOKEN", "t")
+    monkeypatch.setenv("UV_INDEX_PASSWORD", "p")
     monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", "/base/.venv")
     monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", "/pw")
 
     env = mods["check_fix"].render_env("dark", "python")
-    assert "DATABASE_URL" not in env and "GH_TOKEN" not in env
+    assert "DATABASE_URL" not in env and "GH_TOKEN" not in env and "UV_INDEX_PASSWORD" not in env
     assert env["UV_PROJECT_ENVIRONMENT"] == "/base/.venv" and env["PLAYWRIGHT_BROWSERS_PATH"] == "/pw"
     assert (env["ANYPLOT_THEME"], env["MPLBACKEND"], env["PYTHON_DOTENV_DISABLED"]) == ("dark", "Agg", "1")
     assert "MPLBACKEND" not in mods["check_fix"].render_env("light", "javascript")

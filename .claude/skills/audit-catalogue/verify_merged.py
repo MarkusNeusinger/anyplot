@@ -367,12 +367,12 @@ def main(argv: list[str] | None = None) -> int:
         paths = sorted({pair.impl_path for _, pair in mine})
         try:
             fix_tree = catalogue.GitTree(args.repo, sha)
-            code = fix_tree.read_many(paths)
-            start = catalogue.GitTree(args.repo, fix_tree.merge_base(tree.sha)).read_many(paths)
+            fixed_code = fix_tree.read_many(paths)
+            start_code = catalogue.GitTree(args.repo, fix_tree.merge_base(tree.sha)).read_many(paths)
         except ValueError, RuntimeError:
-            code, start = {}, {}
+            fixed_code, start_code = {}, {}
         for entry, pair in mine:
-            fixes[(entry.key, pair.key)] = (code.get(pair.impl_path), start.get(pair.impl_path))
+            fixes[(entry.key, pair.key)] = (fixed_code.get(pair.impl_path), start_code.get(pair.impl_path))
     metadata = {pair.key: catalogue.load_metadata(metadata_text[pair.metadata_path]) for _, pair in jobs}
     merged = [
         pair

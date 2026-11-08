@@ -232,7 +232,9 @@ def gcs_reasons(heads: dict[str, tuple[int | None, datetime | None]], updated: d
             reasons.append(Reason("gcs", "render_unchecked", f"plot-{theme}.png: no answer"))
         elif status != 200:
             reasons.append(Reason("gcs", "render_missing", f"plot-{theme}.png: HTTP {status}"))
-        elif modified is not None and updated is not None and modified + GCS_SLACK < updated:
+        elif modified is None:
+            reasons.append(Reason("gcs", "render_unchecked", f"plot-{theme}.png: no Last-Modified, freshness unknown"))
+        elif updated is not None and modified + GCS_SLACK < updated:
             reasons.append(
                 Reason(
                     "gcs",
@@ -300,7 +302,9 @@ async def read_only(session: AsyncSession) -> None:
 
 async def vote_rows(session: AsyncSession) -> list[tuple[str, str, str | None, str, datetime]]:
     """Every counted plot vote as `(spec, library, language, reaction, created_at)`: the newest row per visitor
-    session and image, a row without a session counting once, as `FeedbackRepository.reaction_counts` counts."""
+    session, spec and library, a row without a session counting once, as `FeedbackRepository.reaction_counts(spec,
+    library)` counts. The language stays out of the partition: library ids are unique across languages, and a row
+    without one (`aggregate_votes` gives it the library's) must not count a second time for the same session."""
     from sqlalchemy import String, cast, func, select
 
     from core.database import Feedback
@@ -315,7 +319,7 @@ async def vote_rows(session: AsyncSession) -> list[tuple[str, str, str | None, s
             Feedback.created_at.label("created_at"),
             func.row_number()
             .over(
-                partition_by=(voter, Feedback.spec_id, Feedback.library_id, Feedback.language),
+                partition_by=(voter, Feedback.spec_id, Feedback.library_id),
                 order_by=(Feedback.created_at.desc(), Feedback.id.desc()),
             )
             .label("rank"),

@@ -14,7 +14,10 @@
 #           a strict pattern and the PR's own number, spec and library, and run as an argument list, never through a
 #           shell.
 # Resume only after the limit has reset: a resume while the stop lasts pauses the PR again. Without --execute it
-# prints what it would dispatch. The log is <round-dir>/resume.log.
+# prints what it would dispatch. With --execute it holds a lock next to the round directories, so two resumes never
+# run at once, and it stops while a daily-regen run is queued or in progress, because that run's pair mode resumes
+# paused PRs itself. The check and the dispatch are still two steps: a resume started by hand at the same moment can
+# slip between them. The log is <round-dir>/resume.log.
 set -uo pipefail
 umask 077
 
@@ -53,6 +56,17 @@ if [ "$ALL_OPEN" != 1 ]; then
 fi
 mkdir -p "$ROUND"
 log() { echo "$(date -u +%FT%TZ) $*" | tee -a "$LOG"; }
+
+if [ "$EXECUTE" = 1 ]; then
+  exec 9> "$(dirname "$ROUND")/resume_paused.lock"
+  flock -n 9 || { echo "resume_paused: another resume holds $(dirname "$ROUND")/resume_paused.lock" >&2; exit 2; }
+  regen=$(gh -R "$GH_REPO" run list --workflow daily-regen.yml --limit 10 --json status \
+            --jq '[.[] | select(.status != "completed")] | length' 2>/dev/null) || regen=1
+  if [ "$regen" != "0" ]; then
+    log "a daily-regen run is queued or in progress (or gh failed); it resumes paused PRs itself, so nothing is resumed now"
+    exit 1
+  fi
+fi
 
 # paused <label>: "<number> <library> <spec>" per open PR with the label and an implementation title.
 paused() {

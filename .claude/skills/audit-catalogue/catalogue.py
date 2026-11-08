@@ -280,8 +280,11 @@ def outside_repository(path: Path) -> bool:
 
 
 def write_private(path: Path, text: str) -> None:
-    """Write `text` with mode 0600 into a directory made with mode 0700."""
+    """Write `text` with mode 0600, into a directory made with mode 0700 when it is new. A file that already existed
+    is tightened to 0600 too: `os.open` applies its mode only when it creates. An existing directory keeps its mode,
+    since a `--json /tmp/x.json` must never change `/tmp`; the round directory is 0700 from step 1."""
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    os.fchmod(descriptor, 0o600)
     with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
         handle.write(text)

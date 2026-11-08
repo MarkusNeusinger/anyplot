@@ -51,14 +51,18 @@ RENDER_NAME = re.compile(r"(^|/)plot-[^/]*\.(png|html|webp)$")
 HEADER_SCAN = 12
 """Lines from the top in which the header block and its `Quality:` line must lie."""
 RENDER_TIMEOUT = 300
-RENDER_ENV = ("PATH", "HOME", "USER", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "TERM", "NVM_DIR", "NVM_BIN", "DISPLAY")
-RENDER_ENV_PREFIXES = ("UV_", "XDG_", "PLAYWRIGHT_", "FONTCONFIG_")
-"""What a render inherits from the shell: enough for `uv`, `node`, Chromium and the fonts, nothing else."""
+RENDER_ENV = (
+    *("PATH", "HOME", "USER", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "TERM", "DISPLAY", "NVM_DIR", "NVM_BIN"),
+    *("UV_PROJECT_ENVIRONMENT", "UV_CACHE_DIR", "UV_PYTHON_INSTALL_DIR", "PLAYWRIGHT_BROWSERS_PATH"),
+    *("XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR", "FONTCONFIG_FILE", "FONTCONFIG_PATH"),
+)
+"""What a render inherits from the shell, by name: enough for `uv`, `node`, Chromium and the fonts, and never a
+prefix, which would let a credential such as `UV_INDEX_PASSWORD` through."""
 
 
 def render_env(theme: str, language: str) -> dict[str, str]:
     """The environment of one render: the allowed shell variables, the theme, and the pipeline's own switches."""
-    env = {key: value for key, value in os.environ.items() if key in RENDER_ENV or key.startswith(RENDER_ENV_PREFIXES)}
+    env = {key: value for key, value in os.environ.items() if key in RENDER_ENV}
     env.update(ANYPLOT_THEME=theme, PYTHON_DOTENV_DISABLED="1")
     if language == "python":
         env["MPLBACKEND"] = "Agg"
