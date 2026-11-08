@@ -2,185 +2,165 @@
 // curve-power-duration: Mean-Maximal Power Duration Curve
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 84/100 | Created: 2026-06-13
-
-import { LineChart, ChartsReferenceLine } from "@mui/x-charts";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { LineChart } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
-const TITLE_H = 54;
 
-// --- Data (deterministic, in-memory) ----------------------------------------
+// Constants
+// Reference efforts of power profiling, in seconds
+const REFERENCE_DURATIONS = [
+  { seconds: 5, name: "5 s sprint" },
+  { seconds: 60, name: "1 min" },
+  { seconds: 300, name: "5 min" },
+  { seconds: 1200, name: "20 min (FTP proxy)" },
+];
+// Human-readable tick ladder for a log time axis, in seconds (1 s up to 5 h)
+const DURATION_TICKS = [1, 5, 30, 60, 300, 1200, 3600, 7200, 18000];
+const POWER_UNIT = "W"; // power-duration curves are always in watts, work capacity in kilojoules
+const WORK_UNIT = "kJ";
+const HEADROOM_SHARE = 0.08; // space above the 1-second peak, as a share of it
 
-const CP = 280;        // Critical Power in watts — aerobic asymptote
-const W_PRIME = 20000; // Anaerobic work capacity in joules
-const PEAK = 1100;     // Neuromuscular peak (1-second best), watts
-const BLEND = 30;      // Seconds below which CP model overestimates
+// Columns: set these to your data's column names
+const DURATION = "Effort duration"; // role: duration_s
+const POWER = "Mean-maximal power (W)"; // role: power_w
+const MODEL = "Critical power model (W)"; // role: model_power_w
 
-// 55 log-spaced durations: 1 s → 18 000 s (5 h)
-const N = 55;
-const durations = Array.from({ length: N }, (_, i) => {
-  const lo = Math.log10(1);
-  const hi = Math.log10(18000);
-  return Math.pow(10, lo + (i / (N - 1)) * (hi - lo));
-});
+// Data: replace this block with your own records, one object per duration in seconds
+// Synthetic well-trained cyclist: 55 log-spaced durations from 1 s to 5 h; a neuromuscular plateau
+// (1,100 W peak) blends below 30 s into the hyperbolic model P = CP + W′/t with CP = 280 W and
+// W′ = 20 kJ, plus 3 % measurement noise; the model applies from 30 s on
+const data = (() => {
+  const cp = 280;
+  const wPrime = 20000;
+  const peak = 1100;
+  const blend = 30;
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+    return (seed >>> 0) / 0xffffffff;
+  };
+  let best = Infinity;
+  return Array.from({ length: 55 }, (_, i) => {
+    const d = 10 ** ((i / 54) * Math.log10(18000));
+    const base = d >= blend ? cp + wPrime / d : peak + (cp + wPrime / blend - peak) * (Math.log10(d) / Math.log10(blend));
+    // a mean-maximal curve never rises: each best effort is capped by the shorter ones
+    best = Math.min(best, base * (1 + (rand() - 0.5) * 0.03));
+    return {
+      [DURATION]: d,
+      [POWER]: Math.round(best),
+      [MODEL]: d >= blend ? Math.round(cp + wPrime / d) : null,
+    };
+  });
+})();
 
-// Empirical curve: neuromuscular plateau (< 30 s) blends into CP model (≥ 30 s)
-const cpAtBlend = CP + W_PRIME / BLEND; // ≈ 947 W
-const empiricalBase = durations.map((d) => {
-  if (d >= BLEND) return CP + W_PRIME / d;
-  const frac = Math.log10(d) / Math.log10(BLEND); // 0 at 1 s, 1 at BLEND s
-  return PEAK + (cpAtBlend - PEAK) * frac;
-});
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[DURATION] - b[DURATION]);
+const durations = rows.map((d) => d[DURATION]);
 
-// LCG for reproducible noise
-let seed = 42;
-const lcg = () => {
-  seed = (seed * 1664525 + 1013904223) & 0xffffffff;
-  return (seed >>> 0) / 0xffffffff;
+// CP and W′ recovered from the model column: least squares of model power on 1 / duration
+const modelRows = rows.filter((d) => d[MODEL] !== null && Number.isFinite(d[MODEL]));
+const inverse = modelRows.map((d) => 1 / d[DURATION]);
+const modelPower = modelRows.map((d) => d[MODEL] as number);
+const meanInverse = inverse.reduce((a, b) => a + b, 0) / inverse.length;
+const meanPower = modelPower.reduce((a, b) => a + b, 0) / modelPower.length;
+const wPrimeFit =
+  inverse.reduce((s, x, i) => s + (x - meanInverse) * (modelPower[i] - meanPower), 0) /
+  inverse.reduce((s, x) => s + (x - meanInverse) ** 2, 0);
+const cpFit = meanPower - wPrimeFit * meanInverse;
+
+const xMin = durations[0];
+const xMax = durations[durations.length - 1];
+const ticks = DURATION_TICKS.filter((s) => s >= xMin && s <= xMax);
+const references = REFERENCE_DURATIONS.filter((r) => r.seconds >= xMin && r.seconds <= xMax);
+const yMax = Math.max(...rows.map((d) => d[POWER])) * (1 + HEADROOM_SHARE);
+const formatDuration = (seconds: number) => {
+  const s = Math.round(seconds);
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.round(s / 60)} min`;
+  return `${Math.round(s / 3600)} h`;
 };
 
-// Add small noise, then enforce monotone non-increase
-const empiricalNoisy = empiricalBase.map((b) => b * (1 + (lcg() - 0.5) * 0.03));
-const empiricalPower = [];
-let prevW = Infinity;
-for (const v of empiricalNoisy) {
-  const val = Math.min(v, prevW);
-  empiricalPower.push(Math.round(val));
-  prevW = val;
-}
-
-// Fitted CP model (hyperbolic): null below BLEND so the line starts at 30 s
-const modelPower = durations.map((d) =>
-  d >= BLEND ? Math.round(CP + W_PRIME / d) : null
-);
-
-// Human-readable duration labels for axis ticks
-const fmtDur = (s) => {
-  s = Math.round(s);
-  if (s < 60) return `${s}s`;
-  if (s < 3600) return `${Math.round(s / 60)}min`;
-  return `${Math.round(s / 3600)}h`;
-};
-
-// --- Component (default-exported; harness mounts it) ------------------------
+const TITLE = "Cyclist Power Profile · curve-power-duration · javascript · muix · anyplot.ai";
+const subtitle = `${rows.length} durations from ${formatDuration(xMin)} to ${formatDuration(xMax)} · model fit CP = ${cpFit.toFixed(0)} ${POWER_UNIT}, W′ = ${(wPrimeFit / 1000).toFixed(1)} ${WORK_UNIT}`;
+const HEADER_H = 88;
+const LEGEND_H = 44;
 
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: t.pageBg,
-      }}
-    >
-      <Typography
-        sx={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          flexShrink: 0,
-        }}
-      >
-        curve-power-duration · javascript · muix · anyplot.ai
-      </Typography>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
+      </Box>
       <LineChart
-        width={W}
-        height={H - TITLE_H}
+        width={width}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        colors={[t.palette[0], t.palette[1]]}
+        margin={{ top: 16, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
             id: "duration",
             data: durations,
             scaleType: "log",
-            label: "Effort Duration",
-            valueFormatter: fmtDur,
-            tickInterval: [1, 5, 30, 60, 300, 1200, 3600, 7200, 18000],
-            min: 1,
-            max: 20000,
-            tickLabelStyle: { fontSize: 13 },
+            min: xMin,
+            max: xMax,
+            tickInterval: ticks,
+            valueFormatter: formatDuration,
+            label: DURATION,
+            height: 64,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
             id: "power",
-            label: "Mean-Maximal Power (W)",
             min: 0,
-            max: 1200,
-            tickLabelStyle: { fontSize: 13 },
+            max: yMax,
+            label: POWER,
+            width: 84,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         series={[
-          {
-            id: "empirical",
-            data: empiricalPower,
-            label: "Best MMP (empirical)",
-            showMark: false,
-            curve: "monotoneX",
-          },
-          {
-            id: "model",
-            data: modelPower,
-            label: `CP Model · CP = ${CP} W, W′ = ${W_PRIME / 1000} kJ`,
-            showMark: false,
-            curve: "monotoneX",
-            connectNulls: false,
-          },
+          { id: "empirical", label: POWER, data: rows.map((d) => d[POWER]), color: t.palette[0], showMark: false, curve: "monotoneX" },
+          { id: "model", label: MODEL, data: rows.map((d) => d[MODEL]), color: t.palette[1], showMark: false, curve: "monotoneX", connectNulls: false },
         ]}
-        sx={{
-          ".MuiLineElement-series-model": {
-            strokeDasharray: "12 6",
-            strokeWidth: 2.5,
-          },
-          ".MuiLineElement-series-empirical": {
-            strokeWidth: 3.5,
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink, gap: "28px" },
           },
         }}
-        margin={{ left: 90, right: 40, top: 20, bottom: 90 }}
+        sx={{
+          '& .MuiLineChart-line[data-series="empirical"]': { strokeWidth: 3.5 },
+          '& .MuiLineChart-line[data-series="model"]': { strokeWidth: 3, strokeDasharray: "10 8" },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
       >
+        {references.map((r) => (
+          <ChartsReferenceLine
+            key={r.name}
+            x={r.seconds}
+            label={r.name}
+            labelAlign="start"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
+            labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
+          />
+        ))}
         <ChartsReferenceLine
-          x={5}
-          label="5 s"
+          y={cpFit}
+          label={`Critical power ${cpFit.toFixed(0)} ${POWER_UNIT}`}
           labelAlign="start"
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-        <ChartsReferenceLine
-          x={60}
-          label="1 min"
-          labelAlign="start"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-        <ChartsReferenceLine
-          x={300}
-          label="5 min"
-          labelAlign="start"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-        <ChartsReferenceLine
-          x={1200}
-          label="20 min (FTP)"
-          labelAlign="start"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-        />
-        <ChartsReferenceLine
-          y={CP}
-          label={`Critical Power = ${CP} W`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 3", strokeWidth: 1 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
         />
       </LineChart>
     </Box>
