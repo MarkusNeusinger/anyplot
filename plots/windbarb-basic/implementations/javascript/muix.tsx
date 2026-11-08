@@ -18,10 +18,14 @@ const HALF_KT = 5;
 const FULL_KT = 10;
 const PENNANT_KT = 50;
 const KEY_SPEEDS = [0, HALF_KT, 2 * FULL_KT + HALF_KT, PENNANT_KT]; // key glyphs, wind from the north
-const BARB_ANGLE_DEG = -112; // feathers on the left of the staff (Northern Hemisphere)
+// Feather direction, turned clockwise on screen from the staff's outward
+// direction: Northern Hemisphere feathers point toward low pressure, on the
+// staff's left seen downwind (east for a north wind), and lean out to the tip.
+const BARB_ANGLE_DEG = 68;
 const STAFF_PX = 46;
 const FEATHER_PX = 16;
 const FEATHER_GAP_PX = 8;
+const LONE_HALF_GAPS = 1.5; // a lone half barb sits this many gaps in from the tip, so it is not read as a full barb
 const PENNANT_BASE_PX = 12;
 const CALM_R = 5.5;
 const POS_PAD = 0.125; // share of the station extent added on every side
@@ -98,8 +102,9 @@ const glyphs = [...stations.map((d) => [d[U], d[V]]), ...KEY_SPEEDS.map((s) => [
     const by = tipY - oy * (p + 1) * PENNANT_BASE_PX;
     return `${ax},${ay} ${bx},${by} ${(ax + bx) / 2 + fx * FEATHER_PX},${(ay + by) / 2 + fy * FEATHER_PX}`;
   });
+  const firstGap = pennantCount > 0 ? 0.5 : fullCount === 0 ? LONE_HALF_GAPS : 0;
   const feathers = Array.from({ length: fullCount + (hasHalf ? 1 : 0) }, (_, k) => {
-    const along = pennantCount * PENNANT_BASE_PX + (k + (pennantCount > 0 ? 0.5 : 0)) * FEATHER_GAP_PX;
+    const along = pennantCount * PENNANT_BASE_PX + (k + firstGap) * FEATHER_GAP_PX;
     const sx = tipX - ox * along;
     const sy = tipY - oy * along;
     const len = k < fullCount ? FEATHER_PX : FEATHER_PX / 2;
@@ -147,12 +152,16 @@ function WindBarbLayer() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartW = width - KEY_W;
-  const chartH = height - TITLE_H;
-  // Equal km per pixel on both axes, so distances and directions keep their shape
-  const drawW = chartW - MARGIN.left - MARGIN.right - Y_AXIS_W;
-  const drawH = chartH - MARGIN.top - MARGIN.bottom - X_AXIS_H;
-  const kmPerPx = Math.max(xNeed / drawW, yNeed / drawH);
+  // Equal km per pixel on both axes, so distances and directions keep their
+  // shape: the binding axis fills its room, the other one shrinks to the
+  // stations' extent, and the chart and key sit centred on the page
+  const roomW = width - KEY_W - MARGIN.left - MARGIN.right - Y_AXIS_W;
+  const roomH = height - TITLE_H - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+  const kmPerPx = Math.max(xNeed / roomW, yNeed / roomH);
+  const drawW = Math.floor(xNeed / kmPerPx);
+  const drawH = Math.floor(yNeed / kmPerPx);
+  const chartW = drawW + MARGIN.left + MARGIN.right + Y_AXIS_W;
+  const chartH = drawH + MARGIN.top + MARGIN.bottom + X_AXIS_H;
 
   return (
     <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
@@ -160,7 +169,7 @@ export default function Chart() {
         <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
         <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
-      <div style={{ display: "flex" }}>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <ChartsContainer
           width={chartW}
           height={chartH}
