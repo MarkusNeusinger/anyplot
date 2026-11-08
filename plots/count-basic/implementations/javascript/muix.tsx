@@ -1,7 +1,7 @@
 // anyplot.ai
 // count-basic: Basic Count Plot
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 95/100 | Created: 2026-08-11
+// Quality: pending | Created: 2026-08-11
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { BarChart } from "@mui/x-charts/BarChart";
