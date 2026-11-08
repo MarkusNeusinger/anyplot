@@ -2,129 +2,136 @@ library: muix
 language: javascript
 specification_id: maze-circular
 created: '2026-09-02T02:57:40Z'
-updated: '2026-09-02T03:19:37Z'
-generated_by: claude-sonnet
-workflow_run: 33584672358
+updated: '2026-11-08T03:58:11Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42444210114
 issue: 3804
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Difficulty parameter is now genuinely wired into the maze generator (CONTINUE_BIAS
-    biases Prim's frontier selection) and surfaced in the caption ('7 rings · medium
-    difficulty'), fixing the attempt-1 weakness where difficulty had no visible effect.
-  - 'Mathematically correct maze: a randomized Prim''s spanning tree over the ring/sector
-    graph guarantees exactly one solvable path (no cycles), regardless of the difficulty
-    bias.'
-  - 'Excellent theme handling: chrome (page background, title) flips correctly between
-    light/dark while the print-style maze ink stays fixed cream-on-black, matching
-    the spec''s own ''black walls on white background for print-friendly output''
-    requirement and the established crossword-basic precedent.'
-  - Clear, well-marked entry (START tick + label) and goal (brand-green center disc),
-    both legible in both themes with no edge clipping.
-  - Rounded-corner frame (rx=20) is a real, if modest, visual-refinement improvement
-    over the plain black-bordered square from attempt 1.
-  - Deterministic, seeded generation (mulberry32) for reproducibility.
+  - The carve is a randomised Prim's spanning tree over a hub plus 7×12 ring cells,
+    so there is exactly one route from the entry to the goal and no cell is sealed
+    off; the entry is chosen as the outer cell farthest from the hub along the passages,
+    which gives the longest route (21 cells, stated in the subtitle)
+  - 'Uses MUI X composition idiomatically: ChartsContainer with hidden linear axes
+    (position: ''none'', reversed y) gives a 1:1 coordinate space, and the Maze child
+    reads useXScale/useYScale to draw the arcs and radial walls as SVG paths'
+  - 'Walls are drawn in t.ink with one 3.5 px interior stroke and a heavier 5.5 px
+    outer boundary with round caps: near-black on #FAF8F1 in light for print, near-white
+    on #1A1A17 in dark, with strong contrast in both'
+  - 'The entry arrow and GOAL disc use brand green #009E73 in both themes; the arrow
+    sits outside the outer wall and the disc stays inside the hub cell, so neither
+    marker blocks a corridor, and GOAL is set in #1A1A17 on green for contrast in
+    both themes'
+  - Difficulty is a real parameter (the chance of extending the newest passage), and
+    the layout reserves room only on the side that holds the START label while keeping
+    one px-per-unit on both axes so the circle stays round
   weaknesses:
-  - 'Library Mastery remains low: the ScatterChart component is still used purely
-    as a sized canvas via a single dummy point plus a slots.scatter override, not
-    for any of MUI X''s actual data-encoding/series capabilities — this attempt did
-    not address that attempt-1 weakness.'
-  - Only one difficulty tier (medium) is ever rendered — the parameter now affects
-    generation and is labeled, but the catalog image still can't show how 'easy' or
-    'hard' visually differ.
-  - Design Excellence is solid but still short of exceptional — beyond the new rounded
-    corners, the frame and wall styling remain fairly plain/utilitarian.
+  - 'CQ-01 (code): lines 116–128 define two helper functions, fitUnit and viewRange,
+    for a one-off layout calculation (the Maze component itself is required for the
+    scale hooks) → inline the computation at module level or use a fixed symmetric
+    x/y range with a margin for the START label. Likely cause: the auto-fit for the
+    label side was written as reusable helpers.'
+  - 'Suggestion: more sectors in the outer rings (for example 12 → 24 from ring 4)
+    would narrow the very wide outer cells and make the puzzle more even to trace.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 page background; the maze's own "paper" panel (rounded-corner rect) is the same #FAF8F1 so it blends seamlessly into the page.
-      Chrome: Title "maze-circular · javascript · muix · anyplot.ai" in dark ink at the top, clearly legible. START label (bold black) with a short diagonal entry tick sits just outside the circle at the gap in the outer wall. Caption "7 rings · medium difficulty" in soft ink at bottom-left is legible despite reduced opacity.
-      Data: Maze walls drawn in black (#1A1A17) with rounded caps across 7 concentric rings and 12 sectors, forming a clean radial labyrinth. Goal marker at center is a solid Imprint brand-green (#009E73) disc with a thin cream stroke.
-      Legibility verdict: PASS — no light-on-light text, no overlaps.
+      Background: warm off-white #FAF8F1 across the square 2400×2400 canvas.
+      Chrome: the bold near-black title "maze-circular · javascript · muix · anyplot.ai" is centred at the top, with a soft grey subtitle "7 rings × 12 sectors · medium difficulty · seed 42 · one 21-cell route from START to GOAL". There are no axes or grid (permitted). All text is readable.
+      Data: a circular maze of 7 concentric rings around a central hub, with 12 sectors per ring. Interior walls are thin near-black arcs and radial lines with one consistent stroke; the outer boundary is heavier. The outer wall has one gap at about 2 o'clock, marked by a brand-green #009E73 triangle pointing inward and a bold "START" label just outside. The centre holds a green #009E73 disc labelled "GOAL" in dark ink. Corridors are wide enough for a pen. The maze sits slightly left of centre to make room for the START label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 page background; the maze panel keeps its #FAF8F1 cream fill unchanged (intentional print-artifact exception per spec — "black walls on white background for print-friendly output" — matching the crossword-basic precedent), producing a "cream card floating on a dark canvas" effect.
-      Chrome: Title text flips to light ink, fully readable against the dark page background. START label, entry tick, and caption remain black-on-cream inside the maze panel, still fully legible since that panel itself stays light in both themes.
-      Data: Maze wall colors and the brand-green goal marker are pixel-identical to the light render — no unintended color drift between themes.
-      Legibility verdict: PASS — no dark-on-dark text; the fixed-palette maze panel is a deliberate, spec-mandated exception rather than a theme-adaptation bug.
+      Background: warm near-black #1A1A17.
+      Chrome: the title is near-white, the subtitle a light grey, and START is in light ink. All are readable, with no dark-on-dark text. GOAL stays dark ink on the green disc, which reads well.
+      Data: the walls flip to light ink with the same geometry and stroke widths. The green entry arrow and goal disc are identical to the light render; only the chrome and wall ink flip.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes; caption at 65% opacity
-          is slightly faint but still legible
+        comment: Title 26 px, subtitle 18 px, START 20 px, GOAL 18 px (CSS); readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, maze walls, START label, or caption
+        comment: No text collisions; markers clear of the walls
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wall stroke width visible without dominating; goal marker well sized
+        comment: Walls at 3.5 px with a 5.5 px outer wall are clearly visible; the
+          green markers are prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast black/cream/green, no red-green reliance
+        comment: Ink-on-page wall contrast is very high; the markers are told apart
+          by shape and label, not colour
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Maze panel fills the square canvas with balanced margins; nothing
-          cut off; canvas-dimension gate passed
+        comment: Square canvas; the maze fills the body, with the START label inside
+          the canvas and balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A traditional axes; title correctly formatted
+        comment: N/A for axes (none, permitted); the subtitle describes the parameters
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Goal uses Imprint #009E73; page chrome exactly #FAF8F1/#1A1A17;
-          fixed maze ink is a spec-mandated print exception'
+        comment: 'Brand green #009E73 for the markers, ink tokens for the walls, correct
+          backgrounds in both themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful custom polar geometry and markers, above generic default
+        comment: 'Beyond the baseline: a two-level type hierarchy (title and informative
+          subtitle), round-capped walls with a deliberately heavier boundary, and
+          dark GOAL ink chosen for contrast on green'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: New rounded-corner frame (rx=20) improves on attempt 1's plain square
-          border
+        comment: START label placement adapts to the entry side, with room reserved
+          only there while the circle stays round
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Goal/START markers create clear visual hierarchy for the solver
+        comment: The entry is chosen as the farthest outer cell, so the route is the
+          longest one, and the subtitle states its length; the green start and goal
+          are the focal points
     spec_compliance:
       score: 15
       max: 15
@@ -134,29 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine circular maze with concentric rings and radial sectors
+        comment: Circular maze with concentric rings and radial walls
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Entry, goal, single-solution walls, and now a working difficulty
-          parameter all present
+        comment: 'Ring corridors, radial walls, openings between rings, a marked entry
+          and goal, exactly one solution, consistent interior walls with a heavier
+          outer wall, black on white in light: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar geometry correctly maps rings/sectors; rings=7 and difficulty=medium
-          match the spec's own example
+        comment: Geometry is constructed in a 1:1 unit space and the circle is round
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed
+        comment: Title format correct; legend N/A
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -164,20 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Rings, sectors, walls, entry, goal, and a labeled difficulty tier
-          are all shown
+        comment: Dead ends, long curved corridors and passages between all rings are
+          all shown
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correctly generated, solvable, neutral puzzle artifact
+        comment: 'Puzzle parameters match the spec example: 7 rings, medium difficulty,
+          seed 42'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 rings within spec's recommended 5-10 range; 12 sectors stay legible
+        comment: 7 rings, within the 5–10 range the spec recommends; no Check values
+          in the spec
     code_quality:
       score: 9
       max: 10
@@ -186,61 +195,63 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Helper functions justified by maze-generation and difficulty-bias
-          algorithm needs
+        passed: false
+        comment: Helper functions fitUnit and viewRange (lines 116–128); see the defect
+          line
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mulberry32 PRNG with fixed seed 42
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only ChartsContainer and the scale hooks
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation of biased Prim's spanning tree over a polar
-          grid graph
+        comment: Carve and BFS are concise; no call is available that computes them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, correct harness contract
+        comment: Default export, skipAnimation, v9 ChartsContainer API, square directive
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: ScatterChart is still used only as a sized canvas via a dummy point
-          and slot override, not for real charting — unaddressed from attempt 1
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: useDrawingArea() and slots.scatter overrides are genuinely MUI X-specific
-          extensibility mechanisms
+        comment: Composition via ChartsContainer with hidden axes and custom children
+          that read useXScale/useYScale, the recommended pattern for custom marks
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses the MUI X scale hooks inside the chart context for custom SVG
+          drawing
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:55:31Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

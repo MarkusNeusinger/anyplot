@@ -1,236 +1,199 @@
 // anyplot.ai
 // maze-circular: Circular Maze Puzzle
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-02
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
-
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// The maze itself is a print artifact — "black walls on white background for
-// print-friendly output" per spec — so its ink/paper colors stay fixed across
-// themes, like the crossword-basic muix implementation does for its grid.
-// Only the surrounding page and title follow ANYPLOT_THEME.
-const PAPER = "#FAF8F1";
-const INK = "#1A1A17";
-const GOAL_GREEN = "#009E73";
+// Constants
+// Difficulty sets how often the carve keeps extending the newest passage: a high share gives long
+// winding corridors with few branch points (harder), a low one many short branches (easier).
+// The carve is a spanning tree either way, so there is exactly one route between any two cells.
+const DIFFICULTY_BIAS = { easy: 0.15, medium: 0.55, hard: 0.85 };
+const MAZE_R = 1.04; // outer-wall radius plus its stroke, in outer-wall radii
+const LABEL_R = 1.15; // radius of the START label anchor, just past the entry arrow
+const LABEL_W = 70; // px width reserved for the START label
+const LABEL_H = 26; // px height reserved for the START label
+const GAP = 16; // px kept free around the drawing
+const WALL_W = 3.5; // interior wall stroke in px
+const OUTER_WALL_W = 5.5; // the outer boundary is drawn heavier
+const GOAL_INK = "#1A1A17"; // the ink with the stronger contrast on the brand green goal disc
 
-// --- Deterministic PRNG (mulberry32) — the browser has no seeded RNG --------
-function mulberry32(seed) {
-  let a = seed;
-  return function random() {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let z = Math.imul(a ^ (a >>> 15), 1 | a);
-    z = (z + Math.imul(z ^ (z >>> 7), 61 | z)) ^ z;
-    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
-  };
+// Data: replace this block with your own parameters
+const RINGS = 7; // role: rings
+const DIFFICULTY = "medium"; // role: difficulty
+const SEED = 42; // role: seed
+const SECTORS = 12; // role: extra
+
+// Plot: reads only the parameters and the constants above
+// Cell graph: a hub at the centre, then RINGS rings of SECTORS cells; each edge is a wall that can be opened
+const edges = [];
+for (let s = 0; s < SECTORS; s += 1) edges.push({ a: "hub", b: `1-${s}`, key: `h-${s}` });
+for (let r = 1; r <= RINGS; r += 1) {
+  for (let s = 0; s < SECTORS; s += 1) edges.push({ a: `${r}-${s}`, b: `${r}-${(s + 1) % SECTORS}`, key: `c-${r}-${s}` });
 }
-
-const rand = mulberry32(42);
-
-// --- Maze topology: a hub cell + RINGS concentric rings of SECTORS cells ----
-const RINGS = 7;
-const SECTORS = 12;
-const ENTRY_SECTOR = 0;
-
-// Spec's difficulty parameter — "7 rings with medium difficulty" is the
-// spec's own example, so that's the tier demonstrated here. Difficulty biases
-// how the spanning tree grows: a high CONTINUE_BIAS keeps extending the most
-// recently carved passage (long, winding corridors with few branch points —
-// harder to trace by eye), while a low bias favors a uniformly random
-// frontier pick (many short branches, more decision points — easier). The
-// carve is still a spanning tree either way, so "exactly one solution" always
-// holds; only the corridor character (the spec's "passage density" feel)
-// changes with difficulty.
-const DIFFICULTY = "medium";
-const CONTINUE_BIAS = { easy: 0.15, medium: 0.55, hard: 0.85 }[DIFFICULTY];
-
+for (let r = 1; r < RINGS; r += 1) {
+  for (let s = 0; s < SECTORS; s += 1) edges.push({ a: `${r}-${s}`, b: `${r + 1}-${s}`, key: `r-${r}-${s}` });
+}
 const adjacency = new Map();
-function addEdge(a, b) {
-  const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-  if (!adjacency.has(a)) adjacency.set(a, []);
-  if (!adjacency.has(b)) adjacency.set(b, []);
-  adjacency.get(a).push({ to: b, key });
-  adjacency.get(b).push({ to: a, key });
-}
+edges.forEach((e) => {
+  [[e.a, e.b], [e.b, e.a]].forEach(([from, to]) => {
+    if (!adjacency.has(from)) adjacency.set(from, []);
+    adjacency.get(from).push({ from, to, key: e.key });
+  });
+});
 
-for (let s = 0; s < SECTORS; s++) addEdge("hub", `1-${s}`);
-for (let r = 1; r <= RINGS; r++) {
-  for (let s = 0; s < SECTORS; s++) addEdge(`${r}-${s}`, `${r}-${(s + 1) % SECTORS}`);
-}
-for (let r = 1; r < RINGS; r++) {
-  for (let s = 0; s < SECTORS; s++) addEdge(`${r}-${s}`, `${r + 1}-${s}`);
-}
-
-// Randomized Prim's algorithm, biased by difficulty, carves a spanning tree
-// over the cell graph. A spanning tree has no cycles, so there is exactly one
-// path between the hub and any cell — including the entry — which is what
-// "exactly one solvable path" requires, regardless of the bias.
-const passageKeys = new Set();
+// Randomised Prim's carve from the hub, biased by difficulty, with a fixed-seed LCG
+const bias = DIFFICULTY_BIAS[DIFFICULTY];
+const passages = new Set();
 const visited = new Set(["hub"]);
-let frontier = adjacency.get("hub").map((edge) => ({ ...edge, from: "hub" }));
+const frontier = [...adjacency.get("hub")];
 let lastAdded = "hub";
+let state = SEED >>> 0;
 while (frontier.length > 0) {
-  const continuing = rand() < CONTINUE_BIAS ? frontier.filter((edge) => edge.from === lastAdded) : [];
+  state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+  const continuing = state / 4294967296 < bias ? frontier.filter((e) => e.from === lastAdded) : [];
   const pool = continuing.length > 0 ? continuing : frontier;
-  const edge = pool[Math.floor(rand() * pool.length)];
+  state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+  const edge = pool[Math.floor((state / 4294967296) * pool.length)];
   frontier.splice(frontier.indexOf(edge), 1);
   if (visited.has(edge.to)) continue;
   visited.add(edge.to);
   lastAdded = edge.to;
-  passageKeys.add(edge.key);
+  passages.add(edge.key);
   adjacency.get(edge.to).forEach((next) => {
-    if (!visited.has(next.to)) frontier.push({ ...next, from: edge.to });
+    if (!visited.has(next.to)) frontier.push(next);
   });
 }
 
-const isPassage = (a, b) => passageKeys.has(a < b ? `${a}|${b}` : `${b}|${a}`);
+// The entry is the outer cell farthest from the goal along the carved passages
+const distance = new Map([["hub", 0]]);
+const queue = ["hub"];
+while (queue.length > 0) {
+  const cell = queue.shift();
+  adjacency.get(cell).forEach((e) => {
+    if (passages.has(e.key) && !distance.has(e.to)) {
+      distance.set(e.to, distance.get(cell) + 1);
+      queue.push(e.to);
+    }
+  });
+}
+const entrySector = Array.from({ length: SECTORS }, (_, s) => s).reduce(
+  (best, s) => (distance.get(`${RINGS}-${s}`) > distance.get(`${RINGS}-${best}`) ? s : best),
+  0,
+);
+const routeCells = distance.get(`${RINGS}-${entrySector}`) + 1;
 
-// --- Polar geometry (unit disc, radius 1 = outer wall) ----------------------
+// Walls in unit-disc geometry: radius 1 is the outer wall, angle 0 points right, sectors run clockwise from 12 o'clock
 const HUB_R = 1 / (RINGS + 1);
-const RING_WIDTH = (1 - HUB_R) / RINGS;
-const ringInner = (r) => HUB_R + (r - 1) * RING_WIDTH;
-const ringOuter = (r) => HUB_R + r * RING_WIDTH;
-const ANGLE_STEP = (2 * Math.PI) / SECTORS;
-const angleOf = (s) => -Math.PI / 2 + s * ANGLE_STEP; // sector 0 starts at 12 o'clock
-
-function polar(cx, cy, scale, radius, angle) {
-  return [cx + scale * radius * Math.cos(angle), cy + scale * radius * Math.sin(angle)];
+const RING_W = (1 - HUB_R) / RINGS;
+const STEP = (2 * Math.PI) / SECTORS;
+const walls = [];
+for (let s = 0; s < SECTORS; s += 1) {
+  if (!passages.has(`h-${s}`)) walls.push({ arc: true, r: HUB_R, a0: -Math.PI / 2 + s * STEP, width: WALL_W });
 }
-
-function arcPath(cx, cy, scale, radius, a0, a1) {
-  const [x0, y0] = polar(cx, cy, scale, radius, a0);
-  const [x1, y1] = polar(cx, cy, scale, radius, a1);
-  const large = a1 - a0 > Math.PI ? 1 : 0;
-  return `M ${x0} ${y0} A ${scale * radius} ${scale * radius} 0 ${large} 1 ${x1} ${y1}`;
+for (let r = 1; r <= RINGS; r += 1) {
+  for (let s = 0; s < SECTORS; s += 1) {
+    if (!passages.has(`c-${r}-${s}`)) {
+      walls.push({ arc: false, r0: HUB_R + (r - 1) * RING_W, r1: HUB_R + r * RING_W, a0: -Math.PI / 2 + (s + 1) * STEP, width: WALL_W });
+    }
+    if (r < RINGS && !passages.has(`r-${r}-${s}`)) {
+      walls.push({ arc: true, r: HUB_R + r * RING_W, a0: -Math.PI / 2 + s * STEP, width: WALL_W });
+    }
+  }
 }
+for (let s = 0; s < SECTORS; s += 1) {
+  if (s !== entrySector) walls.push({ arc: true, r: 1, a0: -Math.PI / 2 + s * STEP, width: OUTER_WALL_W });
+}
+const entryAngle = -Math.PI / 2 + (entrySector + 0.5) * STEP;
+const labelAnchor = Math.cos(entryAngle) > 0.3 ? "start" : Math.cos(entryAngle) < -0.3 ? "end" : "middle";
 
-// Draws the whole puzzle as raw SVG paths sized off the chart's own drawing
-// area — MUI X owns layout/scaling, the maze geometry is ours.
-function MazeMark() {
-  const { left, top, width, height } = useDrawingArea();
-  const cx = left + width / 2;
-  const cy = top + height / 2;
-  const halfDim = Math.min(width, height) / 2;
-  const scale = halfDim * 0.8;
+// Largest px-per-unit that fits the maze and the START label on one axis: the label sits at unit
+// coordinate c and extends `before` px towards the negative side and `after` px towards the positive one
+const fitUnit = (avail: number, c: number, before: number, after: number) =>
+  Math.min(
+    avail / (2 * MAZE_R),
+    MAZE_R + c > 0 ? (avail - after) / (MAZE_R + c) : Infinity,
+    MAZE_R - c > 0 ? (avail - before) / (MAZE_R - c) : Infinity,
+  );
+// View range on one axis: the content bounds at this scale, centred in the available span
+const viewRange = (avail: number, unit: number, c: number, before: number, after: number) => {
+  const lo = Math.min(-MAZE_R, c - before / unit);
+  const hi = Math.max(MAZE_R, c + after / unit);
+  const min = lo - (avail / unit - (hi - lo)) / 2;
+  return { min, max: min + avail / unit };
+};
 
-  const walls = [];
+const TITLE = "maze-circular · javascript · muix · anyplot.ai";
+const SUBTITLE = `${RINGS} rings × ${SECTORS} sectors · ${DIFFICULTY} difficulty · seed ${SEED} · one ${routeCells}-cell route from START to GOAL`;
+const HEADER_H = 92;
 
-  // Hub <-> ring 1 boundary
-  for (let s = 0; s < SECTORS; s++) {
-    if (!isPassage("hub", `1-${s}`)) {
-      walls.push(arcPath(cx, cy, scale, HUB_R, angleOf(s), angleOf(s + 1)));
-    }
-  }
-
-  // Sector-divider (circumferential) walls, per ring
-  for (let r = 1; r <= RINGS; r++) {
-    for (let s = 0; s < SECTORS; s++) {
-      const a = `${r}-${s}`;
-      const b = `${r}-${(s + 1) % SECTORS}`;
-      if (isPassage(a, b)) continue;
-      const boundaryAngle = angleOf(s + 1);
-      const [x0, y0] = polar(cx, cy, scale, ringInner(r), boundaryAngle);
-      const [x1, y1] = polar(cx, cy, scale, ringOuter(r), boundaryAngle);
-      walls.push(`M ${x0} ${y0} L ${x1} ${y1}`);
-    }
-  }
-
-  // Ring-boundary (radial) walls between adjacent rings
-  for (let r = 1; r < RINGS; r++) {
-    for (let s = 0; s < SECTORS; s++) {
-      if (!isPassage(`${r}-${s}`, `${r + 1}-${s}`)) {
-        walls.push(arcPath(cx, cy, scale, ringOuter(r), angleOf(s), angleOf(s + 1)));
-      }
-    }
-  }
-
-  // Outer perimeter, with a gap left open at the entry sector
-  for (let s = 0; s < SECTORS; s++) {
-    if (s === ENTRY_SECTOR) continue;
-    walls.push(arcPath(cx, cy, scale, 1, angleOf(s), angleOf(s + 1)));
-  }
-
-  const entryMid = angleOf(ENTRY_SECTOR) + ANGLE_STEP / 2;
-  const [tickX0, tickY0] = polar(cx, cy, scale, 1, entryMid);
-  const [tickX1, tickY1] = polar(cx, cy, scale, 1.06, entryMid);
-  const [labelX, labelY] = polar(cx, cy, scale, 1.16, entryMid);
-
+function Maze() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const unit = xScale(1) - xScale(0);
+  const cx = xScale(0);
+  const cy = yScale(0);
+  const at = (r: number, a: number) => [cx + r * unit * Math.cos(a), cy + r * unit * Math.sin(a)];
+  const [tipX, tipY] = at(1.025, entryAngle);
+  const [leftX, leftY] = at(1.11, entryAngle - STEP * 0.07);
+  const [rightX, rightY] = at(1.11, entryAngle + STEP * 0.07);
+  // The label continues outward past the arrow, anchored away from the circle on whichever side the entry lies
+  const [labelX, labelY] = at(LABEL_R, entryAngle);
   return (
     <g>
-      <rect
-        x={left}
-        y={top}
-        width={width}
-        height={height}
-        rx={20}
-        ry={20}
-        fill={PAPER}
-        stroke={INK}
-        strokeWidth={1.5}
-      />
-      {walls.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke={INK} strokeWidth={3.5} strokeLinecap="round" />
-      ))}
-      <line x1={tickX0} y1={tickY0} x2={tickX1} y2={tickY1} stroke={INK} strokeWidth={3.5} strokeLinecap="round" />
-      <text x={labelX} y={labelY} fontSize={20} fontWeight={600} fill={INK} textAnchor="middle" dominantBaseline="middle">
+      {walls.map((w, i) => {
+        const [x0, y0] = at(w.arc ? w.r : w.r0, w.a0);
+        const [x1, y1] = w.arc ? at(w.r, w.a0 + STEP) : at(w.r1, w.a0);
+        const d = w.arc ? `M ${x0} ${y0} A ${w.r * unit} ${w.r * unit} 0 0 1 ${x1} ${y1}` : `M ${x0} ${y0} L ${x1} ${y1}`;
+        return <path key={i} d={d} fill="none" stroke={t.ink} strokeWidth={w.width} strokeLinecap="round" />;
+      })}
+      <path d={`M ${tipX} ${tipY} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`} fill={t.palette[0]} />
+      <text x={labelX} y={labelY} fontSize={20} fontWeight={700} fill={t.ink} textAnchor={labelAnchor} dominantBaseline="middle">
         START
       </text>
-      <circle cx={cx} cy={cy} r={scale * HUB_R * 0.6} fill={GOAL_GREEN} stroke={PAPER} strokeWidth={2} />
-      <text x={left + 16} y={top + height - 16} fontSize={14} fill={INK} fillOpacity={0.65} textAnchor="start">
-        {RINGS} rings · {DIFFICULTY} difficulty
+      <circle cx={cx} cy={cy} r={HUB_R * unit * 0.62} fill={t.palette[0]} />
+      <text x={cx} y={cy} fontSize={18} fontWeight={700} fill={GOAL_INK} textAnchor="middle" dominantBaseline="central">
+        GOAL
       </text>
     </g>
   );
 }
 
-const TITLE = "maze-circular · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 64;
-
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
-  const margin = 48;
+  const bodyH = height - HEADER_H;
+  const availW = width - 2 * GAP;
+  const availH = bodyH - 2 * GAP;
+  // Only the side holding the START label gets extra room; one px-per-unit on both axes keeps the circle round
+  const lx = LABEL_R * Math.cos(entryAngle);
+  const ly = LABEL_R * Math.sin(entryAngle);
+  const left = labelAnchor === "end" ? LABEL_W : labelAnchor === "middle" ? LABEL_W / 2 : 0;
+  const right = labelAnchor === "start" ? LABEL_W : labelAnchor === "middle" ? LABEL_W / 2 : 0;
+  const unit = Math.min(fitUnit(availW, lx, left, right), fitUnit(availH, ly, LABEL_H / 2, LABEL_H / 2));
+  const xRange = viewRange(availW, unit, lx, left, right);
+  const yRange = viewRange(availH, unit, ly, LABEL_H / 2, LABEL_H / 2);
 
   return (
-    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 30,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-          pt: "16px",
-          height: TITLE_HEIGHT,
-          fontFamily: "inherit",
-        }}
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "18px 40px 0 40px", boxSizing: "border-box", textAlign: "center" }}>
+        <div style={{ fontSize: 26, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 18, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={bodyH}
+        series={[]}
+        skipAnimation
+        margin={{ left: GAP, right: GAP, top: GAP, bottom: GAP }}
+        xAxis={[{ id: "x", scaleType: "linear", ...xRange, position: "none" }]}
+        yAxis={[{ id: "y", scaleType: "linear", ...yRange, reverse: true, position: "none" }]}
       >
-        {TITLE}
-      </Typography>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <ScatterChart
-          width={width}
-          height={chartHeight}
-          skipAnimation
-          disableVoronoi
-          series={[{ id: "maze", type: "scatter", data: [{ x: 0, y: 0, id: "c" }] }]}
-          xAxis={[{ scaleType: "linear", min: -1.3, max: 1.3, disableTicks: true, disableLine: true }]}
-          yAxis={[{ scaleType: "linear", min: -1.3, max: 1.3, disableTicks: true, disableLine: true }]}
-          topAxis={null}
-          bottomAxis={null}
-          leftAxis={null}
-          rightAxis={null}
-          margin={{ top: margin, bottom: margin, left: margin, right: margin }}
-          slots={{ scatter: MazeMark }}
-          slotProps={{ legend: { hidden: true } }}
-        />
-      </Box>
-    </Box>
+        <Maze />
+      </ChartsContainer>
+    </div>
   );
 }
