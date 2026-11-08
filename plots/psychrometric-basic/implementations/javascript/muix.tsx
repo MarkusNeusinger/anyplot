@@ -17,11 +17,11 @@ const FAMILY = {
   rh: { color: t.palette[0], dash: "none", width: 1.8, key: "Relative humidity (%)" },
   wb: { color: t.palette[1], dash: "8 5", width: 1.6, key: "Wet-bulb temperature (°C)" },
   h: { color: t.palette[2], dash: "12 4 3 4", width: 1.6, key: "Enthalpy (kJ/kg dry air)" },
-  v: { color: t.palette[3], dash: "2 5", width: 1.8, key: "Specific volume (m³/kg dry air)" },
+  v: { color: t.palette[3], dash: "2 3", width: 2.4, key: "Specific volume (m³/kg dry air)" },
 };
 const SATURATION_KEY = "Saturation (100 % RH)";
 const COMFORT_KEY = "Comfort zone";
-const PROCESS_COLOR = t.palette[4];
+const PROCESS_COLOR = t.palette[5]; // cyan reads as cooling; red is reserved for bad / loss
 const TITLE_H = 48;
 const SUBTITLE_H = 26;
 const KEY_H = 40;
