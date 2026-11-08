@@ -108,8 +108,10 @@ const headers = sectors.map((sector, i) => {
   return { sector, x: cx + (radiusPx + 26) * cos, y: cy - (radiusPx + 26) * Math.sin(mid), anchor };
 });
 
-// Label placement: markers stay on their positions; each label takes the first of eight slots around
-// its marker (outer side first) that is free of markers, headers, ring names and earlier labels
+// Label placement: markers stay on their positions; each label takes, of the eight slots around its
+// marker (outer side first) that are free of markers, headers, ring names and earlier labels, the
+// first one that crosses the fewest ring arcs and sector spokes
+const spokeAngles = Array.from({ length: sectors.length + 1 }, (_, i) => Math.PI - i * sectorSpan);
 const obstacles = [
   ...items.map((it, i) => ({ owner: i, box: [it.px - MARKER_R - 3, it.py - MARKER_R - 3, it.px + MARKER_R + 3, it.py + MARKER_R + 3] })),
   ...headers.map((h) => {
@@ -138,9 +140,23 @@ const labels = items.map((it, i) => {
     const clash = obstacles
       .filter((o) => o.owner !== i)
       .reduce((sum, { box: o }) => sum + Math.max(0, Math.min(box[2], o[2]) - Math.max(box[0], o[0])) * Math.max(0, Math.min(box[3], o[3]) - Math.max(box[1], o[1])), 0);
-    return { dx, dy, anchor: side > 0 ? "start" : side < 0 ? "end" : "middle", box, clash };
+    // The box corners relative to the centre (y up): a ring arc is crossed when its radius lies
+    // between the box's nearest and farthest point above the baseline, a spoke when the corners
+    // fall on both sides of it within its length
+    const corners = [[box[0], box[1]], [box[2], box[1]], [box[0], box[3]], [box[2], box[3]]].map(([x, y]) => [x - cx, cy - y]);
+    const near = Math.hypot(Math.max(box[0] - cx, 0, cx - box[2]), Math.max(box[1] - cy, 0, cy - box[3]));
+    const far = Math.max(...corners.map(([x, y]) => Math.hypot(x, y)));
+    const above = corners.some(([, y]) => y > 0);
+    const arcCrossings = above ? rings.filter((_, r) => near < (r + 1) * unit && (r + 1) * unit < far).length : 0;
+    const spokeCrossings = spokeAngles.filter((a) => {
+      const across = corners.map(([x, y]) => x * Math.sin(a) - y * Math.cos(a));
+      const along = corners.map(([x, y]) => x * Math.cos(a) + y * Math.sin(a));
+      return Math.min(...across) < 0 && Math.max(...across) > 0 && Math.max(...along) > 0 && Math.min(...along) < radiusPx;
+    }).length;
+    return { dx, dy, anchor: side > 0 ? "start" : side < 0 ? "end" : "middle", box, clash, lines: arcCrossings + spokeCrossings };
   });
-  const best = slots.find((s) => s.clash === 0) ?? slots.reduce((a, b) => (b.clash < a.clash ? b : a));
+  const free = slots.filter((s) => s.clash === 0);
+  const best = free.length > 0 ? free.reduce((a, b) => (b.lines < a.lines ? b : a)) : slots.reduce((a, b) => (b.clash < a.clash ? b : a));
   obstacles.push({ owner: -1, box: best.box });
   return best;
 });
