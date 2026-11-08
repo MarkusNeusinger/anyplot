@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: line-stress-strain
 created: '2026-08-24T21:17:29Z'
-updated: '2026-08-24T21:37:37Z'
-generated_by: claude-sonnet
-workflow_run: 32777256762
+updated: '2026-11-08T08:20:16Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42443239754
 issue: 4413
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-light.html
@@ -15,132 +16,121 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stre
 quality_score: 88
 review:
   strengths:
-  - Comprehensive, physically realistic stress-strain curve with distinct elastic,
-    Lüders-plateau (with authentic serration noise), strain-hardening, and necking
-    regions, all clearly color-coded and labeled to match the spec's required regions
-  - Correct 0.2% offset construction line paired with a marker exactly at its intersection
-    with the yield plateau, demonstrating the offset method rather than just labeling
-    a number
-  - Thoughtful use of MUI X hooks (useXScale/useYScale/useDrawingArea) for custom
-    data-space overlays (region labels, point markers, hand-rolled Y-axis title) that
-    shows deep familiarity with the library beyond basic chart props
-  - 'Correct Imprint palette usage: brand green first, with a well-justified semantic
-    exception (matte red) for the necking/failure region'
-  - Deterministic seeded LCG for the Lüders-band noise, clean imports, and correct
-    harness contract (skipAnimation, ANYPLOT_SIZE sizing, export default)
+  - 'Every characteristic the spec asks for is present and sits where it belongs:
+    elastic, plastic (strain hardening) and necking labels at their stretches of the
+    curve; yield, UTS and fracture marked at the offset crossing, the peak stress
+    and the last sample; the 0.2% offset line dashed in inkSoft from strain 0.002,
+    parallel to the elastic slope, clearly distinct from the green curve.'
+  - 'Critical values are computed from the data rather than typed: E is a least-squares
+    fit through the origin over the elastic samples (200,000 MPa), yield is the interpolated
+    first crossing of the curve under the offset line (251 MPa), UTS is the stress
+    maximum (450 MPa) and fracture is the last sample (300 MPa, 26.0% elongation).'
+  - 'Idiomatic MUI X v9 composition: the annotation overlay is a child component of
+    LineChart that draws in the chart''s own coordinate space through the useXScale/useYScale
+    hooks, and the series keeps a valueFormatter so the HTML tooltip reads stress
+    with its unit.'
+  - 'Clear typographic hierarchy beyond the baseline: region labels in ink at weight
+    500, point labels in inkSoft, critical-point markers with a page-coloured halo
+    ring, faint dotted drop lines to the strain axis, and a data-driven subtitle summarising
+    sample count, fit window, method and elongation.'
+  - Theme tokens threaded through every custom element (ink, inkSoft, grid, pageBg,
+    palette[0]); both renders are fully legible and the green curve is identical in
+    both.
   weaknesses:
-  - '"Fracture ≈ 300 MPa" reference-line label overlaps its own dashed vertical line
-    in BOTH light and dark renders — the letters "Pa" are bisected by the line. Caused
-    by combining labelAlign="start" with a conflicting textAnchor: "end" override
-    in labelStyle on that one ChartsReferenceLine (muix.tsx ~lines 241-248); the Yield
-    and UTS reference lines use labelAlign="start" without the anchor override and
-    render cleanly clear of their lines. Fix: drop the textAnchor: "end" override
-    (or switch consistently to labelAlign="end") so the fracture label clears the
-    dashed line like the other two.'
-  - The 0.2% offset construction line and the Yield reference line sit so close together
-    near the origin (they diverge by only a few pixels over the full stress range)
-    that they read as one doubled dashed line rather than two distinct construction
-    lines — consider a distinct color for the offset line (instead of t.ink, which
-    matches the reference-line family visually) or a lower opacity so the offset construction
-    is easier to isolate from the yield marker line.
-  - Axis tick marks (small perpendicular dashes) are still visible on both axes; the
-    style guide's decoration-removal checklist prefers dropping them when only the
-    tick labels are needed.
+  - 'Suggestion: the mandated title fills only about a third of the width at 22 px;
+    a descriptive prefix such as ''Mild Steel Tensile Test · '' would give the header
+    more presence.'
+  - 'Suggestion: the x-axis title sits about 50 px below the tick labels; a slightly
+    smaller x-axis band (height ≈ 52) would tighten the bottom whitespace.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Centered title "line-stress-strain · javascript · muix · anyplot.ai" in dark ink. Y-axis title "Engineering stress, σ (MPa)" rotated along the left edge, fully visible with generous margin. X-axis title "Engineering strain, ε (mm/mm)" centered below the tick row. Tick labels (0-500 MPa, 0.00-0.27 strain) in medium-gray ink, all legible. Legend top-right lists four series with color swatches: "Elastic + yield" (green), "Strain hardening" (purple), "Necking" (red), "0.2% offset" (black dashed). Three vertical dashed reference lines mark Yield/UTS/Fracture with adjacent gray labels.
-      Data: Green line rises steeply (elastic region) then plateaus with small serrated noise (Lüders band) to a green dot at (yield strain, 250 MPa); a lavender/purple curve continues upward through strain hardening to a purple dot at (0.20, 450 MPa, UTS); a dark-red curve descends through necking to a red dot at (0.26, 300 MPa, fracture). A thin black dashed diagonal line (the 0.2% offset construction) runs near the origin, nearly parallel to but diverging slightly from the vertical Yield reference line. Region text labels ("Elastic + Yield", "Plastic (Strain Hardening)", "Necking") are placed in each curve's own color, plus a gray "E ≈ 200 GPa (elastic modulus)" note near the top-left. First data series is confirmed brand green #009E73.
-      Legibility verdict: PASS overall, with one localized defect - the "Fracture ≈ 300 MPa" reference-line label is bisected by its own dashed line (the "P" of "MPa" has the line running through it), while the Yield and UTS labels sit cleanly clear of their lines. All other text is fully readable against the light background.
+      Background: warm off-white #FAF8F1, no white panel painted.
+      Chrome: title "line-stress-strain · javascript · muix · anyplot.ai" in bold dark ink top-left with a grey data-driven subtitle (168 samples, E fitted over 6 samples, 0.2% offset method, elongation 26.0%); y-axis "Engineering stress (MPa)" 0–500 in 50 MPa steps, x-axis "Engineering strain (mm/mm)" 0.00–0.26 in 0.02 steps; subtle horizontal grid only; all text dark on light and readable.
+      Data: one brand-green (#009E73) line, thick: near-vertical elastic rise to 250 MPa, serrated yield plateau to strain 0.02, smooth hardening to the UTS at ~0.20/450 MPa, necking fall to fracture at 0.26/300 MPa. Green halo-ringed markers at yield (251 MPa), UTS (450 MPa) and fracture (300 MPa) with inkSoft labels and dotted drop lines to the strain axis. Dashed inkSoft 0.2% offset line rises from 0.002 to ~326 MPa, labelled "0.2% offset line, slope E". Region labels "Elastic · E = 200,000 MPa", "Plastic (strain hardening)" and "Necking" beside their stretches. No overlaps, no clipping.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same layout as the light render with all text flipped to light ink (near-white title/labels, light-gray tick labels and reference-line labels) - fully legible against the dark background. No dark-on-dark text anywhere; the white-ish dashed reference lines and the white-dashed "0.2% offset" legend swatch are clearly visible.
-      Data: Identical curve shapes and identical data colors to the light render - green (#009E73) for elastic+yield, lavender for strain hardening, dark red for necking, confirming the palette is theme-invariant as required. Only the chrome (background, axis lines, tick/label colors, reference-line color) has flipped to the dark-theme tokens.
-      Legibility verdict: PASS overall, with the same localized defect as the light render - the "Fracture ≈ 300 MPa" label is crossed by its dashed line ("P" of "MPa" bisected). No dark-on-dark failures; everything else reads clearly.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles and tick labels in light ink/inkSoft, all clearly readable; grid lines subtle dark grey but visible; no dark-on-dark text anywhere.
+      Data: the curve and markers are the same #009E73 as in the light render; the offset line and drop lines flip to light inkSoft and stay visible; all annotations in the same positions.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles/labels/ticks readable in both themes at explicit font
-          sizes; no dark-on-dark or light-on-light failures
+        comment: Explicit sizes (title 22, ticks 15, labels 16, annotations 15-16
+          CSS px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: '"Fracture ≈ 300 MPa" label is bisected by its own dashed reference
-          line in both renders (labelAlign/textAnchor mismatch); offset line and Yield
-          reference line also sit very close together near the origin'
+        passed: true
+        comment: No text collides with text or the curve; offset line and yield marker
+          beside the elastic segment are permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines (3.5px) and point markers (r=10 with page-bg edge halo) are
-          clearly visible against 170 curve points; no overplotting
+        comment: 3.5 px curve, 8 px haloed markers, dashed offset line distinct in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Region color is redundantly encoded with adjacent text labels, so
-          it is not the sole signal; adequate contrast on both surfaces
+        comment: Single green series plus neutral ink annotations; no colour-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas confirmed (gate file absent); nothing
-          clipped at any edge; well-balanced margins
+        comment: Canvas gate passed; balanced axis labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units and symbols (ε, σ, MPa,
-          mm/mm)
+        comment: Engineering strain (mm/mm) and Engineering stress (MPa), with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; matte red used as a justified
-          semantic exception for the necking/fracture region; backgrounds theme-correct;
-          data colors identical across themes'
+        comment: 'Curve in Imprint #009E73, identical across themes; backgrounds #FAF8F1
+          / #1A1A17'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Color-coded storytelling per region, realistic Lüders-band serration,
-          hand-rolled Y-axis title to avoid MUI X's default collision - above-median
-          polish
+        comment: Typographic hierarchy (ink weight-500 region labels vs inkSoft point
+          labels), haloed markers, data-driven subtitle
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid clutter, no legend box frame, minimal spines; small axis
-          tick marks are still present rather than removed
+        comment: Faint dotted drop lines at 0.6 opacity, region-label side chosen
+          from the local slope so text sits clear of the curve
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear narrative from elastic through fracture via matched color/label
-          pairs and critical-point markers, though the fracture-label overlap slightly
-          undercuts the payoff moment
+        comment: Subtitle surfaces the derived properties (fit window, method, elongation
+          at fracture) beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -150,27 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for an engineering stress-strain curve
+        comment: Engineering stress-strain line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec-mandated elements present: region labels, yield/UTS/fracture
-          markers, elastic-modulus annotation, 0.2% offset line'
+        comment: 'Region labels, yield/UTS/fracture marked, E annotated, 0.2% offset
+          line drawn: every Notes and ''A good version shows'' bullet met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=strain, Y=stress; axes cover the full data range with headroom
+        comment: Strain on x, stress on y, linear segments, all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact required format; legend labels correctly
-          describe each series
+        comment: Mandated title format; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -180,60 +169,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Elastic, yield plateau, strain hardening, and necking-to-fracture
-          are all present and distinguishable
+        comment: Elastic, yield plateau, hardening, necking and fracture all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Values plausible for mild steel (E=200 GPa, yield=250 MPa, UTS=450
-          MPa) and neutral
+        comment: Mild-steel tensile specimen, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strain/stress ranges and axis limits are sensible for the domain
+        comment: 'Checked: E = 200 GPa, yield 251 MPa at the offset crossing (strain
+          ~0.0033), UTS 450 MPa, fracture 300 MPa at 26% elongation; typical mild-steel
+          values, computed in code; 168 samples within 100-500'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Several small helper functions/components (DataLabel, PointMarker,
-          YAxisTitle, curve-segment functions) are used - justified by MUI X's children/hooks
-          pattern but adds structure beyond a minimal script
+        comment: Linear module flow; the overlay child component is the required pattern
+          for scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) for deterministic Lüders-band noise
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports that are actually used
+        comment: LineChart, useXScale, useYScale all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake/simulated functionality; all elements are real chart primitives
+        comment: Short written-out fit and crossing search are allowed by the Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: export default, skipAnimation, sized via
-          window.ANYPLOT_SIZE'
+        comment: Default-exported component, skipAnimation, v9 API (hideLegend, axis
+          height/width, per-chart classes)
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -241,22 +230,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic dataset/series pattern, ChartsReferenceLine, connectNulls
-          for split-series curves
+        comment: Composition by children inside LineChart, sx targeting .MuiLineChart-line
+          / .MuiChartsGrid-line, series valueFormatter
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Custom overlays built on useXScale/useYScale/useDrawingArea hooks
-          go beyond basic chart-prop usage
+        comment: useXScale/useYScale hooks to draw custom SVG in data coordinates;
+          formatted HTML tooltip
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:35:07Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - edge-highlighting
+  - grid-styling
