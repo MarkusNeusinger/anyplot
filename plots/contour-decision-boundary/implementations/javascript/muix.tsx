@@ -1,300 +1,253 @@
 // anyplot.ai
 // contour-decision-boundary: Decision Boundary Classifier Visualization
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-04
-
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Deterministic LCG (seed 42) — no Math.random() in the browser harness
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return () => {
+// Constants
+const K_NEIGHBORS = 13; // k-nearest-neighbour classifier: majority vote of the 13 closest training points
+const MESH_STEPS = 180; // prediction mesh nodes per axis, fine enough that the boundary shows no grid steps
+const PAD_SHARE = 0.12; // feature plane beyond the training points, as a share of each feature's range
+const REGION_OPACITY = 0.24; // region tint, light enough that the training points stay the strongest marks
+
+// Columns: set these to your data's column names
+const PETAL_LENGTH = "Petal length (cm)"; // role: X1
+const PETAL_WIDTH = "Petal width (cm)"; // role: X2
+const SPECIES = "Species"; // role: y
+
+// Data: replace this block with your own records, one object per training point
+// Synthetic iris-like petal measurements of three species: setosa separates cleanly on these two
+// features, versicolor and virginica overlap near their shared boundary as in the real iris data
+const data = (() => {
+  let state = 42;
+  const rand = () => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
     return state / 4294967296;
   };
-}
-const rng = makeLcg(42);
+  const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+  const species = [
+    { name: "Setosa", meanLength: 1.5, meanWidth: 0.25, sdLength: 0.17, sdWidth: 0.1, n: 50 },
+    { name: "Versicolor", meanLength: 4.3, meanWidth: 1.3, sdLength: 0.47, sdWidth: 0.2, n: 55 },
+    { name: "Virginica", meanLength: 5.55, meanWidth: 2.03, sdLength: 0.55, sdWidth: 0.27, n: 55 },
+  ];
+  return species.flatMap((sp) =>
+    Array.from({ length: sp.n }, () => {
+      const length = Math.round((sp.meanLength + gaussian() * sp.sdLength) * 100) / 100;
+      const width = Math.round((sp.meanWidth + gaussian() * sp.sdWidth) * 100) / 100;
+      // petals are never thinner than 0.1 cm, the smallest width in the real iris data
+      return { [PETAL_LENGTH]: length, [PETAL_WIDTH]: Math.max(0.1, width), [SPECIES]: sp.name };
+    }),
+  );
+})();
 
-// Box-Muller standard normal draw, fed by the LCG above.
-function gaussian() {
-  const u1 = Math.max(rng(), 1e-9);
-  const u2 = rng();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Plot: reads only data and the constants above
+// Classes in order of first appearance, one palette position each
+const classes = [...new Set(data.map((d) => d[SPECIES]))];
+const points = data
+  .filter((d) => Number.isFinite(d[PETAL_LENGTH]) && Number.isFinite(d[PETAL_WIDTH]))
+  .map((d, i) => ({ id: `point-${i}`, x: d[PETAL_LENGTH], y: d[PETAL_WIDTH], cls: classes.indexOf(d[SPECIES]) }));
 
-// --- Data: synthetic iris-like petal measurements, 3 species ---------------
-// Setosa is fully separable on these two features; versicolor and virginica
-// overlap near the boundary — the same pattern the real iris dataset shows,
-// which is what makes a few training points fall on the wrong side.
-const SPECIES = [
-  { name: "Setosa", meanX: 1.5, meanY: 0.25, stdX: 0.17, stdY: 0.1, n: 50 },
-  { name: "Versicolor", meanX: 4.3, meanY: 1.3, stdX: 0.47, stdY: 0.2, n: 55 },
-  { name: "Virginica", meanX: 5.55, meanY: 2.03, stdX: 0.55, stdY: 0.27, n: 55 },
+// Feature plane: the training extent plus a padding share; a feature that is never negative keeps a
+// non-negative axis
+const [xDomain, yDomain] = [points.map((p) => p.x), points.map((p) => p.y)].map((values) => {
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const pad = (high - low) * PAD_SHARE;
+  return [low >= 0 ? Math.max(0, low - pad) : low - pad, high + pad];
+});
+const meshX = Array.from({ length: MESH_STEPS }, (_, i) => xDomain[0] + (i / (MESH_STEPS - 1)) * (xDomain[1] - xDomain[0]));
+const meshY = Array.from({ length: MESH_STEPS }, (_, j) => yDomain[0] + (j / (MESH_STEPS - 1)) * (yDomain[1] - yDomain[0]));
+
+// k-NN votes per class: every training point is classified leave-one-out (it never votes for itself),
+// every mesh node by all training points
+const queries = [
+  ...points.map((p, i) => ({ x: p.x, y: p.y, skip: i })),
+  ...meshY.flatMap((y) => meshX.map((x) => ({ x, y, skip: -1 }))),
 ];
+const votes = queries.map((q) => {
+  const nearest = points
+    .map((p, i) => ({ i, cls: p.cls, d2: (p.x - q.x) ** 2 + (p.y - q.y) ** 2 }))
+    .filter((n) => n.i !== q.skip)
+    .sort((a, b) => a.d2 - b.d2)
+    .slice(0, K_NEIGHBORS);
+  return classes.map((_, c) => nearest.filter((n) => n.cls === c).length);
+});
+const predicted = points.map((_, i) => votes[i].indexOf(Math.max(...votes[i])));
+const misclassified = points.filter((p, i) => predicted[i] !== p.cls);
 
-let pointId = 0;
-const trainingPoints = SPECIES.flatMap((sp, cls) =>
-  Array.from({ length: sp.n }, () => ({
-    id: `iris-${pointId++}`,
-    x: Math.round((sp.meanX + gaussian() * sp.stdX) * 100) / 100,
-    y: Math.round((sp.meanY + gaussian() * sp.stdY) * 100) / 100,
-    cls,
-  })),
-);
-
-// --- k-nearest-neighbors classifier (k=13, squared distance, majority vote) -
-// k=13 (vs. a smaller k) widens each point's neighborhood just enough to pull
-// in 2-3 genuine misclassifications near different spots along the
-// Versicolor/Virginica boundary, instead of only one.
-const K = 13;
-function knnPredict(px, py, excludeId) {
-  const neighbors = [];
-  for (const p of trainingPoints) {
-    if (p.id === excludeId) continue;
-    const dx = px - p.x;
-    const dy = py - p.y;
-    neighbors.push({ d2: dx * dx + dy * dy, cls: p.cls });
-  }
-  neighbors.sort((a, b) => a.d2 - b.d2);
-  const votes = new Map();
-  for (let i = 0; i < K && i < neighbors.length; i += 1) {
-    votes.set(neighbors[i].cls, (votes.get(neighbors[i].cls) || 0) + 1);
-  }
-  let bestCls = 0;
-  let bestVotes = -1;
-  votes.forEach((count, cls) => {
-    if (count > bestVotes) {
-      bestVotes = count;
-      bestCls = cls;
+// Region of a class: mesh nodes where its votes reach the best other class (margin >= 0). Marching
+// triangles over that margin give the region polygons and a boundary interpolated between nodes.
+const meshVotes = votes.slice(points.length);
+const regionPolygons: { x: number; y: number }[][][] = [];
+const boundaryCuts: { x: number; y: number }[][][] = [];
+classes.forEach((_, c) => {
+  const margin = meshVotes.map((v) => v[c] - Math.max(...v.filter((_, k) => k !== c)));
+  const polys: { x: number; y: number }[][] = [];
+  const cuts: { x: number; y: number }[][] = [];
+  for (let j = 0; j < MESH_STEPS - 1; j += 1) {
+    for (let i = 0; i < MESH_STEPS - 1; i += 1) {
+      const [sw, se, ne, nw] = [
+        [i, j],
+        [i + 1, j],
+        [i + 1, j + 1],
+        [i, j + 1],
+      ].map(([ii, jj]) => ({ x: meshX[ii], y: meshY[jj], z: margin[jj * MESH_STEPS + ii] }));
+      const centre = { x: (sw.x + se.x) / 2, y: (sw.y + nw.y) / 2, z: (sw.z + se.z + ne.z + nw.z) / 4 };
+      [[sw, se], [se, ne], [ne, nw], [nw, sw]].forEach(([a, b]) => {
+        const tri = [a, b, centre];
+        const inside = tri.map((p) => p.z >= 0);
+        if (inside.every(Boolean)) {
+          polys.push(tri);
+          return;
+        }
+        if (!inside.some(Boolean)) return;
+        const ring: { x: number; y: number }[] = [];
+        const cut: { x: number; y: number }[] = [];
+        tri.forEach((p, k) => {
+          const q = tri[(k + 1) % 3];
+          if (inside[k]) ring.push(p);
+          if (inside[k] !== inside[(k + 1) % 3]) {
+            const r = p.z / (p.z - q.z);
+            const crossing = { x: p.x + r * (q.x - p.x), y: p.y + r * (q.y - p.y) };
+            ring.push(crossing);
+            cut.push(crossing);
+          }
+        });
+        polys.push(ring);
+        cuts.push(cut);
+      });
     }
-  });
-  return bestCls;
-}
-
-// Leave-one-out prediction — predicting a point against a set that includes
-// itself would trivially match, hiding real misclassifications.
-trainingPoints.forEach((p) => {
-  p.predicted = knnPredict(p.x, p.y, p.id);
-  p.correct = p.predicted === p.cls;
+  }
+  regionPolygons.push(polys);
+  boundaryCuts.push(cuts);
 });
 
-// --- Dense mesh grid: classifier prediction at every cell -------------------
-const GRID = 110;
-const trainX = trainingPoints.map((p) => p.x);
-const trainY = trainingPoints.map((p) => p.y);
-const padX = (Math.max(...trainX) - Math.min(...trainX)) * 0.12;
-const padY = (Math.max(...trainY) - Math.min(...trainY)) * 0.12;
-const X_MIN = Math.min(...trainX) - padX;
-const X_MAX = Math.max(...trainX) + padX;
-const Y_MIN = Math.min(...trainY) - padY;
-const Y_MAX = Math.max(...trainY) + padY;
+const series = [
+  ...classes.map((name, c) => ({
+    type: "scatter" as const,
+    id: `class-${c}`,
+    label: name,
+    color: t.palette[c],
+    markerSize: 8,
+    labelMarkType: "circle" as const,
+    data: points.filter((p) => p.cls === c).map(({ id, x, y }) => ({ id, x, y })),
+  })),
+  {
+    type: "scatter" as const,
+    id: "misclassified",
+    label: "Misclassified (leave-one-out)",
+    color: t.ink,
+    markerSize: 13,
+    labelMarkType: "circle" as const,
+    data: misclassified.map(({ id, x, y }) => ({ id: `ring-${id}`, x, y })),
+  },
+];
 
-const xs = Array.from({ length: GRID }, (_, i) => X_MIN + (i / (GRID - 1)) * (X_MAX - X_MIN));
-const ys = Array.from({ length: GRID }, (_, j) => Y_MIN + (j / (GRID - 1)) * (Y_MAX - Y_MIN));
-const classGrid = ys.map((y) => xs.map((x) => knnPredict(x, y)));
+const TITLE = "Iris Species by k-NN · contour-decision-boundary · javascript · muix · anyplot.ai";
+const subtitle = `${points.length} training points · k = ${K_NEIGHBORS} nearest-neighbour vote on a ${MESH_STEPS} × ${MESH_STEPS} mesh · ${misclassified.length} misclassified in leave-one-out`;
+const HEADER_H = 84;
+const LEGEND_W = 280;
 
-// --- Region fill: rasterize the classifier's predicted class at every mesh
-// cell into an off-screen canvas, one pixel per cell, then stretch it under
-// the chart as a plain <img>. This paints a genuinely smooth, contiguous
-// region fill straight from the real grid predictions (no fake data) instead
-// of thousands of overlapping scatter markers, which read as a stippled dot
-// texture rather than a deliberate area fill.
-const CLASS_COLORS = [t.palette[0], t.palette[1], t.palette[2]];
-const REGION_ALPHA = 0.24;
-
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
-}
-const classRgb = CLASS_COLORS.map(hexToRgb);
-
-function buildRegionFillDataUrl() {
-  const canvas = document.createElement("canvas");
-  canvas.width = GRID;
-  canvas.height = GRID;
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.createImageData(GRID, GRID);
-  ys.forEach((_y, j) => {
-    // Canvas row 0 is the top of the image; ys[0] is Y_MIN (the bottom of the
-    // plot), so row = GRID - 1 - j flips the mesh into image space.
-    const row = GRID - 1 - j;
-    xs.forEach((_x, i) => {
-      const [r, g, b] = classRgb[classGrid[j][i]];
-      const idx = (row * GRID + i) * 4;
-      imageData.data[idx] = r;
-      imageData.data[idx + 1] = g;
-      imageData.data[idx + 2] = b;
-      imageData.data[idx + 3] = Math.round(REGION_ALPHA * 255);
-    });
-  });
-  ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL();
-}
-const regionFillDataUrl = buildRegionFillDataUrl();
-
-// --- Boundary trace: a staircase along the mesh cells where the predicted
-// class changes between neighbours — the actual decision boundary read off
-// the grid, not a fitted curve.
-function boundarySegments() {
-  const halfDx = (xs[1] - xs[0]) / 2;
-  const halfDy = (ys[1] - ys[0]) / 2;
-  const segs = [];
-  for (let j = 0; j < GRID; j += 1) {
-    for (let i = 0; i < GRID - 1; i += 1) {
-      if (classGrid[j][i] !== classGrid[j][i + 1]) {
-        const xm = (xs[i] + xs[i + 1]) / 2;
-        segs.push([
-          [xm, ys[j] - halfDy],
-          [xm, ys[j] + halfDy],
-        ]);
-      }
-    }
-  }
-  for (let j = 0; j < GRID - 1; j += 1) {
-    for (let i = 0; i < GRID; i += 1) {
-      if (classGrid[j][i] !== classGrid[j + 1][i]) {
-        const ym = (ys[j] + ys[j + 1]) / 2;
-        segs.push([
-          [xs[i] - halfDx, ym],
-          [xs[i] + halfDx, ym],
-        ]);
-      }
-    }
-  }
-  return segs;
-}
-const boundary = boundarySegments();
-
-// --- SVG boundary overlay (rendered as a ScatterChart child) ---------------
-function BoundaryOverlay() {
-  const { left, top, width, height } = useDrawingArea();
-  const toSVG = (dx, dy) => [
-    left + ((dx - X_MIN) / (X_MAX - X_MIN)) * width,
-    top + (1 - (dy - Y_MIN) / (Y_MAX - Y_MIN)) * height,
-  ];
-  const d = boundary
-    .map(([p0, p1]) => {
-      const [x0, y0] = toSVG(p0[0], p0[1]);
-      const [x1, y1] = toSVG(p1[0], p1[1]);
-      return `M ${x0.toFixed(1)},${y0.toFixed(1)} L ${x1.toFixed(1)},${y1.toFixed(1)}`;
-    })
-    .join(" ");
-  return <path d={d} stroke={t.ink} strokeWidth={2} strokeOpacity={0.55} fill="none" />;
-}
-
-// --- Training-point overlay --------------------------------------------------
-// Correctly classified points keep their species color; misclassified points
-// switch to the amber warning anchor so the classifier's mistakes stand out
-// against the region fill.
-const correctSeries = SPECIES.map((sp, cls) => ({
-  id: `species-${cls}`,
-  label: sp.name,
-  data: trainingPoints
-    .filter((p) => p.cls === cls && p.correct)
-    .map((p) => ({ x: p.x, y: p.y, id: p.id })),
-  color: CLASS_COLORS[cls],
-  markerSize: 9,
-}));
-
-const misclassifiedSeries = {
-  id: "misclassified",
-  label: "Misclassified",
-  data: trainingPoints
-    .filter((p) => !p.correct)
-    .map((p) => ({ x: p.x, y: p.y, id: p.id })),
-  color: t.amber,
-  markerSize: 11,
-};
-
-const TITLE = "contour-decision-boundary · javascript · muix · anyplot.ai";
-
-// Fixed pixel margin, shared by the ScatterChart's own `margin` prop and the
-// region-fill <img> below — both need to agree on exactly where the drawing
-// area starts.
-const MARGIN = { left: 70, right: 200, top: 12, bottom: 58 };
-
-// --- Chart (default-exported component — the harness mounts it) -----------
-export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const chartW = W - 64;
-  const chartH = H - 28 - 36 - 8;
-  const drawW = chartW - MARGIN.left - MARGIN.right;
-  const drawH = chartH - MARGIN.top - MARGIN.bottom;
+function RegionLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const toPath = (shapes: { x: number; y: number }[][], close: boolean) =>
+    shapes
+      .map((shape) => shape.map((p, k) => `${k === 0 ? "M" : "L"}${xScale(p.x)!.toFixed(1)},${yScale(p.y)!.toFixed(1)}`).join("") + (close ? "Z" : ""))
+      .join("");
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: t.pageBg,
-        boxSizing: "border-box",
-        pt: "28px",
-        px: "32px",
-        pb: "8px",
-      }}
-    >
-      <Typography
-        component="div"
-        sx={{ fontSize: 22, fontWeight: 500, color: t.ink, textAlign: "center", lineHeight: 1.3, mb: "6px", flexShrink: 0 }}
-      >
-        {TITLE}
-      </Typography>
-      <Box sx={{ position: "relative", width: chartW, height: chartH, flexShrink: 0 }}>
-        {/* Region-fill wash sits behind the chart; the ScatterChart itself stays
-            transparent so its dots and boundary line render crisply on top. */}
-        <Box
-          component="img"
-          src={regionFillDataUrl}
-          alt=""
-          sx={{ position: "absolute", left: MARGIN.left, top: MARGIN.top, width: drawW, height: drawH, pointerEvents: "none" }}
-        />
-        <ScatterChart
-          width={chartW}
-          height={chartH}
-          skipAnimation
-          tooltip={{ trigger: "none" }}
-          series={[...correctSeries, misclassifiedSeries]}
-          xAxis={[
-            {
-              min: X_MIN,
-              max: X_MAX,
-              label: "Petal length (cm)",
-              disableLine: true,
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            },
-          ]}
-          yAxis={[
-            {
-              min: Y_MIN,
-              max: Y_MAX,
-              label: "Petal width (cm)",
-              disableLine: true,
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            },
-          ]}
-          margin={MARGIN}
-          sx={{ position: "relative" }}
-          slotProps={{
-            legend: {
-              direction: "column",
-              position: { vertical: "middle", horizontal: "right" },
-              itemMarkWidth: 14,
-              itemMarkHeight: 14,
-              labelStyle: { fontSize: 13, fill: t.inkSoft },
-            },
-          }}
-        >
-          <BoundaryOverlay />
-        </ScatterChart>
+    <g>
+      {/* Opaque fills inside one translucent group: no seams between the mesh triangles */}
+      <g opacity={REGION_OPACITY}>
+        {regionPolygons.map((polys, c) => (
+          <path key={`region-${c}`} d={toPath(polys, true)} fill={t.palette[c]} stroke={t.palette[c]} strokeWidth={0.75} />
+        ))}
+      </g>
+      {boundaryCuts.map((cuts, c) => (
+        <path key={`boundary-${c}`} d={toPath(cuts, false)} fill="none" stroke={t.inkSoft} strokeWidth={1.8} strokeLinecap="round" />
+      ))}
+    </g>
+  );
+}
+
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  return (
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
       </Box>
+      <ChartsDataProvider
+        width={width - LEGEND_W}
+        height={height - HEADER_H}
+        series={series}
+        skipAnimation
+        margin={{ top: 16, bottom: 16, left: 24, right: 24 }}
+        xAxis={[
+          {
+            scaleType: "linear",
+            min: xDomain[0],
+            max: xDomain[1],
+            label: PETAL_LENGTH,
+            height: 60,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: yDomain[0],
+            max: yDomain[1],
+            label: PETAL_WIDTH,
+            width: 76,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+      >
+        <ChartsWrapper
+          legendPosition={{ vertical: "middle", horizontal: "end" }}
+          legendDirection="vertical"
+          sx={{ width, height: height - HEADER_H }}
+        >
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1.2 },
+              '& [data-series="misclassified"] .MuiScatterChart-marker': { fill: "none", stroke: t.ink, strokeWidth: 2.5 },
+            }}
+          >
+            <RegionLayer />
+            <ScatterPlot />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+          <ChartsLegend
+            direction="vertical"
+            sx={{
+              width: LEGEND_W,
+              pl: "24px",
+              gap: "12px",
+              "& .MuiChartsLegend-label": { fontSize: 15, color: t.ink },
+              '& [data-series="misclassified"] .MuiChartsLabelMark-fill': { fill: "none", stroke: t.ink, strokeWidth: 2.5, r: 5.5 },
+            }}
+          />
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </Box>
   );
 }
