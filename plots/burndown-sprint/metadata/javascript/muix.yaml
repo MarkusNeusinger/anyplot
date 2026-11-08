@@ -2,58 +2,66 @@ library: muix
 language: javascript
 specification_id: burndown-sprint
 created: '2026-06-14T23:08:16Z'
-updated: '2026-06-14T23:31:39Z'
-generated_by: claude-sonnet
-workflow_run: 27514626366
+updated: '2026-11-08T01:35:06Z'
+generated_by: claude-opus-5-5
+adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
+workflow_run: 42434564237
 issue: 8654
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/burndown-sprint/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 88
 review:
   strengths:
-  - 'Excellent spec compliance — all required features present: step burndown, ideal
-    reference line, weekend shading, scope change marker with annotation, and legend'
-  - WeekendBand component using useXScale and useDrawingArea MUI X hooks is idiomatic
-    and demonstrates deep library knowledge — impossible to replicate in non-React
-    charting libraries
-  - 'Proper Imprint palette usage: first series in #009E73, ideal reference line in
-    muted chrome token (inkSoft), scope marker in palette[3] ochre for visual distinction'
-  - Both light and dark themes work correctly — ThemeProvider handles all chrome,
-    data colors are identical between renders, no dark-on-dark failures
-  - 'Step curve (curve: ''step'') for actual vs. dashed linear for ideal creates clear
-    visual hierarchy — viewer immediately reads the schedule status'
-  - Realistic agile sprint data (40 pts, 10 working days, +8 scope change on Thu 4)
-    with deterministic hard-coded arrays
-  - Custom title rendered in a separate div above the LineChart for precise positioning
-    and consistent typography control
+  - 'Full MUI X v9 composition API: ChartsDataProvider + ChartsWrapper + ChartsSurface
+    with ChartsGrid, LinePlot, MarkPlot and both axes layered in an explicit order,
+    so custom SVG layers sit exactly where they belong (weekend bands under the grid,
+    fill under the lines, scope marker under the marks)'
+  - Custom layers read the chart's own scales through useXScale / useYScale / useDrawingArea,
+    so weekend bands, the ahead/behind fill and the scope-change marker stay aligned
+    with the data without hand-computed pixel positions
+  - 'Actual series is a true step series (curve: stepAfter with strictStepCurve) with
+    circle marks at every day value; the ideal guideline is a muted inkSoft dashed
+    straight line, and the legend mark for it is restyled to a dashed sample via data-series
+    selectors so the legend matches the plot'
+  - 'The ahead/behind fill is split exactly where the held step value crosses the
+    falling ideal line and colored red (behind, Imprint semantic anchor #AE3030) or
+    green (ahead), keeping the reading obvious; the subtitle states the color key'
+  - Weekend gaps are derived from the dates themselves (any gap of more than one calendar
+    day) and labelled Sat–Sun, explaining the flat Fri→Mon segments; the +8 scope
+    change is a dotted ink vertical line with a bold label at Thu, Jun 4 where the
+    series jumps
+  - 'Realistic sprint data matching the spec example: 40 points committed, +8 added
+    on day 4 (2 completed that day, net +6), ending with 2 points left; subtitle summary
+    is computed from the data'
+  - All chrome threads ANYPLOT_TOKENS (ink, inkSoft, grid, pageBg); data colors identical
+    across both themes and every text element readable in both renders
+  - skipAnimation set on the provider, LinePlot and MarkPlot; native tooltips and
+    legend interactivity available in the HTML output
   weaknesses:
-  - 'X-axis is missing an explicit label title (e.g. ''Sprint Day'') — only tick mark
-    labels are present; add label: ''Sprint Day'' to the xAxis config (VQ-06 deduction)'
-  - Grid opacity not explicitly customized — MUI X default horizontal grid lines are
-    visible in both renders; consider adding slotProps to reduce grid opacity for
-    a more refined look (DE-02)
-  - 'Ideal burndown area fill is very subtle (fillOpacity: 0.07) — the ''below ideal
-    = ahead of schedule'' reading could be communicated more clearly with slightly
-    higher opacity (0.10–0.12) (DE-03)'
+  - 'Suggestion: the mandated title spans only about 31 % of the width at 22 px; a
+    slightly larger title (about 26–28 px) would give the header more presence over
+    the long subtitle.'
+  - 'Suggestion: the red/green ahead-behind key lives only in the subtitle; adding
+    the fill as a legend entry would put the whole encoding in one place.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot surface, no pure white
-      Chrome: Title "burndown-sprint · javascript · muix · anyplot.ai" at top-left in dark ink (#1A1A17-ish), clearly readable. Y-axis label "Story Points Remaining" rotated, dark ink, readable. X-axis tick labels (Start, Mon 1...Fri 12) in inkSoft gray, readable. Y-axis tick labels (0–45) in inkSoft gray, readable. Legend ("Actual Remaining" — green swatch, "Ideal Burndown" — gray swatch) above chart, readable. Scope "+8 pts" annotation in ochre, readable.
-      Data: Actual Remaining as a green (#009E73) step line with open circle markers — prominent, clear step pattern. Ideal Burndown as a dashed gray (inkSoft) line — distinct, secondary feel. Very subtle green area fill under the ideal line (fillOpacity 0.07). Ochre dashed vertical reference line at Thu 4 ("Scope +8 pts"). Light gray rectangle shading between Fri 5 and Mon 8 (weekend band).
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1 across the whole canvas, 3200x1800.
+      Chrome: centered bold title "burndown-sprint · javascript · muix · anyplot.ai" in dark ink, a softer-ink subtitle "40 story points committed · +8 added during the sprint · 2 left on Fri, Jun 12 · red: behind the ideal line, green: ahead", a right-aligned horizontal legend (green circle-line "Remaining (story points)", dashed dark-grey "Ideal remaining (story points)"). Y axis "Remaining (story points)" 0–40 in steps of 5 with subtle horizontal grid lines; x axis "Day" with 11 ticks Fri, May 29 … Fri, Jun 12. All text dark on light and readable.
+      Data: brand-green #009E73 step series with white-filled circle marks at 40, 37, 34, 32, 38, 34, 28, 21, 14, 7, 2; dashed muted ideal line from 40 on Fri, May 29 to 0 on Fri, Jun 12; translucent matte-red fill between the two (the actual series stays above the ideal the whole sprint, so no green appears); two light grey weekend bands labelled "Sat–Sun" over the Fri→Mon intervals, lining up with the flat segments; a dotted vertical ink line at Thu, Jun 4 with the bold label "Scope change +8 story points" where the series jumps from 32 to 38.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black
-      Chrome: Title in light #F0EFE8-ish text — clearly readable on dark background. Y-axis label and tick labels in light-colored text — no dark-on-dark failure. X-axis tick labels in light gray — readable. Legend text in light ink — readable. Scope annotation in ochre — visible and readable. All chrome is correctly adapted to dark theme via ThemeProvider.
-      Data: Actual Remaining step line is the same #009E73 brand green — identical to light render. Ideal Burndown dashed line is light gray (B8B7B0 dark inkSoft) — visible and appropriately secondary. Weekend band shading slightly darker against the near-black background. Area fill barely visible but present. Scope reference line ochre — visible.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures, brand green clearly visible
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and tick labels all flip to light ink and read clearly; grid lines subtle but visible; the dashed ideal line flips to light grey; the scope-change line and label render in light ink. No dark-on-dark text anywhere.
+      Data: the green step series, the marks (now dark-filled with green outline), and the matte-red fill hue are identical to the light render; weekend bands are a lighter grey on the dark surface and remain visible with their "Sat–Sun" labels.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -61,58 +69,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, tick labels 13px, legend
-          14px, y-axis label 15px). Both themes fully readable, well-proportioned,
-          no overflow.
+        comment: Explicit font sizes (title 22, subtitle 15, axis titles 16, ticks
+          14, annotations 14–15 CSS px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render. Legend, title,
-          axis labels, scope annotation all clearly separated.
+        comment: No text collisions; scope label sits clear of the series, weekend
+          labels at the band bottoms
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step line at strokeWidth 3 is prominent. Circle markers visible.
-          Dashed reference line appropriately secondary at strokeOpacity 0.6. Elements
-          well-adapted to sparse (11 point) data.
+        comment: 11 sparse points with prominent 6 px circle marks and a 3.5 px step
+          line; legend glyphs (circle-line, dashed sample) visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) vs gray (inkSoft) for two series — CVD-safe combination.
-          Ochre scope marker distinguishable. No red-green as sole signal.
+        comment: Red/green fill is backed by position relative to the dashed ideal
+          line and the subtitle key, not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout. Chart fills canvas well. Balanced margins. Custom
-          title div approach cleanly positions title outside chart area. Nothing cut
-          off.
+        comment: 3200x1800, balanced margins, axis labels and tick labels proportional,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis has 'Story Points Remaining' — descriptive with implicit units.
-          X-axis has no label title, only tick labels (Start, Mon 1...Fri 12). Missing
-          x-axis title like 'Sprint Day'.
+        passed: true
+        comment: '"Remaining (story points)" with unit, "Day" on a date axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series uses t.palette[0]=#009E73 (brand green). Ideal series
-          uses t.inkSoft (chrome muted token) — appropriate for a reference/guideline
-          line. Scope marker uses t.palette[3]=ochre. Background t.pageBg applied
-          correctly. Both renders theme-correct via ThemeProvider.
+        comment: 'Actual series #009E73; behind fill uses the semantic red anchor
+          #AE3030 for the bad role; ideal line inkSoft; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -120,25 +121,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Strong design: WeekendBand hook component, step vs dashed visual
-          differentiation, subtle area fill, scope change marker, custom title div.
-          Clearly above defaults but not quite FiveThirtyEight publication-ready.'
+        comment: Title/subtitle hierarchy with a data-computed summary line, bold
+          scope label vs. soft weekend labels, white-filled marks on the light page
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good refinement: custom title positioning, clean layout, explicit
-          color theming for every element. Grid lines use MUI X defaults without explicit
-          opacity adjustment — a minor gap.'
+        comment: Weekend bands labelled at the band foot, fill polygons split exactly
+          at crossings, legend ideal sample restyled to dashed to match the plot
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: prominent step line vs secondary dashed reference
-          line, scope change marker flags the key inflection event, weekend band explains
-          flat segments. Reader is guided to the key story points.'
+        comment: Subtitle tells the sprint outcome (40 committed, +8 added, 2 left
+          on the last day) beyond what the Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -148,32 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct burndown chart — step series for actual remaining work, straight
-          dashed reference line for ideal burndown.
+        comment: 'Sprint burndown: step actual vs straight ideal'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: step burndown line, ideal reference line,
-          weekend band shading, scope change marker+annotation, legend distinguishing
-          actual vs ideal, Y-axis from 0.'
+        comment: Step series, dashed muted ideal line 40→0, y from 0, weekend bands
+          aligned with flat segments, scope-change vertical line + annotation, legend,
+          red/green ahead/behind fill — every Notes and good-version bullet met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: sprint days (Start through Fri 12). Y: story points remaining
-          (0–48). Both series correctly mapped. Y-axis min=0, max=48 accommodates
-          scope change peak.'
+        comment: Marks at their day values; steps change at the day values; all data
+          in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'burndown-sprint · javascript · muix · anyplot.ai' matches
-          required format. Legend labels 'Actual Remaining' and 'Ideal Burndown' are
-          clear and accurate.
+        comment: Mandated title format; legend entries are readable labels
     data_quality:
       score: 15
       max: 15
@@ -183,25 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key burndown chart aspects: monotonic burndown, scope
-          creep event (jump at Thu 4), weekend gap, sprint ending with near-zero remaining.
-          Full feature coverage.'
+        comment: Shows flat weekend segments, a scope-add jump, behind-schedule fill
+          and work remaining at the end
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic 10-working-day sprint with 40 story points. Stakeholder-driven
-          +8 scope addition on Day 4 is a textbook burndown scenario. Neutral, professional
-          agile context.
+        comment: Two-week sprint in story points with dated days; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 story points over 10 days (4 pts/day) is a realistic team velocity.
-          Scope change of +8 (20% increase) is plausible. Final remaining of 2 pts
-          (near-complete sprint) is realistic.
+        comment: 40-point sprint, 2–7 points/day burn; ideal falls 4/day to 0 on the
+          final day (checked on axis); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -211,65 +201,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: WeekendBand is a required sub-component for hook usage (useXScale,
-          useDrawingArea must run inside the chart context) — not over-engineering.
-          Main Chart component is clean and linear.
+        comment: Constants → data → plot; the three small layer components are required
+          by MUI X's hook-based composition
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded as deterministic arrays. No random number generation.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart, ChartsReferenceLine, useXScale, useDrawingArea — all imports
-          used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic React/MUI X code. Appropriate complexity. No fake
-          interactivity or UI chrome.
+        comment: No native MUI X equivalent for the sign-split fill or weekend bands;
+          no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract. skipAnimation set. window.ANYPLOT_SIZE
-          used for dimensions. Harness handles plot-light.png/plot-dark.png output.
+        comment: Default-exported component, v9 composition API, skipAnimation; harness
+          writes PNG + HTML
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of MUI X: LineChart with series, sx prop for CSS-in-class
-          selectors (.MuiLineElement-*, .MuiAreaElement-*), slotProps.legend, ChartsReferenceLine,
-          useXScale/useDrawingArea hooks — all MUI X recommended patterns.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale and useDrawingArea hooks for WeekendBand custom SVG overlay
-          is distinctively MUI X — these chart-internal coordinate hooks cannot be
-          replicated in non-React charting libraries. ChartsReferenceLine is also
-          MUI X-specific.
+        comment: ChartsDataProvider/ChartsSurface composition, series-level curve/showMark/shape,
+          data-series CSS selectors
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useXScale/useYScale/useDrawingArea hooks for custom SVG layers, strictStepCurve,
+          legend mark restyling through slot classes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:32:11Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
+  - grid-styling
