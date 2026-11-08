@@ -2,247 +2,200 @@
 // sankey-basic: Basic Sankey Diagram
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 90/100 | Created: 2026-07-25
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
-const TITLE = "sankey-basic · javascript · muix · anyplot.ai";
-const MUTED = t.theme === "light" ? "#6B6A63" : "#A8A79F"; // Imprint muted anchor
 
-const FONT =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+// Constants
+const LOSS_SLOT = 4; // Imprint slot 5 (matte red) stays reserved for bad/loss roles
+const GAP_SHARE = 0.12; // vertical gap between stacked nodes as a share of the largest stage total
+const SWEEPS = 4; // barycentre passes that reorder nodes to reduce link crossings
+const NODE_WIDTH = 26; // px
+const LINK_ALPHA = 0.45;
 
-// --- Data: national energy flow, sources → carriers → end-use sectors (TWh) --
-// Deterministic, in-memory. No link has source === target, and the graph is a
-// strict left-to-right DAG (3 stages), so there are no circular flows. Wind
-// and Solar are combined into one "Renewables" source so the 4 source
-// categories stay within canonical palette positions 1-4 — position 5
-// (#AE3030) is the reserved bad/loss/error anchor, not a free ordinal slot.
-const NODES_RAW = [
-  { id: "coal", label: "Coal", col: 0, color: t.palette[0] },
-  { id: "gas", label: "Gas", col: 0, color: t.palette[1] },
-  { id: "nuclear", label: "Nuclear", col: 0, color: t.palette[2] },
-  { id: "renewables", label: "Renewables", col: 0, color: t.palette[3] },
-  { id: "electricity", label: "Electricity", col: 1, color: t.palette[5] },
-  { id: "heat", label: "Heat", col: 1, color: t.palette[6] },
-  { id: "residential", label: "Residential", col: 2, color: MUTED },
-  { id: "industrial", label: "Industrial", col: 2, color: MUTED },
-  { id: "commercial", label: "Commercial", col: 2, color: MUTED },
-  { id: "transport", label: "Transport", col: 2, color: MUTED },
+// Columns: set these to your data's column names
+const SOURCE = "Source"; // role: source
+const TARGET = "Target"; // role: target
+const VALUE = "Energy flow (TWh)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// National energy flow: primary sources to energy carriers to end-use sectors.
+const data = [
+  { [SOURCE]: "Coal", [TARGET]: "Electricity", [VALUE]: 42 },
+  { [SOURCE]: "Gas", [TARGET]: "Electricity", [VALUE]: 28 },
+  { [SOURCE]: "Gas", [TARGET]: "Heat", [VALUE]: 18 },
+  { [SOURCE]: "Nuclear", [TARGET]: "Electricity", [VALUE]: 22 },
+  { [SOURCE]: "Renewables", [TARGET]: "Electricity", [VALUE]: 24 },
+  { [SOURCE]: "Renewables", [TARGET]: "Heat", [VALUE]: 3 },
+  { [SOURCE]: "Electricity", [TARGET]: "Residential", [VALUE]: 34 },
+  { [SOURCE]: "Electricity", [TARGET]: "Industrial", [VALUE]: 40 },
+  { [SOURCE]: "Electricity", [TARGET]: "Commercial", [VALUE]: 30 },
+  { [SOURCE]: "Electricity", [TARGET]: "Transport", [VALUE]: 12 },
+  { [SOURCE]: "Heat", [TARGET]: "Residential", [VALUE]: 14 },
+  { [SOURCE]: "Heat", [TARGET]: "Industrial", [VALUE]: 7 },
 ];
 
-const LINKS_RAW = [
-  { source: "coal", target: "electricity", value: 42 },
-  { source: "gas", target: "electricity", value: 28 },
-  { source: "gas", target: "heat", value: 18 },
-  { source: "nuclear", target: "electricity", value: 22 },
-  { source: "renewables", target: "electricity", value: 24 }, // wind 15 + solar 9
-  { source: "renewables", target: "heat", value: 3 }, // solar 3
-  { source: "electricity", target: "residential", value: 34 },
-  { source: "electricity", target: "industrial", value: 40 },
-  { source: "electricity", target: "commercial", value: 30 },
-  { source: "electricity", target: "transport", value: 12 },
-  { source: "heat", target: "residential", value: 14 },
-  { source: "heat", target: "industrial", value: 7 },
-];
+// Plot: reads only data and the constants above
+// A flow from a node back to itself has no place in a sankey
+const links = data.filter((d) => d[SOURCE] !== d[TARGET]);
+const nodeNames = [...new Set(links.flatMap((d) => [d[SOURCE], d[TARGET]]))];
+const senders = new Set(links.map((d) => d[SOURCE]));
+const unit = VALUE.match(/\(([^)]+)\)/)?.[1] ?? "";
 
-const COL_HEADERS = ["PRIMARY SOURCES", "ENERGY CARRIERS", "END-USE SECTORS"];
-const COL_X = [170, 760, 1440]; // left edge of the node bar per column; left-most gives "Renewables" room to the left
-const NODE_W = 26;
-const GAP = 18; // vertical gap between stacked nodes in the same column
-const PLOT_TOP = 150;
-const PLOT_BOTTOM = 838;
-const PLOT_H = PLOT_BOTTOM - PLOT_TOP;
-const H = SIZE.height; // used to flip top-down pixel y into the chart's data y
-
-// --- Layout: node sizes, per-column vertical stacking, link attach points ----
-const nodes = NODES_RAW.map((n) => ({ ...n, out: [], in: [] }));
-const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
-for (const l of LINKS_RAW) {
-  byId[l.source].out.push(l);
-  byId[l.target].in.push(l);
+// Stage = longest path from a node without inflow; nodes that only receive go to the last stage
+const stageOf: Record<string, number> = Object.fromEntries(nodeNames.map((name) => [name, 0]));
+for (let pass = 0; pass < nodeNames.length; pass += 1) {
+  links.forEach((d) => {
+    stageOf[d[TARGET]] = Math.max(stageOf[d[TARGET]], stageOf[d[SOURCE]] + 1);
+  });
 }
-for (const n of nodes) {
-  const outSum = n.out.reduce((s, l) => s + l.value, 0);
-  const inSum = n.in.reduce((s, l) => s + l.value, 0);
-  n.value = Math.max(outSum, inSum);
-}
+const stageCount = Math.max(...Object.values(stageOf)) + 1;
+nodeNames.forEach((name) => {
+  if (!senders.has(name)) stageOf[name] = stageCount - 1;
+});
 
-const columns = [0, 1, 2].map((c) => nodes.filter((n) => n.col === c));
-
-// Reorder nodes within each column by the value-weighted average rank of
-// their linked counterparts (Sugiyama-style barycenter heuristic), sweeping
-// left-to-right then right-to-left until it converges. This keeps nodes with
-// shared flow paths adjacent, which cuts down ribbon crossings between
-// columns instead of relying on the arbitrary NODES_RAW order.
-const assignRanks = (col) => col.forEach((n, i) => (n.rank = i));
-const barycenter = (links, counterpartId) => {
-  const total = links.reduce((s, l) => s + l.value, 0);
-  if (!total) return null;
-  return links.reduce((s, l) => s + byId[counterpartId(l)].rank * l.value, 0) / total;
-};
-const reorder = (col, links, counterpartId) =>
-  col
-    .map((n, i) => ({ n, key: barycenter(links(n), counterpartId) ?? n.rank ?? i }))
-    .sort((a, b) => a.key - b.key)
-    .map((s) => s.n);
-
-assignRanks(columns[0]);
-for (let pass = 0; pass < 4; pass++) {
-  if (pass % 2 === 0) {
-    for (let c = 1; c < columns.length; c++) {
-      columns[c] = reorder(columns[c], (n) => n.in, (l) => l.source);
-      assignRanks(columns[c]);
-    }
-  } else {
-    for (let c = columns.length - 2; c >= 0; c--) {
-      columns[c] = reorder(columns[c], (n) => n.out, (l) => l.target);
-      assignRanks(columns[c]);
-    }
-  }
-}
-
-// One shared px/unit scale (from the tightest-fitting column) keeps a given
-// flow value the same thickness everywhere it appears in the diagram.
-const scale = Math.min(
-  ...columns.map((col) => {
-    const total = col.reduce((s, n) => s + n.value, 0);
-    return (PLOT_H - GAP * (col.length - 1)) / total;
-  }),
+const inflow: Record<string, number> = {};
+const outflow: Record<string, number> = {};
+links.forEach((d) => {
+  outflow[d[SOURCE]] = (outflow[d[SOURCE]] ?? 0) + d[VALUE];
+  inflow[d[TARGET]] = (inflow[d[TARGET]] ?? 0) + d[VALUE];
+});
+const nodeValue = Object.fromEntries(
+  nodeNames.map((name) => [name, Math.max(inflow[name] ?? 0, outflow[name] ?? 0)]),
 );
 
-for (const col of columns) {
-  const stackH = col.reduce((s, n) => s + n.value * scale, 0) + GAP * (col.length - 1);
-  let cursor = PLOT_TOP + (PLOT_H - stackH) / 2;
-  for (const n of col) {
-    n.x0 = COL_X[n.col];
-    n.x1 = n.x0 + NODE_W;
-    n.y0 = cursor; // top edge, top-down px
-    n.h = n.value * scale;
-    n.y1 = n.y0 + n.h; // bottom edge, top-down px
-    cursor = n.y1 + GAP;
-  }
+// Every sending node gets the next Imprint hue in its order of appearance in the source column;
+// its links carry it. Nodes that only receive stay neutral.
+const senderNames = [...senders];
+const sourcePalette = t.palette.filter((_, i) => i !== LOSS_SLOT);
+const nodeColor = Object.fromEntries(
+  nodeNames.map((name) => [name, senders.has(name) ? sourcePalette[senderNames.indexOf(name)] : t.inkSoft]),
+);
+
+// Order within each stage: barycentre sweeps, forward by sources, backward by targets
+const stages = Array.from({ length: stageCount }, (_, s) => nodeNames.filter((name) => stageOf[name] === s));
+const rank: Record<string, number> = {};
+stages.forEach((col) => col.forEach((name, i) => (rank[name] = i)));
+for (let pass = 0; pass < SWEEPS; pass += 1) {
+  const forward = pass % 2 === 0;
+  const stageOrder = forward
+    ? stages.map((_, s) => s).slice(1)
+    : stages.map((_, s) => s).reverse().slice(1);
+  stageOrder.forEach((s) => {
+    stages[s] = stages[s]
+      .map((name) => {
+        const attached = links.filter((d) => (forward ? d[TARGET] : d[SOURCE]) === name);
+        const weight = attached.reduce((sum, d) => sum + d[VALUE], 0);
+        const centre = attached.reduce((sum, d) => sum + rank[forward ? d[SOURCE] : d[TARGET]] * d[VALUE], 0) / weight;
+        return { name, centre };
+      })
+      .sort((a, b) => a.centre - b.centre)
+      .map((entry) => entry.name);
+    stages[s].forEach((name, i) => (rank[name] = i));
+  });
 }
 
-// Stack each node's links along its edge, ordered by the counterpart's
-// position, so ribbons fan out with minimal crossing near the node.
-for (const n of nodes) {
-  n.out.sort((a, b) => byId[a.target].y0 - byId[b.target].y0);
-  let oc = n.y0;
-  for (const l of n.out) {
-    l.sy0 = oc;
-    l.sy1 = oc + l.value * scale;
-    l.sx = n.x1;
-    oc = l.sy1;
-  }
-  n.in.sort((a, b) => byId[a.source].y0 - byId[b.source].y0);
-  let ic = n.y0;
-  for (const l of n.in) {
-    l.ty0 = ic;
-    l.ty1 = ic + l.value * scale;
-    l.tx = n.x0;
-    ic = l.ty1;
-  }
-}
+// Vertical layout in value units: one scale for every link and bar, each stage centred
+const stageSums = stages.map((col) => col.reduce((sum, name) => sum + nodeValue[name], 0));
+const gapUnits = Math.max(...stageSums) * GAP_SHARE;
+const stageHeights = stages.map((col, s) => stageSums[s] + gapUnits * (col.length - 1));
+const layoutHeight = Math.max(...stageHeights);
+const nodeTop: Record<string, number> = {};
+stages.forEach((col, s) => {
+  let cursor = (layoutHeight - stageHeights[s]) / 2;
+  col.forEach((name) => {
+    nodeTop[name] = cursor;
+    cursor += nodeValue[name] + gapUnits;
+  });
+});
 
-const fmt = (v) => `${v} TWh`;
+// Each node stacks its links along its edge in the order of the nodes at their other end
+const linkSourceTop = new Map();
+const linkTargetTop = new Map();
+nodeNames.forEach((name) => {
+  let outCursor = nodeTop[name];
+  links
+    .filter((d) => d[SOURCE] === name)
+    .sort((a, b) => nodeTop[a[TARGET]] - nodeTop[b[TARGET]])
+    .forEach((d) => {
+      linkSourceTop.set(d, outCursor);
+      outCursor += d[VALUE];
+    });
+  let inCursor = nodeTop[name];
+  links
+    .filter((d) => d[TARGET] === name)
+    .sort((a, b) => nodeTop[a[SOURCE]] - nodeTop[b[SOURCE]])
+    .forEach((d) => {
+      linkTargetTop.set(d, inCursor);
+      inCursor += d[VALUE];
+    });
+});
 
-function ribbonPath(xs, ys, l) {
-  const cx = (l.sx + l.tx) / 2;
-  const P = (x, yPix) => `${xs(x).toFixed(1)} ${ys(H - yPix).toFixed(1)}`;
-  const C = (yPix) => `${xs(cx).toFixed(1)} ${ys(H - yPix).toFixed(1)}`;
-  return (
-    `M ${P(l.sx, l.sy0)} ` +
-    `C ${C(l.sy0)}, ${C(l.ty0)}, ${P(l.tx, l.ty0)} ` +
-    `L ${P(l.tx, l.ty1)} ` +
-    `C ${C(l.ty1)}, ${C(l.sy1)}, ${P(l.sx, l.sy1)} Z`
+const TITLE = "sankey-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `Link width and bar height proportional to ${VALUE} · ${links.length} flows across ${stageCount} stages`;
+const HEADER_HEIGHT = 84;
+
+function SankeyLayer() {
+  const area = useDrawingArea();
+  const pxPerUnit = area.height / layoutHeight;
+  const stageStep = (area.width - NODE_WIDTH) / Math.max(1, stageCount - 1);
+  const nodeX: Record<string, number> = Object.fromEntries(
+    nodeNames.map((name) => [name, area.left + stageOf[name] * stageStep]),
   );
-}
-
-// --- Overlay layers -----------------------------------------------------------
-function Links() {
-  const xs = useXScale();
-  const ys = useYScale();
+  const toY = (units: number) => area.top + units * pxPerUnit;
   return (
     <g>
-      {LINKS_RAW.map((l, k) => (
-        <path key={k} d={ribbonPath(xs, ys, l)} fill={byId[l.source].color} fillOpacity={0.42}>
-          <title>{`${byId[l.source].label} → ${byId[l.target].label}: ${fmt(l.value)}`}</title>
-        </path>
-      ))}
-    </g>
-  );
-}
-
-function Nodes() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g>
-      {nodes.map((n) => (
+      {links.map((d) => {
+        const sx = nodeX[d[SOURCE]] + NODE_WIDTH;
+        const tx = nodeX[d[TARGET]];
+        const mx = (sx + tx) / 2;
+        const sy0 = toY(linkSourceTop.get(d));
+        const sy1 = toY(linkSourceTop.get(d) + d[VALUE]);
+        const ty0 = toY(linkTargetTop.get(d));
+        const ty1 = toY(linkTargetTop.get(d) + d[VALUE]);
+        return (
+          <path
+            key={`link-${d[SOURCE]}-${d[TARGET]}`}
+            d={`M ${sx} ${sy0} C ${mx} ${sy0}, ${mx} ${ty0}, ${tx} ${ty0} L ${tx} ${ty1} C ${mx} ${ty1}, ${mx} ${sy1}, ${sx} ${sy1} Z`}
+            fill={nodeColor[d[SOURCE]]}
+            fillOpacity={LINK_ALPHA}
+          >
+            <title>{`${d[SOURCE]} → ${d[TARGET]}: ${d[VALUE]} ${unit}`}</title>
+          </path>
+        );
+      })}
+      {nodeNames.map((name) => (
         <rect
-          key={n.id}
-          x={xs(n.x0).toFixed(1)}
-          y={ys(H - n.y0).toFixed(1)}
-          width={(xs(n.x1) - xs(n.x0)).toFixed(1)}
-          height={(ys(H - n.y1) - ys(H - n.y0)).toFixed(1)}
-          fill={n.color}
+          key={`node-${name}`}
+          x={nodeX[name]}
+          y={toY(nodeTop[name])}
+          width={NODE_WIDTH}
+          height={nodeValue[name] * pxPerUnit}
           rx={3}
+          fill={nodeColor[name]}
         >
-          <title>{`${n.label}: ${fmt(n.value)}`}</title>
+          <title>{`${name}: ${nodeValue[name]} ${unit}`}</title>
         </rect>
       ))}
-    </g>
-  );
-}
-
-function Labels() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      {COL_HEADERS.map((label, c) => (
-        <text
-          key={label}
-          x={xs(COL_X[c] + NODE_W / 2)}
-          y={ys(H - (PLOT_TOP - 26))}
-          textAnchor="middle"
-          fontSize={13}
-          fontWeight={600}
-          letterSpacing={1}
-          fill={t.inkSoft}
-        >
-          {label}
-        </text>
-      ))}
-      {nodes.map((n) => {
-        const cy = ys(H - (n.y0 + n.h / 2));
-        const anchor = n.col === 0 ? "end" : n.col === 2 ? "start" : "middle";
-        const lx = n.col === 0 ? xs(n.x0) - 12 : n.col === 2 ? xs(n.x1) + 12 : xs((n.x0 + n.x1) / 2);
-        const midAbove = n.col === 1;
+      {nodeNames.map((name) => {
+        const stage = stageOf[name];
+        const top = toY(nodeTop[name]);
+        const middle = top + (nodeValue[name] * pxPerUnit) / 2;
+        // First stage labels sit left of the bar, last stage right, middle stages above it
+        const side = stage === 0 ? "left" : stage === stageCount - 1 ? "right" : "above";
+        const x =
+          side === "left" ? nodeX[name] - 12 : side === "right" ? nodeX[name] + NODE_WIDTH + 12 : nodeX[name] + NODE_WIDTH / 2;
+        const anchor = side === "left" ? "end" : side === "right" ? "start" : "middle";
+        const nameY = side === "above" ? top - 34 : middle - 10;
         return (
-          <g key={n.id}>
-            <text
-              x={lx}
-              y={midAbove ? ys(H - n.y0) - 22 : cy - 6}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fontSize={16}
-              fontWeight={600}
-              fill={t.ink}
-            >
-              {n.label}
+          <g key={`label-${name}`} stroke={t.pageBg} strokeWidth={4} paintOrder="stroke" strokeLinejoin="round">
+            <text x={x} y={nameY} textAnchor={anchor} dominantBaseline="central" fontSize={16} fontWeight={600} fill={t.ink}>
+              {name}
             </text>
-            <text
-              x={lx}
-              y={midAbove ? ys(H - n.y0) - 4 : cy + 14}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fontSize={13}
-              fill={t.inkSoft}
-            >
-              {fmt(n.value)}
+            <text x={x} y={nameY + 20} textAnchor={anchor} dominantBaseline="central" fontSize={14} fill={t.inkSoft}>
+              {`${nodeValue[name]} ${unit}`}
             </text>
           </g>
         );
@@ -251,40 +204,34 @@ function Labels() {
   );
 }
 
-function Frame() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      <text x={xs(SIZE.width / 2)} y={ys(H - 46)} textAnchor="middle" fontSize={27} fontWeight={600} fill={t.ink}>
-        {TITLE}
-      </text>
-      <text x={xs(SIZE.width / 2)} y={ys(H - 78)} textAnchor="middle" fontSize={16} fill={t.inkSoft}>
-        National energy flow: primary sources → carriers → end-use sectors
-      </text>
-      <text x={xs(SIZE.width / 2)} y={ys(H - 872)} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
-        Link width and node height ∝ flow value (TWh/yr)
-      </text>
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
-      width={SIZE.width}
-      height={SIZE.height}
-      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      series={[]}
-      xAxis={[{ id: "x", scaleType: "linear", min: 0, max: SIZE.width }]}
-      yAxis={[{ id: "y", scaleType: "linear", min: 0, max: SIZE.height }]}
-      skipAnimation
-    >
-      <Links />
-      <Nodes />
-      <Labels />
-      <Frame />
-    </ChartContainer>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - HEADER_HEIGHT}
+        series={[]}
+        xAxis={[{ position: "none" }]}
+        yAxis={[{ position: "none" }]}
+        margin={{ top: 56, right: 150, bottom: 32, left: 150 }}
+        skipAnimation
+      >
+        <SankeyLayer />
+      </ChartsContainer>
+    </div>
   );
 }
