@@ -86,18 +86,24 @@ function DayRow() {
     <g>
       {days.map((day) => (
         <g key={day.start}>
-          {day.start > tMin && (
-            <line
-              x1={xScale(new Date(day.start))}
-              x2={xScale(new Date(day.start))}
-              y1={top}
-              y2={bottom + 62}
-              stroke={t.inkSoft}
-              strokeOpacity={0.5}
-              strokeWidth={1}
-              strokeDasharray="3 3"
-            />
-          )}
+          {/* The separator breaks at the tick row so it never crosses the "00:00" labels */}
+          {day.start > tMin &&
+            [
+              [top, bottom],
+              [bottom + 34, bottom + 62],
+            ].map(([y1, y2]) => (
+              <line
+                key={y1}
+                x1={xScale(new Date(day.start))}
+                x2={xScale(new Date(day.start))}
+                y1={y1}
+                y2={y2}
+                stroke={t.inkSoft}
+                strokeOpacity={0.5}
+                strokeWidth={1}
+                strokeDasharray="3 3"
+              />
+            ))}
           <text
             x={(xScale(new Date(day.start)) + xScale(new Date(day.end))) / 2}
             y={bottom + 54}
