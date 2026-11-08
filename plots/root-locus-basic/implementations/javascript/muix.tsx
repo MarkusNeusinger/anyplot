@@ -1,7 +1,7 @@
 // anyplot.ai
 // root-locus-basic: Root Locus Plot for Control Systems
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-18
+// Quality: pending | Created: 2026-06-18
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
