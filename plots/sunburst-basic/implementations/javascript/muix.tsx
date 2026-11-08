@@ -1,7 +1,7 @@
 // anyplot.ai
 // sunburst-basic: Basic Sunburst Chart
 // Library: muix 9.17.0 | JavaScript 22.23.1
-// Quality: 91/100 | Created: 2026-07-26
+// Quality: pending | Created: 2026-07-26
 //# anyplot-orientation: square
 import { PieChart } from "@mui/x-charts/PieChart";
 import Box from "@mui/material/Box";
