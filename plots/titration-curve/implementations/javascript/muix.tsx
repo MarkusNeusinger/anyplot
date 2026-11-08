@@ -1,7 +1,7 @@
 // anyplot.ai
 // titration-curve: Acid-Base Titration Curve
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-24
+// Quality: pending | Created: 2026-06-24
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
