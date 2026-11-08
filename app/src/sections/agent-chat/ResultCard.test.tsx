@@ -829,6 +829,96 @@ describe('ResultCard', () => {
     // The version's status stands in the theme row, beside the run's line.
     expect(screen.getByTestId('result-status')).toHaveTextContent('needs attention');
     expect(screen.queryByText(/\.expand\(\)|\.collapse\(\)/)).not.toBeInTheDocument();
+    // A version whose memory the server did not name: no kept label, no kept line.
+    expect(screen.queryByTestId('result-decisions')).not.toBeInTheDocument();
+  });
+
+  describe('the decisions it kept and added', () => {
+    const LONG = 'horizontal reference line at y = 7, dashed, in the colour of the first series';
+    const decided = (kept: (string | null)[], added: (string | null)[]) =>
+      makeVersion({
+        decisions: {
+          kept: kept.map((text, index) => ({ id: `m${index + 1}`, text })),
+          added: added.map((text, index) => ({ id: `m${index + 10}`, text })),
+        },
+      });
+    const phone = () =>
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({
+          matches: query === '(max-width: 599.95px)',
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          onchange: null,
+          dispatchEvent: vi.fn(),
+        }))
+      );
+
+    it('keeps the request in its label and names what it kept and added on its first line, each cut, in full for a screen reader', () => {
+      renderCard({
+        version: decided([LONG, 'x label "Monat"', 'title in German'], ['log scale on y']),
+        summary: 'log scale on y please',
+      });
+      const label = screen.getByRole('button', {
+        name: 'Plot v2, matplotlib, log scale on y please',
+      });
+      expect(label).toHaveTextContent(/^plot v2 · matplotlib · log scale on y please$/);
+      const line = screen.getByTestId('result-decisions');
+      expect(line.firstElementChild).toHaveTextContent(
+        'kept: horizontal reference line at y = 7, das… · x label "Monat" · title in German · new: log scale on y'
+      );
+      expect(line.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+      expect(line).toHaveTextContent(
+        `kept: ${LONG}, x label "Monat", title in German; new: log scale on y`
+      );
+      // The card's first line, above the image.
+      expect(
+        line.compareDocumentPosition(screen.getByTestId('result-image-box')) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it('shows no line for two empty lists, and never kept 0', () => {
+      renderCard({ version: decided([], []), summary: 'title in German' });
+      expect(screen.getByTestId('result-label')).toHaveTextContent(
+        /^plot v2 · matplotlib · title in German$/
+      );
+      expect(screen.queryByTestId('result-decisions')).not.toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent('kept 0');
+    });
+
+    it('counts a decision whose text no list named, and says how many more', () => {
+      renderCard({ version: decided(['title in German', null], [null]) });
+      expect(screen.getByTestId('result-label')).not.toHaveTextContent('kept');
+      expect(screen.getByTestId('result-decisions').firstElementChild).toHaveTextContent(
+        'kept: title in German · 1 more · new: 1 decision'
+      );
+    });
+
+    it('shows the same line on a phone, under the image and above its action line', () => {
+      phone();
+      renderCard({ version: decided(['title in German'], ['log scale on y']) });
+      const line = screen.getByTestId('result-decisions');
+      expect(line.firstElementChild).toHaveTextContent(
+        /^kept: title in German · new: log scale on y$/
+      );
+      const image = screen.getByTestId('result-image-box');
+      const actions = screen.getByTestId('result-image-actions');
+      expect(image.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(line.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(screen.getByTestId('result-label')).not.toHaveTextContent('kept');
+    });
+
+    it('shows what a version only kept on a phone too', () => {
+      phone();
+      renderCard({ version: decided(['title in German'], []) });
+      expect(screen.getByTestId('result-decisions').firstElementChild).toHaveTextContent(
+        /^kept: title in German$/
+      );
+    });
   });
 
   it('has no feedback control without onSendFeedback', () => {

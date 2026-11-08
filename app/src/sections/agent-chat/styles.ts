@@ -228,6 +228,57 @@ export const cardFrameSx = {
  */
 export const MASTHEAD_CLEARANCE = 56;
 
+/** How long a jump's target keeps its highlight, in ms (the v4 mock's flash, `jumpTargetSx`). */
+export const JUMP_MS = 1600;
+
+/**
+ * A place a jump lands on (a chapter's count of its questions, `ChapterLine.tsx`): while it holds
+ * `data-jump`, a ring and a tint in the brand green show where the focus went, fading in and out
+ * (the v4 mock's `.jump` and `.hl`), at once under `prefers-reduced-motion`, where the highlight
+ * still shows. The ring is a line, never text, so it needs no darker green. A keyboard focus keeps
+ * its own ring; a click's focus shows the highlight alone.
+ */
+export const jumpTargetSx = {
+  transition: 'box-shadow 0.3s, background-color 0.3s',
+  '&[data-jump]': {
+    boxShadow: `0 0 0 2px ${colors.primary}`,
+    bgcolor: 'rgba(0, 158, 115, 0.1)',
+  },
+  '&:focus': { outline: 'none' },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 3 },
+  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+} as const;
+
+/**
+ * A control in a chapter's line (`ChapterLine.tsx`): its count of questions and the remembered
+ * decisions' `N decisions ▾`, underlined words in the line's own size, as the v4 mock draws them;
+ * a 32 px target at phone width, 24 px from `sm` up. The negative margin keeps the target out of
+ * the line's height, into the thread's gaps above and below it, so a line keeps its height when its
+ * first count comes and nothing below it moves. 32 px, not the cards' 44: a line that wraps on a
+ * phone keeps its rows 12 px apart (`CHAPTER_ROW_GAP`), so two rows' targets meet and never overlap.
+ */
+export const chapterControlSx = {
+  font: 'inherit',
+  letterSpacing: 'inherit',
+  color: 'inherit',
+  bgcolor: 'transparent',
+  border: 'none',
+  borderRadius: '4px',
+  p: 0,
+  px: 0.25,
+  minHeight: { xs: 32, sm: 24 },
+  my: { xs: -0.75, sm: -0.25 },
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  textUnderlineOffset: '3px',
+  whiteSpace: 'nowrap',
+  '&:hover': { color: colors.primary },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
+} as const;
+
+/** The gap between the rows of a chapter's line that wraps (a phone), in theme spacing units. */
+export const CHAPTER_ROW_GAP = 1.5;
+
 /** Read by screen readers, invisible on screen. */
 export const visuallyHiddenSx = {
   position: 'absolute',

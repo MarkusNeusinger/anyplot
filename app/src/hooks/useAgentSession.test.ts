@@ -3290,6 +3290,169 @@ describe('useAgentSession: what a typed turn changed', () => {
     await waitFor(() => expect(result.current.state.memory?.entries).toEqual([decision]));
     expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
   });
+
+  it.each(['answer', 'data', 'plot', 'switch', 'language', 'kept', 'memory'])(
+    "takes the server's word %s for a turn whose stream showed no change",
+    async outcome => {
+      const { result } = await turns(() => [
+        ['message', { text: 'Done.' }],
+        ['done', { turn: outcome }],
+      ]);
+      await act(() => result.current.sendMessage('anything'));
+      expect(lastUser(result.current.state.items)).toMatchObject({ outcome });
+    }
+  );
+
+  it.each<[string, [string, unknown][], string]>([
+    ['a plot', [['plot', PLOT_OK]], 'plot'],
+    ['a plot that failed', [['plot', { ...PLOT_OK, status: 'failed', version: null }]], 'plot'],
+    ['a data version', [], 'data'],
+    ['a switch', [], 'switch'],
+    ['a chosen language', [], 'language'],
+  ])(
+    "reads a server's answer whose stream showed %s as that change: nothing changed must hold by both",
+    async (shown, events, outcome) => {
+      const done = {
+        turn: 'answer',
+        ...(shown === 'a data version'
+          ? { dataset: PREPARED, bindings: PREPARED.bindings, data_confirmed: false }
+          : {}),
+        ...(shown === 'a switch' ? { switch: { library: 'seaborn', plot: false } } : {}),
+        ...(shown === 'a chosen language'
+          ? { language: { language: 'de', source: 'chosen' } }
+          : {}),
+      };
+      const { result } = await turns(() => [...events, ['done', done]]);
+      await act(() => result.current.sendMessage('anything'));
+      expect(lastUser(result.current.state.items)).toMatchObject({ outcome });
+      expect(result.current.state.memoryTurn).toBeNull();
+    }
+  );
+
+  it("reads a server's word it does not know as the stream's change, or marks nothing", async () => {
+    let events: [string, unknown][] = [
+      ['plot', PLOT_OK],
+      ['done', { turn: 'restyled' }],
+    ];
+    const { result } = await turns(() => events);
+    await act(() => result.current.sendMessage('restyle it'));
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'plot' });
+
+    // Nothing in the stream: no question, no chapter, and no memory read waited for.
+    events = [
+      ['message', { text: 'Restyled.' }],
+      ['done', { turn: 'restyled' }],
+    ];
+    await act(() => result.current.sendMessage('restyle it again'));
+    expect(lastUser(result.current.state.items)).not.toHaveProperty('outcome');
+    expect(result.current.state.memoryTurn).toBeNull();
+  });
+
+  it("moves a server's answer by the memory read after it, which found the list changed", async () => {
+    const kept = {
+      id: 'm4',
+      kind: 'title',
+      target: null,
+      text: 'title: Sales',
+      expect: null,
+      turn: 1,
+    };
+    let entries: (typeof kept)[] = [];
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'Sure.' }],
+        ['done', { turn: 'answer' }],
+      ]);
+    routes['GET /sessions/S1/memory'] = () =>
+      json(200, { entries, max_entries: 30, written: entries.length > 0 });
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('what is on x?'));
+    await waitFor(() => expect(result.current.state.memory).not.toBeNull());
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
+    // Another window kept a decision meanwhile, or the server's word missed one: the read vetoes.
+    entries = [kept];
+    await act(() => result.current.sendMessage('a title, ok?'));
+    await waitFor(() => expect(result.current.state.memory?.entries).toEqual([kept]));
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'kept' });
+  });
+
+  it("ends a question's wait for its memory read once the read failed, and keeps its mark", async () => {
+    const read = deferred<Response>();
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'x is the hours.' }],
+        ['done', { turn: 'answer' }],
+      ]);
+    routes['GET /sessions/S1/memory'] = () => read.promise;
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('what is on x?'));
+    const asked = lastUser(result.current.state.items)!;
+    expect(asked).toMatchObject({ outcome: 'answer' });
+    expect(result.current.state.memoryTurn).toBe(asked.id);
+    await act(async () => {
+      read.resolve(json(503, { detail: 'unavailable', ref: 'r-m' }));
+    });
+    await waitFor(() => expect(result.current.state.memoryTurn).toBeNull());
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
+  });
+
+  it("ends a question's wait when a newer memory read overtook its own and failed", async () => {
+    const own = deferred<Response>();
+    let reads = 0;
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'x is the hours.' }],
+        ['done', { turn: 'answer' }],
+      ]);
+    // The question's own read waits; the switch's read after it fails.
+    routes['GET /sessions/S1/memory'] = () => {
+      reads += 1;
+      return reads === 1 ? own.promise : json(503, { detail: 'unavailable', ref: 'r-m' });
+    };
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('what is on x?'));
+    expect(result.current.state.memoryTurn).not.toBeNull();
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(reads).toBe(2));
+    await waitFor(() => expect(result.current.state.memoryTurn).toBeNull());
+    // The question's own answer lands late and speaks for nobody: it was overtaken.
+    await act(async () => {
+      own.resolve(json(200, { entries: [], max_entries: 30, written: false }));
+    });
+    expect(result.current.state.memory).toBeNull();
+    expect(lastUser(result.current.state.items)).toMatchObject({ outcome: 'answer' });
+  });
+
+  it('marks the note sent with a paste, whatever it changed, and never a forwarded text', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: '2 rows; hours is a number.' }],
+        ['done', { turn: 'answer' }],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() =>
+      result.current.parseData('a,b\n1,2\n', false, undefined, undefined, { note: 'is b a share?' })
+    );
+    expect(lastUser(result.current.state.items)).toMatchObject({
+      text: 'is b a share?',
+      outcome: 'answer',
+      note: true,
+    });
+
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
+    await act(() => result.current.parseData('y = sin(x) from -pi to pi'));
+    expect(lastUser(result.current.state.items)).toMatchObject({
+      text: 'y = sin(x) from -pi to pi',
+      outcome: 'answer',
+    });
+    expect(lastUser(result.current.state.items)).not.toHaveProperty('note');
+  });
 });
 
 describe('agentReducer: the memory read after a turn', () => {
@@ -3380,6 +3543,100 @@ describe('agentReducer: the memory read after a turn', () => {
     const stopped = ended(question, { kind: 'user', text: 'and y?' });
     expect(stopped.memoryTurn).toBeNull();
     expect(outcomes(stopped)).toEqual(['answer', undefined]);
+  });
+
+  it('ends the wait when the read brings no list, and keeps the mark', () => {
+    const question = asked(ready, 'what is on x?');
+    expect(question.memoryTurn).toBe(1);
+    const unread = agentReducer(question, { type: 'memory_unread' });
+    expect(unread.memoryTurn).toBeNull();
+    expect(outcomes(unread)).toEqual(['answer']);
+    expect(agentReducer(unread, { type: 'memory_unread' })).toBe(unread);
+  });
+});
+
+describe("agentReducer: a version's remembered decisions", () => {
+  const entry = (id: string, text: string) => ({
+    id,
+    kind: 'other',
+    target: null,
+    text,
+    expect: null,
+    turn: 1,
+  });
+  const list = (...entries: ReturnType<typeof entry>[]) => ({
+    entries,
+    max_entries: 30,
+    written: true,
+  });
+  const LINE = entry('m1', 'reference line at y = 7');
+  const TITLE = entry('m2', 'title in German');
+  const LOG = entry('m3', 'log scale on y');
+  const version = (number: number, memory?: { kept: string[]; added: string[] }) => ({
+    number,
+    library: 'seaborn',
+    result: { ...(PLOT_OK as PlotResult), version: number, ...(memory ? { memory } : {}) },
+    theme: 'light' as const,
+    images: {},
+    code: { state: 'loading' as const },
+  });
+  const start = (memory: ReturnType<typeof list> | null): AgentSessionState => ({
+    ...initialAgentState('seaborn'),
+    phase: 'ready',
+    sessionId: 'S1',
+    memory,
+  });
+  const decisionsOf = (state: AgentSessionState, number: number) =>
+    state.versions[number].decisions;
+
+  it('takes the kept texts from the list it arrives on and the added ones from the read after its turn', () => {
+    const added = agentReducer(start(list(LINE, TITLE)), {
+      type: 'version_add',
+      version: version(4, { kept: ['m1', 'm2'], added: ['m3'] }),
+    });
+    expect(decisionsOf(added, 4)).toEqual({
+      kept: [
+        { id: 'm1', text: LINE.text },
+        { id: 'm2', text: TITLE.text },
+      ],
+      added: [{ id: 'm3', text: null }],
+    });
+    const read = agentReducer(added, {
+      type: 'memory_sync',
+      memory: list(LINE, TITLE, LOG),
+      afterTurn: true,
+    });
+    expect(decisionsOf(read, 4)?.added).toEqual([{ id: 'm3', text: LOG.text }]);
+    // A later `.forget()` takes nothing from the card it was on.
+    const forgot = agentReducer(read, { type: 'memory_sync', memory: list(TITLE, LOG) });
+    expect(decisionsOf(forgot, 4)).toEqual(decisionsOf(read, 4));
+    expect(forgot.versions[4]).toBe(read.versions[4]);
+  });
+
+  it('keeps a text unknown while no list names it, counts it all the same, and fills it from a later list', () => {
+    const added = agentReducer(start(null), {
+      type: 'version_add',
+      version: version(2, { kept: ['m1'], added: [] }),
+    });
+    expect(decisionsOf(added, 2)?.kept).toEqual([{ id: 'm1', text: null }]);
+    // The read after the turn failed: nothing to fill.
+    const unread = agentReducer(added, { type: 'memory_unread' });
+    expect(decisionsOf(unread, 2)?.kept).toEqual([{ id: 'm1', text: null }]);
+    const later = agentReducer(unread, { type: 'memory_sync', memory: list(LINE) });
+    expect(decisionsOf(later, 2)?.kept).toEqual([{ id: 'm1', text: LINE.text }]);
+  });
+
+  it('gives a version without the field no decisions, and two empty lists two empty lists', () => {
+    const without = agentReducer(start(list(LINE)), { type: 'version_add', version: version(1) });
+    expect(without.versions[1]).not.toHaveProperty('decisions');
+    const empty = agentReducer(without, {
+      type: 'version_add',
+      version: version(2, { kept: [], added: [] }),
+    });
+    expect(decisionsOf(empty, 2)).toEqual({ kept: [], added: [] });
+    // A later list leaves both as they are.
+    const read = agentReducer(empty, { type: 'memory_sync', memory: list(LINE), afterTurn: true });
+    expect(read.versions).toBe(empty.versions);
   });
 });
 
@@ -4766,6 +5023,37 @@ describe('useAgentSession: a cut stream', () => {
     expect(result.current.state.items.filter(item => item.kind === 'user')).toMatchObject([
       { text: 'plot it with a log scale', outcome: 'plot' },
       { text: 'what is on x?', outcome: 'answer' },
+    ]);
+  });
+
+  it("checks a cut turn's late word against what its stream showed before the cut", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      numberedSse([...TURN_START, TURN_REST[0]], { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.sendMessage('plot it with a log scale'));
+
+    // The late `done` says `answer`, yet its plot came before the cut: the turn changed the plot.
+    routes['GET /sessions/S1/turn'] = () =>
+      numberedSse(
+        [
+          ['message', { text: 'Here is your plot.' }],
+          ['done', { turn: 'answer' }],
+        ],
+        { from: 5 }
+      );
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'Kept for the first plot.' }],
+        ['done', { turn: 'kept' }],
+      ]);
+    await act(() => result.current.sendMessage('and a German title'));
+    expect(result.current.state.items.filter(item => item.kind === 'user')).toMatchObject([
+      { text: 'plot it with a log scale', outcome: 'plot' },
+      { text: 'and a German title', outcome: 'kept' },
     ]);
   });
 

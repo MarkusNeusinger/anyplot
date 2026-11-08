@@ -136,6 +136,24 @@ const EXPIRING = 'are you still there?';
 let missingY: boolean;
 /** The plots the session made so far: each plot turn ships the next version. */
 let plots: number;
+/** The question whose turn changed nothing: its `done` says `answer`. */
+const QUESTION = 'what is on x?';
+/** The plot memory's entries: a typed change that ships adds one, the version names them. */
+let memory: { id: string; kind: string; target: null; text: string; expect: null; turn: number }[];
+/** The memory has no room left (`State.full`). */
+let full: boolean;
+/** Two decisions remembered before the session's first plot here (another library's, say). */
+const DECIDED = [
+  {
+    id: 'm1',
+    kind: 'reference_line',
+    target: null,
+    text: 'reference line at y = 7',
+    expect: null,
+    turn: 1,
+  },
+  { id: 'm2', kind: 'title', target: null, text: 'title in German', expect: null, turn: 1 },
+];
 
 /**
  * One BFF for both lanes. A session route of the admin lane (`/debug/agent/sessions/S1/<rest>`)
@@ -199,6 +217,13 @@ function stubFetch() {
         const missing = ['x', 'y'].filter(role => !bindings.some(bound => bound.role === role));
         return json(200, { bindings, complete: missing.length === 0, missing_roles: missing });
       }
+      if (sub === '/memory' && method === 'GET') {
+        return json(200, {
+          entries: memory,
+          max_entries: full ? memory.length : 30,
+          written: memory.length > 0,
+        });
+      }
       if (sub === '/dataset/confirm') return json(200, { confirmed: true, rows: 2, columns: 2 });
       if (sub === '/dataset/undo' && method === 'POST') return json(200, DATASET);
       // The library menu's switch: the plot there may take the two decisions along.
@@ -233,11 +258,33 @@ function stubFetch() {
             ],
           ]);
         }
+        if (body.text === QUESTION) {
+          return sse([
+            ['message', { text: 'The hours.' }],
+            ['done', { llm_calls: 1, data_confirmed: true, turn: 'answer' }],
+          ]);
+        }
         plots += 1;
+        // The version names what it kept from the memory and what its request added to it.
+        const kept = memory.map(entry => entry.id);
+        if (body.text) {
+          memory = [
+            ...memory,
+            {
+              id: `m${memory.length + 10}`,
+              kind: 'other',
+              target: null,
+              text: body.text,
+              expect: null,
+              turn: 3,
+            },
+          ];
+        }
+        const added = memory.map(entry => entry.id).filter(id => !kept.includes(id));
         return sse([
-          ['plot', { ...PLOT, version: plots }],
+          ['plot', { ...PLOT, version: plots, memory: { kept, added } }],
           ['message', { text: plots === 1 ? 'Here is your plot.' : `Plot ${plots}.` }],
-          ['done', { llm_calls: 2, data_confirmed: true }],
+          ['done', { llm_calls: 2, data_confirmed: true, turn: 'plot' }],
         ]);
       }
       if (sub === '/outcome') return new Response(null, { status: 204 });
@@ -307,6 +354,10 @@ interface State {
   door?: boolean;
   /** The service's day budget is spent. */
   paused?: boolean;
+  /** The plot memory holds two decisions from the start (`DECIDED`); empty unless said. */
+  decided?: boolean;
+  /** The memory has no room left: its cap is the entries it holds. */
+  full?: boolean;
   /** The admins compared with the visitor; both unless said. */
   compare?: readonly Exclude<Who, 'visitor'>[];
 }
@@ -453,6 +504,57 @@ const STATES: Record<string, State> = {
       fireEvent.click(seaborn);
       expect(await screen.findByTestId('switch-line')).toHaveTextContent(
         '· plotting in seaborn from here, 2 decisions kept'
+      );
+    },
+  },
+  // A question after the plot: its `?` mark, its reply's label, and the count on its chapter line.
+  'with a question and its count': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      await send(QUESTION, 'The hours.');
+      await screen.findByTestId('answer-label');
+      await screen.findByRole('button', { name: '1 question in this chapter, go to it' });
+    },
+  },
+  // The remembered decisions on the `# plot` line, unfolded under it.
+  'with the decisions unfolded': {
+    open: 'ok',
+    decided: true,
+    reach: async () => {
+      await plotOnce();
+      fireEvent.click(await screen.findByRole('button', { name: '2 decisions remembered' }));
+      await screen.findByRole('button', { name: 'Forget: title in German' });
+    },
+  },
+  // Both counts on one line, and the memory full: `# plot · 2 decisions ▾ · full · 1 question`.
+  'with both counts and the memory full': {
+    open: 'ok',
+    decided: true,
+    full: true,
+    reach: async () => {
+      await plotOnce();
+      await send(QUESTION, 'The hours.');
+      await screen.findByRole('button', { name: '1 question in this chapter, go to it' });
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: '2 decisions remembered' }).parentElement
+        ).toHaveTextContent(/▾·full$/)
+      );
+    },
+  },
+  // A version that kept the two decisions and added one: its request on the label, both on its line.
+  'with a plot card and its kept line': {
+    open: 'ok',
+    decided: true,
+    reach: async () => {
+      await plotOnce();
+      await send('log scale on y', 'Plot 2.');
+      await screen.findByRole('button', { name: 'Plot v2, matplotlib, log scale on y' });
+      await waitFor(() =>
+        expect(screen.getByTestId('result-decisions')).toHaveTextContent(
+          'kept: reference line at y = 7 · title in German · new: log scale on y'
+        )
       );
     },
   },
@@ -607,6 +709,8 @@ async function pageFor(who: Who, state: string): Promise<string> {
   paused = STATES[state].paused ?? false;
   missingY = STATES[state].missingY ?? false;
   plots = 0;
+  memory = STATES[state].decided ? DECIDED.map(entry => ({ ...entry })) : [];
+  full = STATES[state].full ?? false;
   stubFetch();
   renderPage();
   await STATES[state].reach();

@@ -5,21 +5,124 @@
  * chapters; the `#` is the chat's comment mark and is not read out.
  *
  * The line is a flex row with its rules as pseudo-elements, and the heading holds the name alone:
- * what a chapter will count later (its questions, the plot's remembered decisions) stands in the
- * row beside the heading, between the name and the right-hand rule, so a control never becomes
- * part of the heading's name. The heading carries an id of its own, for a jump to it; the page's
- * `scroll-padding-top` keeps a jump's target clear of the site's sticky masthead.
+ * what the chapter counts stands in the row beside the heading, between the name and the
+ * right-hand rule, so a control never becomes part of the heading's name. First the remembered
+ * decisions on the line that holds them (`3 decisions ▾ · full`, `Remembered.tsx`, which the
+ * thread passes), then the chapter's questions (`· 2 questions`), nothing for none. Where the
+ * words do not fit one line (a phone), they wrap between the rules, the heading first, each count
+ * whole.
+ *
+ * The count of the questions is a button: a press moves the focus to the chapter's first question,
+ * each further press to the next, and after the last back to the first. The target is the
+ * question's bubble (`questionDomId`, `tabIndex` -1), which a ring and a tint mark for a moment
+ * (`jumpTargetSx`, `JUMP_MS`); the page's `scroll-padding-top` keeps it clear of the site's sticky
+ * masthead. The heading carries an id of its own, for a jump to it.
  */
+
+import { type ReactNode, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { labelSx } from 'src/sections/agent-chat/styles';
-import type { Chapter } from 'src/sections/agent-chat/threadModel';
+import { countOf } from 'src/sections/agent-chat/countOf';
+import { questionJumpName } from 'src/sections/agent-chat/messages';
+import {
+  CHAPTER_ROW_GAP,
+  chapterControlSx,
+  JUMP_MS,
+  labelSx,
+} from 'src/sections/agent-chat/styles';
+import { type Chapter, questionDomId } from 'src/sections/agent-chat/threadModel';
 
-/** The rule on either side of the line's words. */
-const rule = { content: '""', flex: '1 1 0', minWidth: 16, borderTop: '1px solid var(--rule)' };
+/**
+ * The rule on either side of the line's words, at the height of their first row: half the line's
+ * height down, so a line whose counts wrap (a phone) keeps its rules beside the heading.
+ */
+const rule = {
+  content: '""',
+  flex: '1 1 0',
+  minWidth: 16,
+  mt: '0.8em',
+  borderTop: '1px solid var(--rule)',
+};
 
-export function ChapterLine({ chapter }: { chapter: Chapter }) {
+/** The highlight timers by target, so a second jump to the same bubble restarts its flash. */
+const flashes = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+
+/** Mark `target` as a jump's target for `JUMP_MS` (`data-jump`, which `jumpTargetSx` styles). */
+function flash(target: HTMLElement) {
+  const running = flashes.get(target);
+  if (running) clearTimeout(running);
+  target.setAttribute('data-jump', '');
+  flashes.set(
+    target,
+    setTimeout(() => {
+      target.removeAttribute('data-jump');
+      flashes.delete(target);
+    }, JUMP_MS)
+  );
+}
+
+const reducedMotion = () =>
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+/**
+ * A count in the line, after its `·`, kept whole when the line wraps. The thread's log does not
+ * read it out as it comes or changes (`aria-live="off"`): a question's reply says what the count
+ * would, and a screen reader finds the count on the chapter's heading.
+ */
+function Count({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      component="span"
+      aria-live="off"
+      sx={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}
+    >
+      <Box component="span" aria-hidden sx={{ mr: 1 }}>
+        ·
+      </Box>
+      {children}
+    </Box>
+  );
+}
+
+/** The chapter's count of its questions, the button that jumps to them in turn. */
+function QuestionJump({ questions }: { questions: readonly number[] }) {
+  // The question the last press went to: the next press goes to the one after it, after the last
+  // back to the first, also when a question came in meanwhile.
+  const last = useRef<number | null>(null);
+  const jump = () => {
+    const at = last.current === null ? -1 : questions.indexOf(last.current);
+    const id = questions[(at + 1) % questions.length];
+    last.current = id;
+    const target = document.getElementById(questionDomId(id));
+    if (!target) return;
+    target.scrollIntoView?.({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    target.focus({ preventScroll: true });
+    flash(target);
+  };
+  return (
+    <Box
+      component="button"
+      type="button"
+      data-testid="question-jump"
+      onClick={jump}
+      aria-label={questionJumpName(questions.length)}
+      sx={chapterControlSx}
+    >
+      {countOf(questions.length, 'question')}
+    </Box>
+  );
+}
+
+export function ChapterLine({
+  chapter,
+  decisions,
+}: {
+  chapter: Chapter;
+  /** The remembered decisions' count and toggle, on the line that holds them (`Remembered.tsx`). */
+  decisions?: ReactNode;
+}) {
+  const asked = chapter.questions.length > 0;
   return (
     <Box
       data-testid="chapter-line"
@@ -29,7 +132,7 @@ export function ChapterLine({ chapter }: { chapter: Chapter }) {
         color: 'var(--ink-soft)',
         lineHeight: 1.6,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 1.25,
         minWidth: 0,
         '&::before': rule,
@@ -37,14 +140,32 @@ export function ChapterLine({ chapter }: { chapter: Chapter }) {
       }}
     >
       <Box
-        component="h3"
-        id={`agent-chapter-${chapter.index}`}
-        sx={{ font: 'inherit', color: 'inherit', m: 0 }}
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'center',
+          columnGap: 1,
+          rowGap: CHAPTER_ROW_GAP,
+          minWidth: 0,
+        }}
       >
-        <Box component="span" aria-hidden>
-          #{' '}
+        <Box
+          component="h3"
+          id={`agent-chapter-${chapter.index}`}
+          sx={{ font: 'inherit', color: 'inherit', m: 0, whiteSpace: 'nowrap' }}
+        >
+          <Box component="span" aria-hidden>
+            #{' '}
+          </Box>
+          {chapter.kind}
         </Box>
-        {chapter.kind}
+        {decisions && <Count>{decisions}</Count>}
+        {asked && (
+          <Count>
+            <QuestionJump questions={chapter.questions} />
+          </Count>
+        )}
       </Box>
     </Box>
   );

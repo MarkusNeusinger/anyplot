@@ -3,8 +3,9 @@
  * words for a screen reader, which reads `·` and `×` badly.
  */
 
-import type { DataSnapshot } from 'src/hooks/useAgentSession';
+import type { DataSnapshot, VersionDecision } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { cutRequest } from 'src/sections/agent-chat/threadModel';
 
 /** A card's label on its border, and the same in words. */
 export interface CardLabel {
@@ -66,8 +67,10 @@ export function fileSource(name: string): string {
 
 /**
  * A plot card's label on its border and its folded line: `plot v2 · matplotlib · title in German`,
- * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`). It names
- * the button the label is, so its name keeps the words on screen in their order, `Plot v2,
+ * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`). What the
+ * version kept of the remembered decisions is not the label's, so a folded version still says what
+ * it answered: the open card's first line names it (`decisionsText`). It
+ * names the button the label is, so its name keeps the words on screen in their order, `Plot v2,
  * matplotlib, title in German`, and a voice command that says them finds it (WCAG 2.5.3); only the
  * `·` give way to commas.
  */
@@ -79,5 +82,26 @@ export function plotCardLabel(
   return {
     text: `plot v${number} · ${library}${summary ? ` · ${summary}` : ''}`,
     spoken: `Plot v${number}, ${library}${summary ? `, ${summary}` : ''}`,
+  };
+}
+
+/**
+ * One part of a plot card's decisions line: `kept: y = 7 line · x label` or `new: log scale on
+ * y`, each text cut as a label quotes a request (`cutRequest`), and in words with the full texts;
+ * `null` for an empty list. A decision whose text no list named counts all the same, as `1 more`
+ * after the texts (`kept: 3 decisions` when none has one), so the line names every decision the
+ * server listed for the version.
+ */
+export function decisionsText(part: 'kept' | 'new', list: VersionDecision[]): CardLabel | null {
+  if (list.length === 0) return null;
+  const texts = list.flatMap(item => (item.text === null ? [] : [item.text]));
+  const unnamed = list.length - texts.length;
+  if (texts.length === 0) {
+    const count = countOf(unnamed, 'decision');
+    return { text: `${part}: ${count}`, spoken: `${part}: ${count}` };
+  }
+  return {
+    text: `${part}: ${[...texts.map(cutRequest), ...(unnamed ? [`${unnamed} more`] : [])].join(' · ')}`,
+    spoken: `${part}: ${texts.join(', ')}${unnamed ? `, and ${countOf(unnamed, 'more decision')}` : ''}`,
   };
 }
