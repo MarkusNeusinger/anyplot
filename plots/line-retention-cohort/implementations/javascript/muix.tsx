@@ -21,7 +21,7 @@ const Y_DOMAIN_MAX = 100; // retention runs from 0 to 100 percent
 const Y_HEAD_SHARE = 0.03; // headroom so the 100 % starts keep their full stroke
 const WIDTH_OLDEST = 1.75; // older cohorts draw thinner and fainter, the newest at full weight
 const WIDTH_NEWEST = 3.25;
-const OPACITY_OLDEST = 0.65;
+const OPACITY_OLDEST = 0.75;
 
 // Columns: set these to your data's column names
 const WEEK = "Weeks since signup"; // role: time_period
@@ -142,7 +142,22 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "end" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 16, color: t.ink, columnGap: 3, pr: 5, "& .MuiChartsLegend-mark": { width: 28 } }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 16,
+              color: t.ink,
+              columnGap: 3,
+              pr: 5,
+              "& .MuiChartsLegend-mark": { width: 28 },
+              // Each swatch carries its line's width and opacity, so the legend explains the recency encoding
+              ...Object.fromEntries(
+                lines.map((line) => [
+                  `& .MuiChartsLegend-item[data-series="${line.id}"] .MuiChartsLegend-mark path`,
+                  { strokeWidth: line.width, strokeOpacity: line.opacity },
+                ]),
+              ),
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
