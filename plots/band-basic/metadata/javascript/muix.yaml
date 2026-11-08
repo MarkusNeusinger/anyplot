@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: band-basic
 created: '2026-08-24T16:00:57Z'
-updated: '2026-11-08T00:55:53Z'
+updated: '2026-11-08T01:00:09Z'
 generated_by: claude-opus-5-5
 adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
 workflow_run: 42431684942
@@ -13,52 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'The band is built the native MUI X way: an invisible series at the lower bound
-    stacked under an area series carrying the band width (stack: "band"), so the fill
-    spans exactly lower to upper at every x and nothing is filled outside the two
-    boundaries'
-  - monotoneX interpolation on all three series passes through every data value without
-    overshoot, matching the spec's 'straight or monotone-interpolated, no fitted smoothing'
-    requirement
-  - The band fill at fillOpacity 0.28 keeps the horizontal gridlines visible through
-    it in both themes while staying clearly distinct from the page; the 3 px central
-    line sits on top at its values
-  - Data-driven subtitle (point count, day range, band name and its computed width
-    range 1.7–9.4 °C) states the uncertainty source as the Notes suggest and adds
-    a clear title/subtitle hierarchy
-  - Realistic 30-day temperature forecast whose interval widens with lead time, with
-    slightly asymmetric, wiggling bounds — exactly the behaviour the spec permits
-  - Per-series v9 CSS selectors ([data-series=...]) hide the helper lines and style
-    the area; skipAnimation is set; a valueFormatter gives the HTML tooltip the 'lower
-    – upper' range per day
+  - 'The band is built the MUI X way: an invisible lower series stacked under a filled
+    width series (`stack: "band"`, `area: true`), so the fill spans exactly lower
+    to upper at every x and nothing is filled outside the boundaries.'
+  - 'Edges and the central line use `curve: "monotoneX"`, so every segment passes
+    through the data values without spline overshoot, as the Notes ask.'
+  - Semi-transparent fill (fillOpacity 0.28) keeps the horizontal gridlines visible
+    through the band in both themes, while the band stays clearly distinct from the
+    page.
+  - The central line in Imprint purple (palette position 2) at strokeWidth 3 sits
+    on top of the brand-green band and contrasts clearly with it in both renders.
+  - Series-targeted v9 CSS selectors (`.MuiLineChart-line[data-series=...]`) hide
+    the helper strokes cleanly, and the band series' `valueFormatter` with `dataIndex`
+    turns the tooltip into a lower–upper range readout in the HTML view.
+  - The subtitle names the uncertainty source and the computed band width range (1.7–9.4
+    °C), derived from the data rather than typed in, which points the viewer to the
+    widening forecast uncertainty.
   weaknesses:
-  - 'VQ-07 (both): the central line, the chart''s second series, is drawn in Imprint
-    position 3 blue #4467A3, skipping position 2 lavender #C475FD for an aesthetic
-    reason (code comment: ''a second hue, so the central line contrasts'') → the next
-    canonical position, t.palette[1]. Likely cause: CENTER_COLOR = t.palette[2].'
-  - 'Suggestion: drop the label on the helper ''lower'' series and use the native
-    MUI X legend (hideLegend off, slotProps.legend) instead of the hand-built Box
-    legend.'
-  - 'Suggestion: the 15 px tick labels could go to 16 px to read more firmly in the
-    400 px thumbnail.'
+  - 'Suggestion: the subtitle''s ''30 points, forecast day 1–30'' repeats what the
+    x axis already shows; shortening it to the band description would tighten the
+    header.'
+  - 'Suggestion: the hand-built HTML legend could be replaced by the native `ChartsLegend`
+    if the hidden lower-edge series can be kept out of it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white cream (#FAF8F1), not pure white.
-      Chrome: bold dark title "band-basic · javascript · muix · anyplot.ai" top-left (~30% of width), soft-ink subtitle "30 points, forecast day 1–30 · shaded: 90% confidence band, width 1.7–9.4 °C". Y-axis label "Forecast temperature (°C)" with ticks 15–27, x-axis label "Forecast day" with ticks 1–30; subtle horizontal gridlines; left and bottom axis lines in soft ink. Custom legend centered at the bottom: green swatch "90% confidence band" and blue line "Forecast temperature (°C)". All text dark and readable.
-      Data: a semi-transparent brand-green (#009E73, ~28% opacity) band from lower to upper bound, narrow at day 1 (~16–17.6 °C) and widening to ~16–25.4 °C by day 30, with wiggling, slightly asymmetric edges; gridlines visible through the band. A 3 px blue (#4467A3) central forecast line rises from 16.6 °C to a ~23 °C plateau around days 18–20 and eases to ~20.7 °C; monotone segments, no overshoot. No clipping at any edge.
+      Background: warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: bold title "band-basic · javascript · muix · anyplot.ai" top left with a soft-ink subtitle "30 points, forecast day 1–30 · shaded: 90% confidence band, width 1.7–9.4 °C"; y axis "Forecast temperature (°C)" with ticks 15–27, x axis "Forecast day" with ticks 1–30; subtle horizontal gridlines; HTML legend centred at the bottom (green swatch "90% confidence band", purple line "Forecast temperature (°C)"). All text dark on light and readable.
+      Data: brand-green #009E73 band at ~0.28 opacity widening from ~1.7 °C at day 1 to ~9.4 °C at day 30; purple central line (Imprint position 2) rising from 16.6 to ~23 °C, plateauing and falling to 20.7 °C, drawn on top of the band. Monotone segments, no overshoot; gridlines visible through the band.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), not pure black.
-      Chrome: title in light ink, subtitle, tick labels and axis titles in light soft ink, all clearly readable; no dark-on-dark text. Gridlines subtle but visible; axis lines light.
-      Data: same brand-green band at the same opacity (reads as deep teal on the dark page, distinct from the background, gridlines visible through it) and the same blue #4467A3 central line — data colors identical to the light render, only chrome flipped. Legend swatches visible.
+      Background: warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles, tick labels and legend text all render in light ink; axis lines and ticks light; gridlines subtle but visible. No dark-on-dark text.
+      Data: identical green band (reads as dark teal-green at 0.28 opacity, still clearly distinct from the page) and identical purple central line; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,48 +60,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (22 px title, 15 px subtitle/ticks/legend, 16 px axis
-          titles); readable in both themes
+        comment: Explicit sizes (title 22 px, subtitle/ticks/legend 15 px, axis titles
+          16 px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; line sits inside band by design
+        comment: No text collisions anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Band distinct from page in both themes, 3 px central line prominent,
-          legend glyphs visible and matching the marks
+          legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green fill vs blue line differ in lightness and hue; CVD-safe, no
-          red-green
+        comment: Green band vs purple line, CVD-safe and high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axis labels, no overflow or clipping, plot fills
-          canvas well
+        comment: 3200x1800, plot fills the canvas, balanced axis labels, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Forecast day'', ''Forecast temperature (°C)'' with units'
+        comment: '''Forecast day'' and ''Forecast temperature (°C)'' with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds and chrome correct, band in #009E73; central line skips
-          Imprint position 2 for position 3 blue (defect line)'
+        comment: 'Band #009E73 first, central line Imprint position 2, backgrounds
+          theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -117,23 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Evidence: a data-computed subtitle in soft ink under the bold title
-          creates a deliberate typographic hierarchy beyond the baseline'
+        comment: Title/subtitle hierarchy with weight and ink-soft contrast beyond
+          the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Evidence: band drawn borderless (helper lines hidden, filter none)
-          so the fill edge is the boundary; x domain tight to the data with no padding'
+        comment: Helper edge strokes hidden so the band reads as one clean fill; strict
+          x domain flush to the data
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: 'Evidence: the forecast scenario makes the widening band itself the
-          focal story of growing uncertainty with lead time, reinforced by the subtitle''s
-          width range'
+        comment: Subtitle reports the computed band width 1.7–9.4 °C, pointing to
+          growing forecast uncertainty
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: One band plus central line; no extra layers
+        comment: One band plus central line, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill 0.28 (in 0.2–0.4), contrasting central line
-          on top, monotone segments, uncertainty source in subtitle; all 'A good version
-          shows' bullets met
+        comment: Semi-transparent fill 0.28, contrasting central line on top, monotone
+          segments, uncertainty source in subtitle; all 'A good version shows' bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stacked lower+width puts edges at exact lower/upper values; monotoneX
-          without overshoot; full x range shown
+        comment: Stacked lower+width spans exactly lower–upper; monotoneX passes through
+          values, no overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; legend labels match the band and line
+        comment: Mandated title format; legend entries readable and match the marks
     data_quality:
       score: 15
       max: 15
@@ -174,21 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying width, asymmetric and wiggling bounds, central trend with
-          plateau and decline
+        comment: Varying-width, slightly asymmetric band with wiggling boundaries
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 30-day temperature forecast with a 90% interval — plausible and neutral
+        comment: 30-day temperature forecast with a widening 90% interval, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperatures 16–26 °C and band widths 1.7–9.4 °C are sensible; no
-          Check values in the spec
+        comment: Temperatures 16–23 °C, interval width 1.7–9.4 °C plausible; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -198,13 +189,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module; only the seeded LCG closure inside the data block
+        comment: Linear zones; only the endorsed tiny LCG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Seeded LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -222,8 +213,8 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 API (hideLegend, axis height/width,
-          per-series CSS)
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          v9 API
     library_mastery:
       score: 6
       max: 10
@@ -233,19 +224,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Evidence: the stack-based band (invisible lower series + area width
-          series) is MUI X''s documented band idiom, styled with v9 per-series selectors'
+        comment: Stacked-series band idiom with v9 per-series CSS selectors
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: 'Evidence: series valueFormatter reading dataIndex to show the ''lower
-          – upper'' range in the native tooltip of the HTML output'
-  verdict: REJECTED
+        passed: true
+        comment: Series valueFormatter with dataIndex turns the band tooltip into
+          a range readout
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T00:53:05Z'
+  rendered_at: '2026-11-08T00:57:33Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -258,4 +248,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
