@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: sankey-basic
 created: '2026-07-25T12:21:06Z'
-updated: '2026-11-08T04:43:32Z'
+updated: '2026-11-08T04:48:03Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42447687119
@@ -13,44 +13,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Faithful sankey geometry: every link keeps its value as width end to end, node
-    bars equal max(inflow, outflow), and the energy balance holds (Electricity 116
-    in = 116 out, Heat 21 in = 21 out)'
-  - Links carry their source node's Imprint hue at 0.45 opacity, so each flow can
-    be followed from Coal, Nuclear, Renewables or Gas through Electricity/Heat to
-    the end-use sectors; crossings stay distinguishable in both themes
-  - 'Imprint palette applied correctly: Coal starts at #009E73, the matte-red slot
-    is skipped as the reserved loss anchor, and receive-only sector bars take the
-    theme-adaptive inkSoft neutral so the colored sources lead the eye'
-  - Labels placed by stage (left of the first column, above the middle column, right
-    of the last) with a pageBg halo stroke; bold names over softer totals give a clear
-    two-level hierarchy, nothing collides with links
-  - 'Uses the MUI X v9 composition pattern correctly: ChartsContainer with hidden
-    axes, a custom layer reading useDrawingArea, skipAnimation, theme tokens from
-    window.ANYPLOT_TOKENS, and native SVG <title> tooltips per link and node for the
-    HTML view'
-  - 'Data block follows the adaptable-code zones: role constants, records keyed by
-    them, stages, colors and the unit all derived from the data'
+  - 'Correct three-stage Sankey: every link keeps its value''s width end to end on
+    one shared px-per-unit scale, and every bar is as tall as its larger of in- and
+    outflow (Electricity 116 = 116, Heat 21 = 21 TWh)'
+  - Links stack along each node edge in the order of the nodes at their other end,
+    and barycentre sweeps order each stage, so only two crossings remain and both
+    stay easy to follow
+  - 'Links carry their sender''s Imprint hue at 0.45 opacity, Coal first in brand
+    green #009E73, and the matte-red slot is skipped; sink nodes stay neutral in the
+    inkSoft token, so the colors name the sources'
+  - 'Two-level node labels (16 px bold name in ink, 14 px total in inkSoft) with a
+    page-colored halo stroke: they sit left of stage 0, right of the last stage and
+    above the middle bars, clear of every link in both themes'
+  - 'Uses MUI X composition idiomatically: a custom SVG layer inside ChartsContainer
+    reads useDrawingArea, the axes are hidden with position: ''none'', and skipAnimation
+    is set'
+  - Native SVG <title> tooltips on every link and node give source → target values
+    in the interactive HTML
   weaknesses:
-  - 'Suggestion: Renewables could take the green Imprint hue and Coal a later position,
-    matching the reader''s common color association for these energy sources (semantic
-    exception in the style guide).'
-  - 'Suggestion: the empty band between the subtitle and the top nodes (about 90 px)
-    could be tightened so the diagram fills more of the canvas.'
+  - 'Suggestion: the Imprint canonical order puts Coal in brand green and Renewables
+    in ochre; the semantic-exception order (Renewables in green) would match readers''
+    color expectations for energy sources.'
+  - 'Suggestion: about 90 px of empty band between the subtitle and the top nodes
+    could be reduced to give the diagram a little more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no white panel.
-      Chrome: bold dark title "sankey-basic · javascript · muix · anyplot.ai" centered at top, softer subtitle "Link width and bar height proportional to Energy flow (TWh) · 12 flows across 3 stages"; node names in bold ink with TWh totals in inkSoft beside/above each bar. No axes (correct for a sankey). All text readable.
-      Data: three stages. Left: Coal (#009E73 green, 42), Nuclear (blue, 22), Renewables (ochre, 27), Gas (lilac, 46). Middle: Electricity (cyan, 116), Heat (plum, 21). Right: Commercial 30, Transport 12, Industrial 47, Residential 48 as dark-neutral bars. Translucent links in the source color; the thin Renewables→Heat link and the Heat→Industrial link cross other links and remain distinguishable.
+      Background: warm off-white #FAF8F1, no frame and no axes.
+      Chrome: centred bold title "sankey-basic · javascript · muix · anyplot.ai" in dark ink, with an inkSoft subtitle "Link width and bar height proportional to Energy flow (TWh) · 12 flows across 3 stages". Node names in bold dark ink with totals in soft gray: Coal 42, Nuclear 22, Renewables 27, Gas 46 to the left of the stage-0 bars; Electricity 116 and Heat 21 above the middle bars; Commercial 30, Transport 12, Industrial 47, Residential 48 to the right of the sink bars. All readable.
+      Data: source bars and links in Imprint order: Coal #009E73 green, Gas #C475FD lavender, Nuclear #4467A3 blue, Renewables #BD8233 ochre, Electricity #2ABCCD cyan, Heat #954477 rose. Links at 0.45 opacity. The sink bars are a neutral dark gray. There are two visible crossings: Renewables→Heat over Gas→Electricity, and Heat→Industrial over Electricity→Residential.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, node names and totals in light ink / light inkSoft; no dark-on-dark text anywhere.
-      Data: node and link hues identical to the light render (green, blue, ochre, lilac, cyan, plum); links are translucent over the dark page so they read deeper but stay distinct; receive-only sector bars flip to a light neutral (theme-adaptive inkSoft), as chrome-like neutrals should.
+      Chrome: title and node names in light ink, subtitle and totals in light gray. No dark-on-dark text; the halo stroke switches to the dark page color.
+      Data: bar colors are identical to the light render. Translucent links blend toward the dark page (deeper green, navy, brown, purple, teal and maroon) but stay distinct, and the crossings remain distinguishable. The sink bars switch to light gray (inkSoft). Brand green is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,48 +61,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, node names 16 px bold, totals 14 px; readable in both
-          themes, halo keeps labels crisp
+        comment: Explicit sizes (title 22, names 16 bold, totals 14, subtitle 15 CSS
+          px), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No label collides with links or other labels; middle-stage labels
-          sit in clear gaps above the bars
+        comment: All labels clear of links and of each other; Heat label sits between
+          the Electricity bar and the Heat bar without touching links
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 links visible, smallest (3 TWh) still traceable; bars well
-          sized
+        comment: Bars 26 px wide, smallest link (3 TWh) still visible; links visible
+          on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Six distinct Imprint hues, no red-green sole signal; labels carry
-          identity
+        comment: CVD-safe Imprint hues; direct labels carry identity, so there is
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced three-column layout, nothing cut off
+        comment: 3200x1800, canvas gate passed; balanced three columns, title about
+          28% width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A axes; subtitle and node totals state the unit (TWh)
+        comment: No axes; the unit TWh appears on every node total and in the subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First source #009E73, matte red skipped, correct backgrounds, data
-          hues identical across themes'
+        comment: 'Imprint canonical order with the first sender in #009E73, red slot
+          skipped, correct backgrounds in both themes'
     design_excellence:
       score: 12
       max: 20
@@ -113,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Two-level label hierarchy (bold name, soft total), halo-stroked labels,
-          rounded bars, neutral sinks
+        comment: Two-tier label hierarchy (bold ink name over an inkSoft total), page-colored
+          halo strokes, rounded bars, neutral sinks
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Stage-aware label placement (left/above/right), tuned node gaps,
-          barycentre ordering that reduces crossings
+        comment: Crossing-reducing barycentre ordering, per-edge link stacking, stage-dependent
+          label placement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Receive-only sectors kept neutral so the colored sources and the
-          Electricity hub become the focal path
+        comment: Neutral sink nodes leave color to the sources, so the eye follows
+          each source into the Electricity hub
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic single sankey, no extra layers or highlights
+        comment: Single basic Sankey, no highlights, reference lines or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No self-loops (filtered), labels clear of links, distinct source
-          colors carried by links, link opacity 0.45; all good-version bullets met
+        comment: No self-links (filtered), labels clear of links, distinct source
+          colors carried by links, opacity used; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Link widths and bar heights proportional to value; layout-positioned
-          node order
+        comment: Widths and bar heights on one value scale; node order is layout,
+          as the spec allows
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; node labels replace a legend
+        comment: Title format correct; direct labels replace a legend (legend N/A)
     data_quality:
       score: 15
       max: 15
@@ -168,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multi-stage flow with splits, merges, a hub, crossings and a small
-          flow
+        comment: Multi-stage flow, splits and merges, crossings, wide and hair-thin
+          links, send-only and receive-only nodes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: National energy flow sources→carriers→sectors, neutral
+        comment: National energy flow from primary sources through carriers to sectors,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked conservation: Electricity 42+28+22+24=116 in, 34+40+30+12=116
-          out; Heat 18+3=21 in, 14+7=21 out'
+        comment: 12 flows within 5-50; TWh magnitudes plausible for a small country;
+          flow conservation checked (Electricity 116 in and out, Heat 21 in and out)
     code_quality:
       score: 10
       max: 10
@@ -192,13 +193,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single layer component, needed for the useDrawingArea hook
+        comment: One layer component, required by the useDrawingArea hook, plus the
+          default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded data, deterministic layout
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -210,16 +212,17 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Sankey is Pro-only in MUI X; the written-out stage/order/stack layout
-          is the minimal needed
+        comment: Sankey is Pro-only in MUI X, so a written-out layout is the only
+          option; the layout is compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, harness mount contract, skipAnimation, v9 API
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 API, community
+          surface only
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -227,28 +230,28 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'MUI X composition: ChartsContainer + custom layer via useDrawingArea'
+        comment: ChartsContainer composition is the right v9 pattern; the marks themselves
+          are raw SVG
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Nothing beyond what the library prompt mandates; the diagram itself
-          is raw SVG
-  verdict: REJECTED
+        passed: true
+        comment: A custom layer driven by the useDrawingArea hook inside ChartsContainer
+          (MUI X composition API)
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
   rendered_at: '2026-11-08T04:40:48Z'
 impl_tags:
   dependencies: []
   techniques:
+  - bezier-curves
+  - annotations
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - aggregation
+  patterns: []
+  dataprep: []
   styling:
   - alpha-blending
   - minimal-chrome
