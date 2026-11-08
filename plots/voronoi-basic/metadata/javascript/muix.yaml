@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: voronoi-basic
 created: '2026-09-02T10:35:21Z'
-updated: '2026-11-08T07:00:36Z'
+updated: '2026-11-08T07:05:28Z'
 generated_by: claude-opus-5-5
 adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
 workflow_run: 42456753307
@@ -16,40 +16,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 quality_score: 85
 review:
   strengths:
-  - 'Correct Voronoi partition: each cell is the bounding box clipped by the bisector
-    half-plane toward every other seed, so the 18 convex cells tile the square box
-    with no gaps or overlaps and the outer cells are cut at the box edges'
-  - Greedy coloring of the adjacency graph keeps cells that share an edge in different
-    Imprint hues, and the matte red slot is left out because the palette reserves
-    it for loss roles
-  - The clipping box is square in data units and the drawing area is square in pixels,
-    so 1 km spans the same pixels on both axes and bisectors meet seed-to-seed lines
-    at true right angles
-  - Seeds are ink dots with a page-colored halo and the cell borders are page-colored
-    gaps, so seeds and boundaries stand out in both themes without any theme-specific
-    code
+  - 'Correct Voronoi partition computed by clipping the bounding box with every perpendicular-bisector
+    half-plane (lines 60-83): 18 convex cells tile the box with no gaps or overlaps,
+    and the outer cells are clipped at its edges'
+  - The clipping box is square in data units and the drawing area is square in pixels
+    (lines 48-52, 138-140), so the cell edges really are perpendicular to the lines
+    joining their seeds
+  - 'A greedy coloring over the detected shared edges (lines 85-105) gives every pair
+    of neighbouring cells different Imprint hues, starting on brand green #009E73
+    and skipping the matte-red slot'
+  - Seeds are drawn at their exact coordinates with a page-colored halo (ink dots
+    on light, cream dots on dark) and stand out from every fill in both themes
   - 'Idiomatic MUI X v9 composition: ChartsContainer with linear axes plus a custom
-    SVG layer that draws through useXScale/useYScale, so the cells are registered
-    to the chart''s own scales and axes'
+    SVG layer that reads the chart''s own scales through useXScale/useYScale, with
+    sized axis bands and skipAnimation'
   weaknesses:
-  - 'DQ-02 (both): the render never says what the seeds are; the axes read the generic
-    ''X coordinate (km)'' / ''Y coordinate (km)'' and the retail-store scenario lives
-    only in a code comment → name the domain in the visible text, e.g. axis labels
-    ''Easting (km)'' / ''Northing (km)'' with a subtitle naming the 18 store locations.
-    Likely cause: the X/Y column constants and the SUBTITLE string.'
-  - 'Suggestion: optional store labels (the spec''s optional label column) next to
-    a few seeds would make the service-area reading concrete.'
+  - 'DQ-03 (both): the 18 ''retail stores across a city grid'' span about 14-83 km
+    on both axes (a box of about 95 km), far wider than a city → keep the store scenario
+    at city scale, e.g. coordinates within about 0-20 km, or relabel the scenario
+    as a regional network. Likely cause: the data block''s 10 + rand() * 80 range.'
+  - 'Suggestion: short store labels next to a few seeds (the Data allows a label column)
+    would tie the cells to the service-area story.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the page and the plot area.
-      Chrome: bold dark title "voronoi-basic · javascript · muix · anyplot.ai", a soft-ink subtitle, axis titles "X coordinate (km)" / "Y coordinate (km)", tick labels 5–95 on both axes in soft ink; all readable. No grid (the cells fill the area).
-      Data: 18 convex Voronoi cells clipped to a square box, filled at 62 % opacity in five Imprint hues (green #009E73, lavender, blue, cyan, ochre; no red), separated by page-colored borders; adjacent cells always differ in color. Seeds are near-black dots with a cream halo, each inside its own cell.
+      Background: warm off-white, matches #FAF8F1; not pure white.
+      Chrome: bold title "voronoi-basic · javascript · muix · anyplot.ai" centered at top, grey subtitle beneath it; axis titles "Easting (km)" and "Northing (km)" in dark ink, tick labels 5-95 in soft ink on both axes; thin dark axis lines on the left and bottom. All text readable.
+      Data: 18 convex Voronoi cells tile a square box, filled at 0.62 opacity in Imprint green #009E73, lavender, blue, ochre and cyan, separated by 3 px page-colored strokes; neighbouring cells always differ in hue. Each seed is a near-black dot with a cream halo, inside its own cell. First color is brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles and tick labels flip to light ink and read clearly; no dark-on-dark text.
-      Data: same cells, same hue assignment from the same Imprint positions (the 62 % opacity blends them with the dark page, so they read deeper), borders now in the dark page color, seeds flip to cream dots with a dark halo. Brand green remains clearly visible.
+      Background: warm near-black, matches #1A1A17; not pure black.
+      Chrome: title, subtitle, axis titles and tick labels all in light ink and clearly readable; no dark-on-dark text. Axis lines light.
+      Data: identical geometry and the same Imprint palette tokens per cell (the 0.62 opacity lets the darker page show through, so the tints read deeper); cell boundaries are dark page-colored strokes, still clearly visible; seeds flip to cream dots with a dark halo and stand out on every fill. Brand green remains visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,48 +59,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis titles 16 px, ticks 15 px; readable in both themes
-          and at thumbnail size
+        comment: Title 22 px, subtitle/ticks 15 px, axis titles 16 px set explicitly;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; seeds sit clear of each other, the closest pair
-          (x≈14, y≈28–31) is still distinct
+        comment: No text collisions; seeds never overlap each other or labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Seed dots at 7 px radius with a halo stand out from every fill in
-          both themes; borders visible
+        comment: Seeds at r=7 with halo stand out on every fill; boundaries visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues plus page-colored borders carry the cell distinction
+        comment: Adjacent cells differ in hue and are also separated by strokes, so
+          no color-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas, square plot area, balanced axis labels,
-          no overflow
+        comment: Square 2400x2400 canvas, square plot area, balanced axes, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles with units (km)
+        comment: Easting (km) / Northing (km) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions from tokens starting with #009E73, red slot skipped
-          deliberately; correct backgrounds in both themes'
+        comment: 'Imprint slots in canonical order from #009E73, red slot skipped;
+          correct page backgrounds in both themes'
     design_excellence:
       score: 10
       max: 20
@@ -111,22 +109,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Leaded-glass look: page-colored borders as grout and seeds with
-          page-colored halos that invert per theme; title/subtitle hierarchy'
+        passed: true
+        comment: 'Beyond baseline: a title/subtitle hierarchy and page-colored cell
+          gaps with round joins that read as a clean tiled map'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Box made square in data units and the drawing area square in pixels,
-          so the geometry reads true; no grid over the cells
+        passed: true
+        comment: 'Beyond baseline: square data-unit box in a square drawing area so
+          bisectors render at true right angles; grid omitted for this chart'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default: partition displayed, no focal point chosen'
+        comment: Partition displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic Voronoi partition, no overlays, triangulation or highlights
+        comment: Voronoi diagram, single partition, no overlays
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clipped box, distinguishable cells, seeds marked in their cells,
-          adjacent cells differ in color, straight convex edges
+        comment: Clipped box, distinguishable cells, seeds marked, adjacent cells
+          differ, straight bisector edges, convex cells - every Notes and good-version
+          bullet met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Seeds at their exact coordinates; equal-unit axes
+        comment: Seeds at exact x/y; box covers all seeds with padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; no legend needed (N/A)
+        comment: Mandated title format; legend N/A for a partition
     data_quality:
       score: 14
       max: 15
@@ -165,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Unequal cells, a tight seed pair, elongated clipped border cells
-          all shown
+        comment: Shows unequal cell sizes, clustered seeds (two near (14, 30)), elongated
+          clipped border cells
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: 'Plausible but generic: the visible text never names the store scenario
-          (defect line)'
+        passed: true
+        comment: Retail store service areas - neutral, plausible application from
+          the spec
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 18 seeds within the 10–50 range on a 0–100 km grid
+        comment: About 95 km box is too wide for a city grid (defect line); no Check
+          values in Notes
     code_quality:
       score: 10
       max: 10
@@ -189,8 +189,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module; the one sub-component is required to call the scale
-          hooks
+        comment: Flat module; the one inner component is required by the React custom-layer
+          pattern
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -202,21 +202,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Half-plane clipping is short; the library prompt allows written-out
-          geometry since @mui/x-charts has no helpers
+        comment: No Voronoi helper exists in the available packages; the half-plane
+          clipping is short and clear
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
-          sized from ANYPLOT_SIZE
+        comment: Default-exported component sized to ANYPLOT_SIZE, v9 API, skipAnimation
     library_mastery:
       score: 6
       max: 10
@@ -225,30 +224,29 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Composed ChartsContainer with explicit linear axes, axis bands sized,
-          sx overrides for axis lines
+        passed: true
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis and axis-config
+          bands, the recommended v9 pattern
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Custom SVG layer drawing through useXScale/useYScale hooks inside
-          the chart's scale system
-  verdict: REJECTED
+        comment: Custom SVG layer drawn through the chart's useXScale/useYScale hooks,
+          MUI X's composition API beyond a stock chart
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T06:57:52Z'
+  rendered_at: '2026-11-08T07:02:44Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-layer
-  - polygon-clipping
+  - layer-composition
+  - patches
+  - html-export
   patterns:
   - data-generation
-  dataprep:
-  - voronoi-tessellation
-  - graph-coloring
+  dataprep: []
   styling:
   - alpha-blending
-  - theme-adaptive
+  - edge-highlighting
