@@ -21,13 +21,18 @@ const SALES = "Online retail sales ($ billion)"; // role: value
 // Data: replace this block with your own records, one object per row
 // Monthly online retail sales 2014–2023: about 8 % yearly growth on a holiday-peaked season.
 const data = (() => {
+  let s = 42;
+  const rand = () => {
+    s = (Math.imul(1664525, s) + 1013904223) | 0;
+    return (s >>> 0) / 0x100000000;
+  };
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const seasonal = [0.72, 0.75, 0.88, 0.85, 0.87, 0.82, 0.84, 0.87, 0.9, 0.95, 1.1, 1.45];
   const rows = [];
   for (let yi = 0; yi < 10; yi += 1) {
     months.forEach((month, m) => {
       const trend = 3.5 * 1.08 ** yi;
-      const noise = (((m * 7 + yi * 13) % 17) - 8) * 0.04;
+      const noise = (rand() - 0.5) * 0.64; // uniform within ±0.32
       rows.push({ [MONTH]: month, [YEAR]: 2014 + yi, [SALES]: Math.round((trend * seasonal[m] + noise) * 100) / 100 });
     });
   }
