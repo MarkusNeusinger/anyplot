@@ -111,3 +111,17 @@ def test_no_name_belongs_to_two_owners() -> None:
 def test_the_width_and_case_of_a_name_are_ignored() -> None:
     assert resolve_library("Ｄ３．ｊｓ") == "d3"  # full-width forms, as a phone keyboard may send them
     assert name_key("D3.js") == name_key("d3 JS") == "d3js"
+
+
+@pytest.mark.parametrize("form", ["chart  js", "lets   plot", "mui  x", "d3 . js"])
+def test_any_run_of_separators_joins_a_names_parts(form: str) -> None:
+    assert resolve_library(form) is not None and named_tools(f"in {form} please").libraries
+
+
+def test_a_name_that_is_also_a_word_still_names_the_library() -> None:
+    """The table reads names, not intent: "vitamin d3" names D3. Only the judge's `other_library` for such a message
+    would be lifted (`scope_guard.served_library_request`), and a question about vitamin levels is not one."""
+    assert named_tools("plot the vitamin d3 levels") == NamedTools(frozenset({"d3"}), False)
+    assert named_tools("make the bars shiny") == NamedTools(frozenset(), False)  # Shiny only as R Shiny
+    assert named_tools("an observable trend") == NamedTools(frozenset(), False)
+    assert named_tools("as an R Shiny app") == NamedTools(frozenset(), True)

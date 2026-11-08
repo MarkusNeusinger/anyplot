@@ -6,8 +6,8 @@ request for a library the chat serves to the catalogue as another library
 (`agents/anyplot/plugins/scope_guard.served_library_request`), and the chat's `switch_plot` tool,
 whose library argument a model writes (`agents/anyplot/schemas.SwitchArgs`).
 
-A name matches whatever its case and Unicode width, and whatever separates its parts: a space, a
-dot, a hyphen, an underscore, a slash or nothing. So `Chart.js` is also `chartjs`, `chart js` and
+A name matches whatever its case and Unicode width, and whatever separates its parts: spaces, dots,
+hyphens, underscores, slashes or nothing. So `Chart.js` is also `chartjs`, `chart js` and
 `Chart-JS`, and `lets-plot` is also `letsplot`, `lets plot` and `lets_plot`. A name never matches
 inside a longer word: `id3` names no library, and `pyecharts` is not ECharts. Where two names start
 at the same place, the longer one wins: `plotly.js` is the JavaScript library outside the catalogue,
@@ -53,8 +53,8 @@ OUTSIDE_TOOLS: tuple[str, ...] = (
     "Vega-Lite",
     "Plotly.js",
     "BokehJS",
-    "Observable",
     "Observable Plot",
+    "ObservableHQ",
     "nivo",
     "Recharts",
     "visx",
@@ -103,7 +103,8 @@ OUTSIDE_TOOLS: tuple[str, ...] = (
     "echarts4r",
     "ggvis",
     "rCharts",
-    "Shiny",
+    "R Shiny",
+    "Shiny app",
     # Julia outside the catalogue.
     "Plots.jl",
     "Gadfly",
@@ -172,9 +173,10 @@ OUTSIDE_TOOLS: tuple[str, ...] = (
 A message for this plot that names one of them asks for something the catalogue does not hold, even when it also
 names a catalogue library ("port this D3 plot to Vega-Lite"). The list makes no request in-scope or not on its own:
 it only keeps a message that names one from counting as a request for a catalogue library alone. A common word that
-is also such a name (`origin`, `prism`, `dash`, `go`, `numbers`) is left out."""
+is also such a name (`origin`, `prism`, `dash`, `go`, `numbers`, `shiny`, `observable`) is left out or named with
+its context (`R Shiny`, `Observable Plot`)."""
 
-_SEPARATOR = r"[\s._/-]?"
+_SEPARATOR = r"[\s._/-]*"
 _PART = re.compile(r"[0-9a-z+#]+")
 _EDGE_BEFORE = r"(?<![^\W_])"
 _EDGE_AFTER = r"(?![^\W_])"

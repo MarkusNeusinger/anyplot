@@ -11,9 +11,8 @@
   Excel, Plots.jl) still gets the pointer, and an attack or a data request that
   names a library keeps its refusal. In the scope eval the judge itself refused
   4 of 12 such requests, all of which now go through.
-- **A refusal keeps the session language.** A message without a clear language,
-  such as "d3.js", got its refusal in English in a German session. Once the
-  session language is recorded or chosen, every refusal after the scope check
-  is in it, as the assistant's replies are; before that, a message of fewer
-  than three words that the judge reads as English keeps the session's
-  language.
+- **A short message's refusal keeps the session language.** A message without
+  a clear language, such as "d3.js", got its refusal in English in a German
+  session. A message of fewer than three words that the scope check reads as
+  English now gets its refusal in the session language, the rule that already
+  kept such a message from setting the language.

@@ -4,7 +4,8 @@ Live session of 2026-11-08: in a German session "erstell das bitte mal in d3" an
 pointer to the catalogue, the second in English, and only "D3.js", the display name the judge's rubric lists, switched
 the plot. The scope guard now lifts an `other_library` for a message that names only served libraries
 (`scope_guard.served_library_request`, one names table in `core/library_names.py`), `switch_plot` takes any common
-form, and a refusal after the judge keeps an established session language (`scope_guard.refusal_language`).
+form, and the judge's `en` for a message too short to tell never overrides the session language
+(`scope_guard.refusal_language`).
 """
 
 from collections.abc import AsyncIterator, Iterator
@@ -172,29 +173,30 @@ class TestScopeGuard:
 
 
 class TestRefusalLanguage:
+    """The judge's `en` for a message too short to tell is no language: it never overrides the session's."""
+
     @pytest.mark.parametrize(
-        ("state", "judged", "text", "expected"),
+        ("session", "judged", "text", "expected"),
         [
-            (GERMAN, "en", "vega-lite", "de"),  # the live case: a name has no language
-            (GERMAN, "en", "Write me an email to my customers about this plot", "de"),  # the session's, as the root's
-            (GERMAN, "fr", "Écris-moi un poème", "de"),
-            ({LANGUAGE: "fr", LANGUAGE_SOURCE: "chosen"}, "en", "write me a poem about cats", "fr"),
-            ({LANGUAGE: "Klingon", LANGUAGE_SOURCE: "chosen"}, "de", "Schreib mir ein Gedicht", "en"),
-            ({}, "de", "Schreib mir ein Gedicht", "de"),  # nothing recorded yet: the message's
-            ({}, "en", "d3.js", "en"),
-            ({LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}, "en", "vega-lite", "de"),  # too short to say: the paste's
-            ({LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}, "fr", "Écris-moi un poème", "fr"),
-            ({LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}, "en", "write me a poem about cats", "en"),
+            ("de", "en", "vega-lite", "de"),  # the live case: a name has no language
+            ("de", "en", "d3.js", "de"),
+            ("de", "en", "in Excel", "de"),
+            ("de", "en", "Write me an email to my customers about this plot", "en"),  # three words or more: English
+            ("de", "fr", "Bleu", "fr"),  # a language other than English counts at any length
+            ("en", "de", "Schreib mir ein Gedicht", "de"),
+            ("en", "en", "d3.js", "en"),
         ],
     )
-    def test_the_fixed_replies_follow_an_established_session_language(
-        self, state: dict[str, Any], judged: str, text: str, expected: str
+    def test_a_short_english_guess_keeps_the_session_language(
+        self, session: str, judged: str, text: str, expected: str
     ) -> None:
-        assert refusal_language(state, judged, text) == expected
+        assert refusal_language(session, judged, text) == expected
 
     async def test_a_short_refused_message_keeps_the_german_session(
         self, ledger: RequestLedger, services: Services, judge, served: list[str]
     ) -> None:
+        ledger.lang = "de"  # the route's, from the session language
+
         replaced, _ = await judged(judge, "vega-lite", "other_library", "en", state=GERMAN)
 
         assert replaced.parts[0].text == withheld_text("other_library")
@@ -204,6 +206,8 @@ class TestRefusalLanguage:
     async def test_an_accepted_message_without_a_language_keeps_the_session_language(
         self, ledger: RequestLedger, services: Services, judge, served: list[str]
     ) -> None:
+        ledger.lang = "de"
+
         replaced, context = await judged(judge, "d3.js", "other_library", "en", state=GERMAN)
 
         assert replaced is None and ledger.lang == "de"
