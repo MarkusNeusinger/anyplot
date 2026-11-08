@@ -1,15 +1,15 @@
-"""Roles the plot can compute from the data: bound when the data has the column, computed when it has not.
+"""Roles bound only by a clear name: the ones the plot can compute, and the ones only a column named so holds.
 
 No ADK import. A spec role is computed (`DataRole.computed`) when its `## Data` bullet
 starts with "Computed", "Calculated" or "Derived" (`spec_roles.COMPUTED`, the rolling average of
-`line-timeseries-rolling`), or when `COMPUTED_ROLES` lists it for its spec: values the
+`line-timeseries-rolling`), or when `spec_roles.COMPUTED_ROLES` lists it for its spec: values the
 plot derives from the other roles although the spec's bullet reads like data (the Bollinger
 bands from the closing price, the fitness, fatigue and form of a training-load chart from
-the daily load, the moving averages and Ichimoku lines of a price table). The list lives
-here, not in the spec files, which only the spec pipeline writes;
-`tests/unit/agents/data/test_computed.py` checks that every listed role exists in its spec
-and audits the wording of every spec's roles, so a new spec with such a role fails until it
-is listed here or named as data there with the reason.
+the daily load, the moving averages and Ichimoku lines of a price table). The list lives in
+`core/spec_roles.py`, not in the spec files, which only the spec pipeline writes, so the
+pipeline's adaptability checker reads it too; `tests/unit/agents/data/test_computed.py` checks
+that every listed role exists in its spec and audits the wording of every spec's roles, so a
+new spec with such a role fails until it is listed there or named as data with the reason.
 
 An unmarked role is required, and the default bindings fill a required number role with any
 number column: unmarked, the three SMAs of `indicator-sma` take a stock table's `Open`,
@@ -29,42 +29,40 @@ unless the word belongs to one of the role's own phrases (`MACD Signal` is the M
 line). The spec's window (`WINDOWS`: 20 for the Bollinger roles, 42 and 7 for CTL and ATL)
 breaks a tie (`window_rank`), and a bound column of another window (`SMA 200`) is a binding
 warning (`window_line`), so nothing changes silently.
+
+A name-only role (`DataRole.name_only`, listed in `NAME_ONLY_ROLES`) takes a column by the same
+name match and by nothing else, but a required one stays required: no role of its spec carries
+what the plot would compute it from. Unmarked, the MACD line of `indicator-macd` and the RSI of
+`indicator-rsi` took a price table's `Open`, and the sample means, ranges and control limits of
+`spc-xbar-r` took the raw measurements `X1` to `X5` of a wide subgroup table: complete bindings,
+a wrong plot and no warning. Marked, such a role stays open and is missing, so the page and the
+root ask for its column. No conversion, row number or date fills it either (`conversions.py`).
 """
 
 import re
 import unicodedata
-from collections.abc import Iterable
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from dataclasses import replace
 
 from core.spec_roles import DataRole
 
 
-COMPUTED_ROLES: dict[str, frozenset[str]] = {
-    "burndown-sprint": frozenset({"ideal"}),
-    "climograph-walter-lieth": frozenset({"temp_annual_mean", "precip_annual_total"}),
-    "curve-bias-variance-tradeoff": frozenset({"total_error"}),
-    "heatmap-loss-triangle": frozenset({"development_factor"}),
-    "indicator-bollinger": frozenset({"sma", "upper_band", "lower_band"}),
-    "indicator-ema": frozenset({"ema_short", "ema_long"}),
-    "indicator-ichimoku": frozenset({"tenkan_sen", "kijun_sen", "senkou_span_a", "senkou_span_b", "chikou_span"}),
-    "indicator-macd": frozenset({"signal", "histogram"}),
-    "indicator-sma": frozenset({"sma_short", "sma_medium", "sma_long"}),
-    "line-training-load-pmc": frozenset({"ctl", "atl", "tsb"}),
-    "probability-weibull": frozenset({"cumulative_probability"}),
-    "shap-waterfall": frozenset({"final_value"}),
-    "tree-decision": frozenset({"emv", "pruned"}),
+NAME_ONLY_ROLES: dict[str, frozenset[str]] = {
+    "indicator-macd": frozenset({"macd", "close"}),
+    "indicator-rsi": frozenset({"rsi", "close"}),
+    "spc-xbar-r": frozenset(
+        {"sample_mean", "sample_range", "ucl", "lcl", "center_line", "upper_warning", "lower_warning", "subgroup_size"}
+    ),
 }
-"""Per spec, the roles the plot computes when no column holds them, beyond the bullets that say so.
+"""Per spec, the roles the default bindings fill only from a column whose name clearly holds them (`name_match`).
 
-A role belongs here when its value follows from the spec's other roles by a fixed formula: the
-one its bullet or the spec's notes give, or the standard definition of the indicator it names.
-Moving averages and EMAs of `close`, the Ichimoku lines from `high`, `low` and `close`, the
-MACD signal line and histogram from `macd`, the ideal burndown line from the first day's
-scope, the annual mean and total of a climograph's months, a sum of error terms, chain-ladder
-age-to-age factors, median-rank plotting positions, a SHAP prediction as base plus
-contributions, and a decision tree's rollback. Not here: a value that needs a model fit
-(`logistic-regression`'s probability, a forecast), an input no role carries (the MACD line
-without prices, control limits without the subgroup size), or a stated value such as a target.
+A role belongs here when every number column fits its kind but only a column named so holds its value, and no
+role of its spec can compute it: the MACD line and the RSI need closing prices, which neither spec carries, and
+the X-bar/R chart's sample statistics and limits need the subgroups' measurements and size, which it carries
+neither. The optional warning limits are here too, because an optional number role otherwise takes any free
+number column. `close` and `subgroup_size` are not in the specs yet: they are the optional roles the spec changes
+for these specs add, listed here so that they bind by name from the day they arrive.
 """
 
 _BOLLINGER = frozenset({"sma", "upper_band", "lower_band"})
@@ -194,11 +192,27 @@ ALIASES: dict[str, tuple[str, ...]] = {
     "precip_annual_total": ("annual precipitation", "annual rainfall", "jahresniederschlag"),
     "final_value": ("prediction", "model output"),
     "emv": ("expected monetary value", "expected value"),
+    # The name-only roles (`NAME_ONLY_ROLES`): `MACD_12_26_9` and `RSI_14` hold their role's own name.
+    "macd": ("macd line", "moving average convergence divergence"),
+    "rsi": ("relative strength index",),
+    "close": ("closing price", "closing", "price", "schlusskurs", "schluss", "kurs", "cierre", "chiusura", "cloture"),
+    "sample_mean": ("mean", "average", "avg", "x bar", "xbar", "mittelwert", "moyenne"),
+    "sample_range": ("range", "r", "spannweite"),
+    "ucl": ("upper control limit", "upper limit", "obere eingriffsgrenze", "oeg"),
+    "lcl": ("lower control limit", "lower limit", "untere eingriffsgrenze", "ueg"),
+    "center_line": (
+        *("cl", "center", "centre", "centerline", "centre line", "central line", "mittellinie"),
+        *("x bar bar", "xbarbar", "grand mean", "process mean", "r bar", "rbar", "average range", "mean range"),
+    ),
+    "upper_warning": ("uwl", "upper warning limit", "obere warngrenze", "owg"),
+    "lower_warning": ("lwl", "lower warning limit", "untere warngrenze", "uwg"),
+    "subgroup_size": ("n", "subgroup n", "sample size", "group size", "stichprobenumfang", "stichprobengrosse"),
 }
 """Per role name, the words a column name holds when it clearly carries that value (all words of one entry,
 compared without case and diacritics, in any order). The role's own name always counts too (`rolling_avg`,
 `upper band`, `ideal`), so a role whose name is all a column would say has no entry. No bare word that also
-names something else (`upper`, `fitness`, `form`)."""
+names something else (`upper`, `fitness`, `form`). A role name has one entry for every spec: `close` is
+looked up only where it is name-only, since a required `close` of another spec takes any number column."""
 
 _BAND_SIDES = frozenset(
     {"upper", "lower", "obere", "oberes", "untere", "unteres", "oben", "unten", "bbu", "bbl"}
@@ -218,6 +232,11 @@ _NOT_SIMPLE = frozenset(
 )
 """Words of an average that is not a simple one: an EMA, a weighted average or a VWAP is no SMA and no rolling mean."""
 _SHORT, _MEDIUM, _LONG = frozenset({"short", "fast"}), frozenset({"medium", "mid"}), frozenset({"long", "slow"})
+_LIMIT_WORDS = frozenset(
+    {"ucl", "lcl", "cl", "uwl", "lwl", "limit", "limits", "control", "warning", "upper", "lower", "sigma"}
+    | {"center", "centre", "central", "centerline", "spec", "usl", "lsl", "tolerance"}
+)
+"""Words of a control chart's limits and center line: a column named so is no sample mean and no range."""
 EXCLUDES: dict[str, frozenset[str]] = {
     "sma": _BAND_SIDES | _NOT_SIMPLE,
     "rolling_avg": _BAND_WORDS | _NOT_SIMPLE,
@@ -229,31 +248,49 @@ EXCLUDES: dict[str, frozenset[str]] = {
     "signal": frozenset({"buy", "sell", "trade", "trades", "trading", "entry", "exit", "bullish", "bearish"}),
     "cumulative_probability": frozenset({"survival", "reliability"}),
     "final_value": frozenset({"base", "expected", "mean", "average"}),
+    "macd": frozenset({"signal", "hist", "histogram", "oscillator", "osc"}),
+    "rsi": frozenset({"stoch", "stochastic", "stochrsi", "connors", "ma", "sma", "ema", "signal", "smoothed"}),
+    "close": frozenset({"open", "high", "low", "ma", "sma", "ema", "rsi", "signal", "change", "return", "target"}),
+    "sample_mean": _LIMIT_WORDS | {"range", "grand", "process", "overall", "moving"},
+    "sample_range": _LIMIT_WORDS | {"mean", "average", "avg", "bar", "moving", "interquartile", "iqr"},
+    "ucl": frozenset({"warning", "uwl", "lower", "lcl", "spec", "specification", "usl", "tolerance"}),
+    "lcl": frozenset({"warning", "lwl", "upper", "ucl", "spec", "specification", "lsl", "tolerance"}),
+    "center_line": frozenset({"upper", "lower", "ucl", "lcl", "uwl", "lwl", "warning"}),
+    "upper_warning": frozenset({"lower", "lwl"}),
+    "lower_warning": frozenset({"upper", "uwl"}),
 }
 """Per role name, more such words: `SMA Upper Band` is a band, never the middle average or a rolling average;
 `EMA 20` is no SMA; `Long MA` is not the short average; `Buy Signal` is a trade, not the MACD's signal line;
-`Survival Probability` is the complement of the failure probability; `Expected Value` of a SHAP chart is its base."""
+`Survival Probability` is the complement of the failure probability; `Expected Value` of a SHAP chart is its base;
+`MACD Histogram` is no MACD line and `Stoch RSI` no RSI; `Close SMA` is an average, not the price; `X-bar UCL`,
+`Average Range` and `Moving Range` are no sample mean or range; `Upper Spec Limit` is a tolerance, no control
+limit."""
 
-WINDOWS: dict[str, int] = {
-    "sma": 20,
-    "upper_band": 20,
-    "lower_band": 20,
-    "ctl": 42,
-    "atl": 7,
-    "sma_short": 20,
-    "sma_medium": 50,
-    "sma_long": 200,
-    "ema_short": 12,
-    "ema_long": 26,
-    "tenkan_sen": 9,
-    "kijun_sen": 26,
-    "senkou_span_b": 52,
+WINDOWS: dict[str, tuple[int, ...]] = {
+    "sma": (20,),
+    "upper_band": (20,),
+    "lower_band": (20,),
+    "ctl": (42,),
+    "atl": (7,),
+    "sma_short": (20,),
+    "sma_medium": (50,),
+    "sma_long": (200,),
+    "ema_short": (12, 50),
+    "ema_long": (26, 200),
+    "tenkan_sen": (9,),
+    "kijun_sen": (26,),
+    "senkou_span_b": (52,),
+    "rsi": (14,),
 }
-"""The window the specs name for a role (`indicator-bollinger`: 20 periods; `line-training-load-pmc`: CTL over
-42 days, ATL over 7; `indicator-sma`: 20, 50 and 200; `indicator-ema`: 12 and 26, its example and every
-implementation; `indicator-ichimoku`: 9 for the conversion line, 26 for the base line, 52 for leading span B).
-A column whose name
-carries another window (`SMA 100`) is still bound, with a warning."""
+"""The windows the specs name for a role, the first one the convention (`indicator-bollinger`: 20 periods;
+`line-training-load-pmc`: CTL over 42 days, ATL over 7; `indicator-sma`: 20, 50 and 200; `indicator-ichimoku`:
+9 for the conversion line, 26 for the base line, 52 for leading span B; `indicator-rsi`: a 14-period lookback).
+`indicator-ema` names two pairs, 12 and 26 (its example and the implementations) and 50 and 200 (its golden
+cross), so `ema_short` takes 12 or 50 and `ema_long` 26 or 200, paired by position (`PAIRED_WINDOWS`). A column
+whose name carries another window (`SMA 100`) is still bound, with a warning."""
+PAIRED_WINDOWS: dict[str, str] = {"ema_short": "ema_long", "ema_long": "ema_short"}
+"""Roles whose windows go together by their position in `WINDOWS`: an open long EMA beside a bound `EMA 50` is the
+200-period one (`open_window`)."""
 MAX_WINDOW = 999
 
 _WORD = re.compile(r"[^\W_]+")
@@ -261,10 +298,15 @@ _CAMEL = re.compile(r"(?<=[a-z])(?=[A-Z])")
 _DIGIT_EDGE = re.compile(r"(?<=[^\W\d_])(?=\d)|(?<=\d)(?=[^\W\d_])")
 
 
-def mark_computed(roles: Iterable[DataRole], spec_id: str) -> list[DataRole]:
-    """The roles with `computed` set for the ones `COMPUTED_ROLES` lists for `spec_id`; a bullet's own mark stays."""
-    listed = COMPUTED_ROLES.get(spec_id, frozenset())
-    return [replace(role, computed=True) if role.name in listed else role for role in roles]
+def mark_name_only(roles: Iterable[DataRole], spec_id: str) -> list[DataRole]:
+    """The roles with `name_only` set for the single roles `NAME_ONLY_ROLES` lists for `spec_id`."""
+    listed = NAME_ONLY_ROLES.get(spec_id, frozenset())
+    return [replace(role, name_only=True) if role.name in listed and not role.variadic else role for role in roles]
+
+
+def binds_by_name(role: DataRole) -> bool:
+    """Whether the defaults bind the role only to a column whose name holds it: a computed or a name-only role."""
+    return (role.computed or role.name_only) and not role.variadic
 
 
 def companions(spec_id: str, role_name: str, bound: Iterable[str]) -> list[str]:
@@ -284,16 +326,18 @@ def match_score(role: DataRole, column_name: str) -> int:
     `SMA Upper Band` holds `sma` (one word) and `upper band` (two): the more specific role takes
     the column, so the upper band is never read as the middle average (`bindings.default_bindings`).
     A word the role's own phrases hold rules nothing out: `macd` excludes a MACD column from
-    every other role, not from the MACD's signal line (`MACD Signal`).
+    every other role, not from the MACD's signal line (`MACD Signal`). A word a phrase repeats
+    must be repeated in the name: `X-bar` holds `x bar` (the sample mean) but not `x bar bar`
+    (the grand mean), which `X-bar-bar` holds.
     """
-    words = set(_words(column_name))
+    words = Counter(_words(column_name))
     phrases = [
         wanted for phrase in (role.name.replace("_", " "), *ALIASES.get(role.name, ())) if (wanted := _words(phrase))
     ]
     own = {word for wanted in phrases for word in wanted}
-    if words & ((EXCLUDES_ALL | EXCLUDES.get(role.name, frozenset())) - own):
+    if words.keys() & ((EXCLUDES_ALL | EXCLUDES.get(role.name, frozenset())) - own):
         return 0
-    return max((len(wanted) for wanted in phrases if set(wanted) <= words), default=0)
+    return max((len(wanted) for wanted in phrases if not Counter(wanted) - words), default=0)
 
 
 def windows(column_name: str) -> list[int]:
@@ -302,13 +346,17 @@ def windows(column_name: str) -> list[int]:
 
 
 def window_rank(role: DataRole, column_name: str) -> int:
-    """0 when the column's name carries the spec's window for the role (or the role has none), 1 when it names none,
-    2 when it names another: the tie-break between two columns that match as well (`SMA 20` before `SMA 50`)."""
-    window = WINDOWS.get(role.name)
-    found = windows(column_name)
-    if window is None or window in found:
+    """The tie-break between two columns that match as well (`SMA 20` before `SMA 50`): the position of the window
+    the column's name carries among the role's `WINDOWS` (0 for a role without one), then one past the last for a
+    name that names none, and one more for a name that names another window."""
+    accepted = WINDOWS.get(role.name, ())
+    if not accepted:
         return 0
-    return 2 if found else 1
+    found = windows(column_name)
+    for position, window in enumerate(accepted):
+        if window in found:
+            return position
+    return len(accepted) + 1 if found else len(accepted)
 
 
 def window_line(role_name: str, column_name: str) -> str | None:
@@ -316,17 +364,35 @@ def window_line(role_name: str, column_name: str) -> str | None:
 
     Owner rule: nothing changes silently. `SMA 200` on `sma` stays bound, and the session block,
     the `set_bindings` result and the page say that the plot shows a 200-period average where
-    the spec's convention is 20 (review of 2026-10-15).
+    the spec's convention is 20 (review of 2026-10-15). `EMA 50` and `EMA 200` are a pair the
+    EMA spec names, so they carry no warning.
     """
-    window = WINDOWS.get(role_name)
+    accepted = WINDOWS.get(role_name, ())
     found = windows(column_name)
-    if window is None or not found or window in found:
+    if not accepted or not found or set(accepted) & set(found):
         return None
-    other = found[0]
+    convention = " or ".join(str(window) for window in accepted)
     return (
-        f"{role_name}: column '{column_name}' holds a {other}-period value; the spec's convention is {window}, "
-        "so the plot shows the column's window"
+        f"{role_name}: column '{column_name}' holds a {found[0]}-period value; the spec's convention is "
+        f"{convention}, so the plot shows the column's window"
     )
+
+
+def open_window(role_name: str, bound: Mapping[str, str]) -> int | None:
+    """The window the plot computes an open role with: the role's first in `WINDOWS`, or, when its partner in
+    `PAIRED_WINDOWS` is bound (`bound`: role name to column) to a column that names one of the partner's windows,
+    the window at the same position (`EMA 50` bound to the short EMA: the open long one takes 200). None for a role
+    without a window."""
+    accepted = WINDOWS.get(role_name, ())
+    if not accepted:
+        return None
+    partner = PAIRED_WINDOWS.get(role_name)
+    if partner is not None and partner in bound:
+        found = windows(bound[partner])
+        for position, window in enumerate(WINDOWS.get(partner, ())):
+            if window in found and position < len(accepted):
+                return accepted[position]
+    return accepted[0]
 
 
 def _words(text: str) -> list[str]:
