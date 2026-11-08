@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-oc: Operating Characteristic (OC) Curve
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-20
+// Quality: pending | Created: 2026-06-20
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
