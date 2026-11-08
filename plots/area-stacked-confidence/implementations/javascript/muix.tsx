@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-stacked-confidence: Stacked Area Chart with Confidence Bands
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-08-26
+// Quality: pending | Created: 2026-08-26
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
