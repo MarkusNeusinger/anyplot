@@ -61,6 +61,7 @@ interface UseFilterStateReturn {
   handleAddValueToGroup: (groupIndex: number, value: string) => void;
   handleRemoveFilter: (groupIndex: number, value: string) => void;
   handleRemoveGroup: (groupIndex: number) => void;
+  handleClearFilters: () => void;
   handleRandom: (method?: 'click' | 'space' | 'doubletap') => void;
 
   // Animation state for random
@@ -122,6 +123,7 @@ export function useFilterState({
           filterCounts: homeStateRef.current.filterCounts,
           globalCounts: homeStateRef.current.globalCounts,
           orCounts: homeStateRef.current.orCounts,
+          specTitles: homeStateRef.current.specTitles,
           allImages: homeStateRef.current.allImages,
           displayedImages: homeStateRef.current.displayedImages,
           hasMore: homeStateRef.current.hasMore,
@@ -149,9 +151,19 @@ export function useFilterState({
         filterCounts,
         globalCounts,
         orCounts,
+        specTitles,
         hasMore,
       }),
-    [allImages, displayedImages, activeFilters, filterCounts, globalCounts, orCounts, hasMore]
+    [
+      allImages,
+      displayedImages,
+      activeFilters,
+      filterCounts,
+      globalCounts,
+      orCounts,
+      specTitles,
+      hasMore,
+    ]
   );
   const lastSyncedKeyRef = useRef<string | null>(null);
 
@@ -167,6 +179,7 @@ export function useFilterState({
       filterCounts,
       globalCounts,
       orCounts,
+      specTitles,
       hasMore,
       initialized: true,
     }));
@@ -178,6 +191,7 @@ export function useFilterState({
     filterCounts,
     globalCounts,
     orCounts,
+    specTitles,
     hasMore,
     setHomeState,
   ]);
@@ -233,6 +247,15 @@ export function useFilterState({
     },
     [onTrackEvent]
   );
+
+  // Remove every group at once (the search's `.search_all()`); each removed
+  // group is reported like a single removal.
+  const handleClearFilters = useCallback(() => {
+    for (const group of activeFiltersRef.current) {
+      onTrackEvent('filter_remove', { category: group.category, value: group.values.join(',') });
+    }
+    setActiveFilters([]);
+  }, [onTrackEvent]);
 
   // Random filter - replaces last filter slot (or adds first one)
   const handleRandom = useCallback(
@@ -308,6 +331,7 @@ export function useFilterState({
     handleAddValueToGroup,
     handleRemoveFilter,
     handleRemoveGroup,
+    handleClearFilters,
     handleRandom,
 
     // Animation
