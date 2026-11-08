@@ -104,7 +104,7 @@ export default function Chart() {
             scaleType: "band",
             data: quarters,
             label: QUARTER,
-            height: 64,
+            height: 48,
             categoryGapRatio: 0.35,
             barGapRatio: 0.12,
             disableTicks: true,
