@@ -68,7 +68,7 @@ from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import Any, Literal
+from typing import Any, Literal, cast, get_args
 
 from ..schemas import Theme
 from ..settings import AgentSettings
@@ -109,6 +109,64 @@ class CallFacts:
     finish_reason: str | None
     candidates: int = 0
     thoughts: int = 0
+
+
+CallOutcome = Literal[
+    "ok", "changed", "kept", "shipped", "failed", "not_ready", "unconfirmed", "error", "refused", "unfinished"
+]
+"""What one root tool call did, as ToolSafety reads it from the tool's own answer (`tool_safety.call_outcome`):
+
+* `ok`: it answered and changed nothing (a reader, or `keep_plot_request` that kept nothing);
+* `changed`: it stored a change in the session (the data, the bindings, a language, the plot memory) or asked the
+  page for a library switch;
+* `kept`: a first-plot wish kept for the next run (`keep_plot_request`, or a `plot_pipeline` that stopped on
+  unconfirmed data and kept the request);
+* `shipped`, `failed`: a `plot_pipeline` run that stored a version, or that ran and stored none;
+* `not_ready`: the session was not ready for it (no data, open roles), which for `plot_pipeline` the page shows as a
+  failed plot card, a wish it kept or not; `unconfirmed`: a `plot_pipeline` call refused for unconfirmed data that
+  kept nothing, which runs no round and shows the page no plot card;
+* `error`: it answered an error or raised; `refused`: a guard refused it before it ran (`ToolCall.verdict`);
+* `unfinished`: it had not answered when the turn ended (a cancel, a deadline)."""
+GuardVerdict = Literal[
+    "allowed",
+    "tool_not_allowed",
+    "invalid_arguments",
+    "url_or_path_not_allowed",
+    "plot_as_confirmed",
+    "one_pipeline_per_turn",
+    "switch_requested",
+    "plot_already_run",
+    "too_many_data_runs",
+    "budget",
+    "internal",
+    "unknown",
+]
+"""What the guards said to a root tool call: `allowed`, one of ToolSafety's refusals, the Budget plugin's `budget`
+(its daily pipeline runs, which it answers before ToolSafety sees the call), `internal` (a guard failed and refused
+the call), or `unknown` for a code outside this list, so the record stays closed when a guard gains a refusal."""
+GUARD_VERDICTS: frozenset[str] = frozenset(get_args(GuardVerdict))
+TOOL_ALLOWED: GuardVerdict = "allowed"
+"""The verdict of a root tool call no guard refused."""
+
+
+def guard_verdict(code: object) -> GuardVerdict:
+    """`code` as a `GuardVerdict`: itself when it is one, else `unknown`."""
+    return cast(GuardVerdict, code) if isinstance(code, str) and code in GUARD_VERDICTS else "unknown"
+
+
+@dataclass(frozen=True, slots=True)
+class ToolCall:
+    """One root tool call of the turn: its name, the guards' verdict and what it did, closed codes only.
+
+    `tool` is a root tool's name or `other` (a name the model made up); `verdict` a `GuardVerdict`; `outcome` a
+    `CallOutcome`. Never an argument, a result or a word of the user: what the turn's outcome
+    (`stream.turn_outcome`) reads, and what the feedback case bundle is to carry once it keeps a turn's calls (backend
+    PR B6; the record lives with the request and is not stored yet). The record keeps the order the guards saw the
+    calls in: ToolSafety notes each call before it runs, and the Budget plugin a pipeline run it refuses first."""
+
+    tool: str
+    verdict: GuardVerdict = TOOL_ALLOWED
+    outcome: CallOutcome = "unfinished"
 
 
 def finish_name(value: Any) -> str | None:
@@ -222,6 +280,18 @@ class RequestLedger:
     """Calls and tokens by agent name (`book_step`), and the judges' under `judge` (`book_judge`)."""
     tools: list[str] = field(default_factory=list)
     """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
+    tool_calls: list[ToolCall] = field(default_factory=list)
+    """Every root tool call of the turn in the order the guards saw them, refused ones too, each with the guards'
+    verdict and what it did (`ToolCall`), written by ToolSafety and, for a pipeline run it refuses first, the Budget
+    plugin (`open_call`, `close_call`): the turn's `done.turn` (`stream.turn_outcome`) reads it, and the feedback case
+    bundle is to carry it (B6). `tools` stays the allowed names alone, which the usage telemetry and EmptyReply read."""
+    open_calls: dict[str, list[int]] = field(default_factory=dict, repr=False)
+    """The `tool_calls` indexes still waiting for their answer, by ADK's function call id (the tool's name for a call
+    without one): parallel calls of one model answer close in any order. Never logged or sent."""
+    shipped_memory: dict[str, list[str]] | None = None
+    """The plot memory a shipped version stands on, `{kept, added}`: the ids of the entries from before the run that
+    it kept, and of the entries its own `remember` items added (`pipeline.memory_ids`), set once the memory is settled
+    with the version. The `plot` event carries it as `memory`; None for a run that stored no version."""
     prep_ops: list[str] = field(default_factory=list)
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     rebuilt_from: list[int] = field(default_factory=list)
@@ -287,6 +357,30 @@ class RequestLedger:
             step.output += output_tokens
         else:
             step.input += tokens  # no split reported: the plain total counts as input
+
+    def open_call(self, key: str, tool: str, verdict: str) -> None:
+        """Note a root tool call as the guards judged it; a refused one is closed already (`refused`)."""
+        closed = guard_verdict(verdict)
+        self.tool_calls.append(ToolCall(tool, closed, "unfinished" if closed == TOOL_ALLOWED else "refused"))
+        self.open_calls.setdefault(key, []).append(len(self.tool_calls) - 1)
+
+    def close_call(self, key: str, tool: str, outcome: CallOutcome, *, early_verdict: str) -> None:
+        """Note what an opened call did; a refused call stays `refused`. A call no `open_call` noted (its note
+        failed) goes in when it closes: refused by `early_verdict` when its answer is an error, which a plugin before
+        ToolSafety may have given, else allowed with what it did, so a change it stored still counts."""
+        waiting = self.open_calls.get(key)
+        if not waiting:
+            if outcome == "error":
+                self.tool_calls.append(ToolCall(tool, guard_verdict(early_verdict), "refused"))
+            else:
+                self.tool_calls.append(ToolCall(tool, TOOL_ALLOWED, outcome))
+            return
+        index = waiting.pop(0)
+        if not waiting:
+            del self.open_calls[key]
+        call = self.tool_calls[index]
+        if call.outcome == "unfinished":
+            self.tool_calls[index] = ToolCall(call.tool, call.verdict, outcome)
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:

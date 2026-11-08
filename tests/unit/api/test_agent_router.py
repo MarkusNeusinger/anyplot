@@ -1114,6 +1114,26 @@ class TestMessagesStream:
         assert events[0] == ("status", {"step": "repairing", "attempt": 2, "outcome": "review", "findings": 3})
         assert events[1] == ("plot", plot)
 
+    def test_the_turn_outcome_the_memory_and_the_round_cap_pass(self, client, upstream) -> None:
+        """`done.turn`, a version's `memory` and a step's `max_attempts` reach the page; unknown fields still drop."""
+        status = {"step": "adapting", "attempt": 1, "max_attempts": 3, "cap": 9}
+        memory = {"kept": ["m1", "m2", "m3"], "added": ["m4"]}
+        plot = {"status": "ok", "attempts": 1, "artifacts": [], "version": 4, "memory": memory, "plan": "secret"}
+        done = {"llm_calls": 4, "tokens": 900, "turn": "kept", "turns": ["x"]}
+        body = "".join(
+            f"event: {name}\ndata: {json.dumps(data)}\n\n"
+            for name, data in (("status", status), ("plot", plot), ("done", done))
+        )
+        upstream.handler = lambda request: httpx.Response(200, content=body.encode())
+
+        events = _sse_events(self._post(client).text)
+
+        assert events == [
+            ("status", {"step": "adapting", "attempt": 1, "max_attempts": 3}),
+            ("plot", {"status": "ok", "attempts": 1, "artifacts": [], "version": 4, "memory": memory}),
+            ("done", {"llm_calls": 4, "tokens": 900, "turn": "kept"}),
+        ]
+
     def test_text_message_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
         client.post("/debug/agent/sessions/s1/messages", json={"text": "make it blue"}, headers=CLIENT_HEADERS)
