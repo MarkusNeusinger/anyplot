@@ -129,6 +129,27 @@ const HEADER_H = 84;
 const LEGEND_H = 44;
 const MARK_PX = 8; // half the width of a crossover triangle
 
+// One stroke style per series, shared by the plotted line and its legend sample
+const STROKES = {
+  close: { width: 3, dash: undefined },
+  smaShort: { width: 2, dash: "8 5" },
+  smaMedium: { width: 2.75, dash: "2 4" },
+  smaLong: { width: 2.25, dash: undefined },
+};
+const SAMPLE_W = 40;
+const SAMPLE_H = 10;
+
+// The built-in "line" mark is a short solid bar; this sample carries the series' dash pattern
+const lineSample = ({ width, dash }: { width: number; dash?: string }) =>
+  function LineSample({ color }: { color: string }) {
+    return (
+      <svg viewBox={`0 0 ${SAMPLE_W} ${SAMPLE_H}`}>
+        <line x1={1} y1={SAMPLE_H / 2} x2={SAMPLE_W - 1} y2={SAMPLE_H / 2} stroke={color} strokeWidth={width} strokeDasharray={dash} />
+      </svg>
+    );
+  };
+const lineStyle = (id: keyof typeof STROKES) => ({ strokeWidth: STROKES[id].width, strokeDasharray: STROKES[id].dash });
+
 function CrossoverMarks() {
   const xScale = useXScale();
   const yScale = useYScale();
@@ -177,7 +198,7 @@ export default function Chart() {
             color: t.palette[3],
             curve: "linear",
             showMark: false,
-            labelMarkType: "line",
+            labelMarkType: lineSample(STROKES.smaLong),
           },
           {
             type: "line",
@@ -187,7 +208,7 @@ export default function Chart() {
             color: t.palette[2],
             curve: "linear",
             showMark: false,
-            labelMarkType: "line",
+            labelMarkType: lineSample(STROKES.smaMedium),
           },
           {
             type: "line",
@@ -197,7 +218,7 @@ export default function Chart() {
             color: t.palette[1],
             curve: "linear",
             showMark: false,
-            labelMarkType: "line",
+            labelMarkType: lineSample(STROKES.smaShort),
           },
           {
             type: "line",
@@ -207,7 +228,7 @@ export default function Chart() {
             color: t.palette[0],
             curve: "linear",
             showMark: false,
-            labelMarkType: "line",
+            labelMarkType: lineSample(STROKES.close),
           },
         ]}
         xAxis={[
@@ -236,14 +257,21 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 15, color: t.ink, gap: "28px", flexDirection: "row-reverse" }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 15,
+              color: t.ink,
+              gap: "28px",
+              flexDirection: "row-reverse",
+              "& .MuiChartsLegend-mark": { width: SAMPLE_W, height: SAMPLE_H },
+            }}
+          />
           <ChartsSurface
             sx={{
-              "& .MuiLineChart-line": { strokeWidth: 2 },
-              '& .MuiLineChart-line[data-series="close"]': { strokeWidth: 3 },
-              '& .MuiLineChart-line[data-series="smaShort"]': { strokeDasharray: "8 5" },
-              '& .MuiLineChart-line[data-series="smaMedium"]': { strokeWidth: 2.75, strokeDasharray: "2 4" },
-              '& .MuiLineChart-line[data-series="smaLong"]': { strokeWidth: 2.25 },
+              '& .MuiLineChart-line[data-series="close"]': lineStyle("close"),
+              '& .MuiLineChart-line[data-series="smaShort"]': lineStyle("smaShort"),
+              '& .MuiLineChart-line[data-series="smaMedium"]': lineStyle("smaMedium"),
+              '& .MuiLineChart-line[data-series="smaLong"]': lineStyle("smaLong"),
               "& .MuiChartsGrid-line": { stroke: t.grid },
             }}
           >
