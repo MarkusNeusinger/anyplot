@@ -145,7 +145,7 @@ anyplot_theme = theme(
     axis_line=element_blank(),
     plot_title=element_text(size=16, face="bold", color=INK),
     plot_subtitle=element_text(size=11, color=INK_SOFT),
-    plot_caption=element_text(size=10, color=INK_SOFT, hjust=0),
+    plot_caption=element_text(size=10, color=INK_SOFT),
     legend_title=element_text(size=11, color=INK),
     legend_text=element_text(size=10, color=INK_SOFT),
     legend_background=element_blank(),
