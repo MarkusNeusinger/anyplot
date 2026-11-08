@@ -27,10 +27,11 @@ const HOUR = "Duration (hours, ranked by load)"; // role: hour
 const LOAD = "Power demand (MW)"; // role: load_mw
 
 // Data: replace this block with your own records, one object per row
-// Synthetic hourly demand of a mid-sized utility over one year, ranked from the highest hour to the lowest.
+// Synthetic hourly demand of a mid-sized utility over one year, ranked from the highest hour to the lowest:
+// a long gently sloping middle plus a steep spike over the few hottest hours.
 const data = Array.from({ length: 8760 }, (_, h) => ({
   [HOUR]: h,
-  [LOAD]: Math.round((400 + 800 * (1 - h / 8759) ** 0.65) * 10) / 10,
+  [LOAD]: Math.round((400 + 600 * (1 - h / 8759) ** 0.8 + 200 * Math.exp(-h / 8759 / 0.02)) * 10) / 10,
 }));
 
 // Plot: reads only data and the constants above
