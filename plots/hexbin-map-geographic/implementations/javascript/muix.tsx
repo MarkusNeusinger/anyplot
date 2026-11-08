@@ -20,7 +20,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const HEX_RADIUS_SHARE = 0.032; // hexagon radius as a share of the projected map width
 const PAD_SHARE = 0.06; // map padding around the points, as a share of their extent
-const HEX_OPACITY = 0.8; // translucent cells let the base map show through
+const HEX_OPACITY = 0.62; // translucent cells let the base map show through
 const KM_PER_DEG_LAT = 111.2; // length of one degree of latitude
 
 // Columns: set these to your data's column names
@@ -30,7 +30,8 @@ const LAT = "Latitude"; // role: lat
 // Data: replace this block with your own records, one object per point
 // Synthetic gray-whale and common-dolphin sighting reports off Southern
 // California: clusters offshore of three whale-watching launch points (Santa
-// Barbara Channel, Dana Point, La Jolla) plus sparse sightings along the coast.
+// Barbara Channel, Dana Point, La Jolla) plus sparse sightings up and down the
+// coast, every report at least 15 km from the shore.
 // Base map geometry: approximate real coastline vertices, north to south, and
 // the land polygon east of it.
 const COASTLINE = [
@@ -67,35 +68,59 @@ const data = (() => {
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
   const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
-  // Coastline longitude at a latitude, interpolated between the vertices
-  const coastLonAt = (lat: number) => {
+  const minShoreKm = 15; // no report closer to the shore than this
+  const cosRef = Math.cos((33.5 * Math.PI) / 180);
+  // Distance from a point at sea to the coastline in km; -1 for a point on land
+  const offshoreKm = (lon: number, lat: number) => {
+    let coastLon = -Infinity;
     for (let i = 0; i < COASTLINE.length - 1; i += 1) {
       const [lonA, latA] = COASTLINE[i];
       const [lonB, latB] = COASTLINE[i + 1];
-      if ((lat - latA) * (lat - latB) <= 0) return lonA + ((lat - latA) / (latB - latA)) * (lonB - lonA);
+      if ((lat - latA) * (lat - latB) <= 0) {
+        coastLon = lonA + ((lat - latA) / (latB - latA)) * (lonB - lonA);
+        break;
+      }
     }
-    return lat > COASTLINE[0][1] ? COASTLINE[0][0] : COASTLINE[COASTLINE.length - 1][0];
+    if (lon >= coastLon) return -1;
+    let nearest = Infinity;
+    for (let i = 0; i < COASTLINE.length - 1; i += 1) {
+      const ax = COASTLINE[i][0] * cosRef;
+      const ay = COASTLINE[i][1];
+      const dx = COASTLINE[i + 1][0] * cosRef - ax;
+      const dy = COASTLINE[i + 1][1] - ay;
+      const u = Math.min(1, Math.max(0, ((lon * cosRef - ax) * dx + (lat - ay) * dy) / (dx * dx + dy * dy)));
+      nearest = Math.min(nearest, Math.hypot(lon * cosRef - ax - u * dx, lat - ay - u * dy));
+    }
+    return nearest * KM_PER_DEG_LAT;
   };
+  const inView = (lon: number, lat: number) => lon > -120.6 && lon < -117.05 && lat > 32.45 && lat < 34.55;
 
   const hotspots = [
-    { lat: 34.15, lonOffset: 0.55, sigma: 0.28, n: 520 }, // Santa Barbara Channel
-    { lat: 33.47, lonOffset: 0.22, sigma: 0.16, n: 380 }, // Dana Point
-    { lat: 32.78, lonOffset: 0.18, sigma: 0.14, n: 340 }, // La Jolla
+    { lon: -119.72, lat: 34.16, sdLon: 0.3, sdLat: 0.09, n: 520 }, // Santa Barbara Channel
+    { lon: -117.9, lat: 33.3, sdLon: 0.13, sdLat: 0.1, n: 380 }, // off Dana Point
+    { lon: -117.47, lat: 32.8, sdLon: 0.1, sdLat: 0.1, n: 340 }, // off La Jolla
   ];
   const rows: { [LON]: number; [LAT]: number }[] = [];
   for (const spot of hotspots) {
-    for (let i = 0; i < spot.n; i += 1) {
-      const lat = spot.lat + gaussian() * spot.sigma * 0.6;
-      const lon = coastLonAt(lat) - Math.abs(spot.lonOffset + gaussian() * spot.sigma);
-      if (lon > -120.6 && lon < -117.05 && lat > 32.45 && lat < 34.55) {
+    let kept = 0;
+    while (kept < spot.n) {
+      const lon = spot.lon + gaussian() * spot.sdLon;
+      const lat = spot.lat + gaussian() * spot.sdLat;
+      if (inView(lon, lat) && offshoreKm(lon, lat) >= minShoreKm) {
         rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)) });
+        kept += 1;
       }
     }
   }
-  for (let i = 0; i < 280; i += 1) {
+  let sparse = 0;
+  while (sparse < 280) {
+    const lon = -120.6 + rand() * 3.55;
     const lat = 32.45 + rand() * 2.1;
-    const lon = coastLonAt(lat) - 0.05 - rand() * 0.5;
-    if (lon > -120.6) rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)) });
+    const km = offshoreKm(lon, lat);
+    if (km >= minShoreKm && km <= minShoreKm + 40) {
+      rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)) });
+      sparse += 1;
+    }
   }
   return rows;
 })();
@@ -248,6 +273,7 @@ export default function Chart() {
             max: xMax,
             height: X_AXIS_H,
             label: LON,
+            tickLabelMinGap: 24,
             valueFormatter: formatLon,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
