@@ -1,230 +1,236 @@
 // anyplot.ai
 // heatmap-adjacency: Network Adjacency Matrix Heatmap
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 95/100 | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
-
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
-const tokens = window.ANYPLOT_TOKENS;
+const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) — cross-team collaboration network ----
-// A fixed-seed LCG replaces the browser's non-reproducible Math.random().
-function lcg(seed) {
-  let s = seed >>> 0;
-  return () => {
+// Constants
+const TITLE = "heatmap-adjacency · javascript · muix · anyplot.ai";
+const TITLE_H = 96;
+const LEGEND_W = 190;
+const X_AXIS_H = 34;
+const Y_AXIS_W = 64;
+const TEAM_LABEL_H = 44;
+
+// Columns: set these to your data's column names
+const SOURCE = "Source"; // role: source
+const TARGET = "Target"; // role: target
+const WEIGHT = "Shared threads per month"; // role: weight
+const SOURCE_TEAM = "Source team"; // role: extra
+const TARGET_TEAM = "Target team"; // role: extra
+
+// Data: replace this block with your own records, one object per row
+// Undirected collaboration network of 20 people in four teams: same-team pairs link often and
+// strongly, cross-team pairs rarely and weakly; one row per linked pair
+const data = (() => {
+  let s = 42 >>> 0;
+  const random = () => {
     s = (Math.imul(1664525, s) + 1013904223) >>> 0;
     return s / 4294967295;
   };
-}
-const random = lcg(42);
+  const teams = [
+    { name: "Engineering", members: ["Ava", "Noah", "Mia", "Liam", "Zoe"] },
+    { name: "Design", members: ["Ivy", "Theo", "Nora", "Omar", "Luca"] },
+    { name: "Product", members: ["Maya", "Eli", "Ruby", "Finn", "Sara"] },
+    { name: "Marketing", members: ["Nina", "Cole", "Ana", "Drew", "Wes"] },
+  ];
+  const people = teams.flatMap((team) => team.members.map((name) => ({ name, team: team.name })));
+  const rows: Record<string, string | number>[] = [];
+  people.forEach((a, i) => {
+    people.slice(i + 1).forEach((b) => {
+      const sameTeam = a.team === b.team;
+      const linkRoll = random();
+      let weight = 0;
+      if (sameTeam && linkRoll < 0.85) weight = Math.round(35 + random() * 65);
+      else if (!sameTeam && linkRoll < 0.22) weight = Math.round(5 + random() * 30);
+      if (weight > 0) {
+        rows.push({ [SOURCE]: a.name, [TARGET]: b.name, [WEIGHT]: weight, [SOURCE_TEAM]: a.team, [TARGET_TEAM]: b.team });
+      }
+    });
+  });
+  return rows;
+})();
 
-const teams = [
-  { name: "Engineering", members: ["Ava", "Noah", "Mia", "Liam", "Zoe"] },
-  { name: "Design", members: ["Ivy", "Theo", "Nora", "Omar", "Luca"] },
-  { name: "Product", members: ["Maya", "Eli", "Ruby", "Finn", "Sara"] },
-  { name: "Marketing", members: ["Nina", "Cole", "Ana", "Drew", "Wes"] },
-];
-const names = teams.flatMap((team) => team.members);
-const clusterSize = teams[0].members.length;
-const nodeCount = names.length;
+// Plot: reads only data and the constants above
+const edges = data.filter((d) => Number.isFinite(Number(d[WEIGHT])));
 
-// Edge weight = shared Slack threads/docs per month. Same-team pairs link
-// often and strongly; cross-team pairs link rarely and weakly — this is what
-// makes the community structure visible as darker diagonal blocks.
-const weights = Array.from({ length: nodeCount }, () => new Array(nodeCount).fill(0));
-for (let i = 0; i < nodeCount; i += 1) {
-  for (let j = i + 1; j < nodeCount; j += 1) {
-    const sameTeam = Math.floor(i / clusterSize) === Math.floor(j / clusterSize);
-    const linkRoll = random();
-    let weight = 0;
-    if (sameTeam && linkRoll < 0.85) {
-      weight = Math.round(35 + random() * 65);
-    } else if (!sameTeam && linkRoll < 0.22) {
-      weight = Math.round(5 + random() * 30);
-    }
-    weights[i][j] = weight;
-    weights[j][i] = weight;
-  }
-}
+// Nodes from both endpoint columns (first appearance in the source column, then the target column),
+// grouped by team to expose the blocks along the diagonal
+const teamOf = new Map<string, string>();
+edges.forEach((d) => teamOf.set(String(d[SOURCE]), String(d[SOURCE_TEAM])));
+edges.forEach((d) => teamOf.set(String(d[TARGET]), String(d[TARGET_TEAM])));
+const teams = [...new Set([...teamOf.values()])];
+const nodes = teams.flatMap((team) => [...teamOf.keys()].filter((name) => teamOf.get(name) === team));
 
-// Full matrix — both triangles filled, since the underlying graph is
-// undirected (a diagonal stays 0: no self-collaboration edges).
-const points = [];
-for (let row = 0; row < nodeCount; row += 1) {
-  for (let col = 0; col < nodeCount; col += 1) {
-    points.push({ id: `${row}-${col}`, x: names[col], y: names[row], z: weights[row][col] });
-  }
-}
+// Undirected graph: each pair fills both triangles; an absent pair keeps no entry
+const weightOf = new Map<string, number>();
+edges.forEach((d) => {
+  weightOf.set(`${d[SOURCE]}|${d[TARGET]}`, Number(d[WEIGHT]));
+  weightOf.set(`${d[TARGET]}|${d[SOURCE]}`, Number(d[WEIGHT]));
+});
+const cells = nodes.flatMap((row) =>
+  nodes.map((col) => ({ key: `${row}|${col}`, row, col, weight: weightOf.get(`${row}|${col}`) })),
+);
+const minWeight = Math.min(...weightOf.values());
+const maxWeight = Math.max(...weightOf.values());
 
-const edgeWeights = weights.flat().filter((w) => w > 0);
-const minWeight = Math.min(...edgeWeights);
-const maxWeight = Math.max(...edgeWeights);
+// Team blocks along the diagonal: first and last node of each team
+const blocks = teams.map((team) => {
+  const members = nodes.filter((name) => teamOf.get(name) === team);
+  return { team, first: members[0], last: members[members.length - 1] };
+});
+const strongest = edges.filter((d) => Number(d[WEIGHT]) === maxWeight);
+const subtitle = `${nodes.length} nodes in ${teams.length} teams · ${edges.length} undirected links, both triangles filled · outlined: strongest link (${maxWeight}), ${strongest.map((d) => `${d[SOURCE]}–${d[TARGET]}`).join(", ")}`;
 
-// Custom marker: filled square matrix cells instead of the default circles.
-// Absent edges (z === 0) render as the plain page background — visually
-// distinct from every real, colored edge — rather than the palest color step.
-function AdjacencyCell(props) {
-  const { series, xScale, yScale, colorGetter, color } = props;
-  const cellWidth = xScale.bandwidth();
-  const cellHeight = yScale.bandwidth();
-
+function AdjacencyLayer() {
+  const xScale = useXScale() as unknown as ((v: string) => number) & { bandwidth: () => number; step: () => number };
+  const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number; step: () => number };
+  const colorScale = useZColorScale() as unknown as (v: number) => string;
+  const { left, top, width, height } = useDrawingArea();
+  const cellW = xScale.bandwidth();
+  const cellH = yScale.bandwidth();
+  const halfGap = (xScale.step() - cellW) / 2;
   return (
     <g>
-      {series.data.map((point, i) => {
-        const x0 = xScale(point.x) ?? 0;
-        const y0 = yScale(point.y) ?? 0;
-        const fill = point.z > 0 ? (colorGetter ? colorGetter(i) : color) : tokens.pageBg;
-        const isTopLink = point.z === maxWeight;
-        return (
-          <rect
-            key={point.id}
-            x={x0}
-            y={y0}
-            width={cellWidth}
-            height={cellHeight}
-            fill={fill}
-            stroke={isTopLink ? tokens.ink : "none"}
-            strokeWidth={isTopLink ? 2 : 0}
+      {cells.map((c) => (
+        <rect
+          key={c.key}
+          x={xScale(c.col)}
+          y={yScale(c.row)}
+          width={cellW}
+          height={cellH}
+          fill={c.weight === undefined ? t.elevatedBg : colorScale(c.weight)}
+          stroke={c.weight === maxWeight ? t.ink : "none"}
+          strokeWidth={c.weight === maxWeight ? 2.5 : 0}
+        />
+      ))}
+      {blocks.slice(1).map((b) => (
+        <g key={b.team}>
+          <line
+            x1={xScale(b.first) - halfGap}
+            x2={xScale(b.first) - halfGap}
+            y1={top}
+            y2={top + height}
+            stroke={t.inkSoft}
+            strokeWidth={2}
           />
-        );
-      })}
+          <line
+            x1={left}
+            x2={left + width}
+            y1={yScale(b.first) - halfGap}
+            y2={yScale(b.first) - halfGap}
+            stroke={t.inkSoft}
+            strokeWidth={2}
+          />
+        </g>
+      ))}
+      {blocks.map((b) => (
+        <text
+          key={`label-${b.team}`}
+          x={(xScale(b.first) + xScale(b.last) + cellW) / 2}
+          y={top + height + 28}
+          textAnchor="middle"
+          fontSize={15}
+          fontWeight={600}
+          fill={t.inkSoft}
+        >
+          {b.team}
+        </text>
+      ))}
     </g>
   );
 }
 
-// Ink-soft dividers at team boundaries (drawn at low opacity, distinct from
-// both the colored edges and the blank/absent-edge background) so the
-// block-diagonal cluster structure reads at a glance.
-function ClusterBoundaries() {
-  const xScale = useXScale("col");
-  const yScale = useYScale("row");
-  const drawingArea = useDrawingArea();
-  const marks = [];
-  for (let k = clusterSize; k < nodeCount; k += clusterSize) {
-    const bx = xScale(names[k]) ?? 0;
-    const by = yScale(names[k]) ?? 0;
-    marks.push(
-      <line
-        key={`v-${k}`}
-        x1={bx}
-        y1={drawingArea.top}
-        x2={bx}
-        y2={drawingArea.top + drawingArea.height}
-        stroke={tokens.inkSoft}
-        strokeOpacity={0.4}
-        strokeWidth={2}
-      />,
-      <line
-        key={`h-${k}`}
-        x1={drawingArea.left}
-        y1={by}
-        x2={drawingArea.left + drawingArea.width}
-        y2={by}
-        stroke={tokens.inkSoft}
-        strokeOpacity={0.4}
-        strokeWidth={2}
-      />,
-    );
-  }
-  return <g>{marks}</g>;
-}
-
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_HEIGHT = 76;
-  const MARGIN_TOP = 50;
-  const MARGIN_LEFT = 70;
-  const MARGIN_RIGHT = 130;
-  const MARGIN_BOTTOM = 40;
-
-  const LEGEND_EDGE_PADDING = 14;
-  const chartWidth = width - LEGEND_EDGE_PADDING;
-  const chartHeight = height - TITLE_HEIGHT;
-
+  const chartW = width - LEGEND_W;
+  const chartH = height - TITLE_H;
+  // Equal px per node on both axes: the matrix is a square of the smaller available side
+  const availW = chartW - 16 - Y_AXIS_W - 12;
+  const availH = chartH - 8 - X_AXIS_H - TEAM_LABEL_H;
+  const side = Math.min(availW, availH);
   return (
-    <Box sx={{ width, height, bgcolor: tokens.pageBg, display: "flex", flexDirection: "column" }}>
-      <Box sx={{ height: TITLE_HEIGHT, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-        <Typography sx={{ color: tokens.ink, fontSize: 22, fontWeight: 500, lineHeight: 1.2, fontFamily: "inherit" }}>
-          heatmap-adjacency · javascript · muix · anyplot.ai
-        </Typography>
-        <Typography sx={{ color: tokens.inkSoft, fontSize: 13, lineHeight: 1.2, fontFamily: "inherit", pt: "4px" }}>
-          Monthly shared threads between teammates, grouped by team
-        </Typography>
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", px: "24px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px", lineHeight: 1.35 }}>{subtitle}</Typography>
       </Box>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "flex-start" }}>
-        <ScatterChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          disableVoronoi
-          series={[
-            {
-              id: "collaboration",
-              type: "scatter",
-              data: points,
-              label: "Collaboration weight",
-              xAxisId: "col",
-              yAxisId: "row",
-              zAxisId: "weight",
-            },
-          ]}
-          xAxis={[
-            {
-              id: "col",
-              scaleType: "band",
-              data: names,
-              categoryGapRatio: 0.04,
-              tickLabelStyle: { fontSize: 13, fill: tokens.inkSoft },
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
-          yAxis={[
-            {
-              id: "row",
-              scaleType: "band",
-              data: names,
-              categoryGapRatio: 0.04,
-              tickLabelStyle: { fontSize: 13, fill: tokens.inkSoft },
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
-          zAxis={[
-            {
-              id: "weight",
-              min: minWeight,
-              max: maxWeight,
-              colorMap: { type: "continuous", min: minWeight, max: maxWeight, color: [tokens.seq[0], tokens.seq[1]] },
-            },
-          ]}
-          topAxis="col"
-          bottomAxis={null}
-          leftAxis="row"
-          rightAxis={null}
-          margin={{ top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT }}
-          slots={{ scatter: AdjacencyCell }}
-          slotProps={{ legend: { hidden: true } }}
+      <ChartsDataProvider
+        width={chartW}
+        height={chartH}
+        series={[]}
+        skipAnimation
+        margin={{ top: 8, left: 16, right: 12 + availW - side, bottom: TEAM_LABEL_H + availH - side }}
+        xAxis={[
+          {
+            scaleType: "band",
+            data: nodes,
+            position: "top",
+            height: X_AXIS_H,
+            categoryGapRatio: 0.06,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: nodes,
+            width: Y_AXIS_W,
+            categoryGapRatio: 0.06,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        zAxis={[{ colorMap: { type: "continuous", min: minWeight, max: maxWeight, color: [t.seq[0], t.seq[1]] } }]}
+      >
+        <ChartsWrapper
+          legendPosition={{ vertical: "middle", horizontal: "end" }}
+          legendDirection="vertical"
+          sx={{ width, height: chartH }}
         >
-          <ClusterBoundaries />
-          <ContinuousColorLegend
-            axisId="weight"
-            axisDirection="z"
-            position={{ horizontal: "right", vertical: "middle" }}
-            direction="column"
-            length="55%"
-            thickness={14}
-            minLabel={({ formattedValue }) => `${formattedValue} threads`}
-            maxLabel={({ formattedValue }) => `${formattedValue} threads`}
-            labelStyle={{ fontSize: 12, fill: tokens.inkSoft, fontFamily: "inherit" }}
-          />
-        </ScatterChart>
-      </Box>
+          <Box
+            sx={{
+              gridArea: "legend",
+              width: LEGEND_W,
+              height: 520,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              pr: "24px",
+              boxSizing: "border-box",
+            }}
+          >
+            <Typography sx={{ fontSize: 15, color: t.ink, textAlign: "center", lineHeight: 1.3, maxWidth: 160, mb: "10px", textWrap: "balance" }}>
+              {WEIGHT}
+            </Typography>
+            <ContinuousColorLegend
+              direction="vertical"
+              thickness={20}
+              labelPosition="end"
+              sx={{ flex: 1, color: t.inkSoft, fontSize: 14 }}
+            />
+          </Box>
+          <ChartsSurface>
+            <AdjacencyLayer />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </Box>
   );
 }

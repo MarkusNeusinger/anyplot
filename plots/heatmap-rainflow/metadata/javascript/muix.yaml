@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: heatmap-rainflow
 created: '2026-08-25T01:12:01Z'
-updated: '2026-08-25T01:27:29Z'
-generated_by: claude-sonnet
-workflow_run: 32795939068
+updated: '2026-11-08T07:03:47Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42438971144
 issue: 4465
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/muix/plot-light.html
@@ -15,131 +16,119 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 quality_score: 90
 review:
   strengths:
-  - Implements genuine ASTM E1049 three-point rainflow counting from a synthetic wind-turbine
-    load signal (turning-point extraction + stack collapse), not a canned matrix —
-    the data is a faithful worked example of the spec's domain
-  - Correctly works around the community-tier @mui/x-charts limitation (no native
-    Heatmap) by driving a ScatterChart with a custom `slots.scatter` rect renderer
-    sized from the underlying linear scales — produces a true tiled grid instead of
-    circular bubbles
-  - Log1p color scale with domain anchored on the true rendered minimum (not log1p(0))
-    correctly handles the heavily right-skewed cycle-count distribution described
-    in the spec
-  - Dominant/peak bin is outlined, directly answering the spec's 'identifying dominant
-    cycle combinations' use case with a clear visual focal point
-  - Zero-count bins are simply never drawn (transparent), exactly matching the spec's
-    'visually distinct zero-count bins' requirement
-  - imprint_seq (green → blue) used correctly for the continuous count scale, identical
-    data colors across both themes, both renders fully theme-correct with no clipping
-    at any canvas edge
-  - Axis labels are descriptive with physical units (kN·m) on both axes, and font
-    sizes are explicitly set throughout (title/axis/tick/legend)
+  - 'Composes the matrix from community MUI X primitives: ChartsDataProvider with
+    linear x/y axes and a continuous zAxis colorMap, cells drawn through useXScale/useYScale/useZColorScale,
+    and a ContinuousColorLegend whose min/max labels are mapped back from log space
+    to counts'
+  - Every bin is a filled cell at its mean ± half a bin width and amplitude ± half
+    a bin width; empty bins stay unfilled with a faint grid outline, so a 1-cycle
+    bin (brand green) is never mistaken for an empty one in either theme
+  - Log colour scale on the Imprint sequential ramp (t.seq) with a colour-bar title
+    that names the count and the scale; frequent low-amplitude bins read blue, rare
+    bins green
+  - Real three-point rainflow counting (ASTM E1049, residual half-cycles weighted
+    0.5) on a deterministic LCG-seeded wind-turbine blade-root moment signal, binned
+    20 × 20 — the counts fall out of the computation
+  - Subtitle states total cycles, bin grid and the empty-bin convention, and the peak
+    bin (61 cycles) is outlined in ink, giving the reader an entry point without covering
+    data
+  - Theme tokens threaded through all chrome (ink, inkSoft, grid, pageBg); data colours
+    identical in both renders
   weaknesses:
-  - The ContinuousColorLegend shows only the numeric extremes ('61' / '1') with no
-    caption identifying what they measure (cycle count) — a viewer isolated from the
-    surrounding page context has to infer the unit from the title/axis alone
-  - Title fontSize (26px) renders at only ~37% of canvas width, notably below the
-    ~70-85% this exact mandated title string typically fills at the style-guide default
-    size elsewhere in the catalog — not a legibility problem, but slightly under-weighted
-    relative to the chart below it
-  - 'LM-02: the peak-highlighting technique and slot-based cell renderer are good
-    uses of muix''s customization surface, but a distinctive feature specific to this
-    domain (e.g. a small readout of the peak bin''s exact count, or log-scale tick
-    labels on the legend) is not yet exploited'
+  - 'Suggestion: the colour bar labels only its endpoints (1 and 61); one or two intermediate
+    log ticks (e.g. 5, 20) would let a reader map the mid-ramp teal cells to counts.'
+  - 'Suggestion: the 170 px legend column leaves a wide empty band on the right; a
+    slightly narrower column would give the matrix more width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "heatmap-rainflow · javascript · muix · anyplot.ai" centered at top, clearly readable. X-axis label "Cycle mean, blade-root flapwise moment (kN·m)" and rotated Y-axis label "Cycle amplitude, half-range (kN·m)" both dark ink, fully readable, comfortably clear of the canvas edges (checked via pixel crop). Tick labels on both axes (dark grey) legible and evenly spaced, no overlap.
-      Data: An irregular grid of rectangular cells forming a rainflow amplitude-vs-mean matrix. Cells range from bright green (low cycle counts, near 1) through teal to dark blue (high cycle counts, up to 61) — a continuous sequential ramp, not a categorical palette. The single highest-count cell (near mean≈600 kN·m, amplitude≈0-25 kN·m) is outlined in black to mark it as the dominant cycle combination. A vertical color legend on the right shows the green→blue ramp labeled "1" to "61". Zero-count bins are simply absent (background shows through), matching the spec's requirement for visually distinct empty bins.
-      Legibility verdict: PASS — all text (title, axis labels, ticks, legend numbers) is clearly dark-on-light and readable; no overlaps or clipped elements found in edge crops (top/bottom/left/right all checked).
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "heatmap-rainflow · javascript · muix · anyplot.ai" centred at the top (~31 % of the width) with a grey subtitle "1,075 counted cycles in 20 × 20 bins · empty bins left unfilled · outlined: peak bin, 61 cycles". Y axis "Cycle amplitude, half-range (kN·m)" with ticks 50–500; x axis "Cycle mean, blade-root flapwise moment (kN·m)" with ticks 200–1,050. Colour bar on the right titled "Cycle count (log scale)", labelled 1 (bottom) and 61 (top). All text dark and readable.
+      Data: a 20 × 20 grid of cells separated by 2 px gaps; empty bins are unfilled with faint grid-colour outlines. Counted bins run from brand green #009E73 (1 cycle) through teal to blue (61 cycles). Dense blue rows at the lowest amplitudes across means 200–1,050, a second band at amplitudes ~150–250 for means 350–900, and a few isolated green cells at amplitudes 375–500 near mean 600–700. The peak bin (lowest amplitude, mean 600) carries a 3 px dark outline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now rendered in light/white text, fully readable against the dark background. Axis labels and tick labels also light-colored and legible; no dark-on-dark text found anywhere (title, axes, ticks, legend numbers "61"/"1" all confirmed light-colored via pixel crop of the legend region).
-      Data: Identical green→blue cell colors and identical matrix layout to the light render — only the chrome (background, text, peak-cell outline color, which switches to white) adapts to the theme. Peak bin still clearly outlined for the same focal-point emphasis.
-      Legibility verdict: PASS — confirmed no dark-on-dark failures; all chrome elements flip appropriately while data colors stay identical between themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, tick labels and colour-bar text all flip to light ink and read clearly; empty-bin outlines are subtle dark-grey and still visible; no dark-on-dark text.
+      Data: cell colours identical to the light render (green → teal → blue); the peak-bin outline flips to light ink. Brand green low-count cells remain clearly visible and distinct from the unfilled empty bins.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title renders
-          at only ~37% of canvas width (measured), well under the ~70-85% typical
-          for this exact mandated title string at style-guide default size
+        comment: Title 22 px, axis titles 16 px, ticks 14 px; readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements found
+        comment: No text collisions; cells separated by gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cell sizes and color ramp make both sparse and dense bins clearly
-          visible; peak bin outlined for extra visibility
+        comment: Cells large and filled; empty-bin outlines subtle but visible in
+          both themes; colour bar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp avoids red-green confusion, no CVD-unsafe
-          hue-only signal
+        comment: Green-to-blue sequential ramp, CVD-safe; empty bins distinguished
+          by fill, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Matrix fills most of the canvas, legend sits close to the chart,
-          balanced margins, nothing cut off (verified via edge crops)
+        comment: 3200×1800; balanced axis labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with physical units (kN·m)
+        comment: Descriptive axis titles with kN·m units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (green #009E73 -> blue #4467A3) used correctly for continuous
-          data; backgrounds and chrome theme-correct in both renders'
+        comment: 'Continuous data on imprint_seq (t.seq); backgrounds #FAF8F1 / #1A1A17;
+          theme-correct chrome'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Above library defaults: brand-consistent gradient, deliberate peak-cell
-          emphasis, clean typography; not quite publication-grade polish'
+        comment: Informative subtitle with totals and the empty-bin convention, two-line
+          colour-bar title naming the log scale, clear title/subtitle hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No heavy grid, generous whitespace, cell gaps read as subtle separators;
-          standard axis lines remain and title is somewhat under-sized relative to
-          the chart
+        comment: 2 px cell gaps, empty bins as faint outlines instead of a fill, axis
+          domains snapped to bin edges
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Bold outline on the single dominant cell directly surfaces the spec's
-          key insight (identifying dominant cycle combinations) without needing annotation
-          text
+        comment: Peak bin outlined in ink and named in the subtitle, giving a focal
+          point beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,28 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True 2D tiled heatmap-style matrix (via a legitimate community-tier
-          workaround), matches spec exactly
+        comment: Binned rainflow matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log color scale, colorbar, amplitude/mean binning, transparent zero-count
-          bins — all spec notes covered
+        comment: Amplitude on y, mean on x, sequential log colour scale, colour bar,
+          units, empty bins distinct; ticks are linear values, not bin labels, so
+          the bin-tick bullet does not apply
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Amplitude on Y, mean on X as specified; axes show the full data range
+        comment: Each cell spans its bin centre ± half a bin width; axes cover all
+          bins
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format exactly correct; color legend shows numeric extremes
-          but no caption naming the quantity (cycle count)
+        comment: Title in mandated format; colour bar titled 'Cycle count (log scale)'
     data_quality:
       score: 15
       max: 15
@@ -178,63 +167,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide range of bin densities from single-cycle outliers to a 61-cycle
-          peak, showing the full skewed distribution the spec describes
+        comment: Dense low-amplitude rows, a secondary turbulence band, sparse isolated
+          high-amplitude bins and many empty bins
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind-turbine blade-root flapwise bending moment is a real, neutral,
-          comprehensible fatigue-analysis scenario
+        comment: Wind-turbine blade-root flapwise moment — neutral engineering scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Load magnitudes and amplitude/mean ranges are physically plausible
-          for this domain
+        comment: Moments ~200–1,050 kN·m and amplitudes up to ~520 kN·m plausible;
+          counts computed by rainflow counting, not placed; no Check values in the
+          spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Necessary helper functions for the rainflow algorithm (turning points,
-          cycle counting) add structure beyond a flat script, though justified by
-          the domain
+        comment: Linear module; the one sub-component is required to use the MUI X
+          scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed=42), no Math.random()
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart, ContinuousColorLegend, Box, Typography imported,
-          all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for implementing a genuine rainflow-counting
-          algorithm plus a custom heatmap renderer; no fake UI
+        comment: Rainflow and binning written out, which the library prompt allows
+          (no statistics helpers available)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract, skipAnimation set, current
-          MUI X API
+        comment: Default-exported component, skipAnimation, v9 composition API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -242,23 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Follows the documented community workaround (ScatterChart + custom
-          slot) for the missing Heatmap component; zAxis colorMap used correctly
+        comment: 'v9 composition: ChartsDataProvider + ChartsWrapper + ChartsSurface
+          with ChartsXAxis/ChartsYAxis and sized axis bands'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Custom slots.scatter renderer and zAxis-driven ContinuousColorLegend
-          are genuinely muix-specific; one more domain-specific touch (e.g. peak-value
-          readout) would push this to a 5
+        comment: Custom SVG layer driven by useXScale/useYScale/useZColorScale and
+          a zAxis continuous colorMap feeding ContinuousColorLegend — a community-tier
+          heatmap without the Pro component
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T02:33:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
+  - layer-composition
   - patches
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -266,4 +257,4 @@ impl_tags:
   - binning
   styling:
   - custom-colormap
-  - publication-ready
+  - edge-highlighting

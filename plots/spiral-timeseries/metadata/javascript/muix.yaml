@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: spiral-timeseries
 created: '2026-09-09T19:10:04Z'
-updated: '2026-09-09T19:26:38Z'
-generated_by: claude-sonnet
-workflow_run: 34392706930
+updated: '2026-11-08T05:53:37Z'
+generated_by: claude-opus-5-5
+adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
+workflow_run: 42452232828
 issue: 5243
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/muix/plot-light.html
@@ -15,128 +16,121 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-ti
 quality_score: 87
 review:
   strengths:
-  - Correct Archimedean spiral (constant spacing between revolutions), computed continuously
-    so the earliest data sits closest to the center as required.
-  - 'Full spec feature set present: color-coded value magnitude, radial month grid
-    marking cycle subdivisions, cycle-start (year) labels for orientation, and a colorbar
-    legend.'
-  - 'Genuine MUI X library engagement: a real ScatterPlot series (with valueFormatter
-    and item tooltip) for the cycle-start markers, plus useXScale/useYScale hooks
-    to project the custom spiral geometry into the chart''s coordinate space — not
-    a generic default chart.'
-  - Correct Imprint sequential palette usage for the continuous temperature scale;
-    data colors are identical between light and dark renders, with theme-correct chrome
-    in both.
-  - 'Square canvas (2400x2400) exactly matches the ''//# anyplot-orientation: square''
-    directive; nothing is clipped in either render.'
-  - Deterministic, seeded (LCG, seed=42) data generation; clean imports with no unused
-    symbols.
+  - 'Calendar-correct Archimedean spiral: each point''s angle is its share of its
+    own calendar year, so the same date in every year sits at the same angle, clockwise
+    from the top, and the winter (green, thin) and summer (blue, thick) bands line
+    up along the radii in both renders'
+  - Value is encoded twice, by imprint_seq color and by stroke width (2 to 5.5 px),
+    so the seasonal peaks also read through line weight alone
+  - 'Idiomatic MUI X composition: ChartsContainer with hidden linear axes set to equal
+    limits on a square drawing area keeps the spiral circular, and a custom SVG layer
+    reads the scales through useXScale/useYScale'
+  - Each cycle start is a ScatterPlot series in the theme ink with a ChartsTooltip
+    item trigger, so the year markers can be hovered in the HTML view, and each one
+    carries a bold year label
+  - Month spokes in the grid token stay lighter than the spiral, start clear of the
+    hub and follow each month's real length, with month labels at the middle of each
+    month, anchored by side
+  - All chrome comes from ANYPLOT_TOKENS, so both themes are correct and the data
+    colors are the same in both renders
   weaknesses:
-  - The secondary line-width ramp (2-5.5px) meant to reinforce the value encoding
-    is barely perceptible in the rendered PNG — either widen the range or drop it
-    and rely on color alone for clarity.
-  - Year labels (e.g. '2024') sit close enough to the spiral stroke passing through
-    that point that they nearly touch it — add a small offset or background halo so
-    the label fully separates from the data line.
-  - The coded multi-year warming trend (WARMING_PER_YEAR_C=0.35, ~1.4°C total over
-    5 years) is dwarfed by the ~13°C seasonal amplitude and is not visually verifiable
-    as 'later revolutions running consistently warmer' — either increase the trend's
-    realistic magnitude slightly or add a subtle visual cue (e.g., a faint trend arc/annotation)
-    so the claimed pattern is actually visible.
+  - 'Suggestion: the community ContinuousColorLegend, fed by a zAxis colorMap built
+    from t.seq, could replace the hand-drawn gradient rect and the nice-tick computation
+    for the colorbar.'
+  - 'Suggestion: the data''s 0.35 °C/year warming barely shows on the ramp; the year
+    labels could carry each year''s mean so the trend is readable as well.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "spiral-timeseries · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. Twelve month labels (Jan-Dec) ring the outside of the spiral with short radial tick marks, all in soft dark gray, clearly legible. A right-side colorbar labeled "Avg Temp" with "30°C" / "15°C" / "-1°C" stops is fully visible and legible.
-      Data: Five concentric spiral revolutions (2020-2024) rendered as a continuous line colored along an Imprint sequential green-to-blue scale keyed to temperature (green = cold months, blue = warm months); five black dot markers with adjacent "2020"-"2024" text labels mark the start of each yearly revolution along the top (Jan) spoke, with the earliest year (2020) closest to the center.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: centered bold title "spiral-timeseries · javascript · muix · anyplot.ai" with a soft-ink subtitle ("1,825 daily values, Jan 1, 2020 to Dec 29, 2024 · one revolution per year, earliest at the centre"); twelve month labels Jan–Dec run clockwise from the top around the rim in inkSoft; bold year labels 2020–2024 sit next to near-black dots along the 12 o'clock spoke; a vertical colorbar on the right shows ticks 0–25 and the rotated title "Daily mean temperature (°C)". All text is dark on light and readable.
+      Data: one continuous Archimedean spiral of 5 revolutions with even spacing, expanding outward from the center. Its color runs from brand green #009E73 (cold, Jan, top) to blue #4467A3 (warm, Jul, bottom), and its stroke widens with the value. The seasonal bands line up along the radii. Thin light-grey month spokes sit behind the spiral. The last revolution ends just before the top (Dec 29).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, month labels, and colorbar as the light render, now rendered in light gray/off-white text, clearly legible against the dark background. Grid tick marks remain subtle but visible.
-      Data: The spiral's green-to-blue color mapping is visually identical to the light render (same hues at the same radii/angles) — only the chrome (background, text, grid) flipped, as required. Year-marker dots switch from black to light/white to stay visible on the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, tick, and legend text remains clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, year labels and colorbar title in light ink, month labels and colorbar ticks in light soft ink, all clearly readable; no dark-on-dark text. The cycle-start dots flip to off-white, the spokes to a subtle dark grey that stays visible.
+      Data: the spiral's green-to-blue colors and stroke widths are identical to the light render; brand green stays clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome text (title, month/year labels, colorbar labels) reads
-          cleanly in both themes at explicit 14-22px sizes.
+        comment: Explicit sizes (title 22, month/year labels 15, colorbar 14/16 CSS
+          px), readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No severe overlap; year labels (e.g. '2024') sit close enough to
-          the spiral stroke to nearly touch it — minor.
+        comment: Year labels sit beside their dots and clear of the Dec spoke; month
+          labels sit outside the rim
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Color is the dominant, clearly visible value encoding; the secondary
-          line-width ramp (2-5.5px) is present but barely perceptible in the render.
+        comment: Stroke 2–5.5 px suits a dense 1,825-point line; cycle-start dots
+          are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential green-to-blue scale gives adequate contrast on
-          both light and dark chrome; color is not the sole signal since spiral geometry
-          also carries structure.
+        comment: Green-to-blue sequential ramp backed by line width; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas exactly 2400x2400, legend fits cleanly in the reserved
-          right margin, nothing clipped.
+        comment: Square 2400x2400; the spiral fills the area, the colorbar balances
+          the right side, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional x/y axis, but month/year labeling correctly substitutes
-          as the chart's orientation axis; colorbar labeled with units (°C).
+        comment: Colorbar titled 'Daily mean temperature (°C)' with units; months
+          and years labeled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous scale correctly uses imprint_seq (t.seq[0]/t.seq[1]);
-          backgrounds are theme-correct (#FAF8F1 / #1A1A17); data colors identical
-          across themes.'
+        comment: 'imprint_seq #009E73→#4467A3 from t.seq for continuous values; theme-correct
+          backgrounds'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Bespoke Archimedean spiral geometry, sequential color mapping, and
-          custom SVG legend go well beyond default chart styling.
+        comment: 'Beyond the baseline: a data-derived subtitle (count, date range,
+          reading rule) and a bold year-label vs soft month-label hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Minimal chrome, no boxed axes, generous whitespace; radial tick marks
-          near the outer rim are slightly busy where they meet the outermost revolution.
+        comment: Spokes start clear of the hub so the center stays open; month labels
+          anchored by side so they hug the rim
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Seasonal color banding makes the yearly cycle legible at a glance,
-          but the coded multi-year warming trend (~1.4°C total) is too subtle against
-          the ~13°C seasonal swing to actually read.
+        passed: true
+        comment: Width and color encode value together, so the warm summer arcs get
+          visual weight and the seasonal alignment along the radii becomes the focal
+          pattern
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Archimedean spiral time series with constant revolution spacing.
+        comment: Archimedean spiral time series, one revolution per year
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: color-coded magnitude, radial month
-          grid, cycle-start year labels, colorbar.'
+        comment: Value encoded by color (+ width) with a colorbar, month spokes labeled
+          at the rim, cycle starts labeled, earliest at the center, constant spacing;
+          every 'A good version shows' bullet met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle=day-of-year, radius=cumulative time (earliest at center), color=temperature;
-          full 5-year/1825-point dataset rendered.
+        comment: Angle = share of the calendar year, radius grows continuously with
+          elapsed time; no break between cycles
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the required '{spec-id} · {language} · {library}
-          · anyplot.ai' pattern; colorbar labeled 'Avg Temp' with units.
+        comment: Mandated title format; colorbar labeled for a reader
     data_quality:
       score: 15
       max: 15
@@ -177,22 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates every core feature of the spiral-timeseries type: spiral
-          geometry, color/width magnitude encoding, radial subdivisions, cycle labeling,
-          legend.'
+        comment: Five full cycles show periodic alignment, a continuous spiral and
+          the value encoding
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily average temperature over 5 years is realistic and neutral.
+        comment: Daily mean temperature at a mid-latitude station, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -1°C to 30°C annual range with a modest 0.35°C/year warming trend
-          and 1825 points sits well within the spec's size and value expectations.
+        comment: About 1–29 °C, seasonal amplitude ±13 °C around 14 °C; plausible
+          for the domain. No Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -202,36 +195,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small single-purpose functional components consistent
-          with the library-mandated overlay-hooks pattern for parametric curves.
+        comment: Flat data → geometry → render; the two components exist because MUI
+          X hooks need them
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes the dataset fully deterministic.
+        comment: Seeded LCG (state = 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (ChartContainer, ChartsText, ScatterPlot, ChartsTooltip,
-          useXScale, useYScale) is used.
+        comment: ChartsContainer, ScatterPlot, ChartsTooltip and the scale hooks are
+          all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; complexity matches what the
-          spiral geometry actually requires.
+        comment: Geometry fits the problem; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-managed output; skipAnimation set; sized from window.ANYPLOT_SIZE.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          square orientation directive
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -239,25 +232,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ChartContainer + useXScale/useYScale to project custom geometry,
-          plus a real ScatterPlot series with valueFormatter/tooltip — the documented
-          community pattern for parametric curves MUI X has no native primitive for.
+        comment: ChartsContainer composition with useXScale/useYScale for a custom
+          layer is the documented MUI X pattern for custom marks
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Real scatter series and item tooltip are genuine MUI X features,
-          though most of the visual (spiral path, grid, labels) is hand-drawn SVG
-          rather than native chart primitives.
+        comment: Mixes a native ScatterPlot series with ChartsTooltip item interaction
+          on the cycle starts inside a custom SVG layer
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:50:34Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - colorbar
   - annotations
-  - manual-ticks
+  - layer-composition
+  - polar-projection
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
@@ -265,4 +261,4 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
-  - gradient-fill
+  - minimal-chrome
