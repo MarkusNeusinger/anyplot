@@ -2,151 +2,163 @@ library: pygal
 language: python
 specification_id: shap-waterfall
 created: '2026-05-07T11:56:19Z'
-updated: '2026-05-07T12:37:21Z'
-generated_by: claude-sonnet
-workflow_run: 25493700161
+updated: '2026-11-08T22:19:43Z'
+generated_by: claude-opus-5-5
+adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
+workflow_run: 42526234497
 issue: 5237
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data quality: realistic telecom churn ML scenario with plausible SHAP
-    values and both positive/negative contributions'
-  - 'Perfect code quality: clean KISS structure, reproducible, correct output files,
-    elegant spacer waterfall pattern'
-  - Correct theme-adaptive chrome in both renders; dark render is particularly clean
-    and readable
-  - SHAP values embedded in Y-axis labels provide instant quantitative context without
-    cluttering the bars
+  - 'The waterfall chain is built with pygal''s own stacking idiom: HorizontalStackedBar
+    with an unpainted spacer series up to each segment''s left edge, so every segment
+    starts exactly where its neighbor ends and the chain runs unbroken from 0.25 to
+    0.48'
+  - Base value and prediction are drawn as pygal major y_labels guides (dashed, heavier
+    stroke) with bold 'Base 0.25' / 'Prediction 0.48' labels in the tick row; nearby
+    ticks are dropped so the labels never collide
+  - 'Per-point dict values carry each segment''s color (#AE3030 up, #4467A3 down)
+    and its signed label, printed beside every segment via print_labels, readable
+    even for the +0.02 sliver'
+  - Features sorted by |SHAP| with Monthly Charges at the top, chain climbing from
+    the base at the bottom to the prediction next to the largest bar
+  - 'Theme tokens threaded through Style and inline CSS: all chrome flips cleanly,
+    data colors identical in both renders; HTML export keeps native pygal tooltips'
   weaknesses:
-  - 'VQ-07: First visible data color is not #009E73 (brand green); style colors tuple
-    starts with background spacer color offsetting Okabe-Ito order'
-  - 'DE-01/DE-02: Limited design sophistication beyond configured defaults; minimal
-    visual refinement options within pygal constraints'
-  - 'SC-02: SHAP values shown in Y-axis labels rather than directly annotated on/beside
-    bar segments as spec implies'
+  - 'Suggestion: thin connector lines between consecutive segment ends (the Notes''
+    optional ''consider a connector line'') would make the doubling-back flow easier
+    to trace, for example through a pygal XY overlay or inline CSS on the spacer edges.'
+  - 'Suggestion: the ''Prediction 0.48'' label sits at the bottom of a chain that
+    ends at the top; a label near the Monthly Charges end would tie it closer to the
+    segment it closes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Customer Churn Prediction · shap-waterfall · pygal · anyplot.ai" visible in dark ink; Y-axis feature labels (e.g., "Monthly Charges (+0.20)") readable in dark text; X-axis label with full SHAP value context readable at bottom
-      Data: Orange (#D55E00 Okabe-Ito vermillion) bars for positive contributions, blue (#0072B2 Okabe-Ito blue) for negative; vertical guide lines at x=0.25 (base) and x=0.48 (prediction); bars correctly stacked showing cumulative waterfall progression
-      Legibility verdict: PASS — all elements visible and readable; some right-side whitespace beyond final prediction value
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold title "Customer Churn Prediction · shap-waterfall · python · pygal · anyplot.ai" in dark ink, ~83% width; y-axis title "Feature (ordered by |SHAP value|)" rotated on the left; x-axis title "Predicted churn probability (base value + SHAP contributions)"; feature names and ticks 0.1–0.4 in dark ink; faint vertical guides; two dark dashed reference lines at 0.25 and 0.48 labelled in bold "Base 0.25" and "Prediction 0.48" in the tick row. All readable.
+      Data: 10 horizontal waterfall segments, matte red #AE3030 for positive and blue #4467A3 for negative contributions, chained from Streaming TV (+0.02, bottom, starting at 0.25) up to Monthly Charges (+0.20, top, ending at 0.48); signed value labels beside each segment's right end. No brand-green series (the spec mandates red/blue).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct theme surface
-      Chrome: Title, Y-axis feature labels, and X-axis label all rendered in light text (#F0EFE8/INK_MUTED range), clearly readable against dark background; no dark-on-dark failures detected
-      Data: Orange and blue bars are identical to light render — only chrome (background and text) flipped; strong contrast between bar colors and dark background
-      Legibility verdict: PASS — all text clearly readable, no dark-on-dark issues, data colors identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, feature names, ticks and value labels in light ink (#F0EFE8 / #B8B7B0); reference dashed lines in light ink; guides subtle. No dark-on-dark text anywhere.
+      Data: segment colors identical to the light render (#AE3030 / #4467A3), same geometry and labels.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, label=22, major_label=18); readable
-          in both themes
+        comment: Fonts set explicitly (56/44/40 px on 3200x1800); title bold 62 px;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or bar overlap; 10 features cleanly spaced
+        comment: No collisions; ticks near the reference values are dropped so Base/Prediction
+          labels stay clear
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; Monthly Charges bar dominates as expected
+        comment: 10 thick segments, even the +0.02 sliver visible; reference guides
+          heavier than grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: '#D55E00 vs #0072B2 — Okabe-Ito, CVD-safe, strong contrast'
+        comment: Red vs blue differ in hue and lightness; signed labels carry the
+          direction too
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; some right-side whitespace inherent to data range
+        comment: 3200x1800, balanced margins, title ~83% width (expected for the mandated
+          title), nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive X-axis with base/prediction values; feature names on
-          Y-axis
+        comment: Descriptive axis titles for a reader
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct; Okabe-Ito colors used but first data color
-          not #009E73'
+        passed: true
+        comment: 'Spec-mandated red/blue via the Imprint anchors #AE3030 and #4467A3;
+          backgrounds #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Professional two-tone semantic coloring; well-configured default
+        comment: 'Beyond baseline: bold title and bold reference-value tick labels,
+          reference guides drawn heavier and dashed as a distinct typographic tier'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean chrome, hidden legend, controlled guides; pygal frame border
-          remains
+        comment: Ticks within 0.3 step of the reference values are suppressed to keep
+          labels clean; value labels start-anchored beside each segment; axis range
+          trimmed to the chain with room for the top label
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Waterfall structure communicates cumulative path; Monthly Charges
-          visually dominant
+        comment: Chain climbs bottom-to-top so the eye ends on the largest driver
+          next to the prediction line
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct horizontal waterfall via stacked bar with spacers; no connector
-          lines
+        comment: Horizontal SHAP waterfall
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present; SHAP values in Y-axis labels vs directly on
-          bars
+        comment: Sorted by |SHAP|, cumulative chain base→prediction, red/blue, labelled
+          base and prediction references, value labels, horizontal layout; connector
+          line optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on Y-axis, SHAP values on X-axis, correct cumulative stacking
+        comment: 'Every segment spans its exact chain interval (checked all 10: 0.25→0.27→0.24→0.28→0.33→0.27→0.35→0.25→0.13→0.28→0.48)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains shap-waterfall · pygal · anyplot.ai; legend appropriately
-          hidden
+        comment: Descriptive prefix + mandated title; legend N/A (colors explained
+          by signed labels)
     data_quality:
       score: 15
       max: 15
@@ -156,21 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both positive and negative contributions; full range of magnitudes;
-          10 features
+        comment: Mixed signs, a doubling-back chain, wide magnitude range down to
+          a sliver
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Telecom customer churn prediction — textbook ML explainability scenario
+        comment: Customer churn model with plausible telecom features; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base 0.25, prediction 0.48, SHAP in -0.12 to +0.20 — plausible probability
-          space
+        comment: Probabilities in 0.13–0.48; final_value computed as base + sum(SHAP)
+          = 0.48, read off the axis at the prediction line
     code_quality:
       score: 10
       max: 10
@@ -180,31 +192,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Style → Plot → Save; no unnecessary functions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, sys, numpy, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Canonical spacer+visible waterfall pattern; sys.path fix is necessary
+        comment: Chain via np.cumsum; sys.path guard not deducted
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html saved correctly
+        comment: plot-{THEME}.png and .html; current pygal 3.1 API
     library_mastery:
       score: 7
       max: 10
@@ -214,22 +226,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: HorizontalStackedBar with per-bar color dicts is correct pygal pattern
+        comment: Spacer-series stacking on HorizontalStackedBar is the pygal waterfall
+          idiom; per-point dict values for color/label
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-bar {value, color, label} dicts and HTML interactive export are
-          distinctive pygal features
+        comment: y_labels_major turns the reference values into native major guides,
+          per-value print_labels, inline css hooks into pygal's SVG classes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-08T21:39:46Z'
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  - hover-tooltips
+  patterns: []
   dataprep:
   - cumulative-sum
   styling: []
