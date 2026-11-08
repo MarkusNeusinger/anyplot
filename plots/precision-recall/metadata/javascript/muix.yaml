@@ -2,136 +2,132 @@ library: muix
 language: javascript
 specification_id: precision-recall
 created: '2026-09-05T12:23:33Z'
-updated: '2026-09-05T12:44:23Z'
-generated_by: claude-sonnet
-workflow_run: 33965544780
+updated: '2026-11-08T04:08:40Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42445301724
 issue: 2274
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Clean, theme-correct Imprint palette usage — first series is #009E73 (gradient
-    boosting), second series follows canonical order (#C475FD, logistic regression);
-    backgrounds and text are correctly warm off-white / near-black in each theme.'
-  - Precision-recall math is computed correctly from raw scores (sorted-threshold
-    sweep with tie handling) and rendered with curve="stepAfter", accurately matching
-    the spec's requirement for a stepped, threshold-based line style.
-  - Average Precision is computed and shown directly in the legend for both classifiers,
-    and a dashed baseline reference line (ChartsReferenceLine) marks the random-classifier
-    precision — both explicit spec requirements.
-  - Realistic, neutral fraud-detection scenario with a genuinely imbalanced 6% positive
-    rate, and two clearly contrasting classifiers (AP = 0.90 vs AP = 0.18) that visibly
-    demonstrate strong vs weak model behavior — good DQ-01 feature coverage.
-  - Deterministic LCG + Box-Muller data generation (seed 42), no functions/classes
-    beyond the necessary curve-math helpers and the mandatory default-exported component.
+  - Precision-recall points come from every distinct score threshold, with tied scores
+    grouped. The stepBefore curve gives each precision P_n the recall interval (R_(n-1),
+    R_n], which matches the AP sum (R_n - R_(n-1)) * P_n computed on lines 65-67,
+    so the drawn area and the AP in the legend agree
+  - The random-classifier baseline uses MUI X's native ChartsReferenceLine as a dashed
+    inkSoft line at 0.040 (24/600 positives, derived from the data). It has its own
+    inline label and reads clearly in both themes
+  - Each curve's AP sits in its own legend label ('Gradient boosting (AP = 0.90)',
+    'Logistic regression (AP = 0.18)'), so it is clear which curve each value belongs
+    to
+  - 'Each series has its own linked x axis (xAxisId), one of them hidden with position:
+    ''none'', so the two curves can carry different recall arrays inside one LineChart.
+    This is an idiomatic v9 composition'
+  - 'The data is plausible and imbalanced: 600 card transactions with 4 % fraud. One
+    strong and one weak classifier make the contrast between the curves clear at a
+    glance'
+  - Theme chrome comes entirely from ANYPLOT_TOKENS (ink, inkSoft, grid); the data
+    colors are palette[0] and palette[1] in both renders; skipAnimation is set
   weaknesses:
-  - 'Iso-F1 contour reference curves (spec: ''Consider showing iso-F1 curves as contour
-    lines'') are not included — optional per spec wording, but would add extra reference
-    value.'
-  - Title occupies only ~35-40% of canvas width at fontSize 21 — well below the ~70-85%
-    naturally expected for the mandated title format; not a legibility problem, but
-    a slightly larger title font would give it more visual presence.
-  - Design execution is solid but still reads as a well-configured default rather
-    than a distinctive/polished chart — e.g. no fill-under-curve or emphasis technique
-    differentiates the strong classifier's dominant region from the weak one beyond
-    color and shape.
+  - 'Suggestion: faint iso-F1 contours (for example F1 = 0.2/0.4/0.6/0.8), each labeled
+    with its value, would give a reference for the trade-off; the Notes only offer
+    them as optional.'
+  - 'Suggestion: the vertical grid at every 0.1 recall, together with the horizontal
+    grid, is fairly dense behind the stepped lines; horizontal-only gridlines would
+    let the steps stand out more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white.
-      Chrome: Title "Fraud Detection · precision-recall · javascript · muix · anyplot.ai" centered at top in dark ink, fully visible, not clipped. Axis labels "Recall" (x) and "Precision" (y) in dark ink, tick labels 0.0-1.0 on both axes, subtle horizontal-only gridlines. Legend at bottom-center with two color swatches and AP values in legend text. Dashed baseline reference line near the bottom with "Random classifier (baseline)" label in muted gray ink.
-      Data: First series (gradient boosting) is #009E73 brand green, second series (logistic regression) is a light purple/violet from the Imprint palette (#C475FD). Both drawn as step-after (staircase) lines matching the threshold-based PR-curve convention. Green curve stays near 1.0 precision for most of the recall range then drops sharply near recall=0.9; purple curve drops quickly from precision 1.0 to under 0.1 within the first ~40% of recall, consistent with a much weaker classifier.
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no overlap or clipping observed.
+      Background: warm off-white #FAF8F1 across the whole canvas (3200x1800).
+      Chrome: bold dark title "Fraud Detection · precision-recall · javascript · muix · anyplot.ai" (~42 % width), with a softer-ink subtitle "600 transactions · 24 positives (4.0 %) · step curves through every score threshold". Axis titles "Recall" (x) and "Precision" (y), tick labels 0.0–1.0 in steps of 0.1 on both axes, a subtle grey grid in both directions, and a horizontal legend at the bottom. All text is readable.
+      Data: Gradient boosting (#009E73 green) holds precision 1.0 up to recall ~0.46, then steps down through 0.92–0.84 and drops to 0.48 at recall ~0.96. Its last vertical segment at recall 1.0 falls to the baseline. Logistic regression (purple, second Imprint position) falls quickly from 1.0 to 0.5 at recall 0.04, shows a sawtooth between 0.36 and 0.10, and flattens around 0.05–0.08 near the baseline. Short vertical stubs at the steps are real tied-recall threshold points. The baseline is a dashed inkSoft line at 0.040, labeled "Random classifier: precision = positive rate 0.040" at the left. The legend reads "Gradient boosting (AP = 0.90)" and "Logistic regression (AP = 0.18)".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, tick labels, and legend layout as the light render, all rendered in light/off-white ink against the dark background. Gridlines are a subtle dark gray, still visible. Baseline dashed line and its label are rendered in a lighter muted gray, legible against the dark backdrop.
-      Data: Identical colors to the light render — #009E73 green and the same light purple — confirming chrome-only theme adaptation with no shift in data-series hues.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; every text element (title, axis labels, tick labels, legend, baseline annotation) is clearly legible against the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, tick labels, baseline label and legend text are all light ink. The grid is subtle but visible. No dark-on-dark text.
+      Data: the green and purple curves are identical to the light render; only the chrome flipped. The dashed baseline renders light grey and stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set via sx overrides (axis label 16px, tick
-          label 14px, legend 15px); readable in both themes. Title is smaller than
-          the ~70-85% expected width for the mandated format but not clipped or squeezed.
+        comment: 'Explicit font sizes: 22 px title, 15 px subtitle and legend, 16
+          px axis titles, 14 px ticks. All readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions; y-axis label nudged away from tick labels
-          via translateX.
+        comment: No text collisions; the baseline label sits clear of both curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3px stroke width on a 51-point resampled grid gives clean, clearly
-          visible step lines for both series.
+        comment: 3 px step lines are clearly visible; the legend line samples match
+          the series colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple, good contrast, not red-green dependent.
+        comment: Green vs purple is CVD-safe, and the baseline is dashed neutral ink
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas, legend sits close
-          to the plot, balanced margins.
+        comment: 3200x1800; balanced axis bands; nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Recall'' and ''Precision'' are the correct, descriptive, unitless
-          metric names for this plot type.'
+        comment: Recall / Precision are the correct unitless ratio names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series next Imprint palette color,
-          identical across themes; backgrounds theme-correct.'
+        comment: 'First series #009E73, second series Imprint position 2; correct
+          page backgrounds in both themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette and clean chrome, but no
-          distinctive visual treatment beyond that.'
+        passed: true
+        comment: 'Beyond the baseline: a data-derived subtitle (sample size, positive
+          rate) under the title forms a clear title/subtitle typographic hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Horizontal-only subtle grid, custom stroke width, spacing nudges
-          — some refinement visible beyond raw defaults.
+        comment: Small 0.02 axis padding keeps the 1.0 and 0.0 steps off the axis
+          lines; the reference-line label is placed inline at its line's start
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: The stark contrast between the near-flat strong classifier and the
-          fast-decaying weak classifier, plus the baseline line, gives the viewer
-          an immediate read on relative model quality.
+        comment: The strong-versus-weak classifier pairing against the near-floor
+          4 % baseline makes the imbalance lesson readable at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct precision-recall step curve.
+        comment: Stepped precision-recall curves, precision on y and recall on x
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AP in legend, baseline reference line, stepped style, and multi-classifier
-          comparison all present; iso-F1 curves were only a 'consider' suggestion.
+        comment: Stepped line, horizontal baseline at the positive ratio, AP in the
+          legend, distinct colors with a legend; iso-F1 is optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Recall on x, precision on y, full [0,1] range shown on both axes.
+        comment: Both axes span 0-1 with all points visible; marks sit at their computed
+          threshold values, no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive} · {spec-id} · {language} · {library}
-          · anyplot.ai'; legend labels include model name and AP value.
+        comment: Title uses the mandated format with a descriptive prefix; legend
+          names the models with their AP
     data_quality:
       score: 15
       max: 15
@@ -171,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both a strong and a weak classifier plus the random baseline,
-          covering the full range of PR-curve behavior.
+        comment: Two classifiers, a sawtooth at low recall, a high-recall fall and
+          an imbalanced baseline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fraud-detection scenario with realistic 6% positive rate, neutral
-          domain.
+        comment: Card fraud detection, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Baseline precision matches the actual positive rate; AP values are
-          internally consistent with the visualized curves.
+        comment: 'Checked: baseline 24/600 = 0.040 matches the line position; AP is
+          computed as the step sum consistent with the drawn steps; AP values 0.90
+          / 0.18 are plausible for the score separations'
     code_quality:
       score: 10
       max: 10
@@ -196,59 +193,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions are limited to the necessary curve-math (sorting/cumulative
-          counts) and RNG; no unnecessary abstraction.
+        comment: Flat module-level computation plus the required default-export component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic.
+        comment: Fixed-seed LCG with Box-Muller normals
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart and ChartsReferenceLine imported, both used.
+        comment: LineChart and ChartsReferenceLine are both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the required curve computation; no fake
-          UI.
+        comment: Written-out PR/AP computation is allowed by the muix Computation
+          line; concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, current MUI X API, harness owns output files.
+        comment: Default-export component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 axis/legend API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic LineChart config: xAxis/yAxis, series, grid, slotProps.legend,
-          sx-based fine styling.'
+        comment: Declarative series/axis config; ChartsReferenceLine composed as a
+          LineChart child; per-series xAxisId binding with a hidden second axis
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses ChartsReferenceLine and explicit tickInterval, both library-specific,
-          but overall usage pattern is still fairly generic line-chart territory.
+        passed: false
+        comment: 'Native curve: ''stepBefore'' interpolation and ChartsReferenceLine
+          with a built-in label'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:06:01Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
