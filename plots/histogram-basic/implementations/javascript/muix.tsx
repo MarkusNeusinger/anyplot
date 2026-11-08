@@ -1,127 +1,100 @@
 // anyplot.ai
 // histogram-basic: Basic Histogram
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-08-26
 import { BarChart } from "@mui/x-charts/BarChart";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "histogram-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
 
-// --- Data (in-memory, deterministic): subscriber ages for a streaming service
-// Deterministic LCG so the sampled distribution is stable across renders —
-// the browser has no seeded Math.random().
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return function next() {
+// Constants
+const TARGET_BINS = 14; // about this many bins; the width is rounded to a 1-2-2.5-5 step
+const NICE_STEPS = [1, 2, 2.5, 5, 10];
+
+// Columns: set these to your data's column names
+const AGE = "Subscriber Age (years)"; // role: values
+
+// Data: replace this block with your own records, one object per observation
+// Ages of 600 streaming-service subscribers: a log-normal draw gives a young-
+// skewed base with a long tail of older loyal customers.
+const data = (() => {
+  let state = 42 >>> 0;
+  const rand = () => {
     state = (state * 1664525 + 1013904223) >>> 0;
     return state / 4294967296;
   };
-}
-const rand = makeLcg(42);
-function gaussianSample() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+  return Array.from({ length: 600 }, () => {
+    const z = Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+    return { [AGE]: Math.round(Math.min(85, Math.max(16, Math.exp(Math.log(29) + 0.34 * z)))) };
+  });
+})();
 
-// Log-normal draw: a young-skewed subscriber base with a long tail of older
-// loyal customers, rather than a perfectly symmetric bell curve.
-const SAMPLE_COUNT = 600;
-const LOG_MU = Math.log(29);
-const LOG_SIGMA = 0.34;
-const ages = Array.from({ length: SAMPLE_COUNT }, () => {
-  const raw = Math.exp(LOG_MU + LOG_SIGMA * gaussianSample());
-  return Math.round(Math.min(85, Math.max(16, raw)));
-});
-
-// Bin into 5-year age brackets covering the observed range.
-const BIN_WIDTH = 5;
-const minAge = Math.min(...ages);
-const maxAge = Math.max(...ages);
-const binStart = Math.floor(minAge / BIN_WIDTH) * BIN_WIDTH;
-const binEnd = Math.ceil((maxAge + 1) / BIN_WIDTH) * BIN_WIDTH;
-const binCount = (binEnd - binStart) / BIN_WIDTH;
-const binLabels = Array.from(
-  { length: binCount },
-  (_, i) => `${binStart + i * BIN_WIDTH}–${binStart + (i + 1) * BIN_WIDTH}`,
-);
+// Plot: reads only data and the constants above
+const values = data.map((d) => d[AGE]).filter((v) => v != null);
+const minValue = Math.min(...values);
+const maxValue = Math.max(...values);
+const rawWidth = (maxValue - minValue) / TARGET_BINS;
+const magnitude = 10 ** Math.floor(Math.log10(rawWidth));
+const binWidth = NICE_STEPS.map((s) => s * magnitude).find((w) => w >= rawWidth);
+const binStart = Math.floor(minValue / binWidth) * binWidth;
+const binCount = Math.floor((maxValue - binStart) / binWidth) + 1;
+// Half-open bins [edge, edge + width): the maximum falls in the last one
+const edges = Array.from({ length: binCount + 1 }, (_, i) => Number((binStart + i * binWidth).toPrecision(12)));
+const binLabels = edges.slice(0, -1).map((lo, i) => `${lo}–${edges[i + 1]}`);
 const counts = new Array(binCount).fill(0);
-ages.forEach((age) => {
-  const idx = Math.min(binCount - 1, Math.floor((age - binStart) / BIN_WIDTH));
-  counts[idx] += 1;
-});
+for (const v of values) counts[Math.floor((v - binStart) / binWidth)] += 1;
 
-// Call out the modal bin so the shape of the distribution reads at a glance,
-// not just from bar heights alone.
-const peakIndex = counts.indexOf(Math.max(...counts));
-const PEAK_LABEL_COLOR = "#1A1A17"; // fixed (not theme-adaptive): stays legible on the brand-green bar in both themes
+const unit = AGE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const TITLE = "histogram-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `n = ${values.length} · bin width ${binWidth}${unit ? ` ${unit}` : ""}`;
+const COUNT_LABEL = "Frequency (count per bin)";
+const HEADER_H = 76;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
 
   return (
-    <div style={{ width, height }}>
-      <div
-        style={{
-          height: TITLE_HEIGHT,
-          lineHeight: `${TITLE_HEIGHT}px`,
-          textAlign: "center",
-          fontSize: 27,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
-      </div>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.5 }}>{SUBTITLE}</Typography>
+      </Box>
       <BarChart
         width={width}
-        height={chartHeight}
+        height={height - HEADER_H}
         skipAnimation
-        barLabel={(item) => (item.dataIndex === peakIndex ? "Peak" : undefined)}
-        series={[
-          {
-            data: counts,
-            label: "Subscribers",
-            color: t.palette[0],
-            valueFormatter: (v) => `${v} subscribers`,
-          },
-        ]}
+        hideLegend
+        borderRadius={0}
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: 40, bottom: 16, left: 24 }}
+        series={[{ id: "counts", data: counts, label: COUNT_LABEL, color: t.palette[0] }]}
         xAxis={[
           {
             scaleType: "band",
             data: binLabels,
-            label: "Subscriber Age (years)",
-            labelStyle: { fontSize: 16, fontWeight: 500 },
-            tickLabelStyle: { fontSize: 13 },
-            // No gap between bins — a histogram's bars are contiguous by
-            // convention; the stroke below (sx) draws the bin-edge lines.
+            // Contiguous bins: no gap between bars, the bar stroke marks the edges
             categoryGapRatio: 0,
+            height: 64,
+            label: AGE,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             min: 0,
-            label: "Number of Subscribers",
-            labelStyle: { fontSize: 16, fontWeight: 500 },
-            tickLabelStyle: { fontSize: 14 },
+            width: 72,
+            label: COUNT_LABEL,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true }}
-        margin={{ left: 92, right: 32, top: 24, bottom: 76 }}
-        slotProps={{ legend: { hidden: true } }}
         sx={{
-          "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1.5 },
-          "& .MuiBarLabel-root": {
-            fill: PEAK_LABEL_COLOR,
-            fontWeight: 700,
-            fontSize: "15px",
-          },
-          "& .MuiChartsAxis-tickLabel": { fontSize: "13px" },
+          "& .MuiBarChart-element": { stroke: t.pageBg, strokeWidth: 1.5 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       />
-    </div>
+    </Box>
   );
 }
