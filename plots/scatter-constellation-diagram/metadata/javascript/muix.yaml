@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-constellation-diagram
 created: '2026-06-18T03:35:25Z'
-updated: '2026-11-08T04:58:15Z'
+updated: '2026-11-08T05:02:52Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42448611173
@@ -13,53 +13,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Composes the chart from ChartsDataProvider + ChartsSurface with ChartsReferenceLine
-    for the six dashed decision boundaries at ±2 and 0, exactly midway between the
-    ideal levels and kept subordinate (inkSoft, 60 % opacity, 1.5 px)
-  - 'Equal aspect ratio is computed, not assumed: the margins make the drawing area
-    square and both axes share one symmetric extent around the origin, so the 16-QAM
-    grid geometry is true'
-  - EVM is computed from the data (RMS error vector over mean ideal power, 6.5 % for
-    sigma 0.15, matching the theoretical 6.7 %) and drawn through the useDrawingArea
-    hook as a haloed SVG label in the empty top-left corner, clear of every cloud
-  - Ideal points are large matte-red circles with a page-coloured outline that keeps
-    them recognizable on top of the semi-transparent green received clouds in both
-    themes
-  - Received symbols (992, inside the 500–2000 range) sit at their own noisy I/Q values
-    with alpha 0.45, styled per series via the v9 [data-series] .MuiScatterChart-marker
-    selector
-  - Theme chrome threads ANYPLOT_TOKENS through title, subtitle, axes and label halo;
-    both renders are fully legible
-  - Library-native tooltips on both series in the HTML output
+  - Composes the chart from MUI X v9 primitives (ChartsDataProvider, ChartsWrapper,
+    ChartsSurface, ChartsXAxis/YAxis, ScatterPlot) so the drawing area is forced square
+    and px-per-unit is equal on both axes — the constellation geometry is true at
+    1:1
+  - Decision boundaries are computed from the data (midpoints between neighbouring
+    ideal levels) and drawn with native ChartsReferenceLine at -2/0/2 in a soft dashed
+    inkSoft stroke that stays subordinate to the symbols
+  - EVM is computed as RMS error vector over mean ideal power (6.5%, consistent with
+    sigma 0.15 per axis) and placed in the empty top-left corner via the useDrawingArea
+    hook, with a page-colored halo so it reads in both themes
+  - Ideal points are large matte-red markers with a page-colored outline that separates
+    them from the green cloud; the legend glyphs repeat the received symbols' opacity
+    and the ideal markers' outline via data-series selectors
+  - Symmetric extent derived from the data and centered on the origin; 992 seeded-LCG
+    symbols keep each cloud at its own I/Q values without snapping or jitter
+  - Native scatter tooltips and hover highlighting are available in the interactive
+    HTML output
   weaknesses:
-  - 'VQ-03 (both): the legend glyphs do not match the marks they explain: the ''Received
-    symbols'' dot is drawn fully opaque while the markers sit at alpha 0.45, and the
-    ''Ideal points'' dot lacks the page-coloured outline of its markers → legend marks
-    with the same fill opacity and outline as the plotted series. Likely cause: the
-    fillOpacity and stroke overrides target only ''.MuiScatterChart-marker'' inside
-    ChartsSurface, not the ChartsLegend mark.'
-  - 'Suggestion: a light I/Q impairment (a small phase rotation) would let the diagram
-    show what a constellation diagnoses beyond plain noise.'
-  - 'Suggestion: the left margin between the Q axis title and the plot is wider than
-    the right one; trimming it would centre the square plot on the canvas.'
+  - 'Suggestion: thin the y-axis-left/x-axis-bottom spine pairing toward an origin-centered
+    look (e.g. lighter axis lines) so the symmetric I/Q frame reads more like a classic
+    constellation display.'
+  - 'Suggestion: a small cross or ring glyph for the ideal points (the spec''s ''red
+    crosses'') would let the received symbols directly underneath stay visible at
+    the cloud centres.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 2400x2400 square canvas.
-      Chrome: bold title "scatter-constellation-diagram · javascript · muix · anyplot.ai" centred at the top, a grey subtitle "992 received symbols around 16 ideal points · dashed lines: decision boundaries", a horizontal legend (Received symbols, Ideal points), axis titles "In-Phase (I)" and "Quadrature (Q)", ticks −4…4 on both axes, left and bottom axis lines only. Dashed grey decision boundaries at I = −2, 0, 2 and Q = −2, 0, 2. "EVM = 6.5%" in bold dark ink in the top-left corner. All text dark on light and readable.
-      Data: 16 large matte-red ideal circles with a page-coloured outline on the 4x4 grid at ±1, ±3; around each, a compact cloud of semi-transparent #009E73 green dots. The square plot area keeps the grid geometry true.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold dark title "scatter-constellation-diagram · javascript · muix · anyplot.ai" centered at top (~52% width), grey subtitle "992 received symbols around 16 ideal points · dashed lines: decision boundaries", horizontal legend (Received symbols / Ideal points) below it. Left and bottom axis lines in inkSoft, ticks -4..4 on both axes, axis titles "In-Phase (I)" and "Quadrature (Q)". "EVM = 6.5%" in bold dark text in the top-left of the plot area, clear of all clouds. All text readable.
+      Data: 16 tight clouds of semi-transparent brand-green (#009E73) dots on a 4x4 grid at ±1, ±3; large matte-red (#AE3030) ideal markers with a cream outline at each grid point. Dashed grey decision-boundary lines at I = -2, 0, 2 and Q = -2, 0, 2 separate the 16 regions. Square drawing area, symmetric limits about ±4.4.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend, axis titles, ticks and EVM label all flip to light ink; axis lines light; dashed boundaries light grey and subordinate. No dark-on-dark text anywhere.
-      Data: identical colours to the light render — #009E73 received dots (read darker through the alpha on the dark page but clearly visible) and the same matte-red ideal circles, now outlined in the dark page colour.
+      Chrome: title, legend text, axis titles and EVM label in light ink; subtitle and tick labels in light grey; axis lines and dashed boundaries in light grey, all clearly visible. No dark-on-dark text.
+      Data: identical green received symbols and matte-red ideal markers (outline now page-dark); only chrome flipped. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,35 +62,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 15, axis titles 17, legend 16, EVM
+        comment: Explicit sizes (title 22, axis titles 17, ticks 15, legend 16, EVM
           20 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; EVM label sits in empty corner; cloud density
-          is permitted by the spec
+        comment: No text collisions; EVM label sits in empty corner; dense clouds
+          are permitted
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marks well sized for ~1000 points; legend glyphs do not match the
-          marks' alpha/outline (defect line)
+        comment: 992 points at small size with 0.45 opacity; ideal markers distinct;
+          legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs red also separated by size and outline, so colour is not
-          the sole signal
+        comment: Red vs green also separated by size and outline, so not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400, square plot area, title ~52% width, nothing cut off
+        comment: Square canvas, square drawing area, balanced axis labels, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -107,10 +102,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; ideal points in Imprint matte red per the
-          spec''s red-marker convention; correct backgrounds both themes'
+        comment: 'Received symbols #009E73; matte red #AE3030 for ideal points follows
+          the spec''s red-marker convention; theme-correct backgrounds'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -118,22 +113,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear typographic hierarchy: bold title, soft subtitle explaining
-          the dashed lines and counts, haloed bold EVM label'
+        comment: Title/subtitle hierarchy with the subtitle doubling as a key for
+          the dashed lines; haloed EVM label; page-colored outline on ideal markers
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: No background grid — the decision boundaries serve as the grid; page-coloured
-          outline on ideal markers; computed square drawing area
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Ideal points read as focal anchors over the clouds; subtitle frames
-          the symbol count
+        comment: Legend glyphs styled to match marker opacity and outline; no grid
+          beyond the boundaries, boundaries softened to 0.6 opacity
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; hierarchy is what the Notes prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM I/Q constellation
+        comment: 16-QAM I/Q constellation scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Large ideal markers, small semi-transparent received dots, dashed
-          midway boundaries, equal aspect, centred symmetric limits, I/Q axis labels,
-          EVM label — all present
+        comment: Large ideal markers, semi-transparent received dots, dashed boundaries
+          midway, equal aspect, symmetric origin-centered limits, axis labels, EVM
+          label — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every symbol at its own I/Q value; axes show all data
+        comment: Each symbol at its own I/Q; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend labels readable
+        comment: Mandated title; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -173,21 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clouds, stray symbols, boundaries and EVM all shown; plain noise
-          is permitted
+        comment: Ideal grid, noise clouds, stray symbols, EVM; plain-noise clouds
+          are permitted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Received 16-QAM symbols under AWGN — real engineering context, neutral
+        comment: Realistic 16-QAM AWGN receive scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ideal levels ±1, ±3; sigma 0.15 gives ~23 dB SNR; checked EVM 6.5%
-          falls out of the computation (theory 6.7%)
+        comment: 'Checked: sigma 0.15 per axis gives expected EVM sqrt(2*0.0225/10)=6.7%,
+          shown 6.5% computed from the data; 992 symbols within 500-2000; ideal levels
+          ±1, ±3'
     code_quality:
       score: 10
       max: 10
@@ -197,14 +192,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; EvmLabel component exists only because useDrawingArea
-          must run inside the provider
+        comment: Columns → Data → Plot zones; the only extra component (EvmLabel)
+          is needed for the useDrawingArea hook
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -216,13 +211,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no library computes EVM
+        comment: Boundaries, extent and EVM derived from data concisely
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 API
+        comment: Default-exported component, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -232,30 +227,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: v9 composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface)
-          with per-axis config and data-series sx selectors
+        comment: Composed v9 API (ChartsDataProvider + ChartsWrapper + ChartsSurface)
+          to control the drawing area exactly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine for boundaries and the useDrawingArea hook for
-          a custom SVG overlay inside the composed chart
-  verdict: REJECTED
+        comment: ChartsReferenceLine for boundaries, useDrawingArea hook for a custom
+          SVG overlay, data-series CSS selectors on markers and legend glyphs
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T04:55:22Z'
+  rendered_at: '2026-11-08T05:00:11Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - reference-lines
+  - annotations
   - custom-legend
-  - layer-composition
+  - composed-chart
   patterns:
   - data-generation
-  - explicit-figure
-  dataprep: []
+  - seeded-rng
+  dataprep:
+  - error-vector-magnitude
   styling:
   - alpha-blending
   - edge-highlighting
