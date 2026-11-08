@@ -11,13 +11,12 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 // Planning tiers from low to high load, each with the capacity line that tops it. The curve
-// crosses the base line near the right end (at the base hours share), so that label sits left.
+// meets the base line only at its right end, so that label sits left, on the intermediate fill.
 const TIERS = [
   { region: "Base load", capacity: "Base capacity", labelAlign: "start" },
   { region: "Intermediate load", capacity: "Intermediate capacity", labelAlign: "end" },
   { region: "Peak load", capacity: "Peak capacity", labelAlign: "end" },
 ];
-const BASE_HOURS_SHARE = 0.9; // base capacity: the load exceeded in 90 % of all hours
 const PEAK_HOURS_SHARE = 0.1; // peak load: the load exceeded in fewer than 10 % of all hours
 const Y_HEAD_SHARE = 0.1; // headroom above the annual peak for the capacity labels
 const INK_SWITCH_LUMINANCE = 0.19; // fills brighter than this take the dark ink
@@ -41,7 +40,7 @@ const loads = data.map((d) => d[LOAD]).sort((a, b) => b - a);
 const n = loads.length;
 const peakLoad = loads[0];
 const minLoad = loads[n - 1];
-const baseCap = loads[Math.min(n - 1, Math.floor(n * BASE_HOURS_SHARE))];
+const baseCap = minLoad; // base capacity: the always-on load, exceeded in every hour of the year
 const interCap = loads[Math.floor(n * PEAK_HOURS_SHARE)];
 const capacities = [baseCap, interCap, peakLoad];
 
@@ -58,14 +57,18 @@ const step = (durations[n - 1] - durations[0]) / (n - 1);
 const energy = loads.reduce((s, v) => s + v, 0) * step;
 const loadFactor = (energy / (peakLoad * step * n)) * 100;
 
-// Ordered tiers take steps of the sequential ramp; text on a fill takes the ink its luminance calls for.
+// Ordered tiers take steps of the sequential ramp. Text on a fill takes the ink that the luminance of
+// the visible fill calls for: the tier colour at FILL_OPACITY over the page.
 const seqRgb = t.seq.map((hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+const pageRgb = [1, 3, 5].map((i) => parseInt(t.pageBg.slice(i, i + 2), 16));
 const tierRgb = TIERS.map((_, i) =>
   seqRgb[0].map((c: number, k: number) => Math.round(c + ((seqRgb[1][k] - c) * i) / (TIERS.length - 1))),
 );
 const tierColors = tierRgb.map((rgb) => `rgb(${rgb.join(", ")})`);
 const tierInks = tierRgb.map((rgb) => {
-  const [r, g, b] = rgb.map((c: number) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+  const [r, g, b] = rgb
+    .map((c: number, k: number) => (c * FILL_OPACITY + pageRgb[k] * (1 - FILL_OPACITY)) / 255)
+    .map((c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > INK_SWITCH_LUMINANCE ? "#1A1A17" : "#FAF8F1";
 });
 
