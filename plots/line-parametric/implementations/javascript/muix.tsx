@@ -7,7 +7,7 @@ import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -22,6 +22,13 @@ const PANEL_TITLE_H = 52;
 const FOOTER_H = 56;
 const SIDE_PAD = 32;
 const PANEL_GAP = 32;
+const LABEL_FONT = 15;
+const LABEL_CHAR_EM = 0.6; // estimated width of one label character, in em, for the free-space test
+const LABEL_RINGS = [30, 56, 84, 116]; // distances from its point at which a label is tried, in px
+// Directions a label is tried in, preferred first: the four diagonals, then above, below, right and left
+const LABEL_DIRECTIONS = [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [1, 0], [-1, 0]];
+const LABEL_CLEARANCE = 6; // px kept free between a label and the curve
+const LEADER_GAP = 12; // px between a point and the start of its leader line
 
 // Columns: set these to your data's column names
 const CURVE = "Curve"; // role: extra
@@ -77,20 +84,50 @@ const panels = [...new Set(data.map((d) => d[CURVE]))].map((name) => {
 const TITLE = "line-parametric · javascript · muix · anyplot.ai";
 const SUBTITLE = `${panels.length} curves · ${data.length.toLocaleString("en-US")} samples · equal aspect ratio in each panel`;
 
-// The curve as short segments coloured by t, an arrowhead ending on the last point and a start dot
+// The curve as short segments coloured by t, an arrowhead ending on the last point and a start dot.
+// Each start and end label takes the nearest spot around its point whose box holds the fewest curve
+// samples, inside the drawing area and clear of the label placed before it, with a leader to the point.
 function CurveLayer({ panel }: { panel: (typeof panels)[number] }) {
   const xScale = useXScale() as (v: number) => number;
   const yScale = useYScale() as (v: number) => number;
+  const area = useDrawingArea();
   const pts = panel.rows.map((d) => [xScale(d[X]), yScale(d[Y])]);
   const [sx, sy] = pts[0];
   const [ex, ey] = pts[pts.length - 1];
   const [px, py] = pts[pts.length - 2];
   const angle = (Math.atan2(ey - py, ex - px) * 180) / Math.PI;
-  const midX = (xScale(panel.xDomain[0]) + xScale(panel.xDomain[1])) / 2;
   const labels = [
-    { x: sx, y: sy - 18, text: `start, ${T} = ${panel.tStart.toFixed(2)}` },
-    { x: ex, y: ey + 30, text: `end, ${T} = ${panel.tEnd.toFixed(2)}` },
-  ];
+    { x: sx, y: sy, text: `start, ${T} = ${panel.tStart.toFixed(2)}` },
+    { x: ex, y: ey, text: `end, ${T} = ${panel.tEnd.toFixed(2)}` },
+  ].reduce((placed, lab) => {
+    const w = lab.text.length * LABEL_FONT * LABEL_CHAR_EM;
+    const h = LABEL_FONT * 1.3;
+    const best = LABEL_RINGS.flatMap((r) =>
+      LABEL_DIRECTIONS.map(([dx, dy]) => {
+        const k = dx !== 0 && dy !== 0 ? Math.SQRT1_2 : 1;
+        const ax = lab.x + dx * r * k;
+        const ay = lab.y + dy * r * k;
+        const x0 = dx > 0 ? ax : dx < 0 ? ax - w : ax - w / 2;
+        const y0 = dy > 0 ? ay : dy < 0 ? ay - h : ay - h / 2;
+        const hits = pts.filter(
+          ([qx, qy]) =>
+            qx > x0 - LABEL_CLEARANCE && qx < x0 + w + LABEL_CLEARANCE && qy > y0 - LABEL_CLEARANCE && qy < y0 + h + LABEL_CLEARANCE,
+        ).length;
+        // Curve samples within the clearance of the leader segment, from LEADER_GAP off the point to the label
+        const lx = lab.x + dx * k * LEADER_GAP;
+        const ly = lab.y + dy * k * LEADER_GAP;
+        const len2 = (ax - lx) ** 2 + (ay - ly) ** 2;
+        const crossings = pts.filter(([qx, qy]) => {
+          const u = Math.max(0, Math.min(1, ((qx - lx) * (ax - lx) + (qy - ly) * (ay - ly)) / len2));
+          return Math.hypot(qx - lx - u * (ax - lx), qy - ly - u * (ay - ly)) < LABEL_CLEARANCE;
+        }).length;
+        const outside = x0 < area.left || x0 + w > area.left + area.width || y0 < area.top || y0 + h > area.top + area.height;
+        const clash = placed.some((b) => x0 < b.x0 + b.w && b.x0 < x0 + w && y0 < b.y0 + b.h && b.y0 < y0 + h);
+        return { ...lab, dx, dy, k, ax, ay, x0, y0, w, h, score: hits + crossings + (outside || clash ? pts.length : 0) };
+      }),
+    ).reduce((a, b) => (b.score < a.score ? b : a));
+    return [...placed, best];
+  }, []);
   return (
     <g>
       {pts.slice(1).map(([x2, y2], i) => (
@@ -115,20 +152,30 @@ function CurveLayer({ panel }: { panel: (typeof panels)[number] }) {
       />
       <circle cx={sx} cy={sy} r={8} fill={panel.colors[0]} stroke={t.pageBg} strokeWidth={2.5} />
       {labels.map((lab) => (
-        <text
-          key={lab.text}
-          x={lab.x + (lab.x > midX ? -14 : 14)}
-          y={lab.y}
-          textAnchor={lab.x > midX ? "end" : "start"}
-          fontSize={15}
-          fontWeight={600}
-          fill={t.ink}
-          stroke={t.pageBg}
-          strokeWidth={4}
-          paintOrder="stroke"
-        >
-          {lab.text}
-        </text>
+        <g key={lab.text}>
+          <line
+            x1={lab.x + lab.dx * lab.k * LEADER_GAP}
+            y1={lab.y + lab.dy * lab.k * LEADER_GAP}
+            x2={lab.ax}
+            y2={lab.ay}
+            stroke={t.inkSoft}
+            strokeWidth={1.5}
+          />
+          <text
+            x={lab.dx > 0 ? lab.x0 : lab.dx < 0 ? lab.x0 + lab.w : lab.x0 + lab.w / 2}
+            y={lab.y0 + lab.h / 2}
+            textAnchor={lab.dx > 0 ? "start" : lab.dx < 0 ? "end" : "middle"}
+            dominantBaseline="central"
+            fontSize={LABEL_FONT}
+            fontWeight={600}
+            fill={t.ink}
+            stroke={t.pageBg}
+            strokeWidth={4}
+            paintOrder="stroke"
+          >
+            {lab.text}
+          </text>
+        </g>
       ))}
     </g>
   );
