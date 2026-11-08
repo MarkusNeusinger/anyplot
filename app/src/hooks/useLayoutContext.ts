@@ -10,6 +10,8 @@ export interface HomeState {
   filterCounts: FilterCounts | null;
   globalCounts: FilterCounts | null;
   orCounts: Record<string, number>[];
+  /** spec_id → title. Back restores the gallery without a fetch, so the titles must survive too. */
+  specTitles: Record<string, string>;
   hasMore: boolean;
   scrollY: number;
   initialized: boolean;
@@ -40,6 +42,7 @@ export const initialHomeState: HomeState = {
   filterCounts: null,
   globalCounts: null,
   orCounts: [],
+  specTitles: {},
   hasMore: false,
   scrollY: 0,
   initialized: false,

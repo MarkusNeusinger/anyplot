@@ -14,13 +14,16 @@ import { FilterSearch } from 'src/sections/plots-gallery/FilterBar/FilterSearch'
 import { FilterSizeToggle } from 'src/sections/plots-gallery/FilterBar/FilterSizeToggle';
 import { fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
+import { formatGalleryTotals } from 'src/utils';
 
 export interface FilterBarProps {
   activeFilters: ActiveFilters;
   filterCounts: FilterCounts | null; // Contextual counts (for AND additions)
+  globalCounts: FilterCounts | null; // Unfiltered counts (search hint, search after a clear)
   orCounts: Record<string, number>[]; // Per-group counts for OR additions
   specTitles: Record<string, string>; // Mapping spec_id -> title for search/tooltips
   currentTotal: number; // Total number of filtered images
+  currentSpecTotal: number; // Distinct specs among the filtered images
   displayedCount: number; // Currently displayed images
   randomAnimation: RandomAnimation | null;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
@@ -30,6 +33,7 @@ export interface FilterBarProps {
   onAddValueToGroup: (groupIndex: number, value: string) => void;
   onRemoveFilter: (groupIndex: number, value: string) => void;
   onRemoveGroup: (groupIndex: number) => void;
+  onClearFilters: () => void;
   onTrackEvent: (event: string, props?: Record<string, string>) => void;
 }
 
@@ -40,9 +44,11 @@ export interface FilterBarProps {
 export function FilterBar({
   activeFilters,
   filterCounts,
+  globalCounts,
   orCounts,
   specTitles,
   currentTotal,
+  currentSpecTotal,
   displayedCount,
   randomAnimation,
   searchInputRef,
@@ -52,10 +58,12 @@ export function FilterBar({
   onAddValueToGroup,
   onRemoveFilter,
   onRemoveGroup,
+  onClearFilters,
   onTrackEvent,
 }: FilterBarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const totals = formatGalleryTotals(currentSpecTotal, currentTotal);
 
   // Scroll percentage and sticky detection
   const [scrollPercent, setScrollPercent] = useState(0);
@@ -170,35 +178,71 @@ export function FilterBar({
             }),
       }}
     >
-      {/* Filter chips row */}
+      {/* Filter chips row. On desktop a grid of counter | chips | toggle: the
+          side columns are equal while there is room, so the chips stay centered,
+          and never narrower than their content, so the counter cannot run
+          under a chip when the chips need the space. */}
       <Box
         sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1,
-          justifyContent: 'center',
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '1fr auto 1fr' },
+          columnGap: 2,
           alignItems: 'center',
-          position: { xs: 'static', md: 'relative' },
         }}
       >
-        {/* Progress counter - absolute left (desktop only) */}
-        {!isMobile && currentTotal > 0 && (
+        {/* Progress counter (desktop only) */}
+        {!isMobile && (
           <Typography
             sx={{
-              position: 'absolute',
-              left: 0,
+              justifySelf: 'start',
               fontFamily: typography.fontFamily,
               fontSize: fontSize.sm,
               color: semanticColors.mutedText,
               whiteSpace: 'nowrap',
             }}
           >
-            {scrollPercent}% · {currentTotal}
+            {currentTotal > 0 && `${scrollPercent}% · ${totals}`}
           </Typography>
         )}
-        {/* Toolbar actions - absolute right (desktop only) */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          {/* Active filter chips + chip action menu */}
+          <FilterChips
+            activeFilters={activeFilters}
+            randomAnimation={randomAnimation}
+            orCounts={orCounts}
+            currentTotal={currentTotal}
+            chipMenuAnchor={chipMenuAnchor}
+            activeGroupIndex={activeGroupIndex}
+            onChipClick={handleChipClick}
+            onChipMenuClose={handleChipMenuClose}
+            onRemoveValue={handleRemoveValue}
+            onRemoveActiveGroup={handleRemoveActiveGroup}
+            onAddValueToActiveGroup={handleAddValueToActiveGroup}
+            onRemoveGroup={onRemoveGroup}
+          />
+          {/* Search input + category dropdown */}
+          <FilterSearch
+            activeFilters={activeFilters}
+            filterCounts={filterCounts}
+            globalCounts={globalCounts}
+            specTitles={specTitles}
+            searchInputRef={searchInputRef}
+            onAddFilter={onAddFilter}
+            onClearFilters={onClearFilters}
+            onTrackEvent={onTrackEvent}
+          />
+        </Box>
+        {/* Toolbar actions (desktop only) */}
         {!isMobile && (
-          <Box sx={{ position: 'absolute', right: 0 }}>
+          <Box sx={{ justifySelf: 'end' }}>
             <FilterSizeToggle
               imageSize={imageSize}
               onImageSizeChange={onImageSizeChange}
@@ -206,30 +250,6 @@ export function FilterBar({
             />
           </Box>
         )}
-        {/* Active filter chips + chip action menu */}
-        <FilterChips
-          activeFilters={activeFilters}
-          randomAnimation={randomAnimation}
-          orCounts={orCounts}
-          currentTotal={currentTotal}
-          chipMenuAnchor={chipMenuAnchor}
-          activeGroupIndex={activeGroupIndex}
-          onChipClick={handleChipClick}
-          onChipMenuClose={handleChipMenuClose}
-          onRemoveValue={handleRemoveValue}
-          onRemoveActiveGroup={handleRemoveActiveGroup}
-          onAddValueToActiveGroup={handleAddValueToActiveGroup}
-          onRemoveGroup={onRemoveGroup}
-        />
-        {/* Search input + category dropdown */}
-        <FilterSearch
-          activeFilters={activeFilters}
-          filterCounts={filterCounts}
-          specTitles={specTitles}
-          searchInputRef={searchInputRef}
-          onAddFilter={onAddFilter}
-          onTrackEvent={onTrackEvent}
-        />
       </Box>
 
       {/* Counter and toggle row (mobile only) */}
@@ -251,7 +271,7 @@ export function FilterBar({
                 whiteSpace: 'nowrap',
               }}
             >
-              {scrollPercent}% · {currentTotal}
+              {scrollPercent}% · {totals}
             </Typography>
           ) : (
             <Box />

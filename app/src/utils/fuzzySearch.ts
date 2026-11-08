@@ -39,6 +39,9 @@ export function createFuzzySearcher<T extends SearchableItem>(items: T[]): Fuse<
     minMatchCharLength: 1,
     includeScore: true,
     useExtendedSearch: true,
+    // Folds ä, é, ñ … to their base letter and ß to "ss" on both sides, so
+    // "säulen" and "saulen" search alike.
+    ignoreDiacritics: true,
   });
 }
 

@@ -175,15 +175,16 @@ _NO_STORE = "private, no-store"
 # the agents service's stream translator.
 _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "ready": frozenset({"v", "run_id"}),
-    # `attempt` on a pipeline step, plus `outcome` and `findings` (how the round before ended) on
-    # `repairing`, with `defects`, the rubric ids it repairs (`VQ-05`); `position` and `waiting` on `step: "queued"`,
-    # and `step: "started"` alone once a run that waited leaves the queue.
-    "status": frozenset({"step", "attempt", "outcome", "findings", "defects", "position", "waiting"}),
+    # `attempt` and `max_attempts` (the run's round cap) on a pipeline step, plus `outcome` and `findings` (how the
+    # round before ended) on `repairing`, with `defects`, the rubric ids it repairs (`VQ-05`); `position` and
+    # `waiting` on `step: "queued"`, and `step: "started"` alone once a run that waited leaves the queue.
+    "status": frozenset({"step", "attempt", "max_attempts", "outcome", "findings", "defects", "position", "waiting"}),
     "message": frozenset({"text"}),
-    # `version` is the agents service's number of the stored version (ok and needs_attention only);
+    # `version` is the agents service's number of the stored version (ok and needs_attention only), and `memory`
+    # (`{kept, added}`, plot memory entry ids) the decisions that version stands on, only with it;
     # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid.
     "plot": frozenset(
-        {"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "rounds"}
+        {"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "memory", "rounds"}
     ),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
@@ -192,9 +193,10 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `generate_data` changed the data (version 1 when `generate_data` made the session's first data);
     # `language` carries the session language `{language, source}` after every run, so the page syncs its chip;
     # `suggestion` the `.to_long()` offer in that language (or null) on a session with data, so its card follows;
-    # `switch` (`{library, plot}`) the library switch the user asked for in the chat, which the page carries out.
+    # `switch` (`{library, plot}`) the library switch the user asked for in the chat, which the page carries out;
+    # `turn` what a turn that ended well changed (`answer`, `data`, `plot`, `switch`, `language`, `kept`, `memory`).
     "done": frozenset(
-        {"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion", "switch"}
+        {"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion", "switch", "turn"}
     ),
 }
 # `no_reply`: the assistant wrote no reply, also when asked once more (`agents/anyplot/plugins/empty_reply.py`).

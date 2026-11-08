@@ -28,6 +28,7 @@ describe('initialHomeState', () => {
       filterCounts: null,
       globalCounts: null,
       orCounts: [],
+      specTitles: {},
       hasMore: false,
       scrollY: 0,
       initialized: false,

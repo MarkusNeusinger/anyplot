@@ -14,6 +14,7 @@ import { FilterBar } from 'src/sections/plots-gallery/FilterBar';
 import { ImagesGrid } from 'src/sections/plots-gallery/ImagesGrid';
 import { colors, fontSize, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
+import { countDistinctSpecs } from 'src/utils';
 
 export function PlotsPage() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export function PlotsPage() {
   const {
     activeFilters,
     filterCounts,
+    globalCounts,
     orCounts,
     specTitles,
     allImages,
@@ -52,6 +54,7 @@ export function PlotsPage() {
     handleAddValueToGroup,
     handleRemoveFilter,
     handleRemoveGroup,
+    handleClearFilters,
     handleRandom,
     randomAnimation,
   } = useFilterState({
@@ -92,6 +95,7 @@ export function PlotsPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const noFilters = isFiltersEmpty(activeFilters);
+  const specTotal = useMemo(() => countDistinctSpecs(allImages), [allImages]);
 
   useEffect(() => {
     localStorage.setItem('imageSize', imageSize);
@@ -202,9 +206,11 @@ export function PlotsPage() {
       <FilterBar
         activeFilters={activeFilters}
         filterCounts={filterCounts}
+        globalCounts={globalCounts}
         orCounts={orCounts}
         specTitles={specTitles}
         currentTotal={allImages.length}
+        currentSpecTotal={specTotal}
         displayedCount={displayedImages.length}
         randomAnimation={randomAnimation}
         searchInputRef={searchInputRef}
@@ -214,6 +220,7 @@ export function PlotsPage() {
         onAddValueToGroup={handleAddValueToGroup}
         onRemoveFilter={handleRemoveFilter}
         onRemoveGroup={handleRemoveGroup}
+        onClearFilters={handleClearFilters}
         onTrackEvent={trackEvent}
       />
 
