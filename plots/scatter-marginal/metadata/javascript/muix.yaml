@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-marginal
 created: '2026-09-09T06:59:18Z'
-updated: '2026-11-08T05:07:43Z'
+updated: '2026-11-08T05:13:00Z'
 generated_by: claude-opus-5-5
 adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
 workflow_run: 42449272351
@@ -13,43 +13,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - 'Composes three community MUI X charts (ScatterChart plus a vertical and a layout="horizontal"
-    BarChart with a reversed band axis) into a joint plot, with hidden marginal axes
-    via position: "none"'
-  - 'Scatter density is readable: 400 points at alpha 0.62 with a thin page-colored
-    outline, so the dense core reads darker'
-  - Marginals in the points' own color at a quieter 0.34 opacity rise from a zero
-    baseline at the scatter edge; the right marginal grows away from the scatter
-  - Plausible agronomy scenario (rainfall 390-1,230 mm vs. yield 2.5-8 t/ha) with
-    r = 0.70; seeded LCG generator is deterministic
-  - Theme chrome fully threaded through tokens; both renders readable
+  - Three community MUI X charts composed in a CSS grid whose marginals copy the scatter's
+    margins plus axis bands, so the top histogram spans exactly the scatter's x range
+    and the right histogram exactly its y range in both renders
+  - One padded domain per variable drives both the scatter axis limits and the marginal
+    bins, so every marginal peak sits directly above or beside the points that cause
+    it
+  - The right marginal uses BarChart layout="horizontal" with a reversed band axis,
+    growing sideways away from the scatter from a zero baseline at its edge
+  - Marginals at fillOpacity 0.34 in brand green with page-coloured bar separators
+    read as the quieter tone the Notes suggest; points at 0.62 opacity with a page-coloured
+    outline show the dense centre darker
+  - Title plus a smaller subtitle (n, Pearson r = 0.70, bin count) gives a clear typographic
+    hierarchy; realistic rainfall-vs-crop-yield field-trial data with a deterministic
+    LCG
+  - 'skipAnimation on every chart, hidden marginal axes via position: "none", v9 class
+    selectors (.MuiScatterChart-marker, .MuiBarChart-element) and native tooltips
+    in the HTML output'
   weaknesses:
-  - 'SC-02 (both): the marginal histograms are compressed relative to the scatter
-    axes. The top histogram spans about CSS 140-939 px while the scatter''s x drawing
-    area spans about 100-979 px (about 40 px short on each side, about 9 % narrower),
-    and the right histogram is likewise about 37 px short at its top and bottom, so
-    the edge bins sit up to half a bin away from the points that fill them → each
-    marginal''s drawing area spans exactly the scatter''s axis range (0 px offset
-    at both ends). Likely cause: the BarChart band axis does not share the scatter''s
-    drawing area (hidden axes or band scale still reserve/pad space); draw the marginals
-    on a linear axis with the same min/max as the scatter (e.g. a step-area LineChart)
-    or zero out the hidden axes'' height/width.'
-  - 'Suggestion: a KDE curve over the histograms would show the marginal shape more
-    smoothly.'
+  - 'Suggestion: the vertical grid at every 50 mm (17 lines) is denser than the horizontal
+    one; a coarser x tick interval would quiet the scatter panel.'
+  - 'Suggestion: the y-axis title sits about 70 px left of its tick labels; a narrower
+    Y_AXIS_WIDTH would tighten it to the axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: dark bold title "scatter-marginal · javascript · muix · anyplot.ai", soft-ink subtitle with n and Pearson r, axis titles "Annual rainfall (mm)" / "Crop yield (t/ha)", tick labels and subtle grid all readable
-      Data: 400 #009E73 points at alpha ~0.62 with page-colored outline; quiet translucent green 22-bin histograms above and (sideways) right of the scatter
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: bold dark title "scatter-marginal · javascript · muix · anyplot.ai" with a smaller ink-soft subtitle "n = 400 · Pearson r = 0.70 · marginal histograms with 22 bins"; axis titles "Annual rainfall (mm)" and "Crop yield (t/ha)"; ticks 400–1,200 and 2.5–8.0, all dark and readable; subtle grey grid in both directions.
+      Data: 400 brand-green #009E73 points at ~0.62 opacity with thin page-coloured outline, rising positive trend; top histogram (22 bins) in pale translucent green spans exactly the scatter's x range, peaking ~830 mm; right histogram drawn sideways from the scatter's right edge spans exactly the y range, peaking ~5 t/ha, with an empty bin near 2.7 and a lone bottom bin matching the two low outliers. Empty top-right corner.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: title, subtitle, axis titles and tick labels in light ink, grid subtle grey; no dark-on-dark text
-      Data: identical #009E73 points and same-opacity green marginal bars (read as deep green on the dark page, still visible)
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, all readable; no dark-on-dark text; grid lines subtle grey but visible.
+      Data: identical brand-green points and the same translucent green marginals (darker-looking on the dark surface, still clearly distinct from the background); same layout and alignment as the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,45 +60,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis titles 16 px, ticks 14 px; readable in both themes
+        comment: Explicit sizes (title 22, subtitle 15, axis titles 16, ticks 14 CSS
+          px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; point overlap handled with alpha and outline
+        comment: No text collisions; point overlap in the dense centre is handled
+          with alpha and outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 400 points at size 6, alpha 0.62; marginal bars visible in both themes
+        comment: Marker size 6 with 0.62 opacity suits 400 points; marginal bars visible
+          on both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue, good contrast
+        comment: Single hue, no red-green reliance; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400, balanced panels, nothing cut off
+        comment: 2400x2400 square; scatter largest panel, small gaps, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive titles with units (mm, t/ha)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 on #FAF8F1 / #1A1A17, chrome theme-correct'
+        comment: '#009E73 for points and marginals, identical across themes; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -107,21 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle hierarchy and a deliberately quieter marginal tone
+        comment: Title/subtitle hierarchy with summary statistics; marginal opacity
+          tuned well below the points
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Tight 12 px gaps and page-colored bin separators
+        comment: Page-coloured separators on bars and outlines on points; marginal
+          axes hidden with margins copied for pixel alignment
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Data displayed, no focal point beyond the Notes
+        comment: Subtitle states n and Pearson r = 0.70, framing the correlation the
+          scatter shows
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,26 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with marginal histograms top and right
+        comment: Scatter with top and right marginal histograms
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Marginal axes not aligned with the scatter axes (defect line); other
+        passed: true
+        comment: Lower-left scatter, aligned marginals, sideways right marginal from
+          zero baseline, quieter marginal tone, alpha 0.62, small gaps - all good-version
           bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their exact values, axes show all data
+        comment: Points at exact values; axes span all data; bins share the scatter
+          domains
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title; legend N/A for single series
+        comment: Correct mandated title; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -158,20 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Correlation, distributions and outliers all shown
+        comment: Shows bivariate correlation, both marginal shapes, outliers and tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Rainfall vs. crop yield field trial, neutral
+        comment: 'Field trial: annual rainfall vs crop yield across 400 plots, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Rainfall 390-1,230 mm and yield 2.5-8 t/ha plausible; no Check values
-          in spec
+        comment: Rainfall ~390-1230 mm and yield ~2.5-8 t/ha plausible; r = 0.70 matches
+          the generator; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -181,33 +190,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, one component
+        comment: Flat module; only the seeded LCG helpers inside the data block, as
+          the library prompt allows
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart and BarChart
+        comment: ScatterChart and BarChart, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Short binning is allowed per the library Computation line
+        comment: Short written-out binning and Pearson r, permitted by the Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, skipAnimation on all charts
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          v9 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -215,18 +227,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: layout="horizontal" BarChart with reversed band axis and sx class
-          selectors
+        comment: Composes high-level ScatterChart/BarChart with band axes categoryGapRatio
+          0, position none and sx class styling
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: true
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        passed: false
+        comment: BarChart layout="horizontal" with a reversed band axis for the sideways
+          marginal
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:05:02Z'
+  rendered_at: '2026-11-08T05:10:16Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -238,7 +251,6 @@ impl_tags:
   - data-generation
   dataprep:
   - binning
-  - correlation-matrix
   styling:
   - alpha-blending
   - edge-highlighting
