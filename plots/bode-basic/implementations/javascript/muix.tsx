@@ -2,215 +2,217 @@
 // bode-basic: Bode Plot for Frequency Response
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 84/100 | Created: 2026-06-17
-
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Refined chart appearance: subtle axis lines, grid at 0.15 opacity, thicker data lines
-const chartSx = {
-  "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeWidth: 0.7 },
-  "& .MuiChartsAxis-tick": { stroke: t.inkSoft, strokeWidth: 0.7 },
-  "& .MuiChartsGrid-root line": { stroke: t.grid },
-  "& .MuiLineElement-root": { strokeWidth: 2.5 },
+// Constants
+const GAIN_REF_DB = 0; // unity gain: the gain crossover and the gain margin are read against it
+const PHASE_REF_DEG = -180; // the phase crossover and the phase margin are read against it
+const Y_PAD_SHARE = 0.06; // y padding as a share of each panel's span
+
+// Columns: set these to your data's column names
+const FREQUENCY = "Frequency (Hz)"; // role: frequency_hz
+const MAGNITUDE = "Magnitude (dB)"; // role: magnitude_db
+const PHASE = "Phase (°)"; // role: phase_deg
+
+// Data: replace this block with your own records, one object per row
+// Open-loop response of G(s) = 20 / ((s/1 + 1)(s/10 + 1)(s/100 + 1)), three real
+// poles at 1, 10 and 100 rad/s, sampled at 250 log-spaced frequencies.
+const data = (() => {
+  const gainK = 20;
+  const poles = [1, 10, 100];
+  const count = 250;
+  return Array.from({ length: count }, (_, i) => {
+    const f = 10 ** (-2 + (4 * i) / (count - 1));
+    const omega = 2 * Math.PI * f;
+    const gain = gainK / Math.sqrt(poles.reduce((p, w) => p * (1 + (omega / w) ** 2), 1));
+    const phase = -poles.reduce((s, w) => s + Math.atan(omega / w), 0) * (180 / Math.PI);
+    return { [FREQUENCY]: f, [MAGNITUDE]: 20 * Math.log10(gain), [PHASE]: phase };
+  });
+})();
+
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[FREQUENCY] - b[FREQUENCY]);
+const freqs = rows.map((d) => d[FREQUENCY]);
+const mags = rows.map((d) => d[MAGNITUDE]);
+const phases = rows.map((d) => d[PHASE]);
+
+// Crossovers, interpolated in log frequency between the two samples that straddle the
+// reference; each keeps the local slope of the other panel's curve for label placement
+let gainCross: { f: number; phase: number; slope: number } | null = null;
+for (let i = 1; i < rows.length && !gainCross; i += 1) {
+  if (mags[i - 1] > GAIN_REF_DB && mags[i] <= GAIN_REF_DB) {
+    const s = (mags[i - 1] - GAIN_REF_DB) / (mags[i - 1] - mags[i]);
+    const f = 10 ** (Math.log10(freqs[i - 1]) + s * (Math.log10(freqs[i]) - Math.log10(freqs[i - 1])));
+    gainCross = { f, phase: phases[i - 1] + s * (phases[i] - phases[i - 1]), slope: phases[i] - phases[i - 1] };
+  }
+}
+let phaseCross: { f: number; mag: number; slope: number } | null = null;
+for (let i = 1; i < rows.length && !phaseCross; i += 1) {
+  if (phases[i - 1] > PHASE_REF_DEG && phases[i] <= PHASE_REF_DEG) {
+    const s = (phases[i - 1] - PHASE_REF_DEG) / (phases[i - 1] - phases[i]);
+    const f = 10 ** (Math.log10(freqs[i - 1]) + s * (Math.log10(freqs[i]) - Math.log10(freqs[i - 1])));
+    phaseCross = { f, mag: mags[i - 1] + s * (mags[i] - mags[i - 1]), slope: mags[i] - mags[i - 1] };
+  }
+}
+
+// Units come from the column names; a degree sign attaches without a space
+const magUnit = MAGNITUDE.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const phaseUnit = PHASE.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const freqUnit = FREQUENCY.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const magSuffix = magUnit.startsWith("°") ? magUnit : ` ${magUnit}`;
+const phaseSuffix = phaseUnit.startsWith("°") ? phaseUnit : ` ${phaseUnit}`;
+
+// A margin label sits on the side of its marker that the curve leaves: the curve runs
+// toward the reference line on the other side, where the label would cross it
+const gainMarker = phaseCross && {
+  x: phaseCross.f,
+  from: phaseCross.mag,
+  to: GAIN_REF_DB,
+  side: (GAIN_REF_DB - phaseCross.mag) * phaseCross.slope < 0 ? 1 : -1,
+  label: `GM ${(GAIN_REF_DB - phaseCross.mag).toFixed(1)}${magSuffix} at ${phaseCross.f.toFixed(2)} ${freqUnit}`,
+};
+const phaseMarker = gainCross && {
+  x: gainCross.f,
+  from: gainCross.phase,
+  to: PHASE_REF_DEG,
+  side: (PHASE_REF_DEG - gainCross.phase) * gainCross.slope < 0 ? 1 : -1,
+  label: `PM ${(gainCross.phase - PHASE_REF_DEG).toFixed(1)}${phaseSuffix} at ${gainCross.f.toFixed(2)} ${freqUnit}`,
 };
 
-// --- Data: G(s) = 20 / ((s/1+1)(s/10+1)(s/100+1)) — 3-pole open-loop TF ---
-// Pole frequencies: ω₁=1, ω₂=10, ω₃=100 rad/s  (0.16 Hz, 1.59 Hz, 15.9 Hz)
-const K = 20;
-const w1 = 1;
-const w2 = 10;
-const w3 = 100;
-const N = 250;
+// Shared log axis: one tick per decade over the data's frequency range
+const firstDecade = Math.floor(Math.log10(freqs[0]));
+const lastDecade = Math.ceil(Math.log10(freqs[freqs.length - 1]));
+const decades = Array.from({ length: lastDecade - firstDecade + 1 }, (_, i) => 10 ** (firstDecade + i));
+const formatFreq = (v: number) => (v >= 1 ? v.toFixed(0) : v.toPrecision(1));
 
-const freqs: number[] = [];
-const mags: number[] = [];
-const phases: number[] = [];
+const magLo = Math.min(...mags, GAIN_REF_DB);
+const magHi = Math.max(...mags, GAIN_REF_DB);
+const phaseLo = Math.min(...phases, PHASE_REF_DEG);
+const phaseHi = Math.max(...phases, PHASE_REF_DEG);
+const magPad = (magHi - magLo) * Y_PAD_SHARE;
+const phasePad = (phaseHi - phaseLo) * Y_PAD_SHARE;
 
-for (let i = 0; i < N; i++) {
-  const f = Math.pow(10, -2 + (i / (N - 1)) * 4); // 0.01 to 100 Hz
-  const omega = 2 * Math.PI * f;
-  const gain =
-    K /
-    Math.sqrt(
-      (1 + (omega / w1) ** 2) *
-        (1 + (omega / w2) ** 2) *
-        (1 + (omega / w3) ** 2)
-    );
-  freqs.push(f);
-  mags.push(20 * Math.log10(gain));
-  phases.push(
-    -(
-      Math.atan(omega / w1) +
-      Math.atan(omega / w2) +
-      Math.atan(omega / w3)
-    ) *
-      (180 / Math.PI)
+const TITLE = "bode-basic · javascript · muix · anyplot.ai";
+const subtitle = `Open-loop frequency response · ${rows.length} log-spaced points from ${formatFreq(freqs[0])} to ${formatFreq(freqs[freqs.length - 1])} ${freqUnit}`;
+const TITLE_H = 76;
+const X_AXIS_H = 64;
+const Y_AXIS_W = 84;
+const MARGIN = { left: 24, right: 48 };
+
+function MarginMarker({ marker }: { marker: { x: number; from: number; to: number; side: number; label: string } }) {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const x = xScale(marker.x);
+  const y0 = yScale(marker.from);
+  const y1 = yScale(marker.to);
+  return (
+    <g>
+      <line x1={x} y1={y0} x2={x} y2={y1} stroke={t.ink} strokeWidth={2.5} />
+      <circle cx={x} cy={y0} r={4.5} fill={t.ink} />
+      <circle cx={x} cy={y1} r={4.5} fill={t.ink} />
+      <text
+        x={x + 12 * marker.side}
+        y={(y0 + y1) / 2}
+        textAnchor={marker.side > 0 ? "start" : "end"}
+        dominantBaseline="middle"
+        fontSize={15}
+        fontWeight={600}
+        fill={t.ink}
+      >
+        {marker.label}
+      </text>
+    </g>
   );
 }
 
-// Gain crossover: magnitude crosses 0 dB going downward
-let gcFreq = freqs[0];
-let phaseAtGC = phases[0];
-for (let i = 1; i < N; i++) {
-  if (mags[i - 1] > 0 && mags[i] <= 0) {
-    gcFreq = freqs[i];
-    phaseAtGC = phases[i];
-    break;
-  }
-}
-const phaseMargin = phaseAtGC + 180;
-
-// Phase crossover: phase crosses -180° going downward
-let pcFreq = freqs[N - 1];
-let magAtPC = mags[N - 1];
-let hasCrossover = false;
-for (let i = 1; i < N; i++) {
-  if (phases[i - 1] > -180 && phases[i] <= -180) {
-    pcFreq = freqs[i];
-    magAtPC = mags[i];
-    hasCrossover = true;
-    break;
-  }
-}
-const gainMargin = hasCrossover ? -magAtPC : null;
-
-// --- Chart component --------------------------------------------------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const titleH = 56;
-  const panelH = Math.floor((height - titleH) / 2);
+  const topH = Math.floor((height - TITLE_H - X_AXIS_H) / 2);
+  const bottomH = height - TITLE_H - topH;
+  const xAxisBase = {
+    data: freqs,
+    scaleType: "log" as const,
+    min: freqs[0],
+    max: freqs[freqs.length - 1],
+    tickInterval: decades,
+    valueFormatter: formatFreq,
+  };
+  const yAxisStyle = {
+    width: Y_AXIS_W,
+    labelStyle: { fontSize: 16, fill: t.ink },
+    tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+  };
+  const sx = {
+    "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+    "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+    "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+    "& .MuiLineChart-line": { strokeWidth: 3 },
+  };
+  const refLine = { stroke: t.inkSoft, strokeDasharray: "8 6", strokeWidth: 1.75 };
+  const refLabel = { fontSize: 14, fill: t.inkSoft };
 
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Box
-        sx={{
-          height: titleH,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography sx={{ fontSize: 23, fontWeight: 600, letterSpacing: 0.3, color: t.ink }}>
-          bode-basic · javascript · muix · anyplot.ai
-        </Typography>
-      </Box>
+    <div style={{ width, height, display: "flex", flexDirection: "column", background: t.pageBg }}>
+      <div style={{ height: TITLE_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 10 }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
+      </div>
 
-      {/* Magnitude panel */}
       <LineChart
         width={width}
-        height={panelH}
-        colors={[t.palette[0]]}
+        height={topH}
         skipAnimation
-        xAxis={[
-          {
-            data: freqs,
-            scaleType: "log",
-            tickSize: 0,
-            tickLabelStyle: { display: "none" },
-          },
-        ]}
-        yAxis={[
-          {
-            label: "Magnitude (dB)",
-            labelStyle: { fontSize: 15 },
-            tickLabelStyle: { fontSize: 13 },
-          },
-        ]}
-        series={[{ data: mags, showMark: false, label: "Magnitude" }]}
-        slotProps={{ legend: { hidden: true } }}
-        grid={{ horizontal: true, vertical: false }}
-        margin={{ left: 80, right: 50, top: 20, bottom: 8 }}
-        sx={chartSx}
+        hideLegend
+        grid={{ horizontal: true, vertical: true }}
+        xAxis={[{ ...xAxisBase, position: "none" }]}
+        yAxis={[{ ...yAxisStyle, label: MAGNITUDE, min: magLo - magPad, max: magHi + magPad }]}
+        series={[{ id: "magnitude", data: mags, label: MAGNITUDE, color: t.palette[0], showMark: false }]}
+        margin={{ ...MARGIN, top: 12, bottom: 8 }}
+        sx={sx}
       >
         <ChartsReferenceLine
-          y={0}
-          lineStyle={{
-            stroke: t.inkSoft,
-            strokeDasharray: "6 4",
-            strokeWidth: 1.5,
-          }}
-          label="0 dB"
-          labelStyle={{ fontSize: 12 }}
+          y={GAIN_REF_DB}
+          label={`${GAIN_REF_DB}${magSuffix}`}
           labelAlign="end"
+          lineStyle={refLine}
+          labelStyle={refLabel}
         />
-        {hasCrossover && (
-          <ChartsReferenceLine
-            x={pcFreq}
-            lineStyle={{
-              stroke: t.palette[3],
-              strokeDasharray: "6 4",
-              strokeWidth: 1.5,
-            }}
-            label={`GM = ${gainMargin!.toFixed(1)} dB`}
-            labelStyle={{ fontSize: 12, fill: t.palette[3] }}
-            labelAlign="start"
-          />
-        )}
+        {gainMarker && <MarginMarker marker={gainMarker} />}
       </LineChart>
 
-      {/* Phase panel */}
       <LineChart
         width={width}
-        height={panelH}
-        colors={[t.palette[1]]}
+        height={bottomH}
         skipAnimation
+        hideLegend
+        grid={{ horizontal: true, vertical: true }}
         xAxis={[
           {
-            data: freqs,
-            scaleType: "log",
-            label: "Frequency (Hz)",
-            labelStyle: { fontSize: 15 },
-            tickLabelStyle: { fontSize: 13 },
+            ...xAxisBase,
+            label: FREQUENCY,
+            height: X_AXIS_H,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
-        yAxis={[
-          {
-            label: "Phase (°)",
-            labelStyle: { fontSize: 15 },
-            tickLabelStyle: { fontSize: 13 },
-          },
-        ]}
-        series={[{ data: phases, showMark: false, label: "Phase" }]}
-        slotProps={{ legend: { hidden: true } }}
-        grid={{ horizontal: true, vertical: false }}
-        margin={{ left: 80, right: 50, top: 5, bottom: 60 }}
-        sx={chartSx}
+        yAxis={[{ ...yAxisStyle, label: PHASE, min: phaseLo - phasePad, max: phaseHi + phasePad }]}
+        series={[{ id: "phase", data: phases, label: PHASE, color: t.palette[1], showMark: false }]}
+        margin={{ ...MARGIN, top: 8, bottom: 12 }}
+        sx={sx}
       >
         <ChartsReferenceLine
-          y={-180}
-          lineStyle={{
-            stroke: t.inkSoft,
-            strokeDasharray: "6 4",
-            strokeWidth: 1.5,
-          }}
-          label="-180°"
-          labelStyle={{ fontSize: 12 }}
+          y={PHASE_REF_DEG}
+          label={`${PHASE_REF_DEG.toString().replace("-", "−")}${phaseSuffix}`}
           labelAlign="end"
+          lineStyle={refLine}
+          labelStyle={refLabel}
         />
-        <ChartsReferenceLine
-          x={gcFreq}
-          lineStyle={{
-            stroke: t.palette[2],
-            strokeDasharray: "6 4",
-            strokeWidth: 1.5,
-          }}
-          label={`PM = ${phaseMargin.toFixed(1)}°`}
-          labelStyle={{ fontSize: 12, fill: t.palette[2] }}
-          labelAlign="start"
-        />
+        {phaseMarker && <MarginMarker marker={phaseMarker} />}
       </LineChart>
-    </Box>
+    </div>
   );
 }
