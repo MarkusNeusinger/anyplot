@@ -185,7 +185,15 @@ export default function Chart() {
         skipAnimation
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "end" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 15, color: t.inkSoft, pr: 5 }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 15,
+              color: t.inkSoft,
+              pr: 5,
+              '& [data-series="ideal"] .MuiChartsLabelMark-root': { width: 28 },
+              '& [data-series="ideal"] .MuiChartsLabelMark-fill': { strokeDasharray: "6 4", strokeLinecap: "butt" },
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiChartsAxis-line": { stroke: t.inkSoft },
