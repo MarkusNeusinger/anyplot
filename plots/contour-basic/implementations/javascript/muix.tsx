@@ -25,9 +25,9 @@ const NORTHING = "Northing (km)"; // role: y
 const ELEVATION = "Elevation (km)"; // role: z
 
 // Data: replace this block with your own records, one object per grid point
-// Terrain of a 6 × 6 km survey square: two summits joined by a low diagonal ridge, sampled on a 60 × 60 grid
+// Terrain of a 6 × 6 km survey square: two summits joined by a low diagonal ridge, sampled on a 100 × 100 grid
 const data = (() => {
-  const gridSize = 60;
+  const gridSize = 100;
   const halfSpan = 3;
   const rows: Record<string, number>[] = [];
   for (let j = 0; j < gridSize; j += 1) {
@@ -120,8 +120,8 @@ const { width: W, height: H } = window.ANYPLOT_SIZE;
 const HEADER_H = 84;
 const X_AXIS_H = 60;
 const Y_AXIS_W = 72;
-const MARGIN = { top: 16, bottom: 20, left: 24, right: 48 };
-const LEGEND_W = 170;
+const MARGIN = { top: 16, bottom: 20, left: 24, right: 28 };
+const LEGEND_W = 140;
 const xSpan = xs[xs.length - 1] - xs[0];
 const ySpan = ys[ys.length - 1] - ys[0];
 const plotH = Math.min(H - HEADER_H - X_AXIS_H - MARGIN.top - MARGIN.bottom, ((W - LEGEND_W - Y_AXIS_W - MARGIN.left - MARGIN.right) * ySpan) / xSpan);
@@ -161,67 +161,70 @@ export default function Chart() {
         <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
         <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
       </Box>
-      <ChartsDataProvider
-        width={surfaceW}
-        height={surfaceH}
-        series={[]}
-        skipAnimation
-        margin={MARGIN}
-        xAxis={[
-          {
-            id: "x",
-            scaleType: "linear",
-            min: xs[0],
-            max: xs[xs.length - 1],
-            label: EASTING,
-            height: X_AXIS_H,
-            labelStyle: { fontSize: 16, fill: t.ink },
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          },
-        ]}
-        yAxis={[
-          {
-            id: "y",
-            scaleType: "linear",
-            min: ys[0],
-            max: ys[ys.length - 1],
-            label: NORTHING,
-            width: Y_AXIS_W,
-            labelStyle: { fontSize: 16, fill: t.ink },
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          },
-        ]}
-        zAxis={[{ id: "z", colorMap: { type: "piecewise", thresholds, colors: bandColors } }]}
-      >
-        <ChartsWrapper
-          legendPosition={{ vertical: "middle", horizontal: "end" }}
-          legendDirection="vertical"
-          sx={{ width: surfaceW + LEGEND_W, height: surfaceH }}
+      {/* The spare height below the header is split evenly above and below the map */}
+      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <ChartsDataProvider
+          width={surfaceW}
+          height={surfaceH}
+          series={[]}
+          skipAnimation
+          margin={MARGIN}
+          xAxis={[
+            {
+              id: "x",
+              scaleType: "linear",
+              min: xs[0],
+              max: xs[xs.length - 1],
+              label: EASTING,
+              height: X_AXIS_H,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            },
+          ]}
+          yAxis={[
+            {
+              id: "y",
+              scaleType: "linear",
+              min: ys[0],
+              max: ys[ys.length - 1],
+              label: NORTHING,
+              width: Y_AXIS_W,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            },
+          ]}
+          zAxis={[{ id: "z", colorMap: { type: "piecewise", thresholds, colors: bandColors } }]}
         >
-          <Box sx={{ gridArea: "legend", width: LEGEND_W, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
-            <Typography sx={{ fontSize: 16, fontWeight: 500, color: t.ink }}>{ELEVATION}</Typography>
-            <PiecewiseColorLegend
-              axisDirection="z"
-              axisId="z"
-              direction="vertical"
-              labelPosition="inline-end"
-              markType="square"
-              labelFormatter={({ min, max }) => `${Number(min ?? zMin).toFixed(2)} – ${Number(max ?? zMax).toFixed(2)}`}
-              sx={{ fontSize: 14, color: t.inkSoft, gap: "6px" }}
-            />
-          </Box>
-          <ChartsSurface
-            sx={{
-              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
-            }}
+          <ChartsWrapper
+            legendPosition={{ vertical: "middle", horizontal: "end" }}
+            legendDirection="vertical"
+            sx={{ width: surfaceW + LEGEND_W, height: surfaceH }}
           >
-            <ContourLayer />
-            <ChartsXAxis axisId="x" />
-            <ChartsYAxis axisId="y" />
-          </ChartsSurface>
-        </ChartsWrapper>
-      </ChartsDataProvider>
+            <Box sx={{ gridArea: "legend", width: LEGEND_W, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+              <Typography sx={{ fontSize: 16, fontWeight: 500, color: t.ink }}>{ELEVATION}</Typography>
+              <PiecewiseColorLegend
+                axisDirection="z"
+                axisId="z"
+                direction="vertical"
+                labelPosition="inline-end"
+                markType="square"
+                labelFormatter={({ min, max }) => `${Number(min ?? zMin).toFixed(2)} – ${Number(max ?? zMax).toFixed(2)}`}
+                sx={{ fontSize: 14, color: t.inkSoft, gap: "6px" }}
+              />
+            </Box>
+            <ChartsSurface
+              sx={{
+                "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+                "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              }}
+            >
+              <ContourLayer />
+              <ChartsXAxis axisId="x" />
+              <ChartsYAxis axisId="y" />
+            </ChartsSurface>
+          </ChartsWrapper>
+        </ChartsDataProvider>
+      </Box>
     </Box>
   );
 }
