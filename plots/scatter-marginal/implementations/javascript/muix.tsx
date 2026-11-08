@@ -10,7 +10,9 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const BIN_COUNT = 22; // histogram bins per marginal, spanning the shared axis domain
-const EXTENT_PAD_SHARE = 0.06; // room beyond the extreme values, as a share of each variable's span
+// Room beyond the extreme values, as a share of each variable's span. Kept below one bin
+// width so the outermost bins hold the extreme points and each histogram reaches the axis ends.
+const EXTENT_PAD_SHARE = 0.02;
 const COUNT_HEADROOM_SHARE = 0.08; // room above the tallest marginal bar
 const POINT_OPACITY = 0.62;
 const MARGINAL_OPACITY = 0.34; // quieter than the points, so the scatter stays the main panel
