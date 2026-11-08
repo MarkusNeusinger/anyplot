@@ -1,9 +1,12 @@
 // anyplot.ai
 // waterfall-basic: Basic Waterfall Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 87/100 | Updated: 2026-11-08
+// Quality: 88/100 | Updated: 2026-11-08
 
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -109,15 +112,7 @@ export default function Chart() {
         <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
         <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
-      <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: 28 }}>
-        {Object.keys(ROLE_COLORS).map((role) => (
-          <div key={role} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 16, height: 16, borderRadius: 3, background: ROLE_COLORS[role], display: "inline-block" }} />
-            <span style={{ fontSize: 16, color: t.ink }}>{ROLE_NAMES[role]}</span>
-          </div>
-        ))}
-      </div>
-      <ChartsContainer
+      <ChartsDataProvider
         width={width}
         height={height - TITLE_H - LEGEND_H}
         skipAnimation
@@ -155,26 +150,32 @@ export default function Chart() {
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
           },
         ]}
-        sx={{
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
-          "& .MuiChartsGrid-line": { stroke: t.grid },
-        }}
       >
-        <ChartsGrid horizontal />
-        <BarPlot
-          skipAnimation
-          borderRadius={3}
-          slotProps={{
-            barLabel: (ownerState) => ({
-              style: { fontSize: 16, fontWeight: 700, fill: labelInk[ownerState.seriesId] },
-            }),
-          }}
-        />
-        <Connectors />
-        <ChartsXAxis axisId="step" />
-        <ChartsYAxis axisId="amount" />
-      </ChartsContainer>
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 16, color: t.ink, gap: 3.5 }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
+            }}
+          >
+            <ChartsGrid horizontal />
+            <BarPlot
+              skipAnimation
+              borderRadius={3}
+              slotProps={{
+                barLabel: (ownerState) => ({
+                  style: { fontSize: 16, fontWeight: 700, fill: labelInk[ownerState.seriesId] },
+                }),
+              }}
+            />
+            <Connectors />
+            <ChartsXAxis axisId="step" />
+            <ChartsYAxis axisId="amount" />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
