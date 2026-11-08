@@ -22,6 +22,9 @@ from datetime import UTC, datetime
 PLOT_VOTE_REACTIONS = ("thumbs_up", "thumbs_down")
 """The two reactions the plot buttons send: the only ones counted per image and version."""
 
+VOTE_SORTS = ("thumbs_down", "thumbs_up", "total")
+"""How the debug dashboard's vote list ranks the plots: by the current version's thumbs down, thumbs up, or both."""
+
 
 def naive_utc(moment: datetime) -> datetime:
     """`moment` as naive UTC, the form `feedback.created_at` and `impls.updated` store; a naive value is UTC."""

@@ -461,16 +461,34 @@ A plot vote is a `thumbs_up` or `thumbs_down` that names `spec_id` and `library_
 
 The page keeps your own vote in `localStorage` under `anyplot_plot_votes`, keyed `spec/language/library@updated`, so a vote on an earlier version doesn't ink the thumbs of the new image. A key from before votes were kept per version has no `@`: it inks nothing and blocks nothing, and the API still drops a repeat on the same version.
 
-### GET `/debug/feedback/top`
+### GET `/debug/feedback/votes`
 
-**Purpose**: The "feedback · top pages" lists on `/debug`, behind the admin gate
+**Purpose**: The "feedback · votes per plot" list on `/debug`, behind the admin gate. It replaces `GET /debug/feedback/top`, which grouped the rows of one reaction by page path.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `reaction` | string | (required) | `thumbs_up`, `thumbs_down`, `bug` or `idea` |
-| `limit` | int | 20 | Number of paths (1-100) |
+| `sort` | string | `thumbs_down` | `thumbs_down`, `thumbs_up` or `total`: the current version's count to rank by |
+| `limit` | int | 25 | Number of plots (1-100) |
 
-Returns the paths with the most rows for that reaction, as `[{path, count, current, earlier, last_seen}]`. `earlier` counts the rows cast before the last regeneration of the implementation they name; `current` counts every other row, including the floating widget's page reactions, which name no implementation. `count` is both together, and `last_seen` is the newest row's UTC time. The paths with the most `current` rows come first. The lists count rows, not votes de-duplicated per session; `FeedbackRepository.reaction_counts` counts those per implementation, with `since` for the current version and `before` for the earlier ones.
+Returns the plots with the most votes, one entry per implementation:
+
+```json
+[
+  {
+    "spec_id": "scatter-basic",
+    "language": "python",
+    "library_id": "matplotlib",
+    "path": "/scatter-basic/python/matplotlib",
+    "thumbs_up": 1,
+    "thumbs_down": 4,
+    "earlier_thumbs_up": 6,
+    "earlier_thumbs_down": 2,
+    "last_vote": "2026-11-08T12:00:00+00:00"
+  }
+]
+```
+
+`thumbs_up` and `thumbs_down` count the votes on the current version, and the `earlier_*` fields the votes on the versions before the last regeneration. They are counted the way `FeedbackRepository.reaction_counts` counts them with `since` and with `before`: on each side, one vote per visitor session, the newest. `total` ranks by both current counts together. A tie goes to the earlier versions' count of the same kind, then to the newer `last_vote` (UTC). The response holds counts only: no message, contact, or session id. Page reactions from the floating widget name no implementation and aren't in the list.
 
 `GET /debug/feedback/messages` and `PATCH /debug/feedback/{id}` serve the messages list and its triage status on the same page.
 
