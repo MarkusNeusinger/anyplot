@@ -1,7 +1,7 @@
 // anyplot.ai
 // ecdf-basic: Basic ECDF Plot
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-25
+// Quality: pending | Created: 2026-06-25
 import { LineChart } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;
