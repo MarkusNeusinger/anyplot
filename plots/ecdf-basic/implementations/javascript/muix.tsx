@@ -1,140 +1,104 @@
 // anyplot.ai
 // ecdf-basic: Basic ECDF Plot
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-25
-//# anyplot-orientation: landscape
-
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Seeded LCG for deterministic data generation (no seeded RNG in browser)
-let seed = 42;
-function rand() {
-  seed = (Math.imul(1664525, seed) + 1013904223) | 0;
-  return (seed >>> 0) / 4294967296;
-}
-function randn() {
-  const u = Math.max(rand(), 1e-10);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
-}
-function normalSorted(mean, std, n) {
-  return Array.from({ length: n }, () => mean + std * randn()).sort((a, b) => a - b);
-}
+// Constants
+const X_PAD = 0.03; // share of the value range added on both sides of the outermost steps
+const TITLE = "ecdf-basic · javascript · muix · anyplot.ai";
+const HEADER_H = 84;
 
-// Exam scores from two teaching methods, 80 students each
-const N = 80;
-const traditional = normalSorted(72, 12, N);   // Traditional instruction: μ=72, σ=12
-const projectBased = normalSorted(78, 10, N);  // Project-based learning:  μ=78, σ=10
+// Columns: set these to your data's column names
+const SCORE = "Exam score (points)"; // role: values
 
-// Merge and sort all x-values to build a shared axis for both ECDF curves
-const allX = [...traditional, ...projectBased].sort((a, b) => a - b);
-
-// ECDF: fraction of observations ≤ x evaluated at every merged x-value
-function computeEcdf(sorted, xValues) {
-  let j = 0;
-  return xValues.map((x) => {
-    while (j < sorted.length && sorted[j] <= x) j++;
-    return j / sorted.length;
+// Data: replace this block with your own records, one object per row
+// Final exam scores of 80 students taught with traditional instruction (normal, mean 72, sd 12)
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (Math.imul(1664525, seed) + 1013904223) | 0;
+    return (seed >>> 0) / 4294967296;
+  };
+  return Array.from({ length: 80 }, () => {
+    const u = Math.max(rand(), 1e-10);
+    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
+    return { [SCORE]: Math.round((72 + 12 * z) * 10) / 10 };
   });
-}
+})();
 
-const ecdfTrad = computeEcdf(traditional, allX);
-const ecdfProj = computeEcdf(projectBased, allX);
+// Plot: reads only data and the constants above
+const values = data.map((d) => d[SCORE]).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+const n = values.length;
+const lo = values[0];
+const hi = values[n - 1];
+const pad = (hi - lo) * X_PAD;
 
-const TITLE_H = 52;
+// Step function: 0 left of the smallest value, then +1/n at every observation (ties stack)
+const xs = [lo - pad, ...values, hi + pad];
+const ecdf = [0, ...values.map((_, i) => (i + 1) / n), 1];
+const subtitle = `n = ${n} · range ${lo.toFixed(1)} to ${hi.toFixed(1)} · each step adds 1/${n}`;
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <div
-      style={{
-        width: W,
-        height: H,
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: t.pageBg,
-      }}
-    >
-      <div
-        style={{
-          padding: "18px 36px 0",
-          fontSize: 22,
-          fontWeight: 600,
-          color: t.ink,
-          height: TITLE_H,
-          boxSizing: "border-box",
-          fontFamily: "sans-serif",
-          letterSpacing: "-0.3px",
-        }}
-      >
-        ecdf-basic · javascript · muix · anyplot.ai
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "22px 40px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{subtitle}</div>
       </div>
       <LineChart
-        width={W}
-        height={H - TITLE_H}
+        width={width}
+        height={height - HEADER_H}
         skipAnimation
-        series={[
-          {
-            data: ecdfTrad,
-            curve: "stepAfter",
-            label: "Traditional Teaching",
-            showMark: false,
-            color: t.palette[0],
-          },
-          {
-            data: ecdfProj,
-            curve: "stepAfter",
-            label: "Project-based Learning",
-            showMark: false,
-            color: t.palette[1],
-          },
-        ]}
+        hideLegend
+        grid={{ horizontal: true, vertical: true }}
+        margin={{ top: 20, right: 48, bottom: 16, left: 24 }}
         xAxis={[
           {
-            data: allX,
-            label: "Exam Score",
-            tickMinStep: 10,
-            valueFormatter: (v) => String(Math.round(v)),
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            data: xs,
+            scaleType: "linear",
+            min: lo - pad,
+            max: hi + pad,
+            label: SCORE,
+            height: 68,
+            tickNumber: 10,
+            valueFormatter: (v) => v.toFixed(0),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             min: 0,
             max: 1,
-            label: "Cumulative Proportion",
-            tickMinStep: 0.25,
-            valueFormatter: (v) => `${Math.round(v * 100)}%`,
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            label: "Cumulative proportion",
+            width: 84,
+            tickNumber: 10,
+            valueFormatter: (v) => v.toFixed(1),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        grid={{ horizontal: true }}
+        series={[
+          {
+            id: "ecdf",
+            data: ecdf,
+            label: "Cumulative proportion",
+            color: t.palette[0],
+            curve: "stepAfter",
+            showMark: false,
+          },
+        ]}
         sx={{
-          "& .MuiLineElement-root": { strokeWidth: 2.5 },
-          "& .MuiChartsGrid-line": { strokeOpacity: 0.15 },
-          "& .MuiChartsAxis-line": { strokeOpacity: 0.3 },
-          "& .MuiChartsAxis-tick": { strokeOpacity: 0.3 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
-        margin={{ left: 90, right: 36, top: 20, bottom: 100 }}
-      >
-        <ChartsReferenceLine
-          y={0.5}
-          label="Median (50th)"
-          labelAlign="end"
-          lineStyle={{
-            stroke: t.inkSoft,
-            strokeDasharray: "6 3",
-            strokeWidth: 1.5,
-          }}
-          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-        />
-      </LineChart>
+      />
     </div>
   );
 }
