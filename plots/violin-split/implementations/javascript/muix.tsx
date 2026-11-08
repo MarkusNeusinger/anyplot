@@ -13,8 +13,12 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const GRID_N = 160; // KDE evaluation points per half
 const TAIL_BANDWIDTHS = 1.5; // the density falls below ~4 % of its peak this far past the data
+const SCORE_MIN = 0; // the test's fixed score range: no density is drawn and no tick is set outside it
+const SCORE_MAX = 100;
 const Y_PAD = 0.04; // share of the value range added below the data
 const Y_HEADROOM = 0.08; // share of the value range added above the data, room for the callout
+const Y_TICK_COUNT = 15; // about this many value ticks
+const NICE_STEPS = [1, 2, 2.5, 5, 10]; // round tick step multipliers
 const TITLE = "violin-split · javascript · muix · anyplot.ai";
 const TITLE_H = 80;
 const LEGEND_H = 40;
@@ -67,7 +71,8 @@ const halvesOrder = [...new Set(rows.map((d) => d[GROUP]))].slice(0, 2);
 
 // Per category and half: quartiles and a Gaussian KDE (Silverman bandwidth)
 // normalized to its own peak, on a grid that ends a short way past the data,
-// so each half tapers to the centre line just beyond its values
+// so each half tapers to the centre line just beyond its values; the grid is
+// cut at the score range, where a half then ends flat
 const halves = categories.map((cat) =>
   halvesOrder.map((group) => {
     const values = rows
@@ -84,8 +89,8 @@ const halves = categories.map((cat) =>
     const mean = values.reduce((a, b) => a + b, 0) / n;
     const sd = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1));
     const bandwidth = Math.max(0.9 * sd * Math.pow(n, -0.2), 1e-6);
-    const lo = values[0] - TAIL_BANDWIDTHS * bandwidth;
-    const hi = values[n - 1] + TAIL_BANDWIDTHS * bandwidth;
+    const lo = Math.max(SCORE_MIN, values[0] - TAIL_BANDWIDTHS * bandwidth);
+    const hi = Math.min(SCORE_MAX, values[n - 1] + TAIL_BANDWIDTHS * bandwidth);
     const grid = Array.from({ length: GRID_N }, (_, k) => lo + (k * (hi - lo)) / (GRID_N - 1));
     const raw = grid.map((gy) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((gy - v) / bandwidth) ** 2), 0));
     const peak = Math.max(...raw);
@@ -98,6 +103,14 @@ const gridMin = Math.min(...filled.map((h) => h.grid[0]));
 const gridMax = Math.max(...filled.map((h) => h.grid[GRID_N - 1]));
 const yMin = gridMin - (gridMax - gridMin) * Y_PAD;
 const yMax = gridMax + (gridMax - gridMin) * Y_HEADROOM;
+// Round ticks inside the axis and the score range: the headroom above the
+// test maximum holds the callout, never a score tick
+const tickRaw = (yMax - yMin) / Y_TICK_COUNT;
+const tickMagnitude = 10 ** Math.floor(Math.log10(tickRaw));
+const tickStep = NICE_STEPS.map((m) => m * tickMagnitude).find((s) => s >= tickRaw);
+const tickLo = Math.max(SCORE_MIN, Math.ceil(yMin / tickStep - 1e-9) * tickStep);
+const tickHi = Math.min(SCORE_MAX, yMax);
+const yTicks = Array.from({ length: Math.floor((tickHi - tickLo) / tickStep + 1e-9) + 1 }, (_, i) => tickLo + i * tickStep);
 
 // Focal callout: the category with the largest gap between the two halves' medians
 const UNIT = SCORE.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
@@ -196,6 +209,7 @@ export default function Chart() {
             scaleType: "linear",
             min: yMin,
             max: yMax,
+            tickInterval: yTicks,
             width: 84,
             label: SCORE,
             labelStyle: { fontSize: 16, fill: t.ink },
