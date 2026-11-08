@@ -2,131 +2,133 @@
 // gain-curve: Cumulative Gains Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-05
-//# anyplot-orientation: landscape
-
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: fraud-investigation scoring model (in-memory, deterministic) -----
-// LCG PRNG — the browser has no seeded RNG.
-let seed = 42;
-function nextRandom() {
-  seed = (1664525 * seed + 1013904223) % 4294967296;
-  return seed / 4294967296;
-}
-function nextGaussian() {
-  const u1 = Math.max(nextRandom(), 1e-12);
-  const u2 = nextRandom();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
-function sigmoid(x) {
-  return 1 / (1 + Math.exp(-x));
-}
+// Constants
+const FULL = 100; // both axes run in percent, from none to all
+const PAD_SHARE = 0.015; // axis padding beyond 0 % and 100 %, so the corner points and the perfect-model plateau sit inside
+const X_LABEL = "Population targeted (%)";
+const Y_LABEL = "Positive cases captured (%)";
+const PERFECT_LABEL = "Perfect model";
+const RANDOM_LABEL = "Random selection";
+const TITLE = "gain-curve · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 44;
 
-const TRANSACTIONS = 3000;
-const yTrue = [];
-const yScore = [];
-for (let i = 0; i < TRANSACTIONS; i++) {
-  const risk = nextGaussian();
-  const fraudProbability = sigmoid(1.4 * risk - 2.3); // ~9% base fraud rate
-  yTrue.push(nextRandom() < fraudProbability ? 1 : 0);
-  yScore.push(risk + nextGaussian() * 0.9); // model score: imperfect proxy for true risk
-}
+// Columns: set these to your data's column names
+const CONFIRMED_FRAUD = "Confirmed fraud after review"; // role: y_true
+const FRAUD_SCORE = "Model fraud score"; // role: y_score
 
-// Rank by predicted score (descending) and accumulate captured fraud cases.
-const order = yTrue.map((_, i) => i).sort((a, b) => yScore[b] - yScore[a]);
-const totalFraud = yTrue.reduce((sum, v) => sum + v, 0);
-const fraudRate = totalFraud / TRANSACTIONS;
+// Data: replace this block with your own records, one object per row
+// 3000 card transactions that rule checks flagged for manual review: a latent risk drives fraud (about 15 %
+// of the flagged transactions are confirmed by the reviewers), the model score sees that risk with noise
+const data = (() => {
+  let state = 42;
+  const rand = () => {
+    state = (1664525 * state + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+  const gaussian = () => {
+    const u1 = Math.max(rand(), 1e-12);
+    const u2 = rand();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  };
+  return Array.from({ length: 3000 }, () => {
+    const risk = gaussian();
+    const fraudProbability = 1 / (1 + Math.exp(-(1.4 * risk - 2.3)));
+    const fraud = rand() < fraudProbability ? 1 : 0;
+    return { [CONFIRMED_FRAUD]: fraud, [FRAUD_SCORE]: Math.round((risk + gaussian() * 0.9) * 10000) / 10000 };
+  });
+})();
 
-const cumulativeGainAt = new Array(TRANSACTIONS);
-let cumulativeFraud = 0;
-for (let i = 0; i < TRANSACTIONS; i++) {
-  cumulativeFraud += yTrue[order[i]];
-  cumulativeGainAt[i] = (cumulativeFraud / totalFraud) * 100;
-}
+// Plot: reads only data and the constants above
+const ranked = data
+  .filter((d) => Number.isFinite(d[FRAUD_SCORE]) && (d[CONFIRMED_FRAUD] === 0 || d[CONFIRMED_FRAUD] === 1))
+  .sort((a, b) => b[FRAUD_SCORE] - a[FRAUD_SCORE]);
+const n = ranked.length;
+const positives = ranked.reduce((sum, d) => sum + d[CONFIRMED_FRAUD], 0);
+const positiveRate = positives / n;
 
-// Sample at every integer percent of population targeted.
-const PERCENTAGES = Array.from({ length: 101 }, (_, i) => i);
-const modelGain = PERCENTAGES.map((pct) => {
-  if (pct === 0) return 0;
-  const idx = Math.min(Math.round((pct / 100) * TRANSACTIONS), TRANSACTIONS) - 1;
-  return cumulativeGainAt[idx];
+// One computed point per targeted sample, starting at the origin
+const targeted = [0];
+const captured = [0];
+let runningPositives = 0;
+ranked.forEach((d, i) => {
+  runningPositives += d[CONFIRMED_FRAUD];
+  targeted.push(((i + 1) / n) * FULL);
+  captured.push((runningPositives / positives) * FULL);
 });
-const randomGain = PERCENTAGES.map((pct) => pct);
-const perfectCapPct = fraudRate * 100;
-const perfectGain = PERCENTAGES.map((pct) => (pct <= perfectCapPct ? pct / fraudRate : 100));
+const perfect = targeted.map((x) => Math.min(FULL, x / positiveRate));
+const random = targeted.map((x) => x);
 
-// --- Chart -------------------------------------------------------------------
-const TITLE = "Fraud Investigation Targeting · gain-curve · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length));
-const TITLE_HEIGHT = 64;
+const subtitle = `n = ${n} · positive rate ${(positiveRate * FULL).toFixed(1)} % (${CONFIRMED_FRAUD} = 1) · ranked by ${FRAUD_SCORE}, highest first`;
 
 export default function Chart() {
-  const chartWidth = window.ANYPLOT_SIZE.width;
-  const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
-
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <Box sx={{ width: chartWidth, height: window.ANYPLOT_SIZE.height, display: "flex", flexDirection: "column" }}>
-      <Box sx={{ height: TITLE_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Typography sx={{ color: t.ink, fontSize: TITLE_FONT_SIZE, fontWeight: 500 }}>{TITLE}</Typography>
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
       </Box>
       <LineChart
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
-        width={chartWidth}
-        height={chartHeight}
-        margin={{ top: 50, right: 40, bottom: 70, left: 105 }}
-        grid={{ horizontal: true }}
+        grid={{ horizontal: true, vertical: true }}
+        margin={{ top: 16, right: 56, bottom: 16, left: 32 }}
         xAxis={[
           {
-            data: PERCENTAGES,
+            data: targeted,
             scaleType: "linear",
-            min: 0,
-            max: 100,
-            label: "Population Targeted (%)",
-            labelStyle: { fontSize: 16, fill: t.ink },
+            min: -PAD_SHARE * FULL,
+            max: (1 + PAD_SHARE) * FULL,
+            label: X_LABEL,
+            height: 68,
+            tickNumber: 10,
+            valueFormatter: (v: number) => `${Math.round(v)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            valueFormatter: (v) => `${v}%`,
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            min: 0,
-            max: 100,
-            label: "Fraud Cases Captured (%)",
-            labelStyle: { fontSize: 16, fill: t.ink },
+            min: -PAD_SHARE * FULL,
+            max: (1 + PAD_SHARE) * FULL,
+            label: Y_LABEL,
+            width: 92,
+            tickNumber: 10,
+            valueFormatter: (v: number) => `${Math.round(v)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            valueFormatter: (v) => `${v}%`,
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        // Push the rotated y-axis title clear of the "100%"-wide tick labels —
-        // MUI X's default label offset assumes narrower numeric ticks. Set via
-        // `leftAxis` (not the yAxis config) so only the left axis is affected.
-        leftAxis={{ slotProps: { axisLabel: { x: -78 } } }}
         series={[
           {
             id: "model",
-            data: modelGain,
-            label: "Model",
+            data: captured,
+            label: FRAUD_SCORE,
             color: t.palette[0],
-            curve: "monotoneX",
+            curve: "linear",
             area: true,
             showMark: false,
           },
           {
             id: "perfect",
-            data: perfectGain,
-            label: "Perfect Model",
+            data: perfect,
+            label: PERFECT_LABEL,
             color: t.inkSoft,
             curve: "linear",
             showMark: false,
           },
           {
             id: "random",
-            data: randomGain,
-            label: "Random Selection",
+            data: random,
+            label: RANDOM_LABEL,
             color: t.ink,
             curve: "linear",
             showMark: false,
@@ -134,18 +136,26 @@ export default function Chart() {
         ]}
         slotProps={{
           legend: {
-            direction: "row",
-            position: { vertical: "top", horizontal: "right" },
-            labelStyle: { fontSize: 14, fill: t.inkSoft },
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: {
+              fontSize: 15,
+              color: t.inkSoft,
+              mb: "8px",
+              "& .MuiChartsLegend-mark": { width: 36 },
+              '& [data-series="perfect"] .MuiChartsLegend-mark path': { strokeWidth: 2, strokeDasharray: "2 5" },
+              '& [data-series="random"] .MuiChartsLegend-mark path': { strokeWidth: 2, strokeDasharray: "10 7" },
+            },
           },
         }}
         sx={{
-          "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
           "& .MuiChartsGrid-line": { stroke: t.grid },
-          "& .MuiLineElement-series-model": { strokeWidth: 3 },
-          "& .MuiLineElement-series-perfect": { strokeWidth: 1.5, strokeDasharray: "2 4" },
-          "& .MuiLineElement-series-random": { strokeWidth: 1.5, strokeDasharray: "8 6" },
-          "& .MuiAreaElement-series-model": { fillOpacity: 0.12 },
+          '& .MuiLineChart-line[data-series="model"]': { strokeWidth: 3.5 },
+          '& .MuiLineChart-line[data-series="perfect"]': { strokeWidth: 2, strokeDasharray: "2 5" },
+          '& .MuiLineChart-line[data-series="random"]': { strokeWidth: 2, strokeDasharray: "10 7" },
+          '& .MuiLineChart-area[data-series="model"]': { fillOpacity: 0.12 },
         }}
       />
     </Box>
