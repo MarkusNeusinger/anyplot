@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: raincloud-basic
 created: '2026-08-26T10:36:20Z'
-updated: '2026-11-08T04:25:26Z'
+updated: '2026-11-08T04:30:34Z'
 generated_by: claude-opus-5-5
 adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
 workflow_run: 42446441434
@@ -13,41 +13,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Exact raincloud anatomy in horizontal orientation: cloud rising from a flat baseline,
-    ink box with heavier median centered on it, rain below as a narrow band'
-  - 'Ordered dose levels colored in steps of the Imprint sequential ramp, Placebo
-    in brand green #009E73, identical in both themes'
-  - Bimodal 50 mg arm (responders vs non-responders) shows the distribution shape
-    a box plot alone would hide
-  - Box fill from the elevatedBg token keeps the box legible on top of every cloud
-    in both themes
-  - 'Idiomatic ChartsContainer composition: custom SVG layer drawn with useXScale/useYScale
-    alongside native grid and axes'
+  - Composes the raincloud from ChartsContainer with ChartsXAxis/ChartsYAxis/ChartsGrid
+    and a custom SVG layer driven by MUI's useXScale/useYScale hooks, so cloud, box
+    and rain share the library's own band and linear scales
+  - 'Correct horizontal raincloud layout: each half-violin rises above its category
+    baseline with a flat edge on it, the Tukey box (quartiles, thick median tick,
+    whisker caps) sits centered on the baseline, and the translucent rain (alpha 0.6)
+    falls below it in a band that stays clear of the next category''s cloud'
+  - 'Dose arms are colored in ordered steps of the imprint_seq ramp (#009E73 placebo
+    to #4467A3 at 50 mg), so the dose order reads from the color, identical in both
+    themes'
+  - 'Data tells a clear dose-response story: reaction times fall with dose and the
+    50 mg arm splits into responders and non-responders, which the cloud reveals as
+    a bimodal shape the box alone would hide'
+  - 'Theme chrome is threaded through tokens (ink, inkSoft, grid, elevatedBg box fill),
+    so every label is readable on both #FAF8F1 and #1A1A17'
+  - Deterministic fixed-seed LCG data, axis limits derived from the data, animation
+    skipped
   weaknesses:
-  - 'VQ-05 (both): the y-axis title ''Treatment arm'' sits about 60 px (CSS) left
-    of the longest tick label ''10 mg dose'', leaving an empty column between them
-    → about 10–16 px gap (y-axis width about 90–100 instead of 140, −40 to −50 px).
-    Likely cause: yAxis width: 140.'
-  - 'Suggestion: the 20 ms vertical grid draws 25 lines; a 50 ms step would quiet
-    the background behind the clouds.'
+  - 'Suggestion: the rain band spans about 0.68 of the half band below the baseline;
+    a slightly tighter band (e.g. RAIN_FAR around 0.75) would sit closer to the narrow
+    end of the jitter the Notes describe.'
+  - 'Suggestion: the 50 mg rain in the dark render (#4467A3 at alpha 0.6) is the dimmest
+    mark on the page; a slightly higher fill opacity would give it the same presence
+    as the green arms.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: bold dark title 'raincloud-basic · javascript · muix · anyplot.ai' centered on top; x-axis 'Reaction time (ms)' with ticks 220–700 every 20 ms; y-axis 'Treatment arm' with labels Placebo, 10 mg dose, 25 mg dose, 50 mg dose; subtle vertical grid. All readable.
-      Data: four horizontal rainclouds; translucent half-violins rise above each baseline, an ink-outlined page-colored box with whiskers and median sits on the baseline, 70 translucent points per arm fall below. Colors step along the Imprint sequential ramp from #009E73 (Placebo) through teal to blue (50 mg). The 50 mg cloud is clearly bimodal (~345 and ~475 ms).
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "raincloud-basic · javascript · muix · anyplot.ai" centered at top; y axis title "Treatment arm" (rotated) with category labels Placebo, 10 mg dose, 25 mg dose, 50 mg dose; x axis "Reaction time (ms)" with ticks 220–700 every 20 ms; subtle vertical grid only, x axis line in soft ink. All text dark and readable.
+      Data: four horizontal rainclouds. Each half-violin rises above its baseline (Placebo #009E73 green, stepping through teal to #4467A3 blue at 50 mg), with a cream-filled box with dark outline, thick median line and capped whiskers on the baseline, and translucent jittered dots of the same color below. The 50 mg cloud is clearly bimodal (~345 and ~475 ms). Rain stays clear of the next cloud.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and tick labels in light ink; boxes in a dark elevated fill with light outlines; grid subtle. No dark-on-dark text.
-      Data: same ramp colors and positions as the light render; only chrome flips. The 50 mg navy rain is dimmer against the dark page but every point remains visible.
+      Chrome: title, axis titles, category labels and tick labels in light ink, all readable; grid subtle grey; boxes switch to the dark elevated fill with light outlines and median lines. No dark-on-dark text.
+      Data: cloud, rain colors identical to the light render (green → teal → blue sequential steps); the blue 50 mg rain is the dimmest mark but still clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -55,52 +62,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22 px bold, axis titles 16 px, ticks 14/15
-          px CSS) inside the library prompt's range; all text readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14/15 px); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; rain overlap in dense regions is permitted by
-          the spec; boxes over the cloud foot are permitted
+        comment: No text collisions; box over the cloud's foot is permitted by the
+          spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 70 points per arm at r=4 with alpha 0.6 read as individual drops;
-          clouds outlined and filled at 0.5; boxes drawn in ink with a page-colored
-          fill so they stand out on every cloud
+        comment: 70 rain dots per arm at r=4 with alpha 0.6, clouds at 0.5 fill with
+          solid outline; all visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue sequential ramp (green to blue), no red-green signal;
-          categories also separated by position
+        comment: Sequential green-to-blue steps, color is redundant with the y-axis
+          labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: The y-axis title sits about 60 px (CSS) left of the longest tick
-          label, leaving an empty column (defect line); otherwise well proportioned
-          and nothing clipped
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Reaction time (ms)'' with unit, ''Treatment arm'''
+        comment: '''Reaction time (ms)'' with units, ''Treatment arm'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ordered dose levels in steps of the Imprint sequential ramp (t.seq)
-          in their natural order, starting at #009E73 for Placebo; backgrounds #FAF8F1
-          / #1A1A17; data colors identical between themes'
+        comment: 'Ordered dose arms in imprint_seq steps from #009E73; correct backgrounds;
+          data colors identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -110,23 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Boxes filled with the elevatedBg token and outlined in ink with a
-          heavier median stroke, giving the box a distinct layer over the translucent
-          clouds
+        comment: Ink-outlined boxes with elevated-surface fill and a heavier median
+          stroke give a clear mark hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-axis ticks and line disabled so the category labels float next
-          to their baselines; clouds end on the baseline via a density cutoff
+        comment: Vertical-only grid chosen for the horizontal value axis, y axis line
+          and ticks removed, cloud tails ending on the baseline via a density cutoff
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Ramp from Placebo to 50 mg makes the dose progression readable at
-          a glance; the bimodal 50 mg arm shows what a box plot alone would hide
+        comment: Dose-ordered color ramp plus a bimodal 50 mg arm make the dose response
+          and the responder split the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -136,30 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Horizontal raincloud: half-violin, box, rain; no mean markers, reference
-          lines or callouts'
+        comment: Raincloud with half-violin, box and rain; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cloud above baseline with flat edge on it, box centered on baseline
-          with median and quartiles, rain below; alpha 0.6 rain; moderate vertical
-          spread; categories clear of each other
+        comment: Horizontal orientation, cloud above / box on / rain below each baseline,
+          clipped half violin, alpha 0.6 rain, median and quartiles all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every rain point at its x value; only vertical layout offset; axis
-          covers all clouds and points
+        comment: Rain at its x values, jitter only vertical; axis covers every cloud
+          and point
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'raincloud-basic · javascript · muix · anyplot.ai'; no legend
-          needed (categories labelled on the axis)
+        comment: Correct title; no legend needed (categories labelled on the y axis),
+          N/A
     data_quality:
       score: 15
       max: 15
@@ -169,8 +169,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shifting locations, different spreads, a bimodal arm and points beyond
-          whiskers
+        comment: Skewed, unimodal and bimodal shapes, outlying points; shows what
+          box plots hide
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -182,8 +182,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Simple reaction times 280-650 ms, 70 per arm (within 20-300); no
-          Check values in the spec
+        comment: Reaction times 280–650 ms, 70 per arm within the 20–300 range; no
+          Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -193,34 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data/stat blocks; the two components are the React structure
-          the harness requires
+        comment: Flat module-level data and stats; only the React components the harness
+          and hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG; deterministic golden-ratio spread
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports used
+        comment: All six imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Written-out quartiles and KDE are allowed by the library prompt's
-          Computation line; compact
+        comment: Written-out KDE and box statistics are allowed by the library prompt's
+          Computation line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component into the harness mount; skipAnimation; current
-          v7 API
+        comment: Default-export component, skipAnimation, v9 ChartsContainer API
     library_mastery:
       score: 6
       max: 10
@@ -230,28 +229,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with ChartsGrid/ChartsXAxis/ChartsYAxis
-          and a band y scale
+        comment: v9 composition (ChartsContainer + ChartsXAxis/ChartsYAxis/ChartsGrid),
+          band y axis with categoryGapRatio, axis bands sized
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Custom SVG layer drawn inside the chart via the useXScale/useYScale
-          hooks
-  verdict: REJECTED
+        passed: false
+        comment: useXScale/useYScale hooks drive custom SVG marks on the library's
+          scales
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T04:22:11Z'
+  rendered_at: '2026-11-08T04:27:44Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - patches
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
+  - normalization
   styling:
   - alpha-blending
+  - grid-styling
