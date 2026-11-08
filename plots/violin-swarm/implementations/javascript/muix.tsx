@@ -2,309 +2,163 @@
 // violin-swarm: Violin Plot with Overlaid Swarm Points
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "violin-swarm · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
 
-// --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
-function lcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const GRID_N = 140; // KDE evaluation points per violin
+const TAIL_BANDWIDTHS = 2; // each violin ends this many bandwidths past its outermost value
+const Y_PAD = 0.04; // share of the violins' value range added above and below them
+const VIOLIN_SPAN = 0.8; // share of a category band the widest violin fills
+const MARKER_R = 5; // swarm point radius, px
+const PEAK_MIN_HEIGHT = 0.25; // a density peak below this share of the violin's maximum is noise
+const PEAK_MIN_SEPARATION = 2; // two peaks closer than this many bandwidths are one mode
+const PEAK_VALLEY_RATIO = 0.85; // a valley above this share of the lower peak does not split two modes
+const TITLE = "violin-swarm · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+
+// Columns: set these to your data's column names
+const CONDITION = "Condition"; // role: category
+const REACTION_TIME = "Reaction time (ms)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// Reaction times across four experimental conditions, 50 trials each. Each
+// condition has its own shape: sleep deprivation adds a cluster of attention
+// lapses (a second mode), and the dual task skews into a long slow tail.
+const data = (() => {
+  let state = 42;
+  const rand = () => {
     state = (state * 1664525 + 1013904223) % 4294967296;
     return state / 4294967296;
   };
-}
-function randomNormal(rand, mean, stdDev) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * stdDev;
-}
-function clamp(v, lo, hi) {
-  return Math.min(hi, Math.max(lo, v));
-}
-
-const rand = lcg(42);
-
-// Reaction time (ms) across 4 experimental conditions, 50 trials each — each
-// condition shaped differently so the swarm points reveal structure (a bimodal
-// split, a skewed tail) that summary stats alone would hide.
-const N_PER_CONDITION = 50;
-const conditions = [
-  {
-    name: "Baseline",
-    sample: () => clamp(randomNormal(rand, 420, 35), 300, 650),
-  },
-  {
-    name: "Caffeine",
-    sample: () => clamp(randomNormal(rand, 360, 28), 300, 650),
-  },
-  {
-    // Most trials slow down, but a subset of attention lapses spike much higher.
-    name: "Sleep-deprived",
-    sample: () =>
-      clamp(
-        rand() < 0.75
-          ? randomNormal(rand, 470, 30)
-          : randomNormal(rand, 590, 25),
-        300,
-        650,
-      ),
-  },
-  {
-    // Right-skewed: most trials cluster near a floor, with a long slow tail.
-    name: "Dual-task",
-    sample: () =>
-      clamp(
-        430 + 140 * Math.pow(rand(), 2.2) + 8 * randomNormal(rand, 0, 1),
-        300,
-        650,
-      ),
-  },
-];
-const categories = conditions.map((c) => c.name);
-const valuesByCategory = conditions.map((c) =>
-  Array.from({ length: N_PER_CONDITION }, c.sample),
-);
-
-const allValues = valuesByCategory.flat();
-const dataMin = Math.min(...allValues);
-const dataMax = Math.max(...allValues);
-const yPad = (dataMax - dataMin) * 0.1;
-const Y_MIN = dataMin - yPad;
-const Y_MAX = dataMax + yPad;
-
-// --- Gaussian KDE per condition, Silverman bandwidth, normalized to its own
-// peak so violin width encodes shape, not sample count. Each violin's grid is
-// clipped to its own local support (data range ± 3 bandwidths) rather than the
-// shared Y_MIN..Y_MAX span — otherwise the closed path pinches to near-zero
-// width far from the data and the stroke still draws a hairline all the way to
-// the axis edges.
-const GRID_N = 140;
-function stdOf(values) {
-  const m = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance =
-    values.reduce((a, b) => a + (b - m) ** 2, 0) / (values.length - 1);
-  return Math.sqrt(variance);
-}
-function bandwidthOf(values) {
-  return 0.9 * stdOf(values) * Math.pow(values.length, -0.2);
-}
-function kdeAt(values, bandwidth, y) {
-  return values.reduce(
-    (sum, v) => sum + Math.exp(-0.5 * ((y - v) / bandwidth) ** 2),
-    0,
+  const normal = (mean, sd) =>
+    mean + sd * Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+  const clamp = (v) => Math.min(650, Math.max(300, v));
+  const conditions = [
+    ["Baseline", () => clamp(normal(420, 35))],
+    ["Caffeine", () => clamp(normal(360, 28))],
+    ["Sleep-deprived", () => clamp(rand() < 0.75 ? normal(470, 30) : normal(590, 25))],
+    ["Dual-task", () => clamp(430 + 140 * Math.pow(rand(), 2.2) + 8 * normal(0, 1))],
+  ];
+  return conditions.flatMap(([name, sample]) =>
+    Array.from({ length: 50 }, () => ({ [CONDITION]: name, [REACTION_TIME]: Math.round(sample() * 10) / 10 })),
   );
-}
-const bandwidthByCategory = valuesByCategory.map(bandwidthOf);
-const gridByCategory = valuesByCategory.map((values, i) => {
-  const bandwidth = bandwidthByCategory[i];
-  const lo = Math.max(Y_MIN, Math.min(...values) - 3 * bandwidth);
-  const hi = Math.min(Y_MAX, Math.max(...values) + 3 * bandwidth);
-  return Array.from(
-    { length: GRID_N },
-    (_, k) => lo + (k * (hi - lo)) / (GRID_N - 1),
+})();
+
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[REACTION_TIME] != null);
+const categories = [...new Set(rows.map((d) => d[CONDITION]))];
+
+// Per category: sorted values, median and a Gaussian KDE (Silverman bandwidth)
+// normalized to its own peak, so width encodes shape rather than sample count.
+// The grid ends a few bandwidths past the data, so each violin tapers near its
+// own range. Density modes are the local maxima that survive a valley test.
+const violins = categories.map((cat) => {
+  const values = rows
+    .filter((d) => d[CONDITION] === cat)
+    .map((d) => d[REACTION_TIME])
+    .sort((a, b) => a - b);
+  const n = values.length;
+  const median = n % 2 === 0 ? (values[n / 2 - 1] + values[n / 2]) / 2 : values[(n - 1) / 2];
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const sd = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1));
+  const bandwidth = Math.max(0.9 * sd * Math.pow(n, -0.2), 1e-6);
+  const lo = values[0] - TAIL_BANDWIDTHS * bandwidth;
+  const hi = values[n - 1] + TAIL_BANDWIDTHS * bandwidth;
+  const grid = Array.from({ length: GRID_N }, (_, k) => lo + (k * (hi - lo)) / (GRID_N - 1));
+  const raw = grid.map((gy) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((gy - v) / bandwidth) ** 2), 0));
+  const peak = Math.max(...raw);
+  const density = raw.map((v) => v / peak);
+  const valueDensity = values.map(
+    (y) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((y - v) / bandwidth) ** 2), 0) / peak,
   );
+  const medianDensity = values.reduce((sum, v) => sum + Math.exp(-0.5 * ((median - v) / bandwidth) ** 2), 0) / peak;
+
+  const modes = [];
+  for (let k = 1; k < GRID_N - 1; k += 1) {
+    if (density[k] < PEAK_MIN_HEIGHT || density[k] < density[k - 1] || density[k] < density[k + 1]) continue;
+    const close = modes.find((m) => Math.abs(m.value - grid[k]) < PEAK_MIN_SEPARATION * bandwidth);
+    if (!close) modes.push({ idx: k, value: grid[k], height: density[k] });
+    else if (density[k] > close.height) Object.assign(close, { idx: k, value: grid[k], height: density[k] });
+  }
+  modes.sort((a, b) => a.idx - b.idx);
+  let merged = true;
+  while (merged && modes.length > 1) {
+    merged = false;
+    for (let i = 0; i < modes.length - 1 && !merged; i += 1) {
+      const valley = Math.min(...density.slice(modes[i].idx, modes[i + 1].idx + 1));
+      if (valley / Math.min(modes[i].height, modes[i + 1].height) > PEAK_VALLEY_RATIO) {
+        modes.splice(modes[i].height >= modes[i + 1].height ? i + 1 : i, 1);
+        merged = true;
+      }
+    }
+  }
+  const minorMode = modes.length > 1 ? [...modes].sort((a, b) => a.height - b.height)[0] : null;
+
+  return { values, valueDensity, median, medianDensity, grid, density, minorMode };
 });
-const rawDensityByCategory = valuesByCategory.map((values, i) =>
-  gridByCategory[i].map((gy) => kdeAt(values, bandwidthByCategory[i], gy)),
-);
-const peakByCategory = rawDensityByCategory.map((raw) => Math.max(...raw));
-const densityByCategory = rawDensityByCategory.map((raw, i) =>
-  raw.map((v) => v / peakByCategory[i]),
-);
-function densityFraction(categoryIndex, value) {
-  return (
-    kdeAt(
-      valuesByCategory[categoryIndex],
-      bandwidthByCategory[categoryIndex],
-      value,
-    ) / peakByCategory[categoryIndex]
-  );
-}
+const gridMin = Math.min(...violins.map((v) => v.grid[0]));
+const gridMax = Math.max(...violins.map((v) => v.grid[GRID_N - 1]));
+const yMin = gridMin - (gridMax - gridMin) * Y_PAD;
+const yMax = gridMax + (gridMax - gridMin) * Y_PAD;
+const SUBTITLE = `${rows.length} observations in ${categories.length} groups · bar: median${violins.some((v) => v.minorMode) ? " · dashed leader: second density mode" : ""}`;
 
-// --- Median tick (per-violin embellishment) and bimodality detection (data
-// storytelling) — both derived straight from the already-computed density
-// grid, no extra passes over the raw samples.
-function medianOf(values) {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
-}
-const medianByCategory = valuesByCategory.map(medianOf);
-
-// Local maxima of the normalized density curve. Two nearby local maxima are
-// only a real second mode if the valley between them dips well below both —
-// a shallow-valley shoulder (e.g. plain sampling noise on an otherwise
-// unimodal normal) is merged away instead of flagged. That valley-depth
-// check is what separates the genuinely bimodal Sleep-deprived condition
-// from the merely lumpy KDE of the other, unimodal conditions.
-function findPeaks(grid, density, minHeight, minSeparation, valleyRatio) {
-  const raw = [];
-  for (let k = 1; k < density.length - 1; k += 1) {
-    if (
-      density[k] >= minHeight &&
-      density[k] >= density[k - 1] &&
-      density[k] >= density[k + 1]
-    ) {
-      raw.push({ idx: k, value: grid[k], height: density[k] });
-    }
-  }
-  const merged = [];
-  raw.forEach((p) => {
-    const close = merged.find(
-      (m) => Math.abs(m.value - p.value) < minSeparation,
-    );
-    if (!close) merged.push(p);
-    else if (p.height > close.height) Object.assign(close, p);
-  });
-  merged.sort((a, b) => a.idx - b.idx);
-
-  let changed = true;
-  while (changed && merged.length > 1) {
-    changed = false;
-    for (let i = 0; i < merged.length - 1; i += 1) {
-      const a = merged[i];
-      const b = merged[i + 1];
-      let valley = Infinity;
-      for (let k = a.idx; k <= b.idx; k += 1) {
-        valley = Math.min(valley, density[k]);
-      }
-      if (valley / Math.min(a.height, b.height) > valleyRatio) {
-        merged.splice(a.height >= b.height ? i + 1 : i, 1);
-        changed = true;
-        break;
-      }
-    }
-  }
-  return merged;
-}
-const peaksByCategory = gridByCategory.map((grid, i) =>
-  findPeaks(grid, densityByCategory[i], 0.25, 2 * bandwidthByCategory[i], 0.85),
-);
-
-// --- Beeswarm packing, width-limited to the violin's own density envelope at
-// that value — points spread horizontally but never cross the violin boundary.
-// Collisions are resolved in on-screen pixels for even spacing regardless of
-// the value axis' scale.
-const MARKER_RADIUS = 5;
-const MARKER_DIAMETER_PX = MARKER_RADIUS * 2 + 1.5;
-
-function layoutSwarm(categoryIndex, pxPerValue, violinHalfWidthPx) {
-  const sorted = [...valuesByCategory[categoryIndex]].sort((a, b) => a - b);
-  const placed = [];
-
-  sorted.forEach((value) => {
-    const maxOffset = Math.max(
-      0,
-      densityFraction(categoryIndex, value) * violinHalfWidthPx - MARKER_RADIUS,
-    );
-    const nearby = placed.filter(
-      (p) => Math.abs((value - p.value) * pxPerValue) < MARKER_DIAMETER_PX,
-    );
-
-    let offsetPx = 0;
-    if (nearby.length > 0) {
-      const step = MARKER_DIAMETER_PX * 0.92;
-      let found = false;
-      for (let k = 0; k < 200 && !found; k += 1) {
-        const candidate =
-          k === 0
-            ? 0
-            : (k % 2 === 1 ? Math.ceil(k / 2) : -Math.ceil(k / 2)) * step;
-        if (Math.abs(candidate) > maxOffset) continue;
-        const clear = nearby.every(
-          (p) =>
-            Math.hypot(
-              candidate - p.offsetPx,
-              (value - p.value) * pxPerValue,
-            ) >=
-            MARKER_DIAMETER_PX * 0.95,
-        );
-        if (clear) {
-          offsetPx = candidate;
-          found = true;
-        }
-      }
-      if (!found) offsetPx = clamp(offsetPx, -maxOffset, maxOffset);
-    }
-    placed.push({ value, offsetPx });
-  });
-
-  return placed;
-}
-
-// The community package (7.29.1) has no violin/swarm component. A custom SVG
-// layer positioned via the chart's own band/linear scale hooks reproduces one
-// while staying entirely within the community ChartContainer surface — the
-// documented "composition" technique for chart types MUI X doesn't ship.
+// The community package has no violin or swarm component: a custom layer
+// draws both through the chart's band and linear scales.
 function ViolinSwarm() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const bandwidth = xScale.bandwidth();
-  const violinHalfWidthPx = bandwidth * 0.4;
-  const pxPerValue = Math.abs(yScale(Y_MAX) - yScale(Y_MIN)) / (Y_MAX - Y_MIN);
+  const band = xScale.bandwidth();
+  const halfWidth = (band * VIOLIN_SPAN) / 2;
+  const diameter = MARKER_R * 2 + 1.5;
+  const step = diameter * 0.92;
 
   return (
     <g>
       {categories.map((cat, i) => {
-        const color = t.palette[i % t.palette.length];
-        const center = xScale(cat) + bandwidth / 2;
-        const density = densityByCategory[i];
-        const catGrid = gridByCategory[i];
-        const leftSide = catGrid.map(
-          (gy, k) => `${center - density[k] * violinHalfWidthPx},${yScale(gy)}`,
-        );
-        const rightSide = catGrid
-          .map(
-            (gy, k) =>
-              `${center + density[k] * violinHalfWidthPx},${yScale(gy)}`,
-          )
-          .reverse();
+        const v = violins[i];
+        const color = t.palette[i];
+        const center = xScale(cat) + band / 2;
+        const leftSide = v.grid.map((gy, k) => `${center - v.density[k] * halfWidth},${yScale(gy)}`);
+        const rightSide = v.grid.map((gy, k) => `${center + v.density[k] * halfWidth},${yScale(gy)}`).reverse();
         const violinPath = `M${leftSide.join(" L")} L${rightSide.join(" L")} Z`;
-        const swarm = layoutSwarm(i, pxPerValue, violinHalfWidthPx);
 
-        // Median tick: a short contrasting bar spanning most of the local
-        // density envelope, the standard violin-plot embellishment for
-        // reading off central tendency without the swarm's raw noise.
-        const median = medianByCategory[i];
-        const medianHalfWidth =
-          densityFraction(i, median) * violinHalfWidthPx * 0.85;
-        const medianY = yScale(median);
+        // Beeswarm: each point keeps its value and moves sideways only as far
+        // as needed to clear the points placed near it, never past the violin's
+        // own outline at that value.
+        const swarm = [];
+        v.values.forEach((value, j) => {
+          const y = yScale(value);
+          const maxOffset = Math.max(0, v.valueDensity[j] * halfWidth - MARKER_R);
+          const nearby = swarm.filter((p) => Math.abs(y - p.y) < diameter);
+          let offset = 0;
+          for (let k = 0; k <= 2 * Math.floor(maxOffset / step); k += 1) {
+            const candidate = (k % 2 === 1 ? 1 : -1) * Math.ceil(k / 2) * step;
+            if (nearby.every((p) => Math.hypot(candidate - p.offset, y - p.y) >= diameter * 0.95)) {
+              offset = candidate;
+              break;
+            }
+          }
+          swarm.push({ y, offset });
+        });
 
-        // Bimodal callout: when the density curve has a second surviving
-        // peak, tag the smaller mode with a short leader + label so the
-        // shape the swarm already shows gets called out explicitly.
-        const peaks = peaksByCategory[i];
-        const isBimodal = peaks.length > 1;
-        const minorPeak = isBimodal
-          ? [...peaks].sort((a, b) => a.height - b.height)[0]
-          : null;
+        const medianHalf = v.medianDensity * halfWidth * 0.85;
+        const modeY = v.minorMode ? yScale(v.minorMode.value) : 0;
 
         return (
           <g key={cat}>
-            <path
-              d={violinPath}
-              fill={color}
-              fillOpacity={0.38}
-              stroke={color}
-              strokeWidth={1.75}
-              strokeLinejoin="round"
-            />
-            {swarm.map((p) => (
+            <path d={violinPath} fill={color} fillOpacity={0.38} stroke={color} strokeWidth={1.75} strokeLinejoin="round" />
+            {swarm.map((p, k) => (
               <circle
-                key={`${cat}-${p.value.toFixed(3)}`}
-                cx={center + p.offsetPx}
-                cy={yScale(p.value)}
-                r={MARKER_RADIUS}
+                key={k}
+                cx={center + p.offset}
+                cy={p.y}
+                r={MARKER_R}
                 fill={t.ink}
                 fillOpacity={0.85}
                 stroke={t.pageBg}
@@ -312,34 +166,26 @@ function ViolinSwarm() {
               />
             ))}
             <line
-              x1={center - medianHalfWidth}
-              x2={center + medianHalfWidth}
-              y1={medianY}
-              y2={medianY}
+              x1={center - medianHalf}
+              x2={center + medianHalf}
+              y1={yScale(v.median)}
+              y2={yScale(v.median)}
               stroke={t.pageBg}
-              strokeWidth={2.5}
+              strokeWidth={3}
               strokeLinecap="round"
             />
-            {minorPeak && (
+            {v.minorMode && (
               <g>
                 <line
-                  x1={center + violinHalfWidthPx * minorPeak.height + 3}
-                  x2={center + violinHalfWidthPx + 20}
-                  y1={yScale(minorPeak.value)}
-                  y2={yScale(minorPeak.value)}
+                  x1={center + halfWidth * v.minorMode.height + 3}
+                  x2={center + halfWidth + 16}
+                  y1={modeY}
+                  y2={modeY}
                   stroke={t.inkSoft}
-                  strokeWidth={1}
-                  strokeDasharray="2,2"
-                  opacity={0.7}
+                  strokeWidth={1.25}
+                  strokeDasharray="3,3"
                 />
-                <text
-                  x={center + violinHalfWidthPx + 24}
-                  y={yScale(minorPeak.value)}
-                  dy="0.32em"
-                  fontSize={11}
-                  fill={t.inkSoft}
-                  opacity={0.85}
-                >
+                <text x={center + halfWidth + 20} y={modeY} dy="0.32em" fontSize={15} fill={t.inkSoft}>
                   second mode
                 </text>
               </g>
@@ -352,69 +198,54 @@ function ViolinSwarm() {
 }
 
 export default function Chart() {
-  const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div
-      style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
-      }}
-    >
-      <div
-        style={{
-          height: TITLE_HEIGHT,
-          lineHeight: `${TITLE_HEIGHT}px`,
-          paddingLeft: 24,
-          fontSize: 22,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
-        height={chartHeight}
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H}
         series={[]}
         skipAnimation
-        margin={{ top: 40, right: 50, bottom: 64, left: 90 }}
+        margin={{ top: 16, right: 48, bottom: 12, left: 24 }}
         xAxis={[
           {
-            id: "conditions",
-            data: categories,
+            id: "category",
             scaleType: "band",
-            tickLabelStyle: { fontSize: 14 },
+            data: categories,
+            disableTicks: true,
+            height: 72,
+            label: CONDITION,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            id: "reactionTime",
-            min: Y_MIN,
-            max: Y_MAX,
-            label: "Reaction Time (ms)",
-            labelStyle: { fontSize: 16 },
-            tickLabelStyle: { fontSize: 14 },
-            // tickFontSize sizes only the axis-label clearance gap (legacy prop,
-            // overridden visually by tickLabelStyle.fontSize above) — bumped so
-            // the rotated axis label doesn't collide with the tick numbers.
-            tickFontSize: 22,
+            id: "value",
+            min: yMin,
+            max: yMax,
+            width: 84,
+            label: REACTION_TIME,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
           },
         ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
       >
-        <ChartsGrid
-          horizontal
-          sx={{
-            "& .MuiChartsGrid-line": {
-              stroke: t.grid,
-              opacity: 0.2,
-            },
-          }}
-        />
+        <ChartsGrid horizontal />
         <ViolinSwarm />
-        <ChartsXAxis axisId="conditions" disableTicks />
-        <ChartsYAxis axisId="reactionTime" />
-      </ChartContainer>
+        <ChartsXAxis axisId="category" />
+        <ChartsYAxis axisId="value" />
+      </ChartsContainer>
     </div>
   );
 }
