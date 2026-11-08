@@ -45,7 +45,7 @@ const total = values.reduce((sum, v) => sum + v, 0);
 // Radial scale from zero to a round outer ring that clears the largest value
 const rawStep = Math.max(...values) / RING_COUNT;
 const magnitude = 10 ** Math.floor(Math.log10(rawStep));
-const ringStep = (NICE_STEPS.find((s) => s * magnitude >= rawStep) ?? 10) * magnitude;
+const ringStep = NICE_STEPS.find((s) => s * magnitude >= rawStep) * magnitude;
 const outerValue = ringStep * RING_COUNT;
 const rings = Array.from({ length: RING_COUNT }, (_, k) => (k + 1) * ringStep);
 
