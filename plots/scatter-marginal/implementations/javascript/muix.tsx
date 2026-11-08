@@ -7,139 +7,128 @@ import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Field-trial data: seasonal rainfall vs. crop yield across 400 plots. Yield
-// tracks rainfall with a moderate positive correlation plus agronomic noise,
-// so both the joint relationship and each variable's own spread are visible.
-let seed = 42;
-const nextRandom = () => {
-  seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-};
-const nextGaussian = () => {
-  const u1 = Math.max(nextRandom(), 1e-9);
-  const u2 = nextRandom();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-};
+// Constants
+const BIN_COUNT = 22; // histogram bins per marginal, spanning the shared axis domain
+const EXTENT_PAD_SHARE = 0.06; // room beyond the extreme values, as a share of each variable's span
+const COUNT_HEADROOM_SHARE = 0.08; // room above the tallest marginal bar
+const POINT_OPACITY = 0.62;
+const MARGINAL_OPACITY = 0.34; // quieter than the points, so the scatter stays the main panel
 
-const POINT_COUNT = 400;
-const points = [];
-for (let i = 0; i < POINT_COUNT; i += 1) {
-  const rainfall = 800 + 150 * nextGaussian();
-  const yieldPerHectare = Math.max(0.6, 1.6 + 0.0046 * rainfall + 0.7 * nextGaussian());
-  points.push({
-    id: i,
-    x: Number(rainfall.toFixed(1)),
-    y: Number(yieldPerHectare.toFixed(2)),
+// Columns: set these to your data's column names
+const RAINFALL = "Annual rainfall (mm)"; // role: x
+const YIELD = "Crop yield (t/ha)"; // role: y
+
+// Data: replace this block with your own records, one object per row
+// Field trial: seasonal rainfall against crop yield across 400 plots, with a
+// moderate positive correlation plus agronomic noise.
+const data = (() => {
+  let seed = 42;
+  const uniform = () => {
+    seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(uniform(), 1e-9))) * Math.cos(2 * Math.PI * uniform());
+  return Array.from({ length: 400 }, () => {
+    const rainfall = 800 + 150 * gaussian();
+    const cropYield = Math.max(0.6, 1.6 + 0.0046 * rainfall + 0.7 * gaussian());
+    return { [RAINFALL]: Number(rainfall.toFixed(1)), [YIELD]: Number(cropYield.toFixed(2)) };
   });
-}
+})();
 
-const rainfallValues = points.map((p) => p.x);
-const yieldValues = points.map((p) => p.y);
+// Plot: reads only data and the constants above
+const points = data.map((d, i) => ({ id: i, x: d[RAINFALL], y: d[YIELD] }));
+const xs = data.map((d) => d[RAINFALL]);
+const ys = data.map((d) => d[YIELD]);
 
-// Shared axis domains — the SAME min/max drive both the main scatter's axes
-// and the marginal histograms' binning, which is what keeps the three panels
-// pixel-aligned.
-const domainPad = (values) => {
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  const pad = (hi - lo) * 0.06;
-  return [lo - pad, hi + pad];
-};
-const [xMin, xMax] = domainPad(rainfallValues);
-const [yMin, yMax] = domainPad(yieldValues);
+// One padded domain per variable drives both the scatter axis and its marginal's bins
+const xPad = (Math.max(...xs) - Math.min(...xs)) * EXTENT_PAD_SHARE;
+const yPad = (Math.max(...ys) - Math.min(...ys)) * EXTENT_PAD_SHARE;
+const xMin = Math.min(...xs) - xPad;
+const xMax = Math.max(...xs) + xPad;
+const yMin = Math.min(...ys) - yPad;
+const yMax = Math.max(...ys) + yPad;
 
-const BIN_COUNT = 22;
-const histogram = (values, min, max, bins) => {
-  const binWidth = (max - min) / bins;
-  const counts = new Array(bins).fill(0);
-  values.forEach((value) => {
-    const idx = Math.min(bins - 1, Math.max(0, Math.floor((value - min) / binWidth)));
-    counts[idx] += 1;
-  });
-  const centers = counts.map((_, i) => Number((min + (i + 0.5) * binWidth).toFixed(2)));
-  return { counts, centers };
-};
-const { counts: countsX, centers: centersX } = histogram(rainfallValues, xMin, xMax, BIN_COUNT);
-const { counts: countsY, centers: centersY } = histogram(yieldValues, yMin, yMax, BIN_COUNT);
-const maxCountX = Math.max(...countsX);
-const maxCountY = Math.max(...countsY);
+const xBinWidth = (xMax - xMin) / BIN_COUNT;
+const yBinWidth = (yMax - yMin) / BIN_COUNT;
+const xCounts = new Array(BIN_COUNT).fill(0);
+const yCounts = new Array(BIN_COUNT).fill(0);
+xs.forEach((v) => {
+  xCounts[Math.min(BIN_COUNT - 1, Math.floor((v - xMin) / xBinWidth))] += 1;
+});
+ys.forEach((v) => {
+  yCounts[Math.min(BIN_COUNT - 1, Math.floor((v - yMin) / yBinWidth))] += 1;
+});
+const xCentres = xCounts.map((_, i) => xMin + (i + 0.5) * xBinWidth);
+const yCentres = yCounts.map((_, i) => yMin + (i + 0.5) * yBinWidth);
 
-// Points get moderate transparency to reveal density (spec: alpha ~0.6-0.7);
-// marginal histograms stay subtle so they don't compete with the scatter.
-const withAlpha = (hex, alpha) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const BRAND = t.palette[0];
-const MARKER_FILL = withAlpha(BRAND, 0.65);
-const MARGINAL_FILL = withAlpha(BRAND, 0.32);
+const n = data.length;
+const xMean = xs.reduce((s, v) => s + v, 0) / n;
+const yMean = ys.reduce((s, v) => s + v, 0) / n;
+const cov = data.reduce((s, d) => s + (d[RAINFALL] - xMean) * (d[YIELD] - yMean), 0);
+const sx = Math.sqrt(xs.reduce((s, v) => s + (v - xMean) ** 2, 0));
+const sy = Math.sqrt(ys.reduce((s, v) => s + (v - yMean) ** 2, 0));
+const pearsonR = cov / (sx * sy);
 
-// --- Layout — main scatter lower-left, marginal histograms top + right -----
-const TITLE_H = 72;
-const GAP = 24;
-const MARGIN_PANEL = 250;
-const plotAreaH = height - TITLE_H;
-const mainWidth = width - GAP - MARGIN_PANEL;
-const mainHeight = plotAreaH - GAP - MARGIN_PANEL;
-// Shared left/right and top/bottom margins keep the histogram bins aligned
-// with the main plot's axis ticks (same drawable-area geometry on both axes).
-const MAIN_MARGIN = { left: 96, right: 20, top: 16, bottom: 78 };
-
-// --- Title (fontsize scales with title length, see plot-generator.md) -------
+// Layout: scatter lower left, marginals on top and right. The marginals hide their
+// axes and copy the scatter's margins plus axis bands, so all drawing areas align.
 const TITLE = "scatter-marginal · javascript · muix · anyplot.ai";
-const TITLE_FONTSIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
+const SUBTITLE = `n = ${n} · Pearson r = ${pearsonR.toFixed(2)} · marginal histograms with ${BIN_COUNT} bins`;
+const HEADER_HEIGHT = 76;
+const GAP = 12;
+const MARGINAL_SIZE = 200;
+const X_AXIS_HEIGHT = 64;
+const Y_AXIS_WIDTH = 76;
+const MAIN_MARGIN = { left: 24, right: 8, top: 8, bottom: 16 };
+const { width, height } = window.ANYPLOT_SIZE;
+const plotAreaHeight = height - HEADER_HEIGHT;
+const mainWidth = width - GAP - MARGINAL_SIZE;
+const mainHeight = plotAreaHeight - GAP - MARGINAL_SIZE;
 
-const HIDE_AXIS_SX = { "& .MuiChartsAxis-root": { display: "none" } };
-// Thin background-colored strokes separate adjacent marks (bars) and
-// overlapping marks (scatter points) from one another — same edge color as
-// the page background so it reads as a "cutout" gap in both themes.
-const MARGIN_BAR_SX = { ...HIDE_AXIS_SX, "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1 } };
-const SCATTER_MARKER_SX = { "& circle": { stroke: t.pageBg, strokeWidth: 1 } };
+const markerSx = {
+  "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+  "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+  "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+  "& .MuiScatterChart-marker": { fillOpacity: POINT_OPACITY, stroke: t.pageBg, strokeWidth: 1 },
+};
+const barSx = { "& .MuiBarChart-element": { fillOpacity: MARGINAL_OPACITY, stroke: t.pageBg, strokeWidth: 1 } };
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
       <div
         style={{
-          height: TITLE_H,
+          height: HEADER_HEIGHT,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: TITLE_FONTSIZE,
-          fontWeight: 600,
-          color: t.ink,
-          fontFamily: "Roboto, Helvetica, Arial, sans-serif",
+          gap: 6,
         }}
       >
-        {TITLE}
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
       </div>
       <div
         style={{
           width,
-          height: plotAreaH,
+          height: plotAreaHeight,
           display: "grid",
-          gridTemplateColumns: `${mainWidth}px ${GAP}px ${MARGIN_PANEL}px`,
-          gridTemplateRows: `${MARGIN_PANEL}px ${GAP}px ${mainHeight}px`,
+          gridTemplateColumns: `${mainWidth}px ${GAP}px ${MARGINAL_SIZE}px`,
+          gridTemplateRows: `${MARGINAL_SIZE}px ${GAP}px ${mainHeight}px`,
         }}
       >
         <div style={{ gridColumn: 1, gridRow: 1 }}>
           <BarChart
             width={mainWidth}
-            height={MARGIN_PANEL}
+            height={MARGINAL_SIZE}
             skipAnimation
-            legend={{ hidden: true }}
-            margin={{ left: MAIN_MARGIN.left, right: MAIN_MARGIN.right, top: 14, bottom: 6 }}
-            xAxis={[{ scaleType: "band", data: centersX, categoryGapRatio: 0 }]}
-            yAxis={[{ min: 0, max: maxCountX * 1.08 }]}
-            series={[{ data: countsX, color: MARGINAL_FILL }]}
-            sx={MARGIN_BAR_SX}
+            hideLegend
+            margin={{ left: MAIN_MARGIN.left + Y_AXIS_WIDTH, right: MAIN_MARGIN.right, top: 8, bottom: 0 }}
+            xAxis={[{ scaleType: "band", data: xCentres, categoryGapRatio: 0, position: "none" }]}
+            yAxis={[{ min: 0, max: Math.max(...xCounts) * (1 + COUNT_HEADROOM_SHARE), position: "none" }]}
+            series={[{ id: "x-marginal", data: xCounts, color: t.palette[0] }]}
+            sx={barSx}
           />
         </div>
         <div style={{ gridColumn: 1, gridRow: 3 }}>
@@ -147,43 +136,45 @@ export default function Chart() {
             width={mainWidth}
             height={mainHeight}
             skipAnimation
-            legend={{ hidden: true }}
+            hideLegend
             grid={{ horizontal: true, vertical: true }}
             margin={MAIN_MARGIN}
             xAxis={[
               {
                 min: xMin,
                 max: xMax,
-                label: "Annual Rainfall (mm)",
+                label: RAINFALL,
+                height: X_AXIS_HEIGHT,
                 labelStyle: { fontSize: 16, fill: t.ink },
-                tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+                tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               },
             ]}
             yAxis={[
               {
                 min: yMin,
                 max: yMax,
-                label: "Crop Yield (t/ha)",
+                label: YIELD,
+                width: Y_AXIS_WIDTH,
                 labelStyle: { fontSize: 16, fill: t.ink },
-                tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+                tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               },
             ]}
-            series={[{ data: points, markerSize: 10, color: MARKER_FILL }]}
-            sx={SCATTER_MARKER_SX}
+            series={[{ id: "plots", data: points, markerSize: 6, color: t.palette[0] }]}
+            sx={markerSx}
           />
         </div>
         <div style={{ gridColumn: 3, gridRow: 3 }}>
           <BarChart
             layout="horizontal"
-            width={MARGIN_PANEL}
+            width={MARGINAL_SIZE}
             height={mainHeight}
             skipAnimation
-            legend={{ hidden: true }}
-            margin={{ top: MAIN_MARGIN.top, bottom: MAIN_MARGIN.bottom, left: 6, right: 14 }}
-            yAxis={[{ scaleType: "band", data: centersY, categoryGapRatio: 0 }]}
-            xAxis={[{ min: 0, max: maxCountY * 1.08 }]}
-            series={[{ data: countsY, color: MARGINAL_FILL }]}
-            sx={MARGIN_BAR_SX}
+            hideLegend
+            margin={{ top: MAIN_MARGIN.top, bottom: MAIN_MARGIN.bottom + X_AXIS_HEIGHT, left: 0, right: 8 }}
+            yAxis={[{ scaleType: "band", data: yCentres, categoryGapRatio: 0, position: "none", reverse: true }]}
+            xAxis={[{ min: 0, max: Math.max(...yCounts) * (1 + COUNT_HEADROOM_SHARE), position: "none" }]}
+            series={[{ id: "y-marginal", data: yCounts, color: t.palette[0] }]}
+            sx={barSx}
           />
         </div>
       </div>
