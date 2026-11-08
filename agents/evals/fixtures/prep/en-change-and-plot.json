@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Hours,Score,Class\n2,55,A\n5,70,B\n8,85,A\n3,60,B\n6,78,A\n4,66,B\n",
+  "message": "Drop the rows of class B and plot it.",
+  "expected_operations": [{"op": "drop_rows", "where": [{"column": "Class", "test": "eq", "value": "B"}]}],
+  "locale": "en",
+  "tags": ["drop_rows", "change_and_plot"]
+}

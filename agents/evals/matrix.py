@@ -32,7 +32,9 @@ stopped (`stage`, the pipeline's `Stage`, and `stages` per attempt), the shipped
 the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, finish
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
-(`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, how
+(`calls`, counted per agent kind in `finish_reasons`), every tool call per turn with the
+guards' verdict and whether it came without arguments (`tool_calls`, from the `tool` lines:
+the closed tool name and verdict, never an argument), the edit-failure kinds, how
 many edits a tolerant matching tier applied (`edit_tolerant`, by tier, also in a plan
 that another edit failed), and the module
 labels of the banned imports the validator refused (`banned_imports`: the longest
@@ -754,6 +756,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "reviewed_attempt": None,
         "attempt_log": [],
         "calls": [],
+        "tool_calls": [],
         "finish_reasons": {},
         "edit_failure_kinds": {},
         "edit_tolerant": {},
@@ -806,6 +809,21 @@ def _any_index(rule: str) -> str:
     location, _, kind = rule.rpartition(":")
     parts = ["*" if part.isdigit() else part for part in location.split(".")]
     return f"{'.'.join(parts)}:{kind}"
+
+
+def tool_entry(turn: int, line: dict[str, Any]) -> dict[str, Any]:
+    """One logged tool call of a turn, content-free: the tool's name (a root tool's, else `other`, since the model
+    writes the name), the guards' verdict (`ledger.GuardVerdict`) and whether it came without arguments, read from the
+    arguments' hash. A plot button's turn should open with `plot_pipeline` and no arguments."""
+    from agents.anyplot.plugins.ledger import argument_hash, guard_verdict
+    from agents.anyplot.plugins.tool_safety import recorded_name
+
+    return {
+        "turn": turn,
+        "tool": recorded_name(str(line.get("tool"))),
+        "verdict": guard_verdict(line.get("verdict")),
+        "no_args": line.get("args") == argument_hash({}),
+    }
 
 
 def _attempt_entry(record: dict[str, Any], attempt: int) -> dict[str, Any]:
@@ -894,6 +912,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
                     **{kind: _int(line.get(kind)) for kind in ("prompt", "cached", "candidates", "thoughts")},
                 }
             )
+        elif hook == "tool":
+            record["tool_calls"].append(tool_entry(record["turns"], line))
         elif hook in ("data_judge", "notes_judge", "scope_guard"):
             judge_in, judge_out = _int(line.get("judge_input")), _int(line.get("judge_output"))
             if not judge_in and not judge_out:
