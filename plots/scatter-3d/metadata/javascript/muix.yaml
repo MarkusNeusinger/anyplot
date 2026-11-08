@@ -2,143 +2,142 @@ library: muix
 language: javascript
 specification_id: scatter-3d
 created: '2026-09-10T00:30:08Z'
-updated: '2026-09-10T00:45:38Z'
-generated_by: claude-sonnet
-workflow_run: 34420557816
+updated: '2026-11-08T04:45:47Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42447820794
 issue: 1945
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 90
 review:
   strengths:
-  - Genuine isometric 3D projection built from scratch (project(x,y,z) -> px/py) with
-    a manually drawn wireframe cell (axis lines + dashed far-floor edges) via useXScale/useYScale
-    hooks, giving a real sense of 3D depth that MUI X's community scatter can't provide
-    natively
-  - Correct 4th-variable color encoding using zAxis colorMap with imprint_seq (green
-    -> blue) driven by a physically-motivated 'distance from fragment core' energy
-    field, plus a genuine depth cue (near/mid/far marker sizing based on x+z) that
-    together tell a believable multivariate story
-  - 'Both renders are theme-correct: #FAF8F1 / #1A1A17 backgrounds, all chrome (title,
-    axis labels, tick ''0'', depth mini-legend, colorbar labels) fully legible in
-    both themes with no dark-on-dark or light-on-light failures'
-  - Deterministic, self-contained data generation (seeded LCG + Box-Muller) for a
-    plausible molecular-dynamics narrative (three atom fragments, core-to-edge potential
-    energy) with sensible physical scale
-  - 'Idiomatic advanced MUI X composition: ChartContainer + ScatterPlot + continuous
-    zAxis colorMap + ContinuousColorLegend + ChartsTooltip with a custom valueFormatter
-    reporting real x/y/z/energy values'
-  - No edge clipping in either render — verified via pixel crops of the top and bottom
-    canvas edges; title, axis labels, and colorbar text all sit comfortably inside
-    the canvas with margin to spare
+  - 'Builds a full 3D box out of the MUI X composition API: ChartsDataProvider + ChartsSurface
+    with custom BoxPanes/BoxLabels layers that read the chart''s own scales through
+    useXScale/useYScale, so panes, grid, labels and ScatterPlot share one coordinate
+    system'
+  - Fixed oblique projection with a 15° ground angle gives all three axes visible
+    extent; floor and two back walls carry tick-aligned grid lines on the elevatedBg
+    pane color, and the three front edges are drawn in inkSoft, which reads clearly
+    as depth in both themes
+  - 'Depth cue handled for a static render: points are painted far to near and sized
+    by depth tertile, explained by a ''Marker size'' legend and the subtitle; markers
+    at ~85 % opacity so interior points show through'
+  - Optional color variable on the Imprint sequential ramp through the native zAxis
+    continuous colorMap, with a ContinuousColorLegend labelled 'Potential energy (eV)'
+  - All three axes labelled with units (x/y/z (nm)), axis titles rotated along their
+    edges, and shared-corner tick labels de-duplicated so no label collides
+  - Theme tokens threaded through every hand-drawn element (pageBg, elevatedBg, grid,
+    ink, inkSoft), so both renders are fully legible; native ChartsTooltip with a
+    valueFormatter that shows the original x, y, z and energy values in the HTML
+  - Deterministic data from a fixed-seed Park–Miller generator; columns as role constants
+    and a single data block, as the adaptable-code zones require
   weaknesses:
-  - 'The file has a duplicated/conflicting header comment block (lines 1-10): an old
-    header (''// anyplot.ai'' / spec-id line / ''Quality: 87/100'') is immediately
-    followed by a second, current header (''// anyplot.ai'' / spec-id line / ''Quality:
-    pending'') with the orientation directive sandwiched between them. Remove the
-    stale first block so only one canonical header remains at the top of the file.'
-  - The dense upper fragment cluster still shows notable marker-on-marker occlusion
-    despite alpha=0.85 and depth-based sizing; a slightly lower alpha (e.g. 0.7) on
-    the 'near' tier would reveal more internal structure without hurting the sparser
-    floor clusters.
-  - Depth tiers (near/mid/far) are computed globally across all 155 atoms combined
-    (x+z tercile over the whole dataset) rather than per-fragment, so the depth cue
-    is dominated by which fragment a point belongs to rather than genuine within-view
-    proximity — a per-fragment or camera-relative depth metric would make the size
-    cue more meaningful.
+  - 'DQ-03 (code): atoms of each ''nanocluster fragment'' are scattered with sigma
+    6–8 nm in a 100 nm cell, about 25–30x the ~0.25 nm interatomic spacing of a real
+    cluster, so the spatial scale does not fit the molecular-dynamics story → keep
+    the same spread in a unit that matches it (e.g. Å for a ~10 nm cell scaled to
+    the same numbers, or relabel the scenario as particles/colloids in a µm-scale
+    cell). Likely cause: the X/Y/Z unit ''(nm)'' with fragment sigma 6–8 in the data
+    block.'
+  - 'Suggestion: the color bar labels only its two ends (-6.42, -4.54); one or two
+    intermediate values would make it easier to read off a marker''s energy.'
+  - 'Suggestion: most markers sit in the middle of the narrow energy range and read
+    as similar teal; a slightly wider energy rise with distance would make the core-to-rim
+    gradient within each fragment more visible.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "scatter-3d · javascript · muix · anyplot.ai" centered at top; axis labels "Height (Y) · 100 nm", "Z · 100 nm", "X · 100 nm" in dark ink at the three wireframe axis ends; origin tick "0"; a top-left mini-legend "Marker size = depth" with Near/Mid/Far sample circles; a horizontal continuous color legend at the bottom labeled "-6.4 eV · core" to "-4.5 eV · edge". All text is clearly readable against the light background.
-      Data: Three atom-fragment clusters rendered as an isometric cube (solid axis lines from origin, dashed far-floor edges) — one cluster near the top (high Y / "Height"), two on the floor plane (left and right). Point color runs from brand green (#009E73, low-energy "core" atoms) to blue (Imprint imprint_seq's blue stop, high-energy "edge" atoms); marker size shrinks with computed depth tier. First-glance colors match the Imprint sequential scale, not a foreign colormap.
+      Background: warm off-white #FAF8F1 page; the three back panes of the 3D box use the slightly lighter elevated surface.
+      Chrome: centered title "scatter-3d · javascript · muix · anyplot.ai" in dark ink (~26 % of the width) with a grey subtitle "n = 155 · fixed oblique view, larger markers are nearer"; oblique 3D box with floor and two back walls carrying subtle grid lines at the ticks, front edges in darker grey; y-axis 0–100 with rotated title "y (nm)", x-axis ticks 20–100 along the left-front edge with "x (nm)" rotated along it, z-axis ticks 0–80 along the right-front edge with "z (nm)". Right-hand side panel: "Potential energy (eV)" vertical color bar (-6.42 bottom to -4.54 top) and a "Marker size" legend with Far/Mid/Near circles. All text dark and clearly readable; nothing clipped or overlapping.
+      Data: 155 markers in three clusters (one high and far at y≈75 with small markers, two near the floor with larger markers), colored on the Imprint sequential ramp from brand green #009E73 (low energy, cluster cores) to blue #4467A3 (higher energy, cluster rims), ~85 % opacity.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, "0" tick, depth mini-legend, and color-legend text, all re-rendered in light ink/soft-gray tones. Verified via pixel crops of the top and bottom canvas strips that no text is dark-on-dark and none is clipped at any edge.
-      Data: Same three clusters, same isometric wireframe (now light-gray lines instead of dark), identical green-to-blue point colors and marker sizes as the light render — only the chrome (background, ink, grid) flipped as required.
+      Background: warm near-black #1A1A17 page; panes on the slightly lighter elevated dark surface.
+      Chrome: title and legend headings in light ink, ticks and subtitle in light grey, grid lines subtle grey, front edges lighter grey — no dark-on-dark text anywhere.
+      Data: identical marker positions, sizes and ramp stops as the light render (#009E73 → #4467A3); the composite shade differs only through the 85 % alpha over the darker panes. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, tick '0', legends) readable in both
-          themes; explicit font sizes 15-26px
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14 CSS px); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text/legend collisions; moderate marker-on-marker occlusion in
-          the dense upper cluster
+        comment: No text collisions; shared-corner tick labels de-duplicated; marker
+          overlap handled with alpha (permitted)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Depth-tiered marker sizes (12/8.5/5.5px) plus alpha=0.85 appropriately
-          address the ~155-point density
+        comment: 155 markers at 5.5–12 px by depth with 85 % opacity; size legend
+          glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green->blue is CVD-safe and not used as sole categorical
-          signal
+        comment: Green-to-blue sequential ramp, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping at any edge (verified via pixel crops);
-          balanced proportions
+        comment: Box fills the plot area with balanced padding; side panel well placed;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with nm units; correct mandated title format
+        comment: x/y/z (nm) and Potential energy (eV) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous data correctly uses imprint_seq (green->blue); correct
-          theme backgrounds in both renders
+        comment: Continuous color on imprint_seq (t.seq); correct page backgrounds
+          in both themes
     design_excellence:
-      score: 17
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
-        passed: true
-        comment: Custom isometric wireframe cube, depth mini-legend, and continuous
-          color legend go well beyond default styling
+        passed: false
+        comment: Elevated pane fill against the page, inkSoft front edges vs grid-colored
+          back lines, title/subtitle and side-panel typographic hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: No boxed frame, subtle dashed floor grid, generous whitespace
+        passed: false
+        comment: Axis titles rotated along their edges, corner tick labels de-duplicated,
+          far-to-near painting order, box padded from its projected extent
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Color (energy) + size (depth) dual encoding on top of true spatial
-          x/y/z gives a clear multivariate narrative
+        passed: false
+        comment: Energy ramp makes cores (green) vs rims (blue) of each fragment readable;
+          subtitle explains the depth sizing
     spec_compliance:
       score: 15
       max: 15
@@ -148,31 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine 3D scatter via isometric projection, the correct workaround
-          given the community surface has no native 3D
+        comment: 3D scatter in a box frame
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Axis labels with units, point transparency for density, and a real
-          4th-variable color encoding all present
+        comment: Oblique view with three visible axes, labelled axes with units, pane
+          grid and box edges, translucent markers, continuous color with labelled
+          color bar; rotation not supported by MUI X (permitted fixed viewpoint)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/z correctly projected; axes computed from the full data bounding
-          cell
+        comment: Each point projected from its exact x, y, z; axes span the data rounded
+          to nice ticks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'scatter-3d · javascript · muix · anyplot.ai';
-          legends match the data they describe
+        comment: Mandated title; color bar and size legend labelled for a reader
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -180,90 +178,95 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: x/y/z spatial plus optional 4th color variable, all shown
+        comment: Three distinct clusters at different depths and heights, fourth variable
+          in color
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral molecular-dynamics narrative (nanocluster fragments,
-          core-to-edge potential energy)
+        comment: Molecular-dynamics snapshot of nanocluster fragments; neutral scientific
+          scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 100nm cell, 155 atoms across 3 fragments, -6.4 to -4.5 eV energy
-          range are all sensible for the domain
+        passed: false
+        comment: Energies around -6.4 to -4.5 eV per atom are plausible, but atoms
+          spread over 6–8 nm sigma do not fit a nanocluster (defect line)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Helper functions (createLcg, project, depthTier, Iso3DFrame) are
-          justified by the projection technique, but the file also carries a duplicated/conflicting
-          header comment block (old + new) that must be cleaned up
+        passed: true
+        comment: Module-level data and geometry; the two small components exist only
+          because the scale hooks need a component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=7), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports that are actually used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the technique; no fake UI
+        comment: Projection and nice ticks written out because MUI X has no 3D or
+          tick helpers (Computation line); no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract, skipAnimation set, current
-          MUI X API (colorMap, zAxis)
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE;
+          v9 composition API
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Idiomatic composition of ChartContainer sub-components, exactly the
-          pattern the harness/library favors
+        passed: false
+        comment: ChartsDataProvider + ChartsSurface composition with custom layers
+          via useXScale/useYScale, the documented way to extend MUI X
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: zAxis continuous colorMap + useXScale/useYScale data-space overlay
-          are genuinely distinctive, non-generic uses of MUI X
+        passed: false
+        comment: zAxis continuous colorMap, ContinuousColorLegend with label formatters,
+          ChartsTooltip with per-series valueFormatter
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:42:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
   - custom-legend
+  - layer-composition
   - hover-tooltips
-  - annotations
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - publication-ready
+  - grid-styling
