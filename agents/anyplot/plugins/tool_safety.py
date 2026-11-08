@@ -106,7 +106,7 @@ something is refused there until it is listed: the click confirmed what the pane
 (the data, the bindings, the language, the plot memory and the library)."""
 PLOT_ACTION_REFUSAL = "plot_as_confirmed"
 MAX_DATA_CODE_CALLS = 2
-"""`run_data_code` calls per invocation: the first, and one retry after the validator's findings."""
+"""`run_data_code` calls per turn (`TURN_CAPS`): the first, and one retry after the validator's findings."""
 
 
 @dataclass(frozen=True, slots=True)
