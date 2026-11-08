@@ -1,7 +1,7 @@
 // anyplot.ai
 // swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 // Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-08-24
+// Quality: pending | Created: 2026-08-24
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
