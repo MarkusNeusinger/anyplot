@@ -1,3 +1,3 @@
 ### Fixed
 
-- **The prep eval reads the version a turn starts from again.** It still called `resolve_version` with the session view that the server's version numbering removed, so every prep run and 11 unit tests failed on `main`. (#12823)
+- **The prep eval runs again.** Scoring a case by the version its turn starts from had failed on every run since the server began numbering data versions; the eval now looks the version up the way the agent does. (#12823)
