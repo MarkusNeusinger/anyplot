@@ -1,7 +1,7 @@
 // anyplot.ai
 // pyramid-basic: Basic Pyramid Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 86/100 | Updated: 2026-11-08
+// Quality: 87/100 | Updated: 2026-11-08
 import { getContrastRatio } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
