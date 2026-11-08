@@ -1,142 +1,173 @@
 // anyplot.ai
 // curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 97/100 | Created: 2026-08-24
-
-import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 90/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-// "muted" semantic anchor is not exposed on ANYPLOT_TOKENS — derive per theme
-// to match prompts/default-style-guide.md "Theme-adaptive Chrome" table.
-const INK_MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-// --- Data: theoretical error-decomposition curves, not empirical -----------
-const N_POINTS = 80;
-const COMPLEXITY_MIN = 1;
-const COMPLEXITY_MAX = 20;
-const modelComplexity = Array.from(
-  { length: N_POINTS },
-  (_, i) => COMPLEXITY_MIN + (i * (COMPLEXITY_MAX - COMPLEXITY_MIN)) / (N_POINTS - 1),
-);
+// Constants
+const ERROR_AXIS = "Prediction error"; // the y quantity of every bias-variance decomposition
+const HEADROOM_SHARE = 0.08; // space above the highest total error, as a share of it
+const LABEL_GAP = 20; // minimum vertical distance between two end-of-curve labels, in px
 
-const IRREDUCIBLE_ERROR = 0.15;
-const biasSquared = modelComplexity.map((c) => 2.4 / (1 + 0.3 * c));
-const variance = modelComplexity.map((c) => 0.005 * c * c);
-const irreducibleError = modelComplexity.map(() => IRREDUCIBLE_ERROR);
-const totalError = modelComplexity.map((_, i) => biasSquared[i] + variance[i] + IRREDUCIBLE_ERROR);
+// Columns: set these to your data's column names
+const COMPLEXITY = "Model complexity (low → high)"; // role: model_complexity
+const BIAS_SQUARED = "Bias²"; // role: bias_squared
+const VARIANCE = "Variance"; // role: variance
+const IRREDUCIBLE = "Irreducible error"; // role: irreducible_error
+const TOTAL = "Total error"; // role: total_error
 
-let optimalIndex = 0;
-for (let i = 1; i < totalError.length; i++) {
-  if (totalError[i] < totalError[optimalIndex]) optimalIndex = i;
-}
-const optimalComplexity = modelComplexity[optimalIndex];
-const yMax = Math.max(...totalError) * 1.08;
+// Data: replace this block with your own records, one object per complexity value
+// Theoretical decomposition over 80 complexity values: bias² falls as 2.4 / (1 + 0.3c), variance rises
+// as 0.005c², the noise floor stays at 0.15, and the total error is their sum
+const data = Array.from({ length: 80 }, (_, i) => {
+  const c = 1 + (i * 19) / 79;
+  const biasSquared = 2.4 / (1 + 0.3 * c);
+  const variance = 0.005 * c * c;
+  const irreducible = 0.15;
+  return {
+    [COMPLEXITY]: c,
+    [BIAS_SQUARED]: biasSquared,
+    [VARIANCE]: variance,
+    [IRREDUCIBLE]: irreducible,
+    [TOTAL]: biasSquared + variance + irreducible,
+  };
+});
 
-const series = [
-  { id: "total", label: "Total Error", data: totalError, color: t.palette[0], curve: "monotoneX" as const, showMark: false },
-  { id: "bias", label: "Bias²", data: biasSquared, color: t.palette[1], curve: "monotoneX" as const, showMark: false },
-  { id: "variance", label: "Variance", data: variance, color: t.palette[2], curve: "monotoneX" as const, showMark: false },
-  // "Irreducible" plays the neutral/baseline semantic role (see default-style-guide.md
-  // "Semantic anchors") — a constant reference line, styled to read as part of the chart's ink.
-  { id: "irreducible", label: "Irreducible Error", data: irreducibleError, color: t.ink, curve: "linear" as const, showMark: false },
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[COMPLEXITY] - b[COMPLEXITY]);
+const complexity = rows.map((d) => d[COMPLEXITY]);
+const optimum = rows.reduce((best, d) => (d[TOTAL] < best[TOTAL] ? d : best), rows[0]);
+const yMax = Math.max(...rows.map((d) => d[TOTAL])) * (1 + HEADROOM_SHARE);
+
+// Total error carries the story, so it leads in palette order and line weight; the irreducible noise
+// floor is a baseline and takes the neutral ink anchor
+const curves = [
+  { id: "total", column: TOTAL, color: t.palette[0], width: 4, dash: "none" },
+  { id: "bias", column: BIAS_SQUARED, color: t.palette[1], width: 3, dash: "10 6" },
+  { id: "variance", column: VARIANCE, color: t.palette[2], width: 3.5, dash: "2 6" },
+  { id: "irreducible", column: IRREDUCIBLE, color: t.ink, width: 1.5, dash: "4 4" },
 ];
+const series = curves.map((c) => ({
+  type: "line" as const,
+  id: c.id,
+  label: c.column,
+  data: rows.map((d) => d[c.column]),
+  color: c.color,
+  curve: "monotoneX" as const,
+  showMark: false,
+}));
 
-const TITLE_HEIGHT = 84;
+const TITLE = "curve-bias-variance-tradeoff · javascript · muix · anyplot.ai";
+const formula = `${TOTAL} = ${BIAS_SQUARED} + ${VARIANCE} + ${IRREDUCIBLE}`;
+const HEADER_H = 88;
 
-// --- Overlay: underfit/overfit zones + direct end-of-line curve labels ------
-function Annotations() {
+function Zones() {
   const xScale = useXScale();
-  const yScale = useYScale();
   const { left, top, width, height } = useDrawingArea();
-
-  const xOptimal = xScale(optimalComplexity);
-  const xMin = left;
-  const xMax = left + width;
-
-  const endLabels = [
-    { id: "total", value: totalError[totalError.length - 1], color: t.palette[0], text: "Total Error" },
-    { id: "variance", value: variance[variance.length - 1], color: t.palette[2], text: "Variance" },
-    { id: "bias", value: biasSquared[biasSquared.length - 1], color: t.palette[1], text: "Bias²" },
-    { id: "irreducible", value: IRREDUCIBLE_ERROR, color: t.ink, text: "Irreducible Error" },
-  ]
-    .map((s) => ({ ...s, y: yScale(s.value) }))
-    .sort((a, b) => a.y - b.y);
-
-  const MIN_LABEL_GAP = 20;
-  for (let i = 1; i < endLabels.length; i++) {
-    if (endLabels[i].y - endLabels[i - 1].y < MIN_LABEL_GAP) {
-      endLabels[i].y = endLabels[i - 1].y + MIN_LABEL_GAP;
-    }
-  }
-
+  const xOpt = xScale(optimum[COMPLEXITY])!;
   return (
     <g>
-      <rect x={xMin} y={top} width={xOptimal - xMin} height={height} fill={INK_MUTED} opacity={0.07} />
-      <rect x={xOptimal} y={top} width={xMax - xOptimal} height={height} fill={t.amber} opacity={0.1} />
-      <text x={xMin + (xOptimal - xMin) / 2} y={top + 26} fill={INK_MUTED} fontSize={14} fontWeight={600} letterSpacing={1} textAnchor="middle">
+      <rect x={left} y={top} width={xOpt - left} height={height} fill={t.inkSoft} fillOpacity={0.07} />
+      <rect x={xOpt} y={top} width={left + width - xOpt} height={height} fill={t.inkSoft} fillOpacity={0.13} />
+      <text x={(left + xOpt) / 2} y={top + 28} fill={t.inkSoft} fontSize={15} fontWeight={600} letterSpacing={1} textAnchor="middle">
         UNDERFITTING
       </text>
-      <text x={xOptimal + (xMax - xOptimal) / 2} y={top + 26} fill={INK_MUTED} fontSize={14} fontWeight={600} letterSpacing={1} textAnchor="middle">
+      <text x={(xOpt + left + width) / 2} y={top + 28} fill={t.inkSoft} fontSize={15} fontWeight={600} letterSpacing={1} textAnchor="middle">
         OVERFITTING
       </text>
-      {endLabels.map((s) => (
-        <text key={s.id} x={xMax + 10} y={s.y + 5} fill={s.color} fontSize={15} fontWeight={500}>
-          {s.text}
+    </g>
+  );
+}
+
+function CurveLabels() {
+  const yScale = useYScale();
+  const { left, width } = useDrawingArea();
+  const last = rows[rows.length - 1];
+  // Labels sit at each curve's right end; only the labels move apart when two ends are close
+  const labels = curves.map((c) => ({ ...c, y: yScale(last[c.column])! })).sort((a, b) => a.y - b.y);
+  labels.forEach((l, i) => {
+    if (i > 0 && l.y - labels[i - 1].y < LABEL_GAP) l.y = labels[i - 1].y + LABEL_GAP;
+  });
+  return (
+    <g>
+      {labels.map((l) => (
+        <text key={l.id} x={left + width + 12} y={l.y} dominantBaseline="middle" fill={l.color} fontSize={16} fontWeight={500}>
+          {l.column}
         </text>
       ))}
     </g>
   );
 }
 
-// --- Chart --------------------------------------------------------------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-
   return (
-    <Box sx={{ width, height, display: "flex", flexDirection: "column", paddingTop: "18px" }}>
-      <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500, textAlign: "center", lineHeight: 1.2 }}>
-        curve-bias-variance-tradeoff · javascript · muix · anyplot.ai
-      </Typography>
-      <Typography sx={{ color: t.inkSoft, fontSize: 14, textAlign: "center", marginTop: "4px" }}>
-        Total Error = Bias² + Variance + Irreducible Error
-      </Typography>
-      <LineChart
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 16, color: t.inkSoft, lineHeight: 1.2 }}>{formula}</Typography>
+      </Box>
+      <ChartsContainer
         width={width}
-        height={height - TITLE_HEIGHT}
-        skipAnimation
+        height={height - HEADER_H}
         series={series}
-        xAxis={[{
-          data: modelComplexity,
-          scaleType: "linear",
-          label: "Model Complexity (Low → High)",
-          min: COMPLEXITY_MIN,
-          max: COMPLEXITY_MAX,
-        }]}
-        yAxis={[{ label: "Prediction Error", min: 0, max: yMax }]}
-        margin={{ left: 100, right: 170, top: 34, bottom: 80 }}
-        slotProps={{ legend: { hidden: true } }}
+        skipAnimation
+        margin={{ top: 16, right: 180, bottom: 16, left: 32 }}
+        xAxis={[
+          {
+            scaleType: "linear",
+            data: complexity,
+            min: complexity[0],
+            max: complexity[complexity.length - 1],
+            label: COMPLEXITY,
+            height: 64,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            max: yMax,
+            label: ERROR_AXIS,
+            width: 76,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiLineElement-series-total": { strokeWidth: 4 },
-          "& .MuiLineElement-series-bias": { strokeWidth: 2.5, strokeDasharray: "10 6" },
-          "& .MuiLineElement-series-variance": { strokeWidth: 2.5, strokeDasharray: "3 5" },
-          "& .MuiLineElement-series-irreducible": { strokeWidth: 1.5, strokeDasharray: "2 4", opacity: 0.6 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          ...Object.fromEntries(
+            curves.map((c) => [
+              `& .MuiLineChart-line[data-series="${c.id}"]`,
+              { strokeWidth: c.width, strokeDasharray: c.dash, strokeLinecap: "round" },
+            ]),
+          ),
         }}
       >
+        <Zones />
+        <LinePlot />
         <ChartsReferenceLine
-          x={optimalComplexity}
-          label={`Optimal ≈ ${optimalComplexity.toFixed(1)}`}
+          x={optimum[COMPLEXITY]}
+          label={`Optimum at ${optimum[COMPLEXITY].toFixed(1)} (minimum ${TOTAL.toLowerCase()} ${optimum[TOTAL].toFixed(2)})`}
           labelAlign="end"
           lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.ink, fontSize: 13, fontWeight: 600 }}
+          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 600 }}
         />
-        <Annotations />
-      </LineChart>
+        <CurveLabels />
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
     </Box>
   );
 }
