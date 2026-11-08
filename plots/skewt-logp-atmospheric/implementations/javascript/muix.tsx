@@ -162,16 +162,17 @@ function SkewTLayer() {
         ))}
         <path d={toPath(dewProfile)} fill="none" stroke={dewColor} strokeWidth={3} strokeDasharray="10 6" />
         <path d={toPath(tempProfile)} fill="none" stroke={tempColor} strokeWidth={3.5} />
-        {levels.map((d) => {
-          const skew = (yScale(pBottom) - yScale(d[PRESSURE])) / pxPerDeg;
-          return (
-            <g key={`level-${d[PRESSURE]}`}>
-              <circle cx={xScale(d[DEWPOINT] + skew)} cy={yScale(d[PRESSURE])} r={3.5} fill={dewColor} stroke={t.pageBg} strokeWidth={1} />
-              <circle cx={xScale(d[TEMPERATURE] + skew)} cy={yScale(d[PRESSURE])} r={3.5} fill={tempColor} stroke={t.pageBg} strokeWidth={1} />
-            </g>
-          );
-        })}
       </g>
+      {/* Level markers stay unclipped: the window holds every skewed level, and the top and bottom levels sit on the edges */}
+      {levels.map((d) => {
+        const skew = (yScale(pBottom) - yScale(d[PRESSURE])) / pxPerDeg;
+        return (
+          <g key={`level-${d[PRESSURE]}`}>
+            <circle cx={xScale(d[DEWPOINT] + skew)} cy={yScale(d[PRESSURE])} r={3.5} fill={dewColor} stroke={t.pageBg} strokeWidth={1} />
+            <circle cx={xScale(d[TEMPERATURE] + skew)} cy={yScale(d[PRESSURE])} r={3.5} fill={tempColor} stroke={t.pageBg} strokeWidth={1} />
+          </g>
+        );
+      })}
     </>
   );
 }
