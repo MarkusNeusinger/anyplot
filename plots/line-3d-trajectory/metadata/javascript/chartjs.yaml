@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:09:26Z'
-updated: '2026-11-08T22:19:38Z'
+updated: '2026-11-08T22:26:25Z'
 generated_by: claude-opus-5-5
 adopted_from: c068cb93c786cb497786be1328c2a9436c8d59b9 (c068cb93c786cb497786be1328c2a9436c8d59b9)
 workflow_run: 42529319307
@@ -13,115 +13,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/chartjs/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Isometric projection of the (x, y, z) path onto a linear-scale line chart, with
-    equal screen units in both directions computed from ANYPLOT_SIZE so the 16:9 canvas
-    does not stretch the orbit; the oblique view reveals extent in all three dimensions
-  - 'Scriptable segment.borderColor runs the imprint_seq gradient (#009E73 to #4467A3)
-    along the path in sequence order, and the legend names the encoded variable (elapsed
-    time)'
-  - Custom afterDatasetsDraw plugin draws three labeled 3D axes with tick marks pointing
-    away from the trajectory, while the canvas frame axes stay hidden
-  - 'Theme tokens threaded through all chrome; both renders read cleanly, data colors
-    identical across themes, and the semantic red #AE3030 is reserved for the re-entry
-    point'
-  - Tooltip callback reports the original x, y and z instead of projected screen coordinates
-    in the HTML view; the legend filter hides the axis datasets; animation disabled
+  - 'Builds a real orthographic 3D camera on top of Chart.js: drag changes azimuth
+    and elevation and the wheel zooms, each re-projecting the data and the axes, so
+    the interactive rotation the Notes call critical works in the HTML view'
+  - 'Every point sits at its x, y and z values (checked: the start point x=6.4, y=0,
+    z=5.5 projects exactly onto the green start marker), with equal screen units in
+    both directions so the 16:9 canvas does not stretch the spiral'
+  - Time progression runs as a per-segment gradient through Chart.js's scriptable
+    segment.borderColor, from Imprint green to blue (t.seq), so the three and a half
+    shrinking loops read in order
+  - The three axes leave the floor corner farthest from the viewer, with tick marks
+    pointing away from the path, and the oblique camera shows the path's extent in
+    x, y and altitude
+  - 'Theme tokens carry all the chrome: ink and inkSoft text, the page background,
+    and identical data colors in both renders; the tooltip lists all four columns
+    for each point'
   weaknesses:
-  - 'SC-03 (both): the three axes run only from the origin to the positive ends (0
-    to about 7.6), while the orbit spans about −6.4 to +6.4 in x and y, so the half
-    of the path behind the origin has no scale → start the floor axes at the data
-    minimum (or put the origin at the min-x/min-y corner) so every point lies over
-    a scaled axis. Likely cause: axes built with at(0) as origin and length RADIUS_START
-    + 1.2 in the positive direction only.'
-  - 'VQ-03 (both): the legend shows the start point and the re-entry point as rectangles,
-    while the marks are a circle and a triangle, and the orbit entry shows a flat
-    green box instead of a line sample → legend glyphs that match the marks. Likely
-    cause: legend.labels without usePointStyle: true.'
-  - 'VQ-06 (both): axis names ''X position'', ''Y position'', ''Altitude Z'' carry
-    no units → add a unit, e.g. ''X position (1000 km)''. Likely cause: the axes[].name
-    strings.'
-  - 'VQ-01 (both): tick labels at 14 px CSS (axis names 16 px) are small next to the
-    22 px title and blur in the 400 px thumbnail → about 18 px ticks and 20 px axis
-    names (+4 px). Likely cause: ctx.font = "14px sans-serif" / "16px sans-serif"
-    in axisLabelPlugin.'
-  - 'SC-02 (both): the Notes call interactive rotation and zoom critical, but the
-    HTML view is a fixed isometric projection with no way to turn it → re-project
-    on pointer drag (update the projection angle and call chart.update()). Likely
-    cause: COS30/SIN30 fixed constants in project().'
-  - 'CQ-01 (code): the file does not follow the library prompt''s data-block zones
-    (column constants, one ''// Data'' block ending in const data as records) and
-    adds helper functions project, lerpChannel, lerpColor → inline the projection
-    in the data loop and generate records under a ''// Data'' block. Likely cause:
-    the trajectory array built directly with helper functions.'
-  - 'Suggestion: a small gradient bar with ''start'' and ''re-entry'' end labels would
-    make the time mapping readable without relying on the two markers.'
+  - 'SC-02 (both): the elapsed-time gradient has no scale. The legend names the variable,
+    but its swatch is a single solid green line, and no color bar maps green to 0
+    h and blue to 18 h, so a reader cannot read time off the line''s color → explain
+    both ends of the gradient (a gradient swatch or a small color bar labeled 0 h
+    to 18 h). Likely cause: the orbit dataset''s legend entry uses borderColor t.palette[0],
+    and nothing draws the t.seq ramp.'
+  - 'DQ-03 (code): the decaying orbit ends 1,200 km from the frame''s origin at altitude
+    0, which is deep inside the Earth if X/Y are Earth-centered, while the start sits
+    6,400 km out and 5,500 km up → keep the horizontal radius and the altitude consistent
+    with one frame (for example, a ground-track frame where X/Y are downrange offsets,
+    or a radius that never falls below the Earth''s 6,371 km). Likely cause: radius
+    = 6.4 - 5.2 * progress next to an independent altitude curve.'
+  - 'Suggestion: tick labels such as the X axis''s 0 sit within a few pixels of the
+    curve; a little more tick offset would separate them more clearly.'
+  - 'Suggestion: the empty band between the legend and the top loop could give the
+    3D scene a little more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no plot-area fill.
-      Chrome: bold title "line-3d-trajectory · javascript · chartjs · anyplot.ai" centered on top; legend below it (Orbit start, Re-entry (impact), Orbit (color = elapsed time)); three thin ink-soft 3D axes from a common origin, X position toward lower right, Y position toward lower left, Altitude Z vertical, with ticks 2/4/6 (floor) and 2/4 (altitude) in dark grey. All text dark and readable; the tick labels are small.
-      Data: a 3.5-turn shrinking, descending spiral (decaying orbit) drawn as one smooth 3 px line, colored by elapsed time from brand green #009E73 (outer, high) to blue #4467A3 (inner, low); green circle marks the start, a matte-red triangle marks re-entry. Legend swatches are rectangles, not the circle and triangle.
+      Background: warm off-white, consistent with #FAF8F1; not pure white.
+      Chrome: the bold title "line-3d-trajectory · javascript · chartjs · anyplot.ai" is centered at the top, with a legend row below it (green circle "Orbit start", red triangle "Re-entry (impact)", green line "Orbit (color = elapsed time (h))"). Three dark-gray axis lines leave a back floor corner: "Y position (1000 km)" to the lower left (ticks -4 to 6), "X position (1000 km)" to the lower right (ticks -4 to 6), and a vertical "Altitude (1000 km)" (ticks 2, 4). All text is dark and readable, and nothing is clipped.
+      Data: a smooth descending spiral of about 3.5 shrinking loops, a gradient from Imprint green #009E73 on the outer upper loop to blue #4467A3 on the inner bottom loop, about 3 px wide. A large green dot marks the start on the right, and a red triangle marks the end near the bottom center. The first series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, legend text and axis names in light ink, ticks and axis lines in light grey; no dark-on-dark text anywhere.
-      Data: identical spiral, gradient, green start circle and red re-entry triangle as the light render; only chrome flipped.
+      Background: warm near-black, consistent with #1A1A17; not pure black.
+      Chrome: the title, legend, axis names, and tick labels flip to light ink and light-gray inkSoft, with light-gray axis lines. Everything is readable, with no dark-on-dark text.
+      Data: identical to the light render: the same green-to-blue gradient, green start dot, and red triangle at the same positions.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Readable in both themes; tick labels 14 px and axis names 16 px are
-          small for the thumbnail (defect line)
+        passed: true
+        comment: Explicit sizes (title 22, legend 18, ticks 18, axis names 20 px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; line crossings are inherent to the 3D projection
-          (permitted)
+        comment: No text collides with text or data; crossing strands are inherent
+          to 3D (permitted)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: 3 px line well visible; legend glyphs are rectangles that do not
-          match the circle/triangle markers (defect line)
+        passed: true
+        comment: 3 px line with 260 points, prominent start/end markers; legend glyphs
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe; markers differ in shape too
+        comment: Green-to-blue ramp plus red triangle; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; equal-unit projection fills the canvas well,
-          no overflow
+        comment: Canvas gate passed; scene well framed, no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis names lack units (defect line)
+        passed: true
+        comment: All three axes named with units (1000 km)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq gradient from t.seq, first color #009E73, semantic red
-          for re-entry, correct backgrounds in both themes'
+        comment: 'First series #009E73, continuous ramp from t.seq, correct backgrounds
+          in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -131,24 +120,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Hand-drawn 3D axes with tick direction chosen away from the path
-          and a hidden canvas frame give a cleaner hierarchy than the baseline
+        comment: Hand-built orthographic 3D chrome with clear text hierarchy beyond
+          the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Equal screen units computed against the canvas aspect so the orbit
-          is not stretched; ticks offset outward
+        comment: Ticks oriented away from the path, axes from the farthest corner,
+          equal-unit framing
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: 'Decaying-orbit story: start circle and red re-entry triangle bracket
-          the time gradient'
+        comment: Start and impact endpoints give the decaying spiral a clear direction
+          and endpoint
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -156,30 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D trajectory line via projection
+        comment: 3D line trajectory with an oblique view
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: false
-        comment: Smooth sequential line, oblique view, gradient named in the legend;
-          no interactive rotation/zoom although the Notes call it critical (defect
-          line)
+        comment: Gradient in sequence order and variable named in legend, but no scale
+          maps the colors to 0 to 18 h (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Axes cover only the positive half of x and y while the orbit spans
-          negative values (defect line)
+        passed: true
+        comment: Points at their x/y/z values (start point verified); tension 0.3
+          over 260 points shows no visible overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; legend entries readable and named
+        comment: Mandated title; legend entries readable
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -187,31 +175,31 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Continuous curved path, 3D extent in every dimension, time gradient
+        comment: Continuous curved path, 3D extent, time gradient
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Decaying satellite orbit spiraling to re-entry, neutral and plausible
+        comment: Decaying satellite orbit, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 260 points within 100-2000; radius 6.4 to 1.2 and altitude 5.5 to
-          0 are consistent; no Check values in the spec
+        passed: false
+        comment: Horizontal radius falls to 1,200 km at altitude 0, inconsistent with
+          an Earth-centered frame (defect line)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Helper functions and no data-block zones per the library prompt (defect
-          line)
+        passed: true
+        comment: The project/buildAxes/layoutScene functions are needed to re-project
+          on drag and zoom; no removable structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,54 +211,54 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart global
+        comment: Only harness globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity justified by the missing 3D type
+        comment: Projection is required (Chart.js has no 3D); no available call replaces
+          it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract, responsive, maintainAspectRatio false, animation
-          false
+        comment: 'Mount-node contract, animation: false, current Chart.js 4 API'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Line datasets, parsing keys, scriptable options; projection done
-          by hand
+        comment: Line datasets with scriptable segment colors, plugin hook afterDatasetsDraw,
+          legend filter, tooltip callbacks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Scriptable segment.borderColor gradient, custom afterDatasetsDraw
-          plugin, legend label filter, tooltip callback with original coordinates
-  verdict: REJECTED
+        comment: Uses the segment-scriptable borderColor API and the custom plugin
+          lifecycle to add 3D axes
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d315357327
-  rendered_at: '2026-11-08T22:16:39Z'
+  rendered_at: '2026-11-08T22:23:27Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
-  - annotations
-  - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
+  - bezier-curves
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
-  - edge-highlighting
+  - minimal-chrome

@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 // Library: chartjs 4.6.1 | JavaScript 22.23.4
-// Quality: 80/100 | Updated: 2026-11-08
+// Quality: 86/100 | Updated: 2026-11-08
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
