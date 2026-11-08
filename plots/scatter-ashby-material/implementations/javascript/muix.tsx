@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-ashby-material: Ashby Material Selection Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-08-24
+// Quality: pending | Created: 2026-08-24
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
