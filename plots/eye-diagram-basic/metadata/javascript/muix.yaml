@@ -2,129 +2,124 @@ library: muix
 language: javascript
 specification_id: eye-diagram-basic
 created: '2026-06-18T02:32:11Z'
-updated: '2026-06-18T02:48:51Z'
-generated_by: claude-sonnet
-workflow_run: 27732467684
+updated: '2026-11-08T06:45:58Z'
+generated_by: claude-opus-5-5
+adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
+workflow_run: 42437640612
 issue: 4561
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Correct imprint_seq colormap (t.seq[0]→t.seq[1]) applied to z-axis density encoding
-    — exactly right for single-polarity continuous data
-  - Seeded LCG (_s=42) solves browser's lack of seeded Math.random and produces fully
-    deterministic eye diagrams
-  - 2D density grid (60×36 Int32Array) + log-density mapping creates recognizable
-    eye opening with minimal computation overhead
-  - 'NRZ simulation parameters match spec precisely: noise σ=5%, jitter σ=3%, sigmoid
-    transitions'
-  - Theme-adaptive chrome throughout (t.pageBg, t.ink, t.inkSoft) — both renders pass
-    readability check
+  - 'Builds a community-only density heatmap from the MUI X v9 composition API: custom
+    rects in ChartsSurface, positioned by useXScale/useYScale and colored by useZColorScale'
+  - One zAxis continuous colorMap (imprint_seq) drives both the cells and the ContinuousColorLegend,
+    so the color bar always matches the marks
+  - Counts distinct traces per cell on a log scale, so the dense 0 V and 1 V levels
+    and the rare outlying traces are both readable
+  - 'The data honors the Notes exactly: sigmoid band-limited edges, 5 % amplitude
+    noise, 3 % UI jitter, 300 traces, deterministic LCG'
+  - Theme tokens are applied to all chrome; both renders are fully legible, and the
+    data colors are identical
   weaknesses:
-  - 'markerSize: 9 produces dots that nearly fill each 25×20-px density cell, causing
-    inter-cell bleed and blurring density gradient — reduce to markerSize 5–6'
-  - Grid resolution (TB=60, VB=36) is coarse; increasing to TB=80, VB=48 would yield
-    a smoother eye diagram
-  - Optional eye height/width annotations absent — even simple reference lines at
-    crossing voltages with labels would lift storytelling
+  - 'Suggestion: a finer density grid (for example 160 x 90 cells) would smooth the
+    staircase contours of the eye opening.'
+  - 'Suggestion: label one or two intermediate color-bar ticks (for example 5 and
+    20 traces) so that the log scale can be read between its endpoints 1 and 67.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "eye-diagram-basic · javascript · muix · anyplot.ai" centered at top in dark ink (#1A1A17 via t.ink). Axis labels "Time (UI)" and "Voltage (V)" in dark ink. Tick labels in t.inkSoft (#4A4A44). Colorbar "Low density"/"High density" labels in t.inkSoft. All text clearly readable against light background.
-      Data: imprint_seq colormap (green #009E73 = low density → blue #4467A3 = high density) on 60×36 density grid scatter. Characteristic eye opening visible: dense bands at 0V and 1V, open region at ~0.5V between 0.5–1.5 UI, crossing at 0 and 1 UI.
+      Background: warm off-white #FAF8F1 across the full canvas; no plot box, only left and bottom axis lines in the soft ink color.
+      Chrome: bold dark title "eye-diagram-basic · javascript · muix · anyplot.ai" centered at the top, a grey subtitle "300 overlaid traces · 200 samples per trace · 100 × 56 density cells", y label "Voltage (V)" with ticks 0.0 to 1.0, x label "Time (UI)" with ticks 0.0 to 2.0; all readable.
+      Data: a grid of density cells forms two full eye openings between the 0 V and 1 V level bands, with an X-shaped crossing at 1.0 UI and partial crossings at 0 and 2 UI. Dense cells (the level bands, the crossing core) are blue #4467A3, sparse fringe cells brand green #009E73 (imprint_seq). On the right, a vertical color bar titled "Traces per cell (log scale)" runs from 1 (green) to 67 (blue).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title in light text (#F0EFE8 via t.ink in dark). Axis labels and tick labels in appropriate light tones (t.inkSoft = #B8B7B0 in dark). Colorbar labels visible. No dark-on-dark failures — all chrome adapts correctly.
-      Data: Data colors identical to light render — green-to-blue density gradient unchanged across themes. Eye opening shape matches light render exactly.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis labels, ticks and the color-bar title all render in light ink; no dark-on-dark text.
+      Data: the cells and the color bar are identical to the light render (green to blue); the eye openings show the dark page through.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (22px title, 15px axis labels, 13px ticks).
-          All readable in both themes. Slight deduction: title at 49 chars/22px is
-          ~40% canvas width, slightly below 50-70% target, but within expected range
-          for this title length.'
+        comment: Explicit sizes (title 22, subtitle 15, axis labels 16, ticks 14 CSS
+          px); everything readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text collisions; the color bar sits clear of the plot area
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'markerSize: 9 creates dots nearly filling each 25x20 CSS-px grid
-          cell, causing slight inter-cell bleed reducing density gradient precision.
-          Eye opening clearly visible.'
+        comment: Density cells cover the levels and crossings clearly; the color-bar
+          gradient is visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is perceptually uniform and CVD-safe.
+        comment: A green-to-blue sequential ramp with a luminance change; it is not
+          a red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed. Title + chart + colorbar fills canvas well.
-          Balanced whitespace and appropriate margins.
+        comment: 3200x1800; the plot fills the canvas, the title spans about 32 %
+          of the width, the axis labels are balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) both include units. Title in required format.
+        comment: Time (UI) and Voltage (V), with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses t.seq[0] to t.seq[1] (imprint_seq) for continuous density —
-          correct. Background t.pageBg, chrome uses t.ink/t.inkSoft — theme-correct
-          in both renders.
+        comment: 'imprint_seq from t.seq for the continuous density; #FAF8F1 / #1A1A17
+          backgrounds; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Well-configured: density grid with colormap, clean centered title,
-          theme-adaptive throughout. Not yet publication-ready; mosaic of colored
-          circles reads as functional scatter.'
+        comment: Title and subtitle hierarchy, with a provenance subtitle (trace count,
+          samples, grid size) that the style guide does not require
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Horizontal-only grid appropriate. Custom HTML colorbar. Clean margins.
-          Axis spines at MUI X defaults.
+        comment: Meets the style-guide baseline; the coarse 100x56 cells leave staircase
+          eye contours
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Eye opening is natural focal point; density coloring creates visual
-          hierarchy. Missing optional eye height/width annotations.
+        comment: Log-scaled distinct-trace density keeps both the dense levels and
+          the rare excursions readable, a choice beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,93 +129,89 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram with density visualization; characteristic eye
-          opening clearly visible.
+        comment: A density-colored eye diagram with no mask, reference lines or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density heatmap coloring, time axis in UI, voltage axis, 300 traces
-          (200-500 range), NRZ with noise sigma=5% and jitter sigma=3%, sigmoid transitions
-          all present.
+        comment: Overlaid 2-UI windows, density coloring with color bar, UI time axis,
+          0/1 V levels as the densest bands, sigmoid edges crossing at 1 UI
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time [0,2] UI, Y=voltage [-0.2,1.2] V, Z=log-density. All data
-          visible.
+        comment: Cells sit at their binned time and voltage; axes span the full data
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'eye-diagram-basic · javascript · muix · anyplot.ai'.
-          Colorbar labels match density encoding.
+        comment: Mandated title format; color bar titled Traces per cell (log scale)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows high-density bands at 0 and 1V, crossing region, eye opening,
-          jitter-induced blurring. Slight deduction for coarse 60x36 grid resolution.
+        comment: Shows the open eye, the crossing, partial eyes at the window edges,
+          noise-thickened levels and outlying traces
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity simulation is well-established real-world scenario
-          (PCB/SerDes testing).
+        comment: 'A simulated NRZ link with a 1 V swing: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'N_TRACES=300 (spec: 200-500), N_SAMPLES=200 (spec: 100-200), noise
-          sigma=0.05 (spec: ~5%), jitter sigma=0.03 (spec: ~3%). All within spec parameters.'
+        comment: 'Checked in code: noise sigma 0.05 V (5 % of 1 V), jitter sigma 0.03
+          UI, 300 traces, 200 samples per 2 UI (100 per UI); the levels read at 0
+          and 1 V on the axis'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper functions rand/randn/sigm necessary for browser seeded RNG.
-          Mandatory export default function for MUI X harness. Minor KISS deviation
-          justified by environment.
+        comment: Linear zones; the one inner component is needed because the scale
+          hooks require it
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG with _s=42 provides deterministic generation in browser
-          environment.
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ScatterChart, Box, Typography — all three used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; Int32Array density grid is efficient; log-density
-          mapping appropriate. No over-engineering.
+        comment: Short written-out binning, which the library prompt allows; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-managed output. Current @mui/x-charts API used throughout.
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, current v9
+          composition API
     library_mastery:
       score: 7
       max: 10
@@ -230,29 +221,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ScatterChart with zAxis/colorMap for density encoding, skipAnimation,
-          window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE. Layout via MUI Box + Typography
-          is idiomatic.
+        comment: v9 composition (ChartsDataProvider, ChartsWrapper, ChartsSurface,
+          ChartsXAxis/YAxis) to build a community heatmap, since Heatmap is Pro-only
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: zAxis continuous colorMap on ScatterChart to encode a third dimension
-          (density) is a distinctive MUI X community feature. Custom Box-based colorbar
-          demonstrates MUI ecosystem composition.
+        comment: zAxis continuous colorMap shared between useZColorScale for the cells
+          and ContinuousColorLegend for the color bar
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:43:08Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - colorbar
+  - layer-composition
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
   dataprep:
   - binning
+  - log-transform
   styling:
-  - custom-colormap
-  - grid-styling
+  - minimal-chrome

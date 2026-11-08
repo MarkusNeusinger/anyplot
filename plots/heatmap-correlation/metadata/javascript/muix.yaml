@@ -2,130 +2,137 @@ library: muix
 language: javascript
 specification_id: heatmap-correlation
 created: '2026-08-18T17:18:42Z'
-updated: '2026-08-18T17:23:38Z'
-generated_by: claude-sonnet
-workflow_run: 32163594891
+updated: '2026-11-08T07:01:09Z'
+generated_by: claude-opus-5-5
+adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
+workflow_run: 42438822320
 issue: 1948
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 88
 review:
   strengths:
-  - Correct, theme-adaptive Imprint diverging colormap (imprint_div) built from tokens.div,
-    with a per-cell luminance check that switches text color for contrast against
-    every cell fill in both themes
-  - Faithful implementation of the spec's lower-triangle masking suggestion, keeping
-    the matrix legible without redundant mirrored values
-  - Creative, correct use of MUI X community APIs (custom slots.scatter cell renderer,
-    zAxis continuous colorMap, ContinuousColorLegend) to build a heatmap the community
-    package has no native component for
-  - Clean theme-adaptive chrome (ticks/lines disabled, ink/inkSoft tokens threaded
-    through title, axis labels, legend) verified legible in both light and dark renders
-    with no clipping at any edge
-  - Deterministic, realistic portfolio-diversification dataset with plausible correlation
-    values spanning the full -1..1 range and a fixed -1/1 colorbar domain
+  - 'Builds the community-surface heatmap from MUI X composition primitives: ChartsContainer
+    with band xAxis/yAxis, a zAxis continuous colorMap fixed to -1..1, and a custom
+    layer reading useXScale/useYScale/useZColorScale/useDrawingArea, so cell colors
+    come from the library''s own color scale'
+  - 'Three-stop Imprint diverging ramp (t.div: #AE3030 -> theme-adaptive page midpoint
+    -> #4467A3) centered on zero, with a gradient color bar spanning the full -1..1
+    range and a 0.0 tick marking the midpoint in both themes'
+  - Cell value text switches between dark and light ink from the computed luminance
+    of each fill, so every 2-decimal label stays legible from the saturated blue diagonal
+    to near-neutral cells in both renders
+  - Square cells on a symmetric lower-triangle matrix with identical variable order
+    on both axes; the mirrored upper triangle is masked, and the matrix is centered
+    in the square canvas
+  - 'Realistic portfolio scenario (six asset classes, monthly-return correlations)
+    with a genuine mix: moderate-strong positive (Gold-Commodities 0.65, Real Estate-Equities
+    0.55), negative (Bonds-Equities -0.35) and near-zero pairs'
+  - Subtitle computed from the data names the strongest off-diagonal pair, giving
+    the reader an entry point without adding a layer over the marks
   weaknesses:
-  - The masked upper triangle combined with the flex-start layout leaves a large blank
-    quadrant in the top-right/right side of the square canvas in both renders — center
-    the triangular matrix or grow the cell size to use the available canvas more fully
-  - No explicit 'Correlation' label near the colorbar legend — only bare -1/1 endpoint
-    values; a short legend title would remove any residual ambiguity about what the
-    color encodes
-  - Data storytelling is functional but flat — no additional emphasis (e.g. highlighting
-    the strongest correlation pair) to guide the reader's eye beyond the raw grid
+  - 'Suggestion: the color-bar tick labels (14 px) could match the 16 px axis tick
+    labels so the scale reads as clearly as the axes in the 400 px thumbnail.'
+  - 'Suggestion: the luminance-switched cell text uses the literals #1A1A17 / #FAF8F1;
+    reading them from t.ink-equivalents of the opposite theme would keep the code
+    on tokens.'
+  - 'Suggestion: the empty band between the subtitle and the matrix top could shrink
+    slightly so the matrix sits closer to its title.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "heatmap-correlation · javascript · muix · anyplot.ai" centered top in dark ink, fully legible. Column headers (top) and row headers (left) — Equities, Bonds, Real Estate, Commodities, Gold, Cash — rendered in medium-grey (inkSoft), all legible, none clipped at the canvas edges (verified via crop). Colorbar legend at bottom-right shows a smooth red→near-white→blue gradient with "-1" and "1" endpoint labels, both fully visible with margin to the right canvas edge.
-      Data: Lower-triangular grid of filled square cells, diagonal = 1.00 (deep blue). Negative correlations render as salmon/pink, positive as blue, magnitude scaling correctly with color intensity. Cell text color switches per-cell (white on dark blue, black on light pink) via a luminance check — every value stays legible.
+      Background: warm off-white, sampled (250, 248, 241) = #FAF8F1.
+      Chrome: bold dark title "heatmap-correlation · javascript · muix · anyplot.ai" centered at top (~45% of width), grey subtitle "6 × 6 matrix, lower triangle shown (the upper one mirrors it) · strongest pair: Gold – Commodities, r = 0.65". Y tick labels Equities…Cash at left, the same names in the same order along the bottom, all horizontal and untruncated. Vertical gradient color bar on the right with ticks 1.0 / 0.5 / 0.0 / -0.5 / -1.0 and rotated title "Correlation (Pearson r)". All text dark and readable.
+      Data: lower-triangle 6×6 matrix of square cells with thin grid-colored outlines; diagonal 1.00 cells in Imprint blue #4467A3 with light text; positive cells in lighter blues (0.65, 0.55, 0.30…), negative cells in pale reds (-0.35, -0.20, -0.15…), near-zero cells close to the cream midpoint. Values shown to 2 decimals in bold dark text on light cells. Imprint diverging ramp red #AE3030 → #FAF8F1 → blue #4467A3.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, column/row headers all render in light ink/inkSoft tokens, clearly legible against the dark background — no dark-on-dark failures found (checked left-column labels and top header crop directly). Colorbar legend gradient and endpoint labels ("-1", "1") remain fully visible and legible.
-      Data: Same lower-triangular grid; data colors are visually identical to the light render (deep blue diagonal, salmon negatives, blue positives) — only the chrome (background, headers, cell text on the mid-range cells) adapted to the dark theme. Cell text again switches white/black per-cell via the luminance check for contrast against every fill.
+      Background: warm near-black, sampled (26, 26, 23) = #1A1A17.
+      Chrome: title in light ink, subtitle and tick labels in light grey, color-bar ticks and title in light ink — no dark-on-dark text anywhere.
+      Data: same layout and same diverging end stops (blue diagonal, red at -1); the midpoint flips to #1A1A17 as the theme-adaptive imprint_div prescribes, so near-zero cells are dark and separated from the page by their grid outlines. All cell values switch to light text on these dark fills and stay readable; diagonal blue identical to light.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles/labels/cell values readable in both themes at full res;
-          per-cell luminance check keeps text contrast correct against every fill
+        comment: Explicit sizes (title 22, axis ticks 16, cell values 24 bold, color
+          bar 14/16); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, cells, or legend
+        comment: No text collisions; cell values centered within cells
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells are solid, high-contrast filled squares; clearly visible at
-          density of 6x6 variables
+        comment: Cells large with outlines; near-zero cells stay distinct from the
+          page via grid stroke in dark theme
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red/blue scale, CVD-safe, not red-green, text contrast
-          validated per-cell
+        comment: Red-blue diverging, CVD-safe; values also printed
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing clipped; masked triangle + flex-start layout leaves a large
-          empty quadrant that could be composed more tightly
+        comment: 2400x2400 square, canvas gate passed; matrix centered, color bar
+          aligned to matrix height, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; row/column variable names serve as axis labels
+        comment: Variable names on both axes are self-describing; color bar titled
+          'Correlation (Pearson r)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div diverging scale (matte-red / theme-adaptive midpoint
-          / blue), backgrounds match #FAF8F1 / #1A1A17, both renders theme-correct'
+        comment: 'imprint_div from t.div with theme-adaptive midpoint; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom cell renderer with mixHex color interpolation and luminance-based
-          text contrast shows real design thought beyond defaults
+        comment: Title/subtitle hierarchy, bold 24 px cell numerals that dominate
+          over 16 px chrome, a hand-built gradient color bar matched to the matrix
+          height
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Ticks/axis lines removed, no grid, generous whitespace; the empty
-          top-right quadrant slightly undercuts the refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triangle masking clarifies redundancy but there's no additional emphasis
-          on notable correlations
+        comment: Axis lines and ticks disabled, narrow 4% cell gaps with grid-colored
+          outlines, matrix centered in the square with computed margins, color bar
+          top/bottom aligned to the matrix
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Data-derived subtitle names the strongest pair (Gold – Commodities,
+          r = 0.65) as the entry point
     spec_compliance:
       score: 15
       max: 15
@@ -135,50 +142,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct correlation-matrix heatmap
+        comment: Correlation matrix heatmap with masked upper triangle (permitted)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap centered at zero, 2-decimal annotations, variable
-          names on both axes, triangle masked, fixed -1..1 colorbar range
+        comment: Diverging map centered at zero, 2-decimal annotations, same names
+          on both axes, fixed -1..1 color bar with visible midpoint, luminance-switched
+          text, mixed correlations — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row/column pairs map correctly to the lower-triangular cells
+        comment: Rows/columns correctly mapped; values placed in their cells
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; colorbar legend present
-          with correct -1/1 range
+        comment: Title exact format; color bar serves as legend with reader-facing
+          title
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows diagonal, positive and negative correlations, and varying magnitudes
+        comment: Positive, negative, strong and near-zero correlations all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Portfolio-diversification asset-class correlations, plausible and
-          neutral
+        comment: Asset-class return correlations for portfolio diversification, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values are realistic for the finance domain
+        comment: Values within [-1,1], plausible signs (equities-bonds negative, gold-commodities
+          positive); matrix checked symmetric in code; no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -188,14 +196,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; helper functions are minimal and necessary for the custom
-          cell renderer
+        comment: Only the default-export component and one child layer, which React
+          hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -207,41 +215,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the requirement, no fake UI
+        comment: Three-stop interpolation is needed because colorMap takes two stops
+          or a function; no available call replaced
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, skipAnimation set, current MUI X API
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 ChartsContainer
+          API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ScatterChart + band scales + custom slot is the established community-tier
-          workaround for heatmap-style charts
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom slots.scatter, zAxis continuous colorMap, and ContinuousColorLegend
-          are genuine MUI X-specific features, well applied
+        comment: Composition API with band axes, zAxis colorMap and drawing-area hooks
+          instead of manual scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: useZColorScale/useDrawingArea custom layer inside ChartsContainer
+          to express a heatmap on the community surface
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T02:31:42Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
   - matrix-construction
-  dataprep:
-  - correlation-matrix
+  dataprep: []
   styling:
   - custom-colormap
+  - gradient-fill
+  - edge-highlighting

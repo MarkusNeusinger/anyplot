@@ -1,210 +1,231 @@
 // anyplot.ai
 // tree-decision: Decision Tree Visualization with Probabilities
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 95/100 | Created: 2026-08-26
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-// ANYPLOT_TOKENS has no "muted" entry — derive the theme-adaptive muted anchor
-// (default-style-guide.md "Semantic anchors") straight from ANYPLOT_THEME.
-const MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
-const FONT = "Inter, system-ui, -apple-system, sans-serif";
 
-// --- Data: a two-stage product-launch investment decision -------------------
-// decision = square (choose an option), chance = circle (uncertain outcome),
-// terminal = triangle (payoff realized). Each non-root node carries the label
-// and (for chance branches) probability of the edge leading to it.
-const TREE = [
-  { id: "D0", type: "decision", parent: null, title: "Launch Product?" },
-  { id: "C1", type: "chance", parent: "D0", title: "Initial Demand", branchLabel: "Launch" },
-  { id: "T6", type: "terminal", parent: "D0", branchLabel: "Don't Launch", payoff: 0 },
-  { id: "D1", type: "decision", parent: "C1", title: "Expand Capacity?", branchLabel: "High Demand", probability: 0.6 },
-  { id: "D2", type: "decision", parent: "C1", title: "Discount Price?", branchLabel: "Low Demand", probability: 0.4 },
-  { id: "C2", type: "chance", parent: "D1", title: "Sustained Demand", branchLabel: "Expand" },
-  { id: "T3", type: "terminal", parent: "D1", branchLabel: "Don't Expand", payoff: 500 },
-  { id: "T4", type: "terminal", parent: "D2", branchLabel: "Discount", payoff: 150 },
-  { id: "T5", type: "terminal", parent: "D2", branchLabel: "Hold Price", payoff: 80 },
-  { id: "T1", type: "terminal", parent: "C2", branchLabel: "High", probability: 0.7, payoff: 850 },
-  { id: "T2", type: "terminal", parent: "C2", branchLabel: "Low", probability: 0.3, payoff: 200 },
+// Constants
+const DECISION = "decision"; // the three node types of the spec, each drawn as its own shape
+const CHANCE = "chance";
+const TERMINAL = "terminal";
+const DEPTH_PAD_LEFT = 0.3; // in depth steps: room left of the root for its question
+const DEPTH_PAD_RIGHT = 0.7; // in depth steps: room right of the deepest terminals for their payoffs
+const SLOT_PAD = 0.6; // in leaf slots: room above the first and below the last leaf
+const NODE_R = 18; // half the side of a node mark, px
+const EDGE_FONT = 15; // branch label size, px
+const QUESTION_FONT = 16; // question label size, px
+const QUESTION_GAP = 12; // px between a question's baseline and the steepest edge under it
+const TITLE = "tree-decision · javascript · muix · anyplot.ai";
+const TITLE_H = 76;
+const LEGEND_H = 44;
+
+// Columns: set these to your data's column names
+const NODE_ID = "Node"; // role: node_id
+const NODE_TYPE = "Node type"; // role: node_type
+const PARENT_ID = "Parent"; // role: parent_id
+const BRANCH_LABEL = "Branch"; // role: branch_label
+const PROBABILITY = "Probability"; // role: probability
+const PAYOFF = "Payoff (USD thousand)"; // role: payoff
+const QUESTION = "Question"; // role: extra
+
+// Data: replace this block with your own records, one object per row
+// A two-stage product-launch decision: launch or not, then react to the
+// demand that materialises. The parent of the root is null; probabilities
+// sit on chance branches only and payoffs on terminal nodes only.
+const data = [
+  { [NODE_ID]: "D0", [NODE_TYPE]: "decision", [PARENT_ID]: null, [BRANCH_LABEL]: null, [PROBABILITY]: null, [PAYOFF]: null, [QUESTION]: "Launch product?" },
+  { [NODE_ID]: "C1", [NODE_TYPE]: "chance", [PARENT_ID]: "D0", [BRANCH_LABEL]: "Launch", [PROBABILITY]: null, [PAYOFF]: null, [QUESTION]: "Initial demand" },
+  { [NODE_ID]: "T6", [NODE_TYPE]: "terminal", [PARENT_ID]: "D0", [BRANCH_LABEL]: "Don't launch", [PROBABILITY]: null, [PAYOFF]: 0, [QUESTION]: null },
+  { [NODE_ID]: "D1", [NODE_TYPE]: "decision", [PARENT_ID]: "C1", [BRANCH_LABEL]: "High demand", [PROBABILITY]: 0.6, [PAYOFF]: null, [QUESTION]: "Expand capacity?" },
+  { [NODE_ID]: "D2", [NODE_TYPE]: "decision", [PARENT_ID]: "C1", [BRANCH_LABEL]: "Low demand", [PROBABILITY]: 0.4, [PAYOFF]: null, [QUESTION]: "Discount price?" },
+  { [NODE_ID]: "C2", [NODE_TYPE]: "chance", [PARENT_ID]: "D1", [BRANCH_LABEL]: "Expand", [PROBABILITY]: null, [PAYOFF]: null, [QUESTION]: "Sustained demand" },
+  { [NODE_ID]: "T3", [NODE_TYPE]: "terminal", [PARENT_ID]: "D1", [BRANCH_LABEL]: "Don't expand", [PROBABILITY]: null, [PAYOFF]: 500, [QUESTION]: null },
+  { [NODE_ID]: "T4", [NODE_TYPE]: "terminal", [PARENT_ID]: "D2", [BRANCH_LABEL]: "Discount", [PROBABILITY]: null, [PAYOFF]: 150, [QUESTION]: null },
+  { [NODE_ID]: "T5", [NODE_TYPE]: "terminal", [PARENT_ID]: "D2", [BRANCH_LABEL]: "Hold price", [PROBABILITY]: null, [PAYOFF]: 80, [QUESTION]: null },
+  { [NODE_ID]: "T1", [NODE_TYPE]: "terminal", [PARENT_ID]: "C2", [BRANCH_LABEL]: "Demand holds", [PROBABILITY]: 0.7, [PAYOFF]: 850, [QUESTION]: null },
+  { [NODE_ID]: "T2", [NODE_TYPE]: "terminal", [PARENT_ID]: "C2", [BRANCH_LABEL]: "Demand fades", [PROBABILITY]: 0.3, [PAYOFF]: 200, [QUESTION]: null },
 ];
 
-const byId = Object.fromEntries(TREE.map((n) => [n.id, n]));
-const childrenOf = (id) => TREE.filter((n) => n.parent === id);
+// Plot: reads only data and the constants above
+const byId = new Map(data.map((d) => [d[NODE_ID], d]));
+const children = new Map(data.map((d) => [d[NODE_ID], []]));
+data.forEach((d) => {
+  if (d[PARENT_ID] != null) children.get(d[PARENT_ID])?.push(d[NODE_ID]);
+});
+const roots = data.filter((d) => d[PARENT_ID] == null).map((d) => d[NODE_ID]);
 
-function depthOf(id) {
-  let depth = 0;
-  let cur = byId[id];
-  while (cur.parent) {
-    depth += 1;
-    cur = byId[cur.parent];
-  }
-  return depth;
+// Depth: the number of ancestors above a node
+const depth = new Map(
+  data.map((d) => {
+    let steps = 0;
+    let parent = d[PARENT_ID];
+    while (parent != null && steps < data.length) {
+      steps += 1;
+      parent = byId.get(parent)?.[PARENT_ID] ?? null;
+    }
+    return [d[NODE_ID], steps];
+  }),
+);
+
+// Leaves take one slot each in depth-first order; a parent sits midway between
+// its first and last child, so subtrees never overlap.
+const preorder = [];
+const stack = [...roots].reverse();
+while (stack.length > 0) {
+  const id = stack.pop();
+  preorder.push(id);
+  stack.push(...[...children.get(id)].reverse());
 }
-TREE.forEach((n) => {
-  n.depth = depthOf(n.id);
+const slot = new Map();
+preorder
+  .filter((id) => children.get(id).length === 0)
+  .forEach((id, i) => slot.set(id, i));
+const bottomUp = [...preorder].sort((a, b) => depth.get(b) - depth.get(a));
+
+// EMV rollback, deepest nodes first: a terminal is worth its payoff, a chance
+// node the probability-weighted mean of its branches, a decision node its best
+// branch; every other branch of a decision is pruned. Pruning stays local to
+// the decision that rejected the branch.
+const emv = new Map();
+const pruned = new Set();
+bottomUp.forEach((id) => {
+  const node = byId.get(id);
+  const kids = children.get(id);
+  if (kids.length > 0) {
+    const kidSlots = kids.map((k) => slot.get(k));
+    slot.set(id, (Math.min(...kidSlots) + Math.max(...kidSlots)) / 2);
+  }
+  if (kids.length === 0) {
+    emv.set(id, node[PAYOFF]);
+  } else if (node[NODE_TYPE] === CHANCE) {
+    emv.set(id, kids.reduce((sum, k) => sum + byId.get(k)[PROBABILITY] * emv.get(k), 0));
+  } else {
+    const best = kids.reduce((b, k) => (emv.get(k) > emv.get(b) ? k : b), kids[0]);
+    emv.set(id, emv.get(best));
+    kids.filter((k) => k !== best).forEach((k) => pruned.add(k));
+  }
 });
 
-// Leaf nodes get sequential y slots top-to-bottom; every internal node sits at
-// the average y of its children, so the tree self-arranges without overlap.
-let nextLeafY = 0;
-function assignY(id) {
-  const kids = childrenOf(id);
-  if (kids.length === 0) {
-    byId[id].y = nextLeafY;
-    nextLeafY += 1;
-    return byId[id].y;
-  }
-  const ys = kids.map((k) => assignY(k.id));
-  byId[id].y = (Math.min(...ys) + Math.max(...ys)) / 2;
-  return byId[id].y;
-}
-assignY("D0");
+const maxDepth = Math.max(...depth.values());
+const slotCount = Math.max(...slot.values());
+const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const nodeTypes = [...new Set(data.map((d) => d[NODE_TYPE]))];
+const typeColor = { [DECISION]: t.palette[0], [CHANCE]: t.palette[1] };
+const PAYOFF_UNIT = PAYOFF.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const terminalCount = data.filter((d) => children.get(d[NODE_ID]).length === 0).length;
+const SUBTITLE = `${data.length} nodes, ${terminalCount} terminal payoffs · payoffs and EMV in ${PAYOFF_UNIT}, rolled back from the terminals · root EMV ${fmt.format(emv.get(roots[0]))}`;
 
-// EMV rollback: terminals carry their payoff; chance nodes take the
-// probability-weighted average of children (both branches stay "live" — a
-// chance outcome is never rejected); decision nodes take the best child EMV
-// and prune every other immediate branch. Pruning is local to the decision
-// that rejected it — it must not cascade into the chosen branch's own
-// subtree, which has its own (possibly different) optimal choices below it.
-function rollback(id) {
-  const node = byId[id];
-  const kids = childrenOf(id);
-  if (node.type === "terminal") {
-    node.emv = node.payoff;
-    return node.emv;
-  }
-  const kidEmvs = kids.map((k) => rollback(k.id));
-  if (node.type === "chance") {
-    node.emv = kids.reduce((sum, k, i) => sum + k.probability * kidEmvs[i], 0);
-    kids.forEach((k) => {
-      k.pruned = false;
-    });
-    return node.emv;
-  }
-  let bestIdx = 0;
-  kidEmvs.forEach((v, i) => {
-    if (v > kidEmvs[bestIdx]) bestIdx = i;
-  });
-  node.emv = kidEmvs[bestIdx];
-  kids.forEach((k, i) => {
-    k.pruned = i !== bestIdx;
-  });
-  return node.emv;
-}
-rollback("D0");
+// The community package has no tree component: a custom layer draws edges,
+// labels and node marks in the container's linear scales (depth by leaf slot).
+function DecisionTree() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const edges = data.filter((d) => d[PARENT_ID] != null && byId.has(d[PARENT_ID]));
 
-const money = (v) => `$${Math.round(v)}`;
-const maxDepth = Math.max(...TREE.map((n) => n.depth));
-const minY = Math.min(...TREE.map((n) => n.y));
-const maxY = Math.max(...TREE.map((n) => n.y));
-const X_DOMAIN = [-0.35, maxDepth + 0.85];
-const Y_DOMAIN = [minY - 0.65, maxY + 0.65];
-
-function edgeLabel(node) {
-  if (node.probability != null) return `${node.branchLabel} · p=${node.probability.toFixed(2)}`;
-  return node.branchLabel;
-}
-
-// --- Custom marks — drawn on the MUI X coordinate system --------------------
-function TreeEdges() {
-  const xs = useXScale();
-  const ys = useYScale();
   return (
-    <g fontFamily={FONT}>
-      {TREE.filter((n) => n.parent).map((n) => {
-        const parent = byId[n.parent];
-        const x1 = xs(parent.depth);
-        const y1 = ys(parent.y);
-        const x2 = xs(n.depth);
-        const y2 = ys(n.y);
+    <g>
+      {edges.map((d) => {
+        const id = d[NODE_ID];
+        const x1 = xScale(depth.get(d[PARENT_ID]));
+        const y1 = yScale(slot.get(d[PARENT_ID]));
+        const x2 = xScale(depth.get(id));
+        const y2 = yScale(slot.get(id));
         const mx = (x1 + x2) / 2;
         const my = (y1 + y2) / 2;
         const angle = Math.atan2(y2 - y1, x2 - x1);
-        const nx = -Math.sin(angle);
-        const ny = Math.cos(angle);
-        const lx = mx + nx * 16;
-        const ly = my + ny * 16;
+        const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+        const isPruned = pruned.has(id);
+        const probability = d[PROBABILITY];
+        const label = probability != null ? `${d[BRANCH_LABEL]} · p = ${probability.toFixed(2)}` : d[BRANCH_LABEL];
+        // The label sits above a rising branch and below a falling one, pushed
+        // out along the normal far enough that its horizontal box clears the line.
+        const halfW = String(label).length * EDGE_FONT * 0.28;
+        const offset = halfW * Math.abs(sin) + (EDGE_FONT / 2) * Math.abs(cos) + 8;
+        const [nx, ny] = y2 <= y1 ? [sin, -cos] : [-sin, cos];
         return (
-          <g key={n.id}>
-            <line
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke={n.pruned ? MUTED : t.inkSoft}
-              strokeWidth={n.pruned ? 1.8 : 2.4}
-              strokeDasharray={n.pruned ? "7 5" : undefined}
-              strokeOpacity={n.pruned ? 0.55 : 0.9}
-            />
-            {n.pruned && (
-              <g stroke={MUTED} strokeWidth={2} strokeOpacity={0.85}>
-                <line x1={mx - 7} y1={my - 7} x2={mx + 7} y2={my + 7} />
-                <line x1={mx - 7} y1={my + 7} x2={mx + 7} y2={my - 7} />
-              </g>
-            )}
+          <g key={`edge-${id}`}>
+            <g opacity={isPruned ? 0.55 : 1}>
+              <line
+                x1={x1 + cos * NODE_R}
+                y1={y1 + sin * NODE_R}
+                x2={x2 - cos * NODE_R}
+                y2={y2 - sin * NODE_R}
+                stroke={t.inkSoft}
+                strokeWidth={isPruned ? 1.8 : 2.6}
+                strokeDasharray={isPruned ? "7 5" : undefined}
+              />
+              {isPruned && (
+                <g stroke={t.ink} strokeWidth={2} transform={`rotate(25 ${mx} ${my})`}>
+                  <line x1={mx - 4} y1={my - 9} x2={mx - 4} y2={my + 9} />
+                  <line x1={mx + 4} y1={my - 9} x2={mx + 4} y2={my + 9} />
+                </g>
+              )}
+            </g>
             <text
-              x={lx}
-              y={ly}
-              fontSize={13.5}
-              fill={n.pruned ? MUTED : t.inkSoft}
+              x={mx + nx * offset}
+              y={my + ny * offset}
+              fontSize={EDGE_FONT}
+              fill={isPruned ? t.inkSoft : t.ink}
               textAnchor="middle"
               dominantBaseline="middle"
             >
-              {edgeLabel(n)}
+              {label}
             </text>
           </g>
         );
       })}
-    </g>
-  );
-}
-
-function DecisionMark({ cx, cy, fill }) {
-  const s = 17;
-  return <rect x={cx - s} y={cy - s} width={s * 2} height={s * 2} fill={fill} stroke={t.pageBg} strokeWidth={2.5} />;
-}
-
-function ChanceMark({ cx, cy, fill }) {
-  return <circle cx={cx} cy={cy} r={19} fill={fill} stroke={t.pageBg} strokeWidth={2.5} />;
-}
-
-function TerminalMark({ cx, cy }) {
-  const w = 15;
-  const h = 15;
-  const points = `${cx - w},${cy - h} ${cx - w},${cy + h} ${cx + w * 1.15},${cy}`;
-  return <polygon points={points} fill={t.elevatedBg} stroke={t.ink} strokeWidth={2} />;
-}
-
-function TreeNodes() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      {TREE.map((n) => {
-        const cx = xs(n.depth);
-        const cy = ys(n.y);
-        const dimmed = n.pruned;
+      {data.map((d) => {
+        const id = d[NODE_ID];
+        const cx = xScale(depth.get(id));
+        const cy = yScale(slot.get(id));
+        const type = d[NODE_TYPE];
+        const isLeaf = children.get(id).length === 0;
+        // The question sits above its node, raised until it clears every edge
+        // that leaves the node upward within the label's half width.
+        const questionHalfW = String(d[QUESTION] ?? "").length * QUESTION_FONT * 0.3;
+        const edgeRise = Math.max(
+          0,
+          ...[d[PARENT_ID], ...children.get(id)]
+            .filter((n) => n != null && byId.has(n))
+            .map((n) => {
+              const ny = yScale(slot.get(n));
+              return ny < cy ? (questionHalfW * (cy - ny)) / Math.max(1, Math.abs(xScale(depth.get(n)) - cx)) : 0;
+            }),
+        );
+        const questionY = cy - Math.max(NODE_R + 14, edgeRise + QUESTION_GAP);
         return (
-          <g key={n.id} opacity={dimmed ? 0.5 : 1}>
-            {n.type === "decision" && <DecisionMark cx={cx} cy={cy} fill={t.palette[0]} />}
-            {n.type === "chance" && <ChanceMark cx={cx} cy={cy} fill={t.palette[1]} />}
-            {n.type === "terminal" && <TerminalMark cx={cx} cy={cy} />}
-
-            {n.type !== "terminal" && (
-              <>
-                <text x={cx} y={cy - 32} fontSize={15} fontWeight={600} fill={t.ink} textAnchor="middle">
-                  {n.title}
-                </text>
-                <text x={cx} y={cy + 36} fontSize={14} fontWeight={600} fill={t.inkSoft} textAnchor="middle">
-                  EMV {money(n.emv)}
-                </text>
-              </>
+          <g key={`node-${id}`}>
+            <g opacity={pruned.has(id) ? 0.55 : 1}>
+              {type === DECISION && (
+                <rect x={cx - NODE_R} y={cy - NODE_R} width={NODE_R * 2} height={NODE_R * 2} fill={typeColor[DECISION]} stroke={t.pageBg} strokeWidth={2.5} />
+              )}
+              {type === CHANCE && <circle cx={cx} cy={cy} r={NODE_R + 2} fill={typeColor[CHANCE]} stroke={t.pageBg} strokeWidth={2.5} />}
+              {type === TERMINAL && (
+                <polygon
+                  points={`${cx - NODE_R * 0.85},${cy - NODE_R * 0.85} ${cx - NODE_R * 0.85},${cy + NODE_R * 0.85} ${cx + NODE_R},${cy}`}
+                  fill={t.elevatedBg}
+                  stroke={t.ink}
+                  strokeWidth={2}
+                />
+              )}
+            </g>
+            {!isLeaf && d[QUESTION] != null && (
+              <text x={cx} y={questionY} fontSize={QUESTION_FONT} fontWeight={600} fill={t.ink} textAnchor="middle">
+                {d[QUESTION]}
+              </text>
             )}
-            {n.type === "terminal" && (
-              <text x={cx + 26} y={cy} fontSize={14.5} fontWeight={600} fill={t.ink} dominantBaseline="middle">
-                {money(n.payoff)}
+            {!isLeaf && (
+              <text x={cx} y={cy + NODE_R + 24} fontSize={15} fontWeight={600} fill={t.inkSoft} textAnchor="middle">
+                EMV {fmt.format(emv.get(id))}
+              </text>
+            )}
+            {isLeaf && (
+              <text x={cx + NODE_R + 12} y={cy} fontSize={16} fontWeight={600} fill={pruned.has(id) ? t.inkSoft : t.ink} dominantBaseline="middle">
+                {fmt.format(d[PAYOFF])}
               </text>
             )}
           </g>
@@ -214,70 +235,49 @@ function TreeNodes() {
   );
 }
 
-function Legend() {
-  const items = [
-    { label: "Decision node", shape: "square", color: t.palette[0] },
-    { label: "Chance node", shape: "circle", color: t.palette[1] },
-    { label: "Terminal payoff", shape: "triangle", color: t.ink },
-  ];
-  return (
-    <g transform="translate(26, 24)" fontFamily={FONT}>
-      {items.map((item, i) => (
-        <g key={item.label} transform={`translate(0, ${i * 28})`}>
-          {item.shape === "square" && <rect x={0} y={0} width={16} height={16} fill={item.color} />}
-          {item.shape === "circle" && <circle cx={8} cy={8} r={8} fill={item.color} />}
-          {item.shape === "triangle" && (
-            <polygon points="0,0 0,16 15,8" fill={t.elevatedBg} stroke={item.color} strokeWidth={2} />
-          )}
-          <text x={26} y={13} fontSize={14.5} fill={t.ink}>
-            {item.label}
-          </text>
-        </g>
-      ))}
-      <g transform={`translate(0, ${items.length * 28 + 6})`}>
-        <line x1={0} y1={8} x2={16} y2={8} stroke={MUTED} strokeWidth={2} strokeDasharray="5 4" />
-        <text x={26} y={13} fontSize={14.5} fill={t.ink}>
-          Pruned branch
-        </text>
-      </g>
-    </g>
-  );
-}
-
-const TITLE_H = 66;
-
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
+  const { width, height } = window.ANYPLOT_SIZE;
+  const legendItems = [
+    { key: DECISION, label: "Decision node", mark: <rect x={1} y={1} width={16} height={16} fill={typeColor[DECISION]} /> },
+    { key: CHANCE, label: "Chance node", mark: <circle cx={9} cy={9} r={8.5} fill={typeColor[CHANCE]} /> },
+    { key: TERMINAL, label: "Terminal payoff", mark: <polygon points="2,2 2,16 17,9" fill={t.elevatedBg} stroke={t.ink} strokeWidth={1.6} /> },
+  ].filter((item) => nodeTypes.includes(item.key));
+
   return (
-    <div
-      style={{
-        width: W,
-        height: H,
-        background: t.pageBg,
-        fontFamily: FONT,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          tree-decision · javascript · muix · anyplot.ai
-        </span>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "16px 40px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
-      <ChartContainer
-        width={W}
-        height={H - TITLE_H}
-        skipAnimation
+      <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: 32, padding: "0 40px" }}>
+        {legendItems.map((item) => (
+          <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <svg width={18} height={18}>{item.mark}</svg>
+            <span style={{ fontSize: 15, color: t.ink }}>{item.label}</span>
+          </div>
+        ))}
+        {pruned.size > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <svg width={34} height={18}>
+              <line x1={0} y1={9} x2={34} y2={9} stroke={t.inkSoft} strokeWidth={1.8} strokeDasharray="6 4" opacity={0.55} />
+              <line x1={13} y1={2} x2={13} y2={16} stroke={t.ink} strokeWidth={2} transform="rotate(25 15 9)" opacity={0.55} />
+              <line x1={19} y1={2} x2={19} y2={16} stroke={t.ink} strokeWidth={2} transform="rotate(25 17 9)" opacity={0.55} />
+            </svg>
+            <span style={{ fontSize: 15, color: t.ink }}>Pruned branch</span>
+          </div>
+        )}
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
         series={[]}
-        margin={{ top: 40, right: 90, bottom: 40, left: 60 }}
-        xAxis={[{ min: X_DOMAIN[0], max: X_DOMAIN[1], scaleType: "linear" }]}
-        yAxis={[{ min: Y_DOMAIN[0], max: Y_DOMAIN[1], scaleType: "linear" }]}
+        skipAnimation
+        margin={{ top: 24, right: 40, bottom: 24, left: 40 }}
+        xAxis={[{ id: "depth", scaleType: "linear", min: -DEPTH_PAD_LEFT, max: maxDepth + DEPTH_PAD_RIGHT, position: "none" }]}
+        yAxis={[{ id: "slot", scaleType: "linear", min: -SLOT_PAD, max: slotCount + SLOT_PAD, reverse: true, position: "none" }]}
       >
-        <TreeEdges />
-        <TreeNodes />
-        <Legend />
-      </ChartContainer>
+        <DecisionTree />
+      </ChartsContainer>
     </div>
   );
 }
