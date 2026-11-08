@@ -9,6 +9,7 @@
 
 import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { englishName, languageLabel } from 'src/sections/agent-chat/languages';
 import type { ChainStop } from 'src/sections/agent-chat/plotChain';
 
 /** Errors of a turn (stream `error` events and failed requests). */
@@ -206,28 +207,43 @@ export interface NoticeInfo {
 }
 
 /**
- * The thread's one quiet line when the session's first typed message (`detected`) or a paste
- * before any typed message (`pasted`, the language of its notes or column names) set the
- * session language; a choice from the chip or the chat says nothing. The line names only the
- * language: where it came from, that a plot keeps its own and the chip that changes both are
- * behind its ⓘ, as the experimental notice does it.
+ * The thread's one language line, the offer of a language found in the user's message or data
+ * (`German detected in your message`), which `.switch()` follows: the line names only where it
+ * was found; what the button sets, that nothing changes until then and the menu at the top are
+ * behind its ⓘ. `current` is the session language the replies are in until then.
  */
-export function languageNotice(
+export function languageOfferLine(
   language: string,
-  source: 'detected' | 'pasted'
+  basis: 'message' | 'data',
+  current: string
 ): { text: string; info: NoticeInfo } {
+  const name = englishName(language);
   return {
-    text: `reply language: ${language}`,
+    text: `${name} detected in your ${basis === 'data' ? 'data' : 'message'}`,
     info: {
-      label: 'About the reply language',
-      heading: '# reply language',
+      label: 'About the language offer',
+      heading: '# language',
       lines: [
-        source === 'pasted' ? 'detected from your pasted data' : 'detected from your message',
-        'a plot you have keeps its language',
-        'the language chip in the header changes both',
+        `replies and plot labels in ${name}`,
+        `until then everything stays ${englishName(current)}`,
+        'the menu at the top changes it any time',
       ],
     },
   };
+}
+
+/** The accessible name of an offer's `.switch()`: what a click does, in words. */
+export const languageSwitchLabel = (language: string) =>
+  `Reply and label the plot in ${englishName(language)}`;
+
+/**
+ * The same line once the user took the offer, in the language's own words: `replies and plot
+ * labels: Deutsch`. With a plot on screen the click starts no run, so the line says that the
+ * next version comes in the new language.
+ */
+export function languageAcceptedLine(language: string, plot: boolean): string {
+  const line = `replies and plot labels: ${languageLabel(language)}`;
+  return plot ? `${line} · the next plot version uses it` : line;
 }
 
 /**

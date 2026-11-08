@@ -66,17 +66,22 @@ function stubFetch(opened: Promise<void> = Promise.resolve()) {
         });
       }
       if (url.pathname.endsWith('/sessions/S1/language') && method === 'PUT') {
-        const body = JSON.parse(String(init.body)) as { language: string };
+        const body = JSON.parse(String(init.body)) as { language: string; via?: string };
         puts.push({ body, headers: init.headers as Record<string, string> });
         // The service's stored form: a known name as its code.
         const stored = body.language.toLowerCase() === 'deutsch' ? 'de' : body.language;
-        return json(200, { language: stored, source: 'chosen' });
+        return json(200, { language: stored, source: body.via === 'offer' ? 'offer' : 'chosen' });
       }
       if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
-        // The service's detection: the first typed message is German.
+        // The typed message is German: the reply stays English, and the done offers German.
+        const offered = {
+          language: 'en',
+          source: 'default',
+          offer: { language: 'de', basis: 'message' },
+        };
         const response = sse([
-          ['message', { text: 'Die x-Achse zeigt die Lernstunden.' }],
-          ['done', { llm_calls: 2, language: { language: 'de', source: 'detected' } }],
+          ['message', { text: 'The x axis shows the study hours.' }],
+          ['done', { llm_calls: 2, language: offered }],
         ]);
         return new Promise<Response>(resolve => {
           releaseTurn = () => resolve(response);
@@ -143,7 +148,8 @@ describe('AgentChatPage language chip', () => {
     expect(puts[0].body).toEqual({ language: 'de' });
     expect(puts[0].headers['X-Anyplot-Client']).toBe('agent-chat/1');
     // A choice is the user's own: the thread stays quiet.
-    expect(screen.queryByText(/detected from your message/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('language-offer')).not.toBeInTheDocument();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_language', { via: 'header' });
   });
 
   it('shows the server form of a typed language and refuses one outside the pattern', async () => {
@@ -172,36 +178,83 @@ describe('AgentChatPage language chip', () => {
     expect(puts.map(put => put.body)).toEqual([{ language: 'deutsch' }]);
   });
 
-  it("holds the chip during a turn and follows the turn's detected language with one notice", async () => {
-    stubFetch();
-    renderPage();
-    await waitFor(() => expect(chip()).toBeEnabled());
-
+  /** Sends a typed message and lets its turn end. */
+  async function sendTurn(text: string) {
     const box = screen.getByLabelText('Message');
-    fireEvent.change(box, { target: { value: 'Was zeigt die x-Achse?' } });
+    fireEvent.change(box, { target: { value: text } });
     fireEvent.keyDown(box, { key: 'Enter' });
     // The server answers 409 run_active while a turn runs: the chip waits.
     await waitFor(() => expect(chip()).toBeDisabled());
     await waitFor(() => expect(releaseTurn).not.toBeNull());
     releaseTurn?.();
+    await waitFor(() => expect(chip()).toBeEnabled());
+  }
 
-    expect(await screen.findByText('Die x-Achse zeigt die Lernstunden.')).toBeInTheDocument();
-    await waitFor(() =>
-      expect(chip()).toHaveAccessibleName('Reply language: Deutsch, detected. Change')
-    );
-    expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
-    expect(chip()).toBeEnabled();
-    // One short line; where the language came from and the chip are behind its ⓘ.
-    const notice = screen.getByText(/^# reply language: de$/);
-    expect(notice).toBeInTheDocument();
-    expect(screen.queryByText(/detected from your message/)).not.toBeInTheDocument();
-    fireEvent.click(within(notice).getByRole('button', { name: 'About the reply language' }));
-    const details = within(await screen.findByRole('dialog', { name: 'About the reply language' }));
+  it('holds the chip during a turn, then offers the language the turn found and keeps English', async () => {
+    stubFetch();
+    renderPage();
+    await waitFor(() => expect(chip()).toBeEnabled());
+
+    await sendTurn('Was zeigt die x-Achse?');
+
+    expect(await screen.findByText('The x axis shows the study hours.')).toBeInTheDocument();
+    expect(chip()).toHaveAccessibleName('Reply language: English, default. Change');
+    // One short line with its button; what the button sets is behind its ⓘ.
+    const line = screen.getByTestId('language-offer');
+    expect(line).toHaveTextContent(/^# German detected in your message.*\.switch\(\)$/);
+    fireEvent.click(within(line).getByRole('button', { name: 'About the language offer' }));
+    const details = within(await screen.findByRole('dialog', { name: 'About the language offer' }));
     expect(details.getAllByRole('listitem').map(item => item.textContent)).toEqual([
-      'detected from your message',
-      'a plot you have keeps its language',
-      'the language chip in the header changes both',
+      'replies and plot labels in German',
+      'until then everything stays English',
+      'the menu at the top changes it any time',
     ]);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_language', { via: 'shown' });
     expect(puts).toEqual([]);
+  });
+
+  it('takes the offer with .switch(): the replies and the plot labels, the line names them', async () => {
+    const user = userEvent.setup();
+    stubFetch();
+    renderPage();
+    await waitFor(() => expect(chip()).toBeEnabled());
+    await sendTurn('Was zeigt die x-Achse?');
+    const line = await screen.findByTestId('language-offer');
+
+    await user.click(
+      within(line).getByRole('button', { name: 'Reply and label the plot in German' })
+    );
+
+    await waitFor(() => expect(chip()).toHaveTextContent(/^Deutsch ▾$/));
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, chosen from the offer. Change');
+    expect(puts.map(put => put.body)).toEqual([{ language: 'de', via: 'offer' }]);
+    expect(screen.getByTestId('language-offer')).toHaveTextContent(
+      /^# replies and plot labels: Deutsch$/
+    );
+    // The button is gone: its focus moved to the line, never to the page.
+    expect(screen.getByTestId('language-offer')).toHaveFocus();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_language', { via: 'offer' });
+  });
+
+  it('closes an open offer when the user picks at the top instead', async () => {
+    const user = userEvent.setup();
+    stubFetch();
+    renderPage();
+    await waitFor(() => expect(chip()).toBeEnabled());
+    await sendTurn('Was zeigt die x-Achse?');
+    expect(
+      await screen.findByRole('button', { name: 'Reply and label the plot in German' })
+    ).toBeEnabled();
+
+    await user.click(chip());
+    const list = screen.getByRole('dialog', { name: 'Language of the replies and the plot' });
+    await user.click(within(list).getByRole('button', { name: /French/ }));
+
+    await waitFor(() => expect(chip()).toHaveTextContent(/^Français ▾$/));
+    // The line stays as a record of what was found; its button goes.
+    expect(screen.getByTestId('language-offer')).toHaveTextContent(
+      /^# German detected in your message$/
+    );
+    expect(screen.queryByRole('button', { name: 'Reply and label the plot in German' })).toBeNull();
   });
 });

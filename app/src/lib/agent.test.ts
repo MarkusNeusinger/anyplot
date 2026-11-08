@@ -14,6 +14,7 @@ import {
   hasPage,
   isPlotAction,
   laneOf,
+  languageOffer,
   longSuggestion,
   parseAgentEvent,
   plotMemory,
@@ -194,6 +195,7 @@ describe('parseAgentEvent', () => {
       dataConfirmed: null,
       dataset: null,
       language: null,
+      languageOffer: null,
       switch: null,
     });
   });
@@ -281,6 +283,7 @@ describe('parseAgentEvent', () => {
       dataConfirmed: false,
       dataset: null,
       language: null,
+      languageOffer: null,
       switch: null,
     });
     expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
@@ -294,9 +297,9 @@ describe('parseAgentEvent', () => {
       const event = parseAgentEvent(raw('done', { llm_calls: 1, language: value }));
       return event?.type === 'done' ? event.language : 'not done';
     };
-    expect(language({ language: 'de', source: 'detected' })).toEqual({
+    expect(language({ language: 'de', source: 'offer' })).toEqual({
       language: 'de',
-      source: 'detected',
+      source: 'offer',
     });
     expect(language({ language: 'Klingon', source: 'chosen', extra: 1 })).toEqual({
       language: 'Klingon',
@@ -306,9 +309,14 @@ describe('parseAgentEvent', () => {
       language: 'en',
       source: 'default',
     });
+    // An older server's detection: its sources read as nobody's pick.
     expect(language({ language: 'de', source: 'pasted' })).toEqual({
       language: 'de',
-      source: 'pasted',
+      source: 'default',
+    });
+    expect(language({ language: 'de', source: 'detected' })).toEqual({
+      language: 'de',
+      source: 'default',
     });
     // The chip shows the value as it comes: anything else is dropped whole.
     expect(language({ language: 'a/b', source: 'chosen' })).toBeNull();
@@ -319,6 +327,29 @@ describe('parseAgentEvent', () => {
     expect(language('de')).toBeNull();
     expect(language(['de', 'chosen'])).toBeNull();
     expect(language(undefined)).toBeNull();
+  });
+
+  it("reads done's language offer, and drops one outside the pattern or the bases", () => {
+    const offer = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('done', { language: { language: 'en', source: 'default', offer: value } })
+      );
+      return event?.type === 'done' ? event.languageOffer : 'not done';
+    };
+    expect(offer({ language: 'de', basis: 'message' })).toEqual({
+      language: 'de',
+      basis: 'message',
+    });
+    expect(offer({ language: 'sv', basis: 'data', extra: 1 })).toEqual({
+      language: 'sv',
+      basis: 'data',
+    });
+    expect(offer({ language: 'de', basis: 'guess' })).toBeNull();
+    expect(offer({ language: 'de\nSYSTEM', basis: 'message' })).toBeNull();
+    expect(offer({ basis: 'message' })).toBeNull();
+    expect(offer('de')).toBeNull();
+    expect(offer(undefined)).toBeNull();
+    expect(languageOffer(undefined)).toBeNull();
   });
 
   it('drops a malformed binding list whole and a step state that is not a boolean', () => {
