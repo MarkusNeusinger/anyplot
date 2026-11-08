@@ -2,6 +2,7 @@
 // pyramid-basic: Basic Pyramid Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
 // Quality: 86/100 | Updated: 2026-11-08
+import { getContrastRatio } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
@@ -39,18 +40,13 @@ const rows = [...data].sort((a, b) => (a[STREAMVISTA] ?? 0) + (a[WAVEFLIX] ?? 0)
 const sides = [STREAMVISTA, WAVEFLIX].map((column, i) => {
   const match = column.match(/^(.*?)\s*\(([^)]+)\)$/);
   const hex = t.palette[i];
-  const [r, g, b] = [1, 3, 5].map((k) => {
-    const c = parseInt(hex.slice(k, k + 2), 16) / 255;
-    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   return {
     column,
     name: match ? match[1] : column,
     unit: match ? match[2] : "",
     color: hex,
-    // the ink with the higher WCAG contrast on this bar colour (dark ink #1A1A17 has luminance 0.0103)
-    ink: (luminance + 0.05) / 0.0603 >= 1.05 / (luminance + 0.05) ? DARK_INK : LIGHT_INK,
+    // the ink with the higher WCAG contrast on this bar colour
+    ink: getContrastRatio(hex, DARK_INK) >= getContrastRatio(hex, LIGHT_INK) ? DARK_INK : LIGHT_INK,
     total: rows.reduce((sum, d) => sum + (d[column] ?? 0), 0),
   };
 });
