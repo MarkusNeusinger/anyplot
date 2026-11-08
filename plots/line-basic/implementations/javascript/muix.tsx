@@ -18,7 +18,7 @@ const TEMPERATURE = "Daily mean temperature (°C)"; // role: y
 
 // Data: replace this block with your own records, one object per reading
 // Daily mean temperature over eight weeks of early spring from 1 Mar 2026: a seasonal rise
-// of about 0.28 °C per day with day-to-day weather noise.
+// of about 0.14 °C per day with day-to-day weather noise.
 const data = (() => {
   let state = 42;
   const rand = () => {
@@ -27,7 +27,7 @@ const data = (() => {
   };
   return Array.from({ length: 56 }, (_, day) => ({
     [DATE]: new Date(Date.UTC(2026, 2, 1 + day)).toISOString().slice(0, 10),
-    [TEMPERATURE]: Math.round((8 + day * 0.28 + (rand() - 0.5) * 3) * 10) / 10,
+    [TEMPERATURE]: Math.round((8 + day * 0.14 + (rand() - 0.5) * 3) * 10) / 10,
   }));
 })();
 
