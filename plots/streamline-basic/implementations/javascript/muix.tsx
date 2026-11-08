@@ -1,326 +1,336 @@
 // anyplot.ai
 // streamline-basic: Basic Streamline Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-09
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { LinePlot } from "@mui/x-charts/LineChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsText } from "@mui/x-charts/ChartsText";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { useXScale, useYScale, useZAxis } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Electric dipole field: two opposite point charges. Field lines are
-// traced by RK4 arc-length integration of the *unit* field direction (not a
-// closed-form solution) — the canonical "electric/magnetic field line"
-// application called out in the spec. u = Ex/|E|, v = Ey/|E|. -------------
-const CHARGE_POS = { x: -1.1, y: 0, q: 1 };
-const CHARGE_NEG = { x: 1.1, y: 0, q: -1 };
-const EXCLUSION_R = 0.16; // seed/terminate radius around each charge (avoids the 1/r^2 singularity)
+// Constants
+const MASK_CELLS_X = 26; // streamline spacing: one line per mask cell across the x range
+const STEP_SHARE = 0.2; // integration step as a share of a grid cell
+const MAX_STEPS = 1500; // steps per direction from a seed
+const MIN_POINTS = 22; // shorter traces are dropped, so no isolated dashes stay behind
+const SEGMENT_POINTS = 6; // points per coloured piece of a line
+const COHERENT_COS = 0.7; // a cell whose corner directions spread wider than ~45° holds a source, sink or singular point
+const COLOR_QUANTITY = "log₁₀ magnitude"; // what the colour of a line encodes, for any (u, v) field
 
-function fieldAt(x, y) {
-  const dxP = x - CHARGE_POS.x;
-  const dyP = y - CHARGE_POS.y;
-  const dxN = x - CHARGE_NEG.x;
-  const dyN = y - CHARGE_NEG.y;
-  const rP3 = Math.pow(dxP * dxP + dyP * dyP, 1.5) + 1e-6;
-  const rN3 = Math.pow(dxN * dxN + dyN * dyN, 1.5) + 1e-6;
-  return [
-    CHARGE_POS.q * (dxP / rP3) + CHARGE_NEG.q * (dxN / rN3),
-    CHARGE_POS.q * (dyP / rP3) + CHARGE_NEG.q * (dyN / rN3),
+// Columns: set these to your data's column names
+const X = "x (normalized distance)"; // role: x
+const Y = "y (normalized distance)"; // role: y
+const U = "Ex (normalized field)"; // role: u
+const V = "Ey (normalized field)"; // role: v
+
+// Data: replace this block with your own records, one object per row
+// Electric field of a dipole (a positive and a negative unit charge on the x axis),
+// sampled on a 36 x 20 grid; one row per grid point
+const data = (() => {
+  const charges = [
+    { x: -1.1, y: 0, q: 1 },
+    { x: 1.1, y: 0, q: -1 },
   ];
-}
-
-function fieldStep(x, y, h) {
-  const dir = (px, py) => {
-    const [ex, ey] = fieldAt(px, py);
-    const mag = Math.hypot(ex, ey) || 1e-9;
-    return [ex / mag, ey / mag];
-  };
-  const [k1x, k1y] = dir(x, y);
-  const [k2x, k2y] = dir(x + (h / 2) * k1x, y + (h / 2) * k1y);
-  const [k3x, k3y] = dir(x + (h / 2) * k2x, y + (h / 2) * k2y);
-  const [k4x, k4y] = dir(x + h * k3x, y + h * k3y);
-  return [
-    x + (h / 6) * (k1x + 2 * k2x + 2 * k3x + k4x),
-    y + (h / 6) * (k1y + 2 * k2y + 2 * k3y + k4y),
-  ];
-}
-
-const X_BOUND = 4.6;
-const Y_BOUND = 2.55;
-const STEP_LEN = 0.032;
-const MAX_STEPS = 2200;
-
-function traceFieldLine(theta) {
-  let x = CHARGE_POS.x + EXCLUSION_R * Math.cos(theta);
-  let y = CHARGE_POS.y + EXCLUSION_R * Math.sin(theta);
-  const xs = [x];
-  const ys = [y];
-  const mags = [Math.hypot(...fieldAt(x, y))];
-  for (let i = 0; i < MAX_STEPS; i++) {
-    [x, y] = fieldStep(x, y, STEP_LEN);
-    const dSink = Math.hypot(x - CHARGE_NEG.x, y - CHARGE_NEG.y);
-    if (dSink < EXCLUSION_R) {
-      const snap = EXCLUSION_R / dSink;
-      x = CHARGE_NEG.x + (x - CHARGE_NEG.x) * snap;
-      y = CHARGE_NEG.y + (y - CHARGE_NEG.y) * snap;
-      xs.push(x);
-      ys.push(y);
-      mags.push(Math.hypot(...fieldAt(x, y)));
-      break;
+  const rows: Record<string, number>[] = [];
+  for (let j = 0; j < 20; j += 1) {
+    for (let i = 0; i < 36; i += 1) {
+      const x = -4.5 + (i * 9) / 35;
+      const y = -2.5 + (j * 5) / 19;
+      let ex = 0;
+      let ey = 0;
+      for (const c of charges) {
+        const r3 = Math.hypot(x - c.x, y - c.y) ** 3;
+        ex += (c.q * (x - c.x)) / r3;
+        ey += (c.q * (y - c.y)) / r3;
+      }
+      rows.push({
+        [X]: Number(x.toFixed(4)),
+        [Y]: Number(y.toFixed(4)),
+        [U]: Number(ex.toFixed(5)),
+        [V]: Number(ey.toFixed(5)),
+      });
     }
-    if (Math.abs(x) > X_BOUND || Math.abs(y) > Y_BOUND) break;
-    xs.push(x);
-    ys.push(y);
-    mags.push(Math.hypot(...fieldAt(x, y)));
   }
-  return { xs, ys, mags };
-}
+  return rows;
+})();
 
-// 16 seeds evenly spaced around the positive charge, offset by half a step so
-// none lands on the +/-x axis (the exact axis line never curves back and
-// would otherwise run to the domain edge as a degenerate special case).
-const LINE_COUNT = 16;
-const rawLines = Array.from({ length: LINE_COUNT }, (_, k) =>
-  traceFieldLine(((k + 0.5) / LINE_COUNT) * 2 * Math.PI),
+// Plot: reads only data and the constants above
+// The long grid table becomes U and V matrices on the sorted unique x and y values
+const gx = [...new Set(data.map((d) => d[X]))].sort((a, b) => a - b);
+const gy = [...new Set(data.map((d) => d[Y]))].sort((a, b) => a - b);
+const nx = gx.length;
+const ny = gy.length;
+const colOf = new Map(gx.map((v, i) => [v, i]));
+const rowOf = new Map(gy.map((v, j) => [v, j]));
+const Ugrid = gy.map(() => new Array(nx).fill(NaN));
+const Vgrid = gy.map(() => new Array(nx).fill(NaN));
+for (const d of data) {
+  Ugrid[rowOf.get(d[Y]) as number][colOf.get(d[X]) as number] = d[U];
+  Vgrid[rowOf.get(d[Y]) as number][colOf.get(d[X]) as number] = d[V];
+}
+const xMin = gx[0];
+const xMax = gx[nx - 1];
+const yMin = gy[0];
+const yMax = gy[ny - 1];
+const cellX = (xMax - xMin) / (nx - 1);
+const cellY = (yMax - yMin) / (ny - 1);
+const step = STEP_SHARE * Math.min(cellX, cellY);
+
+// Cells where the field direction is coherent; lines stop before entering any other cell
+const coherent = Array.from({ length: ny - 1 }, (_, j) =>
+  Array.from({ length: nx - 1 }, (_, i) => {
+    const corners = [
+      [Ugrid[j][i], Vgrid[j][i]],
+      [Ugrid[j][i + 1], Vgrid[j][i + 1]],
+      [Ugrid[j + 1][i], Vgrid[j + 1][i]],
+      [Ugrid[j + 1][i + 1], Vgrid[j + 1][i + 1]],
+    ].map(([u, v]) => [u / Math.hypot(u, v), v / Math.hypot(u, v)]);
+    const mx = corners.reduce((acc, c) => acc + c[0], 0);
+    const my = corners.reduce((acc, c) => acc + c[1], 0);
+    const mLen = Math.hypot(mx, my);
+    return corners.every((c) => (c[0] * mx + c[1] * my) / mLen >= COHERENT_COS);
+  }),
 );
 
-// --- Color-by-magnitude: MUI X has no per-vertex line coloring, so each
-// field line is chopped into fixed sub-segments (own xAxisId + series) and
-// each segment gets one solid color from imprint_seq, driven by its average
-// log-magnitude — a discretized stand-in for a continuous "speed" colormap.
-const allLogMags = rawLines.flatMap((l) => l.mags.map((m) => Math.log10(m + 1e-6)));
-const LOG_MIN = Math.min(...allLogMags);
-const LOG_MAX = Math.max(...allLogMags);
-
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function lerpColor(hexA, hexB, f) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  const c = a.map((v, i) => Math.round(v + (b[i] - v) * Math.min(1, Math.max(0, f))));
-  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
-}
-
-const SEGMENTS_PER_LINE = 5;
-let axisCounter = 0;
-const segments = [];
-const arrowSpecs = [];
-
-for (const line of rawLines) {
-  const n = line.xs.length;
-  const segLen = Math.max(1, Math.floor((n - 1) / SEGMENTS_PER_LINE));
-  const lineSegments = [];
-  for (let s = 0; s < SEGMENTS_PER_LINE; s++) {
-    const start = s * segLen;
-    const end = s === SEGMENTS_PER_LINE - 1 ? n - 1 : (s + 1) * segLen;
-    if (end <= start) continue;
-    const segMags = line.mags.slice(start, end + 1);
-    const avgLogMag = segMags.reduce((acc, m) => acc + Math.log10(m + 1e-6), 0) / segMags.length;
-    const norm = LOG_MAX > LOG_MIN ? (avgLogMag - LOG_MIN) / (LOG_MAX - LOG_MIN) : 0.5;
-    const segment = {
-      axisId: `fl-${axisCounter++}`,
-      xs: line.xs.slice(start, end + 1),
-      ys: line.ys.slice(start, end + 1),
-      color: lerpColor(t.seq[0], t.seq[1], norm),
-    };
-    segments.push(segment);
-    lineSegments.push(segment);
+// Streamlines, as in a streamplot: seeds from the border inward, each traced both ways along the
+// unit field direction (midpoint rule on the bilinear field), stopping at the edge, at a reversal
+// (a source or sink), or where it enters a mask cell another line already holds
+const maskNx = MASK_CELLS_X;
+const maskNy = Math.max(2, Math.round((MASK_CELLS_X * (yMax - yMin)) / (xMax - xMin)));
+const maskW = (xMax - xMin) / maskNx;
+const maskH = (yMax - yMin) / maskNy;
+const occupied = new Uint8Array(maskNx * maskNy);
+const ring = Array.from({ length: maskNx * maskNy }, (_, k) =>
+  Math.min(k % maskNx, maskNx - 1 - (k % maskNx), Math.floor(k / maskNx), maskNy - 1 - Math.floor(k / maskNx)),
+);
+const seeds = ring.map((_, k) => k).sort((a, b) => ring[a] - ring[b] || a - b);
+const lines: { x: number; y: number; s: number }[][] = [];
+for (const seed of seeds) {
+  if (occupied[seed]) continue;
+  occupied[seed] = 1;
+  const claimed = [seed];
+  const halves: { x: number; y: number; s: number }[][] = [];
+  for (const sign of [1, -1]) {
+    const pts: { x: number; y: number; s: number }[] = [];
+    let px = xMin + ((seed % maskNx) + 0.5) * maskW;
+    let py = yMin + (Math.floor(seed / maskNx) + 0.5) * maskH;
+    let qx = px;
+    let qy = py;
+    let midStage = false;
+    let prevDx = 0;
+    let prevDy = 0;
+    let cell = seed;
+    for (let n = 0; n < 2 * MAX_STEPS; n += 1) {
+      const fi = (qx - xMin) / cellX;
+      const fj = (qy - yMin) / cellY;
+      const i0 = Math.min(Math.max(Math.floor(fi), 0), nx - 2);
+      const j0 = Math.min(Math.max(Math.floor(fj), 0), ny - 2);
+      const ax = fi - i0;
+      const ay = fj - j0;
+      const fu =
+        Ugrid[j0][i0] * (1 - ax) * (1 - ay) + Ugrid[j0][i0 + 1] * ax * (1 - ay) +
+        Ugrid[j0 + 1][i0] * (1 - ax) * ay + Ugrid[j0 + 1][i0 + 1] * ax * ay;
+      const fv =
+        Vgrid[j0][i0] * (1 - ax) * (1 - ay) + Vgrid[j0][i0 + 1] * ax * (1 - ay) +
+        Vgrid[j0 + 1][i0] * (1 - ax) * ay + Vgrid[j0 + 1][i0 + 1] * ax * ay;
+      const mag = Math.hypot(fu, fv);
+      if (!(mag > 0) || !coherent[j0][i0]) break;
+      const dx = (sign * fu) / mag;
+      const dy = (sign * fv) / mag;
+      if (!midStage) {
+        if (pts.length > 0 && dx * prevDx + dy * prevDy < 0) break;
+        pts.push({ x: px, y: py, s: Math.log10(mag) });
+        prevDx = dx;
+        prevDy = dy;
+        qx = px + (step / 2) * dx;
+        qy = py + (step / 2) * dy;
+        midStage = true;
+      } else {
+        px += step * dx;
+        py += step * dy;
+        qx = px;
+        qy = py;
+        midStage = false;
+        if (px < xMin || px > xMax || py < yMin || py > yMax) break;
+        const c =
+          Math.min(maskNy - 1, Math.floor((py - yMin) / maskH)) * maskNx + Math.min(maskNx - 1, Math.floor((px - xMin) / maskW));
+        if (c !== cell) {
+          if (occupied[c]) break;
+          occupied[c] = 1;
+          claimed.push(c);
+          cell = c;
+        }
+      }
+    }
+    halves.push(pts);
   }
-  // Direction arrows at two points along the raw path, colored to match the
-  // local field-strength segment they fall in.
-  if (n > 12 && lineSegments.length > 0) {
-    [0.15, 0.42, 0.72].forEach((frac) => {
-      const idx = Math.min(n - 3, Math.max(2, Math.round(frac * (n - 1))));
-      const segIdx = Math.min(lineSegments.length - 1, Math.floor(idx / segLen));
-      const segment = lineSegments[segIdx];
-      arrowSpecs.push({
-        x0: line.xs[idx],
-        y0: line.ys[idx],
-        x1: line.xs[idx + 2],
-        y1: line.ys[idx + 2],
-        color: segment.color,
-      });
-    });
+  const line = [...halves[1].slice(1).reverse(), ...halves[0]];
+  if (line.length < MIN_POINTS) {
+    for (const c of claimed) occupied[c] = 0;
+    continue;
   }
+  lines.push(line);
 }
+const logSpeeds = lines.flatMap((l) => l.map((p) => p.s));
+const speedMin = Math.min(...logSpeeds);
+const speedMax = Math.max(...logSpeeds);
 
-const SHARED_AXIS_ID = segments[0].axisId; // every xAxis shares the same explicit
-// [X_MIN, X_MAX] linear domain, so any one of them maps data->pixels for all lines.
+const TITLE = "streamline-basic · javascript · muix · anyplot.ai";
+const [uName, vName] = [U, V].map((name) => name.replace(/\s*\([^)]*\)/, ""));
+const fieldUnit = U.match(/\(([^)]+)\)/)?.[1];
+const SUBTITLE = `${lines.length} streamlines traced through a ${nx} × ${ny} grid of (${uName}, ${vName})${fieldUnit ? `, ${fieldUnit}` : ""}`;
+const HEADER_H = 76;
+const LEGEND_H = 44;
+const X_BAND = 64;
+const Y_BAND = 72;
 
-// Display domain is tighter than the integration bound X_BOUND on the right:
-// this dipole's field lines either loop between the two charges or escape
-// toward -x, so nothing ever occupies the right two-thirds of a symmetric
-// domain — cropping it there fills the canvas instead of framing empty space.
-const X_MIN = -X_BOUND;
-const X_MAX = 2.0;
-const Y_MIN = -Y_BOUND;
-const Y_MAX = Y_BOUND;
-
-const TITLE = "Electric Dipole Field Lines · streamline-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
-
-const MARGIN = { top: 30, bottom: 90, left: 100, right: 60 };
-
-function arrowPoints(cx, cy, angle, size) {
-  const backAngle = angle + Math.PI;
-  const spread = 0.48;
-  const tip = [cx + Math.cos(angle) * size, cy + Math.sin(angle) * size];
-  const left = [cx + Math.cos(backAngle - spread) * size, cy + Math.sin(backAngle - spread) * size];
-  const right = [cx + Math.cos(backAngle + spread) * size, cy + Math.sin(backAngle + spread) * size];
-  return `${tip.join(",")} ${left.join(",")} ${right.join(",")}`;
-}
-
-// --- Custom overlay: charge markers, direction arrowheads, and a manual
-// field-strength gradient legend (community x-charts has no bound color-axis
-// legend wired for a line chart, so the swatch is drawn directly). ----------
-function FieldOverlay() {
-  const xScale = useXScale(SHARED_AXIS_ID);
-  const yScale = useYScale();
-  const area = useDrawingArea();
-
-  const posPx = { x: xScale(CHARGE_POS.x), y: yScale(CHARGE_POS.y) };
-  const negPx = { x: xScale(CHARGE_NEG.x), y: yScale(CHARGE_NEG.y) };
-
-  const legendW = 190;
-  const legendH = 14;
-  const legendX = area.left + area.width - legendW - 18;
-  const legendY = area.top + 16;
-
+// Each streamline in short pieces coloured by the field magnitude, with one arrow at its middle
+function Streamlines() {
+  const xs = useXScale() as (v: number) => number;
+  const ys = useYScale() as (v: number) => number;
+  const colorScale = useZAxis("speed").colorScale as (v: number) => string;
   return (
-    <g>
-      {arrowSpecs.map((a, i) => {
-        const p0 = { x: xScale(a.x0), y: yScale(a.y0) };
-        const p1 = { x: xScale(a.x1), y: yScale(a.y1) };
-        const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+    <g fill="none" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+      {lines.map((line, li) => {
+        const pieces = [];
+        for (let k = 0; k < line.length - 1; k += SEGMENT_POINTS) {
+          const piece = line.slice(k, k + SEGMENT_POINTS + 1);
+          const meanS = piece.reduce((acc, p) => acc + p.s, 0) / piece.length;
+          pieces.push(
+            <path
+              key={`${li}-${k}`}
+              d={`M${piece.map((p) => `${xs(p.x)} ${ys(p.y)}`).join(" L")}`}
+              stroke={colorScale(meanS)}
+            />,
+          );
+        }
+        const mid = Math.floor(line.length / 2);
+        const ax = xs(line[mid].x);
+        const ay = ys(line[mid].y);
+        const angle = Math.atan2(ys(line[mid + 1].y) - ay, xs(line[mid + 1].x) - ax);
+        const arrow = [
+          [ax + 10 * Math.cos(angle), ay + 10 * Math.sin(angle)],
+          [ax + 8 * Math.cos(angle + Math.PI - 0.5), ay + 8 * Math.sin(angle + Math.PI - 0.5)],
+          [ax + 8 * Math.cos(angle + Math.PI + 0.5), ay + 8 * Math.sin(angle + Math.PI + 0.5)],
+        ]
+          .map((p) => p.join(","))
+          .join(" ");
         return (
-          <polygon
-            key={i}
-            points={arrowPoints(p0.x, p0.y, angle, 11)}
-            fill={a.color}
-            stroke={t.pageBg}
-            strokeWidth={1}
-          />
+          <g key={`line-${li}`}>
+            {pieces}
+            <polygon points={arrow} fill={colorScale(line[mid].s)} stroke="none" />
+          </g>
         );
       })}
-
-      <circle cx={posPx.x} cy={posPx.y} r={17} fill={t.ink} stroke={t.pageBg} strokeWidth={2.5} />
-      <ChartsText
-        x={posPx.x}
-        y={posPx.y}
-        text="+"
-        style={{ fontSize: 20, fontWeight: 700, fill: t.pageBg, textAnchor: "middle", dominantBaseline: "central" }}
-      />
-      <circle cx={negPx.x} cy={negPx.y} r={17} fill={t.ink} stroke={t.pageBg} strokeWidth={2.5} />
-      <ChartsText
-        x={negPx.x}
-        y={negPx.y}
-        text="−"
-        style={{ fontSize: 20, fontWeight: 700, fill: t.pageBg, textAnchor: "middle", dominantBaseline: "central" }}
-      />
-
-      <defs>
-        <linearGradient id="streamline-strength-grad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={t.seq[0]} />
-          <stop offset="100%" stopColor={t.seq[1]} />
-        </linearGradient>
-      </defs>
-      <ChartsText
-        x={legendX + legendW / 2}
-        y={legendY - 14}
-        text="Field strength"
-        style={{ fontSize: 14, fill: t.inkSoft, textAnchor: "middle", dominantBaseline: "central" }}
-      />
-      <rect x={legendX} y={legendY} width={legendW} height={legendH} rx={3} fill="url(#streamline-strength-grad)" />
-      <ChartsText
-        x={legendX}
-        y={legendY + legendH + 14}
-        text="weak"
-        style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "start", dominantBaseline: "central" }}
-      />
-      <ChartsText
-        x={legendX + legendW}
-        y={legendY + legendH + 14}
-        text="strong"
-        style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "end", dominantBaseline: "central" }}
-      />
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width: W, height: H } = window.ANYPLOT_SIZE;
+  const chartH = H - HEADER_H - LEGEND_H;
+  // One unit of x and of y take the same number of pixels, so the field keeps its geometry
+  const availW = W - Y_BAND - 64;
+  const availH = chartH - X_BAND - 24;
+  const pxPerUnit = Math.min(availW / (xMax - xMin), availH / (yMax - yMin));
+  const drawW = pxPerUnit * (xMax - xMin);
+  const drawH = pxPerUnit * (yMax - yMin);
+  const left = (W - Y_BAND - drawW) / 2;
+  const top = (chartH - X_BAND - drawH) / 2;
+
   return (
-    <div
-      style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div style={{ width: W, height: H, background: t.pageBg, display: "flex", flexDirection: "column" }}>
       <div
         style={{
-          height: TITLE_HEIGHT,
+          height: HEADER_H,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: TITLE_FONT_SIZE,
-          fontWeight: 500,
-          color: t.ink,
+          gap: 6,
         }}
       >
-        {TITLE}
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
-        height={window.ANYPLOT_SIZE.height - TITLE_HEIGHT}
-        margin={MARGIN}
+      <ChartsDataProvider
+        width={W}
+        height={chartH}
         skipAnimation
-        sx={{
-          ".MuiLineElement-root": { strokeWidth: 2.75, strokeLinecap: "round" },
-          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 0.75 },
-        }}
-        xAxis={segments.map((seg) => ({
-          id: seg.axisId,
-          scaleType: "linear",
-          data: seg.xs,
-          min: X_MIN,
-          max: X_MAX,
-        }))}
-        yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX }]}
-        series={segments.map((seg) => ({
-          type: "line",
-          data: seg.ys,
-          xAxisId: seg.axisId,
-          color: seg.color,
-          curve: "linear",
-          showMark: false,
-        }))}
+        margin={{ top, bottom: top, left, right: left }}
+        series={[]}
+        xAxis={[
+          {
+            id: "x",
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            label: X,
+            height: X_BAND,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "y",
+            scaleType: "linear",
+            min: yMin,
+            max: yMax,
+            label: Y,
+            width: Y_BAND,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        zAxis={[
+          {
+            id: "speed",
+            colorMap: { type: "continuous", min: speedMin, max: speedMax, color: [t.seq[0], t.seq[1]] },
+          },
+        ]}
       >
-        <ChartsGrid horizontal />
-        <LinePlot />
-        <FieldOverlay />
-        <ChartsXAxis
-          axisId={SHARED_AXIS_ID}
-          label="x (normalized distance)"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-        <ChartsYAxis
-          label="y (normalized distance)"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-      </ChartContainer>
+        <div
+          style={{
+            height: LEGEND_H,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 14,
+            paddingRight: left,
+            color: t.inkSoft,
+            fontSize: 15,
+          }}
+        >
+          <span>{COLOR_QUANTITY}</span>
+          <ContinuousColorLegend
+            axisDirection="z"
+            axisId="speed"
+            direction="horizontal"
+            thickness={14}
+            labelPosition="end"
+            minLabel={({ value }) => (value as number).toFixed(1)}
+            maxLabel={({ value }) => (value as number).toFixed(1)}
+            sx={{ width: 280, fontSize: 14, color: t.inkSoft }}
+          />
+        </div>
+        <ChartsSurface
+          sx={{
+            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+            "& .MuiChartsGrid-line": { stroke: t.grid },
+          }}
+        >
+          <ChartsGrid horizontal vertical />
+          <Streamlines />
+          <ChartsXAxis />
+          <ChartsYAxis />
+        </ChartsSurface>
+      </ChartsDataProvider>
     </div>
   );
 }
