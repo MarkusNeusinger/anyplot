@@ -4,7 +4,7 @@
 // Quality: 90/100 | Created: 2026-08-20
 //# anyplot-orientation: square
 
-import { RadarChart, RadarAxis } from "@mui/x-charts/RadarChart";
+import { RadarChart, RadarAxis, RadarSeriesArea, RadarSeriesMarks } from "@mui/x-charts/RadarChart";
 import { usePolarGeometry, useRadiusAxes } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -12,7 +12,8 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const SCALE_MAX = 100; // the 0–100 rating scale the spec recommends
 const RINGS = 5; // gridlines at every fifth of the scale: 20, 40, 60, 80, 100
-const CALLOUT_RADIUS = 1.12; // the callout box centre, as a share of the outer ring's radius
+const CALLOUT_GAP = 14; // px between the callout box and the outer ring's edge
+const CALLOUT_H = 52; // callout box height, px
 const TITLE_H = 48;
 const SUBTITLE_H = 28;
 const LEGEND_H = 48;
@@ -72,18 +73,22 @@ function WidestLead() {
   const radius = radiusAxis[widest.feature].scale(widest.leader.score);
   const outer = radiusAxis[widest.feature].scale(SCALE_MAX);
   const [vx, vy] = polar.point(radius, angle);
-  // The box sits outside the outer ring, half a spoke counter-clockwise, clear of every polygon
-  const [bx, by] = polar.point(outer * CALLOUT_RADIUS, angle - Math.PI / features.length);
   const color = t.palette[models.indexOf(widest.leader.model)];
   const line1 = `Widest lead: ${widest.feature}`;
   const line2 = `${widest.leader.model} ${widest.leader.score} vs ${widest.runnerUp.model} ${widest.runnerUp.score}`;
   const boxW = Math.max(line1.length * 8.6, line2.length * 7.6) + 28;
+  // The box sits on the bisector half a spoke counter-clockwise, pushed out until its nearest
+  // corner clears the outer ring's edge (which lies at cos(pi / n) of the ring radius there)
+  const bisector = angle - Math.PI / features.length;
+  const [ux, uy] = polar.point(1, bisector);
+  const reach = (boxW / 2) * Math.abs(ux) + (CALLOUT_H / 2) * Math.abs(uy);
+  const [bx, by] = polar.point(outer * Math.cos(Math.PI / features.length) + reach + CALLOUT_GAP, bisector);
   return (
     <g>
       <circle cx={polar.cx + vx} cy={polar.cy + vy} r={12} fill="none" stroke={color} strokeWidth={2.5} />
       <line
         x1={polar.cx + bx}
-        y1={polar.cy + by + (vy < by ? -26 : 26)}
+        y1={polar.cy + by + (vy < by ? -CALLOUT_H / 2 : CALLOUT_H / 2)}
         x2={polar.cx + vx}
         y2={polar.cy + vy + (vy < by ? 12 : -12)}
         stroke={color}
@@ -92,9 +97,9 @@ function WidestLead() {
       />
       <rect
         x={polar.cx + bx - boxW / 2}
-        y={polar.cy + by - 26}
+        y={polar.cy + by - CALLOUT_H / 2}
         width={boxW}
-        height={52}
+        height={CALLOUT_H}
         rx={8}
         fill={t.pageBg}
         fillOpacity={0.9}
@@ -141,7 +146,9 @@ export default function Chart() {
         }}
         sx={{
           "& .MuiRadarChart-gridRadial, & .MuiRadarChart-gridDivider": { stroke: t.grid, strokeOpacity: 1, strokeWidth: 1.5 },
-          "& .MuiRadarChart-seriesArea": { fillOpacity: 0.22, strokeWidth: 3, strokeLinejoin: "round" },
+          // The chart's own areas carry only the fills; the outlines are drawn in a second pass
+          // above every fill, so no series' fill tints another series' outline
+          "& .MuiRadarChart-seriesArea": { fillOpacity: 0.22, strokeWidth: 0 },
           "& .MuiRadarChart-seriesMark": { r: 5.5, stroke: t.pageBg, strokeWidth: 2 },
           "& .MuiRadarChart-axisLine": { stroke: "none" },
           "& .MuiRadarChart-axisLabel": {
@@ -156,6 +163,8 @@ export default function Chart() {
           "& .MuiChartsSvgLayer-root > text": { fontSize: "17px !important", fontWeight: "600 !important" },
         }}
       >
+        <RadarSeriesArea className="radar-outline" fill="none" strokeWidth={3} strokeLinejoin="round" />
+        <RadarSeriesMarks />
         <RadarAxis metric={features[0]} divisions={RINGS} labelOrientation="horizontal" textAnchor="start" />
         <WidestLead />
       </RadarChart>
