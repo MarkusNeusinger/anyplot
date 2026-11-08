@@ -1,7 +1,7 @@
 // anyplot.ai
 // radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 87/100 | Updated: 2026-11-08
+// Quality: 88/100 | Updated: 2026-11-08
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";

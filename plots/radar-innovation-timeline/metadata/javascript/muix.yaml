@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: radar-innovation-timeline
 created: '2026-08-26T10:01:12Z'
-updated: '2026-11-08T04:21:21Z'
+updated: '2026-11-08T04:27:48Z'
 generated_by: claude-opus-5-5
 adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
 workflow_run: 42446157332
@@ -13,45 +13,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Half-circle radar with the open lower half used for mirrored ring names and the
-    legend, exactly as the spec's layout asks
-  - Native ScatterPlot series rendered inside ChartsSurface next to a custom SVG frame
-    drawn with useXScale/useYScale, so the rings, spokes and labels share the chart's
-    coordinate system and the HTML keeps MUI X tooltips
-  - Label placement searches eight slots per marker, avoiding markers, headers, ring
-    names and earlier labels, while markers stay in their cells
-  - Halo-stroked item labels (page-colored stroke) and alternating subtle ring fills
-    keep text readable over arcs in both themes
+  - 'Composes the radar from MUI X building blocks: ChartsDataProvider + ChartsSurface
+    with a custom RadarFrame layer drawn through useXScale/useYScale, so the ring
+    bands, arcs and spokes share the scatter''s coordinate system and the native ScatterPlot
+    and ChartsLegend stay intact'
+  - Half-circle layout opens downward onto the baseline, with the ring names mirrored
+    under both halves of the baseline and the native legend in the open space below,
+    matching the spec's layout bullet
+  - Every item sits inside its own ring/sector cell (fanned evenly across the sector
+    and stepped across the ring band), and labels are placed by a slot search that
+    avoids markers, headers, ring names and other labels; no label collides in either
+    render
+  - Alternating subtle ring fills from inkSoft at 5%/10% opacity plus a heavier outer
+    arc and baseline give the time horizons clear separation without competing with
+    the data
+  - Labels carry a page-colored halo (paintOrder stroke), so they stay readable over
+    spokes and arcs in both themes
+  - Data colors come straight from the Imprint palette by sector index (#009E73 first)
+    and are identical in both renders; all chrome is threaded through ink/inkSoft/grid/pageBg
+    tokens
+  - skipAnimation set on the data provider; native scatter tooltips by item name remain
+    available in the HTML output
   weaknesses:
-  - 'VQ-02 (both): in the Now ring the ''AI Threat Detection'' label (Security marker)
-    reaches left across the vertical spoke and sits about 14 px above ''Serverless
-    Functions'', so it reads as part of the Cloud Infra cluster → place it on the
-    marker''s outer (right) side or below it, kept on its own side of the spoke. Likely
-    cause: the slot score in the labels block counts spoke crossings only as a tie-breaker
-    after clash area, so a left slot that crosses the spoke wins once the right slot
-    touches the ''Zero Trust Access'' label box.'
-  - 'Suggestion: a heavier or tinted label for the Now-ring items could give the radar
-    a focal point on what to adopt first.'
-  - 'Suggestion: the near-synonymous ''Passwordless Auth'' and ''Passkeys Everywhere''
-    could be replaced by two clearly distinct security items.'
+  - 'Suggestion: a few labels (Zero Trust Access, AI Threat Detection, Serverless
+    Functions) run across a sector spoke into the neighbouring sector; preferring
+    the inward or above slot for those markers would keep each label visually inside
+    its own sector.'
+  - 'Suggestion: the band between the subtitle and the outer arc is fairly tall; the
+    half circle could grow slightly to use it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1; the four ring bands carry alternating subtle ink-soft fills.
-      Chrome: centered bold title 'radar-innovation-timeline · javascript · muix · anyplot.ai' with a muted subtitle '25 items · 4 rings, nearest horizon at the center · 4 sectors'; bold dark sector headers (AI & ML, Cloud Infra, Security, Green Tech) just outside the outer arc; ring names (Now (0–6 mo) … Future (3+ yr)) mirrored below the baseline on both sides; legend centered at the bottom. All text dark and readable.
-      Data: 25 circle markers with a page-colored outline, AI & ML in #009E73, Cloud Infra #C475FD, Security #4467A3, Green Tech #BD8233; each item named beside its marker, no text collisions; the Now ring is the most crowded, where 'AI Threat Detection' stretches across the vertical spoke.
+      Background: warm off-white #FAF8F1 page, 3200x1800.
+      Chrome: centered bold title "radar-innovation-timeline · javascript · muix · anyplot.ai" with a gray subtitle "25 items · 4 rings, nearest horizon at the center · 4 sectors"; a half circle on its baseline split into four equal sectors by thin gray spokes, with bold dark sector headers (AI & ML, Cloud Infra, Security, Green Tech) just outside the outer arc; four concentric ring bands with alternating subtle warm-gray fills and thin boundary arcs, a darker outer arc and baseline; ring names (Now (0–6 mo), Near-Term (6–18 mo), Mid-Term (18–36 mo), Future (3+ yr)) mirrored under both halves of the baseline, nearest horizon innermost. All text is dark on light and readable.
+      Data: 25 circular markers with a page-colored outline, colored by sector — AI & ML #009E73 green, Cloud Infra purple, Security blue, Green Tech ochre — each inside its own ring/sector cell with its name beside it in dark text with a page-colored halo; no label collides with another label, a marker, a header or a ring name. Native MUI X legend centered at the bottom with circle glyphs.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 with the same subtle alternating ring fills.
-      Chrome: title, headers, item labels and legend in light ink, ring names and subtitle in muted light grey, arcs and spokes subtle grey, outer arc and baseline brighter. No dark-on-dark text.
-      Data: marker colors identical to the light render; brand green clearly visible; marker outlines switch to the dark page color.
+      Background: warm near-black #1A1A17.
+      Chrome: title, sector headers and item labels flip to light ink, subtitle and ring names to light gray; ring fills become subtle light-gray tints, arcs and spokes muted gray, the outer arc and baseline light gray. No dark-on-dark text anywhere.
+      Data: marker colors identical to the light render (green, purple, blue, ochre); marker outlines switch to the dark page color; legend text light and glyphs visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,51 +66,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, sector headers 18 px bold, item labels 14 px with page-colored
-          halo, ring names 14 px semibold; all readable in both themes
+        comment: Title 22 px, headers 18 px bold, labels/ring names 14 px in the 1600x900
+          mount; all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collides, but in the crowded Now ring the 'AI Threat Detection'
-          label reaches across the vertical spoke and stacks directly above 'Serverless
-          Functions', reading as part of the Cloud Infra cluster (defect line)
+        comment: Slot-search placement keeps all 25 labels clear of each other, markers,
+          headers and ring names
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 25 sparse markers at radius 8 with a page-colored outline, clearly
-          visible; legend circles match the marks in both themes
+        comment: 8 px markers with page-colored outline suit 25 sparse items; legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, purple, blue and ochre are well separated; sectors are also
-          separated by position
+        comment: Green/purple/blue/ochre are CVD-distinguishable; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Half circle fills the canvas width with balanced margins; legend
-          below the baseline in the open half; nothing clipped
+        comment: 3200x1800 canvas, half circle centered with legend below, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes; ring names carry their time units (mo / yr), sector headers
-          are descriptive
+        comment: Ring names carry month/year ranges; sector headers readable names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette in canonical order from t.palette, first series
-          #009E73; backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'Imprint positions 1-4 in order, #009E73 first; correct backgrounds
+          in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -113,24 +118,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Typographic hierarchy decided for this chart: bold sector headers,
-          semibold muted ring names, halo-stroked item labels, a muted subtitle stating
-          the reading rule'
+        comment: 'Typographic hierarchy decided beyond baseline: bold 18 px sector
+          headers, semi-bold muted ring names, halo-stroked item labels'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Alternating subtle ring band fills, heavier outer arc and baseline
-          than inner arcs, ring names mirrored on both sides of the baseline, label
-          slots chosen to cross the fewest arcs and spokes
+        comment: Ring names mirrored under both baseline halves, heavier outer arc/baseline
+          framing lighter inner arcs, label halos over spokes
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no focal point or hierarchy chosen beyond
-          the spec
+        comment: Data displayed clearly; no focal hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -140,31 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Half-circle innovation radar with concentric time-horizon rings and
-          angular sectors
+        comment: Half-circle innovation radar with time-horizon rings and sectors
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and ''A good version shows'' bullets met: 180-degree layout
-          with the open half for the legend, labeled ring boundaries nearest innermost,
-          equal sectors with outer-edge headers, color by sector with legend, subtle
-          ring fills, labels beside markers apart from headers and ring names'
+        comment: Half circle with open area for legend; labeled concentric rings nearest
+          innermost; equal sectors with outer headers; color by sector with legend;
+          subtle ring fills; every item labeled and labels kept apart
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; every marker sits inside its own ring/sector
-          cell (checked the Now-ring cluster near the spokes)
+        comment: Each item inside its own ring/sector cell; intra-cell position is
+          layout, not data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'radar-innovation-timeline · javascript · muix · anyplot.ai';
-          legend entries are the sector names
+        comment: Correct title format; legend entries match sector names
     data_quality:
       score: 15
       max: 15
@@ -174,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 25 items over 4 rings and 4 sectors, with single- and multi-item
-          cells
+        comment: 25 items, 4 rings, 4 sectors; cells with one and two items across
+          every ring
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral technology-strategy radar (AI & ML, Cloud Infra, Security,
-          Green Tech)
+        comment: Plausible technology radar (LLM fine-tuning, passkeys, post-quantum
+          crypto, direct air capture), neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Horizon assignments are plausible (Zero Trust now, post-quantum crypto
-          mid-term, fusion pilots future); no Check values in the spec
+        comment: Horizon assignments plausible (e.g. fusion pilots and neuromorphic
+          chips in Future); spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -199,8 +198,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module-level computation; the RadarFrame component exists only
-          because the scale hooks need a component inside the provider
+        comment: Flat module-level data prep; only the React component needed for
+          the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,21 +211,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All six imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Label slot search is the smart label placement the Notes ask for;
-          no library call replaces it
+        comment: Label slot search is the only route to non-overlapping labels; no
+          library call replaces it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          v9 composition API (ChartsDataProvider / ChartsWrapper / ChartsSurface)
+        comment: Default-exported component, MUI X v9 composition API, skipAnimation
+          set
     library_mastery:
       score: 7
       max: 10
@@ -236,32 +235,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API with native ScatterPlot series and ChartsLegend;
-          marker styling via the .MuiScatterChart-marker class
+        comment: Uses the composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface/ChartsLegend/ScatterPlot)
+          rather than a monolithic chart
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG layer drawn inside ChartsSurface through useXScale/useYScale,
-          sharing the chart's coordinate space with the native scatter and its HTML
-          tooltips
-  verdict: REJECTED
+        comment: Custom SVG layer via useXScale/useYScale hooks inside ChartsSurface,
+          sx-targeted MuiScatterChart-marker styling, native legend and tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T04:18:26Z'
+  rendered_at: '2026-11-08T04:24:52Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - annotations
   - layer-composition
+  - patches
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
   - edge-highlighting
