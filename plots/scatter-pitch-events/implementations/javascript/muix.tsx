@@ -38,6 +38,11 @@ const MARKER_SHAPES = [
 ];
 const FILLED_OUTCOME = "Successful"; // the spec's outcome levels: this one is drawn filled, any other hollow
 const MARKER_RADIUS = 8; // px
+// The spec asks for a white pitch with contrasting lines in both themes, so the pitch keeps the
+// light theme's elevated surface and soft ink in either theme instead of flipping with the page
+const PITCH_SURFACE = "#FFFDF6";
+const PITCH_INK = "#4A4A44";
+const RUN_OFF_TINT = 0.15; // opacity of the ink wash that sets the run-off apart from the pitch
 
 // Columns: set these to your data's column names
 const X = "x (m)"; // role: x
@@ -139,7 +144,7 @@ const areaWidth = (areaHeight * domainLength) / domainWidth;
 const marginX = (chartWidth - areaWidth) / 2;
 const marginY = (chartHeight - areaHeight) / 2;
 
-const line = { fill: "none", stroke: t.inkSoft, strokeWidth: 2 };
+const line = { fill: "none", stroke: PITCH_INK, strokeWidth: 2 };
 
 function PitchMarkings() {
   const { left, top, width, height } = useDrawingArea();
@@ -149,12 +154,13 @@ function PitchMarkings() {
   const midY = PITCH_WIDTH / 2;
   return (
     <g>
-      <rect x={left} y={top} width={width} height={height} fill={t.grid} />
-      <rect x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} fill={t.elevatedBg} />
+      <rect x={left} y={top} width={width} height={height} fill={PITCH_SURFACE} />
+      <rect x={left} y={top} width={width} height={height} fill={PITCH_INK} fillOpacity={RUN_OFF_TINT} />
+      <rect x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} fill={PITCH_SURFACE} />
       <rect {...line} x={xs(0)} y={ys(PITCH_WIDTH)} width={PITCH_LENGTH * k} height={PITCH_WIDTH * k} />
       <line {...line} x1={xs(PITCH_LENGTH / 2)} y1={ys(0)} x2={xs(PITCH_LENGTH / 2)} y2={ys(PITCH_WIDTH)} />
       <circle {...line} cx={xs(PITCH_LENGTH / 2)} cy={ys(midY)} r={CENTRE_CIRCLE_RADIUS * k} />
-      <circle cx={xs(PITCH_LENGTH / 2)} cy={ys(midY)} r={3.5} fill={t.inkSoft} />
+      <circle cx={xs(PITCH_LENGTH / 2)} cy={ys(midY)} r={3.5} fill={PITCH_INK} />
       {[0, PITCH_LENGTH].map((goalLine) => {
         const inward = goalLine === 0 ? 1 : -1;
         const spotX = goalLine + inward * PENALTY_SPOT_DISTANCE;
@@ -183,7 +189,7 @@ function PitchMarkings() {
               width={GOAL_DEPTH * k}
               height={GOAL_WIDTH * k}
             />
-            <circle cx={xs(spotX)} cy={ys(midY)} r={3} fill={t.inkSoft} />
+            <circle cx={xs(spotX)} cy={ys(midY)} r={3} fill={PITCH_INK} />
             {/* Penalty arc: the part of the 9.15 m circle around the spot that lies outside the box */}
             <path
               {...line}
@@ -245,8 +251,8 @@ function EventLayer() {
           d={e.shape}
           transform={`translate(${xs(e.x)} ${ys(e.y)}) scale(${MARKER_RADIUS})`}
           vectorEffect="non-scaling-stroke"
-          fill={e.filled ? e.color : t.elevatedBg}
-          stroke={e.filled ? t.elevatedBg : e.color}
+          fill={e.filled ? e.color : PITCH_SURFACE}
+          stroke={e.filled ? PITCH_SURFACE : e.color}
           strokeWidth={e.filled ? 1 : 2.2}
         />
       ))}
@@ -276,13 +282,6 @@ export default function Chart() {
         height={chartHeight}
         margin={{ top: marginY, bottom: marginY, left: marginX, right: marginX }}
         skipAnimation
-        series={types.map((type, k) => ({
-          type: "scatter" as const,
-          id: `type-${k}`,
-          label: type,
-          color: t.palette[k],
-          data: events.filter((e) => e.typeIndex === k).map((e) => ({ id: e.id, x: e.x, y: e.y })),
-        }))}
         xAxis={[{ id: "x", scaleType: "linear", min: -RUN_OFF, max: PITCH_LENGTH + RUN_OFF, position: "none" }]}
         yAxis={[{ id: "y", scaleType: "linear", min: -RUN_OFF, max: PITCH_WIDTH + RUN_OFF, position: "none" }]}
       >
