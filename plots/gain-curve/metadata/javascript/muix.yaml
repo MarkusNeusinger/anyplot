@@ -2,58 +2,49 @@ library: muix
 language: javascript
 specification_id: gain-curve
 created: '2026-09-05T02:18:47Z'
-updated: '2026-09-05T02:23:09Z'
-generated_by: claude-sonnet
-workflow_run: 33938203524
+updated: '2026-11-08T06:48:24Z'
+generated_by: claude-opus-5-5
+adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
+workflow_run: 42438087288
 issue: 2440
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - 'First series (Model) is brand green #009E73, identical across both themes, with
-    a subtle 12% area fill that gives the curve visual weight'
-  - Random Selection and Perfect Model reference lines correctly use the theme-adaptive
-    semantic anchors (neutral/muted) instead of spending categorical palette slots,
-    and are distinguished from each other via linestyle (dashed vs dotted) rather
-    than relying on hue alone
-  - All chrome (title, axis labels, ticks, legend, grid) threads through window.ANYPLOT_TOKENS
-    and is fully readable in both light and dark renders with no dark-on-dark or light-on-light
-    failures
-  - Data generation is a clean, deterministic LCG + Box-Muller approach appropriate
-    for a browser environment with no seeded RNG, and correctly implements ranking
-    by predicted score, cumulative capture, and the theoretical perfect-model curve
-  - Title fontsize scales via the length-based formula so the long mandated title
-    fits comfortably without overflow or clipping
+  - 'All three curves required or allowed by the spec are present and well told apart:
+    the green model curve, the dotted perfect-model curve that reaches 100 % at the
+    computed 15.5 % positive rate and stays flat, and the dashed random diagonal from
+    corner to corner. Each is labelled in the legend.'
+  - 'The gains curve is computed from the ranked data, one point per sample from the
+    origin, and drawn with curve: ''linear'', so it never smooths or overshoots.'
+  - 'Idiomatic MUI X v9 styling: [data-series=...] selectors on .MuiLineChart-line
+    and .MuiLineChart-area, legend marks restyled through slotProps.legend.sx to match
+    each dash pattern, and axis bands sized with height and width.'
+  - Theme tokens are threaded through all chrome; both renders are fully legible and
+    the data colours are identical.
+  - A realistic fraud-review scenario (3000 flagged card transactions, 15.5 % confirmed
+    fraud), generated deterministically from a seeded LCG.
   weaknesses:
-  - The base fraud rate (~9%) is on the high end for a general transaction-fraud scenario
-    (real-world card/investigation fraud rates are typically well under 2%); either
-    lower the rate or reframe the population as a pre-filtered high-risk segment to
-    justify it
-  - The green area fill shades the full region under the Model curve down to zero
-    rather than the excess over the Random Selection baseline, which would more directly
-    visualize the model's 'lift' and sharpen the storytelling
-  - Reference lines are drawn as regular series with dashed/dotted sx overrides rather
-    than a distinctive MUI X feature; consider whether any community-only capability
-    (e.g. gradient area, custom marks) could better demonstrate library mastery
-  - No direct callout/annotation marks the steep early-capture region (e.g. '~70%
-    of fraud in top 40%'), which would sharpen the data storytelling further (optional,
-    not spec-required)
+  - 'Suggestion: the y-axis title sits about 60 px left of its tick labels; a slightly
+    narrower y-axis band (width of about 76) would tie it closer to its axis.'
+  - 'Suggestion: a muted text label on the dotted plateau could identify the perfect-model
+    curve directly, so the legend is not needed for it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Fraud Investigation Targeting · gain-curve · javascript · muix · anyplot.ai" in dark ink, comfortably sized (~35-40% of width, no overflow); axis labels "Population Targeted (%)" and "Fraud Cases Captured (%)" in dark ink; tick labels in soft dark gray; horizontal grid lines subtle; legend (Model / Perfect Model / Random Selection) in top-right, clearly readable dark text on light swatches.
-      Data: Model curve (green #009E73, solid, thick, with light green area fill) sits well above the black dashed Random Selection diagonal and below the black dotted Perfect Model curve. All three lines are clearly distinguishable via color and linestyle.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title "gain-curve · javascript · muix · anyplot.ai", soft-ink subtitle (n = 3000, positive rate 15.5 %), a horizontal legend (Model fraud score / Perfect model / Random selection), the axis titles "Population targeted (%)" and "Positive cases captured (%)", tick labels at 0 %–100 % every 10 %, a subtle grid. All readable.
+      Data: the model gains curve in brand green #009E73 with a faint green area fill. It runs from the origin to the top-right corner, rises steeply, then flattens, never falls, and shows small finite-sample steps. A dotted soft-ink perfect-model curve reaches 100 % at about 15.5 % and stays flat. A dashed ink random diagonal runs from corner to corner.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis labels rendered in light ink (near-white); tick labels in soft light gray; grid lines subtle light-on-dark; legend text light and fully readable; no dark-on-dark text anywhere.
-      Data: Model curve is the identical green #009E73 as the light render (confirmed same hue/saturation); Perfect Model and Random Selection lines flip to light gray/white tones (theme-adaptive neutral/muted anchors), preserving the same dashed/dotted distinction.
+      Background: warm near-black #1A1A17.
+      Chrome: the title, subtitle, legend, tick labels and axis titles are in light ink, and the grid is subtle light grey. No dark-on-dark text.
+      Data: the model curve is the same #009E73 as in the light render; the area fill shows as a dark green tint; the perfect-model and random lines flip to light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,75 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scaled by length formula, 16px
-          axis labels, 14px ticks/legend); fully readable in both themes
+        comment: Fonts set explicitly (title 22, ticks 14, labels 16, legend 15 px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No text collisions; the three lines cross only at the corners as
+          the plot type implies
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: showMark disabled appropriately for 101-point smooth curves; line
-          weights (3px model, 1.5px references) well adapted to density
+        comment: Model line at 3.5 px, reference lines at 2 px with distinct dash
+          patterns; the legend marks match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Reference lines distinguished by linestyle (dashed/dotted) as well
-          as color, avoiding hue-only encoding
+        comment: Green vs. neutral ink plus solid/dotted/dashed patterns; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills most of the canvas with balanced margins; nothing
-          clipped or cut off
+        comment: 3200x1800; balanced plot area, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with % units
+        comment: Descriptive axis titles with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; reference lines
-          correctly use theme-adaptive neutral/muted anchors instead of custom hexes;
-          backgrounds match #FAF8F1/#1A1A17; chrome fully theme-correct'
+        comment: 'Model series #009E73; references in theme ink tokens; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping for reference lines and area fill
-          for emphasis, clearly above library defaults
+        comment: Three-level type hierarchy (bold title, soft subtitle with n and
+          positive rate, legend) and a consistent solid/dotted/dashed line vocabulary
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Single-axis subtle grid, L-shaped chrome, decent whitespace; not
-          every detail maximally polished
+        comment: Legend marks restyled to the dash patterns; the 1.5 % domain padding
+          keeps corner points and the plateau inside the frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color/weight contrast creates a clear focal point on the model curve
-          vs. baseline; area fill could better emphasize lift over baseline rather
-          than fill-to-zero
+        comment: The faint area fill makes the model curve the focal element against
+          neutral reference lines
     spec_compliance:
       score: 15
       max: 15
@@ -143,30 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative gains chart with all three canonical curves
+        comment: Cumulative gains chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal random baseline and perfect-model curve both present; correctly
-          sorted by descending predicted score
+        comment: Full 0-100 axes, the diagonal random baseline, the perfect model
+          (flat after the positive rate), and a legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = population targeted %, Y = cumulative fraud captured %, both
-          0-100%
+        comment: Computed points drawn linearly, not smoothed; monotone from (0,0)
+          to (100,100)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels (Model,
-          Perfect Model, Random Selection) match data
+        comment: Correct mandated title; readable legend labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -174,20 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows model curve, perfect-model ceiling, and random baseline together
+        comment: Steep initial rise, flattening, finite-sample steps, and the perfect
+          and random references
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fraud-investigation targeting scenario is neutral and comprehensible
+        comment: 'Card-fraud review triage with confirmed-fraud labels: realistic
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: ~9% base fraud rate is plausible but on the high end for real-world
-          fraud detection unless pre-filtered to a high-risk segment
+        comment: 'Checked: the perfect curve reaches 100 % at the 15.5 % positive
+          rate (computed as positives/n); the model curve ends at (100,100)'
     code_quality:
       score: 10
       max: 10
@@ -197,35 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small deterministic RNG helpers are idiomatic for the browser harness;
-          overall flow is Imports → Data → Chart
+        comment: Constants -> data block -> plot; the only inner functions are the
+          seeded RNG the browser needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed LCG seed (42)
+        comment: Seeded LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography imported and used
+        comment: LineChart, Box and Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Direct cumulative computation; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly sized to window.ANYPLOT_SIZE, skipAnimation set, harness
-          owns output files
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE;
+          current v9 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -233,23 +222,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Strong use of LineChart's axis config, grid, legend slotProps, and
-          per-series sx styling
+        comment: v9 data-series CSS selectors, slotProps.legend sx, axis band height/width,
+          valueFormatter
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses area fill, curve interpolation, and leftAxis label offset slotProps;
-          not a feature unique to MUI X specifically
+        comment: Legend-mark dash restyling through the HTML legend's data-series
+          selectors, and an area series with fillOpacity
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T02:21:35Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling

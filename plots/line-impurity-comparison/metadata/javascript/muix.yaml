@@ -2,138 +2,134 @@ library: muix
 language: javascript
 specification_id: line-impurity-comparison
 created: '2026-08-26T07:02:10Z'
-updated: '2026-08-26T07:18:21Z'
-generated_by: claude-sonnet
-workflow_run: 32940212111
+updated: '2026-11-08T07:59:40Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42442087010
 issue: 4133
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 88
 review:
   strengths:
-  - 'Design Excellence weaknesses from Attempt 1 are directly addressed: a two-tone
-    low-alpha area fill under both curves (fillOpacity 0.22 / 0.16) creates a blended
-    overlap region and a distinct lavender wash where Gini and entropy diverge most,
-    giving the chart a real focal narrative instead of two plain strokes.'
-  - The shared peak at p=0.5 is now marked on both curves (showMark at position 0.5)
-    in addition to the dashed ChartsReferenceLine, giving two reinforcing visual-hierarchy
-    devices as the prior review explicitly requested.
-  - 'Correct math for both criteria: Gini is scaled x2 (4p(1-p)) so its peak reaches
-    1.0, matching entropy''s [0,1] range as the spec''s ''normalized to [0,1] for
-    comparison'' note requires, and the scaling is disclosed transparently in the
-    legend label rather than hidden.'
-  - Edge cases at p=0 and p=1 are handled correctly - binaryEntropy returns 0 instead
-    of NaN/Infinity, avoiding broken points at the domain boundaries.
-  - 'Both renders are theme-correct: data colors (#009E73 green, #C475FD lavender)
-    are identical between light and dark, chrome flips correctly with no dark-on-dark
-    or light-on-light failures, and no element is clipped at any canvas edge.'
-  - Font sizes are explicitly set throughout (title 22px, axis labels 16px, ticks/legend
-    14px) and the legend spells out the actual formulas for both curves, letting the
-    chart stand alone without external explanation.
+  - Both curves are computed from the spec formulas, and the entropy edge case is
+    closed explicitly with its limit 0 at p = 0 and p = 1, so both arches reach zero
+    at both ends with no gap or spike
+  - The legend states both formulas as readable Unicode mathematics (2p(1 − p), −p
+    log₂p − (1 − p) log₂(1 − p)), with glyph fills matched to the peak marks
+  - The peak annotation uses MUI X's native ChartsReferenceLine plus a custom SVG
+    layer positioned with the useXScale/useYScale hooks, so the 'Maximum 1.00' and
+    'Maximum 0.50' labels sit beside the peaks in data coordinates
+  - showMark as a per-index predicate draws markers only at the p = 0.5 peaks, and
+    the [data-series] sx selectors style each line, area and mark through the v9 CSS
+    classes
+  - The layered area washes put Gini's fill under entropy's, so the entropy-only band
+    shows exactly where the two criteria differ
+  - Theme tokens drive all chrome; data colours (#009E73 green, Imprint purple) are
+    identical in both renders and all text is readable in both themes
+  - The interactive HTML has per-series tooltips with 3-decimal value formatters
   weaknesses:
-  - 'LM-02: usage is still fairly generic MUI X (ChartsReferenceLine + sx overrides
-    + area mode) - solid but nothing here is a hallmark feature unique to this library;
-    leaning further into muix-specific capabilities (e.g. richer tooltip/legend customization,
-    per-point highlighting beyond a single mark) would raise Library Mastery.'
-  - 'CQ-01: the standalone binaryEntropy helper function is a minor deviation from
-    a flat imports-to-data-to-plot structure - acceptable here since it is needed
-    for the piecewise p=0/p=1 definition, but still worth flagging.'
-  - 'DE-02: the grid, spines and margins are the same as Attempt 1 (horizontal-only
-    grid, default axis lines) - the new area fill improved storytelling and sophistication
-    but no further chrome refinement (e.g. spine removal, additional whitespace tuning)
-    was added.'
+  - 'Suggestion: draw the dashed p = 0.5 reference line beneath the peak marks, or
+    stop it short of them, so it does not run across the two dots.'
+  - 'Suggestion: use the same decimal count on both axes (x ticks show 0.00, y ticks
+    show 0.0) for a calmer tick rhythm.'
+  - 'Suggestion: the bottom label ''Maximum impurity at p = 0.50'' repeats what the
+    two peak labels and the line already say; a shorter ''p = 0.50'' would reduce
+    text.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Title "line-impurity-comparison · javascript · muix · anyplot.ai" is centered, dark ink, clearly legible (~33% of canvas width, well within the canvas, no clipping). Axis labels ("Probability of Class 1 (p)", "Impurity (normalized)") and tick labels are dark and crisp against the light surface. A subtle horizontal-only grid is visible without dominating. Legend swatches sit above the plot with the actual formulas spelled out. The dashed vertical reference line and "Max impurity at p = 0.5" annotation sit inside the plot area near the x-axis, fully readable, no overlap with the axis or tick labels.
-      Data: First series (Gini impurity x2) is brand green (#009E73), second series (Entropy) is lavender (#C475FD) - both smooth arches peaking at 1.0 at p=0.5, each with a small ring marker at the peak. Two low-alpha area fills blend into a teal wash where the curves overlap and a lighter lavender wash where they diverge, visually calling out the divergence region.
-      Legibility verdict: PASS - no text is unreadable, nothing is clipped at any canvas edge (verified left/right/top/bottom margins).
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "line-impurity-comparison · javascript · muix · anyplot.ai" top-left (~43% of width) with a softer subtitle "101 evaluation points, p = 0.00 to 1.00 in steps of 0.01"; horizontal legend centered above the plot with formulas; y-axis "Impurity" (ticks 0.0–1.0), x-axis "Probability of class 1 (p)" (ticks 0.00–1.00); subtle horizontal grid lines; all text dark and readable.
+      Data: Gini impurity arch in brand green #009E73 peaking at 0.50, entropy arch in Imprint purple peaking at 1.00, both reaching 0 at p = 0 and p = 1; translucent area washes under each (blue-grey under Gini, lavender between the curves); filled peak markers at p = 0.5 with bold "Maximum 1.00" / "Maximum 0.50" labels; dashed vertical reference line at p = 0.5 labelled "Maximum impurity at p = 0.50" near the x axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title, axis labels, and tick labels all render in light ink (confirmed via pixel crop) and are clearly legible - no dark-on-dark failures anywhere, including the "Max impurity at p = 0.5" annotation which reads in soft light gray against the dark teal overlap fill. Grid lines are subtle and light-colored.
-      Data: Colors are identical to the light render (#009E73 green, #C475FD lavender) - only the chrome (background, text, grid) flipped, as required. The same teal/lavender area-fill blending is present and reads well on the dark surface.
-      Legibility verdict: PASS - both renders are fully readable and theme-correct.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend, axis titles and tick labels in light ink; grid lines subtle but visible; dashed reference line light grey; no dark-on-dark text.
+      Data: green and purple curves, markers and washes identical in hue to the light render (washes are darker because they blend with the dark page); peak markers outlined in the page colour.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, well-proportioned, readable in both
-          themes; title comfortably fits at ~33% of canvas width
+        comment: Explicit sizes (title 22, axis 16, ticks 14, legend 16, labels 15
+          css px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, data, legend, or annotation in either render
+        comment: Peak labels clear of curves and marks; reference-line label clear
+          of the Gini curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3.5px line strokes and single peak markers are well suited to a smooth
-          101-point continuous curve
+        comment: 3.5 px lines, 7 px peak marks with page-colour outline; legend glyphs
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing has good contrast and is CVD-safe; not red-green
+        comment: Green vs purple is CVD-safe; the curves never cross and differ in
+          height
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, chart fills a large majority of the canvas, nothing
-          cut off
+        comment: 3200x1800; balanced margins, the plot fills the canvas, headroom
+          keeps the entropy peak label inside
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with clear semantics
+        comment: '''Probability of class 1 (p)'' and ''Impurity'' (unitless quantity)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73, second is Imprint position 2 (#C475FD);
-          backgrounds and chrome are theme-correct in both renders'
+        comment: 'First series #009E73, second Imprint position 2; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: The two-tone blended area fill is a thoughtful, above-default design
-          device that directly addresses Attempt 1 feedback
+        comment: Title/subtitle hierarchy with a data-derived subtitle; bold peak
+          labels against soft-ink chrome
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle horizontal grid and generous whitespace, unchanged from Attempt
-          1 - no further spine/chrome cleanup was added
+        comment: Peak marks outlined in the page colour, legend glyph fills matched
+          to the marks, deliberate headroom share
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Peak markers on both curves plus the diverging area fill give a clear,
-          immediate visual insight into where and how the two criteria differ
+        comment: Layered fills make the entropy-only band read as the gap between
+          the criteria
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-line (with area) comparison chart
+        comment: Two-line comparison on shared axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Legend with formulas, p=0.5 annotation, edge-case handling, and a
-          light grid are all present
+        comment: Smooth symmetric arches, curves reach 0 at both ends, distinct colours,
+          legend with formulas as readable maths, maximum at p = 0.5 annotated, light
+          grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: p on x-axis, impurity on y-axis, full [0,1] domain shown for both
-          curves
+        comment: p on x over [0, 1], impurity on y from 0; no visible spline overshoot
+          at 101 samples
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels include
-          both formulas
+        comment: Correct mandated title; legend labels name each metric and formula
     data_quality:
       score: 15
       max: 15
@@ -174,84 +170,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full domain including both edge cases and the shared peak is shown
+        comment: Full range, both maxima, both endpoint zeros, and the gap between
+          the curves
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible ML-education scenario matching the spec's
-          theoretical-comparison intent
+        comment: Theoretical ML-education plot, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Formulas are mathematically correct and the intentional x2 scaling
-          is transparently labeled
+        comment: 'Checked on the axis: Gini max 0.50 and entropy max 1.00 at p = 0.50,
+          both 0 at p = 0 and p = 1, all computed by the code'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: One small helper function (binaryEntropy) needed for the piecewise
-          p=0/p=1 case - minor deviation from flat structure
+        comment: Linear module; PeakLabels is the small component the scale hooks
+          require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data generation
+        comment: Deterministic grid of 101 values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the imports actually used
+        comment: LineChart, ChartsReferenceLine and the hooks are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or interactivity
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, skipAnimation set, current MUI X API
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 classes
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic LineChart series/area/xAxis/yAxis configuration and sx
-          theming
+        comment: Per-index showMark predicate, per-series data-series sx selectors,
+          axis valueFormatters
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine, per-point showMark, and area mode with per-series
-          sx fill opacity are library-specific but not a hallmark feature
+        comment: ChartsReferenceLine child plus a custom SVG layer composed into the
+          chart with useXScale/useYScale
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:18:52Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting

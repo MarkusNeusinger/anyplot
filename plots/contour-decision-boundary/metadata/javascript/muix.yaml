@@ -2,10 +2,10 @@ library: muix
 language: javascript
 specification_id: contour-decision-boundary
 created: '2026-09-04T23:22:15Z'
-updated: '2026-11-08T01:43:17Z'
+updated: '2026-11-08T07:20:39Z'
 generated_by: claude-opus-5-5
-adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
-workflow_run: 42435151010
+adopted_from: 9056f8433527f6d72a2314a2f519864887209598 (9056f8433527f6d72a2314a2f519864887209598)
+workflow_run: 42458116791
 issue: 2921
 language_version: 22.23.4
 library_version: 9.17.0
@@ -13,44 +13,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Composition API used as intended: ChartsDataProvider + ChartsSurface with a custom
-    RegionLayer that reads useXScale/useYScale, so the region polygons share the exact
-    scales of the native ScatterPlot and axes'
-  - Region fills are drawn opaque inside one translucent group (opacity 0.24), so
-    the mesh triangles show no seams and the training points stay the strongest marks
-    in both themes
-  - Marching triangles over the k-NN vote margin interpolate the boundary between
-    mesh nodes, and the boundary is stroked in INK_SOFT so it reads on every region
-    in both themes
-  - Misclassified points get a hollow ink ring around their true-class marker, and
-    the legend glyph is styled to match, so a misclassified point reads as one class
-    lying on another class's region
-  - Leave-one-out classification keeps each training point from voting for itself,
-    so the 3 flagged points are honest misclassifications rather than an artefact
-  - Synthetic iris-like petal measurements are plausible and neutral; the subtitle
-    states n, k, mesh size and misclassified count computed from the data
-  - Theme tokens threaded through every chrome element; Imprint positions 1-3 identical
-    in both renders; skipAnimation set
+  - Region layer drawn through useXScale/useYScale inside ChartsSurface, so the predicted-class
+    fills share the scatter's exact scales instead of a separate image overlay
+  - Marching triangles over the distance-weighted k-NN vote margin on a 200 x 200
+    mesh give smooth, interpolated boundaries without grid stair-steps, outlined in
+    the inkSoft token
+  - Training points keep their true-class Imprint color with a page-colored outline,
+    so they stay the strongest marks on every region in both themes
+  - The misclassified point (leave-one-out) is marked by a hollow ink ring over its
+    true-color dot and explained in the legend with a matching hollow glyph via data-series
+    selectors
+  - Opaque fills inside one translucent group avoid seams between mesh triangles;
+    chrome threads pageBg/ink/inkSoft tokens so both themes read correctly
+  - skipAnimation, ChartsDataProvider + ChartsWrapper + ChartsLegend composition follows
+    the v9 API
   weaknesses:
-  - 'Suggestion: the x axis carries 35 tick labels at 0.2 cm steps; a 0.5 cm step
-    would read calmer and match the y axis density in the 400 px thumbnail.'
-  - 'Suggestion: the class-region boundary between Versicolor and Virginica is stroked
-    twice (once per class''s cuts); drawing each boundary once would make the line
-    weight uniform.'
+  - 'Suggestion: the x axis carries 35 tick labels at a 0.2 cm step; a 0.5 cm step
+    would read more calmly next to the y axis''s 0.2 cm step over a shorter range.'
+  - 'Suggestion: the header leaves about 40 px of empty space above the plot area
+    that could go to the plot height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; plot area fully tinted by the three predicted class regions.
-      Chrome: bold dark title "Iris Species by k-NN · contour-decision-boundary · javascript · muix · anyplot.ai" (~52% width), grey subtitle with n=160, k=13, 180×180 mesh, 3 misclassified; axis titles "Petal length (cm)" / "Petal width (cm)", dark-grey ticks (0.6–7.4 and 0.0–2.6), right-side vertical legend. All readable.
-      Data: regions in light tints of #009E73 (Setosa, left), #C475FD (Versicolor, middle band), blue (Virginica, right) separated by a dark grey interpolated boundary with mild k-NN raggedness; training points as filled circles in full class colours with a page-coloured outline; 3 misclassified points ringed in dark ink near the Versicolor/Virginica boundary. Legend: Setosa, Versicolor, Virginica, Misclassified (leave-one-out) with hollow ring glyph.
+      Background: warm off-white #FAF8F1 page; plot area fully covered by translucent class regions.
+      Chrome: bold title "Iris Species by k-NN · contour-decision-boundary · javascript · muix · anyplot.ai" with a grey subtitle (160 training points, k = 13, 200 × 200 mesh, 1 misclassified); axis titles "Petal length (cm)" and "Petal width (cm)" in dark ink, tick labels in inkSoft, all readable. Vertical legend at the right middle: Setosa, Versicolor, Virginica, Misclassified (leave-one-out) with a hollow ring glyph.
+      Data: three predicted regions — green (#009E73 tint) on the left, light purple in the middle, grey-blue on the right — separated by dark-grey smooth boundary lines. Training points: Setosa #009E73 cluster lower left, Versicolor purple in the centre, Virginica blue upper right, each with a white outline. One Virginica point near (4.77, 1.63) at the Versicolor/Virginica boundary carries a black ring.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; regions are dark tints of the same three hues.
-      Chrome: title, subtitle, axis titles, ticks and legend labels in light ink, all clearly readable; no dark-on-dark text. Boundary line in light grey.
-      Data: point colours identical to the light render (green #009E73, lavender #C475FD, blue); point outlines flip to the dark page colour; misclassified rings flip to light ink and stay visible.
+      Background: warm near-black #1A1A17 page; regions are the same hues at the same opacity, reading as deep green, plum and slate.
+      Chrome: title, subtitle, axis titles, ticks and legend labels in light ink — no dark-on-dark text; boundary lines flip to light grey; misclassified ring flips to light ink.
+      Data: point colors identical to the light render (#009E73, purple, blue), outlined in the dark page color; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,75 +57,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, ticks 14, labels 16, legend 15); readable
+        comment: Title 22 px, axis titles 16 px, ticks 14 px, legend 15 px; readable
           in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; point overlap in the Setosa cluster is outlined
-          and expected
+        comment: No text collisions; overlapping Setosa dots stay distinguishable
+          by their page-colored outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 160 points at markerSize 8 with page-coloured outlines; misclassified
-          rings and legend glyphs visible in both themes
+        comment: 8 px markers with outline suit 160 points; legend glyphs, including
+          the hollow ring, match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green / lavender / blue are CVD-distinct; misclassification is also
-          encoded by the ring shape
+        comment: Green / purple / blue are CVD-separable; misclassification also shown
+          by a ring shape
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced plot/legend split, nothing cut off
+        comment: 3200x1800, title about 52% of width, balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (cm)
+        comment: Petal length (cm), Petal width (cm) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-3 in canonical order, first = #009E73; correct
-          backgrounds in both themes'
+        comment: 'Imprint positions 1-3 in order, first #009E73; correct page backgrounds
+          in both themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Computed subtitle (n, k, mesh, misclassified count) in a secondary
-          ink tier under the title: a deliberate typographic hierarchy beyond the
-          baseline'
+        passed: false
+        comment: 'Raised: title/subtitle hierarchy with the method summary, tinted
+          regions with a separate inkSoft boundary stroke'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Seamless region fill via opaque paths in one translucent group, interpolated
-          boundary stroked in INK_SOFT, legend glyph for the ring styled to match
-          the marks
+        passed: false
+        comment: 'Raised: seam-free region fills (opaque paths in one translucent
+          group), vertically centred legend column'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Leave-one-out evaluation chosen so the flagged points are honest
-          misclassifications, reported in the subtitle
+        passed: false
+        comment: 'Raised: subtitle states the leave-one-out error count, tying the
+          ringed point to an accuracy reading'
     spec_compliance:
       score: 15
       max: 15
@@ -146,21 +139,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Translucent class regions, true-class markers, misclassified marker
-          style, legend; all 'A good version shows' bullets met
+        comment: Translucent class regions, true-class points, misclassified marker,
+          legend, fine mesh; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at exact feature values; regions cover the whole padded plane
+        comment: Points at exact feature values; plane covers all data with padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title with descriptive prefix; legend labels are species
-          names and the ring style
+        comment: Mandated title with descriptive prefix; legend labels are reader
+          text
     data_quality:
       score: 15
       max: 15
@@ -170,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clean separation (Setosa) and an overlapping boundary with misclassified
-          points (Versicolor/Virginica)
+        comment: Clean separation (Setosa), an overlapping boundary (Versicolor/Virginica),
+          a curved boundary and a misclassified point
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like petal measurements, neutral
+        comment: Iris-like petal measurements, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Petal lengths 1-7 cm, widths 0.1-2.5 cm, matching real iris ranges;
-          no Check values in the spec
+        comment: Petal length 1-7 cm, width 0.1-2.5 cm match iris ranges; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -194,8 +187,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script; RegionLayer component is required for the
-          scale hooks
+        comment: Linear script; only the Chart component and RegionLayer (needed for
+          the scale hooks)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,15 +206,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: k-NN and marching triangles written out, which the muix Computation
-          rule permits (no statistics helpers available)
+        comment: k-NN and marching triangles written out, permitted by the muix Computation
+          rule; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Renders into the harness mount via window.ANYPLOT_SIZE; skipAnimation
-          set; current v7 composition API
+        comment: Default-export component into the harness mount, skipAnimation, v9
+          API
     library_mastery:
       score: 7
       max: 10
@@ -230,32 +223,31 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: ChartsDataProvider/ChartsWrapper/ChartsSurface composition with ChartsLegend
-          and axis config objects, the recommended v7 pattern for custom layers
+        passed: false
+        comment: 'Raised: ChartsDataProvider/ChartsWrapper/ChartsSurface composition
+          with ScatterPlot, axes and HTML legend'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Custom SVG layer driven by useXScale/useYScale hooks inside ChartsSurface,
-          plus data-series selectors to restyle one series and its legend mark
+        passed: false
+        comment: 'Raised: custom SVG layer through useXScale/useYScale and per-series
+          data-series CSS selectors restyling marker and legend glyph'
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T01:40:37Z'
+  rendered_at: '2026-11-08T07:18:11Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - layer-composition
-  - contour-lines
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - knn-classification
-  - grid-interpolation
+  - knn
+  - marching-squares
   styling:
   - alpha-blending
   - edge-highlighting
