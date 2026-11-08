@@ -2,47 +2,56 @@ library: muix
 language: javascript
 specification_id: heatmap-adjacency
 created: '2026-09-05T03:20:50Z'
-updated: '2026-09-05T03:34:41Z'
-generated_by: claude-sonnet
-workflow_run: 33941128123
+updated: '2026-11-08T07:01:35Z'
+generated_by: claude-opus-5-5
+adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
+workflow_run: 42438537642
 issue: 5240
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-dark.html
-quality_score: 95
+quality_score: 89
 review:
   strengths:
-  - 'Both attempt-1 weaknesses are resolved: cluster-boundary dividers are now clearly
-    visible (ink-soft stroke at low opacity) and the colorbar bounds carry the "threads"
-    unit.'
-  - New top-edge highlight (black/ink stroke on the max-weight cell) adds a genuine
-    focal point that strengthens data storytelling without cluttering the matrix.
-  - Full 20x20 symmetric adjacency matrix, correct Imprint sequential palette, absent
-    edges rendered as page background, deterministic fixed-seed data generation.
-  - Clean square 2400x2400 canvas, no clipping, no overlap in either theme.
+  - A square, symmetric matrix with the same team-grouped node order on both axes;
+    both triangles are filled from each undirected pair and the four teams appear
+    as clear blocks along the diagonal
+  - Absent edges use the elevated-surface token, a distinct background tone in both
+    themes that cannot be mistaken for the green low end of the ramp
+  - 'Idiomatic MUI X v9 composition: ChartsDataProvider with band x/y axes, a continuous
+    zAxis colorMap from the Imprint seq stops, a custom SVG layer drawn via useXScale/useYScale/useZColorScale/useDrawingArea,
+    and a ContinuousColorLegend driven by the same zAxis'
+  - Team-boundary rules span the full matrix and bold team labels sit in their own
+    band, so group boundaries read at a glance
+  - 'Deterministic seeded LCG data with a plausible scenario: collaboration threads
+    among 20 named colleagues in four departments'
   weaknesses:
-  - 'Minor: the top-link highlight stroke has no legend/annotation explaining what
-    it means — a viewer has to infer "this cell is outlined because it''s the strongest
-    edge." A one-line caption or small annotation would make the affordance self-explanatory,
-    though it''s not a scoring blocker.'
+  - 'VQ-05 (both): the matrix block is anchored to the top and all leftover height
+    (about 100 CSS px, ~9 % of the canvas) collects as an empty band below the team
+    labels, while the column labels sit close under the subtitle → split the leftover
+    between top and bottom so the block sits vertically centered (about +50 px top
+    margin, −50 px bottom). Likely cause: margin.bottom = TEAM_LABEL_H + availH -
+    side puts the entire availH - side slack at the bottom.'
+  - 'Suggestion: one or two intermediate ticks on the color bar (for example 30, 60)
+    would make mid-range weights easier to read off.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 across the full square canvas.
-      Chrome: Title "heatmap-adjacency · javascript · muix · anyplot.ai" in dark ink, subtitle in dark-gray ink-soft. 20 node-name tick labels along top x-axis and left y-axis in muted ink-soft tone, all legible. Thin gray divider lines mark the four 5-node team boundaries, clearly visible. Colorbar at right labeled "98 threads" (top) / "7 threads" (bottom).
-      Data: Filled square cells on green-to-blue Imprint sequential scale (seq[0] -> seq[1]); absent edges show plain page background, cleanly distinct from colored cells. Strongest edge (Nina<->Wes, 98 threads) outlined in black/ink as a focal highlight.
+      Background: warm off-white #FAF8F1; absent-edge cells in the near-white elevated tone with thin gaps.
+      Chrome: bold dark title "heatmap-adjacency · javascript · muix · anyplot.ai", soft-ink subtitle, node names along top and left, bold team labels (Engineering, Design, Product, Marketing) below, color bar "Shared threads per month" 7–98 on the right; all readable.
+      Data: 20x20 symmetric matrix, Imprint sequential ramp from #009E73 (weak) to #4467A3 (strong); four diagonal team blocks split by dark rules; Nina–Wes strongest link outlined. Matrix sits high, leaving ~100 CSS px empty below.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 across the full square canvas.
-      Chrome: Same title/subtitle now in light ink/ink-soft tones, fully legible. Same 20 tick labels in light muted tone. Team-boundary divider lines remain visible as light-gray strokes. Colorbar bounds "98 threads" / "7 threads" legible in light text. No dark-on-dark failures.
-      Data: Cell colors pixel-identical to the light render (theme-invariant weight scale); absent edges now show the dark page background. Top-link cell (Nina<->Wes) outlined in a light stroke, correctly adapted to the dark theme.
+      Background: warm near-black #1A1A17; absent cells a slightly lifted dark gray.
+      Chrome: title, subtitle, ticks, team labels, color bar text in light ink; no dark-on-dark; team rules and outline flip to light.
+      Data: identical green-to-blue cell colors to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,65 +59,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes
+        comment: Title 22 px, ticks 14 px, team labels 15 px bold; all readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text or data elements
+        comment: No text collisions; 20 column labels fit their bands
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible; focal highlight on max-weight cell
+        comment: Cells clearly visible with thin gaps; color bar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential scale, adequate contrast
+        comment: Green-to-blue sequential ramp is CVD-safe; absent cells distinct
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Correct square 2400x2400 canvas, no clipping
+        comment: Matrix anchored high; ~100 CSS px empty band below team labels (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar bounds now carry the threads unit
+        comment: Node names as ticks, team labels, readable color bar title 'Shared
+          threads per month'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential palette, correct theme backgrounds
+        comment: 'imprint_seq from t.seq; #FAF8F1 / #1A1A17 backgrounds; theme-correct
+          chrome'
     design_excellence:
-      score: 17
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Custom rect-based cells plus highlighted top-edge outline
+        comment: Two-level title with data-summary subtitle, bold team labels in their
+          own band, balanced wrapped legend title
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Cluster dividers now clearly visible ink-soft strokes
+        comment: Full-span team rules, chosen 6% cell gap instead of a grid, equal-pixel
+          square cells computed from available space
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strongest edge outlined, giving a clear focal point
+        comment: Team rules and labels make the diagonal blocks the focal point; strongest
+          link outlined and named in the subtitle
     spec_compliance:
       score: 15
       max: 15
@@ -118,47 +134,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct adjacency matrix heatmap
+        comment: Square adjacency matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cluster-boundary dividers now genuinely visible
+        comment: Cluster ordering, both triangles filled, distinct absent-edge tone,
+          color bar, node-name ticks plus group boundary labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows/columns correctly mapped to nodes
+        comment: Each edge at source row / target column; same order on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title format
+        comment: Correct title format; color bar title is reader text
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No optional dendrogram (acceptable, spec marks it optional)
+        comment: Dense diagonal blocks, sparse weak cross-team links, weighted edges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral cross-team collaboration scenario
+        comment: Workplace collaboration network, neutral, real first names and departments
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible weight range 7-98 threads/month
+        comment: Within-team 35-100, cross-team 5-35 shared threads per month; plausible.
+          No Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -168,33 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes
+        comment: Linear data -> plot; AdjacencyLayer component is required for MUI
+          X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Seeded LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Appropriate complexity; community surface has no heatmap, so the
+          custom layer is needed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, skipAnimation set
+        comment: Default-exported component, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -202,25 +222,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ScatterChart-as-heatmap workaround
+        comment: ChartsDataProvider/ChartsWrapper/ChartsSurface composition with band
+          axes and zAxis colorMap
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Custom slots.scatter, scale hooks, conditional stroke highlighting
+        comment: zAxis continuous colorMap consumed by useZColorScale in a custom
+          layer and by ContinuousColorLegend
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:58:33Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
-  - manual-ticks
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
-  - alpha-blending
+  - minimal-chrome

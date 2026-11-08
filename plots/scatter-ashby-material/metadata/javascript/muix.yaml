@@ -2,52 +2,65 @@ library: muix
 language: javascript
 specification_id: scatter-ashby-material
 created: '2026-08-24T08:44:06Z'
-updated: '2026-08-24T08:58:32Z'
-generated_by: claude-sonnet
-workflow_run: 32706970725
+updated: '2026-11-08T04:55:40Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42447951229
 issue: 4677
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 90
 review:
   strengths:
-  - 'All three attempt-1 weaknesses were addressed: material-specific density/modulus
-    sub-ranges for Tungsten/Tungsten Carbide/PTFE, reduced hull fill opacity and margin
-    to cut visual clutter, and a rebalanced right margin matching the left'
-  - Convex-hull family envelopes with direct color-matched, halo-stroked labels exactly
-    match the spec's 'colored bubble regions or convex-hull envelopes' requirement
-    and remove the need for a separate legend
-  - Optional E/rho specific-stiffness guide lines (dashed, rotated to match slope,
-    labeled inline) add genuine Ashby-chart analytical value beyond the spec minimum
-  - Full Imprint palette compliance in canonical order with theme-correct chrome in
-    both light and dark renders
-  - Deterministic LCG-seeded data generation, focused single-purpose helper functions,
-    no fake interactivity
+  - 'Both axes are true MUI X log scales (scaleType: ''log'') with decade ticks from
+    tickInterval and labels like 1,000 and 0.0001; each axis is labeled with its property
+    and units, and every one of the 82 materials sits at its handbook density and
+    modulus'
+  - Every family is a convex hull computed in log-log space, pushed 15 px past its
+    points, with a 10 % fill and a 75 % stroke in its Imprint color. Where Metals,
+    Ceramics and Composites overlap, all three outlines and every point stay visible
+    in both themes
+  - Family labels pair a color swatch with ink text that carries a page-colored halo,
+    so they stay readable in both themes. They are placed beside their own envelopes,
+    clear of markers, other labels and other regions
+  - The constant E/rho guides (10^-1, 10^-3, 10^-5 GPa/(kg/m³)) are straight, parallel,
+    dashed, softer than the regions, and labeled along their own slope with a superscript
+    exponent
+  - 'Idiomatic MUI X v9 composition: ChartsDataProvider + ChartsSurface with custom
+    SVG layers driven by useXScale/useYScale/useDrawingArea, ScatterPlot for the marks,
+    and an item-triggered ChartsTooltip whose valueFormatter names each material in
+    the HTML'
   weaknesses:
-  - Ceramics and Metals convex-hull regions still overlap substantially across their
-    shared boundary (density ~2,000-3,500 kg/m^3, modulus ~50-450 GPa), producing
-    a blended teal zone -- reflects genuine overlap in real material property space
-    so the data itself is not wrong, but a further opacity reduction or slight vertical
-    offset between the two hulls in that shared band would read cleaner
+  - 'CQ-01 (code): insidePolygon (lines 121–125) and distanceToPolygon (lines 127–135)
+    are free-standing helper functions next to the hook and the layer components that
+    composition needs → fold them into the one component that uses them, or inline
+    them where they are called. Likely cause: the geometry for placing the labels
+    was factored out as utilities.'
+  - 'Suggestion: Plywood, wood, bamboo and laminated veneer sit under Composites,
+    and balsa and cork under Foams. A separate Natural Materials family would match
+    the classic Ashby grouping and keep the across-grain wood point from stretching
+    the Composites hull down to 0.6 GPa.'
+  - 'Suggestion: the Foams label sits about 1.5 decades above its envelope''s upper
+    edge. A spot closer to the region would tie it more tightly to the region.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Bold dark title "scatter-ashby-material · javascript · muix · anyplot.ai" centered at top with gray subtitle below; dark axis titles and medium-gray decade tick labels clearly legible; subtle light-gray grid. Right margin now balanced (105px) against left (110px) -- Metals hull/label have clear breathing room from the canvas edge.
-      Data: Six convex-hull family regions (Metals=green #009E73, Polymers=lavender, Ceramics=blue, Composites=ochre, Elastomers=matte red, Foams=cyan) filled at low opacity (0.07) with solid colored border and color-matched halo-stroked text label; scatter markers match family color; two dashed E/rho guide lines with inline rotated labels.
+      Background: warm off-white #FAF8F1 over the whole canvas; no pure white.
+      Chrome: the bold title "scatter-ashby-material · javascript · muix · anyplot.ai" is centered, with a soft subtitle "82 materials in 6 families · dashed lines hold the ratio ...". Log x axis "Density (kg/m³)" runs from 10 to 10,000; log y axis "Young's modulus (GPa)" runs from 0.0001 to 1,000. Ticks, axis titles and the subtle vertical and horizontal grid are all dark on light and readable.
+      Data: 82 circular markers in six translucent convex-hull envelopes. Metals #009E73 (first series), Polymers lavender, Ceramics blue, Composites ochre, Elastomers matte red, Foams cyan. Each family has a bold label with a color swatch beside its region (Ceramics and Composites at the top, Metals below its hull, Polymers below its hull, Elastomers above its hull, Foams upper left). Three dashed gray guide lines, labeled 10^-1, 10^-3 and 10^-5 GPa/(kg/m³), run parallel across the chart. Metals, Ceramics and Composites overlap, and every outline and point stays visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Title, subtitle, axis titles, and tick labels render in light gray/off-white and remain clearly visible -- no dark-on-dark text found.
-      Data: Hull regions and scatter markers use identical hex colors to the light render (Metals green #009E73 confirmed unchanged) -- only chrome (background, text, grid, label halo-stroke) flips to dark-theme tokens.
+      Background: warm near-black #1A1A17; no pure black.
+      Chrome: the title, subtitle, ticks, axis titles and family labels are light on dark and fully readable, with no dark-on-dark text. The grid is subtle but visible, and the guide lines and their labels are soft gray and readable.
+      Data: the family colors, markers, hulls and layout are identical to the light render; only the chrome flips. Brand green Metals reads clearly, and region fills stay faint while the outlines stay distinct.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -55,70 +68,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes and at thumbnail
-          scale
+        comment: Title 22 px, ticks 14 px, axis titles 16 px and family labels 16
+          px semibold with a halo; all readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Composites overlap resolved; Ceramics/Metals hulls still overlap
-          substantially but remain readable
+        comment: Labels are clear of markers, other labels and other regions; region
+          overlap among Metals, Ceramics and Composites is permitted and stays legible
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size and hull fill/stroke well visible across ~82 points over
-          6 families
+        comment: 6 px markers suit 82 points; 10 % fills with 75 % outlines keep the
+          points and overlapping neighbors visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Direct family labels give redundant encoding beyond hue
+        comment: Six distinct Imprint hues, each backed by a text label; color is
+          never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Right margin rebalanced (60px to 105px) against left (110px)
+        comment: Canvas gate passed; balanced axis bands, title well proportioned,
+          no overflow; the empty corners are permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Density (kg/m³) and Young's modulus (GPa), each with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome'
+        comment: 'Metals takes #009E73, families follow the canonical Imprint order
+          1–6, backgrounds are #FAF8F1 and #1A1A17, and data colors are identical
+          across themes'
     design_excellence:
-      score: 17
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Convex-hull regions, halo-stroked labels, guide-line annotations
-          above library defaults
+        comment: 'Beyond the baseline: a three-level type hierarchy (bold title, soft
+          subtitle, semibold family labels with a color swatch, soft rotated guide
+          labels) and halo strokes that keep the labels clean over the grid'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Balanced whitespace and lighter hull opacity; residual Ceramics/Metals
-          overlap is the only remaining issue
+        comment: 'Beyond the baseline: guide labels rotated to their lines and placed
+          at the spot furthest from the envelopes, hull margins that keep the outlines
+          off the markers, and label placement that avoids marks and foreign regions'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Guide lines and direct labeling create clear visual hierarchy
+        comment: The subtitle tells the reader how to read the guide lines and states
+          the dataset size; there is no further focal hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +148,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct log-log Ashby scatter with labeled family regions
+        comment: Log-log Ashby scatter with family envelopes; the guide lines are
+          an optional feature that the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log axes, hull regions with labels, units, distinct colors, guide
-          lines all present
+        comment: Log axes with units; colored convex-hull regions that enclose their
+          points; one label per family; distinct colors; optional guides drawn straight,
+          parallel, labeled and lighter than the regions
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=density, y=modulus, standard Ashby convention
+        comment: Every marker sits at its own density and modulus; the axes span all
+          data with an 8 % log pad
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; direct labeling substitutes for legend
+        comment: The title matches the mandated format; family identity comes from
+          the direct labels, so a separate legend is not needed
     data_quality:
       score: 15
       max: 15
@@ -157,54 +181,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 families, ~82 points, full property-range coverage
+        comment: Six families spanning 5 decades of density and 6.5 of modulus, with
+          overlapping and isolated regions and families of very different extent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, standard materials-science/education scenario
+        comment: The classic density vs. Young's modulus chart with real engineering
+          materials; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Material-specific overrides for Tungsten/Tungsten Carbide/PTFE resolved
-          attempt-1's outlier-material inaccuracy
+        comment: 'Checked: mild steel 7850 kg/m³ / 210 GPa, aluminum 2700 / 70, CFRP
+          1550 / 110, alumina 3950 / 370, natural rubber 0.002 GPa. The 10^-1 guide
+          passes through (10, 1) in the render, and the guide values fall out of the
+          data''s ratio range (lines 156–164)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes beyond focused helpers
+        comment: Free-standing helpers insidePolygon and distanceToPolygon sit beside
+          the components that composition needs (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seed=42 LCG
+        comment: Hard-coded handbook data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; clean useXScale/useYScale overlay pattern
+        comment: The hull and label placement are longer than usual, but no available
+          call computes them and no named shorter form replaces them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, skipAnimation set
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          v9 composition API
     library_mastery:
       score: 9
       max: 10
@@ -214,25 +245,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ChartContainer + composable Charts* components is the recommended
-          MUI X pattern
+        comment: v9 composition (ChartsDataProvider, ChartsSurface, ScatterPlot, ChartsXAxis/YAxis,
+          ChartsGrid) with log scaleType and tickInterval, styled through sx class
+          selectors
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks layering custom SVG overlays is MUI-X-distinctive
+        comment: Custom SVG layers drawn through the useXScale, useYScale and useDrawingArea
+          hooks inside the chart surface, plus an item-triggered ChartsTooltip whose
+          series valueFormatter names each material
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T04:52:10Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
+  - patches
   - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - convex-hull
   styling:
-  - publication-ready
   - alpha-blending
+  - grid-styling

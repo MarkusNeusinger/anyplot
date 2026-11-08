@@ -1,256 +1,201 @@
 // anyplot.ai
 // timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-09-02
-import { LineChart } from "@mui/x-charts/LineChart";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const BRAND = t.palette[0]; // one hue for the whole series family: actual, forecast, and its own uncertainty envelope
 
-// --- Data: 42 months of historical product demand + a 9-month-ahead forecast
-// (the forecast's first point overlaps the last historical point so the two
-// lines connect, per the spec). Uncertainty widens with horizon — the classic
-// "fan out" of a real ARIMA/Prophet-style demand-planning forecast. ---
-function lcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const LEVEL_80 = 80; // confidence levels of the two bands (%)
+const LEVEL_95 = 95;
+const OPACITY_80 = 0.38; // the narrower band is darker
+const OPACITY_95 = 0.18;
+const PAD_SHARE = 0.06; // room above and below the outermost values and bounds
+const UNIT_SUFFIX = /\s*\([^)]*\)\s*$/; // a trailing "(unit)" in a column name
+const HEADER_H = 112;
+const MARGIN = { top: 16, right: 40, bottom: 8, left: 16 };
+
+// Columns: set these to your data's column names
+const DATE = "Month"; // role: date
+const ACTUAL = "Demand (units)"; // role: actual
+const FORECAST = "Forecast (units)"; // role: forecast
+const LOWER_80 = "80% lower bound (units)"; // role: lower_80
+const UPPER_80 = "80% upper bound (units)"; // role: upper_80
+const LOWER_95 = "95% lower bound (units)"; // role: lower_95
+const UPPER_95 = "95% upper bound (units)"; // role: upper_95
+
+// Data: replace this block with your own records, one object per row
+// Monthly product demand: 42 months of history and a 12-month forecast whose first
+// month repeats the last observation, with normal intervals that widen with the horizon
+const data = (() => {
+  let state = 42;
+  const random = () => {
     state = (state * 1103515245 + 12345) % 2147483648;
     return state / 2147483648;
   };
-}
-const random = lcg(42);
+  const history = 42;
+  const start = history - 1;
+  const centre = (i: number) => 3200 + 9 * i + 260 * Math.sin((2 * Math.PI * i) / 12);
+  return Array.from({ length: history + 12 }, (_, i) => {
+    const actual = i <= start ? Math.round(centre(i) + (random() - 0.5) * 180) : null;
+    const forecast = i < start ? null : i === start ? actual : Math.round(centre(i));
+    const sigma = 70 + 26 * (i - start);
+    return {
+      [DATE]: new Date(2023, i, 1),
+      [ACTUAL]: actual,
+      [FORECAST]: forecast,
+      [LOWER_80]: forecast == null ? null : Math.round(forecast - 1.2816 * sigma),
+      [UPPER_80]: forecast == null ? null : Math.round(forecast + 1.2816 * sigma),
+      [LOWER_95]: forecast == null ? null : Math.round(forecast - 1.96 * sigma),
+      [UPPER_95]: forecast == null ? null : Math.round(forecast + 1.96 * sigma),
+    };
+  });
+})();
 
-const HIST_MONTHS = 42;
-const FORECAST_HORIZON = 12;
-const FORECAST_START = HIST_MONTHS - 1; // last historical index == first forecast index (overlap)
-const TOTAL_MONTHS = HIST_MONTHS + FORECAST_HORIZON;
-
-const dates = Array.from({ length: TOTAL_MONTHS }, (_, i) => new Date(2023, i, 1));
-
-const BASE = 3200;
-const TREND = 9;
-const SEASON_AMP = 260;
-const NOISE_AMP = 90;
-const centerAt = (i) => BASE + TREND * i + SEASON_AMP * Math.sin((2 * Math.PI * i) / 12);
-
-const actual = dates.map((_, i) =>
-  i <= FORECAST_START ? Math.round(centerAt(i) + (random() - 0.5) * 2 * NOISE_AMP) : null,
-);
-const forecast = dates.map((_, i) => {
-  if (i < FORECAST_START) return null;
-  return i === FORECAST_START ? actual[FORECAST_START] : Math.round(centerAt(i));
-});
-
-// 80% / 95% normal-interval multipliers applied to a linearly growing sigma.
-const Z80 = 1.2816;
-const Z95 = 1.96;
-const SIGMA_BASE = 70;
-const SIGMA_GROWTH = 26;
-
-const lower80 = [];
-const lower95 = [];
-const bandWidth80 = [];
-const bandWidth95 = [];
-dates.forEach((_, i) => {
-  if (i < FORECAST_START) {
-    lower80.push(null);
-    lower95.push(null);
-    bandWidth80.push(null);
-    bandWidth95.push(null);
-    return;
-  }
-  const horizon = i - FORECAST_START;
-  const sigma = SIGMA_BASE + SIGMA_GROWTH * horizon;
-  const half80 = Z80 * sigma;
-  const half95 = Z95 * sigma;
-  lower80.push(forecast[i] - half80);
-  lower95.push(forecast[i] - half95);
-  bandWidth80.push(2 * half80);
-  bandWidth95.push(2 * half95);
-});
-
-// Stacked-band trick: an invisible series carries the lower-bound offset, and
-// a second series stacked on top of it supplies only the band's own width
-// (upper - lower). The visible area then spans exactly [lower, upper]. The
-// wider 95% band is declared first so the narrower 80% band draws on top of
-// it, giving the "darker inner / lighter outer" nesting the spec asks for.
-// The base/stroke hiding below (see `sx`) depends on `@mui/x-charts`'
-// internal `.MuiAreaElement-series-*` / `.MuiLineElement-series-*` class
-// names, which are not part of the library's public API and could change
-// on a version bump — there's no documented public hook for "stack a series
-// but don't render its own line/fill" as of 7.29.1.
-const series = [
-  { id: "lower95-base", data: lower95, stack: "ci95", showMark: false, color: t.pageBg },
-  {
-    id: "band95",
-    label: "95% confidence interval",
-    data: bandWidth95,
-    stack: "ci95",
-    area: true,
-    showMark: false,
-    color: BRAND,
-  },
-  { id: "lower80-base", data: lower80, stack: "ci80", showMark: false, color: t.pageBg },
-  {
-    id: "band80",
-    label: "80% confidence interval",
-    data: bandWidth80,
-    stack: "ci80",
-    area: true,
-    showMark: false,
-    color: BRAND,
-  },
-  {
-    id: "actual",
-    label: "Historical demand",
-    data: actual,
-    showMark: false,
-    color: BRAND,
-    curve: "monotoneX",
-  },
-  {
-    id: "forecast",
-    label: "Forecast (point estimate)",
-    data: forecast,
-    showMark: false,
-    color: BRAND,
-    curve: "monotoneX",
-  },
+// Plot: reads only data and the constants above
+const rows = data
+  .filter((d) => d[DATE] instanceof Date && !Number.isNaN(d[DATE].getTime()))
+  .sort((a, b) => a[DATE].getTime() - b[DATE].getTime());
+const dates = rows.map((d) => d[DATE]);
+const forecastRows = rows.filter((d) => Number.isFinite(d[FORECAST]));
+const forecastStart = forecastRows[0][DATE];
+const historyRows = rows.filter((d) => Number.isFinite(d[ACTUAL]));
+const horizon = forecastRows.filter((d) => !Number.isFinite(d[ACTUAL])).length;
+const values = rows
+  .flatMap((d) => [ACTUAL, FORECAST, LOWER_80, UPPER_80, LOWER_95, UPPER_95].map((k) => d[k]))
+  .filter((v) => Number.isFinite(v));
+const vMin = Math.min(...values);
+const vMax = Math.max(...values);
+// the wider band is drawn first, so the narrower one lies on top of it
+const bands = [
+  { id: "ci95", level: LEVEL_95, lower: LOWER_95, upper: UPPER_95, opacity: OPACITY_95 },
+  { id: "ci80", level: LEVEL_80, lower: LOWER_80, upper: UPPER_80, opacity: OPACITY_80 },
+].map((b) => ({ ...b, rows: rows.filter((d) => Number.isFinite(d[b.lower]) && Number.isFinite(d[b.upper])) }));
+const formatMonth = (d: Date) => d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+const legend = [
+  { key: "actual", label: ACTUAL.replace(UNIT_SUFFIX, ""), dash: false, opacity: 0 },
+  { key: "forecast", label: FORECAST.replace(UNIT_SUFFIX, ""), dash: true, opacity: 0 },
+  { key: "ci80", label: `${LEVEL_80}% interval`, dash: false, opacity: 1 - (1 - OPACITY_80) * (1 - OPACITY_95) },
+  { key: "ci95", label: `${LEVEL_95}% interval`, dash: false, opacity: OPACITY_95 },
 ];
 
-// Tight y-axis floor: pad just below the lowest plotted value (across the
-// historical line and the wide 95% band) instead of a hand-picked constant,
-// so the margin below the data stays proportional as FORECAST_HORIZON changes.
-const plottedLows = [...actual, ...lower95].filter((v) => v !== null);
-const yMin = Math.floor((Math.min(...plottedLows) - 150) / 100) * 100;
-
 const TITLE = "Monthly Demand Forecast · timeseries-forecast-uncertainty · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 22;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 42;
-const LEGEND_H = 34;
+const SUBTITLE = `${historyRows.length} ${DATE.toLowerCase()}s of history to ${formatMonth(historyRows[historyRows.length - 1][DATE])} · ${horizon}-${DATE.toLowerCase()} forecast with ${LEVEL_80}% and ${LEVEL_95}% intervals`;
+const axisText = { tickLabelStyle: { fontSize: 14, fill: t.inkSoft }, labelStyle: { fontSize: 16, fill: t.ink } };
 
-// Hand-rolled legend: MUI X's built-in legend renders a flat, full-opacity
-// swatch per series, which can't show the 80%-vs-95% band nesting or the
-// solid-vs-dashed line distinction the spec calls for.
-function Legend() {
-  const items = [
-    { label: "Historical demand", kind: "line-solid" },
-    { label: "Forecast (point estimate)", kind: "line-dashed" },
-    { label: "80% confidence interval", kind: "fill", opacity: 0.42 },
-    { label: "95% confidence interval", kind: "fill", opacity: 0.2 },
-  ];
+function BandLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
   return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "22px", flexWrap: "wrap" }}>
-      {items.map((it) => (
-        <div key={it.label} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          {it.kind === "fill" ? (
-            <span style={{ width: "16px", height: "16px", backgroundColor: BRAND, opacity: it.opacity, display: "inline-block" }} />
-          ) : (
-            <span
-              style={{
-                width: "18px",
-                height: 0,
-                borderTop: `3px ${it.kind === "line-dashed" ? "dashed" : "solid"} ${BRAND}`,
-                display: "inline-block",
-              }}
-            />
-          )}
-          <span style={{ fontSize: "14px", color: t.inkSoft }}>{it.label}</span>
-        </div>
+    <g>
+      {bands.map((b) => (
+        <path
+          key={b.id}
+          d={`M ${b.rows.map((d) => `${xScale(d[DATE])} ${yScale(d[b.upper])}`).join(" L ")} L ${[...b.rows]
+            .reverse()
+            .map((d) => `${xScale(d[DATE])} ${yScale(d[b.lower])}`)
+            .join(" L ")} Z`}
+          fill={t.palette[0]}
+          fillOpacity={b.opacity}
+          stroke="none"
+        />
       ))}
-    </div>
+    </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_H - LEGEND_H;
-  const Y_LABEL_W = 34;
-  const chartWidth = width - Y_LABEL_W;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", backgroundColor: t.pageBg }}>
-      <div style={{ paddingLeft: "84px" }}>
-        <div
-          style={{
-            height: `${TITLE_H}px`,
-            lineHeight: `${TITLE_H}px`,
-            fontSize: `${titleFontSize}px`,
-            fontWeight: 600,
-            color: t.ink,
-          }}
-        >
-          {TITLE}
-        </div>
-        <Legend />
-      </div>
-      <div style={{ display: "flex", width, height: chartHeight }}>
-        <div style={{ width: Y_LABEL_W, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span
-            style={{
-              display: "inline-block",
-              transform: "rotate(-90deg)",
-              whiteSpace: "nowrap",
-              fontSize: "16px",
-              color: t.ink,
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, px: "56px", pt: "14px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600, lineHeight: 1.25 }}>{TITLE}</Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: 15, mt: "4px" }}>{SUBTITLE}</Typography>
+        <Box sx={{ display: "flex", gap: "26px", mt: "12px", alignItems: "center" }}>
+          {legend.map((item) => (
+            <Box key={item.key} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {item.opacity > 0 ? (
+                <Box sx={{ width: 20, height: 14, bgcolor: t.palette[0], opacity: item.opacity }} />
+              ) : (
+                <Box sx={{ width: 26, height: 0, borderTop: `3px ${item.dash ? "dashed" : "solid"} ${t.palette[0]}` }} />
+              )}
+              <Typography sx={{ color: t.inkSoft, fontSize: 15 }}>{item.label}</Typography>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+      <ChartsDataProvider
+        width={width}
+        height={height - HEADER_H}
+        skipAnimation
+        margin={MARGIN}
+        xAxis={[
+          {
+            data: dates,
+            scaleType: "time",
+            min: dates[0],
+            max: dates[dates.length - 1],
+            tickNumber: 10,
+            valueFormatter: formatMonth,
+            label: DATE,
+            height: 60,
+            ...axisText,
+          },
+        ]}
+        yAxis={[
+          {
+            min: vMin - (vMax - vMin) * PAD_SHARE,
+            max: vMax + (vMax - vMin) * PAD_SHARE,
+            label: ACTUAL,
+            width: 84,
+            valueFormatter: (v: number) => v.toLocaleString("en-US"),
+            ...axisText,
+          },
+        ]}
+        series={[
+          { type: "line", id: "actual", label: legend[0].label, data: rows.map((d) => d[ACTUAL]), color: t.palette[0], showMark: false, curve: "monotoneX" },
+          { type: "line", id: "forecast", label: legend[1].label, data: rows.map((d) => d[FORECAST]), color: t.palette[0], showMark: false, curve: "linear" },
+        ]}
+      >
+        <ChartsWrapper>
+          <ChartsSurface
+            sx={{
+              "& .MuiLineChart-line": { strokeWidth: 3 },
+              '& .MuiLineChart-line[data-series="forecast"]': { strokeDasharray: "10 6" },
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
             }}
           >
-            Demand (units / month)
-          </span>
-        </div>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          grid={{ horizontal: true }}
-          xAxis={[
-            {
-              data: dates,
-              scaleType: "time",
-              valueFormatter: (date) => date.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-              tickNumber: 10,
-              label: "Month",
-              labelStyle: { fontSize: 16 },
-              tickLabelStyle: { fontSize: 13 },
-            },
-          ]}
-          yAxis={[
-            {
-              min: yMin,
-              tickLabelStyle: { fontSize: 14 },
-              valueFormatter: (v) => v.toLocaleString("en-US"),
-            },
-          ]}
-          series={series}
-          margin={{ top: 20, right: 40, bottom: 56, left: 65 }}
-          slotProps={{ legend: { hidden: true } }}
-          sx={{
-            "& .MuiAreaElement-series-band95": { fillOpacity: 0.2 },
-            "& .MuiAreaElement-series-band80": { fillOpacity: 0.42 },
-            "& .MuiLineElement-series-lower95-base": { display: "none" },
-            "& .MuiLineElement-series-lower80-base": { display: "none" },
-            "& .MuiLineElement-series-band95": { stroke: "none" },
-            "& .MuiLineElement-series-band80": { stroke: "none" },
-            "& .MuiLineElement-series-forecast": { strokeDasharray: "10 6" },
-            "& .MuiLineElement-root": { strokeWidth: 3 },
-            "& .MuiChartsAxis-tickLabel": { fill: t.inkSoft },
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
-          }}
-        >
-          <ChartsReferenceLine
-            x={dates[FORECAST_START]}
-            label="Forecast start"
-            labelAlign="start"
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-            labelStyle={{ fontSize: 13, fill: t.inkSoft, fontStyle: "italic" }}
-          />
-        </LineChart>
-      </div>
-    </div>
+            <ChartsGrid horizontal />
+            <BandLayer />
+            <LinePlot />
+            <ChartsReferenceLine
+              x={forecastStart}
+              label="Forecast start"
+              labelAlign="start"
+              lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+              labelStyle={{ fontSize: 14, fill: t.inkSoft }}
+            />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+          <ChartsTooltip trigger="axis" />
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </Box>
   );
 }

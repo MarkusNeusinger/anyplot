@@ -1,9 +1,8 @@
 // anyplot.ai
 // violin-split: Split Violin Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-09-09
-import { Box, Typography } from "@mui/material";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -11,346 +10,223 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-const CAT_AXIS_ID = "category-axis";
-const VAL_AXIS_ID = "value-axis";
+// Constants
+const GRID_N = 160; // KDE evaluation points per half
+const TAIL_BANDWIDTHS = 1.5; // the density falls below ~4 % of its peak this far past the data
+const SCORE_MIN = 0; // the test's fixed score range: no density is drawn and no tick is set outside it
+const SCORE_MAX = 100;
+const Y_PAD = 0.04; // share of the value range added below the data
+const Y_HEADROOM = 0.08; // share of the value range added above the data, room for the callout
+const Y_TICK_COUNT = 15; // about this many value ticks
+const NICE_STEPS = [1, 2, 2.5, 5, 10]; // round tick step multipliers
+const TITLE = "violin-split · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+const LEGEND_H = 40;
 
-// --- Data (in-memory, deterministic — tiny fixed-seed LCG) ------------------
-function makeLcg(seed: number) {
-  let state = seed >>> 0;
-  return function next() {
+// Columns: set these to your data's column names
+const SUBJECT = "Subject"; // role: category
+const GROUP = "Study arm"; // role: split_group
+const SCORE = "Test score (points)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// End-of-term test scores of 140 students per subject and study arm; the
+// experimental arm used a new tutoring program. Scores outside 0-100 are redrawn.
+const data = (() => {
+  let state = 20260909 >>> 0;
+  const rng = () => {
     state = (Math.imul(1664525, state) + 1013904223) >>> 0;
     return state / 4294967296;
   };
-}
-const rng = makeLcg(20260909);
-
-function gaussian(mean: number, std: number) {
-  let u1 = rng();
-  while (u1 <= 1e-12) u1 = rng();
-  const u2 = rng();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * std;
-}
-
-function clamp(v: number, lo: number, hi: number) {
-  return Math.min(hi, Math.max(lo, v));
-}
-
-const N_PER_GROUP = 140;
-const SPLIT_GROUPS = ["Control group", "Experimental group"];
-
-const CATEGORY_PARAMS = [
-  {
-    name: "Mathematics",
-    control: { mean: 68, std: 11 },
-    experimental: { mean: 74, std: 9 },
-  },
-  {
-    name: "Science",
-    control: { mean: 74, std: 9 },
-    experimental: { mean: 80, std: 7 },
-  },
-  {
-    name: "Language Arts",
-    control: { mean: 76, std: 8 },
-    experimental: { mean: 81, std: 7 },
-  },
-  {
-    name: "History",
-    control: { mean: 70, std: 10 },
-    experimental: { mean: 76, std: 8 },
-  },
-];
-const CATEGORIES = CATEGORY_PARAMS.map((c) => c.name);
-
-const DATA: Record<string, Record<string, number[]>> = {};
-CATEGORY_PARAMS.forEach(({ name, control, experimental }) => {
-  DATA[name] = {
-    // Only the physical floor (0) is clamped — a hard clamp at 100 would pile
-    // up upper-tail samples on the boundary and flatten the violin's tip.
-    "Control group": Array.from({ length: N_PER_GROUP }, () =>
-      clamp(gaussian(control.mean, control.std), 0, Infinity),
-    ),
-    "Experimental group": Array.from({ length: N_PER_GROUP }, () =>
-      clamp(gaussian(experimental.mean, experimental.std), 0, Infinity),
-    ),
+  const gaussian = (mean, sd) => {
+    let u1 = rng();
+    while (u1 <= 1e-12) u1 = rng();
+    return mean + sd * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * rng());
   };
-});
+  const subjects = [
+    ["Mathematics", 68, 11, 74, 9],
+    ["Science", 74, 9, 80, 7],
+    ["Language Arts", 76, 8, 81, 7],
+    ["History", 70, 10, 76, 8],
+  ];
+  return subjects.flatMap(([subject, cMean, cSd, eMean, eSd]) =>
+    [
+      ["Control", cMean, cSd],
+      ["Experimental", eMean, eSd],
+    ].flatMap(([arm, mean, sd]) =>
+      Array.from({ length: 140 }, () => {
+        let v = gaussian(mean, sd);
+        while (v < 0 || v > 100) v = gaussian(mean, sd);
+        return { [SUBJECT]: subject, [GROUP]: arm, [SCORE]: Math.round(v * 10) / 10 };
+      }),
+    ),
+  );
+})();
 
-const ALL_VALUES = CATEGORIES.flatMap((cat) =>
-  SPLIT_GROUPS.flatMap((grp) => DATA[cat][grp]),
-);
-const RAW_MIN = Math.min(...ALL_VALUES);
-const RAW_MAX = Math.max(...ALL_VALUES);
-const PAD = (RAW_MAX - RAW_MIN) * 0.1;
-const Y_MIN = Math.max(0, Math.floor(RAW_MIN - PAD));
-// Test scores don't exceed 100 — cap the axis window there. The underlying
-// data stays unclamped (see above) so the KDE tail decays smoothly into this
-// boundary instead of piling up on it.
-const Y_MAX = Math.min(100, Math.ceil(RAW_MAX + PAD));
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[SCORE] != null);
+const categories = [...new Set(rows.map((d) => d[SUBJECT]))];
+// A split violin has two halves: the first two split groups in order of
+// appearance take the left and the right side in every category
+const halvesOrder = [...new Set(rows.map((d) => d[GROUP]))].slice(0, 2);
 
-const GRID_N = 220;
-const GRID_Y = Array.from(
-  { length: GRID_N },
-  (_, i) => Y_MIN + ((Y_MAX - Y_MIN) * i) / (GRID_N - 1),
+// Per category and half: quartiles and a Gaussian KDE (Silverman bandwidth)
+// normalized to its own peak, on a grid that ends a short way past the data,
+// so each half tapers to the centre line just beyond its values; the grid is
+// cut at the score range, where a half then ends flat
+const halves = categories.map((cat) =>
+  halvesOrder.map((group) => {
+    const values = rows
+      .filter((d) => d[SUBJECT] === cat && d[GROUP] === group)
+      .map((d) => d[SCORE])
+      .sort((a, b) => a - b);
+    const n = values.length;
+    if (n === 0) return null;
+    const [q1, median, q3] = [0.25, 0.5, 0.75].map((q) => {
+      const pos = (n - 1) * q;
+      const base = Math.floor(pos);
+      return values[base] + (pos - base) * ((values[base + 1] ?? values[base]) - values[base]);
+    });
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const sd = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, n - 1));
+    const bandwidth = Math.max(0.9 * sd * Math.pow(n, -0.2), 1e-6);
+    const lo = Math.max(SCORE_MIN, values[0] - TAIL_BANDWIDTHS * bandwidth);
+    const hi = Math.min(SCORE_MAX, values[n - 1] + TAIL_BANDWIDTHS * bandwidth);
+    const grid = Array.from({ length: GRID_N }, (_, k) => lo + (k * (hi - lo)) / (GRID_N - 1));
+    const raw = grid.map((gy) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((gy - v) / bandwidth) ** 2), 0));
+    const peak = Math.max(...raw);
+    return { q1, median, q3, grid, density: raw.map((v) => v / peak) };
+  }),
 );
 
-const GROUP_COLORS = [t.palette[0], t.palette[1]];
+const filled = halves.flat().filter((h) => h != null);
+const gridMin = Math.min(...filled.map((h) => h.grid[0]));
+const gridMax = Math.max(...filled.map((h) => h.grid[GRID_N - 1]));
+const yMin = gridMin - (gridMax - gridMin) * Y_PAD;
+const yMax = gridMax + (gridMax - gridMin) * Y_HEADROOM;
+// Round ticks inside the axis and the score range: the headroom above the
+// test maximum holds the callout, never a score tick
+const tickRaw = (yMax - yMin) / Y_TICK_COUNT;
+const tickMagnitude = 10 ** Math.floor(Math.log10(tickRaw));
+const tickStep = NICE_STEPS.map((m) => m * tickMagnitude).find((s) => s >= tickRaw);
+const tickLo = Math.max(SCORE_MIN, Math.ceil(yMin / tickStep - 1e-9) * tickStep);
+const tickHi = Math.min(SCORE_MAX, yMax);
+const yTicks = Array.from({ length: Math.floor((tickHi - tickLo) / tickStep + 1e-9) + 1 }, (_, i) => tickLo + i * tickStep);
 
-// --- KDE (Gaussian kernel, Silverman bandwidth) — draws the violin curves ---
-function silvermanBandwidth(values: number[]) {
-  const n = values.length;
-  const mean = values.reduce((s, v) => s + v, 0) / n;
-  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1);
-  const sigma = Math.sqrt(variance) || 1;
-  return Math.max(0.9 * sigma * Math.pow(n, -0.2), 0.6);
-}
+// Focal callout: the category with the largest gap between the two halves' medians
+const UNIT = SCORE.match(/\(([^)]+)\)\s*$/)?.[1] ?? "";
+const gaps = halves.map((pair) => (pair[0] && pair[1] ? pair[1].median - pair[0].median : null));
+const gapIndex = gaps.reduce((best, g, i) => (g != null && (best < 0 || Math.abs(g) > Math.abs(gaps[best])) ? i : best), -1);
+const CALLOUT =
+  gapIndex >= 0
+    ? `Largest median gap: ${halvesOrder[1]} ${gaps[gapIndex] >= 0 ? "+" : "−"}${Math.abs(gaps[gapIndex]).toFixed(1)} ${UNIT}`
+    : null;
+const SUBTITLE = `${rows.length.toLocaleString("en-US")} ${SCORE.replace(/\s*\([^)]*\)\s*$/, "").toLowerCase()}s across ${categories.length} ${SUBJECT.toLowerCase()}s · bar: Q1–Q3 of each half, dot: its median`;
 
-function kdeCurve(values: number[], gridY: number[]) {
-  const h = silvermanBandwidth(values);
-  const n = values.length;
-  const norm = 1 / (n * h * Math.sqrt(2 * Math.PI));
-  return gridY.map((y) => {
-    let sum = 0;
-    for (let i = 0; i < n; i++) {
-      const u = (y - values[i]) / h;
-      sum += Math.exp(-0.5 * u * u);
-    }
-    return sum * norm;
-  });
-}
-
-// Trims the near-zero density tails so each half pinches to the center spine
-// instead of drawing a near-invisible sliver across the whole y-range.
-function trimToSupport(density: number[], thresholdRatio: number) {
-  const max = Math.max(...density);
-  const threshold = max * thresholdRatio;
-  let lo = 0;
-  let hi = density.length - 1;
-  while (lo < hi && density[lo] < threshold) lo++;
-  while (hi > lo && density[hi] < threshold) hi--;
-  lo = Math.max(0, lo - 1);
-  hi = Math.min(density.length - 1, hi + 1);
-  return { lo, hi, max };
-}
-
-function quartileStats(values: number[]) {
-  const sorted = [...values].sort((a, b) => a - b);
-  const quantile = (p: number) => {
-    const pos = (sorted.length - 1) * p;
-    const base = Math.floor(pos);
-    const rest = pos - base;
-    return sorted[base + 1] !== undefined
-      ? sorted[base] + rest * (sorted[base + 1] - sorted[base])
-      : sorted[base];
-  };
-  return { q1: quantile(0.25), median: quantile(0.5), q3: quantile(0.75) };
-}
-
-// Largest control-vs-experimental median gap across categories — drives the
-// callout annotation that anchors the data-storytelling focal point.
-const GAP_INFO = CATEGORIES.map((cat) => {
-  const controlMedian = quartileStats(DATA[cat]["Control group"]).median;
-  const experimentalMedian = quartileStats(
-    DATA[cat]["Experimental group"],
-  ).median;
-  return {
-    category: cat,
-    gap: experimentalMedian - controlMedian,
-  };
-}).reduce((best, cur) => (Math.abs(cur.gap) > Math.abs(best.gap) ? cur : best));
-
-// --- Custom-drawn split violins (community @mui/x-charts has no built-in
-// violin mark — composed from ChartContainer's cartesian scales instead) ----
-function Violins() {
-  const xScale = useXScale(CAT_AXIS_ID);
-  const yScale = useYScale(VAL_AXIS_ID);
+// The community package has no violin component: a custom layer draws each
+// half through the chart's band and linear scales, both meeting at the
+// category's centre line.
+function SplitViolins() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const band = xScale.bandwidth();
+  const halfWidthMax = band * 0.42;
 
   return (
-    <>
-      {CATEGORIES.map((cat) => {
-        const bandStart = xScale(cat);
-        if (bandStart === undefined) return null;
-        const bandwidth = xScale.bandwidth();
-        const cx = bandStart + bandwidth / 2;
-        const halfWidthMax = bandwidth * 0.42;
-
-        const halves = SPLIT_GROUPS.map((grp, gi) => {
-          const values = DATA[cat][grp];
-          const density = kdeCurve(values, GRID_Y);
-          const { lo, hi, max } = trimToSupport(density, 0.01);
-          const side = gi === 0 ? -1 : 1;
-          const color = GROUP_COLORS[gi];
-
-          const points: [number, number][] = [];
-          for (let i = lo; i <= hi; i++) {
-            const w = (density[i] / max) * halfWidthMax;
-            points.push([cx + side * w, yScale(GRID_Y[i]) as number]);
-          }
-          const d =
-            `M ${cx} ${points[0][1]} ` +
-            points.map(([x, y]) => `L ${x} ${y}`).join(" ") +
-            ` L ${cx} ${points[points.length - 1][1]} Z`;
-
-          const { q1, median, q3 } = quartileStats(values);
-          const markerX = cx + side * 7;
-          // GRID_Y is ascending, so index `hi` is the higher score (top of
-          // chart, smaller pixel y) and `lo` is the lower score (bottom).
-          const yTop = yScale(GRID_Y[hi]) as number;
-          const yBottom = yScale(GRID_Y[lo]) as number;
-
-          return { grp, d, color, q1, median, q3, markerX, yTop, yBottom };
-        });
-
-        // Thin spine anchoring the two halves where they meet, spanning the
-        // combined vertical extent of both violins for this category.
-        const spineTop = Math.min(...halves.flatMap((h) => [h.yTop, h.yBottom]));
-        const spineBottom = Math.max(
-          ...halves.flatMap((h) => [h.yTop, h.yBottom]),
-        );
-
-        const isMaxGap = cat === GAP_INFO.category;
-
+    <g>
+      {categories.map((cat, ci) => {
+        const cx = xScale(cat) + band / 2;
+        const present = halves[ci].filter((h) => h != null);
+        const spineTop = Math.min(...present.map((h) => yScale(h.grid[GRID_N - 1])));
+        const spineBottom = Math.max(...present.map((h) => yScale(h.grid[0])));
         return (
           <g key={cat}>
-            <line
-              x1={cx}
-              x2={cx}
-              y1={spineTop}
-              y2={spineBottom}
-              stroke={t.inkSoft}
-              strokeWidth={1}
-              opacity={0.4}
-            />
-            {halves.map(({ grp, d, color, q1, median, q3, markerX }) => (
-              <g key={grp}>
-                <path
-                  d={d}
-                  fill={color}
-                  fillOpacity={0.75}
-                  stroke={color}
-                  strokeWidth={1.5}
-                  strokeOpacity={0.95}
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1={markerX}
-                  x2={markerX}
-                  y1={yScale(q1)}
-                  y2={yScale(q3)}
-                  stroke={t.pageBg}
-                  strokeWidth={5}
-                  strokeLinecap="round"
-                  opacity={0.85}
-                />
-                <circle
-                  cx={markerX}
-                  cy={yScale(median)}
-                  r={4.5}
-                  fill={t.pageBg}
-                  stroke={color}
-                  strokeWidth={1.5}
-                />
-              </g>
-            ))}
-            {isMaxGap && (
-              <text
-                x={cx}
-                y={spineTop - 12}
-                textAnchor="middle"
-                fontSize={13}
-                fontWeight={700}
-                fill={t.ink}
-              >
-                {`Largest gap: ${GAP_INFO.gap >= 0 ? "+" : ""}${GAP_INFO.gap.toFixed(1)} pt`}
+            <line x1={cx} x2={cx} y1={spineTop} y2={spineBottom} stroke={t.inkSoft} strokeWidth={1} />
+            {halves[ci].map((half, gi) => {
+              if (half == null) return null;
+              const side = gi === 0 ? -1 : 1;
+              const color = t.palette[gi];
+              const outline = half.grid.map((gy, k) => `L ${cx + side * half.density[k] * halfWidthMax} ${yScale(gy)}`).join(" ");
+              const d = `M ${cx} ${yScale(half.grid[0])} ${outline} L ${cx} ${yScale(half.grid[GRID_N - 1])} Z`;
+              const markerX = cx + side * 8;
+              return (
+                <g key={`${cat}-${gi}`}>
+                  <path d={d} fill={color} fillOpacity={0.7} stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
+                  <line x1={markerX} x2={markerX} y1={yScale(half.q1)} y2={yScale(half.q3)} stroke={t.pageBg} strokeWidth={5} strokeLinecap="round" />
+                  <circle cx={markerX} cy={yScale(half.median)} r={4.5} fill={t.pageBg} stroke={color} strokeWidth={1.75} />
+                </g>
+              );
+            })}
+            {ci === gapIndex && (
+              <text x={cx} y={spineTop - 14} textAnchor="middle" fontSize={15} fontWeight={600} fill={t.ink}>
+                {CALLOUT}
               </text>
             )}
           </g>
         );
       })}
-    </>
+    </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const TITLE_H = 46;
-  const LEGEND_H = 34;
-  const CHART_H = H - TITLE_H - LEGEND_H;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
-      <Typography
-        sx={{
-          height: TITLE_H,
-          lineHeight: `${TITLE_H}px`,
-          fontSize: 22,
-          fontWeight: 700,
-          textAlign: "center",
-        }}
-      >
-        violin-split · javascript · muix · anyplot.ai
-      </Typography>
-      <Box
-        sx={{
-          height: LEGEND_H,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 4,
-        }}
-      >
-        {SPLIT_GROUPS.map((grp, i) => (
-          <Box key={grp} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box
-              sx={{
-                width: 16,
-                height: 16,
-                borderRadius: "3px",
-                backgroundColor: GROUP_COLORS[i],
-              }}
-            />
-            <Typography sx={{ fontSize: 16, color: "text.secondary" }}>
-              {grp}
-            </Typography>
-          </Box>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
+      </div>
+      <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: 28, padding: "0 36px" }}>
+        {halvesOrder.map((group, i) => (
+          <div key={group} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 16, height: 16, borderRadius: 3, background: t.palette[i], opacity: 0.85, display: "inline-block" }} />
+            <span style={{ fontSize: 15, color: t.ink }}>{`${group} (${i === 0 ? "left" : "right"} half)`}</span>
+          </div>
         ))}
-      </Box>
-      <ChartContainer
-        width={W}
-        height={CHART_H}
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
         series={[]}
         skipAnimation
-        margin={{ top: 36, right: 50, bottom: 74, left: 96 }}
+        margin={{ top: 8, right: 48, bottom: 12, left: 24 }}
         xAxis={[
           {
-            id: CAT_AXIS_ID,
+            id: "category",
             scaleType: "band",
-            data: CATEGORIES,
-            label: "Subject",
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16, fontWeight: 600 },
+            data: categories,
+            disableTicks: true,
+            height: 72,
+            label: SUBJECT,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            id: VAL_AXIS_ID,
+            id: "value",
             scaleType: "linear",
-            min: Y_MIN,
-            max: Y_MAX,
-            label: "Test score (points)",
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16, fontWeight: 600 },
+            min: yMin,
+            max: yMax,
+            tickInterval: yTicks,
+            width: 84,
+            label: SCORE,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
           },
         ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
       >
         <ChartsGrid horizontal />
-        <Violins />
-        <ChartsXAxis axisId={CAT_AXIS_ID} position="bottom" />
-        <ChartsYAxis axisId={VAL_AXIS_ID} position="left" />
-      </ChartContainer>
-    </Box>
+        <SplitViolins />
+        <ChartsXAxis axisId="category" />
+        <ChartsYAxis axisId="value" />
+      </ChartsContainer>
+    </div>
   );
 }
