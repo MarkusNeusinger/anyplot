@@ -56,8 +56,8 @@ moves it from the member that held it, and `check_bindings` refuses it. A lower 
 on one column is never inverted, so it carries no warning.
 
 A spec whose plot draws one value per key (`DataRole.key`, `fidelity.KEY_ROLES`: a bar per category, a point per x)
-gets one more warning when the bound key columns repeat in the rows, with the counts (`fidelity.repeated_key`, owner
-decision of 2026-11-08): `x: column 'Length' holds 9 values in 27 rows; ...`. It is a fact of the rows, not of the
+gets one more warning when the bound key columns of complete bindings repeat in the rows, with the counts
+(`fidelity.repeated_key`, owner decision of 2026-11-08): `x: column 'Length' holds 9 values in 27 rows; ...`. It is a fact of the rows, not of the
 binding, so it changes no default and no carry (`BindingCheck.fit_warnings`).
 """
 
@@ -172,8 +172,8 @@ class BindingCheck:
     missing_roles: list[str]
     warnings: list[str] = field(default_factory=list)
     repeated_key: RepeatedKey | None = None
-    """The key of a spec that draws one value per key, when the bound columns repeat it in the rows
-    (`fidelity.repeated_key`); its line is the last of `warnings`."""
+    """The key of a spec that draws one value per key, when the bound columns of complete bindings repeat it in the
+    rows (`fidelity.repeated_key`); its line is the last of `warnings`."""
 
     @property
     def fit_warnings(self) -> list[str]:
@@ -910,9 +910,9 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     unbound non-negative role whose every fitting column that no other role holds has one,
     and a role that takes labels bound to a measurement column of a wide table
     (`label_siblings`, `sibling_line`), and a lower and upper bound pair whose lower column
-    starts above the largest value of the upper one (`bounds.inverted_line`), and, last, a key
-    of a spec that draws one value per key whose bound columns the rows repeat
-    (`fidelity.repeated_key`, also as `repeated_key`).
+    starts above the largest value of the upper one (`bounds.inverted_line`), and, last and only
+    when the bindings are complete, a key of a spec that draws one value per key whose bound
+    columns the rows repeat (`fidelity.repeated_key`, also as `repeated_key`).
     """
     columns = {column.name: column for column in profile.columns}
     siblings = label_siblings(roles, profile)
@@ -978,12 +978,15 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
                 f"{role.name}: not bound, because every column that fits it ({names}) has negative values; "
                 "this role needs values of 0 or more"
             )
-    # Judged on the bindings in spec order, so the spec's first key role names the line.
-    order = {role.name: position for position, role in enumerate(roles)}
-    repeated = repeated_key(sorted(valid, key=lambda item: order.get(item[1].name, len(roles))), profile.rows)
+    missing = [role.name for role in roles if role.required and not role.computed and role.name not in bound]
+    # Only on complete bindings, since a mark is drawn only then; judged in spec order, so the spec's first key role
+    # names the line.
+    repeated = None
+    if not errors and not missing:
+        order = {role.name: position for position, role in enumerate(roles)}
+        repeated = repeated_key(sorted(valid, key=lambda item: order.get(item[1].name, len(roles))), profile.rows)
     if repeated is not None:
         warnings.append(repeated.line())
-    missing = [role.name for role in roles if role.required and not role.computed and role.name not in bound]
     return BindingCheck(
         complete=not errors and not missing,
         errors=errors,

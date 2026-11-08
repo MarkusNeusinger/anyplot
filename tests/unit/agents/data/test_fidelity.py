@@ -279,15 +279,27 @@ class TestExistingRulesStillWin:
         assert check.repeated_key is None
         assert left_out_line(valid_bindings(bindings, roles, profile), "line-timeseries-rolling", roles, 10) is None
 
-    def test_a_name_only_role_stays_missing_while_the_key_warns(self) -> None:
-        """B1b: the MACD line binds only to a column named so; a repeated date warns all the same."""
-        profile = profile_of("Date,Open\n2026-01-01,10\n2026-01-01,11\n2026-01-02,12\n")
+    def test_a_name_only_role_stays_missing_and_the_key_waits_for_it(self) -> None:
+        """B1b: the MACD line binds only to a column named so. While it is missing no mark is drawn, so a repeated
+        date warns only once a MACD column is bound."""
         roles = roles_of("indicator-macd")
+        prices = profile_of("Date,Open\n2026-01-01,10\n2026-01-01,11\n2026-01-02,12\n")
 
-        check = check_bindings(default_bindings(roles, profile), roles, profile)
+        check = check_bindings(default_bindings(roles, prices), roles, prices)
 
-        assert "macd" in check.missing_roles
-        assert check.repeated_key is not None and check.repeated_key.roles == ("date",)
+        assert "macd" in check.missing_roles and check.repeated_key is None
+        named = profile_of("Date,MACD\n2026-01-01,0.4\n2026-01-01,0.5\n2026-01-02,0.2\n")
+        bindings = default_bindings(roles, named)
+        assert {binding.role: binding.column for binding in bindings} == {"date": "Date", "macd": "MACD"}
+        repeated = check_bindings(bindings, roles, named).repeated_key
+        assert repeated is not None and repeated.roles == ("date",)
+
+    def test_incomplete_or_invalid_bindings_never_warn(self) -> None:
+        roles, profile = roles_of("line-styled"), profile_of(LENGTHS)
+
+        assert check_bindings(bind(x="Length"), roles, profile).repeated_key is None
+        invalid = check_bindings(bind(x="Length", y_1="Reading", z="Reading"), roles, profile)
+        assert invalid.errors and invalid.repeated_key is None
 
     def test_a_spec_of_name_only_summaries_is_never_keyed(self) -> None:
         roles = roles_of("spc-xbar-r")

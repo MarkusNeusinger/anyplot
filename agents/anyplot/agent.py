@@ -149,7 +149,7 @@ A persona test of 2026-11-06: after a re-paste with a note, the root answered ro
 the box ("I can't read data from the message itself") although the table had arrived as the attachment of that very
 turn. The line says where the table is, so the rule for typed tables never reads as this turn's."""
 REPEATED_KEY_LINE = (
-    "- Repeated key: {fact}, and the plot draws one value per {per}; the binding warnings name the columns, and the "
+    "- Repeated key: {fact}, and the plot draws one value per {per}; the line below names the columns, and the "
     "offer is the counted aggregate (see 'Step 1: the data')"
 )
 """The session block's line while the bound key of a spec that draws one value per key repeats in the rows
@@ -238,15 +238,16 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(
                 f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid{BINDINGS_HINT}"
             )
-        if check.warnings:
+        fit = check.fit_warnings
+        if fit:
             # The lines name the user's columns, so they stand inside a data fence.
-            lines.append(
-                f"- Binding warnings: {len(check.warnings)}, roles bound to a column that does not fit them as it is"
-            )
-            lines.append(fence("user_data", "\n".join(check.warnings)))
+            lines.append(f"- Binding warnings: {len(fit)}, roles bound to a column that does not fit them as it is")
+            lines.append(fence("user_data", "\n".join(fit)))
         if check.repeated_key is not None:
+            # A fact of the rows, not of the binding: its own line, its warning with the column names fenced below.
             repeated = check.repeated_key
             lines.append(REPEATED_KEY_LINE.format(fact=repeated.fact(), per=repeated.per()))
+            lines.append(fence("user_data", repeated.line()))
         ledger = CURRENT_LEDGER.get()
         made = read_conversions_made(context.state)
         made_now = ledger is not None and made is not None and ledger.conversions_made == made.dataset_id

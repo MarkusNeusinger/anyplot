@@ -61,9 +61,11 @@ class TestRepeatedKey:
         block = await session_context(context)  # type: ignore[arg-type]
 
         line = REPEATED_KEY_LINE.format(fact="x has 9 values in 27 rows", per="x")
-        assert line in block.splitlines()
-        assert "Length" not in line  # the column names stay inside the fenced warnings
-        assert [WARNING] in fenced_lines(block, "user_data")
+        lines = block.splitlines()
+        assert lines[lines.index(line) + 1 : lines.index(line) + 4] == ["<user_data>", WARNING, "</user_data>"]
+        assert "Length" not in line  # the column names stay inside the fence below it
+        # A fact of the rows, not a column that misfits its role: no "Binding warnings" heading claims otherwise.
+        assert not any(row.startswith("- Binding warnings:") for row in lines)
 
     async def test_the_bindings_route_and_set_bindings_answer_the_warning(self, client: httpx.AsyncClient) -> None:
         sid = await open_spec(client, "line-styled")

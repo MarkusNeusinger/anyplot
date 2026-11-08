@@ -10,7 +10,8 @@ come from the profile, never from the plot code:
 * A key that repeats (`repeated_key`). A spec in `KEY_ROLES` draws one value per key: one bar, slice or stage per
   category, one cell per pair, one point per x or date of each series. When the bound key columns hold fewer keys
   than the rows that need a mark, rows share a key, and the plot either draws them on top of each other, as a
-  zigzag, or groups them in its code without a count. The binding check then warns with the counts
+  zigzag, or groups them in its code without a count. The binding check of complete bindings (a mark is drawn
+  only then) then warns with the counts
   (`RepeatedKey.line`: `x: column 'Length' holds 9 values in 27 rows; ...`), the session block names the key and the
   counts (`RepeatedKey.fact`), and the root offers the counted `aggregate` of `prepare_data` (root.md, "Step 1: the
   data"). It is a fact of the rows, not of the binding: it never refuses a binding, and `bindings.carry_by_name`
