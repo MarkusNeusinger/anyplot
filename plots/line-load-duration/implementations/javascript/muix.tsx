@@ -1,211 +1,200 @@
 // anyplot.ai
 // line-load-duration: Load Duration Curve for Energy Systems
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-10
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 89/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (deterministic, no RNG) -------------------------------------------
-// 8,760 hours sorted descending: peak ≈ 1200 MW → base ≈ 400 MW
-const N_HOURS = 8760;
-const hours = Array.from({ length: N_HOURS }, (_, i) => i);
+// Constants
+// Planning tiers from low to high load, each with the capacity line that tops it. The curve
+// meets the base line only at its right end, so that label sits left, on the intermediate fill.
+const TIERS = [
+  { region: "Base load", capacity: "Base capacity", labelAlign: "start" },
+  { region: "Intermediate load", capacity: "Intermediate capacity", labelAlign: "end" },
+  { region: "Peak load", capacity: "Peak capacity", labelAlign: "end" },
+];
+const PEAK_HOURS_SHARE = 0.1; // peak load: the load exceeded in fewer than 10 % of all hours
+const Y_HEAD_SHARE = 0.1; // headroom above the annual peak for the capacity labels
+const INK_SWITCH_LUMINANCE = 0.19; // fills brighter than this take the dark ink
+const FILL_OPACITY = 0.85;
 
-// Power-law decay gives realistic LDC shape (steep peak drop, flat base tail)
-const loadMW = hours.map(h => 400 + 800 * Math.pow(1 - h / (N_HOURS - 1), 0.65));
+// Columns: set these to your data's column names
+const HOUR = "Duration (hours, ranked by load)"; // role: hour
+const LOAD = "Power demand (MW)"; // role: load_mw
 
-// Decompose into three stacked bands
-const baseData  = hours.map(() => 400);
-const interData = hours.map(h => Math.min(Math.max(loadMW[h] - 400, 0), 400));
-const peakData  = hours.map(h => Math.max(loadMW[h] - 800, 0));
+// Data: replace this block with your own records, one object per row
+// Synthetic hourly demand of a mid-sized utility over one year, ranked from the highest hour to the lowest:
+// a long gently sloping middle plus a steep spike over the few hottest hours.
+const data = Array.from({ length: 8760 }, (_, h) => ({
+  [HOUR]: h,
+  [LOAD]: Math.round((400 + 600 * (1 - h / 8759) ** 0.8 + 200 * Math.exp(-h / 8759 / 0.02)) * 10) / 10,
+}));
 
-const totalEnergyTWh = (loadMW.reduce((s, v) => s + v, 0) / 1e6).toFixed(2);
+// Plot: reads only data and the constants above
+// Durations ascending and loads descending: a monotone curve for ranked or calendar-ordered input alike.
+const durations = data.map((d) => d[HOUR]).sort((a, b) => a - b);
+const loads = data.map((d) => d[LOAD]).sort((a, b) => b - a);
+const n = loads.length;
+const peakLoad = loads[0];
+const minLoad = loads[n - 1];
+const baseCap = minLoad; // base capacity: the always-on load, exceeded in every hour of the year
+const interCap = loads[Math.floor(n * PEAK_HOURS_SHARE)];
+const capacities = [baseCap, interCap, peakLoad];
+
+// Three stacked bands whose top edge is the load duration curve
+const bands = [
+  loads.map((v) => Math.min(v, baseCap)),
+  loads.map((v) => Math.min(Math.max(v - baseCap, 0), interCap - baseCap)),
+  loads.map((v) => Math.max(v - interCap, 0)),
+];
+
+const loadUnit = LOAD.match(/\(([^)]+)\)/)?.[1] ?? "";
+const fmt = (v: number) => Math.round(v).toLocaleString("en-US");
+const step = (durations[n - 1] - durations[0]) / (n - 1);
+const energy = loads.reduce((s, v) => s + v, 0) * step;
+const loadFactor = (energy / (peakLoad * step * n)) * 100;
+
+// Ordered tiers take steps of the sequential ramp. Text on a fill takes the ink that the luminance of
+// the visible fill calls for: the tier colour at FILL_OPACITY over the page.
+const seqRgb = t.seq.map((hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+const pageRgb = [1, 3, 5].map((i) => parseInt(t.pageBg.slice(i, i + 2), 16));
+const tierRgb = TIERS.map((_, i) =>
+  seqRgb[0].map((c: number, k: number) => Math.round(c + ((seqRgb[1][k] - c) * i) / (TIERS.length - 1))),
+);
+const tierColors = tierRgb.map((rgb) => `rgb(${rgb.join(", ")})`);
+const tierInks = tierRgb.map((rgb) => {
+  const [r, g, b] = rgb
+    .map((c: number, k: number) => (c * FILL_OPACITY + pageRgb[k] * (1 - FILL_OPACITY)) / 255)
+    .map((c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > INK_SWITCH_LUMINANCE ? "#1A1A17" : "#FAF8F1";
+});
+
+// Region label anchors: the middle of the hours each band covers; the peak sliver is labelled beside its end.
+const aboveBase = loads.filter((v) => v > baseCap).length;
+const aboveInter = loads.filter((v) => v > interCap).length;
+const baseIdx = Math.floor(n / 2);
+const interIdx = Math.floor(aboveBase / 2);
+const regionLabels = [
+  { x: durations[baseIdx], y: bands[0][baseIdx] / 2, anchor: "middle", dx: 0, fill: tierInks[0] },
+  { x: durations[interIdx], y: baseCap + bands[1][interIdx] / 2, anchor: "middle", dx: 0, fill: tierInks[1] },
+  { x: durations[Math.min(n - 1, aboveInter)], y: (interCap + peakLoad) / 2, anchor: "start", dx: 16, fill: t.ink },
+];
 
 const TITLE = "line-load-duration · javascript · muix · anyplot.ai";
+const SUBTITLE = `${n.toLocaleString("en-US")} hourly loads ranked from highest to lowest · peak ${fmt(peakLoad)} ${loadUnit} · minimum ${fmt(minLoad)} ${loadUnit} · load factor ${loadFactor.toFixed(1)} %`;
+const HEADER_H = 80;
 
-// Chart margins — declared once, shared by LineChart and the annotation overlay
-const MARGIN = { top: 20, right: 130, bottom: 72, left: 80 };
-const Y_MAX = 1280;
-const X_MAX = N_HOURS - 1;
-
-// Convert data-space coordinates to CSS px within the chart container
-function toPixel(x, y, cW, cH) {
-  const dw = cW - MARGIN.left - MARGIN.right;
-  const dh = cH - MARGIN.top - MARGIN.bottom;
-  return {
-    left: MARGIN.left + (x / X_MAX) * dw,
-    top:  MARGIN.top  + (1 - y / Y_MAX) * dh,
-  };
+// Region names inside their bands and the energy total, placed in data coordinates
+function Annotations() {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  const { left, width } = useDrawingArea();
+  const energyY = yScale((baseCap + interCap) / 2);
+  return (
+    <g>
+      {regionLabels.map((lab, i) => (
+        <text
+          key={TIERS[i].region}
+          x={xScale(lab.x) + lab.dx}
+          y={yScale(lab.y)}
+          textAnchor={lab.anchor}
+          dominantBaseline="central"
+          fontSize={16}
+          fontWeight={700}
+          fill={lab.fill}
+        >
+          {TIERS[i].region}
+        </text>
+      ))}
+      <text x={left + width - 16} y={energyY} textAnchor="end" fontSize={16} fontWeight={600} fill={t.ink}>
+        Total energy {(energy / 1e6).toFixed(2)} million {loadUnit}h
+      </text>
+      <text x={left + width - 16} y={energyY + 22} textAnchor="end" fontSize={14} fill={t.inkSoft}>
+        area under the curve
+      </text>
+    </g>
+  );
 }
 
-// --- Component (default-exported; harness mounts it with no props) -----------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  const HEADER_H = 50;
-  const FOOTER_H = 28;
-  const PAD_TOP  = 20;
-  const PAD_BOT  = 12;
-  const PAD_H    = 48;
-  const chartW   = W - PAD_H;
-  const chartH   = H - PAD_TOP - HEADER_H - FOOTER_H - PAD_BOT;
-
-  // Labels placed at representative (x, y) data coords inside each band
-  // Base band: 0–400 MW (y=200 at x=7000 → far-right flat region)
-  // Intermediate band: 400–800 MW (y=600 at x=5000 → saturated mid-band)
-  // Peak band: >800 MW (y=950 at x=1500 → steep left portion)
-  const bandLabels = [
-    { x: 7000, y: 200, text: "Base Load"    },
-    { x: 5000, y: 600, text: "Intermediate" },
-    { x: 1500, y: 950, text: "Peak Load"    },
-  ];
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div style={{
-      width: W,
-      height: H,
-      backgroundColor: t.pageBg,
-      display: "flex",
-      flexDirection: "column",
-      padding: `${PAD_TOP}px 24px ${PAD_BOT}px`,
-      boxSizing: "border-box",
-      fontFamily: "sans-serif",
-    }}>
-      {/* Chart title */}
-      <div style={{
-        color: t.ink,
-        fontSize: 22,
-        fontWeight: 600,
-        lineHeight: "30px",
-        marginBottom: 8,
-        flexShrink: 0,
-      }}>
-        {TITLE}
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 112px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
       </div>
-
-      {/* Stacked-area chart with region-label overlay */}
-      <div style={{ position: "relative", width: chartW, height: chartH, flexShrink: 0 }}>
-        <LineChart
-          width={chartW}
-          height={chartH}
-          margin={MARGIN}
-          skipAnimation
-          grid={{ horizontal: true }}
-          colors={[t.palette[0], t.palette[1], t.palette[2]]}
-          xAxis={[{
-            data: hours,
-            label: "Hours in a Year (sorted by descending load)",
+      <LineChart
+        width={width}
+        height={height - HEADER_H}
+        skipAnimation
+        hideLegend
+        margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
+        xAxis={[
+          {
+            data: durations,
+            scaleType: "linear",
+            min: durations[0],
+            max: durations[n - 1],
+            tickNumber: 10,
+            label: HOUR,
+            height: 64,
+            valueFormatter: fmt,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
             min: 0,
-            max: X_MAX,
-            tickInterval: [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000],
-            tickLabelStyle: { fontSize: 13 },
-          }]}
-          yAxis={[{
-            label: "Power Demand (MW)",
-            min: 0,
-            max: Y_MAX,
-            tickLabelStyle: { fontSize: 13 },
-          }]}
-          series={[
-            {
-              data: baseData,
-              area: true,
-              stack: "load",
-              label: "Base Load (< 400 MW)",
-              showMark: false,
-              curve: "linear",
-            },
-            {
-              data: interData,
-              area: true,
-              stack: "load",
-              label: "Intermediate Load (400–800 MW)",
-              showMark: false,
-              curve: "linear",
-            },
-            {
-              data: peakData,
-              area: true,
-              stack: "load",
-              label: "Peak Load (> 800 MW)",
-              showMark: false,
-              curve: "linear",
-            },
-          ]}
-          sx={{
-            "& .MuiLineElement-root":  { strokeWidth: 0 },
-            "& .MuiAreaElement-root":  { fillOpacity: 0.82 },
-            "& .MuiChartsGrid-line":   { stroke: t.grid, strokeOpacity: 0.5, strokeDasharray: "4 3" },
-            "& .MuiChartsAxis-line":   { stroke: t.inkSoft, strokeOpacity: 0.3 },
-            "& .MuiChartsAxis-tick":   { stroke: t.inkSoft, strokeOpacity: 0.3 },
-          }}
-          slotProps={{
-            legend: {
-              position: { vertical: "top", horizontal: "right" },
-              itemMarkWidth: 14,
-              itemMarkHeight: 14,
-              markGap: 6,
-              itemGap: 12,
-            },
-          }}
-        >
-          {/* Horizontal dashed lines at capacity tier boundaries */}
+            max: peakLoad * (1 + Y_HEAD_SHARE),
+            tickNumber: 7,
+            label: LOAD,
+            width: 88,
+            valueFormatter: fmt,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={TIERS.map((tier, i) => ({
+          id: `tier-${i}`,
+          data: bands[i],
+          label: tier.region,
+          color: tierColors[i],
+          stack: "load",
+          area: true,
+          showMark: false,
+          curve: "linear",
+        }))}
+        sx={{
+          "& .MuiLineChart-area": { fillOpacity: FILL_OPACITY },
+          "& .MuiLineChart-line": { strokeWidth: 0 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      >
+        {/* Gridlines drawn after the fills so they stay readable across the bands */}
+        <ChartsGrid horizontal />
+        {capacities.map((cap, i) => (
           <ChartsReferenceLine
-            y={400}
-            label="Base capacity: 400 MW"
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 4", strokeWidth: 1.5 }}
-            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-            labelAlign="end"
+            key={TIERS[i].capacity}
+            y={cap}
+            label={`${TIERS[i].capacity} ${fmt(cap)} ${loadUnit}`}
+            labelAlign={TIERS[i].labelAlign}
+            spacing={{ x: 16, y: 6 }}
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 5", strokeWidth: 1.75 }}
+            // A label at the left end sits on the next band's fill; at the right end, on the page.
+            labelStyle={{ fontSize: 15, fill: TIERS[i].labelAlign === "start" ? tierInks[i + 1] : t.ink }}
           />
-          <ChartsReferenceLine
-            y={800}
-            label="Intermediate capacity: 800 MW"
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 4", strokeWidth: 1.5 }}
-            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-            labelAlign="end"
-          />
-        </LineChart>
-
-        {/* Direct in-band region labels — spec requires labeling each band on the plot */}
-        {bandLabels.map(({ x, y, text }) => {
-          const pos = toPixel(x, y, chartW, chartH);
-          return (
-            <div
-              key={text}
-              style={{
-                position: "absolute",
-                left: pos.left,
-                top: pos.top,
-                transform: "translate(-50%, -50%)",
-                color: t.ink,
-                fontSize: 15,
-                fontWeight: 700,
-                fontFamily: "sans-serif",
-                pointerEvents: "none",
-                textShadow: `0 0 8px ${t.pageBg}, 0 0 8px ${t.pageBg}`,
-                letterSpacing: "0.04em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {text}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Total energy annotation */}
-      <div style={{
-        color: t.inkSoft,
-        fontSize: 14,
-        textAlign: "center",
-        marginTop: 4,
-        flexShrink: 0,
-        fontFamily: "sans-serif",
-      }}>
-        Total annual energy consumption: {totalEnergyTWh} TWh
-      </div>
+        ))}
+        <Annotations />
+      </LineChart>
     </div>
   );
 }

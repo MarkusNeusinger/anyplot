@@ -1,78 +1,90 @@
 // anyplot.ai
 // waffle-basic: Basic Waffle Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-09
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
+
+// Constants
+const GRID_SIZE = 10; // the standard 10 × 10 waffle, one square per percentage point
+const CELL_GAP = 0.12; // share of each band left as the gap between squares
+// Semantic exception: the other/rest category takes the theme-adaptive "muted"
+// anchor (not in the harness tokens), the remaining categories the unused
+// Imprint positions in order.
+const MUTED = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
+const SEMANTIC = { Other: MUTED };
 const TITLE = "waffle-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 72;
+const PAD = 32;
 
-// Imprint's theme-adaptive "muted" anchor (other/rest) isn't part of
-// ANYPLOT_TOKENS, so it's derived here the same way the style guide defines it.
-const MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
+// Columns: set these to your data's column names
+const DEPARTMENT = "Department"; // role: category
+const SHARE = "Budget share (%)"; // role: value
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Annual engineering-org budget allocation by department. Values sum to 100 —
-// one grid square per percentage point, the canonical waffle-chart mapping.
-// "Other" gets the theme-adaptive muted anchor (other/rest semantic exception)
-// instead of the next ordinal palette slot.
-const CATEGORIES = [
-  { label: "Engineering", pct: 34, color: t.palette[0] },
-  { label: "Sales", pct: 21, color: t.palette[1] },
-  { label: "Marketing", pct: 17, color: t.palette[2] },
-  { label: "Operations", pct: 16, color: t.palette[3] },
-  { label: "Other", pct: 12, color: MUTED },
+// Data: replace this block with your own records, one object per row
+// Annual budget allocation of an engineering organization by department.
+const data = [
+  { [DEPARTMENT]: "Engineering", [SHARE]: 34 },
+  { [DEPARTMENT]: "Sales", [SHARE]: 21 },
+  { [DEPARTMENT]: "Marketing", [SHARE]: 17 },
+  { [DEPARTMENT]: "Operations", [SHARE]: 16 },
+  { [DEPARTMENT]: "Other", [SHARE]: 12 },
 ];
 
-const GRID_SIZE = 10; // 10x10 = 100 squares, one per percentage point
-const COLS = Array.from({ length: GRID_SIZE }, (_, i) => i);
-const ROWS = Array.from({ length: GRID_SIZE }, (_, i) => i);
+// Plot: reads only data and the constants above
+const CELLS = GRID_SIZE * GRID_SIZE;
+const rows = data.filter((d) => d[SHARE] != null && d[SHARE] > 0);
+const categories = [...new Set(rows.map((d) => d[DEPARTMENT]))];
+const totals = categories.map((c) => rows.filter((d) => d[DEPARTMENT] === c).reduce((s, d) => s + d[SHARE], 0));
+const grandTotal = totals.reduce((a, b) => a + b, 0);
+const percents = totals.map((v) => (v / grandTotal) * 100);
 
-// Fill the grid row-major, left-to-right then top-to-bottom, handing each
-// category a contiguous block of squares in the order above.
-let cellIndex = 0;
-const series = CATEGORIES.map((category) => {
-  const data = [];
-  for (let i = 0; i < category.pct; i += 1) {
-    data.push({
-      id: `cell-${cellIndex}`,
-      x: cellIndex % GRID_SIZE,
-      y: Math.floor(cellIndex / GRID_SIZE),
-    });
-    cellIndex += 1;
-  }
-  return {
-    type: "scatter",
-    id: category.label.toLowerCase(),
-    data,
-    label: `${category.label} — ${category.pct}%`,
-  };
-});
-const COLORS = CATEGORIES.map((category) => category.color);
+// Largest-remainder rounding: every category gets the whole squares of its
+// share, and the squares left over go to the largest fractional parts, so the
+// blocks fill the grid exactly.
+const exact = totals.map((v) => (v / grandTotal) * CELLS);
+const counts = exact.map((e) => Math.floor(e));
+const leftover = CELLS - counts.reduce((a, b) => a + b, 0);
+exact
+  .map((e, i) => ({ i, rest: e - counts[i] }))
+  .sort((a, b) => b.rest - a.rest)
+  .forEach((r, k) => {
+    if (k < leftover) counts[r.i] += 1;
+  });
 
-// Custom scatter mark: opaque squares tiling the band grid, colored per series
-// rather than by a continuous data value — this is what turns MUI X's
-// ScatterPlot into a waffle/unit-chart grid instead of a scatter of dots.
-function WaffleSquares({ series: seriesData, xScale, yScale, color }) {
-  const cellW = xScale.bandwidth();
-  const cellH = yScale.bandwidth();
-  const radius = Math.min(cellW, cellH) * 0.15;
+let nextSlot = 0;
+const colors = categories.map((c) => SEMANTIC[c] ?? t.palette[nextSlot++]);
+
+// Row by row from the top left, one contiguous block per category in data order
+const cells = categories
+  .flatMap((_, i) => Array.from({ length: counts[i] }, () => i))
+  .map((group, k) => ({ group, col: k % GRID_SIZE, row: Math.floor(k / GRID_SIZE) }));
+const bands = Array.from({ length: GRID_SIZE }, (_, i) => i);
+const SUBTITLE = `${CELLS} squares, one per ${100 / CELLS} % of the total · shares rounded to whole squares`;
+
+// The community package has no waffle chart: a custom layer draws the squares
+// on two band scales, one for the columns and one for the rows.
+function WaffleLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const size = xScale.bandwidth();
+
   return (
     <g>
-      {seriesData.data.map((pt) => (
+      {cells.map((c, k) => (
         <rect
-          key={pt.id}
-          x={xScale(pt.x) ?? 0}
-          y={yScale(pt.y) ?? 0}
-          width={cellW}
-          height={cellH}
-          rx={radius}
-          fill={color}
+          key={k}
+          x={xScale(c.col)}
+          y={yScale(c.row)}
+          width={size}
+          height={yScale.bandwidth()}
+          rx={size * 0.14}
+          fill={colors[c.group]}
         />
       ))}
     </g>
@@ -80,74 +92,49 @@ function WaffleSquares({ series: seriesData, xScale, yScale, color }) {
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  // Reserve width for the legend (right), then size the waffle grid to the
-  // largest square that fits — width is the binding constraint since the
-  // legend column eats more width than the title eats height — so every one
-  // of the 100 cells is a true square.
-  const TITLE_SPACE = 80; // minimum clearance the grid must leave below the title
-  const PAD = 28;
-  const LEGEND_WIDTH = 320;
-
-  const availW = W - PAD * 2 - LEGEND_WIDTH;
-  const availH = H - PAD * 2;
-  const grid = Math.min(availW, availH);
-
-  // Center the grid+legend block vertically in the full canvas (instead of
-  // top-aligning it against the title) so leftover height doesn't collect as
-  // dead space below. Clamp so the grid never rises above the title's
-  // reserved band.
-  const vPad = Math.max(TITLE_SPACE, (H - grid) / 2);
-  const margin = {
-    left: PAD + (availW - grid) / 2,
-    right: W - PAD - (availW - grid) / 2 - grid,
-    top: vPad,
-    bottom: H - vPad - grid,
-  };
-  const gridCenterY = margin.top + grid / 2;
+  const { width, height } = window.ANYPLOT_SIZE;
+  const side = Math.min(width - 2 * PAD, height - TITLE_H - LEGEND_H - 2 * PAD);
 
   return (
-    <ChartContainer
-      width={W}
-      height={H}
-      margin={margin}
-      skipAnimation
-      colors={COLORS}
-      series={series}
-      xAxis={[{ scaleType: "band", data: COLS, categoryGapRatio: 0.18 }]}
-      yAxis={[{ scaleType: "band", data: ROWS, categoryGapRatio: 0.18 }]}
-    >
-      {/* Chart title */}
-      <text
-        x={W / 2}
-        y={44}
-        textAnchor="middle"
-        fontSize={22}
-        fontWeight="500"
-        fill={t.ink}
-        fontFamily={FONT}
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ height: TITLE_H, paddingTop: 18, boxSizing: "border-box", textAlign: "center" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
+      </div>
+      <div style={{ paddingTop: PAD }}>
+        <ChartsContainer
+          width={side}
+          height={side}
+          series={[]}
+          skipAnimation
+          margin={0}
+          xAxis={[{ id: "col", scaleType: "band", data: bands, categoryGapRatio: CELL_GAP, position: "none" }]}
+          yAxis={[{ id: "row", scaleType: "band", data: bands, categoryGapRatio: CELL_GAP, position: "none" }]}
+        >
+          <WaffleLayer />
+        </ChartsContainer>
+      </div>
+      <div
+        style={{
+          height: LEGEND_H,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "center",
+          columnGap: 32,
+          rowGap: 8,
+          paddingTop: 16,
+          boxSizing: "border-box",
+        }}
       >
-        {TITLE}
-      </text>
-
-      {/* The waffle grid — 100 squares, one per percentage point */}
-      <ScatterPlot slots={{ scatter: WaffleSquares }} />
-
-      <ChartsLegend
-        position={{ horizontal: "right", vertical: "middle" }}
-        direction="column"
-        itemMarkWidth={26}
-        itemMarkHeight={26}
-        markGap={14}
-        itemGap={22}
-        // "middle" centers within [padding.top, H - padding.bottom] — bias the
-        // padding so that band's midpoint lands on the grid's true vertical
-        // center (which sits below the title, not the full canvas center).
-        padding={{ top: 0, right: 24, bottom: Math.max(0, H - 2 * gridCenterY), left: 0 }}
-        labelStyle={{ fontSize: 20, fill: t.ink, fontFamily: FONT }}
-      />
-    </ChartContainer>
+        <span style={{ fontSize: 16, color: t.ink, fontWeight: 600 }}>{DEPARTMENT}</span>
+        {categories.map((c, i) => (
+          <div key={c} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ width: 20, height: 20, borderRadius: 3, background: colors[i], display: "inline-block" }} />
+            <span style={{ fontSize: 16, color: t.ink }}>{`${c} ${Math.round(percents[i] * 10) / 10} %`}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

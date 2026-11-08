@@ -2,55 +2,49 @@ library: muix
 language: javascript
 specification_id: violin-split
 created: '2026-09-09T21:57:46Z'
-updated: '2026-09-09T22:10:31Z'
-generated_by: claude-sonnet
-workflow_run: 34408973061
+updated: '2026-11-08T06:54:26Z'
+generated_by: claude-opus-5-5
+adopted_from: 825b77af995b3f816ebf3ac40b0562e42b07d52b (825b77af995b3f816ebf3ac40b0562e42b07d52b)
+workflow_run: 42456365654
 issue: 1949
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 86
 review:
   strengths:
-  - 'All four weaknesses from the attempt-1 review are fixed: skipAnimation is now
-    set on ChartContainer, GRID_N raised 140→220 for smoother KDE outlines, a center
-    spine line anchors each pair of halves, and a ''Largest gap'' callout annotation
-    now anchors the data-storytelling focal point.'
-  - Correctly recognizes that community @mui/x-charts has no native violin mark and
-    composes one from ChartContainer's cartesian scales via useXScale/useYScale —
-    a genuinely distinctive, hook-driven pattern rather than reaching for a Pro feature
-    or a different library.
-  - Real Gaussian KDE with Silverman's-rule bandwidth per category/split-group, trimmed
-    to its support so tails pinch cleanly to the center spine instead of drawing near-invisible
-    slivers across the full y-range.
-  - Inner IQR bars and median dots inside each half directly satisfy the spec's 'consider
-    adding inner box plot or quartile markers' note, colored from the theme's page
-    background so they read against either fill in both themes.
-  - Deterministic LCG + Box-Muller sampling with a clear comment on why only the physical
-    floor (0) is clamped while the axis caps at 100, so the KDE tail decays naturally
-    instead of piling up on a hard boundary.
+  - Each half is its own Gaussian KDE normalized to its own peak, so the asymmetry
+    between Control and Experimental reads directly; both halves meet on a shared
+    centre spine with Control always on the left
+  - Custom SVG layer composed inside ChartsContainer through useXScale/useYScale,
+    so the hand-drawn halves share the band and linear scales, the axes and the grid
+    of the community chart
+  - Inner Q1–Q3 bars drawn in the page colour with a ringed median dot stay visible
+    against both fills in both themes, and the subtitle explains the encoding
+  - Value axis is not forced to zero and each half's tail ends 1.5 bandwidths past
+    its data, clipped at the 0–100 score range
+  - 'Theme tokens threaded through every text and chrome element; data colours identical
+    in both renders (Imprint #009E73 and #C475FD)'
   weaknesses:
-  - A couple of violin lobes (e.g. Mathematics/History right halves) still show a
-    faint secondary bump — an artifact of KDE sampling noise at n=140 rather than
-    the grid resolution; not a defect, but a slightly higher N_PER_GROUP (e.g. 200)
-    would make the silhouettes read as more clearly unimodal.
-  - The gap-callout annotation is only added for the single largest-gap category;
-    a small numeric label on the other three panels (or a shared subtitle) could reinforce
-    the comparison further, though this is a nice-to-have, not a gap versus the spec.
+  - 'Suggestion: the headroom reserved above the 100 tick for the median-gap callout
+    leaves an empty band between legend and plot; without the callout the violins
+    could use that height.'
+  - 'Suggestion: the x-axis band (height 72) leaves a wide gap between the category
+    ticks and the ''Subject'' label; a tighter band would sit the label closer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent) across the full canvas, no white or dark leakage.
-      Chrome: Title "violin-split · javascript · muix · anyplot.ai" is bold dark text, clearly readable and comfortably sized. Legend swatches ("Control group" green, "Experimental group" lavender) with dark labels are readable. X-axis "Subject" and Y-axis "Test score (points)" titles are bold and dark; tick labels (Mathematics/Science/Language Arts/History, and 35-100 numeric ticks) are dark and legible. Horizontal grid lines are subtle light-gray, visible but not dominant. A bold dark "Largest gap: +8.2 pt" callout sits above the Science violin, clear of any tick labels or gridlines.
-      Data: Control group uses Imprint brand green (#009E73) on the left half of each violin; Experimental group uses Imprint lavender (#C475FD) on the right half. A thin muted spine line anchors each pair of halves at the center. Median dots and IQR bars are drawn in the page-background cream color, outlined in the group color, clearly visible against both fills. KDE outlines are smooth (GRID_N=220) with only a very faint secondary bump on a couple of lobes.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "violin-split · javascript · muix · anyplot.ai" bold dark ink top-left, grey subtitle "1,120 test scores across 4 subjects · bar: Q1–Q3 of each half, dot: its median", HTML legend "Control (left half)" green / "Experimental (right half)" lavender; y axis "Test score (points)" ticks 35–100 every 5, x axis "Subject" with Mathematics, Science, Language Arts, History; subtle horizontal grid; left and bottom axis lines only. Bold callout "Largest median gap: Experimental +8.3 points" above Science. All text readable.
+      Data: four split violins, left halves brand green #009E73, right halves lavender #C475FD at 0.7 fill opacity with solid outlines, meeting on a thin centre spine. Each half has a page-coloured Q1–Q3 bar and a ringed median dot. Control halves sit lower (medians ~67–75) with long lower tails (Mathematics down to ~35); Experimental halves are higher and tighter (medians ~73–81).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent) across the full canvas, no pure-black or light leakage.
-      Chrome: Title, legend text, axis titles/tick labels, and the "Largest gap" callout all switch to light text via the harness's ThemeProvider — all clearly readable against the dark background. No dark-on-dark text found anywhere. Grid lines remain subtle but visible.
-      Data: Control-group green and Experimental-group lavender are pixel-identical to the light render — only the chrome (background, text, grid, spine) flipped, as required. Median dots and IQR bars now render as near-black (page-background) markers outlined in the group color, reading clearly against the fills, mirroring the light render's treatment.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, subtitle, legend text, axis titles and ticks all in light ink; grid subtle dark grey; no dark-on-dark text.
+      Data: identical green and lavender fills and shapes as the light render; the Q1–Q3 bars are now near-black (page colour) and clearly visible against both fills; median dots ringed in the half's colour.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,78 +56,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title 22px, axis labels 16px bold,
-          ticks 14px, legend 16px, callout 13px bold); readable in both themes via
-          ThemeProvider; title occupies a comfortable width.
+        comment: Explicit 15–22 px fonts; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker collisions in either render; the new gap-callout
-          sits cleanly above the plot area without touching gridlines or ticks.
+        comment: No text collisions; callout sits above the Science violin
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: GRID_N raised to 220 smooths the KDE outlines; median/IQR markers
-          are clearly visible against both fills.
+        comment: Halves, IQR bars and median dots visible in both themes; legend swatches
+          match fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing, not red-green, adequate contrast on both
-          backgrounds.
+        comment: Green vs lavender is CVD-safe, plus left/right position encodes group
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 exact, canvas gate passed, no overflow/clipping, well-balanced
-          margins even with the added top annotation.
+        comment: 3200x1800, balanced axis labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Subject'' and ''Test score (points)'' — descriptive with units.'
+        comment: '''Test score (points)'' and ''Subject'' descriptive with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green), second series #C475FD (Imprint
-          position 2, lavender); backgrounds theme-correct in both renders; data colors
-          identical across themes.'
+        comment: 'Imprint #009E73 first, #C475FD second; correct backgrounds in both
+          themes'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Fully custom hand-drawn violin composition (no library default exists
-          for this) with a coherent color/marker system — strong design, clearly above
-          a configured default.
+        comment: Title/subtitle hierarchy with an encoding key in the subtitle and
+          side-labelled legend entries
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid, generous whitespace, refined center
-          spine and marker treatment; minor room left in overall polish.
+        comment: Page-coloured IQR bars with ringed medians offset into each half,
+          thin centre spine
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: The new 'Largest gap' callout gives the plot a clear focal point
-          beyond four similar-looking panels, directly addressing the prior review's
-          storytelling gap.
+        passed: false
+        comment: Default; the median-gap callout is an annotation layer the spec does
+          not request and earns no credit
     spec_compliance:
       score: 15
       max: 15
@@ -143,54 +129,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct split violin plot with left/right halves per category.
+        comment: Split violin, one group per side with its own density
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors with legend, halves meet at a center spine, inner
-          quartile/median markers, and alpha transparency at the meeting point — all
-          spec notes satisfied.
+        comment: Distinct colours with legend, halves meet at centre, quartile markers,
+          alpha fill; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x-axis, value on y-axis, all data visible within the
-          axis range.
+        comment: Shared value axis not forced to zero, tails end near the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels ('Control group'/'Experimental
-          group') match the split_group data.
+        comment: Mandated title format; legend names both groups
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Four categories with varying means/spreads and a highlighted largest-gap
-          category; no deliberate outliers or skew beyond natural Gaussian variation.
+        comment: Halves differ in width, spread, skew and median across categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral education/test-score before-after scenario, directly mirrors
-          a spec application example.
+        comment: Control vs tutoring-program test scores by subject, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Test scores bounded realistically to 0-100 with plausible means/std
-          devs per subject.
+        comment: Scores bounded 0–100, 140 per half (inside 30–500), 4 categories;
+          checked the axis range 35–100
     code_quality:
       score: 10
       max: 10
@@ -200,36 +181,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions (LCG, gaussian, KDE) are justified by the custom-mark
-          complexity; no over-engineering.
+        comment: Linear module; the one child component is required for the scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (20260909).
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (Box, Typography, ChartContainer, ChartsGrid, ChartsXAxis,
-          ChartsYAxis, useXScale/useYScale) are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-composed violin mark; no fake UI.
+        comment: Written-out KDE and quartiles are allowed by the library prompt's
+          Computation line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation now set on ChartContainer per the mandatory harness
-          contract.
+        comment: Default export, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -237,25 +217,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of ChartContainer plus ChartsGrid/ChartsXAxis/ChartsYAxis
-          as the scale/axis scaffold for a composed mark.
+        comment: 'Composition API: ChartsContainer with band/linear axes, ChartsGrid,
+          ChartsXAxis/YAxis'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Driving custom SVG marks off useXScale/useYScale is a genuinely MUI
-          X-specific technique, not easily replicated in another library.
+        comment: Custom SVG layer driven by useXScale/useYScale hooks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:51:46Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
+  - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - kde
+  - normalization
   styling:
   - alpha-blending
+  - edge-highlighting

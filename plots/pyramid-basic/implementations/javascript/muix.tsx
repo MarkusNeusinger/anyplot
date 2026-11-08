@@ -1,128 +1,131 @@
 // anyplot.ai
 // pyramid-basic: Basic Pyramid Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
+import { getContrastRatio } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic): streaming-service genre preference ----
-// Survey of 400 subscribers per service, asked which genre they watch most.
-// Each category holds two independent counts (not a signed net score) --
-// Service A always extends left, Service B always extends right, sharing the
-// zero baseline as the pyramid's central axis. Sorted by combined magnitude
-// (descending) so the chart tapers into a classic pyramid silhouette.
-const genreRows = [
-  { name: "Action & Adventure", streamVista: 75, waveFlix: 60 },
-  { name: "Drama", streamVista: 90, waveFlix: 94 },
-  { name: "Comedy", streamVista: 65, waveFlix: 71 },
-  { name: "Sci-Fi & Fantasy", streamVista: 50, waveFlix: 38 },
-  { name: "Reality TV", streamVista: 33, waveFlix: 46 },
-  { name: "Anime", streamVista: 40, waveFlix: 45 },
-  { name: "Documentary", streamVista: 27, waveFlix: 36 },
-  { name: "Kids & Family", streamVista: 20, waveFlix: 10 },
-].sort((a, b) => b.streamVista + b.waveFlix - (a.streamVista + a.waveFlix));
+// Constants
+const X_PAD = 0.08; // share of the largest value kept free beyond the longest bar
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 40;
 
-const genres = genreRows.map((r) => r.name);
-const streamVista = genreRows.map((r) => r.streamVista);
-const waveFlix = genreRows.map((r) => r.waveFlix);
+// Columns: set these to your data's column names
+const GENRE = "Favourite genre"; // role: category
+const STREAMVISTA = "StreamVista (subscribers)"; // role: value_left
+const WAVEFLIX = "WaveFlix (subscribers)"; // role: value_right
 
-// One shared stack per row: negative values (Service A, negated below) land
-// left of zero, positive values (Service B) land right -- MUI X's default
-// `stackOffset: "diverging"` for mixed-sign stacks on a shared stackId.
-const leftData = streamVista.map((v) => -v);
-const rightData = waveFlix;
+// Data: replace this block with your own records, one object per row
+// Survey of 400 subscribers per streaming service: the genre each watches most
+const data = [
+  { [GENRE]: "Action & Adventure", [STREAMVISTA]: 75, [WAVEFLIX]: 60 },
+  { [GENRE]: "Drama", [STREAMVISTA]: 90, [WAVEFLIX]: 94 },
+  { [GENRE]: "Comedy", [STREAMVISTA]: 65, [WAVEFLIX]: 71 },
+  { [GENRE]: "Sci-Fi & Fantasy", [STREAMVISTA]: 50, [WAVEFLIX]: 38 },
+  { [GENRE]: "Reality TV", [STREAMVISTA]: 33, [WAVEFLIX]: 46 },
+  { [GENRE]: "Anime", [STREAMVISTA]: 40, [WAVEFLIX]: 45 },
+  { [GENRE]: "Documentary", [STREAMVISTA]: 27, [WAVEFLIX]: 36 },
+  { [GENRE]: "Kids & Family", [STREAMVISTA]: 20, [WAVEFLIX]: 10 },
+];
 
-const axisLimit = Math.ceil((Math.max(...streamVista, ...waveFlix) + 10) / 20) * 20;
-// Explicit tick positions every 20 units -- the default continuous-scale tick
-// generator produced 35 ticks (every 10) across this range, which is too
-// dense for mobile-scale legibility.
-const xTicks = [];
-for (let v = -axisLimit; v <= axisLimit; v += 20) xTicks.push(v);
+// Plot: reads only data and the constants above
+// Genres have no natural order: rank them by their combined count, the largest at the base
+const rows = [...data].sort((a, b) => (a[STREAMVISTA] ?? 0) + (a[WAVEFLIX] ?? 0) - ((b[STREAMVISTA] ?? 0) + (b[WAVEFLIX] ?? 0)));
+const sides = [STREAMVISTA, WAVEFLIX].map((column, i) => {
+  const match = column.match(/^(.*?)\s*\(([^)]+)\)$/);
+  const hex = t.palette[i];
+  return {
+    column,
+    name: match ? match[1] : column,
+    unit: match ? match[2] : "",
+    color: hex,
+    // the ink with the higher WCAG contrast on this bar colour
+    ink: getContrastRatio(hex, DARK_INK) >= getContrastRatio(hex, LIGHT_INK) ? DARK_INK : LIGHT_INK,
+    total: rows.reduce((sum, d) => sum + (d[column] ?? 0), 0),
+  };
+});
+const maxValue = Math.max(...rows.flatMap((d) => [d[STREAMVISTA], d[WAVEFLIX]]).filter((v) => Number.isFinite(v)));
+const limit = maxValue * (1 + X_PAD);
+
+const TITLE = "pyramid-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${sides[0].total} ${sides[0].name} and ${sides[1].total} ${sides[1].name} ${sides[0].unit} across ${rows.length} genres`;
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const CHART_TOP = 82;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      <Box sx={{ position: "absolute", top: 22, left: 32, right: 32 }}>
-        <Typography sx={{ color: t.ink, fontSize: 28, fontWeight: 600 }}>
-          pyramid-basic · javascript · muix · anyplot.ai
-        </Typography>
-      </Box>
-
-      <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          layout="horizontal"
-          skipAnimation
-          barLabel={(item) => (item.value === null ? null : `${Math.abs(item.value)}`)}
-          series={[
-            {
-              id: "streamvista",
-              stackId: "genre",
-              data: leftData,
-              label: "StreamVista",
-              color: t.palette[0],
-              valueFormatter: (v) => (v === null ? "" : `${Math.abs(v)} viewers`),
-            },
-            {
-              id: "waveflix",
-              stackId: "genre",
-              data: rightData,
-              label: "WaveFlix",
-              color: t.palette[1],
-              valueFormatter: (v) => (v === null ? "" : `${v} viewers`),
-            },
-          ]}
-          xAxis={[
-            {
-              id: "value",
-              min: -axisLimit,
-              max: axisLimit,
-              label: "Subscribers who picked this genre as their favorite",
-              labelStyle: { fontSize: 16, fill: t.inkSoft },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              tickInterval: xTicks,
-              valueFormatter: (v) => `${Math.abs(v)}`,
-            },
-          ]}
-          yAxis={[
-            {
-              scaleType: "band",
-              data: genres,
-              tickLabelStyle: { fontSize: 14, fill: t.ink },
-              disableTicks: true,
-              categoryGapRatio: 0.35,
-            },
-          ]}
-          margin={{ top: 20, right: 60, bottom: 76, left: 190 }}
-          grid={{ vertical: true }}
-          slotProps={{
-            legend: {
-              position: { vertical: "top", horizontal: "right" },
-              labelStyle: { fontSize: 14, fill: t.inkSoft },
-            },
-          }}
-          sx={{
-            "& .MuiBarLabel-root": {
-              fill: "#F0EFE8",
-              fontSize: "14px",
-              fontWeight: 600,
-            },
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        >
-          <ChartsReferenceLine x={0} axisId="value" lineStyle={{ stroke: t.ink, strokeWidth: 2 }} />
-        </BarChart>
-      </Box>
-    </Box>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
+      <BarChart
+        width={width}
+        height={height - TITLE_H - SUBTITLE_H - LEGEND_H}
+        layout="horizontal"
+        skipAnimation
+        margin={{ top: 12, right: 48, bottom: 8, left: 16 }}
+        grid={{ vertical: true }}
+        series={sides.map((side, i) => ({
+          barLabel: (item) => (item.value === null ? null : `${Math.abs(item.value)}`),
+          id: `side-${i}`,
+          stack: "pyramid",
+          data: rows.map((d) => (d[side.column] === null || d[side.column] === undefined ? null : i === 0 ? -d[side.column] : d[side.column])),
+          label: side.name,
+          color: side.color,
+          valueFormatter: (v) => (v === null ? "" : `${Math.abs(v)} ${side.unit}`),
+        }))}
+        xAxis={[
+          {
+            id: "value",
+            min: -limit,
+            max: limit,
+            tickNumber: 10,
+            valueFormatter: (v) => `${Math.abs(v)}`,
+            label: `${sides[0].unit[0].toUpperCase()}${sides[0].unit.slice(1)} (← ${sides[0].name} · ${sides[1].name} →)`,
+            height: 64,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: rows.map((d) => d[GENRE]),
+            categoryGapRatio: 0.3,
+            label: GENRE,
+            width: 180,
+            disableTicks: true,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.ink },
+          },
+        ]}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.inkSoft },
+          },
+        }}
+        sx={{
+          ...Object.fromEntries(
+            sides.map((side, i) => [`& [data-series="side-${i}"] .MuiBarChart-label`, { fill: side.ink, fontSize: 14, fontWeight: 600 }]),
+          ),
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      >
+        <ChartsReferenceLine x={0} axisId="value" lineStyle={{ stroke: t.ink, strokeWidth: 2 }} />
+      </BarChart>
+    </div>
   );
 }
