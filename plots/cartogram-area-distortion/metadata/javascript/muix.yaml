@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: cartogram-area-distortion
 created: '2026-08-20T18:27:37Z'
-updated: '2026-11-08T01:36:41Z'
+updated: '2026-11-08T01:42:51Z'
 generated_by: claude-opus-5-5
 adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
 workflow_run: 42434711325
@@ -13,43 +13,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Circle area is exactly proportional to population (radius ∝ √value via the zAxis
-    sizeMap), and the radius scale is the largest that keeps every circle at its true
-    centroid without overlap
-  - The undistorted US outline sits under the circles, so the reader compares geography
-    with population at a glance
-  - The label ink is chosen per region fill by WCAG contrast (light on blue, dark
-    elsewhere), so labels stay legible in both themes
-  - 'Idiomatic MUI X composition: ChartsDataProvider + ChartsSurface with custom layers
-    drawn through useXScale/useYScale, plus a native item tooltip in the HTML output'
+  - Circle area is truly proportional to population through a zAxis continuous sizeMap
+    with a square-root radius, and every circle sits at its exact state centroid
+  - The simplified contiguous-US outline drawn through useXScale/useYScale gives the
+    undistorted geography for comparison in the chart's own coordinates
+  - Census regions take Imprint positions 1-4 in canonical order, identical across
+    themes, with label ink chosen per region color for contrast
+  - A custom size legend (3 / 10 / 30 million) plus a note explaining the shaded outline
+    makes both encodings self-explanatory
+  - Native ChartsTooltip with a state-and-population valueFormatter adds inspection
+    in the HTML view
   weaknesses:
-  - 'DQ-01 (both): the data covers only the 20 most populous states, so the type''s
-    core contrast (large, sparsely populated states such as MT, WY and NV shrinking
-    to small marks over their wide outlines) is not shown → include all 48 contiguous
-    states; the label threshold already leaves the smallest circles unlabeled. Likely
-    cause: the data block is limited to the top 20 states.'
-  - 'Suggestion: Dorling circles that grow and push apart could fill more of the outline
-    and keep neighbors closer than circles shrunk to fit fixed centroids.'
-  - 'Suggestion: the header''s library version (7.29.1) does not match the installed
-    @mui/x-charts 9.17.0.'
+  - 'SC-01 (both): the circles fill only a small share of the map and sit far apart
+    (e.g. the Mountain West dots are 3-8 px on a 1500 px-wide map), so the render
+    reads as a proportional-symbol map rather than a Dorling cartogram whose circles
+    nearly touch their neighbors → grow the radius scale until neighboring circles
+    nearly touch (largest circle about 2-3x the current 64 px cap) and resolve the
+    resulting overlaps with a Dorling separation pass that keeps each circle near
+    its centroid, as the Notes accept. Likely cause: maxRadius is the minimum over
+    all centroid pairs, so the tight Northeast pairs (RI-MA, DE-MD) shrink every circle.'
+  - 'VQ-05 (both): about 110 px of empty page between the region legend and the top
+    of the map and about 90 px below it, while the map fills only part of the height
+    → close the gap (about −80 px above). Likely cause: the equirectangular extent
+    is fitted to the width, leaving vertical slack in CHART_H that the fixed legend
+    band does not absorb.'
+  - 'Suggestion: tinting the size-legend circles with a neutral outline like the data
+    marks would tie the legend more visibly to the map.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: dark bold title, soft-ink subtitle, horizontal region legend, right-side size legend "Population (millions)" with 3/10/30 circles and the note "Shaded outline: true geography" — all readable
-      Data: light-grey contiguous-US outline under 20 non-overlapping circles at the state centroids; West #009E73, South purple, Northeast blue, Midwest ochre; bold abbreviations, dark ink on green/purple/ochre and light ink on blue
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title "cartogram-area-distortion · javascript · muix · anyplot.ai", grey subtitle explaining the Dorling form, a horizontal region legend (West, South, Northeast, Midwest), and a right-hand size legend "Population (millions)" with grey 3 / 10 / 30 circles and the note "Shaded outline: true geography". All text readable.
+      Data: a light-grey simplified contiguous-US outline with 48 circles at the state centroids; West #009E73 green, South #C475FD lavender, Northeast #4467A3 blue, Midwest #BD8233 ochre. CA, TX, FL and NY are the largest; bold abbreviations on the larger circles (dark ink, light ink on blue). Circles are small relative to the map and widely spaced; empty bands above and below the map.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: light title, subtitle and legend text; dark-grey outline fill still distinct from the page; light-grey size-legend circles; no dark-on-dark text
-      Data: circle colors identical to the light render; only the circle stroke flips to the page color
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, subtitle, region legend and size legend in light grey; size-legend circles light grey. No dark-on-dark text.
+      Data: outline is a dark grey fill with a soft stroke; circle colors identical to the light render, outlined in the page color; abbreviation ink identical to light (dark on green/lavender/ochre, light on blue), readable against each fill.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,47 +64,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, subtitle/legends 15 px, labels 14–16 px bold; readable
-          in both themes
+        comment: Title 22 px, subtitle and legends 15 px, bold 14-16 px abbreviations;
+          all readable in both themes, label ink picked per region color for contrast
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Radius scale keeps all circles apart; no text collisions
+        comment: No text collisions; circles never overlap by construction
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles and size-legend glyphs visible in both themes
+        comment: 48 circles with page-colored outlines read clearly; size-legend circles
+          visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct Imprint hues; contrast-aware label ink
+        comment: Four distinct Imprint hue families, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 3200×1800, balanced map plus side legend, nothing clipped
+        passed: false
+        comment: Empty band of about 110 px between the region legend and the map
+          top, and about 90 px below the map (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A axes (map); legend titles descriptive with units
+        comment: No axes by design; subtitle and size-legend title name the variable
+          with its unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint order, correct backgrounds in both
-          themes'
+        comment: 'Imprint positions 1-4 in canonical order (West #009E73 first), #FAF8F1
+          / #1A1A17 backgrounds, data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -105,74 +115,77 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Explanatory subtitle hierarchy; per-region contrast-aware label ink
+        comment: Title/subtitle hierarchy, per-region label ink chosen by WCAG contrast,
+          a neutral custom size legend with an explanatory note
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Page-colored circle strokes, computed gap between closest circles,
-          labels hidden on too-small circles
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle and outline-vs-circle contrast guide the reading; no further
-          focal hierarchy
+        comment: Muted outline fill with a soft stroke sits behind the data, page-colored
+          marker strokes separate neighbors
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Dorling circles, an accepted non-contiguous form
+        passed: false
+        comment: 'Radius scale capped by the closest centroid pair keeps circles tiny
+          and far apart: reads as a proportional-symbol map, not a Dorling cartogram
+          (defect line)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area ∝ value, true outline, color by census region, abbreviations,
-          area and color legends
+        comment: Original outline, color by census region, abbreviations on major
+          states, legends for area and color all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Circles at exact centroids, no displacement
+        comment: Circles at exact centroids, area proportional to population via sqrt
+          sizeMap
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend labels readable
+        comment: Mandated title format; region legend and size legend labelled for
+          a reader
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Only the 20 most populous states: no large sparse state shown shrinking
-          (defect line)'
+        comment: 48 states spanning 0.6-38.9 M, four regions, outline comparison
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 2023 US Census populations
+        comment: 2023 US Census estimates, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: CA 38.9, TX 30.5, FL 22.6 M correct; size refs 3/10/30 follow the
-          radius formula
+        comment: Checked CA 38.9, TX 30.5, FL 22.6, WY 0.6 M against 2023 estimates;
+          size-legend 3/10/30 references computed from the max
     code_quality:
       score: 10
       max: 10
@@ -182,13 +195,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only React components needed for scale hooks
+        comment: Flat script; the two small components exist only to call the scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Static data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -200,13 +214,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, skipAnimation, sized to ANYPLOT_SIZE
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          v9 API
     library_mastery:
       score: 7
       max: 10
@@ -216,29 +231,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsDataProvider/ChartsWrapper/ChartsSurface composition with ScatterPlot
+        comment: 'Composition API: ChartsDataProvider + ChartsWrapper + ChartsSurface
+          with ScatterPlot, ChartsLegend and ChartsTooltip'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: zAxis continuous sizeMap for area scaling; custom SVG layers via
-          useXScale/useYScale
-  verdict: REJECTED
+        comment: zAxis continuous sizeMap for area-true radii; useXScale/useYScale
+          hooks to draw the outline and labels in the chart's own coordinate space
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T01:33:59Z'
+  rendered_at: '2026-11-08T01:39:52Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - annotations
   - custom-legend
+  - annotations
   - hover-tooltips
-  - html-export
+  - layer-composition
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  - columns-block
+  dataprep:
+  - normalization
   styling:
-  - publication-ready
+  - alpha-blending
+  - minimal-chrome
