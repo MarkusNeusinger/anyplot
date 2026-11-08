@@ -52,24 +52,35 @@ const unit = unitMatch ? unitMatch[1] : "";
 
 const circleAngles = Array.from({ length: UNIT_CIRCLE_POINTS }, (_, k) => (2 * Math.PI * k) / (UNIT_CIRCLE_POINTS - 1));
 
-// Gain crossover: the row nearest |G| = 1 where the magnitude first crosses 1;
-// phase crossover: the row nearest Im = 0 where the curve first crosses the negative real axis
-let gainCrossover = -1;
-let phaseCrossover = -1;
+// Gain crossover: where |G| first crosses 1; phase crossover: where the curve first crosses the
+// negative real axis (Im = 0). Each is interpolated between the two rows that straddle it, the
+// frequency on its log scale. The phase-crossover label sits up and to the left, clear of the
+// curve and of the imaginary axis.
+let gainCrossover = null;
+let phaseCrossover = null;
 for (let i = 0; i < rows.length - 1; i++) {
   const m0 = Math.hypot(re[i], im[i]) - 1;
   const m1 = Math.hypot(re[i + 1], im[i + 1]) - 1;
-  if (gainCrossover < 0 && m0 * m1 <= 0) gainCrossover = Math.abs(m0) <= Math.abs(m1) ? i : i + 1;
-  if (phaseCrossover < 0 && im[i] * im[i + 1] <= 0 && re[i] < 0) {
-    phaseCrossover = Math.abs(im[i]) <= Math.abs(im[i + 1]) ? i : i + 1;
+  if (!gainCrossover && m0 * m1 <= 0) gainCrossover = { i, f: m0 === m1 ? 0 : m0 / (m0 - m1) };
+  if (!phaseCrossover && im[i] * im[i + 1] <= 0 && re[i] < 0) {
+    phaseCrossover = { i, f: im[i] === im[i + 1] ? 0 : im[i] / (im[i] - im[i + 1]) };
   }
 }
 const crossovers = [
-  gainCrossover >= 0 ? { kind: "gain crossover", i: gainCrossover, dx: 26, dy: -12 } : null,
-  phaseCrossover >= 0 ? { kind: "phase crossover", i: phaseCrossover, dx: 14, dy: 28 } : null,
-].filter(Boolean);
-const phaseMargin = gainCrossover >= 0 ? 180 + (Math.atan2(im[gainCrossover], re[gainCrossover]) * 180) / Math.PI : null;
-const gainMarginDb = phaseCrossover >= 0 ? -20 * Math.log10(Math.abs(re[phaseCrossover])) : null;
+  gainCrossover ? { kind: "gain crossover", ...gainCrossover, dx: 20, dy: -16, anchor: "start" } : null,
+  phaseCrossover ? { kind: "phase crossover", ...phaseCrossover, dx: -16, dy: -34, anchor: "end" } : null,
+]
+  .filter(Boolean)
+  .map((c) => ({
+    ...c,
+    re: re[c.i] + c.f * (re[c.i + 1] - re[c.i]),
+    im: im[c.i] + c.f * (im[c.i + 1] - im[c.i]),
+    omega: rows[c.i][FREQUENCY] * (rows[c.i + 1][FREQUENCY] / rows[c.i][FREQUENCY]) ** c.f,
+  }));
+const gainPoint = crossovers.find((c) => c.kind === "gain crossover");
+const phasePoint = crossovers.find((c) => c.kind === "phase crossover");
+const phaseMargin = gainPoint ? 180 + (Math.atan2(gainPoint.im, gainPoint.re) * 180) / Math.PI : null;
+const gainMarginDb = phasePoint ? -20 * Math.log10(Math.abs(phasePoint.re)) : null;
 
 // Arrow positions along the arc length of the curve, in data units
 const arcLength = [0];
@@ -117,14 +128,11 @@ function CurveAnnotations() {
         );
       })}
       {crossovers.map((c) => (
-        <text
-          key={c.kind}
-          x={xScale(re[c.i]) + c.dx}
-          y={yScale(im[c.i]) + c.dy}
-          fontSize={15}
-          fill={t.ink}
-        >
-          {c.kind} · ω = {rows[c.i][FREQUENCY].toFixed(2)} {unit}
+        <text key={c.kind} x={xScale(c.re) + c.dx} y={yScale(c.im) + c.dy} fontSize={15} fill={t.ink} textAnchor={c.anchor}>
+          <tspan x={xScale(c.re) + c.dx}>{c.kind}</tspan>
+          <tspan x={xScale(c.re) + c.dx} dy={19}>
+            ω = {c.omega.toFixed(2)} {unit}
+          </tspan>
         </text>
       ))}
     </g>
@@ -175,7 +183,7 @@ export default function Chart() {
             type: "scatter",
             id: "crossovers",
             label: "Crossover frequencies",
-            data: crossovers.map((c) => ({ x: re[c.i], y: im[c.i], id: c.kind })),
+            data: crossovers.map((c) => ({ x: c.re, y: c.im, id: c.kind })),
             xAxisId: "re",
             yAxisId: "im",
             color: t.palette[1],
@@ -227,7 +235,16 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 15, color: t.inkSoft, height: LEGEND_H, alignItems: "center" }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 15,
+              color: t.inkSoft,
+              height: LEGEND_H,
+              alignItems: "center",
+              // the unit circle is dashed, so its legend glyph is too
+              "& [data-series='circle'] path": { strokeDasharray: "3 2", strokeLinecap: "butt" },
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiLineChart-line[data-series='response']": { strokeWidth: 3 },
