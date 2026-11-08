@@ -1,7 +1,7 @@
 // anyplot.ai
 // sudoku-basic: Basic Sudoku Grid
 // Library: muix 9.17.0 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-25
+// Quality: pending | Created: 2026-06-25
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
