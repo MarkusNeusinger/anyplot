@@ -2,215 +2,187 @@ library: pygal
 language: python
 specification_id: line-3d-trajectory
 created: '2026-05-16T08:58:18Z'
-updated: '2026-08-25T06:33:34Z'
-generated_by: claude-sonnet
-workflow_run: 32816110793
+updated: '2026-11-08T22:42:14Z'
+generated_by: claude-opus-5-5
+adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
+workflow_run: 42527242404
 issue: 3182
-language_version: 3.13.15
+language_version: 3.14.10
 library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Fixed the attempt-1 SC-01 rejection: Z now genuinely feeds a true isometric projection
-    (45° azimuth / 35.264° elevation rotation matrices) instead of being dropped after
-    the ODE step, so the 2D (x_rot, y_iso) view actually encodes 3D shape -- consistent
-    with the same isometric-projection technique already used by the sibling bokeh
-    and altair implementations of this spec, establishing this as the accepted workaround
-    for a library with no native 3D chart type'
-  - 'Fixed the attempt-1 VQ-03 weakness: stroke_width reduced from 2.5 to 1.5 and
-    alpha=0.75 is now baked into every gradient rgba stop, thinning the previously
-    near-solid overplotted coil regions near both attractor foci'
-  - 'First color is exactly Imprint brand green #009E73, and the 30-segment gradient
-    correctly interpolates imprint_seq (#009E73 -> #4467A3) for the single-polarity
-    ''elapsed time'' variable'
-  - 'Theme-adaptive chrome correctly threaded through the Style object in both renders
-    -- light background #FAF8F1 with dark ink text, dark background #1A1A17 with light
-    ink text, no dark-on-dark or light-on-light failures'
-  - Data is a real, deterministic Lorenz attractor (classic sigma=10, rho=28, beta=8/3,
-    no randomness) -- scientifically accurate, neutral, and exercises rich chaotic
-    dynamics
-  - Title format is exactly correct, legend correctly omitted for a 30-segment single
-    trajectory, and code comments clearly document the WHY behind both the projection
-    math and the segmented-gradient workaround
-  - Clean flat KISS script structure, fully reproducible, only used imports, correct
-    plot-{theme}.png + .html outputs
+  - Builds a true oblique 3D view on pygal's XY chart with an orthographic projection
+    (elevation 20°, azimuth -45°) that sets the two Lorenz wings side by side and
+    shows extent in x, y and z, with projected axes, outward tick marks and tick labels
+    at one shared tick step so the box stays at equal scale
+  - 4000 solve_ivp points (rtol 1e-9) give a smooth, continuous Lorenz trajectory;
+    segments share their end points so the gradient never breaks the line
+  - 'Time is encoded as an imprint_seq gradient (#009E73 to #4467A3) along the path,
+    explained by a key in the line''s own gradient titled ''Elapsed time (model time
+    units)'' with its 0 and 30 end values'
+  - Theme tokens threaded through Style (background, foreground, foreground_subtle)
+    give correct chrome in both renders; data colors are identical between light and
+    dark
+  - 'Uses pygal-native mechanisms well: allow_interruptions with None breaks, print_labels
+    for positioned text, inline css injection for stroke widths and the bold title,
+    and per-segment series names (''t = a–b'') that become tooltips in the interactive
+    HTML'
   weaknesses:
-  - 'SC-02: true interactive rotation/zoom (which the spec calls essential for exploring
-    3D spatial structure) is still unattainable -- pygal has no 3D chart type at all,
-    so the isometric projection is the best available substitute rather than the spec''s
-    literal ask; this is an inherent library limitation shared with the other 2D-only
-    libraries for this spec, not a fixable code defect'
-  - 'VQ-03: even with alpha=0.75 and thinner strokes, the tightly-wound coil regions
-    near both attractor foci still show some overlapping strands that are hard to
-    fully separate visually -- could push alpha lower (e.g. 0.5-0.6) or thin the line
-    width further for the densest inner loops'
-  - 'LM-02: the segmented-series gradient remains a workaround for pygal''s per-add
-    color-kwarg limitation rather than a showcase of a feature distinctive to pygal
-    specifically -- still fairly generic technique that any 2D charting library could
-    replicate'
-  - 'DE-03: the isometric perspective and time-gradient create some visual hierarchy,
-    but there''s no explicit annotation or callout marking the two attractor foci/lobes
-    to help a first-time viewer immediately grasp the chaotic double-lobe structure'
+  - 'Suggestion: the time key is drawn at the trajectory''s own stroke width, so it
+    reads like a line sample; a thicker key bar would make the gradient easier to
+    read in the 400 px thumbnail.'
+  - 'Suggestion: the blue end of the gradient (#4467A3 at 0.85 alpha) is dimmer on
+    the dark background than the green start; a slightly higher opacity in the dark
+    theme would lift the late loops.'
+  - 'Suggestion: the plot box leaves an empty band on the right below the key; a slightly
+    larger scale would use the canvas more fully.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface -- not pure white.
-      Chrome: Title "line-3d-trajectory · python · pygal · anyplot.ai" is dark ink, centered at top, comfortably within the plot width with no clipping. Axis titles "X — isometric projection of (x, y, z)" (bottom) and "Y — isometric projection; color encodes elapsed time" (left, rotated, wrapped to two lines) are dark ink and clearly readable. Tick labels on both axes (-4..5 on X, -3..2 on Y) are dark, evenly spaced, similarly sized, no overlap. A subtle dashed gridline grid plus darker x=0/y=0 reference lines are visible without competing with the data.
-      Data: A continuous curved trajectory forming an isometric-perspective view of the Lorenz-attractor "butterfly" -- one lobe reads as a tight, elongated spiral point extending to the right (~x=5, y=-1.5), the other as a rounder concentric coil on the left/center, connected by a diagonal streak toward the upper-left, which is the expected look of a true 3D projection (distinct from a flat top-down XY view). Color sweeps from brand green (#009E73) through teal/blue to blue (#4467A3) across 30 sequential time segments with alpha baked into the strokes, no markers (show_dots=False). The densest inner-coil regions near both foci show some overlapping strands but individual loops remain distinguishable.
-      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: bold title "line-3d-trajectory · python · pygal · anyplot.ai" centred at top (~60% width); projected 3D box with a vertical Z axis (ticks 0–50), an X floor edge running down-right (ticks -20 to 20) and a Y floor edge running up-right (ticks -30 to 30), axis names X, Y, Z; all dark ink, crisp and readable. Time key top right: "Elapsed time (model time units)" over a short gradient bar with end values 0 and 30.
+      Data: one continuous Lorenz attractor trajectory (two wings, butterfly shape) seen obliquely, coloured by an imprint_seq gradient from brand green #009E73 (start, the spiral-out of the left wing and the first large outer loop) to blue #4467A3 (late loops), thin lines at 0.85 opacity; the tightly wound left-wing centre is dense but traceable as a spiral.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface -- not pure black.
-      Chrome: Same title, axis titles, and tick labels, now rendered in light ink (near-white/light-gray) and fully legible against the dark background -- no dark-on-dark failures found. Gridlines and the x=0/y=0 reference lines are visible but subtle, using the dark-theme muted tone.
-      Data: Identical trajectory shape and identical green-to-blue gradient colors as the light render -- confirms the Imprint data colors are held constant across themes; only chrome (background/text/grid) flipped, as required.
-      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark issues.
-
-    Note: Both renders pass the theme-readability check. No canvas-dimension gate file was present (/tmp/anyplot-canvas-gate.txt does not exist), so the gate passed. No AR-08 or AR-09 triggers found -- no fake interactivity, and no title/axis/tick text is clipped at the canvas border in either render.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title, tick labels, axis names and key text in light ink; axis and tick lines light grey; no dark-on-dark text anywhere.
+      Data: identical geometry and identical gradient colours to the light render (green to blue); the blue late loops are slightly dimmer on the dark surface but clearly visible; brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style; title, axis titles, and
-          ticks readable in both themes; title occupies a comfortable fraction of
-          width, no overflow
+        comment: Explicit sizes (title 66, labels 44); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap in either render
+        comment: Tick labels, axis names and key clear of each other and of the path;
+          crossing strands are inherent to 3D (permitted)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: stroke_width reduced to 1.5 and alpha=0.75 now baked into every gradient
-          stop, thinning the previously near-solid overplotted coil regions from attempt
-          1 -- some overlap remains in the densest inner loops near both attractor
-          foci
+        comment: 3.5 px lines at 0.85 opacity keep dense loops traceable; key bar
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue gradient is CVD-safe and provides good contrast
-          against both surfaces
+        comment: Green-to-blue sequential ramp, CVD-safe, adequate contrast on both
+          backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off;
-          no canvas-dimension gate failure
+        comment: 3200x1800, equal screen scale, nothing cut off, balanced labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles describe both the projection and the color-time encoding
+        comment: X, Y, Z are the dimensionless Lorenz state variables; key names the
+          variable with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First segment is exactly #009E73; imprint_seq correctly chosen for
-          single-polarity time data; theme-correct chrome in both renders'
+        comment: 'imprint_seq #009E73→#4467A3 for continuous time; correct backgrounds
+          in both renders'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom hand-built per-segment gradient plus a genuine isometric-projection
-          derivation are clearly above a configured default
+        comment: Restrained hand-built 3D box with outward tick marks and a key drawn
+          in the line's own gradient, a cohesive typographic hierarchy (bold title,
+          uniform labels)
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Subtle grid, no cluttered legend, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Isometric perspective plus the time-color gradient guide the eye
-          through the chaotic evolution and lobe-switching, creating visual hierarchy,
-          but no explicit callouts mark the two attractor foci
+        comment: Gridless box, label offsets tuned per edge so X's first label clears
+          the Z column, axis/tick strokes thinner than the data line
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Time gradient as the Notes suggest; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Fixed from attempt 1 (was 0): Z now genuinely feeds a true isometric
-          projection (rotation matrices, not a discarded ODE byproduct), matching
-          the isometric-projection technique already established by the sibling bokeh/altair
-          implementations of this same spec for libraries without native 3D -- correct
-          base approach, missing only true interactive rotation which pygal cannot
-          provide at all'
+        comment: 3D trajectory line via orthographic projection (pygal has no 3D type)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Sequential smooth-line connection, 3D spatial encoding via isometric
-          projection, and time-progression color gradient are all present; only the
-          spec's 'essential' interactive rotation/zoom is absent, an inherent pygal
-          limitation rather than an implementation defect
+        comment: Continuous smooth line in order, three labeled axes from an oblique
+          angle, gradient explained by a named key, width/transparency for overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x_rot/y_iso correctly mix all three original coordinates via the
-          rotation matrices; all data is shown
+        comment: Every point projected from its x, y, z; axes cover full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; legend correctly
-          omitted for a single 30-segment trajectory
+        comment: Mandated title format; key titled with the encoded variable
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Classic chaotic double-lobe Lorenz dynamics with lobe-switching and
-          spiraling are well represented
+        comment: Both wings, transient spiral-out, tight and wide loops shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is a real, neutral scientific system
+        comment: Lorenz attractor, the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Textbook chaotic parameters (sigma=10, rho=28, beta=8/3) produce
-          the factually correct butterfly attractor shape
+        comment: Classic sigma=10, rho=28, beta=8/3; render shows x about ±20, y about
+          ±27, z 0–50, as expected for the attractor
     code_quality:
       score: 10
       max: 10
@@ -220,33 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic ODE integration, no randomness
+        comment: Deterministic ODE
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the projection + gradient workaround,
-          well-commented explaining WHY, no fake UI
+        comment: Integration via solve_ivp; projection code is needed since pygal
+          lacks 3D
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for an interactive
-          library
+        comment: plot-{THEME}.png and .html, current pygal 3 API
     library_mastery:
       score: 6
       max: 10
@@ -256,28 +227,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic pygal.XY + Style usage
+        comment: XY with allow_interruptions/None breaks, print_labels for positioned
+          text, Style tokens
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: The segmented-gradient technique and isometric projection work around
-          pygal-specific limitations rather than showcasing a feature distinctive
-          to pygal itself
+        passed: true
+        comment: pygal inline css injection and per-series tooltip names in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-08T22:39:35Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
-  - html-export
   - 3d-projection
+  - manual-ticks
+  - annotations
+  - colorbar
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - gradient-fill
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
+  - minimal-chrome
