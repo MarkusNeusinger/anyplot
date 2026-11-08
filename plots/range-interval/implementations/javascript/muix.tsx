@@ -22,6 +22,7 @@ const SUBTITLE_H = 28;
 const DEPARTMENT = "Department"; // role: category
 const MIN_SALARY = "Minimum base salary ($k)"; // role: min_value
 const MAX_SALARY = "Maximum base salary ($k)"; // role: max_value
+const SALARY = "Base salary ($k)"; // value-axis title shared by both bounds
 
 // Data: replace this block with your own records, one object per row
 // Annual base-salary bands by department at a mid-size tech company
@@ -47,7 +48,7 @@ const highest = Math.max(...ranges.map((r) => r.hi));
 const pad = (highest - lowest) * PAD_SHARE;
 
 const TITLE = "range-interval · javascript · muix · anyplot.ai";
-const unit = MIN_SALARY.match(/\(([^)]+)\)/)?.[1] ?? "";
+const unit = SALARY.match(/\(([^)]+)\)/)?.[1] ?? "";
 const SUBTITLE = `${ranges.length} ranges sorted by midpoint · overall span ${lowest}–${highest} ${unit}`;
 
 function RangeBars() {
@@ -96,7 +97,7 @@ export default function Chart() {
             scaleType: "linear",
             min: lowest - pad,
             max: highest + pad,
-            label: `${MIN_SALARY} – ${MAX_SALARY}`,
+            label: SALARY,
             height: 64,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
