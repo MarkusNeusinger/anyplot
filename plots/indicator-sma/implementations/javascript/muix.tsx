@@ -30,8 +30,8 @@ const SMA_LONG = "SMA 200 (USD)"; // role: sma_long
 
 // Data: replace this block with your own records, one object per trading day
 // 300 weekdays of a stock from 1 Jun 2023: a steady uptrend, a choppy pullback (days 110-189)
-// and a recovery. Each SMA averages the last 20, 50 or 200 closes and stays empty until its
-// window is full.
+// that gives back about 12 % of the price, and a recovery. Each SMA averages the last 20, 50
+// or 200 closes and stays empty until its window is full.
 const data = (() => {
   const periods = 300;
   let seed = 42;
@@ -52,20 +52,28 @@ const data = (() => {
   const close = [68];
   for (let i = 1; i < periods; i += 1) {
     const pullback = i >= 110 && i < 190;
-    const changePct = (pullback ? -0.12 : 0.09) + (pullback ? 1.3 : 0.9) * gaussian();
+    const changePct = (pullback ? -0.3 : 0.09) + (pullback ? 1.3 : 0.9) * gaussian();
     close.push(close[i - 1] * (1 + changePct / 100));
   }
 
-  const smaAt = (i: number, span: number) =>
-    i < span - 1 ? null : round2(close.slice(i - span + 1, i + 1).reduce((s, v) => s + v, 0) / span);
-
-  return days.map((day, i) => ({
-    [DATE]: day,
-    [CLOSE]: round2(close[i]),
-    [SMA_SHORT]: smaAt(i, 20),
-    [SMA_MEDIUM]: smaAt(i, 50),
-    [SMA_LONG]: smaAt(i, 200),
-  }));
+  // Running sums over the last 20, 50 and 200 closes
+  let sumShort = 0;
+  let sumMedium = 0;
+  let sumLong = 0;
+  const rows = [];
+  for (let i = 0; i < periods; i += 1) {
+    sumShort += close[i] - (i >= 20 ? close[i - 20] : 0);
+    sumMedium += close[i] - (i >= 50 ? close[i - 50] : 0);
+    sumLong += close[i] - (i >= 200 ? close[i - 200] : 0);
+    rows.push({
+      [DATE]: days[i],
+      [CLOSE]: round2(close[i]),
+      [SMA_SHORT]: i >= 19 ? round2(sumShort / 20) : null,
+      [SMA_MEDIUM]: i >= 49 ? round2(sumMedium / 50) : null,
+      [SMA_LONG]: i >= 199 ? round2(sumLong / 200) : null,
+    });
+  }
+  return rows;
 })();
 
 // Plot: reads only data and the constants above
@@ -78,9 +86,11 @@ const shorts = rows.map((d) => d[SMA_SHORT] ?? null);
 const mediums = rows.map((d) => d[SMA_MEDIUM] ?? null);
 const longs = rows.map((d) => d[SMA_LONG] ?? null);
 
-// A crossover of the short over the medium SMA is a change of side between two consecutive
-// days; its mark sits where the two straight segments between those days meet
+// A crossover of the short over the medium SMA is a change of side against the last day on
+// which the two differed; its mark sits where the two straight segments meet, or on the day
+// they were equal
 const crossovers: { time: number; value: number; upward: boolean }[] = [];
+let side = 0; // sign of the last non-zero difference short - medium
 for (let i = 1; i < n; i += 1) {
   const s0 = shorts[i - 1];
   const m0 = mediums[i - 1];
@@ -89,8 +99,9 @@ for (let i = 1; i < n; i += 1) {
   if (s0 == null || m0 == null || s1 == null || m1 == null) continue;
   const before = s0 - m0;
   const after = s1 - m1;
-  if (before * after >= 0) continue;
-  const f = before / (before - after);
+  if (before !== 0) side = Math.sign(before);
+  if (after === 0 || side === 0 || Math.sign(after) === side) continue;
+  const f = before / (before - after); // 0 when the two were equal on the day before
   crossovers.push({
     time: dates[i - 1].getTime() + f * (dates[i].getTime() - dates[i - 1].getTime()),
     value: s0 + f * (s1 - s0),
@@ -155,7 +166,8 @@ export default function Chart() {
         height={height - HEADER_H - LEGEND_H}
         margin={{ top: 12, right: 40, bottom: 8, left: 20 }}
         skipAnimation
-        // The averages come first so the close is drawn on top of them
+        // The averages come first so the close is drawn on top of them; the legend reverses
+        // this order so it reads close, then the SMAs by ascending period
         series={[
           {
             type: "line",
@@ -224,7 +236,7 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 15, color: t.ink, gap: "28px" }} />
+          <ChartsLegend sx={{ fontSize: 15, color: t.ink, gap: "28px", flexDirection: "row-reverse" }} />
           <ChartsSurface
             sx={{
               "& .MuiLineChart-line": { strokeWidth: 2 },
