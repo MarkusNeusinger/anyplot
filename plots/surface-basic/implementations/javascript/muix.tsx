@@ -1,254 +1,259 @@
 // anyplot.ai
 // surface-basic: Basic 3D Surface Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-10
-//# anyplot-orientation: landscape
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
 
-// --- Data: a smooth response surface z = sin(x) * cos(y) over a 30x30 grid --
-// @mui/x-charts has no native 3D surface component (community or Pro), so the
-// surface is hand-projected: an isometric transform turns each (x, y, z) grid
-// vertex into a 2D (px, py) point, then adjacent vertices are joined into
-// filled quads and painted back-to-front, the same technique used for the
-// hand-rolled axis frame in scatter-3d — here driving the fill itself.
+// Constants
+const VIEW_ANGLE = (25 * Math.PI) / 180; // tilt of the ground plane's axes below the horizontal
+const HEIGHT_SHARE = 0.5; // full z range drawn as this share of the ground's side
+const TICK_COUNT = 6; // about this many ticks per axis
+const TICK_PX = 7; // tick mark length (px)
+const TICK_LABEL_PX = 14; // gap between an axis and its tick labels (px)
+const AXIS_TITLE_PX = 48; // gap between an axis and its title (px)
+const HEADER_H = 84;
+const LEGEND_W = 150;
+const MARGIN = { top: 56, right: 120, bottom: 80, left: 120 };
+
+// Data: replace these with your own grid, z[row][col] being the height at x[col], y[row]
+// A smooth response surface z = sin(x) · cos(y) sampled on a 30 × 30 grid
+const X_NAME = "x";
+const Y_NAME = "y";
+const Z_NAME = "z = sin(x) · cos(y)";
 const GRID_N = 30;
-const X_MIN = -3;
-const X_MAX = 3;
-const Y_MIN = -3;
-const Y_MAX = 3;
-const HEIGHT_SCALE = 3.2; // visually exaggerates the [-1, 1] function range
+const x = Array.from({ length: GRID_N }, (_, i) => -3 + (6 * i) / (GRID_N - 1)); // role: x
+const y = Array.from({ length: GRID_N }, (_, i) => -3 + (6 * i) / (GRID_N - 1)); // role: y
+const z = y.map((yv) => x.map((xv) => Math.sin(xv) * Math.cos(yv))); // role: z
 
-const grid = [];
-for (let row = 0; row < GRID_N; row += 1) {
-  const y = Y_MIN + (row / (GRID_N - 1)) * (Y_MAX - Y_MIN);
-  const line = [];
-  for (let col = 0; col < GRID_N; col += 1) {
-    const x = X_MIN + (col / (GRID_N - 1)) * (X_MAX - X_MIN);
-    const z = Math.sin(x) * Math.cos(y);
-    line.push({ x, y, z });
-  }
-  grid.push(line);
-}
-
-// --- Isometric projection: (x, y, z) -> 2D (px, py) data-space coordinates -
-// x/y form the ground plane (down-right / down-left), z (the function value)
-// is height, scaled up so the relief reads clearly at isometric angle.
-const ISO_ANGLE = Math.PI / 6; // 30 degrees
-function project(x, y, z) {
-  return {
-    px: (x - y) * Math.cos(ISO_ANGLE),
-    py: z * HEIGHT_SCALE - (x + y) * Math.sin(ISO_ANGLE),
-  };
-}
-
-grid.forEach((line) =>
-  line.forEach((node) => {
-    const projected = project(node.x, node.y, node.z);
-    node.px = projected.px;
-    node.py = projected.py;
-  })
+// Plot: reads only the grid and the constants above
+// The ground is the unit square (gx along x, gy along y), the height gz runs 0 to
+// HEIGHT_SHARE; an oblique projection maps (gx, gy, gz) to the plane, with the
+// x = min, y = min corner at the back and the x = max, y = max corner in front
+const COS = Math.cos(VIEW_ANGLE);
+const SIN = Math.sin(VIEW_ANGLE);
+const xMin = Math.min(...x);
+const xMax = Math.max(...x);
+const yMin = Math.min(...y);
+const yMax = Math.max(...y);
+const zMin = Math.min(...z.flat());
+const zMax = Math.max(...z.flat());
+const gxOf = x.map((v) => (v - xMin) / (xMax - xMin));
+const gyOf = y.map((v) => (v - yMin) / (yMax - yMin));
+const vertices = z.map((row, r) =>
+  row.map((v, c) => ({
+    px: (gxOf[c] - gyOf[r]) * COS,
+    py: ((v - zMin) / (zMax - zMin)) * HEIGHT_SHARE - (gxOf[c] + gyOf[r]) * SIN,
+  })),
 );
 
-// --- Quads: one filled polygon per grid cell, colored by average height ----
-const heightValues = grid.flat().map((node) => node.z);
-const heightMin = Math.min(...heightValues);
-const heightMax = Math.max(...heightValues);
+// One quad per grid cell, colored by its mean height and painted back to front
+const quads = vertices
+  .slice(0, -1)
+  .flatMap((row, r) =>
+    row.slice(0, -1).map((_, c) => ({
+      id: `${r}-${c}`,
+      depth: gxOf[c] + gyOf[r],
+      corners: [vertices[r][c], vertices[r][c + 1], vertices[r + 1][c + 1], vertices[r + 1][c]],
+      height: (z[r][c] + z[r][c + 1] + z[r + 1][c + 1] + z[r + 1][c]) / 4,
+    })),
+  )
+  .sort((a, b) => a.depth - b.depth);
 
-// Diverging Imprint scale (matte red -> theme midpoint -> blue): the surface
-// has a genuine zero baseline (a flat plane), so low/high are signed
-// deviations around it — the textbook case for imprint_div.
-const midpointHex = t.div[1];
-const lowHex = t.div[0];
-const highHex = t.div[2];
-const hexToRgb = (hex) => {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-};
-const lerpHex = (a, b, ratio) => {
-  const [ar, ag, ab] = hexToRgb(a);
-  const [br, bg, bb] = hexToRgb(b);
-  const r = Math.round(ar + (br - ar) * ratio);
-  const g = Math.round(ag + (bg - ag) * ratio);
-  const bch = Math.round(ab + (bb - ab) * ratio);
-  return `rgb(${r}, ${g}, ${bch})`;
-};
-const colorForUnit = (unitT) =>
-  unitT <= 0.5
-    ? lerpHex(lowHex, midpointHex, unitT / 0.5)
-    : lerpHex(midpointHex, highHex, (unitT - 0.5) / 0.5);
-const colorForHeight = (value) =>
-  colorForUnit((value - heightMin) / (heightMax - heightMin));
+// Round tick values inside each axis' extent
+const [xTicks, yTicks, zTicks] = [
+  [xMin, xMax],
+  [yMin, yMax],
+  [zMin, zMax],
+].map(([lo, hi]) => {
+  const raw = (hi - lo) / TICK_COUNT;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= raw) ?? raw;
+  const first = Math.ceil(lo / step - 1e-9);
+  const last = Math.floor(hi / step + 1e-9);
+  return Array.from({ length: last - first + 1 }, (_, i) => Number(((first + i) * step).toFixed(10)));
+});
 
-const quads = [];
-for (let row = 0; row < GRID_N - 1; row += 1) {
-  for (let col = 0; col < GRID_N - 1; col += 1) {
-    const p00 = grid[row][col];
-    const p10 = grid[row][col + 1];
-    const p11 = grid[row + 1][col + 1];
-    const p01 = grid[row + 1][col];
-    const avgHeight = (p00.z + p10.z + p11.z + p01.z) / 4;
-    quads.push({
-      points: [p00, p10, p11, p01],
-      depthKey: row + col, // painter's algorithm: far (low row+col) first
-      fill: colorForHeight(avgHeight),
-    });
-  }
-}
-quads.sort((a, b) => a.depthKey - b.depthKey);
+// Frame anchors in ground coordinates: base corners, ticks on the two front edges and the
+// z axis at the left corner, and the axis titles
+const anchors = [
+  ...[
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ].map(([gx, gy], i) => ({ kind: "base", key: `base-${i}`, value: 0, g: [gx, gy, 0] })),
+  ...xTicks.map((v) => ({ kind: "x", key: `x-${v}`, value: v, g: [(v - xMin) / (xMax - xMin), 1, 0] })),
+  ...yTicks.map((v) => ({ kind: "y", key: `y-${v}`, value: v, g: [1, (v - yMin) / (yMax - yMin), 0] })),
+  ...zTicks.map((v) => ({ kind: "z", key: `z-${v}`, value: v, g: [0, 1, ((v - zMin) / (zMax - zMin)) * HEIGHT_SHARE] })),
+  { kind: "zTop", key: "z-top", value: 0, g: [0, 1, HEIGHT_SHARE] },
+  { kind: "xTitle", key: "x-title", value: 0, g: [0.5, 1, 0] },
+  { kind: "yTitle", key: "y-title", value: 0, g: [1, 0.5, 0] },
+].map((a) => ({ ...a, px: (a.g[0] - a.g[1]) * COS, py: a.g[2] - (a.g[0] + a.g[1]) * SIN }));
+const base = anchors.filter((a) => a.kind === "base");
+const xTickAnchors = anchors.filter((a) => a.kind === "x");
+const yTickAnchors = anchors.filter((a) => a.kind === "y");
+const zTickAnchors = anchors.filter((a) => a.kind === "z");
+const zTop = anchors.find((a) => a.kind === "zTop")!;
+const xTitle = anchors.find((a) => a.kind === "xTitle")!;
+const yTitle = anchors.find((a) => a.kind === "yTitle")!;
 
-// --- Domain bounds for the linear x/y scales, padded for axis labels -------
-// Padding is a fraction of the projected data range (not a fixed data-unit
-// constant) — the isometric domain here is ~O(20) units, an order of
-// magnitude smaller than scatter-3d's ~O(100)-unit spatial domain, so a fixed
-// pad borrowed from that scale would swallow most of the plot area.
-const allProjected = grid.flat();
-const rawPxMin = Math.min(...allProjected.map((n) => n.px));
-const rawPxMax = Math.max(...allProjected.map((n) => n.px));
-const rawPyMin = Math.min(...allProjected.map((n) => n.py));
-const rawPyMax = Math.max(...allProjected.map((n) => n.py));
-const padX = (rawPxMax - rawPxMin) * 0.08;
-const padY = (rawPyMax - rawPyMin) * 0.08;
-const pxMin = rawPxMin - padX;
-const pxMax = rawPxMax + padX;
-const pyMin = rawPyMin - padY;
-const pyMax = rawPyMax + padY * 2.8; // extra headroom for the z-axis label
+const allPoints = [...vertices.flat(), ...anchors];
+const pxLo = Math.min(...allPoints.map((p) => p.px));
+const pxHi = Math.max(...allPoints.map((p) => p.px));
+const pyLo = Math.min(...allPoints.map((p) => p.py));
+const pyHi = Math.max(...allPoints.map((p) => p.py));
+const tickFormat = (v: number) => Number(v.toFixed(2)).toString();
 
-// --- Reference frame: ground corners + a height axis, drawn in data space
-// via the chart's own scale hooks (same pattern as scatter-3d's Iso3DFrame) -
-const originPoint = project(X_MIN, Y_MIN, 0);
-const xEndPoint = project(X_MAX, Y_MIN, 0);
-const yEndPoint = project(X_MIN, Y_MAX, 0);
-const heightEndPoint = project(X_MIN, Y_MIN, heightMax);
-const farCorner = project(X_MAX, Y_MAX, 0);
+const TITLE = "surface-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${x.length} × ${y.length} grid · ${Z_NAME} from ${zMin.toFixed(2)} to ${zMax.toFixed(2)}`;
+const textSx = { fontSize: 14, fill: t.inkSoft };
+const titleText = { fontSize: 16, fontWeight: 600, fill: t.ink };
 
-function IsoFrame() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPixels = (p) => ({ x: xScale(p.px), y: yScale(p.py) });
-
-  const origin = toPixels(originPoint);
-  const xEnd = toPixels(xEndPoint);
-  const yEnd = toPixels(yEndPoint);
-  const heightEnd = toPixels(heightEndPoint);
-  const far = toPixels(farCorner);
-
-  const groundEdge = (from, to) => (
-    <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
-      stroke={t.grid}
-      strokeWidth={1.5}
-      strokeDasharray="6 5"
-    />
-  );
-  const axisLabel = (point, text, dx, dy) => (
-    <text
-      x={point.x + dx}
-      y={point.y + dy}
-      fill={t.ink}
-      fontSize={16}
-      fontWeight={600}
-      fontFamily="system-ui, sans-serif"
-      textAnchor="middle"
-    >
-      {text}
-    </text>
-  );
+function SurfaceLayer() {
+  const xScale = useXScale("iso-x");
+  const yScale = useYScale("iso-y");
+  const colorOf = useZColorScale("height");
 
   return (
     <g>
-      {groundEdge(xEnd, far)}
-      {groundEdge(yEnd, far)}
-      <line
-        x1={origin.x}
-        y1={origin.y}
-        x2={heightEnd.x}
-        y2={heightEnd.y}
-        stroke={t.inkSoft}
-        strokeWidth={2}
+      <polygon
+        points={base.map((p) => `${xScale(p.px)},${yScale(p.py)}`).join(" ")}
+        fill="none"
+        stroke={t.grid}
+        strokeWidth={1.5}
       />
-      {axisLabel(xEnd, `x · [${X_MIN}, ${X_MAX}]`, 30, 10)}
-      {axisLabel(yEnd, `y · [${Y_MIN}, ${Y_MAX}]`, -32, 10)}
-      {axisLabel(heightEnd, "z = sin(x)·cos(y)", 0, -26)}
-    </g>
-  );
-}
-
-const chartTitle = "surface-basic · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) ------------
-export default function Chart() {
-  return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={[]}
-      zAxis={[
-        {
-          id: "heightColor",
-          min: heightMin,
-          max: heightMax,
-          colorMap: { type: "continuous", min: heightMin, max: heightMax, color: colorForUnit },
-        },
-      ]}
-      xAxis={[{ id: "iso-x", scaleType: "linear", min: pxMin, max: pxMax }]}
-      yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMin, max: pyMax }]}
-      margin={{ top: 70, right: 70, bottom: 90, left: 70 }}
-      disableAxisListener
-      skipAnimation
-    >
-      <text
-        x={size.width / 2}
-        y={38}
-        textAnchor="middle"
-        fontSize={26}
-        fontWeight={600}
-        fill={t.ink}
-        fontFamily="system-ui, sans-serif"
-      >
-        {chartTitle}
-      </text>
-      <SurfaceMesh />
-      <IsoFrame />
-      <ContinuousColorLegend
-        axisDirection="z"
-        axisId="heightColor"
-        direction="row"
-        position={{ horizontal: "middle", vertical: "bottom" }}
-        length="26%"
-        thickness={10}
-        minLabel={() => `${heightMin.toFixed(2)} (valley)`}
-        maxLabel={() => `${heightMax.toFixed(2)} (peak)`}
-        labelStyle={{ fontSize: 15, fill: t.inkSoft }}
-      />
-    </ChartContainer>
-  );
-}
-
-// --- The surface itself: painter's-algorithm-sorted filled quads -----------
-function SurfaceMesh() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPixels = (p) => `${xScale(p.px)},${yScale(p.py)}`;
-
-  return (
-    <g>
-      {quads.map((quad, i) => (
+      {quads.map((q) => (
         <polygon
-          key={`quad-${quad.depthKey}-${i}`}
-          points={quad.points.map(toPixels).join(" ")}
-          fill={quad.fill}
+          key={q.id}
+          points={q.corners.map((p) => `${xScale(p.px)},${yScale(p.py)}`).join(" ")}
+          fill={colorOf?.(q.height) ?? t.seq[0]}
           stroke={t.pageBg}
+          strokeOpacity={0.35}
           strokeWidth={0.6}
         />
       ))}
+      <g stroke={t.inkSoft} strokeWidth={1.5}>
+        <line x1={xScale(base[3].px)} y1={yScale(base[3].py)} x2={xScale(base[2].px)} y2={yScale(base[2].py)} />
+        <line x1={xScale(base[1].px)} y1={yScale(base[1].py)} x2={xScale(base[2].px)} y2={yScale(base[2].py)} />
+        <line x1={xScale(base[3].px)} y1={yScale(base[3].py)} x2={xScale(zTop.px)} y2={yScale(zTop.py)} />
+      </g>
+      {xTickAnchors.map((a) => (
+        <g key={a.key}>
+          <line
+            x1={xScale(a.px)}
+            y1={yScale(a.py)}
+            x2={xScale(a.px) - TICK_PX * COS}
+            y2={yScale(a.py) + TICK_PX * SIN}
+            stroke={t.inkSoft}
+            strokeWidth={1.5}
+          />
+          <text
+            x={xScale(a.px) - TICK_LABEL_PX * COS}
+            y={yScale(a.py) + TICK_LABEL_PX * SIN}
+            textAnchor="end"
+            dominantBaseline="hanging"
+            {...textSx}
+          >
+            {tickFormat(a.value)}
+          </text>
+        </g>
+      ))}
+      {yTickAnchors.map((a) => (
+        <g key={a.key}>
+          <line
+            x1={xScale(a.px)}
+            y1={yScale(a.py)}
+            x2={xScale(a.px) + TICK_PX * COS}
+            y2={yScale(a.py) + TICK_PX * SIN}
+            stroke={t.inkSoft}
+            strokeWidth={1.5}
+          />
+          <text
+            x={xScale(a.px) + TICK_LABEL_PX * COS}
+            y={yScale(a.py) + TICK_LABEL_PX * SIN}
+            textAnchor="start"
+            dominantBaseline="hanging"
+            {...textSx}
+          >
+            {tickFormat(a.value)}
+          </text>
+        </g>
+      ))}
+      {zTickAnchors.map((a) => (
+        <g key={a.key}>
+          <line x1={xScale(a.px)} y1={yScale(a.py)} x2={xScale(a.px) - TICK_PX} y2={yScale(a.py)} stroke={t.inkSoft} strokeWidth={1.5} />
+          <text x={xScale(a.px) - TICK_LABEL_PX} y={yScale(a.py)} textAnchor="end" dominantBaseline="central" {...textSx}>
+            {tickFormat(a.value)}
+          </text>
+        </g>
+      ))}
+      <text x={xScale(xTitle.px) - AXIS_TITLE_PX * COS} y={yScale(xTitle.py) + AXIS_TITLE_PX * SIN} textAnchor="end" dominantBaseline="hanging" {...titleText}>
+        {X_NAME}
+      </text>
+      <text x={xScale(yTitle.px) + AXIS_TITLE_PX * COS} y={yScale(yTitle.py) + AXIS_TITLE_PX * SIN} textAnchor="start" dominantBaseline="hanging" {...titleText}>
+        {Y_NAME}
+      </text>
+      <text x={xScale(zTop.px)} y={yScale(zTop.py) - 18} textAnchor="middle" {...titleText}>
+        {Z_NAME}
+      </text>
     </g>
+  );
+}
+
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartW = width - LEGEND_W;
+  const chartH = height - HEADER_H;
+  // equal px per unit on both axes keeps the projection's angles true
+  const drawW = chartW - MARGIN.left - MARGIN.right;
+  const drawH = chartH - MARGIN.top - MARGIN.bottom;
+  const k = Math.min(drawW / (pxHi - pxLo), drawH / (pyHi - pyLo));
+  const pxMid = (pxLo + pxHi) / 2;
+  const pyMid = (pyLo + pyHi) / 2;
+
+  return (
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{SUBTITLE}</Typography>
+      </Box>
+      <ChartsDataProvider
+        width={chartW}
+        height={chartH}
+        series={[]}
+        skipAnimation
+        margin={MARGIN}
+        xAxis={[{ id: "iso-x", scaleType: "linear", min: pxMid - drawW / (2 * k), max: pxMid + drawW / (2 * k), position: "none" }]}
+        yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMid - drawH / (2 * k), max: pyMid + drawH / (2 * k), position: "none" }]}
+        zAxis={[{ id: "height", min: zMin, max: zMax, colorMap: { type: "continuous", min: zMin, max: zMax, color: [t.seq[0], t.seq[1]] } }]}
+      >
+        <ChartsWrapper legendPosition={{ vertical: "middle", horizontal: "end" }} legendDirection="vertical" sx={{ width, height: chartH }}>
+          <Box sx={{ gridArea: "legend", width: LEGEND_W, height: chartH * 0.55, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <Typography sx={{ color: t.ink, fontSize: 15, fontWeight: 600, mb: "10px" }}>{Z_NAME}</Typography>
+            <ContinuousColorLegend
+              axisDirection="z"
+              axisId="height"
+              direction="vertical"
+              thickness={18}
+              labelPosition="end"
+              minLabel={({ value }) => tickFormat(Number(value))}
+              maxLabel={({ value }) => tickFormat(Number(value))}
+              sx={{ flex: 1, color: t.inkSoft, fontSize: 14 }}
+            />
+          </Box>
+          <ChartsSurface>
+            <SurfaceLayer />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </Box>
   );
 }
