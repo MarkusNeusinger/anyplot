@@ -2,161 +2,145 @@
 // bullet-basic: Basic Bullet Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-08-24
-import { BarChart } from "@mui/x-charts/BarChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { BarPlot } from "@mui/x-charts/BarChart";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Quarterly KPI dashboard: actual performance vs. target, banded by
-// poor / satisfactory / good qualitative ranges (Stephen Few's design).
-const kpis = [
-  { label: "Quarterly Revenue ($M)", actual: 82, target: 90, ranges: [50, 75, 100] },
-  { label: "New Customers Acquired", actual: 145, target: 130, ranges: [80, 120, 160] },
-  { label: "Support SLA Compliance (%)", actual: 96, target: 95, ranges: [85, 95, 100] },
-  { label: "Project Milestones (%)", actual: 68, target: 80, ranges: [40, 70, 100] },
+// Constants
+const BAND_OPACITY_DARK = 0.32; // ink share of the lowest (poorest) band
+const BAND_OPACITY_LIGHT = 0.11; // ink share of the highest (best) band
+const MEASURE_SHARE = 0.36; // measure bar thickness as a share of the band height
+const TARGET_SHARE = 0.72; // target marker length as a share of the band height
+
+// Columns: set these to your data's column names
+const KPI = "KPI"; // role: label
+const ACTUAL = "Actual"; // role: actual
+const TARGET = "Target"; // role: target
+const RANGES = ["Poor", "Satisfactory", "Good"]; // role: ranges (upper bound of each band, low to high)
+
+// Data: replace this block with your own records, one object per row
+// Quarterly KPI dashboard: actual performance against target, banded by
+// poor / satisfactory / good qualitative ranges.
+const data = [
+  { [KPI]: "Quarterly Revenue ($M)", [ACTUAL]: 82, [TARGET]: 90, [RANGES[0]]: 50, [RANGES[1]]: 75, [RANGES[2]]: 100 },
+  { [KPI]: "New Customers Acquired", [ACTUAL]: 145, [TARGET]: 130, [RANGES[0]]: 80, [RANGES[1]]: 120, [RANGES[2]]: 160 },
+  { [KPI]: "Support SLA Compliance (%)", [ACTUAL]: 96, [TARGET]: 95, [RANGES[0]]: 85, [RANGES[1]]: 95, [RANGES[2]]: 100 },
+  { [KPI]: "Project Milestones (%)", [ACTUAL]: 68, [TARGET]: 80, [RANGES[0]]: 40, [RANGES[1]]: 70, [RANGES[2]]: 100 },
 ];
 
-const hexToRgba = (hex, alpha) => {
-  const int = parseInt(hex.slice(1), 16);
-  const r = (int >> 16) & 255;
-  const g = (int >> 8) & 255;
-  const b = int & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
+// Plot: reads only data and the constants above
+// Grayscale bands: ink at a falling opacity, darkest for the lowest range
+const inkRgb = [1, 3, 5].map((i) => parseInt(t.ink.slice(i, i + 2), 16)).join(", ");
+const bandColors = RANGES.map((_, i) => {
+  const step = RANGES.length > 1 ? i / (RANGES.length - 1) : 0;
+  return `rgba(${inkRgb}, ${BAND_OPACITY_DARK - step * (BAND_OPACITY_DARK - BAND_OPACITY_LIGHT)})`;
+});
 
-// Grayscale range-band shading (darkest = poor, lightest = good) per spec notes.
-const BAND_COLORS = [hexToRgba(t.ink, 0.26), hexToRgba(t.ink, 0.15), hexToRgba(t.ink, 0.08)];
-const BAR_COLOR = t.palette[0]; // brand green — the measure, identical across every bullet
+// Each bullet runs on its own linear scale from zero to its largest value
+const rows = data.map((d) => ({
+  label: d[KPI],
+  actual: d[ACTUAL],
+  target: d[TARGET],
+  bandWidths: RANGES.map((col, i) => d[col] - (i > 0 ? d[RANGES[i - 1]] : 0)),
+  max: Math.max(d[ACTUAL], d[TARGET], ...RANGES.map((col) => d[col])),
+}));
 
-// --- Layout constants (CSS px within the mount's coordinate space) ---------
-// BAND_HEIGHT occupies most of each row (denser, space-efficient dashboard
-// block per the spec's own framing) instead of a thin band lost in tall rows.
-const PADDING = 40;
-const TITLE_HEIGHT = 40;
-const KEY_HEIGHT = 24;
-const ROW_GAP = 14;
-const LABEL_WIDTH = 300;
-const VALUE_WIDTH = 150;
-const BAND_HEIGHT = 110;
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const TITLE_H = 78;
+const KEY_H = 40;
+const LABEL_W = 300;
+const VALUE_W = 160;
+const SIDE_PAD = 40;
+const X_AXIS_H = 34;
+const CHART_W = W - 2 * SIDE_PAD - LABEL_W - VALUE_W;
+const ROW_H = Math.floor((H - TITLE_H - KEY_H - 24) / rows.length);
 
-const rowAreaHeight =
-  SIZE.height - PADDING * 2 - TITLE_HEIGHT - KEY_HEIGHT - ROW_GAP * (kpis.length + 1);
-const rowHeight = rowAreaHeight / kpis.length;
-const chartWidth = SIZE.width - PADDING * 2 - LABEL_WIDTH - VALUE_WIDTH;
+const TITLE = "bullet-basic · javascript · muix · anyplot.ai";
+const subtitle = `${rows.length} metrics · bands ${RANGES.join(" / ")} · each bullet on its own scale from 0`;
 
-function Bullet({ kpi }) {
-  const maxRange = kpi.ranges[2];
-  const bands = [kpi.ranges[0], kpi.ranges[1] - kpi.ranges[0], kpi.ranges[2] - kpi.ranges[1]];
-
+function MeasureAndTarget({ actual, target }: { actual: number; target: number }) {
+  const xScale = useXScale();
+  const area = useDrawingArea();
+  const mid = area.top + area.height / 2;
+  const barH = area.height * MEASURE_SHARE;
+  const targetH = area.height * TARGET_SHARE;
   return (
-    <div style={{ display: "flex", alignItems: "center", height: rowHeight, gap: 20 }}>
-      <div
-        style={{
-          width: LABEL_WIDTH,
-          textAlign: "right",
-          color: t.ink,
-          fontSize: 16,
-          fontWeight: 500,
-          paddingRight: 8,
-        }}
-      >
-        {kpi.label}
-      </div>
-      <div style={{ position: "relative", width: chartWidth, height: BAND_HEIGHT }}>
-        {/* Background: stacked qualitative range bands, grayscale, full band height */}
-        <BarChart
-          width={chartWidth}
-          height={BAND_HEIGHT}
-          layout="horizontal"
-          series={bands.map((value, i) => ({ data: [value], stack: "range", color: BAND_COLORS[i] }))}
-          xAxis={[{ scaleType: "linear", min: 0, max: maxRange }]}
-          yAxis={[{ scaleType: "band", data: [""], categoryGapRatio: 0.08 }]}
-          margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
-          bottomAxis={null}
-          leftAxis={null}
-          slotProps={{ legend: { hidden: true } }}
-          tooltip={{ trigger: "none" }}
-          skipAnimation
-        />
-        {/* Foreground: thin actual-value bar plus the target reference line */}
-        <div style={{ position: "absolute", top: 0, left: 0 }}>
-          <BarChart
-            width={chartWidth}
-            height={BAND_HEIGHT}
-            layout="horizontal"
-            series={[{ data: [kpi.actual], color: BAR_COLOR }]}
-            xAxis={[{ scaleType: "linear", min: 0, max: maxRange }]}
-            yAxis={[{ scaleType: "band", data: [""], categoryGapRatio: 0.6 }]}
-            margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
-            bottomAxis={null}
-            leftAxis={null}
-            slotProps={{ legend: { hidden: true } }}
-            tooltip={{ trigger: "none" }}
-            skipAnimation
-          >
-            <ChartsReferenceLine
-              x={kpi.target}
-              lineStyle={{ stroke: t.ink, strokeWidth: 3 }}
-              label={`${kpi.target}`}
-              labelStyle={{ fill: t.ink, fontSize: 11, fontWeight: 600 }}
-              labelAlign="end"
-            />
-          </BarChart>
-        </div>
-      </div>
-      <div style={{ width: VALUE_WIDTH, color: t.inkSoft, fontSize: 15 }}>
-        {kpi.actual} / {kpi.target}
-      </div>
-    </div>
+    <g>
+      <rect x={xScale(0)} y={mid - barH / 2} width={xScale(actual) - xScale(0)} height={barH} fill={t.palette[0]} />
+      <line x1={xScale(target)} x2={xScale(target)} y1={mid - targetH / 2} y2={mid + targetH / 2} stroke={t.ink} strokeWidth={4} />
+    </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   return (
-    <div
-      style={{
-        width: SIZE.width,
-        height: SIZE.height,
-        padding: PADDING,
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ height: TITLE_HEIGHT, color: t.ink, fontSize: 22, fontWeight: 500 }}>
-        bullet-basic · javascript · muix · anyplot.ai
+    <div style={{ width: W, height: H, display: "flex", flexDirection: "column", background: t.pageBg, padding: `0 ${SIDE_PAD}px`, boxSizing: "border-box" }}>
+      <div style={{ height: TITLE_H, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, paddingTop: 10 }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{subtitle}</div>
       </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          height: KEY_HEIGHT,
-          marginTop: ROW_GAP,
-          marginLeft: LABEL_WIDTH + 20,
-          gap: 20,
-          fontSize: 13,
-          color: t.inkSoft,
-        }}
-      >
-        {["Poor", "Satisfactory", "Good"].map((name, i) => (
-          <div key={name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 12, height: 12, background: BAND_COLORS[i], borderRadius: 2 }} />
+      <div style={{ height: KEY_H, display: "flex", alignItems: "center", gap: 24, marginLeft: LABEL_W, fontSize: 15, color: t.inkSoft }}>
+        {RANGES.map((name, i) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 16, height: 16, background: bandColors[i], borderRadius: 2 }} />
             {name}
           </div>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 2, height: 12, background: t.ink }} />
-          Target
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 26, height: 9, background: t.palette[0] }} />
+          {ACTUAL}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 4, height: 18, background: t.ink }} />
+          {TARGET}
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: ROW_GAP, marginTop: ROW_GAP }}>
-        {kpis.map((kpi) => (
-          <Bullet key={kpi.label} kpi={kpi} />
-        ))}
-      </div>
+      {rows.map((row) => (
+        <div key={row.label} style={{ height: ROW_H, display: "flex", alignItems: "center" }}>
+          <div style={{ width: LABEL_W, paddingRight: 20, boxSizing: "border-box", textAlign: "right", fontSize: 16, fontWeight: 500, color: t.ink, marginBottom: X_AXIS_H }}>
+            {row.label}
+          </div>
+          <ChartsContainer
+            width={CHART_W}
+            height={ROW_H}
+            skipAnimation
+            margin={{ top: 14, bottom: 6, left: 12, right: 16 }}
+            xAxis={[
+              {
+                min: 0,
+                max: row.max,
+                height: X_AXIS_H,
+                tickNumber: 6,
+                tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              },
+            ]}
+            yAxis={[{ scaleType: "band", data: [row.label], categoryGapRatio: 0, position: "none" }]}
+            series={row.bandWidths.map((value, i) => ({
+              type: "bar" as const,
+              id: `band-${i}`,
+              layout: "horizontal" as const,
+              stack: "bands",
+              data: [value],
+              color: bandColors[i],
+            }))}
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+            }}
+          >
+            <BarPlot skipAnimation />
+            <MeasureAndTarget actual={row.actual} target={row.target} />
+            <ChartsXAxis />
+          </ChartsContainer>
+          <div style={{ width: VALUE_W, paddingLeft: 16, boxSizing: "border-box", marginBottom: X_AXIS_H }}>
+            <span style={{ fontSize: 20, fontWeight: 600, color: t.ink }}>{row.actual}</span>
+            <span style={{ fontSize: 15, color: t.inkSoft }}>{`  ${TARGET} ${row.target}`}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
