@@ -95,6 +95,30 @@ describe('FeedbackTopList', () => {
       '/bar-grouped'
     );
   });
+
+  it('shows the current version count and the earlier ones apart', () => {
+    const items: FeedbackTopPage[] = [
+      {
+        path: '/scatter-basic/python/matplotlib',
+        count: 9,
+        current: 2,
+        earlier: 7,
+        last_seen: null,
+      },
+      { path: '/bar-grouped', count: 4, current: 4, earlier: 0, last_seen: null },
+    ];
+    render(<FeedbackTopList title="👎 thumbs down" items={items} accent={colors.error} />);
+
+    const regenerated = screen.getByRole('link', { name: '/scatter-basic/python/matplotlib' })
+      .parentElement as HTMLElement;
+    expect(within(regenerated).getByText('2')).toBeInTheDocument();
+    expect(within(regenerated).getByText('+7 earlier')).toBeInTheDocument();
+    expect(within(regenerated).queryByText('9')).not.toBeInTheDocument();
+    const unchanged = screen.getByRole('link', { name: '/bar-grouped' })
+      .parentElement as HTMLElement;
+    expect(within(unchanged).getByText('4')).toBeInTheDocument();
+    expect(within(unchanged).queryByText(/earlier/)).not.toBeInTheDocument();
+  });
 });
 
 describe('CopyClaudePromptButton', () => {

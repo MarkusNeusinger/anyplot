@@ -7,12 +7,13 @@ Provides abstraction layer between API and database models.
 from datetime import datetime, timezone
 from typing import Any, Generic, TypeVar
 
-from sqlalchemy import ColumnElement, String, and_, cast, func, or_, select, text, type_coerce, update
+from sqlalchemy import ColumnElement, String, and_, case, cast, func, or_, select, text, type_coerce, update
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
 from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, Spec
+from core.plot_votes import PLOT_VOTE_REACTIONS, naive_utc
 
 
 T = TypeVar("T")
@@ -462,36 +463,73 @@ class FeedbackRepository(BaseRepository[Feedback]):
         result = await self.session.execute(stmt)
         return result.scalar_one() or 0
 
-    async def has_plot_vote(self, session_id: str, spec_id: str, library_id: str, language: str | None) -> bool:
-        """True iff this session already left a 👍/👎 on this implementation.
+    async def version_start(self, spec_id: str, library_id: str, language: str | None = None) -> datetime | None:
+        """When the implementation's current version began: its `impls.updated`, naive UTC (`core.plot_votes`).
 
-        One vote per image per session: the router drops later votes from the
-        same session silently, so a visitor cannot flip up/down at will.
+        None when the implementation has no `updated` or is not in the table: then it has one version, and every
+        vote is on it. Without `language`, any language's row of the library counts; library ids are unique across
+        languages, and the latest `updated` is taken should two rows ever share one.
+        """
+        stmt = select(func.max(Impl.updated)).where(Impl.spec_id == spec_id, Impl.library_id == library_id)
+        if language is not None:
+            stmt = stmt.where(Impl.language_id == language)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def has_plot_vote(
+        self, session_id: str, spec_id: str, library_id: str, language: str | None, *, since: datetime | None = None
+    ) -> bool:
+        """True iff this session already left a 👍/👎 on this implementation at `since` or later.
+
+        One vote per image per session: the router passes the current version's start (`version_start`) as
+        `since` and drops a later vote from the same session on that version silently, so a visitor cannot flip
+        up/down at will, and may rate the next version once. Without `since`, every version counts.
         """
         stmt = select(func.count(Feedback.id)).where(
             Feedback.session_id == session_id,
             Feedback.spec_id == spec_id,
             Feedback.library_id == library_id,
-            Feedback.reaction.in_(("thumbs_up", "thumbs_down")),
+            Feedback.reaction.in_(PLOT_VOTE_REACTIONS),
         )
         if language is not None:
             stmt = stmt.where(Feedback.language == language)
+        if since is not None:
+            stmt = stmt.where(Feedback.created_at >= naive_utc(since))
         result = await self.session.execute(stmt)
         return (result.scalar_one() or 0) > 0
 
-    async def reaction_counts(self, spec_id: str, library_id: str, language: str | None = None) -> dict[str, int]:
+    async def reaction_counts(
+        self,
+        spec_id: str,
+        library_id: str,
+        language: str | None = None,
+        *,
+        since: datetime | None = None,
+        before: datetime | None = None,
+    ) -> dict[str, int]:
         """Count 👍/👎 for one implementation — `{"thumbs_up": n, "thumbs_down": n}`.
 
-        The router already refuses a second vote per session, but the table is
-        append-only and rows from before that guard (or without it) may repeat,
-        so only the newest row per session counts. Rows without a session id
-        cannot be de-duplicated and count once each. `language` narrows the
-        lookup when the same library id exists in more than one language.
+        A vote belongs to the version of the image it was cast on (`core.plot_votes`). Pass the current
+        version's start (`version_start`) as `since` for that version's votes, or as `before` for those of every
+        earlier version; with neither, every vote ever cast counts.
+
+        The router refuses a second vote per session and version, but the table is append-only and rows from
+        before that guard (or without it) may repeat, so within the window only the newest row per session
+        counts. A session that rated an earlier version and the current one counts once on each side. Rows
+        without a session id cannot be de-duplicated and count once each. `language` narrows the lookup when the
+        same library id exists in more than one language.
         """
-        thumbs = ("thumbs_up", "thumbs_down")
-        filters = [Feedback.spec_id == spec_id, Feedback.library_id == library_id, Feedback.reaction.in_(thumbs)]
+        filters = [
+            Feedback.spec_id == spec_id,
+            Feedback.library_id == library_id,
+            Feedback.reaction.in_(PLOT_VOTE_REACTIONS),
+        ]
         if language is not None:
             filters.append(Feedback.language == language)
+        if since is not None:
+            filters.append(Feedback.created_at >= naive_utc(since))
+        if before is not None:
+            filters.append(Feedback.created_at < naive_utc(before))
         # One partition per session; a session-less row is its own partition
         # (the primary key stands in for the missing session id). The id is
         # also the tiebreaker, so two rows sharing a created_at rank the same
@@ -510,7 +548,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
         result = await self.session.execute(
             select(ranked.c.reaction, func.count().label("count")).where(ranked.c.rank == 1).group_by(ranked.c.reaction)
         )
-        counts = dict.fromkeys(thumbs, 0)
+        counts = dict.fromkeys(PLOT_VOTE_REACTIONS, 0)
         for row in result.all():
             counts[row.reaction] = row.count
         return counts
@@ -521,24 +559,50 @@ class FeedbackRepository(BaseRepository[Feedback]):
         return list(result.scalars().all())
 
     async def top_paths_by_reaction(self, reaction: str, limit: int = 20) -> list[dict]:
-        """Group entries by path for one reaction and return path + count + last seen.
+        """Group entries by path for one reaction: path, rows on the current and on earlier versions, last seen.
 
-        Used by the debug dashboard's "top thumbs-up / thumbs-down pages" sections.
-        Entries with no path are skipped — they can't be navigated to.
+        Used by the debug dashboard's "top thumbs-up / thumbs-down pages" sections. It counts rows, not
+        de-duplicated votes (`reaction_counts` is the per-image vote count). A row on an earlier version
+        (`earlier`) names an implementation whose `updated` is later than the row (`core.plot_votes`); every
+        other row is `current`, a page reaction of the floating widget too, which names no implementation.
+        `count` is both together. The pages with the most current rows come first. Entries with no path are
+        skipped — they can't be navigated to.
         """
-        result = await self.session.execute(
+        version_start = (
+            select(func.max(Impl.updated))
+            .where(
+                Impl.spec_id == Feedback.spec_id,
+                Impl.library_id == Feedback.library_id,
+                or_(Feedback.language.is_(None), Impl.language_id == Feedback.language),
+            )
+            .correlate(Feedback)
+            .scalar_subquery()
+        )
+        rows = (
             select(
-                Feedback.path, func.count(Feedback.id).label("count"), func.max(Feedback.created_at).label("last_seen")
+                Feedback.path.label("path"),
+                Feedback.created_at.label("created_at"),
+                # A NULL start (no implementation, or no `updated`) compares to NULL and lands in the else branch.
+                case((Feedback.created_at < version_start, 1), else_=0).label("earlier"),
             )
             .where(Feedback.reaction == reaction, Feedback.path.is_not(None))
-            .group_by(Feedback.path)
-            .order_by(func.count(Feedback.id).desc(), func.max(Feedback.created_at).desc())
+            .subquery()
+        )
+        count = func.count().label("count")
+        earlier = func.sum(rows.c.earlier).label("earlier")
+        last_seen = func.max(rows.c.created_at).label("last_seen")
+        result = await self.session.execute(
+            select(rows.c.path, count, earlier, last_seen)
+            .group_by(rows.c.path)
+            .order_by((func.count() - func.sum(rows.c.earlier)).desc(), func.count().desc(), last_seen.desc())
             .limit(limit)
         )
         return [
             {
                 "path": row.path,
                 "count": row.count,
+                "current": row.count - int(row.earlier or 0),
+                "earlier": int(row.earlier or 0),
                 # created_at is TIMESTAMP WITHOUT TIME ZONE in UTC — tag with Z so
                 # the browser doesn't interpret the naive ISO as local time.
                 "last_seen": (row.last_seen.replace(tzinfo=timezone.utc).isoformat() if row.last_seen else None),

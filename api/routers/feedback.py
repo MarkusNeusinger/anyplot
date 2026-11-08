@@ -25,6 +25,7 @@ from api.exceptions import raise_validation_error
 from api.request_context import client_ip as _client_ip
 from api.schemas import FeedbackRequest, FeedbackResponse
 from core.database import FEEDBACK_REACTIONS, FeedbackRepository
+from core.plot_votes import PLOT_VOTE_REACTIONS
 
 
 logger = logging.getLogger(__name__)
@@ -40,8 +41,6 @@ RATE_LIMIT_MAX = 5
 # library carousel rates several images in quick succession, so the cap is
 # looser and counted over every row from that IP.
 REACTION_RATE_LIMIT_MAX = 30
-# The two reactions the plot buttons send — the ones subject to one-vote-per-image.
-PLOT_VOTE_REACTIONS = ("thumbs_up", "thumbs_down")
 
 # Anti-spam heuristics — see _is_link_stuffed and the duplicate check below.
 # Both branches return 200 silently (mirroring the honeypot) so bots can't
@@ -154,19 +153,17 @@ async def submit_feedback(
         return FeedbackResponse(status="ok")
 
     # One 👍/👎 per image per session: the plot buttons lock after the first
-    # tap, so a second vote from the same session for the same implementation
-    # only ever comes from someone working around the UI — drop it silently.
+    # tap, so a second vote from the same session on the same version of an
+    # implementation only ever comes from someone working around the UI — drop
+    # it silently. A regeneration starts a new version (`core.plot_votes`), and
+    # the same session may rate that one once.
     spec_id = (payload.spec_id or None) and payload.spec_id[:100]
     library_id = (payload.library_id or None) and payload.library_id[:50]
     language = (payload.language or None) and payload.language[:50]
-    if (
-        reaction in PLOT_VOTE_REACTIONS
-        and session_id
-        and spec_id
-        and library_id
-        and await repo.has_plot_vote(session_id, spec_id, library_id, language)
-    ):
-        return FeedbackResponse(status="ok")
+    if reaction in PLOT_VOTE_REACTIONS and session_id and spec_id and library_id:
+        version_start = await repo.version_start(spec_id, library_id, language)
+        if await repo.has_plot_vote(session_id, spec_id, library_id, language, since=version_start):
+            return FeedbackResponse(status="ok")
 
     user_agent = request.headers.get("user-agent", "")[:500] or None
 

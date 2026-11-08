@@ -53,7 +53,8 @@ export function FeedbackSection({
           mb: 1,
         }}
       >
-        grouped by URL — clickable
+        grouped by URL — clickable · the number counts the current version of the plot, “earlier”
+        the versions before its last regeneration
       </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         <FeedbackTopList title="👍 thumbs up" items={topThumbsUp} accent={colors.success} />

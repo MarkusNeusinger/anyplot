@@ -582,10 +582,12 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
 
 
 class FeedbackTopPage(BaseModel):
-    """Aggregated count of one reaction per page path."""
+    """Aggregated count of one reaction per page path, split by the version of the plot it was cast on."""
 
     path: str
-    count: int
+    count: int  # every row: current + earlier
+    current: int  # rows on the version shown now, and page reactions that name no plot
+    earlier: int  # rows cast before the plot's last regeneration (`core.plot_votes`)
     last_seen: str | None  # ISO timestamp of the most recent entry on this path
 
 
@@ -613,7 +615,7 @@ class FeedbackStatusUpdate(BaseModel):
 async def feedback_top_pages(
     reaction: str, limit: int = 20, db: AsyncSession = Depends(require_db)
 ) -> list[FeedbackTopPage]:
-    """Top pages by reaction count (thumbs_up / thumbs_down / idea / bug)."""
+    """Top pages by reaction count (thumbs_up / thumbs_down / idea / bug), the current version's rows first."""
     if reaction not in FEEDBACK_REACTIONS:
         raise_validation_error(f"reaction must be one of {FEEDBACK_REACTIONS}")
     if not 1 <= limit <= 100:

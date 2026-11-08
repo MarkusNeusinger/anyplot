@@ -659,8 +659,8 @@ class TestFeedbackDebugEndpoints:
         repo = MagicMock()
         repo.top_paths_by_reaction = AsyncMock(
             return_value=[
-                {"path": "/scatter-basic", "count": 7, "last_seen": "2026-05-18T12:00:00"},
-                {"path": "/heatmap-basic", "count": 3, "last_seen": "2026-05-17T08:30:00"},
+                {"path": "/scatter-basic", "count": 7, "current": 5, "earlier": 2, "last_seen": "2026-05-18T12:00:00"},
+                {"path": "/heatmap-basic", "count": 3, "current": 3, "earlier": 0, "last_seen": "2026-05-17T08:30:00"},
             ]
         )
         with patch("api.routers.debug.FeedbackRepository", return_value=repo):
@@ -668,7 +668,7 @@ class TestFeedbackDebugEndpoints:
         assert response.status_code == 200
         body = response.json()
         assert [entry["path"] for entry in body] == ["/scatter-basic", "/heatmap-basic"]
-        assert body[0]["count"] == 7
+        assert (body[0]["count"], body[0]["current"], body[0]["earlier"]) == (7, 5, 2)
         repo.top_paths_by_reaction.assert_awaited_once_with("thumbs_up", 5)
 
     def test_messages_filters_by_status(self, db_client) -> None:

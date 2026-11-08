@@ -9,7 +9,15 @@ import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 export interface FeedbackTopPage {
   path: string;
+  /** Every row: `current` + `earlier`. */
   count: number;
+  /**
+   * Rows on the version of the plot shown now, and page reactions that name no plot. Optional, so the list
+   * still reads an API from before the split (it then shows `count`).
+   */
+  current?: number;
+  /** Rows cast before the plot's last regeneration (`core/plot_votes.py`). */
+  earlier?: number;
   last_seen: string | null;
 }
 
@@ -52,7 +60,7 @@ export function FeedbackTopList({
               key={it.path}
               sx={{
                 display: 'grid',
-                gridTemplateColumns: '32px 1fr auto',
+                gridTemplateColumns: '32px 1fr auto auto',
                 gap: 1,
                 alignItems: 'baseline',
                 py: 0.4,
@@ -61,6 +69,7 @@ export function FeedbackTopList({
               }}
             >
               <Typography
+                title="on the current version"
                 sx={{
                   fontFamily: typography.fontFamily,
                   fontSize: fontSize.xxs,
@@ -69,7 +78,7 @@ export function FeedbackTopList({
                   textAlign: 'right',
                 }}
               >
-                {it.count}
+                {it.current ?? it.count}
               </Typography>
               <Link
                 component={RouterLink}
@@ -87,6 +96,17 @@ export function FeedbackTopList({
               >
                 {it.path}
               </Link>
+              <Typography
+                title="cast before the plot's last regeneration"
+                sx={{
+                  fontFamily: typography.fontFamily,
+                  fontSize: fontSize.micro,
+                  color: semanticColors.mutedText,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {it.earlier ? `+${it.earlier} earlier` : ''}
+              </Typography>
               <Typography
                 sx={{
                   fontFamily: typography.fontFamily,

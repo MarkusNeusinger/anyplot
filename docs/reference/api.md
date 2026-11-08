@@ -449,6 +449,33 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ---
 
+## Feedback endpoints
+
+### POST `/feedback`
+
+**Purpose**: The site's feedback widget and the 👍/👎 on a plot page (`api/routers/feedback.py`)
+
+The body is `{message?, reaction?, contact?, path?, spec_id?, library_id?, language?, viewport?, session_id?, website}`; at least one of `message` (500 characters at most) and `reaction` (`thumbs_up`, `thumbs_down`, `bug` or `idea`) is required, and `website` is the honeypot. The answer is `{"status": "ok"}`, also for an entry the spam filters drop silently. A call needs the bot check's `X-Turnstile-Token` (see [Bot check](#bot-check)), and an address may send 5 messages a minute, and a reaction without a message while it has sent fewer than 30 entries in the last minute (`429` beyond that).
+
+A plot vote is a `thumbs_up` or `thumbs_down` that names `spec_id` and `library_id`. It belongs to the version of the image it was cast on: the implementation's current version began at its `updated` (`impls.updated`, the metadata's `updated`), and a regeneration starts a new one (`core/plot_votes.py`). The API drops a second vote from the same `session_id` on the same version silently, so a visitor can't flip a vote, and lets the same session rate each new version once. A regeneration deletes no row.
+
+The page keeps your own vote in `localStorage` under `anyplot_plot_votes`, keyed `spec/language/library@updated`, so a vote on an earlier version doesn't ink the thumbs of the new image. A key from before votes were kept per version has no `@`: it inks nothing and blocks nothing, and the API still drops a repeat on the same version.
+
+### GET `/debug/feedback/top`
+
+**Purpose**: The "feedback · top pages" lists on `/debug`, behind the admin gate
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `reaction` | string | (required) | `thumbs_up`, `thumbs_down`, `bug` or `idea` |
+| `limit` | int | 20 | Number of paths (1-100) |
+
+Returns the paths with the most rows for that reaction, as `[{path, count, current, earlier, last_seen}]`. `earlier` counts the rows cast before the last regeneration of the implementation they name; `current` counts every other row, including the floating widget's page reactions, which name no implementation. `count` is both together, and `last_seen` is the newest row's UTC time. The paths with the most `current` rows come first. The lists count rows, not votes de-duplicated per session; `FeedbackRepository.reaction_counts` counts those per implementation, with `since` for the current version and `before` for the earlier ones.
+
+`GET /debug/feedback/messages` and `PATCH /debug/feedback/{id}` serve the messages list and its triage status on the same page.
+
+---
+
 ## Agent chat
 
 > **Status (2026-11-06):** the admin routes under `/debug/agent` are live, and
