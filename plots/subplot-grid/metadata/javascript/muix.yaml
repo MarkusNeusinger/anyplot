@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: subplot-grid
 created: '2026-09-09T19:17:02Z'
-updated: '2026-11-08T06:13:40Z'
+updated: '2026-11-08T06:19:02Z'
 generated_by: claude-opus-5-5
 adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
 workflow_run: 42453586607
@@ -13,49 +13,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'A regular 2x2 grid of four distinct, complete MUI X chart types (LineChart, BarChart,
-    ScatterChart, PieChart donut) that read as related views of one portfolio scenario:
-    one holding''s close and volume over 18 trading days, their relation, and the
-    portfolio''s sector allocation'
-  - 'Shared and independent axes both demonstrated: the price line and volume bars
-    share the same band-scale trading-day axis (same ticks, range and Monday-only
-    labels via tickLabelInterval), while the scatter has its own independent volume/close
-    axes with their own tick labels and titles'
-  - 'Consistent spacing and alignment: an even 24 px CSS grid gap, fixed axis bands
-    (AXIS_Y_W / AXIS_X_H) so the plot areas line up along rows and columns, and each
-    bold panel title indented to start exactly at its plot area''s left edge'
-  - 'Theme threading is complete: ink/inkSoft/grid tokens on every axis line, tick,
-    label and grid line, so both renders are fully legible; donut arc labels pick
-    dark or light ink per slice by relative luminance'
-  - Panel titles are derived from the column constants and the data (row count, Pearson
-    r), and the donut's legend sits directly beside its own cell, so it is unambiguous
-    which subplot it explains
-  - Animation disabled with skipAnimation on every chart; seeded LCG makes the data
-    deterministic
+  - A true 2x2 CSS grid (MUI Box with gridTemplateColumns/Rows) of four distinct chart
+    types — LineChart, BarChart, ScatterChart and a donut PieChart — reading as one
+    portfolio dashboard
+  - Price and volume panels share one band x axis (the same dayAxis config), so the
+    trading days line up column for column; the scatter keeps independent axes, each
+    with its own tick labels and axis title
+  - Plot areas line up across rows and columns (both left panels start at the same
+    x, both top panels share top and bottom edges) with even 24 px gaps and no text
+    running into a neighbor
+  - Panel titles are left-aligned with each plot area's left edge and carry computed
+    context (18 trading days, r = 0.00), with a clear 22 / 16 / 15 / 14 px type hierarchy
+  - Pie slice labels pick dark or light ink from each slice's relative luminance,
+    so every percentage stays readable on green, lavender, blue and ochre
+  - 'Native MUI X idioms: ChartsReferenceLine composed as a child for the labelled
+    price peak, tickLabelInterval that labels only Mondays, valueFormatter for K-volumes,
+    arcLabelMinAngle and paddingAngle on the donut, skipAnimation on every chart'
+  - The sector legend sits directly beside the donut it explains, and the tooltips/hover
+    highlighting work in the HTML view
   weaknesses:
-  - 'CQ-04 (code): the donut''s legend is hand-built from Box/Typography swatches
-    (about 10 lines) although MUI X''s native PieChart legend does the same → drop
-    hideLegend and the manual list and use slotProps={{ legend: { direction: "vertical",
-    position: { vertical: "middle", horizontal: "end" }, sx: { fontSize: 15 } } }}.
-    Likely cause: the custom Box list next to the PieChart in the fourth cell.'
-  - 'Suggestion: the scatter panel''s vertical grid follows every 20K minor tick;
-    a grid only on the labelled 40K ticks would lighten that cell.'
-  - 'Suggestion: the volume axis reads "0K" at its origin; formatting zero as "0"
-    would be cleaner.'
+  - 'Suggestion: the scatter panel draws vertical grid lines at every 20K tick while
+    labelling only every 40K, so it looks busier than the three other panels; a horizontal-only
+    grid or one line per labelled tick would match them.'
+  - 'Suggestion: the volume axis'' zero tick reads "0K"; a valueFormatter that prints
+    plain 0 would look cleaner.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, no white panels.
-      Chrome: centered bold title "subplot-grid · javascript · muix · anyplot.ai"; four bold panel titles ("Close (USD) · 18 trading days", "Volume (shares) · 18 trading days", "Close (USD) vs Volume (shares) · r = 0.00", "Portfolio weight (%) by sector") left-aligned to each plot area; axis titles "Trading day", "Close (USD)", "Volume (shares)" in dark ink, tick labels in soft dark ink, subtle grid. All readable.
-      Data: top-left green #009E73 line of daily closes 124–129 USD with a dashed amber peak reference line labelled "Peak 128.91 USD"; top-right green volume bars 430K–780K on the same Mar 4–Mar 28 day axis; bottom-left 18 green scatter dots of volume vs close; bottom-right donut with Technology 34% (green), Healthcare 24% (lavender #C475FD), Financials 22% (blue #4467A3), Energy 20% (ochre #BD8233), percentage arc labels and a swatch legend directly to its right. First series is #009E73.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white chart boxes.
+      Chrome: centered bold title "subplot-grid · javascript · muix · anyplot.ai" in dark ink; four bold panel titles ("Close (USD) · 18 trading days", "Volume (shares) · 18 trading days", "Close (USD) vs Volume (shares) · r = 0.00", "Portfolio weight (%) by sector") left-aligned with their plot areas; axis titles ("Close (USD)", "Trading day", "Volume (shares)") and tick labels (124–129, 0K–800K, 420K–780K, Mar 4/11/18/25) in dark ink-soft, all readable; subtle light-grey grid lines.
+      Data: 2x2 grid. Top-left: brand green #009E73 line of 18 closes with an amber dashed reference line labelled "Peak 128.91 USD". Top-right: 18 green volume bars on the same trading-day axis. Bottom-left: 18 green scatter dots of close vs volume with a full grid. Bottom-right: donut in Imprint order green 34 %, lavender 24 %, blue 22 %, ochre 20 % with luminance-matched slice labels and a vertical legend to its right. First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, panel titles, axis titles and tick labels all flip to light ink; grid lines subtle grey; no dark-on-dark text anywhere; the peak label is light on dark; donut legend labels are light.
-      Data: identical colors to the light render (green line, bars and dots, same four Imprint donut slices); arc labels keep their per-slice ink (dark on green/lavender/ochre, light on blue).
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, panel titles, axis titles and tick labels all in light ink and clearly readable; peak label light; grid lines subtle dark grey; no dark-on-dark text anywhere; legend text light.
+      Data: identical to the light render — same green line, bars and dots, same amber reference line, same green/lavender/blue/ochre slices; slice labels keep their per-slice ink (dark on green, lavender, ochre; light on blue). Only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,50 +62,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit 14–16 px ticks/labels, 22 px title; readable in both themes
-          and at thumbnail size
+        comment: All sizes set explicitly (22/16/15/14 px CSS); readable in both themes
+          and at 800 px; title about 28 % of width, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; peak label clear of the line; donut labels inside
-          slices
+        comment: No text collisions; peak label clear of the line; axis titles clear
+          of neighboring panels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3 px line, 8 px scatter markers for 18 points, solid bars, legend
-          swatches match the slices
+        comment: 3 px line, full bars, 8 px scatter markers for 18 points; legend
+          dots match slice colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue cells plus four distinct Imprint hues on the donut, labelled;
-          CVD-safe
+        comment: Single-hue time panels; donut uses four distinct Imprint hue families
+          with value labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Even 2x2 grid, balanced cells, nothing clipped; canvas gate passed
+        comment: 3200x1800; even gaps, aligned plot areas, balanced axis label sizes,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (USD, shares, %)
+        comment: Close (USD), Volume (shares), Trading day — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first; donut in canonical Imprint order; correct backgrounds
-          in both themes'
+        comment: '#009E73 first; donut in canonical Imprint order 1-4; amber token
+          for the reference line; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,23 +114,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear four-level type hierarchy (figure title, bold panel titles,
-          axis titles, softer ticks) with panel titles indented to the plot-area edge;
-          luminance-adaptive arc-label ink
+        comment: 'Beyond baseline: deliberate 22/16/15/14 hierarchy, panel titles
+          aligned to the plot-area edge, luminance-chosen slice label ink'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Fixed axis bands align plot areas across cells; Monday-only day ticks
-          chosen for the 18-day range; padded value domains
+        comment: Monday-only date ticks, K-formatted volumes, shared plot-area edges
+          across the grid, donut padding angle; scatter grid is denser than the others
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Panel titles carry the derived count and Pearson r, framing the cells
-          as one holding's dashboard
+        comment: Labelled price-peak reference line and the computed r in the scatter
+          title point the reader at the key facts
     spec_compliance:
       score: 15
       max: 15
@@ -144,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Subplot grid with a different plot type in each cell
+        comment: Subplot grid with a different plot type per cell
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Regular grid, shared (day) and independent axes, per-panel titles,
-          consistent spacing, cell-local legend: all Notes and good-version bullets
-          met'
+        comment: Configurable 2x2 CSS grid; shared x (price/volume) and independent
+          axes (scatter); per-panel titles; consistent spacing; legend beside its
+          donut
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their data values; axes show all data
+        comment: All marks at their data values; axes cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; donut legend labels match the sectors
+        comment: Mandated title format; sector legend entries match the slices
     data_quality:
       score: 15
       max: 15
@@ -174,22 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four plot types, shared and independent axes all shown
+        comment: Line, bar, scatter and donut cells; shared and independent axes both
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral portfolio dashboard with plausible sectors
+        comment: Neutral portfolio dashboard, the spec's financial example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Closes 124–129 USD, daily volume 430K–780K shares, weights summing
-          to 100 %; no Check values in the spec
+        comment: 'Checked: closes 124.03-128.91 USD (peak label 128.91 matches the
+          computed max), volume 429K-778K, weights sum to 100 %, r recomputed as -0.002
+          -> 0.00'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,13 +194,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with a single Chart component
+        comment: Data, constants, mandated default-export component; seeded LCG inline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (state = 42)
+        comment: Fixed-seed LCG, deterministic dates
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -212,19 +209,20 @@ review:
         comment: All seven imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hand-built donut legend replaces the native PieChart legend (defect
-          line)
+        passed: true
+        comment: Written-out Pearson r and luminance are allowed (no stats helpers
+          in MUI X)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, skipAnimation, v9 API, sized to ANYPLOT_SIZE
+        comment: Default export, harness mount, skipAnimation, v9 API (hideLegend,
+          axis height/width, .MuiLineChart-line)
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,28 +230,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic v9 props: tickLabelInterval function, valueFormatter,
-          axis width/height bands, ChartsReferenceLine composed as a chart child'
+        comment: High-level chart components composed with MUI Box/Typography grid;
+          axis configs shared as objects
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: arcLabel with arcLabelMinAngle and paddingAngle on the donut
-  verdict: REJECTED
+        comment: ChartsReferenceLine as a composed child, tickLabelInterval function,
+          arcLabel + arcLabelMinAngle, paddingAngle donut
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T06:10:48Z'
+  rendered_at: '2026-11-08T06:15:44Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
+  - correlation-matrix
   - time-series
   styling:
   - grid-styling
