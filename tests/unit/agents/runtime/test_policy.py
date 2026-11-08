@@ -666,9 +666,13 @@ class TestSessionLanguage:
         assert "stay in English" not in root and "reply language" not in root and "user's language" not in root
         # The page's English action messages never decide the reply language (live check of 2026-10-13: the
         # create_plot reply came in English for a session set to Japanese until this clause).
-        assert "Reply in the session language, whatever language the message is in" in root
-        assert "the page's action messages (`[action] ...`) are always English" in root
-        assert "The session language starts as English, whatever the user's browser" in root
+        assert "Reply in the session language, whatever language the message or the data is in" in root
+        assert "The page's action messages (`[action] ...`) are always English" in root
+        # English until a pick: a German message or paste only makes the page offer German (2026-11-08).
+        assert "The session language is English until the user picks another one" in root
+        assert "a German message in an English session gets an English reply" in root
+        assert "Never offer to switch the language yourself" in root
+        assert "the first message the user writes records" not in root and "a paste before any" not in root
         assert "Code, code comments and column names stay as they are" in root
         assert "is in the plot language, which `plot_pipeline` reads from the session" in root
         # The value is the user's language to write in, nothing else to follow; English, said once, when it

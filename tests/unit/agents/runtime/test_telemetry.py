@@ -167,9 +167,8 @@ async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
     assert chat_turn["kind"] == "plot" and chat_turn["action"] == "text" and chat_turn["turn"] == 1
     assert chat_turn["tools"] == ["plot_pipeline"] and chat_turn["manual_binding_changed"] is True
     assert {step["step"] for step in chat_turn["steps"]} >= {"root", "adapter", "reviewer"}
-    # The turn's first typed message had its language detected (the fake judge's `en`): read after the run, the
-    # line says so; read before it, it said `default`.
-    assert chat_turn["plot_language"] == "en" and chat_turn["language_source"] == "detected"
+    # A typed message never sets the language: the session stays English, from nobody.
+    assert chat_turn["plot_language"] == "en" and chat_turn["language_source"] == "default"
     assert outcome["action"] == "copied_code" and outcome["version"] == 1 and outcome["turn"] == 1
     assert len({line["idempotency_key"] for line in lines}) == 5
 
@@ -576,25 +575,42 @@ async def test_the_session_source_is_a_closed_set(client: httpx.AsyncClient, sou
     assert response.status_code == 422
 
 
-async def test_the_turn_records_the_language_it_detected(
+async def test_the_turn_records_the_language_as_the_turn_left_it(
     client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Review of 2026-10-30: the line read the language before the run, so the turn that detected German said
-    `en`/`default`. Read after the run, it names what the turn set; a later choice outside the table is `other`."""
+    """A German message only offers German (`default`); the accepted offer reads `offer`, and the root's
+    `set_language` inside a run is read after it. A later choice outside the table is `other`."""
     from agents.anyplot.models import JudgeVerdict
 
     caplog.set_level(logging.INFO)
-    swap_models("gemini", {"root": [{"text": "Gern."}, {"text": "Okay."}, {"text": "Okay."}]})
-    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="en")]
+    script = {
+        "root": [
+            {"text": "Sure."},
+            {"text": "Gern."},
+            {"call": "set_language", "args": {"language": "fr"}},
+            {"text": "Bien."},
+            {"text": "Okay."},
+        ]
+    }
+    swap_models("gemini", script)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")] * 2 + [JudgeVerdict(verdict="in_scope", lang="fr")]
     sid = await open_session(client)
-    assert (await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Mach es"})).is_success
-    chosen = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "Swedish"})
-    assert chosen.status_code == 200
-    assert (await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "go on"})).is_success
 
-    first, second = lines_of(caplog, "chat_turn")
-    assert (first["plot_language"], first["language_source"]) == ("de", "detected")
-    assert (second["plot_language"], second["language_source"]) == ("other", "chosen")
+    async def say(text: str) -> None:
+        assert (await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": text})).is_success
+
+    async def pick(body: dict[str, str]) -> None:
+        assert (await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json=body)).status_code == 200
+
+    await say("Mach es")
+    await pick({"language": "de", "via": "offer"})
+    await say("weiter")
+    await say("en français, s'il te plaît")
+    await pick({"language": "Swedish"})
+    await say("go on")
+
+    turns = [(line["plot_language"], line["language_source"]) for line in lines_of(caplog, "chat_turn")]
+    assert turns == [("en", "default"), ("de", "offer"), ("fr", "chosen"), ("other", "chosen")]
     assert "Swedish" not in json.dumps(telemetry_lines(caplog))
 
 
@@ -612,6 +628,12 @@ def test_the_plot_languages_are_the_named_languages() -> None:
 
     assert set(get_args(telemetry.PlotLanguage)) == {*ENGLISH_NAMES, "other"}
     assert set(COMMON_LANGUAGES) <= set(get_args(telemetry.PlotLanguage))
+
+
+def test_the_language_sources_are_the_sessions() -> None:
+    from agents.anyplot import language
+
+    assert set(get_args(telemetry.LanguageSource)) == set(get_args(language.LanguageSource)) == language.SOURCES
 
 
 async def test_a_run_records_its_attempts_and_their_causes_without_their_text(
@@ -713,31 +735,31 @@ async def test_a_cancelled_turn_records_the_language_the_turn_set(
     runtime: Runtime, client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A client that goes mid-turn closes the stream (Starlette closes the body generator): the line is still
-    written, as `cancelled`, and its language fields come from the session after the turn's work, so the detection
-    that turn made is in it."""
+    written, as `cancelled`, and its language fields come from the session after the turn's work, so the root's
+    `set_language` of that turn is in it."""
     from agents.anyplot.models import JudgeVerdict
     from agents.main import MessageBody, post_message
 
     caplog.set_level(logging.INFO)
-    swap_models("gemini", {"root": [{"text": "Gern gemacht."}]})
+    swap_models(
+        "gemini", {"root": [{"call": "set_language", "args": {"language": "Deutsch"}}, {"text": "Gern gemacht."}]}
+    )
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     sid = await open_session(client)
 
-    response = await post_message(
-        sid, MessageBody(text="Mach die Punkte größer"), USER, "public", runtime, "req-cancelled"
-    )
+    response = await post_message(sid, MessageBody(text="Auf Deutsch bitte"), USER, "public", runtime, "req-cancelled")
     stream = cast(AsyncIterator[str], response.body_iterator)
     chunks = []
     async for chunk in stream:
         chunks.append(chunk)
-        if "Gern gemacht." in chunk:  # the reply streamed: the detection ran before the root's call
+        if "Gern gemacht." in chunk:  # the reply streamed: `set_language` ran before it
             break
     await stream.aclose()  # the client went before `done`
 
     assert not any("event: done" in chunk for chunk in chunks)
     (turn,) = lines_of(caplog, "chat_turn")
     assert turn["error"] == "cancelled" and turn["kind"] == "error"
-    assert (turn["plot_language"], turn["language_source"]) == ("de", "detected")
+    assert (turn["plot_language"], turn["language_source"]) == ("de", "chosen")
     assert sid not in runtime.active  # the run is released at once
 
 

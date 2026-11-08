@@ -9,8 +9,8 @@ saw an English summary in a German session (#12176). This plugin checks it in co
 * `after_model_callback` reads a final text reply of the root (no tool call, not
   partial, not a fixed refusal, which `policy.fixed_replies` lists and which an unknown
   session language gets in English by design), and `language_detect.mismatch` compares
-  its language with the session's, when a paste, a message or a choice set it (never
-  the default English, see `checked_language`). Only a sure guess counts (`language_detect.detect`
+  its language with the session's, the default English included (`checked_language`): a
+  message in another language only makes the page offer that language. Only a sure guess counts (`language_detect.detect`
   returns None when unsure), and only for a session language the detector knows. On a
   mismatch it writes a content-free attribution line (`reply_language`, verdict
   `mismatch`, the expected and the found code), and, while the request budget allows a
@@ -39,11 +39,11 @@ from google.adk.models.llm_response import LlmResponse
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
-from ..language import english_name, is_valid
+from ..language import DEFAULT_LANGUAGE, english_name, is_valid
 from ..language_detect import detect, expected_code, mismatch
 from ..policy import fixed_replies
 from ..services import get_services
-from ..session_state import LANGUAGE, LANGUAGE_SOURCE
+from ..session_state import LANGUAGE
 from ..settings import get_settings
 from .budget import ROOT_AGENT, book_response, strip_tools
 from .ledger import attribution, budget_allows, finish_name, ledger_for
@@ -52,8 +52,6 @@ from .ledger import attribution, budget_allows, finish_name, ledger_for
 logger = logging.getLogger(__name__)
 
 REASK = True
-CHECKED_SOURCES = frozenset(("pasted", "detected", "chosen"))
-"""The language sources the check holds a reply to (`checked_language`); never the default."""
 REASK_LINE = (
     "Your last reply is not in {name}, the session language. Write the same reply again in {name}: the same "
     "content and length, column names, values and code unchanged. Answer with the reply only."
@@ -72,16 +70,16 @@ def reply_text(response: LlmResponse) -> str | None:
 
 
 def checked_language(state: Any) -> str | None:
-    """The session language to hold the reply to, None when the session is on the default.
+    """The session language to hold the reply to: the stored one, English when none is stored.
 
-    The default (English, source `default`) is no signal of what the user reads: a short
-    first message that the judge could not place leaves it, and the root may rightly answer
-    in the message's language then. A language set by a paste, a message or a choice is.
+    The default English is a language like any other: everything stays English until the user
+    picks another (`language.py`), also after a message in another language, whose language the
+    page only offers. None for a stored value outside the pattern, which nothing writes.
     """
-    language, source = state.get(LANGUAGE), state.get(LANGUAGE_SOURCE)
-    if not isinstance(language, str) or not is_valid(language) or source not in CHECKED_SOURCES:
-        return None
-    return language
+    language = state.get(LANGUAGE)
+    if language is None:
+        return DEFAULT_LANGUAGE
+    return language if isinstance(language, str) and is_valid(language) else None
 
 
 def root_model() -> Any:

@@ -300,7 +300,9 @@ ErrorCode = Literal[
 """`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection);
 `run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions;
 `no_reply`: the root wrote no reply, also when asked once more (`plugins/empty_reply.py`)."""
-LanguageSource = Literal["default", "pasted", "detected", "chosen"]
+LanguageSource = Literal["default", "chosen", "offer"]
+"""`language.LanguageSource` (pinned equal by a test): `offer` (since 2026-11-08) is an accepted offer; `pasted` and
+`detected` were detection's, which no longer sets the language."""
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
@@ -508,7 +510,7 @@ class ChatTurn(_Event):
     error: ErrorCode | None = None
     reply_reasked: bool = False
     language_source: LanguageSource | None = None
-    """How the session language was set, as the turn left it (detection or `set_language` may set it in the turn)."""
+    """How the session language was set, as the turn left it (`set_language` may set it in the turn)."""
     plot_language: PlotLanguage | None = None
     """The session language as the turn left it, as a closed code (`plot_language`)."""
     llm_calls: Count = 0

@@ -205,7 +205,7 @@ class TestPlugin:
         [
             (german_session(), response(REPLIES["de"])),  # the right language
             (german_session(), response("Fertig.")),  # unsure
-            (german_session("default"), response(REPLIES["en"])),  # the default is no signal
+            (FakeContext(session=FakeSession(state={})), response(REPLIES["en"])),  # English, the default
             (
                 FakeContext(session=FakeSession(state={LANGUAGE: "Swedish", LANGUAGE_SOURCE: "chosen"})),
                 response(REPLIES["en"]),
@@ -235,6 +235,20 @@ class TestPlugin:
 
         assert await run(context, reply) is None
         assert model.requests == []
+
+    async def test_a_german_reply_in_an_english_session_is_asked_again(
+        self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The default English holds like any language: a German message only makes the page offer German, so a
+        German reply to it is asked again in English, until the user picks German."""
+        model = FakeModel([REPLIES["en"]])
+        monkeypatch.setattr(plugin_module, "root_model", lambda: model)
+
+        result = await run(FakeContext(session=FakeSession(state={})), response(REPLIES["de"]))
+
+        assert result is not None and reply_text(result) == REPLIES["en"]
+        (asked,) = model.requests
+        assert asked.contents[-1].parts[0].text == REASK_LINE.format(name="English")
 
     async def test_log_only_when_reask_is_off(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
