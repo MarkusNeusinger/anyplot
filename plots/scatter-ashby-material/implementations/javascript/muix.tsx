@@ -10,7 +10,7 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -18,6 +18,13 @@ const t = window.ANYPLOT_TOKENS;
 const LOG_PAD_SHARE = 0.08; // axis padding on each side as a share of the log span
 const HULL_MARGIN = 15; // px the family envelopes reach beyond their outermost points
 const GUIDE_STEP_DECADES = 2; // decades between neighbouring constant-ratio guide lines
+const MARKER_RADIUS = 6; // px
+const LABEL_CHAR_WIDTH = 9.2; // px per character of a 16 px family label
+const LABEL_SWATCH_SPACE = 16; // px the colour swatch takes in front of the label text
+const LABEL_HEIGHT = 22; // px
+const LABEL_GAP = 12; // px between an envelope and its label
+const LABEL_STEP = 16; // px each further try moves the label outward
+const LABEL_STEPS = 8; // tries per side before a label falls back to its first spot
 
 // Columns: set these to your data's column names
 const MATERIAL = "Material"; // role: material
@@ -194,20 +201,81 @@ function GuideLines() {
 function FamilyLabels() {
   const xScale = useXScale();
   const yScale = useYScale();
+  const area = useDrawingArea();
+  // The envelopes in px, inflated as FamilyRegions draws them
+  const hulls = families.map((family) => {
+    const px = family.outline.map(([lx, ly]) => [xScale(10 ** lx), yScale(10 ** ly)]);
+    const cx = px.reduce((s, p) => s + p[0], 0) / px.length;
+    const cy = px.reduce((s, p) => s + p[1], 0) / px.length;
+    return px.map(([x, y]) => {
+      const len = Math.hypot(x - cx, y - cy) || 1;
+      return [x + ((x - cx) / len) * HULL_MARGIN, y + ((y - cy) / len) * HULL_MARGIN];
+    });
+  });
+  const markers = data.map((d) => [xScale(d[DENSITY]), yScale(d[MODULUS])]);
+  // Each label tries above, below, right of and left of its envelope, stepping further out, and takes
+  // the first spot inside the plot that touches no marker, no other label and no other envelope, and
+  // that lies nearer its own envelope than any other
+  const placed: { x: number; y: number; w: number }[] = [];
+  families.forEach((family, f) => {
+    const w = family.name.length * LABEL_CHAR_WIDTH + LABEL_SWATCH_SPACE;
+    const xs = hulls[f].map((p) => p[0]);
+    const ys = hulls[f].map((p) => p[1]);
+    const midX = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const midY = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const candidates = Array.from({ length: LABEL_STEPS }, (_, s) => LABEL_GAP + s * LABEL_STEP).flatMap((gap) => [
+      { x: midX, y: Math.min(...ys) - gap - LABEL_HEIGHT / 2 },
+      { x: midX, y: Math.max(...ys) + gap + LABEL_HEIGHT / 2 },
+      { x: Math.max(...xs) + gap + w / 2, y: midY },
+      { x: Math.min(...xs) - gap - w / 2, y: midY },
+    ]);
+    const free = candidates.find(({ x, y }) => {
+      const x0 = x - w / 2;
+      const x1 = x + w / 2;
+      const y0 = y - LABEL_HEIGHT / 2;
+      const y1 = y + LABEL_HEIGHT / 2;
+      if (x0 < area.left || x1 > area.left + area.width || y0 < area.top || y1 > area.top + area.height) return false;
+      if (markers.some(([mx, my]) => mx > x0 - MARKER_RADIUS && mx < x1 + MARKER_RADIUS && my > y0 - MARKER_RADIUS && my < y1 + MARKER_RADIUS)) return false;
+      if (placed.some((p) => x0 < p.x + p.w / 2 && p.x - p.w / 2 < x1 && Math.abs(p.y - y) < LABEL_HEIGHT)) return false;
+      const samples = [x0, x, x1].flatMap((sx) => [y0, y, y1].map((sy) => [sx, sy]));
+      // Ray casting: a sample inside another family's envelope rules the spot out
+      const inOther = hulls.some(
+        (hull, g) =>
+          g !== f &&
+          samples.some(([sx, sy]) =>
+            hull.reduce((inside, [ax, ay], i) => {
+              const [bx, by] = hull[(i + 1) % hull.length];
+              return ay > sy !== by > sy && sx < ((bx - ax) * (sy - ay)) / (by - ay) + ax ? !inside : inside;
+            }, false),
+          ),
+      );
+      if (inOther) return false;
+      const distances = hulls.map((hull) =>
+        Math.min(
+          ...hull.map(([ax, ay], i) => {
+            const [bx, by] = hull[(i + 1) % hull.length];
+            const len2 = (bx - ax) ** 2 + (by - ay) ** 2 || 1;
+            const s = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / len2));
+            return Math.hypot(x - ax - s * (bx - ax), y - ay - s * (by - ay));
+          }),
+        ),
+      );
+      return distances.every((d, g) => g === f || d > distances[f]);
+    });
+    placed.push({ ...(free ?? candidates[0]), w });
+  });
   return (
     <g>
-      {families.map((family) => {
-        const px = family.outline.map(([lx, ly]) => [xScale(10 ** lx), yScale(10 ** ly)]);
-        const cx = px.reduce((s, p) => s + p[0], 0) / px.length;
-        const top = Math.min(...px.map((p) => p[1])) - HULL_MARGIN - 12;
+      {families.map((family, f) => {
+        const { x, y, w } = placed[f];
         // A swatch in the region's colour ties the label to its envelope; the text stays in ink
-        const left = cx - (family.name.length * 9.2 + 16) / 2;
+        const left = x - w / 2;
         return (
           <g key={`label-${family.name}`}>
-            <circle cx={left + 5} cy={top} r={6} fill={family.color} stroke={t.pageBg} strokeWidth={2} />
+            <circle cx={left + 5} cy={y} r={6} fill={family.color} stroke={t.pageBg} strokeWidth={2} />
             <text
-              x={left + 16}
-              y={top}
+              x={left + LABEL_SWATCH_SPACE}
+              y={y}
               dominantBaseline="central"
               fontSize={16}
               fontWeight={600}
@@ -252,7 +320,7 @@ export default function Chart() {
           id: family.name,
           label: family.name,
           color: family.color,
-          markerSize: 6,
+          markerSize: MARKER_RADIUS,
           data: family.rows.map((d, j) => ({ id: `${family.name}-${j}`, x: d[DENSITY], y: d[MODULUS], material: d[MATERIAL] })),
           valueFormatter: (p: any) => `${p.material}: ${p.x} ${unitX}, ${p.y} ${unitY}`,
         }))}
