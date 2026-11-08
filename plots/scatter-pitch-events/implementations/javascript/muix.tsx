@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-pitch-events: Soccer Pitch Event Map
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-21
+// Quality: pending | Created: 2026-06-21
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
