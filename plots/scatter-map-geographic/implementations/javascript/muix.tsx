@@ -116,6 +116,10 @@ const sizeLegend = [magMin, (magMin + magMax) / 2, magMax].map((value) => ({
   value,
   radius: MARKER_RADIUS[0] + ((MARKER_RADIUS[1] - MARKER_RADIUS[0]) * (value - magMin)) / (magMax - magMin || 1),
 }));
+// The size glyphs take the middle of the depth ramp, so they share the markers' fill, edge and alpha
+const midRamp = `rgb(${[1, 3, 5]
+  .map((i) => (parseInt(t.seq[0].slice(i, i + 2), 16) + parseInt(t.seq[1].slice(i, i + 2), 16)) / 2)
+  .join(", ")})`;
 
 const lonTicks = Array.from(
   { length: (WORLD.lonMax - WORLD.lonMin) / GRATICULE_LON_STEP + 1 },
@@ -271,9 +275,10 @@ export default function Chart() {
                       cx={MARKER_RADIUS[1] + 1}
                       cy={MARKER_RADIUS[1] + 1}
                       r={radius}
-                      fill="none"
-                      stroke={t.inkSoft}
-                      strokeWidth={1.5}
+                      fill={midRamp}
+                      fillOpacity={POINT_OPACITY}
+                      stroke={t.pageBg}
+                      strokeWidth={1}
                     />
                   </svg>
                   {value.toFixed(1)}
