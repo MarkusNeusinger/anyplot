@@ -13,9 +13,11 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const MAX_RADIUS_CAP = 64; // px ceiling for the largest circle
-const GAP_SHARE = 0.06; // free space kept between the two closest circles, as a share of their distance
-const PAD_SHARE = 0.12; // map padding as a share of the centroids' longitude and latitude span
+const AREA_SHARE = 0.45; // all circles together cover this share of the true outline's area
+const GAP_SHARE = 0.03; // free space between touching circles, as a share of the largest radius
+const ITERATIONS = 400; // separation steps of the Dorling layout
+const PULL = 0.08; // per-step drift back toward the centroid at the first step, falling to zero by the last
+const PAD_SHARE = 0.03; // map padding as a share of the span of the outline and the circles
 const LABEL_MIN_RADIUS = 12; // px: smaller circles stay unlabeled, a 14 px abbreviation would not fit
 const LABEL_DARK = "#1A1A17";
 const LABEL_LIGHT = "#FAF8F1";
@@ -105,38 +107,60 @@ const CHART_H = H - TITLE_H - LEGEND_H;
 const DRAW_W = CHART_W - MARGIN.left - MARGIN.right;
 const DRAW_H = CHART_H - MARGIN.top - MARGIN.bottom;
 
-// Equirectangular view at the centroids' mean latitude: px per degree of latitude is
-// px per degree of longitude divided by cos(mean latitude); the padded extent grows
-// along one axis until it fills the drawing area
-const lons = data.map((d) => d[LON]);
-const lats = data.map((d) => d[LAT]);
-const lonMin = Math.min(...lons);
-const lonMax = Math.max(...lons);
-const latMin = Math.min(...lats);
-const latMax = Math.max(...lats);
-const cosMeanLat = Math.cos(((lats.reduce((s, v) => s + v, 0) / lats.length) * Math.PI) / 180);
-const lonSpan0 = (lonMax - lonMin) * (1 + 2 * PAD_SHARE);
-const latSpan0 = (latMax - latMin) * (1 + 2 * PAD_SHARE);
-const latSpanFill = (DRAW_H * cosMeanLat * lonSpan0) / DRAW_W;
-const lonSpan = latSpanFill >= latSpan0 ? lonSpan0 : (latSpan0 * DRAW_W) / (DRAW_H * cosMeanLat);
-const latSpan = latSpanFill >= latSpan0 ? latSpanFill : latSpan0;
-const lonCenter = (lonMin + lonMax) / 2;
-const latCenter = (latMin + latMax) / 2;
-const pxPerLon = DRAW_W / lonSpan;
-const pxPerLat = pxPerLon / cosMeanLat;
+// Layout plane: equirectangular at the centroids' mean latitude, longitude scaled by
+// cos(mean latitude), so one unit is one degree of latitude on both axes and areas compare
+const cosMeanLat = Math.cos(((data.reduce((s, d) => s + d[LAT], 0) / data.length) * Math.PI) / 180);
+const home = data.map((d) => ({ x: d[LON] * cosMeanLat, y: d[LAT] }));
+const outline = US_OUTLINE.map(([lon, lat]) => ({ x: lon * cosMeanLat, y: lat }));
+const outlineArea =
+  Math.abs(outline.reduce((s, p, i) => s + p.x * outline[(i + 1) % outline.length].y - outline[(i + 1) % outline.length].x * p.y, 0)) / 2;
 
-// Dorling circles at the exact centroids: area proportional to the value, and the
-// radius scale is the largest at which no two circles overlap, so nothing is moved
-const maxValue = Math.max(...data.map((d) => d[POPULATION]));
-const shares = data.map((d) => Math.sqrt(d[POPULATION] / maxValue));
-let maxRadius = MAX_RADIUS_CAP;
-for (let i = 0; i < data.length; i += 1) {
-  for (let j = i + 1; j < data.length; j += 1) {
-    const dx = (data[i][LON] - data[j][LON]) * pxPerLon;
-    const dy = (data[i][LAT] - data[j][LAT]) * pxPerLat;
-    maxRadius = Math.min(maxRadius, (Math.hypot(dx, dy) * (1 - GAP_SHARE)) / (shares[i] + shares[j]));
+// Dorling circles: area proportional to the value, all of them together AREA_SHARE of the outline's area
+const values = data.map((d) => d[POPULATION]);
+const total = values.reduce((s, v) => s + v, 0);
+const maxValue = Math.max(...values);
+const radius = values.map((v) => Math.sqrt((AREA_SHARE * outlineArea * v) / (total * Math.PI)));
+const gap = GAP_SHARE * Math.max(...radius);
+
+// Separation pass, deterministic: each step pulls every circle back toward its centroid, with a
+// strength that falls to zero, then pushes every overlapping pair apart along the line between their
+// centers, the smaller circle moving more. Neighbors stay close and the last steps leave no overlap.
+const pos = home.map((p) => ({ ...p }));
+for (let step = 0; step < ITERATIONS; step += 1) {
+  const pull = PULL * (1 - step / (ITERATIONS - 1));
+  pos.forEach((p, i) => {
+    p.x += (home[i].x - p.x) * pull;
+    p.y += (home[i].y - p.y) * pull;
+  });
+  for (let i = 0; i < pos.length; i += 1) {
+    for (let j = i + 1; j < pos.length; j += 1) {
+      const dx = pos[j].x - pos[i].x;
+      const dy = pos[j].y - pos[i].y;
+      const dist = Math.hypot(dx, dy);
+      const overlap = radius[i] + radius[j] + gap - dist;
+      if (overlap > 0) {
+        // two circles on the same spot split along a direction fixed by their indices
+        const ux = dist > 0 ? dx / dist : Math.cos(i + j);
+        const uy = dist > 0 ? dy / dist : Math.sin(i + j);
+        const shareI = radius[j] ** 2 / (radius[i] ** 2 + radius[j] ** 2);
+        pos[i].x -= ux * overlap * shareI;
+        pos[i].y -= uy * overlap * shareI;
+        pos[j].x += ux * overlap * (1 - shareI);
+        pos[j].y += uy * overlap * (1 - shareI);
+      }
+    }
   }
 }
+
+// View: the padded extent of the outline and the circles, grown along one axis until it fills the
+// drawing area; px per degree of latitude is px per degree of longitude divided by cos(mean latitude)
+const extentX = [...outline.map((p) => p.x), ...pos.flatMap((p, i) => [p.x - radius[i], p.x + radius[i]])];
+const extentY = [...outline.map((p) => p.y), ...pos.flatMap((p, i) => [p.y - radius[i], p.y + radius[i]])];
+const [xMin, xMax, yMin, yMax] = [Math.min(...extentX), Math.max(...extentX), Math.min(...extentY), Math.max(...extentY)];
+const spanX = Math.max(xMax - xMin, ((yMax - yMin) * DRAW_W) / DRAW_H) * (1 + 2 * PAD_SHARE);
+const spanY = (spanX * DRAW_H) / DRAW_W;
+const pxPerUnit = DRAW_W / spanX;
+const maxRadius = Math.max(...radius) * pxPerUnit;
 
 // Census regions in order of first appearance; each label ink is the one with the higher
 // contrast against its region's color
@@ -148,20 +172,28 @@ const labelInk = regions.map((_, i) => {
   const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   return (lum + 0.05) / 0.06 >= 0.98 / (lum + 0.05) ? LABEL_DARK : LABEL_LIGHT;
 });
+// Each circle back in longitude and latitude, the coordinates of the axes
+const placed = data.map((d, i) => ({
+  state: d[STATE],
+  text: d[ABBR],
+  region: d[CENSUS_REGION],
+  value: d[POPULATION],
+  lon: pos[i].x / cosMeanLat,
+  lat: pos[i].y,
+  r: radius[i] * pxPerUnit,
+}));
 const series = regions.map((region, i) => ({
   type: "scatter" as const,
   id: `region-${i}`,
   label: region,
   color: t.palette[i],
   sizeAxisId: "value",
-  data: data
-    .filter((d) => d[CENSUS_REGION] === region)
-    .map((d) => ({ id: d[STATE], x: d[LON], y: d[LAT], sizeValue: d[POPULATION] })),
+  data: placed.filter((c) => c.region === region).map((c) => ({ id: c.state, x: c.lon, y: c.lat, sizeValue: c.value })),
   valueFormatter: (v: { id: string; sizeValue: number }) => `${v.id} · ${POPULATION} ${v.sizeValue}`,
 }));
-const labels = data
-  .map((d, i) => ({ text: d[ABBR], lon: d[LON], lat: d[LAT], r: maxRadius * shares[i], ink: labelInk[regions.indexOf(d[CENSUS_REGION])] }))
-  .filter((l) => l.r >= LABEL_MIN_RADIUS);
+const labels = placed
+  .filter((c) => c.r >= LABEL_MIN_RADIUS)
+  .map((c) => ({ ...c, ink: labelInk[regions.indexOf(c.region)] }));
 
 // Size legend: three reference values, the largest rounded down to one significant digit
 const magnitude = 10 ** Math.floor(Math.log10(maxValue));
@@ -170,7 +202,7 @@ const sizeRefs = [topRef / 10, topRef / 3, topRef].map((v) => Number(v.toPrecisi
 const sizeRefRadii = sizeRefs.map((v) => maxRadius * Math.sqrt(v / maxValue));
 
 const TITLE = "cartogram-area-distortion · javascript · muix · anyplot.ai";
-const subtitle = `Dorling cartogram of ${data.length} ${STATE.toLowerCase()}s · circle area proportional to ${POPULATION.toLowerCase()}, centered on each centroid over the true outline · color by ${CENSUS_REGION.toLowerCase()}`;
+const subtitle = `Dorling cartogram of ${data.length} ${STATE.toLowerCase()}s · circle area proportional to ${POPULATION.toLowerCase()} · circles pushed apart from their centroids until none overlap · color by ${CENSUS_REGION.toLowerCase()}`;
 
 function ReferenceOutline() {
   const xScale = useXScale();
@@ -222,8 +254,8 @@ export default function Chart() {
           height={CHART_H}
           margin={MARGIN}
           series={series}
-          xAxis={[{ min: lonCenter - lonSpan / 2, max: lonCenter + lonSpan / 2, position: "none" }]}
-          yAxis={[{ min: latCenter - latSpan / 2, max: latCenter + latSpan / 2, position: "none" }]}
+          xAxis={[{ min: (xMin + xMax - spanX) / 2 / cosMeanLat, max: (xMin + xMax + spanX) / 2 / cosMeanLat, position: "none" }]}
+          yAxis={[{ min: (yMin + yMax - spanY) / 2, max: (yMin + yMax + spanY) / 2, position: "none" }]}
           zAxis={[
             {
               id: "value",
@@ -246,9 +278,9 @@ export default function Chart() {
           <div style={{ fontSize: 15, color: t.inkSoft, marginBottom: 14 }}>{POPULATION}</div>
           {sizeRefs.map((v, i) => (
             <div key={v} style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
-              <svg width={2 * maxRadius + 2} height={2 * sizeRefRadii[i] + 2}>
+              <svg width={2 * sizeRefRadii[sizeRefRadii.length - 1] + 2} height={2 * sizeRefRadii[i] + 2}>
                 <circle
-                  cx={maxRadius + 1}
+                  cx={sizeRefRadii[sizeRefRadii.length - 1] + 1}
                   cy={sizeRefRadii[i] + 1}
                   r={sizeRefRadii[i]}
                   fill={t.inkSoft}
