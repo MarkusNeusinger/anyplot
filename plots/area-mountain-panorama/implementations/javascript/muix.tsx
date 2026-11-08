@@ -15,7 +15,8 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "area-mountain-panorama · javascript · muix · anyplot.ai";
 const TITLE_H = 84;
 const Y_PAD_SHARE = 0.06; // room below the lowest skyline sample, as a share of the elevation range
-const LABEL_HEADROOM_SHARE = 0.5; // sky above the highest summit for the label shelves
+const LABEL_HEADROOM_SHARE = 0.28; // sky above the highest summit for the label shelves
+const SILHOUETTE_SHADE = 0.32; // the silhouette fill is the brand green darkened to this share of its brightness
 const Y_TICK_TARGET = 15; // about this many tick steps across the whole elevation axis
 const SHELF_H = 44; // vertical step between label shelves (px)
 const LABEL_GAP_PX = 16; // minimum clear space between two labels on one shelf
@@ -151,6 +152,13 @@ for (let v = Math.ceil(yLo / yStep) * yStep; v <= elevMax; v += yStep) yTicks.pu
 const BEARING_UNIT = BEARING.match(/\(([^)]+)\)/)?.[1] ?? "";
 const ELEV_UNIT = ELEVATION.match(/\(([^)]+)\)/)?.[1] ?? "";
 const fmtElev = (v: number) => `${Math.round(v).toLocaleString("en-US")} ${ELEV_UNIT}`.trim();
+// Dusk silhouette: a deep shade of the brand green, the same in both themes, outlined
+// in the full brand green so the ridgeline still stands out against the dark page
+const silhouette = `#${(t.palette[0] as string)
+  .slice(1)
+  .match(/../g)!
+  .map((c) => Math.round(parseInt(c, 16) * SILHOUETTE_SHADE).toString(16).padStart(2, "0"))
+  .join("")}`;
 const highest = peaks.reduce((best, d) => (d[ELEVATION] > best[ELEVATION] ? d : best), peaks[0]);
 
 const SUBTITLE = [
@@ -299,8 +307,8 @@ export default function Chart() {
           '& .MuiLineChart-area[data-series="haze"]': { fillOpacity: 0.22 },
           // lines are drawn above every area, so the haze keeps no outline across the front ridge
           '& .MuiLineChart-line[data-series="haze"]': { display: "none" },
-          // MUI brightens area fills by default; the silhouette keeps the true brand green
-          '& .MuiLineChart-area[data-series="ridge"]': { fillOpacity: 1, filter: "none" },
+          // MUI brightens area fills by default; the silhouette keeps its dark solid fill
+          '& .MuiLineChart-area[data-series="ridge"]': { fill: silhouette, fillOpacity: 1, filter: "none" },
           '& .MuiLineChart-line[data-series="ridge"]': { strokeWidth: 2.5 },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
