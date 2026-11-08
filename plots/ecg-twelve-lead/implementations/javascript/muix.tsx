@@ -1,7 +1,7 @@
 // anyplot.ai
 // ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 93/100 | Created: 2026-06-17
+// Quality: pending | Created: 2026-06-17
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
