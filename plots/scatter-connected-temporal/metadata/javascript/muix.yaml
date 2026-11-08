@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-connected-temporal
 created: '2026-06-09T23:50:44Z'
-updated: '2026-11-08T08:57:07Z'
+updated: '2026-11-08T18:14:45Z'
 generated_by: claude-opus-5-5
 adopted_from: 5a0b0597e4a560c34a2ea8f1318aef7bf8ff39f7 (5a0b0597e4a560c34a2ea8f1318aef7bf8ff39f7)
 workflow_run: 42464758441
@@ -13,44 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Real US Phillips-curve data 1970–2009 (unemployment vs CPI inflation) with labels
-    on the decade boundaries plus the 1973 oil shock and the 2008 crisis; the 1970s
-    stagflation loop and the 2009 jump read clearly
-  - 'Decades take ordered steps of the Imprint sequential ramp (#009E73 → #4467A3)
-    in time order, with a per-decade marker shape as a redundant CVD-safe cue; legend
-    shows line+mark glyphs filled like the data marks'
-  - A marker at every observation, joined by straight unsorted segments; each decade
-    series carries the previous decade's last point so the path stays unbroken where
-    the colour changes
-  - 'Uses MUI X v9 composition idiomatically: ChartsDataProvider + ChartsWrapper +
-    ChartsSurface with LinePlot/MarkPlot, a custom mark slot for larger symbols, and
-    a TemporalLayer built on useXScale/useYScale/useDrawingArea'
-  - Year labels carry a page-coloured halo and are placed clear of the path, the markers
-    and each other; chrome uses theme tokens, so both renders are fully legible
-  - Interactive HTML keeps MUI X tooltips and legend highlighting
+  - 'Real US Phillips-curve data (1970–2009, unemployment vs CPI inflation) with values
+    that check out (1980: 7.1 % / 13.5 %, 2009: 9.3 % / −0.4 %), so the loops of the
+    stagflation era and the 2009 deflation dive tell a genuine story'
+  - Decades take ordered steps of the Imprint sequential ramp (t.seq[0] → t.seq[1])
+    in time order, with a redundant marker shape per decade so neighbouring steps
+    stay apart where the loops cross
+  - Each period series also carries the previous period's last point, so the path
+    stays one unbroken chronological line through every colour change
+  - 'Composed MUI X v9 chart: ChartsDataProvider + ChartsWrapper + ChartsSurface,
+    a custom mark slot (LargeMark around MarkElement) and a TemporalLayer that reads
+    useXScale/useYScale/useDrawingArea to draw labels and chevrons in data space'
+  - Time labels carry a page-colour halo and are placed clear of the path, the markers
+    and each other; all ten labels are readable in both themes
+  - Theme tokens threaded through every chrome element; both renders pass the readability
+    check, and skipAnimation is set on the provider and on each plot
   weaknesses:
-  - 'VQ-03 (both): the direction chevrons have 7 px arms in the line''s own 2.5 px
-    stroke, so they nearly vanish on the 1600 px-wide plot and disappear entirely
-    in the 400 px thumbnail → about 11–12 px arms (+4 to +5 px), still unfilled and
-    below marker size. Likely cause: CHEVRON_ARM = 7.'
-  - 'Suggestion: the 1980s and 1990s ramp steps are close teal tones; a slightly wider
-    luminance spread between steps would separate the tangled lower-left stretch further.'
-  - 'Suggestion: the y-axis title sits far from its tick labels; a narrower y-axis
-    band would tighten it.'
+  - 'VQ-03 (both): the 2000s direction chevron sits on the 2004→2005 segment inside
+    the dense cluster around x≈5.1, y≈3 (overlapping 1994/2001/2002 markers) and can
+    barely be told apart from the marks around it → place it on a segment with clear
+    space around it, for example the longest segment of the period. Likely cause:
+    the arrows block picks members[Math.floor((members.length - 1) / 2)], the period''s
+    middle point, regardless of local crowding.'
+  - 'Suggestion: the 14 px time labels could go up to 15–16 px with weight 600 so
+    the key years read more strongly in the 400 px thumbnail.'
+  - 'Suggestion: the vertical grid at every unemployment tick together with the horizontal
+    grid adds a lot of lines; a horizontal-only grid would quiet the background behind
+    the crossing path.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no white panel.
-      Chrome: bold title "scatter-connected-temporal · javascript · muix · anyplot.ai" with a grey subtitle; axis titles "Unemployment rate (%)" and "Inflation rate (%)", grey tick labels 4–10 and 0–14, subtle grid on both axes, horizontal legend top-right (1970s circle, 1980s square, 1990s triangle, 2000s diamond). All dark text readable.
-      Data: 40 annual points joined in time order; 1970s in brand green #009E73 circles, stepping through teal to blue #4467A3 diamonds for the 2000s. The 1970s stagflation loop reaches 11 %, 1980 peaks at 13.5 %, 1982–83 swings right to 9.7 % unemployment, the 1990s/2000s tangle at low inflation, and 2009 drops to 9.3 % / −0.4 %. Ten year labels (1970, 1973, 1979, 1980, 1989, 1990, 1999, 2000, 2008, 2009) clear of the path; small chevrons per decade on the path, barely visible.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold title "scatter-connected-temporal · javascript · muix · anyplot.ai" centred at top, grey subtitle "Inflation rate (%) against Unemployment rate (%), 1970–2009, joined in time order"; horizontal legend top right (1970s circle, 1980s square, 1990s triangle, 2000s diamond); x axis "Unemployment rate (%)" ticks 4–10, y axis "Inflation rate (%)" ticks 0–14; subtle grid both ways. All dark text, all readable.
+      Data: 40 annual points joined in time order by straight segments; 1970s in brand green #009E73 (circles), 1980s teal (squares), 1990s blue-teal (triangles), 2000s blue (diamonds) — steps of the Imprint sequential ramp. Markers have a thin page-colour outline. Year labels 1970, 1973, 1979, 1980, 1989, 1990, 1999, 2000, 2008, 2009 with halos, clear of the path. Small open chevrons in the line colour mark direction, one per decade; the 2000s chevron near (5.1, 3) is lost in the cluster.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles, ticks, legend text and year labels all light ink; grid subtle grey; no dark-on-dark text.
-      Data: colours, shapes and positions identical to the light render; brand green clearly visible.
+      Chrome: title, subtitle, legend text, axis titles and tick labels flip to light ink and are all clearly readable; no dark-on-dark text. Grid lines subtle grey, axis lines light.
+      Data: decade colours and shapes identical to the light render; brand green 1970s clearly visible; year labels in light ink with a dark halo.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,49 +65,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, axis titles 16, labels 14 CSS
-          px); readable in both themes
+        comment: Title 22 px, axis titles 16 px, ticks 14 px, legend 15 px, time labels
+          14 px with halo; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Year labels clear of path, markers and each other; path crossings
-          are expected per spec
+        comment: No text collides with text, path or markers; crossings of the path
+          are expected per the spec
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers prominent with page-coloured outline; direction chevrons
-          too small (defect line)
+        comment: Markers scaled 1.6x and visible at all 40 points; the 2000s chevron
+          is lost in the dense cluster (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Decade shapes duplicate the colour steps; no red-green reliance
+        comment: Ramp steps plus redundant marker shapes per decade; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced proportions, nothing cut off
+        comment: 3200x1800, plot fills the canvas, title ~38% wide, balanced axis
+          labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units
+        comment: Both axes descriptive with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ordered decades in imprint_seq steps starting at #009E73; correct
-          theme backgrounds'
+        comment: 'Ordered decades in steps of imprint_seq starting on #009E73; correct
+          page backgrounds in both themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -112,22 +117,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Haloed year labels, subtitle hierarchy and decade shape cue beyond
-          the baseline
+        comment: Title/subtitle hierarchy, halo-backed year labels, line-coloured
+          open chevrons designed to read as part of the line
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Label placement keeps clearance from path and markers; page-coloured
-          mark outlines separate overlapping beads
+        comment: Label placement searched clear of segments, markers and edges; page-colour
+          marker outlines separate crossing marks
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Decade steps segment regimes; 1973 oil shock and 2008 crisis chosen
-          as focal labels
+        comment: Decade colour steps make the regime shifts (stagflation loops, 2009
+          dive) legible; labelled years follow the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected scatter in temporal order
+        comment: Connected scatter with temporal path
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at every point, straight segments, start/end and key years
-          labelled, stepped gradient and arrows
+        comment: Chronological straight segments, markers at every point, start/end
+          and notable years labelled, direction via ramp steps and chevrons
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at exact values; only text labels are positioned
+        comment: Every marker at its exact (x, y); path never sorted or smoothed;
+          axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend entries 1970s–2000s
+        comment: Mandated title; legend entries 1970s–2000s match the marks
     data_quality:
       score: 15
       max: 15
@@ -166,20 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Loops, doubling back, regime changes and an outlier jump all shown
+        comment: Loops, reversals, long and short segments, bunching all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US unemployment and CPI inflation 1970–2009; neutral economics
+        comment: Real US unemployment and CPI inflation, neutral economic data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values match the published annual series (e.g. 1980 13.5 %, 2009
-          9.3 % / -0.4 %)
+        comment: Checked 1974 (5.6 %, 11.0 %), 1980 (7.1 %, 13.5 %), 2009 (9.3 %,
+          −0.4 %) against the axes; plausible values throughout
     code_quality:
       score: 10
       max: 10
@@ -189,7 +195,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the React components the hooks and mark slot require
+        comment: Two small React components needed for the mark slot and for scale
+          hooks; otherwise flat module code
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,19 +208,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Label search is justified; no library call replaces it
+        comment: Ramp interpolation and label search written out; no available call
+          computes them (Computation line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 API, sized from ANYPLOT_SIZE
+        comment: Default export, skipAnimation, MUI X v9 composition API, harness
+          writes outputs
     library_mastery:
       score: 7
       max: 10
@@ -223,29 +232,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: v9 composition API with data-series selectors and sized axis bands
+        comment: v9 composition (ChartsDataProvider/ChartsWrapper/ChartsSurface),
+          per-series data-series CSS selectors, labelMarkType line+mark
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom mark slot and an SVG layer driven by useXScale/useYScale/useDrawingArea
-          inside ChartsSurface
-  verdict: REJECTED
+        comment: Custom mark slot, showMark predicate per series, useXScale/useYScale/useDrawingArea
+          hooks for an in-surface overlay layer
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T08:53:47Z'
+  rendered_at: '2026-11-08T18:11:39Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - hover-tooltips
   - html-export
   patterns:
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
+  - custom-colormap
   - edge-highlighting
-  - grid-styling
