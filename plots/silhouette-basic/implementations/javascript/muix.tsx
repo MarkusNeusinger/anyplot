@@ -17,37 +17,49 @@ const ANNOTATION_W = 180; // px band right of the bars for the cluster averages
 
 // Columns: set these to your data's column names
 const CLUSTER = "Customer segment"; // role: cluster_labels
-const SILHOUETTE = "Silhouette coefficient"; // role: silhouette_values
+const FEATURES = ["Recency score", "Monetary score"]; // role: samples
+const SILHOUETTE = "Silhouette coefficient"; // role: silhouette_values (computed below)
 
 // Data: replace this block with your own records, one object per row
-// Silhouette coefficient per customer of a k-means segmentation on RFM features (k = 4).
-const segments: [string, number, number, number][] = [
-  // name, mean score, spread, customers
-  ["Champions", 0.6, 0.16, 22],
-  ["Loyal", 0.35, 0.22, 20],
-  ["At-Risk", 0.12, 0.22, 19],
-  ["Lost", -0.05, 0.24, 19],
+// Standardized RFM features per customer with the k-means segment (k = 4) they were assigned to.
+const segments: [string, number, number, number, number][] = [
+  // name, recency centre, monetary centre, spread, customers
+  ["Champions", 3.2, 3.0, 0.6, 22],
+  ["Loyal", 1.4, 1.6, 0.6, 20],
+  ["At-Risk", 0.3, 0.2, 0.6, 19],
+  ["Lost", -0.5, -0.6, 0.7, 19],
 ];
 let seed = 42;
+const gauss = () => {
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  const u1 = Math.max(seed / 4294967296, 1e-9);
+  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos((2 * Math.PI * seed) / 4294967296);
+};
 const data: Record<string, number | string>[] = [];
-for (const [name, mean, spread, count] of segments) {
+for (const [name, cx, cy, spread, count] of segments) {
   for (let i = 0; i < count; i += 1) {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    const u1 = Math.max(seed / 4294967296, 1e-9);
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    const u2 = seed / 4294967296;
-    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    data.push({ [CLUSTER]: name, [SILHOUETTE]: Number(Math.max(-0.6, Math.min(0.95, mean + z * spread)).toFixed(3)) });
+    data.push({ [CLUSTER]: name, [FEATURES[0]]: cx + gauss() * spread, [FEATURES[1]]: cy + gauss() * spread });
   }
 }
 
 // Plot: reads only data and the constants above
+// Silhouette per sample: s = (b − a) / max(a, b), a = mean distance within its cluster,
+// b = lowest mean distance to another cluster
 const clusters = [...new Set(data.map((d) => String(d[CLUSTER])))];
+const dist = (p: Record<string, number | string>, q: Record<string, number | string>) =>
+  Math.hypot(...FEATURES.map((f) => Number(p[f]) - Number(q[f])));
+const silhouette = data.map((p) => {
+  const meanDist = (cluster: string) => {
+    const others = data.filter((q) => q !== p && q[CLUSTER] === cluster);
+    return others.reduce((s, q) => s + dist(p, q), 0) / Math.max(others.length, 1);
+  };
+  const a = meanDist(String(p[CLUSTER]));
+  const b = Math.min(...clusters.filter((c) => c !== p[CLUSTER]).map(meanDist));
+  return (b - a) / Math.max(a, b);
+});
 const blocks = clusters.map((cluster) => {
-  const scores = data
-    .filter((d) => d[CLUSTER] === cluster)
-    .map((d) => Number(d[SILHOUETTE]))
-    .sort((a, b) => b - a);
+  const scores = silhouette.filter((_, i) => data[i][CLUSTER] === cluster).sort((a, b) => b - a);
   return { cluster, scores, avg: scores.reduce((s, v) => s + v, 0) / scores.length };
 });
 
