@@ -116,6 +116,7 @@ export default function Chart() {
               ctx.location === "tick" ? T_TICK_LABELS[T_TICKS.indexOf(v)] : `t = ${v.toFixed(2)}`,
             label: X_LABEL,
             height: 64,
+            disableTicks: true,
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
@@ -124,6 +125,8 @@ export default function Chart() {
           {
             label: Y_LABEL,
             width: 76,
+            disableLine: true, // the horizontal grid already carries the y scale
+            disableTicks: true,
             valueFormatter: (v: number) => v.toFixed(1),
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
@@ -159,7 +162,6 @@ export default function Chart() {
           '& .MuiLineChart-line[data-series^="mean-"]': { strokeWidth: 3.5 },
           "& .MuiChartsAxisHighlight-root": { stroke: t.inkSoft, strokeDasharray: "4 3" },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       />
