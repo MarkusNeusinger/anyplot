@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: chessboard-pieces
 created: '2026-09-01T23:26:42Z'
-updated: '2026-11-08T01:38:52Z'
+updated: '2026-11-08T01:44:05Z'
 generated_by: claude-opus-5-5
 adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
 workflow_run: 42434857373
@@ -13,35 +13,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Board orientation exactly per convention: white at bottom, a1 dark, h1 light,
-    a-h and 1-8 at the rim'
-  - White pieces drawn as the outline glyph over a filled solid-glyph halo, so they
-    read on both ochre and pale squares in both themes
-  - Correct Scholar's Mate position (16 white, 15 black, f7 pawn gone) with glyphs
-    computed from Unicode code points
-  - 'Idiomatic MUI X composition: ChartsContainer band axes plus custom layers via
-    useXScale/useYScale/useDrawingArea'
+  - Correct Scholar's Mate position (16 white, 15 black pieces) with white at the
+    bottom and a light h1 corner
+  - Board grid built from MUI X band axes (categoryGapRatio 0) with custom SVG layers
+    that read useXScale/useYScale/useDrawingArea, so squares and pieces follow the
+    library's own scales
+  - White pieces drawn as outline glyph over a light-filled solid glyph with a halo,
+    so they read clearly on both light and dark squares in both themes
+  - Glyphs derived from Unicode code points (U+2654/U+265A + piece index) with the
+    text-style variation selector, avoiding emoji rendering
+  - 'Theme-adaptive chrome: title, subtitle, coordinates and board frame flip with
+    the theme while board and piece colors stay identical'
   weaknesses:
-  - 'VQ-05 (both): the board sits right of center, about 185 px of gutter on the left
-    (rank labels) against about 107 px on the right → equal gutters (about +78 px
-    right margin or shift the container left). Likely cause: the symmetric PAD margin
-    plus the 48 px y-axis band on the left only.'
-  - 'Suggestion: a slightly larger coordinate font would give the rim labels more
-    presence against the large board.'
+  - 'VQ-07 (both): the light squares are filled with t.amber (#DDCC77), the warning/caution
+    semantic anchor, used here outside its role → a light wood tone that is not a
+    semantic anchor, for example a lighter step of the ochre family or the theme''s
+    elevated surface, while the dark squares keep ochre (palette[3]). Likely cause:
+    SQUARE_COLOR.light = t.amber.'
+  - 'Suggestion: the white queen on f7 shows small specks of the light-square color
+    between its crown spokes where the solid fill glyph does not fully cover the outline
+    glyph; a slightly wider halo stroke would close them.'
+  - 'Suggestion: rank labels could sit a little closer to the board edge to match
+    the tight spacing of the file letters.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: bold dark title "Scholar's Mate · chessboard-pieces · javascript · muix · anyplot.ai", soft-gray subtitle "16 white and 15 black pieces · framed: Qxf7#: ...", file letters a-h below and rank numbers 1-8 left of the board, dark ink frame around the board. All readable.
-      Data: 8x8 board of pale amber and ochre squares, a1 dark, h1 light; white pieces off-white with black outlines on ranks 1-2 plus Bc4, e4 and Qf7; black pieces solid near-black; f7 and e8 framed in matte red. All pieces centered with an inset.
+      Background: warm off-white #FAF8F1 page around the board.
+      Chrome: bold dark title "Scholar's Mate · chessboard-pieces · javascript · muix · anyplot.ai" (~57% of width), grey subtitle "16 white and 15 black pieces · framed: Qxf7#: the white queen on f7 checkmates the black king on e8"; rank numbers 1-8 on the left (1 at bottom), file letters a-h below (a at left); dark ink frame around the board. All readable.
+      Data: 8x8 board of pale yellow (amber) light squares and ochre dark squares, h1 light. Black pieces are solid near-black glyphs; white pieces are cream-filled with a dark outline and halo. Position matches Scholar's Mate; f7 (white queen) and e8 (black king) framed in matte red.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title in light ink, subtitle and coordinates in light gray, board frame flips to light ink. No dark-on-dark text.
-      Data: square colors, piece inks and red frames identical to the light render.
+      Background: warm near-black #1A1A17 page.
+      Chrome: title in light ink, subtitle and coordinates in light grey, board frame flips to light ink. No dark-on-dark text.
+      Data: board squares, piece colors and red frames identical to the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,51 +60,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, subtitle 15 px, file/rank labels 16 px bold; all readable
-          in both themes and at thumbnail size
+        comment: Title 22 px, subtitle 15 px, file/rank labels 16 px bold, all explicitly
+          set; readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; every piece sits inside its own square
+        comment: No text collisions; pieces stay inside their squares
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Glyphs at 80 % of the square, white pieces outlined with a light
-          halo, readable on both square colors
+        comment: Pieces at 80% of the square are large and recognizable; white pieces
+          carry a dark outline and a light halo, black pieces are solid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Near-black and off-white pieces contrast strongly with ochre and
-          pale squares; no red-green signal
+        comment: White vs black pieces differ by lightness and fill, not hue; strong
+          contrast on both square colors
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Board sits right of center: ~185 px left gutter vs ~107 px right
-          (defect line)'
+        comment: 2400x2400 square canvas, board centered with equal side margins,
+          title ~57% of the width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for data axes; file letters a-h and rank numbers 1-8 at the rim
+        comment: N/A for data axes; file letters a-h and rank numbers 1-8 at the rim,
+          descriptive subtitle
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Ochre (#BD8233) dark squares via wood semantic exception; #FAF8F1
-          / #1A1A17 backgrounds; frame and labels flip with the theme; board colors
-          identical in both renders'
+        passed: false
+        comment: Backgrounds correct in both themes and ochre for wood is a valid
+          semantic exception, but the light squares use the amber warning anchor outside
+          its role (defect line)
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,23 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Wood-toned board, two-level header (bold title, soft subtitle explaining
-          the position), white pieces drawn as outline glyph over a filled halo for
-          contrast on both squares
+        comment: Warm wood-toned board with a theme-adaptive frame, title/subtitle
+          hierarchy, and a two-layer halo treatment that keeps white pieces crisp
+          on both square colors
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Axis lines and ticks removed so coordinates sit cleanly at the rim;
-          a thin ink frame closes the board
+        comment: Board centered by a mirrored right margin offsetting the rank band,
+          no ticks or axis lines, coordinates sit tight at the rim, consistent glyph
+          inset
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chose the mating moment of Scholar's Mate and frames the two decisive
-          squares (f7, e8) with the subtitle naming the move - a clear focal point
+        comment: Frames the mating queen on f7 and the mated king on e8 and explains
+          Qxf7# in the subtitle, giving the position a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Chess board diagram with pieces
+        comment: Chess position diagram with Unicode pieces
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Unicode U+2654-265F glyphs, white at bottom, light square at h1,
-          centered pieces with inset, contrast in both themes; all good-version bullets
-          met
+        comment: Unicode U+2654-265F glyphs, white at bottom, light h1 corner, centered
+          pieces with inset, contrasting colors, a-h left to right and 1-8 bottom
+          to top at the rim
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every piece on the square PIECES names; a at left, rank 1 at bottom
+        comment: Every piece on its named square via band scales; no other pieces
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: '"Scholar''s Mate · chessboard-pieces · javascript · muix · anyplot.ai";
-          no legend needed (N/A)'
+        comment: Scholar's Mate · chessboard-pieces · javascript · muix · anyplot.ai;
+          legend N/A
     data_quality:
       score: 15
       max: 15
@@ -162,20 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All six piece types for both colors shown on light and dark squares
+        comment: All six piece types in both colors, on light and dark squares
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Scholar's Mate, a famous real game pattern
+        comment: Scholar's Mate, a well-known neutral teaching position
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: 'Checked the position against 1.e4 e5 2.Qh5 Nc6 3.Bc4 Nf6 4.Qxf7#:
-          16 white / 15 black pieces, f7 pawn captured, all squares correct'
+          white 16 pieces (e-pawn on e4, queen on f7, bishop on c4), black 15 (f7
+          pawn gone, e5, Nc6, Nf6); the subtitle counts are computed from the dict'
     code_quality:
       score: 10
       max: 10
@@ -185,34 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Two small layer components needed for the MUI X scale hooks; flat
-          data block
+        comment: Two small layer components, the idiomatic way to draw custom SVG
+          inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic
+        comment: Hard-coded position
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: All six imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Glyphs computed from code points, square colors from parity; no dead
-          code
+        comment: Glyphs derived from code points by piece order; square color from
+          file+rank parity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          current v9 ChartsContainer API
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer and
+          hooks, sized to ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -222,27 +232,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with band x/y axes (categoryGapRatio
-          0) and ChartsXAxis/ChartsYAxis for coordinates
+        comment: 'Composition API: band x/y axes with categoryGapRatio 0 define the
+          grid, ChartsXAxis/ChartsYAxis supply coordinates'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG layers drawn through useXScale/useYScale/useDrawingArea
-          hooks inside the composition API
-  verdict: REJECTED
+        comment: Custom SVG layers read useXScale/useYScale/useDrawingArea, so the
+          board is laid out by MUI X's own scales rather than hand-computed pixels
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T01:36:18Z'
+  rendered_at: '2026-11-08T01:41:22Z'
 impl_tags:
   dependencies: []
   techniques:
+  - custom-svg-layers
+  - annotations
   - layer-composition
-  - manual-ticks
+  - html-export
   patterns:
-  - data-generation
+  - dictionary-data
   - iteration-over-groups
   dataprep: []
   styling:
+  - custom-colors
   - theme-adaptive
+  - minimal-chrome
