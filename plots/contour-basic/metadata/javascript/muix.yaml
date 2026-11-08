@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: contour-basic
 created: '2026-06-25T04:09:57Z'
-updated: '2026-11-08T01:41:25Z'
+updated: '2026-11-08T01:47:50Z'
 generated_by: claude-opus-5-5
 adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
 workflow_run: 42435004762
@@ -13,46 +13,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Band fills are drawn from useZColorScale on the piecewise zAxis colorMap, the
-    same scale PiecewiseColorLegend renders, so fills and the color bar share one
-    source of truth
-  - Marching triangles with a cell-centre vertex resolve the saddle between the summits
-    cleanly; isolines never cross and run to the plot edges
-  - Equal px per km on both axes keeps the terrain undistorted
-  - Correct imprint_seq ramp for single-signed elevation, identical in both themes,
-    with theme-adaptive chrome throughout
-  - Field shows two summits of different height, a saddle and a ridge, exercising
-    steep and flat ground
+  - A zAxis piecewise colorMap drives both the band fills (via useZColorScale) and
+    the PiecewiseColorLegend colour bar, so fills and legend cannot drift apart
+  - Custom contour layer composed inside ChartsDataProvider/ChartsSurface using the
+    library's useXScale/useYScale hooks, with native MUI X axes
+  - Equal px per km layout keeps the terrain undistorted; the 100x100 grid gives smooth,
+    evenly stepped isolines that close around both summits and form a clear saddle
+  - Imprint sequential ramp (t.seq) in discrete steps; chrome is fully theme-adaptive
+    and data colours are identical in both renders
   weaknesses:
-  - 'SC-02 (both): the innermost rings around both summits (1.02 level at the north
-    summit, 1.02/0.89 at the south summit) are visibly faceted polygons, against the
-    spec''s ''smooth curves, never angular'' bullet → smooth rings. Likely cause:
-    gridSize = 60 over 6 km (0.1 km cells); raise it to 100, the spec''s upper bound.'
-  - 'VQ-05 (both): the square map sits low on the canvas, about 190 px of empty band
-    between the subtitle and the plot top versus about 140 px below the x-axis title
-    → centre the map vertically or enlarge it into the spare height. Likely cause:
-    HEADER_H plus the column flex layout leaves the leftover height above the ChartsWrapper
-    instead of splitting it.'
-  - 'Suggestion: labelling a few key levels on their isolines (the Notes allow it)
-    would let the reader read elevations without consulting the color bar.'
+  - 'SC-02 (both): the innermost ring around the south summit (about -1.0, -1.0) is
+    a small, visibly faceted polygon only a few grid cells across, against the spec''s
+    ''smooth curves, never angular'' property → a ring wide enough to look round,
+    e.g. raise the south summit slightly (amplitude 0.75 → about 0.8) so the top level
+    it crosses is not just grazed. Likely cause: the southSummit amplitude puts its
+    peak barely above the 0.89 level.'
+  - 'Suggestion: labels on a few key levels (the Notes allow them) would let the map
+    be read without the colour bar.'
+  - 'Suggestion: neighbouring low bands (0.00–0.13 and 0.13–0.25) are close in tone
+    in the colour bar; fewer levels would widen each step.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page.
-      Chrome: bold title "Survey Terrain · contour-basic · javascript · muix · anyplot.ai" with a soft-ink subtitle "60 × 60 grid points · 9 levels evenly stepped by 0.13"; axis titles "Easting (km)" / "Northing (km)", ticks −3.0 to 3.0 every 0.5; color bar on the right titled "Elevation (km)" with nine swatches 0.00–0.13 … 1.02–1.15. All dark text, clearly readable.
-      Data: square filled contour map, brand green #009E73 on low ground ramping to blue #4467A3 at the higher north-east summit (~1.1 km) and a lower south-west summit; a diagonal ridge runs corner to corner; dark isolines at 0.6 opacity separate each band; innermost summit rings are slightly faceted.
+      Background: warm off-white #FAF8F1 page around a square 6 x 6 km map.
+      Chrome: bold title "Survey Terrain · contour-basic · javascript · muix · anyplot.ai" and grey subtitle "100 × 100 grid points · 9 levels evenly stepped by 0.13" at top; axis titles "Easting (km)" and "Northing (km)", ticks -3.0..3.0 every 0.5 in soft ink; colour bar at right titled "Elevation (km)" with 9 square swatches, 1.02–1.15 at top down to 0.00–0.13. All readable, dark text on light page.
+      Data: filled bands stepped along imprint_seq from brand green #009E73 (low ground) to blue #4467A3 (summits), dark isolines at 0.6 opacity. Two summits (larger NE near (1, 0.5), smaller SW near (-1, -1)) joined by a diagonal ridge with a saddle hourglass; lines crowd on the steep summit flanks and run off the edges along the ridge. Innermost south-summit ring is small and slightly faceted.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page.
-      Chrome: title, subtitle, axis titles, ticks and color-bar labels switch to light ink and are fully readable; no dark-on-dark text.
-      Data: band colors and isolines identical to the light render; brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, ticks, axis lines and legend text all switch to light ink; no dark-on-dark text.
+      Data: band fills, isolines and legend swatches identical to the light render; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,50 +57,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22 px, axis labels 16 px, ticks and legend
-          14 px); all text readable in both themes, no dark-on-dark
+        comment: 'Explicit sizes (title 22, subtitle 15, axis titles 16, ticks and
+          legend 14 px CSS); all text readable on #FAF8F1 and #1A1A17, theme tokens
+          threaded through ticks, axis titles, legend'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; isolines never cross
+        comment: No text collisions; legend sits clear of the map
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Isolines at 1.5 px, 0.6 opacity read clearly on every band; color-bar
-          swatches visible in both themes
+        comment: 1.5 px isolines at 0.6 opacity read on every band in both themes;
+          legend swatches visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp is CVD-safe; isolines separate adjacent bands
-          independently of hue
+        comment: Green-to-blue ramp is CVD-safe, and isolines separate neighbouring
+          bands
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Map sits low: about 190 px of empty space between subtitle and plot
-          top versus about 140 px below the x-axis title (defect line)'
+        comment: Canvas gate passed (2400x2400); equal px per km, map centred with
+          the colour bar beside it, balanced axis labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Easting (km), Northing (km), Elevation (km) with units
+        comment: Easting (km), Northing (km), Elevation (km)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (t.seq) for single-signed elevation; backgrounds #FAF8F1
-          / #1A1A17; data colors identical across themes'
+        comment: 'Bands are discrete steps of imprint_seq (t.seq #009E73 -> #4467A3);
+          backgrounds correct in both themes; data colours identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,21 +109,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle hierarchy with weight and soft-ink contrast, color-bar
-          title in ink above inkSoft range labels
+        comment: 'Raised: a deliberate title/subtitle/legend-title weight hierarchy
+          and a fixed-ink isoline at 0.6 opacity that reads on every band in both
+          themes'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Equal px per km on both axes so the terrain is undistorted; band
-          fills stroked in their own color to hide triangle seams
+        comment: 'Raised: the layout computes equal px per km so the terrain is not
+          distorted, and centres the map vertically in the spare height'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
+        passed: true
+        comment: 'Raised: the subtitle states the level step, so line spacing reads
+          directly as slope; the terrain shows two unequal summits and a saddle'
     spec_compliance:
       score: 14
       max: 15
@@ -135,29 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled contour plus isolines, single field, no extra layers
+        comment: Filled contour bands with isolines and a colour bar; no unasked layers
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Color bar, evenly stepped levels, lines plus fills present; the innermost
-          summit rings are visibly faceted, missing the 'smooth curves, never angular'
-          bullet (defect line); level labels optional and not drawn
+        comment: Colour bar, filled regions, smooth evenly stepped isolines all present;
+          the innermost ring of the south summit is visibly faceted, against the 'smooth
+          curves, never angular' bullet (defect line). Level labels are optional ('when
+          practical') and not drawn, so no deduction for that
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes span the full grid, isolines interpolated at the exact level
-          crossings
+        comment: Axes span the full -3..3 grid; bands and lines come straight from
+          the grid values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: '''Survey Terrain · contour-basic · javascript · muix · anyplot.ai'';
-          color bar titled with quantity and unit'
+          legend titled Elevation (km) with level ranges in order'
     data_quality:
       score: 15
       max: 15
@@ -167,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two peaks of different height, a saddle between them, a ridge running
-          to the edges, steep and flat ground
+        comment: Closed rings around peaks, crowding on steep slopes, wide spacing
+          on flat ground, a saddle hourglass, lines running to the edge
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral survey-terrain scenario
+        comment: Terrain of a 6x6 km survey square, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–1.15 km relief over a 6 × 6 km square is plausible; no Check values
-          in the spec
+        comment: 'Elevations 0-1.15 km over 6 km are plausible hill terrain; checked:
+          100x100 grid inside the spec''s 20-100 range, 9 levels stepped by 0.13 computed
+          from zMin/zMax. No Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -191,8 +193,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the only component besides Chart is the layer that
-          needs the scale hooks
+        comment: Flat script; the only components are the default export and the ContourLayer
+          that the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,20 +206,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Marching triangles written out is permitted: MUI X has no contour
-          helper (library prompt Computation line)'
+        comment: 'Written-out marching triangles is allowed: muix has no contour helper
+          (library prompt: Computation)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, ANYPLOT_SIZE, v9 imports
+        comment: Default-exports a component, sized to ANYPLOT_SIZE, skipAnimation,
+          v9 ChartsDataProvider/ChartsWrapper API
     library_mastery:
       score: 7
       max: 10
@@ -227,25 +230,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composed ChartsDataProvider + ChartsWrapper + ChartsSurface with
-          axis components and a custom layer reading useXScale/useYScale
+        comment: 'Raised: composed chart via ChartsDataProvider + ChartsSurface, with
+          a custom SVG layer reading useXScale/useYScale'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Band fills read from useZColorScale on a piecewise zAxis colorMap,
-          the same scale PiecewiseColorLegend draws, so fills and color bar cannot
-          drift apart
-  verdict: REJECTED
+        comment: 'Raised: a zAxis piecewise colorMap is the single source for both
+          the band fills (useZColorScale) and the PiecewiseColorLegend colour bar'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T01:38:28Z'
+  rendered_at: '2026-11-08T01:44:41Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - layer-composition
+  - custom-legend
   - html-export
   patterns:
   - data-generation
