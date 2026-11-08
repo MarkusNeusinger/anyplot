@@ -20,10 +20,10 @@ const RANK = "Popularity rank"; // role: rank
 const data = [
   { lang: "JavaScript", ranks: [1, 1, 1, 2, 2, 2, 2, 2] },
   { lang: "Python", ranks: [3, 2, 2, 1, 1, 1, 1, 1] },
-  { lang: "Java", ranks: [2, 3, 4, 4, 5, 5, 6, 6] },
-  { lang: "TypeScript", ranks: [6, 6, 5, 5, 4, 3, 3, 3] },
-  { lang: "Go", ranks: [5, 5, 6, 6, 6, 6, 5, 4] },
-  { lang: "Rust", ranks: [4, 4, 3, 3, 3, 4, 4, 5] },
+  { lang: "Java", ranks: [2, 3, 3, 3, 3, 4, 4, 4] },
+  { lang: "TypeScript", ranks: [5, 5, 4, 4, 4, 3, 3, 3] },
+  { lang: "Go", ranks: [4, 4, 5, 5, 5, 5, 6, 6] },
+  { lang: "Rust", ranks: [6, 6, 6, 6, 6, 6, 5, 5] },
 ].flatMap(({ lang, ranks }) =>
   ranks.map((rank, i) => ({ [LANGUAGE]: lang, [YEAR]: String(2018 + i), [RANK]: rank })),
 );
