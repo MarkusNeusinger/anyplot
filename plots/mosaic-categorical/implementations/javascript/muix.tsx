@@ -1,7 +1,7 @@
 // anyplot.ai
 // mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-02
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
