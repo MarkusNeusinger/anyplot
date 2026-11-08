@@ -4,246 +4,220 @@
 // Quality: 93/100 | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
-import { Box, Typography } from "@mui/material";
+import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Simulated portfolio NAV: ~2 years of trading days (weekdays only), starting
-// at 100 with a small positive drift plus two engineered stress regimes, so
-// the drawdown story (decline, trough, recovery) reads unambiguously.
-const START_DATE = new Date(2024, 0, 2);
-const TRADING_DAYS = 500;
+// Constants
+const LOSS = t.palette[4]; // drawdown in the loss red, as the Notes ask
+const VALUE_COLOR = t.palette[0]; // first palette position not taken by the loss colour
+const RECOVERY_MARK_SHARE = 0.1; // recoveries are marked for drawdowns at least this share as deep as the maximum
+const Y_PAD = 0.05; // share of the deepest drawdown left free below it and above the zero line
+const DAY_MS = 86400000;
+const TITLE = "drawdown-basic · javascript · muix · anyplot.ai";
+const HEADER_H = 84;
+const LEGEND_H = 40;
 
-const dates = [];
-const cursor = new Date(START_DATE);
-while (dates.length < TRADING_DAYS) {
-  const weekday = cursor.getDay();
-  if (weekday !== 0 && weekday !== 6) dates.push(new Date(cursor));
-  cursor.setDate(cursor.getDate() + 1);
-}
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const NAV = "NAV per share (USD)"; // role: value
 
-let lcgState = 42;
-const nextRandom = () => {
-  lcgState = (lcgState * 1103515245 + 12345) % 2147483648;
-  return lcgState / 2147483648;
-};
-
-// Regime schedule: calm start -> mild correction -> calm -> sharp bear-market
-// crash (the main event) -> strong V-shaped recovery -> calm cruise. This
-// keeps the running-max drawdown story unambiguous: one dominant trough that
-// fully recovers with runway to spare before the series ends.
-const regimeDrift = (i) => {
-  if (i < 120) return 0.0004;
-  if (i < 150) return -0.0045;
-  if (i < 260) return 0.0006;
-  if (i < 300) return -0.0105;
-  if (i < 410) return 0.0068;
-  return 0.0004;
-};
-
-let nav = 100;
-const navValues = dates.map((_, i) => {
-  const dailyShock = (nextRandom() - 0.5) * 0.018;
-  nav *= 1 + regimeDrift(i) + dailyShock;
-  return nav;
-});
-
-let runningPeak = navValues[0];
-const drawdownPct = navValues.map((value) => {
-  runningPeak = Math.max(runningPeak, value);
-  return ((value - runningPeak) / runningPeak) * 100;
-});
-
-let troughIdx = 0;
-drawdownPct.forEach((value, i) => {
-  if (value < drawdownPct[troughIdx]) troughIdx = i;
-});
-
-let peakIdx = troughIdx;
-for (let i = troughIdx; i >= 0; i -= 1) {
-  if (drawdownPct[i] === 0) {
-    peakIdx = i;
-    break;
+// Data: replace this block with your own records, one object per row
+// Simulated daily NAV of a fund over 500 trading days: a mild correction, a sharp bear-market crash,
+// a strong recovery and a calm finish
+const data = (() => {
+  const dates = [];
+  const cursor = new Date(2024, 0, 2);
+  while (dates.length < 500) {
+    if (cursor.getDay() !== 0 && cursor.getDay() !== 6) dates.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
   }
-}
+  let state = 42;
+  let nav = 100;
+  return dates.map((date, i) => {
+    state = (state * 1103515245 + 12345) % 2147483648;
+    const drift = i < 120 ? 0.0004 : i < 150 ? -0.0045 : i < 260 ? 0.0006 : i < 300 ? -0.0105 : i < 410 ? 0.0068 : 0.0004;
+    nav *= 1 + drift + (state / 2147483648 - 0.5) * 0.018;
+    return { [DATE]: date, [NAV]: Math.round(nav * 100) / 100 };
+  });
+})();
 
-let recoveryIdx = -1;
-for (let i = troughIdx + 1; i < drawdownPct.length; i += 1) {
-  if (drawdownPct[i] >= -0.02) {
-    recoveryIdx = i;
-    break;
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => Number.isFinite(d[NAV])).sort((a, b) => a[DATE] - b[DATE]);
+const dates = rows.map((d) => d[DATE]);
+const values = rows.map((d) => d[NAV]);
+
+// Drawdown from the running maximum, in percent: 0 at every new high
+let runningMax = -Infinity;
+const drawdown = values.map((v) => {
+  runningMax = Math.max(runningMax, v);
+  return ((v - runningMax) / runningMax) * 100;
+});
+
+// Drawdown episodes: from the last high before the curve leaves zero to the first return to zero
+const episodes = [];
+let open = null;
+drawdown.forEach((dd, i) => {
+  if (dd < 0 && open === null) open = { peak: Math.max(0, i - 1), trough: i, recovery: -1 };
+  if (open !== null && dd < drawdown[open.trough]) open.trough = i;
+  if (dd === 0 && open !== null) {
+    open.recovery = i;
+    episodes.push(open);
+    open = null;
   }
-}
+});
+if (open !== null) episodes.push(open);
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-const maxDrawdownPct = drawdownPct[troughIdx];
-const drawdownDays = Math.round((dates[troughIdx] - dates[peakIdx]) / DAY_MS);
-const recoveryDays = recoveryIdx > -1 ? Math.round((dates[recoveryIdx] - dates[troughIdx]) / DAY_MS) : null;
+const worst = episodes.reduce((a, b) => (drawdown[b.trough] < drawdown[a.trough] ? b : a));
+const maxDrawdown = drawdown[worst.trough];
+// The marking threshold is rounded once, so the legend states exactly the rule the marks follow
+const markDepth = Math.round(-maxDrawdown * RECOVERY_MARK_SHARE * 10) / 10;
+const marked = episodes.filter((e) => e.recovery > -1 && -drawdown[e.trough] >= markDepth);
 
-const dateLabel = (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const fmtDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format;
+const declineDays = Math.round((dates[worst.trough] - dates[worst.peak]) / DAY_MS);
+const recoveryText =
+  worst.recovery > -1
+    ? `recovery ${Math.round((dates[worst.recovery] - dates[worst.trough]) / DAY_MS)} days (to ${fmtDate(dates[worst.recovery])})`
+    : "not yet recovered";
+const stats = `Max drawdown ${maxDrawdown.toFixed(1)}% · decline ${declineDays} days (${fmtDate(dates[worst.peak])} → ${fmtDate(dates[worst.trough])}) · ${recoveryText}`;
 
-const statsLine =
-  `Max drawdown ${maxDrawdownPct.toFixed(1)}% · ` +
-  `Underwater ${drawdownDays}d (${dateLabel(dates[peakIdx])} → ${dateLabel(dates[troughIdx])}) · ` +
-  (recoveryDays !== null ? `Recovered in ${recoveryDays}d` : "Not yet recovered");
+const yMin = maxDrawdown * (1 + Y_PAD);
+const yMax = -maxDrawdown * Y_PAD;
 
-// --- Overlay: shades the peak→trough and trough→recovery windows ---------
-function DrawdownWindow({ from, to, color, opacity }) {
+// Marker-only series: a value at the trough and at each marked recovery, null elsewhere
+const recoveryIdx = new Set(marked.map((e) => e.recovery));
+const troughSeries = drawdown.map((dd, i) => (i === worst.trough ? dd : null));
+const recoverySeries = drawdown.map((dd, i) => (recoveryIdx.has(i) ? dd : null));
+
+function MaxDrawdownPeriod() {
   const xScale = useXScale();
-  const { top, height } = useDrawingArea();
-  const x1 = xScale(from);
-  const x2 = xScale(to);
-  if (x1 == null || x2 == null) return null;
+  const yScale = useYScale("drawdown");
+  const { left, top, width, height } = useDrawingArea();
+  const x0 = xScale(dates[worst.peak]);
+  const x1 = xScale(dates[worst.recovery > -1 ? worst.recovery : dates.length - 1]);
+  const tx = xScale(dates[worst.trough]);
+  const ty = yScale(maxDrawdown);
+  const troughRight = tx < left + width * 0.7;
   return (
-    <rect x={Math.min(x1, x2)} y={top} width={Math.abs(x2 - x1)} height={height} fill={color} fillOpacity={opacity} />
+    <g>
+      <rect x={x0} y={top} width={x1 - x0} height={height} fill={t.inkSoft} fillOpacity={0.08} />
+      <text x={x0 + 10} y={top + 18} fontSize={14} fill={t.inkSoft}>
+        Max drawdown period
+      </text>
+      <text x={troughRight ? tx + 16 : tx - 16} y={ty + 5} textAnchor={troughRight ? "start" : "end"} fontSize={15} fontWeight={600} fill={t.ink}>
+        {`${maxDrawdown.toFixed(1)}% on ${fmtDate(dates[worst.trough])}`}
+      </text>
+    </g>
   );
 }
 
-const TITLE_H = 60;
-const STATS_H = 40;
-// MUI X's y-axis `label` prop offsets itself from a hardcoded tickFontSize
-// guess rather than the tick labels' real measured width, so with "-40%"-style
-// negative-percent ticks it collides with the tick numbers. A hand-rotated
-// label in its own flex column sidesteps that with predictable spacing.
-const Y_LABEL_W = 34;
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_H - STATS_H;
-  const chartWidth = width - Y_LABEL_W;
-
   return (
-    <Box
-      sx={{
-        width,
-        height,
-        bgcolor: t.pageBg,
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
-      }}
-    >
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", pl: "28px" }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600 }}>
-          drawdown-basic · javascript · muix · anyplot.ai
-        </Typography>
-      </Box>
-      <Box sx={{ height: STATS_H, display: "flex", alignItems: "center", pl: "28px" }}>
-        <Typography sx={{ color: t.inkSoft, fontSize: 15 }}>{statsLine}</Typography>
-      </Box>
-
-      <Box sx={{ display: "flex", flexDirection: "row", height: chartHeight }}>
-        <Box sx={{ width: Y_LABEL_W, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography
-            sx={{ fontSize: 16, color: t.ink, whiteSpace: "nowrap", transform: "rotate(-90deg)" }}
-          >
-            Drawdown (%)
-          </Typography>
-        </Box>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          rightAxis="nav"
-          series={[
-            {
-              id: "drawdown",
-              yAxisId: "dd",
-              data: drawdownPct,
-              label: "Drawdown",
-              area: true,
-              showMark: false,
-              curve: "linear",
-              color: t.palette[4],
-              valueFormatter: (v) => `${v.toFixed(1)}%`,
-            },
-            {
-              id: "nav",
-              yAxisId: "nav",
-              data: navValues,
-              label: "Portfolio NAV",
-              area: false,
-              showMark: false,
-              curve: "linear",
-              color: t.inkSoft,
-              valueFormatter: (v) => v.toFixed(1),
-            },
-          ]}
-          xAxis={[
-            {
-              id: "x",
-              data: dates,
-              scaleType: "time",
-              valueFormatter: (date) => date.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            },
-          ]}
-          yAxis={[
-            {
-              id: "dd",
-              max: 2,
-              valueFormatter: (v) => `${v}%`,
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            },
-            {
-              id: "nav",
-              position: "right",
-              label: "NAV",
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              labelStyle: { fontSize: 16, fill: t.ink },
-            },
-          ]}
-          grid={{ horizontal: true }}
-          margin={{ top: 48, right: 92, bottom: 50, left: 56 }}
-          slotProps={{
-            legend: {
-              direction: "row",
-              position: { vertical: "top", horizontal: "right" },
-              labelStyle: { fontSize: 14, fill: t.ink },
-              itemMarkWidth: 18,
-              itemMarkHeight: 10,
-              markGap: 8,
-              itemGap: 20,
-            },
-          }}
-          sx={{
-            "& .MuiLineElement-series-drawdown": { strokeWidth: 2.5 },
-            "& .MuiAreaElement-series-drawdown": { fillOpacity: 0.55 },
-            "& .MuiLineElement-series-nav": { strokeWidth: 1.75, strokeDasharray: "6 4" },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        >
-          <DrawdownWindow from={dates[peakIdx]} to={dates[troughIdx]} color={t.amber} opacity={0.1} />
-          {recoveryIdx > -1 && (
-            <DrawdownWindow from={dates[troughIdx]} to={dates[recoveryIdx]} color={t.palette[0]} opacity={0.08} />
-          )}
-          <ChartsReferenceLine
-            y={0}
-            axisId="dd"
-            lineStyle={{ stroke: t.ink, strokeDasharray: "4 4", strokeOpacity: 0.5 }}
-          />
-          <ChartsReferenceLine
-            x={dates[troughIdx]}
-            label={`Max drawdown ${maxDrawdownPct.toFixed(1)}%`}
-            labelAlign="start"
-            lineStyle={{ stroke: t.amber, strokeWidth: 2, strokeDasharray: "5 4" }}
-            labelStyle={{ fill: t.amber, fontSize: 13, fontWeight: 600 }}
-          />
-          {recoveryIdx > -1 && (
-            <ChartsReferenceLine
-              x={dates[recoveryIdx]}
-              label="Recovered"
-              labelAlign="end"
-              lineStyle={{ stroke: t.palette[0], strokeWidth: 2, strokeDasharray: "5 4" }}
-              labelStyle={{ fill: t.palette[0], fontSize: 13, fontWeight: 600 }}
-            />
-          )}
-        </LineChart>
-      </Box>
-    </Box>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "22px 40px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{stats}</div>
+      </div>
+      <LineChart
+        width={width}
+        height={height - HEADER_H - LEGEND_H}
+        skipAnimation
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: 24, bottom: 8, left: 24 }}
+        xAxis={[
+          {
+            data: dates,
+            scaleType: "time",
+            label: DATE,
+            height: 64,
+            valueFormatter: (d) => d.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "drawdown",
+            min: yMin,
+            max: yMax,
+            label: "Drawdown from running peak (%)",
+            width: 84,
+            valueFormatter: (v) => `${v.toFixed(0)}%`,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+          {
+            id: "value",
+            position: "right",
+            label: NAV,
+            width: 84,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={[
+          {
+            id: "drawdown",
+            yAxisId: "drawdown",
+            data: drawdown,
+            label: "Drawdown (%)",
+            color: LOSS,
+            area: true,
+            showMark: false,
+            valueFormatter: (v) => `${v.toFixed(1)}%`,
+          },
+          {
+            id: "value",
+            yAxisId: "value",
+            data: values,
+            label: NAV,
+            color: VALUE_COLOR,
+            showMark: false,
+          },
+          {
+            id: "trough",
+            yAxisId: "drawdown",
+            data: troughSeries,
+            label: "Maximum drawdown",
+            color: LOSS,
+            showMark: true,
+            shape: "circle",
+            labelMarkType: "circle",
+          },
+          {
+            id: "recovery",
+            yAxisId: "drawdown",
+            data: recoverySeries,
+            label: `Recovery from a drawdown of ${markDepth.toFixed(1)}% or more`,
+            color: t.ink,
+            showMark: true,
+            shape: "circle",
+            labelMarkType: "circle",
+          },
+        ]}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 15, color: t.inkSoft, pr: 4 },
+          },
+        }}
+        sx={{
+          '& .MuiLineChart-area[data-series="drawdown"]': { fillOpacity: 0.35 },
+          '& .MuiLineChart-line[data-series="drawdown"]': { strokeWidth: 2.5 },
+          '& .MuiLineChart-line[data-series="value"]': { strokeWidth: 2 },
+          '& .MuiLineChart-mark[data-series="trough"]': { r: 8, fill: LOSS, stroke: t.pageBg, strokeWidth: 2.5 },
+          '& .MuiLineChart-mark[data-series="recovery"]': { r: 7, fill: t.ink, stroke: t.pageBg, strokeWidth: 2.5 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      >
+        <ChartsReferenceLine y={0} axisId="drawdown" lineStyle={{ stroke: t.ink, strokeWidth: 1.5 }} />
+        <MaxDrawdownPeriod />
+      </LineChart>
+    </div>
   );
 }
