@@ -1,139 +1,127 @@
 // anyplot.ai
 // histogram-stacked: Stacked Histogram
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 92/100 | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic fixed-seed LCG) -------------------------
-// Commute distance to work (km), binned, broken down by primary transport mode.
-function makeLcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const TARGET_BINS = 15; // about this many bins; the width is rounded to a 1-2-2.5-5 step
+const NICE_STEPS = [1, 2, 2.5, 5, 10];
+
+// Columns: set these to your data's column names
+const DISTANCE = "Commute Distance (km)"; // role: values
+const MODE = "Transport mode"; // role: group
+
+// Data: replace this block with your own records, one object per observation
+// One-way commute distance of 640 employees by their primary transport mode.
+const data = (() => {
+  let state = 42;
+  const rand = () => {
     state = (state * 1664525 + 1013904223) % 4294967296;
     return state / 4294967296;
   };
-}
+  const modes = [
+    { name: "Car", mean: 19, sd: 6.5, n: 260 },
+    { name: "Public transit", mean: 13, sd: 5, n: 220 },
+    { name: "Bike", mean: 6, sd: 2.5, n: 160 },
+  ];
+  return modes.flatMap((mode) =>
+    Array.from({ length: mode.n }, () => {
+      const z = Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+      return { [MODE]: mode.name, [DISTANCE]: Number(Math.min(Math.max(mode.mean + z * mode.sd, 0), 35.99).toFixed(2)) };
+    }),
+  );
+})();
 
-function sampleNormal(rand, mean, stdDev) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * stdDev;
-}
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[DISTANCE] != null);
+const groups = [...new Set(rows.map((d) => d[MODE]))];
+const values = rows.map((d) => d[DISTANCE]);
+const minValue = Math.min(...values);
+const maxValue = Math.max(...values);
+const rawWidth = (maxValue - minValue) / TARGET_BINS;
+const magnitude = 10 ** Math.floor(Math.log10(rawWidth));
+const binWidth = NICE_STEPS.map((s) => s * magnitude).find((w) => w >= rawWidth);
+const binStart = Math.floor(minValue / binWidth) * binWidth;
+const binCount = Math.max(1, Math.ceil((maxValue - binStart) / binWidth));
+// Bin edges shared by every group; bins [edge, edge + width), the last one closed
+const edges = Array.from({ length: binCount + 1 }, (_, i) => Number((binStart + i * binWidth).toPrecision(12)));
+const binLabels = edges.slice(0, -1).map((lo, i) => `${lo}–${edges[i + 1]}`);
 
-const rand = makeLcg(42);
-
-const GROUPS = [
-  { label: "Car", mean: 19, stdDev: 6.5, count: 260, color: t.palette[0] },
-  { label: "Public transit", mean: 13, stdDev: 5, count: 220, color: t.palette[1] },
-  { label: "Bike", mean: 6, stdDev: 2.5, count: 160, color: t.palette[2] },
-];
-
-const BIN_WIDTH = 3;
-const BIN_COUNT = 12;
-const MAX_DISTANCE = BIN_WIDTH * BIN_COUNT;
-const binLabels = Array.from(
-  { length: BIN_COUNT },
-  (_, i) => `${i * BIN_WIDTH}-${(i + 1) * BIN_WIDTH}`,
-);
-
-const groupCounts = GROUPS.map((group) => {
-  const counts = new Array(BIN_COUNT).fill(0);
-  for (let i = 0; i < group.count; i += 1) {
-    const distance = Math.min(
-      Math.max(sampleNormal(rand, group.mean, group.stdDev), 0),
-      MAX_DISTANCE - 0.01,
-    );
-    counts[Math.floor(distance / BIN_WIDTH)] += 1;
-  }
-  return counts;
+const groupStats = groups.map((group) => {
+  const groupValues = rows.filter((d) => d[MODE] === group).map((d) => d[DISTANCE]);
+  const counts = new Array(binCount).fill(0);
+  for (const v of groupValues) counts[Math.min(binCount - 1, Math.floor((v - binStart) / binWidth))] += 1;
+  return { group, counts, n: groupValues.length };
 });
 
-const dataset = binLabels.map((bin, i) => {
-  const row = { bin };
-  GROUPS.forEach((group, g) => {
-    row[group.label] = groupCounts[g][i];
-  });
-  return row;
-});
+const unit = DISTANCE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const TITLE = "histogram-stacked · javascript · muix · anyplot.ai";
+const SUBTITLE = `${MODE}: ${groupStats.map((g) => `${g.group} n = ${g.n}`).join(" · ")} · bin width ${binWidth}${unit ? ` ${unit}` : ""}`;
+const COUNT_LABEL = "Frequency (count per bin)";
+const HEADER_H = 76;
+const LEGEND_H = 44;
 
-// Dominant mode at the near and far ends of the commute-distance range, used
-// to surface the underlying mode-shift story in the subtitle.
-const dominantGroupAt = (binIndex) => {
-  let bestGroup = GROUPS[0].label;
-  let bestCount = -1;
-  GROUPS.forEach((group, g) => {
-    if (groupCounts[g][binIndex] > bestCount) {
-      bestCount = groupCounts[g][binIndex];
-      bestGroup = group.label;
-    }
-  });
-  return bestGroup;
-};
-const nearMode = dominantGroupAt(0);
-const farMode = dominantGroupAt(BIN_COUNT - 1);
-
-const TITLE_HEIGHT = 60;
-const SUBTITLE_HEIGHT = 30;
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ width, height, display: "flex", flexDirection: "column", paddingTop: "20px" }}>
-      <Typography
-        sx={{ color: t.ink, fontSize: 22, fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}
-      >
-        histogram-stacked · javascript · muix · anyplot.ai
-      </Typography>
-      <Typography
-        sx={{
-          color: t.inkSoft,
-          fontSize: 14,
-          fontWeight: 400,
-          textAlign: "center",
-          lineHeight: 1.2,
-          marginTop: "4px",
-        }}
-      >
-        {`${nearMode} dominates short commutes, ${farMode} takes over as distance grows`}
-      </Typography>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.5 }}>{SUBTITLE}</Typography>
+      </Box>
       <BarChart
         width={width}
-        height={height - TITLE_HEIGHT - SUBTITLE_HEIGHT}
-        dataset={dataset}
-        colors={GROUPS.map((group) => group.color)}
+        height={height - HEADER_H - LEGEND_H}
         skipAnimation
-        xAxis={[
-          {
-            scaleType: "band",
-            dataKey: "bin",
-            label: "Commute Distance (km)",
-            categoryGapRatio: 0.06,
-          },
-        ]}
-        yAxis={[{ label: "Number of Commuters" }]}
-        series={GROUPS.map((group) => ({
-          dataKey: group.label,
-          label: group.label,
+        borderRadius={0}
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
+        // Stacked in the data's group order, the same in every bin
+        series={groupStats.map((g, i) => ({
+          id: `group-${i}`,
+          data: g.counts,
+          label: g.group,
+          color: t.palette[i],
           stack: "total",
           highlightScope: { highlight: "series", fade: "global" },
         }))}
-        grid={{ horizontal: true }}
-        margin={{ top: 40, right: 40, bottom: 130, left: 100 }}
+        xAxis={[
+          {
+            scaleType: "band",
+            data: binLabels,
+            // Contiguous bins: the segment stroke marks bin and group edges
+            categoryGapRatio: 0,
+            height: 64,
+            label: DISTANCE,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            width: 72,
+            label: COUNT_LABEL,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
         slotProps={{
-          legend: { position: { vertical: "bottom", horizontal: "middle" } },
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink, gap: "28px" },
+          },
         }}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiChartsLegend-label": { fontSize: "14px" },
-          "& .MuiChartsGrid-line": { opacity: 0.5 },
+          "& .MuiBarChart-element": { stroke: t.pageBg, strokeWidth: 1.5 },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       />
     </Box>

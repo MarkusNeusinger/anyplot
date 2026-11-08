@@ -2,111 +2,112 @@ library: muix
 language: javascript
 specification_id: histogram-stacked
 created: '2026-09-05T04:41:10Z'
-updated: '2026-09-05T04:53:40Z'
-generated_by: claude-sonnet
-workflow_run: 33945008664
+updated: '2026-11-08T07:21:18Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42439951781
 issue: 2601
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - Correct Imprint palette order (Car=#009E73 brand green first, Public transit=lavender,
-    Bike=blue) with identical data colors and theme-correct chrome (background, text,
-    grid, legend) across both light and dark renders
-  - Narrative subtitle ("Bike dominates short commutes, Car takes over as distance
-    grows") is computed from the actual binned data (dominantGroupAt) and gives the
-    chart a genuine focal insight rather than a generic caption
-  - 'Correct stacked-histogram semantics: identical 3 km bins applied to all three
-    groups, stack="total" produces true combined bar height, legend labels match the
-    series exactly'
-  - Deterministic in-memory data generation (seeded LCG + Box-Muller-style normal
-    sampling per group) with realistic, distinct means/spreads per transport mode
-    (Bike short, Car long, Public transit mid-range)
-  - 'Idiomatic, fairly deep MUI X usage: dataset/dataKey pattern, highlightScope for
-    hover/fade interaction, explicit axis/legend/grid font sizing and grid opacity
-    via sx and slotProps, skipAnimation set for a stable screenshot'
+  - 'Stacking via the series-level `stack: "total"` key with one series per group
+    gives true stacked segments from a zero baseline in one fixed order (Car, Public
+    transit, Bike) in every bin; bar tops read directly as combined frequency.'
+  - 'Shared bin edges are computed once from the pooled data with a 1-2-2.5-5 nice
+    step (2.5 km) and applied to every group; `categoryGapRatio: 0` makes the bars
+    contiguous, and a page-coloured segment stroke (t.pageBg) separates bins and groups
+    cleanly in both themes.'
+  - 'Imprint palette in canonical order (#009E73, #C475FD, #4467A3) with data colours
+    identical across light and dark; chrome fully theme-adaptive via ANYPLOT_TOKENS
+    (ink, inkSoft, grid).'
+  - Subtitle carries per-group n and the bin width, giving the reader the sample context
+    and binning without crowding the plot area.
+  - 'Realistic, neutral scenario (one-way commute distance by transport mode, 640
+    employees) whose overlapping distributions make the stacked composition meaningful:
+    bike dominates short bins, car the long tail.'
+  - 'Library-native interactivity: `highlightScope: { highlight: ''series'', fade:
+    ''global'' }` highlights a whole group across bins on hover in the HTML output;
+    `skipAnimation` and explicit axis band sizes (height 64 / width 72) follow the
+    v9 contract.'
   weaknesses:
-  - 'categoryGapRatio: 0.06 leaves a thin vertical seam between adjacent bins; a true
-    histogram reads more naturally with bars fully touching (gap ratio near 0)'
-  - The smallest bins (e.g. 33-36 total=2, 30-33 total=8) produce very thin colored
-    slivers that are hard to tell apart by group, especially once the PNG is scaled
-    down to mobile width
-  - Design is competent and above bare defaults (custom margins, typography, subtitle)
-    but still reads as a standard stacked-bar composition — could push further with
-    e.g. a subtle marker/band on the crossover bin (9-12 km, where Car overtakes Bike)
-    to sharpen the storytelling even more
+  - 'Suggestion: ordering segments by group size within each bin (the Notes'' optional
+    hint) is not used; the fixed data order is equally valid, but a size-ordered variant
+    could be compared.'
+  - 'Suggestion: the x-axis uses range labels on a band scale (''0–2.5'', ''2.5–5'',
+    …); edge ticks at bin boundaries would read more like a continuous histogram axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "histogram-stacked · javascript · muix · anyplot.ai" centered at top, with a lighter-weight gray subtitle beneath it ("Bike dominates short commutes, Car takes over as distance grows"). Y-axis label "Number of Commuters" (rotated), X-axis label "Commute Distance (km)", both dark and clearly legible. Tick labels (bin ranges "0-3" through "33-36", and Y gridline values 0-120) are dark, small but readable. Horizontal gridlines are subtle and do not compete with the bars. Legend (Car / Public transit / Bike) sits centered below the plot with colored square swatches, clearly readable.
-      Data: 12 stacked bars, one per 3 km bin. Colors bottom-to-top per bar: Car = brand green (#009E73), Public transit = lavender/purple, Bike = blue — matching Imprint canonical palette order with the brand color first. Bike dominates the shortest bins (0-3 through 6-9 km), Public transit dominates the mid-range bins (9-12 through 15-18 km), and Car dominates from 15-18 km onward, tapering off toward 33-36 km.
-      Legibility verdict: PASS — all text is dark-on-cream and fully readable; no overlap between labels, legend, or bars.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "histogram-stacked · javascript · muix · anyplot.ai" centred top (~32% width), soft-ink subtitle "Transport mode: Car n = 260 · Public transit n = 220 · Bike n = 160 · bin width 2.5 km"; y-axis "Frequency (count per bin)" with ticks 0–110 every 10; x-axis "Commute Distance (km)" with 15 bin-range tick labels 0–2.5 … 35–37.5; subtle light horizontal grid; bottom-centred legend Car / Public transit / Bike. All text dark on light and readable.
+      Data: 15 contiguous stacked bars separated by thin off-white strokes; Car #009E73 at the bottom, Public transit #C475FD in the middle, Bike #4467A3 on top, same order in every bin. Tallest total 102 at 5–7.5 km, secondary peak 80 at 15–17.5 km, thin tail bins (count 1) at 32.5–37.5.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now in light/off-white and light-gray text respectively, fully legible against the dark background. Axis labels, tick labels, and legend text are all rendered in light tones (no dark-on-dark instances found). Gridlines are faint light horizontal lines, subtle as in the light render.
-      Data: Same three colors (green/lavender/blue) in the same stacking order and magnitudes as the light render — confirms the data colors are theme-invariant, only the chrome (background/text/grid) flips.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text, gridlines, and bar boundaries are clearly distinguishable from the near-black background.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, clearly readable; grid subtle dark grey; legend text light. No dark-on-dark text.
+      Data: identical colours and values to the light render (green #009E73, lavender #C475FD, blue #4467A3); segment strokes flip to the dark page colour, keeping segments distinct. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle 14px, tick/axis/legend
-          14-16px via sx); readable in both themes, title fits without clipping
+        comment: Explicit sizes (title 22, subtitle 15, axis titles 16, ticks 14,
+          legend 15 CSS px); readable in both themes and at thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, subtitle, axis labels, tick labels, legend,
-          or bars
+        comment: No text collisions; 15 bin-range tick labels fit without rotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are clearly visible and appropriately sized for 12 bins; even
-          the smallest bins remain distinguishable
+        comment: Full-width contiguous segments; thin tail segments still visible;
+          legend swatches match fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue span distinct hue families, CVD-safe, good contrast
-          against both backgrounds
+        comment: Green / lavender / blue are CVD-distinct; page-coloured strokes separate
+          neighbours
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the majority of the canvas, balanced margins, legend sits
-          close to the plot
+        comment: 3200x1800, balanced margins, nothing clipped, y-axis headroom to
+          110
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive with units (km, Number of Commuters)
+        comment: '''Commute Distance (km)'' and ''Frequency (count per bin)'' descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order for the rest, identical
-          data colors across themes, theme-correct chrome in both renders'
+        comment: 'Imprint canonical order, first series #009E73, correct backgrounds,
+          identical data colours across themes'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -114,23 +115,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful typography hierarchy and narrative subtitle clearly above
-          library defaults, though palette itself is the mandated Imprint set rather
-          than a bespoke scheme
+        comment: Title/subtitle hierarchy with per-group n and bin width in the subtitle,
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle horizontal grid, no visible top/right frame, generous whitespace;
-          still a fairly standard bar-chart composition
+        comment: Theme-matched page-colour segment strokes on gapless bars, a refinement
+          chosen for a stacked histogram
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Data-driven subtitle explicitly names the mode-shift insight, backed
-          by clear visual hierarchy in the stacking order
+        passed: false
+        comment: Data displayed clearly; no focal hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct stacked-histogram type: binned continuous values rendered
-          as stacked bars'
+        comment: True stacked histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Same bins across groups, distinct colors, legend, total bar height
-          = combined frequency, all present
+        comment: Shared bins, distinct colours, legend, total = combined frequency,
+          fixed segment order; all 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = commute distance bins, Y = commuter count, all data visible
+        comment: Counts computed from shared edges; zero baseline; axis covers all
+          bins and exceeds tallest total (102)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec exactly; legend labels match group names
+        comment: Mandated title format; legend entries are readable group names
     data_quality:
       score: 15
       max: 15
@@ -170,21 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows a clear mode shift across bins (Bike -> Public transit -> Car
-          dominance), not a flat/uniform distribution
+        comment: Overlapping group distributions show varying composition per bin,
+          a bimodal total and a thin tail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic commute-distance-by-transport-mode scenario
+        comment: Commute distance by transport mode, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Distance range (0-36 km) and commuter counts (up to ~120 per bin)
-          are plausible for a commuting dataset
+        comment: Bike ~6 km, transit ~13 km, car ~19 km; 640 observations within 50-5000;
+          no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -194,55 +193,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data-gen helpers followed by a single exported chart
-          component; no over-engineering
+        comment: 'Flat module: columns, data block, plot code, one default-exported
+          component (harness contract); LCG closure is the mandated seeded RNG'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42) makes the sampled data fully deterministic
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart, Box, Typography imported, all used
+        comment: BarChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering
+        comment: 'Short written-out binning (allowed: no stats helpers in MUI X);
+          no fake UI'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-managed output contract respected; skipAnimation set, current
-          MUI X API used
+        comment: Default-export component, skipAnimation, v9 API (stack, categoryGapRatio,
+          axis height/width, slotProps.legend)
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Dataset/dataKey pattern, xAxis/yAxis config objects, slotProps, sx
-          overrides — idiomatic MUI X usage throughout
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: stack="total" plus highlightScope (highlight/fade) are genuinely
-          MUI X-specific declarative features, not trivially portable to another library
+        comment: Series-level stack key, band axis with categoryGapRatio 0, per-chart
+          CSS classes (.MuiBarChart-element, .MuiChartsGrid-line) in sx
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: highlightScope series highlight with global fade for hover inspection
+          in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T02:48:01Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
