@@ -24,7 +24,7 @@ const data = (() => {
     seed = (seed * 1103515245 + 12345) & 0x7fffffff;
     return seed / 0x7fffffff;
   };
-  const window = 7;
+  const WINDOW_DAYS = 7;
   const visitors = Array.from({ length: 120 }, (_, day) => {
     const date = new Date(2026, 0, 1 + day);
     const weekendDip = date.getDay() === 0 || date.getDay() === 6 ? 0.62 : 1;
@@ -36,7 +36,9 @@ const data = (() => {
     [DATE]: v.date,
     [VISITORS]: v.value,
     [ROLLING]:
-      i < window - 1 ? null : Math.round(visitors.slice(i - window + 1, i + 1).reduce((s, w) => s + w.value, 0) / window),
+      i < WINDOW_DAYS - 1
+        ? null
+        : Math.round(visitors.slice(i - WINDOW_DAYS + 1, i + 1).reduce((s, w) => s + w.value, 0) / WINDOW_DAYS),
   }));
 })();
 
