@@ -206,7 +206,6 @@ const stars = shown.map((d) => {
     con: d[CONSTELLATION] as string | null,
     x: rr * Math.sin(theta),
     y: rr * Math.cos(theta),
-    colorValue: d[MAGNITUDE] as number,
     sizeValue: d[MAGNITUDE] as number,
   };
 });
@@ -258,6 +257,20 @@ const SUBTITLE = `${stars.length} stars to magnitude ${MAG_LIMIT.toFixed(1)} · 
 const HEADER_H = 76;
 const V_MARGIN = 26;
 const labelHalo = { stroke: t.pageBg, strokeWidth: 4, paintOrder: "stroke" as const, strokeLinejoin: "round" as const };
+// A constellation name takes the shift from its centroid (px), nearest first, whose box
+// clears every star and every name placed before it; names never overlap each other
+const NAME_STEP_PX = 10;
+const NAME_REACH_STEPS = 6;
+const NAME_CHAR_PX = 7.2; // average glyph width of the 14 px italic names
+const NAME_HALF_H_PX = 9;
+const NAME_STAR_GAP_PX = 3;
+const nameShifts: { dx: number; dy: number }[] = [];
+for (let i = -NAME_REACH_STEPS; i <= NAME_REACH_STEPS; i += 1) {
+  for (let j = -NAME_REACH_STEPS; j <= NAME_REACH_STEPS; j += 1) {
+    nameShifts.push({ dx: i * NAME_STEP_PX, dy: j * NAME_STEP_PX });
+  }
+}
+nameShifts.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy));
 
 // Declination circles, hour spokes, the rim and the constellation stick figures
 function SkyGrid() {
@@ -316,7 +329,8 @@ function SkyGrid() {
   );
 }
 
-// Constellation names at their star centroids and the magnitude key, read from the size axis
+// Constellation names near their star centroids, shifted off the stars, and the
+// magnitude key, read from the size axis
 function SkyLabels() {
   const xs = useXScale() as (v: number) => number;
   const ys = useYScale() as (v: number) => number;
@@ -324,17 +338,42 @@ function SkyLabels() {
   const magAxis = useZAxis("mag");
   const x0 = left + 12;
   const y0 = top + height - legendMags.length * 30 - 6;
+  const starDots = stars.map((s) => ({
+    x: xs(s.x),
+    y: ys(s.y),
+    reach: (magAxis.sizeScale(s.sizeValue) as number) + NAME_STAR_GAP_PX,
+  }));
+  const placedBoxes: { x0: number; x1: number; y0: number; y1: number }[] = [];
+  const names = centroids.map((c) => {
+    const halfW = (c.name.length * NAME_CHAR_PX) / 2;
+    const candidates = nameShifts.map(({ dx, dy }) => {
+      const cx = xs(c.x) + dx;
+      const cy = ys(c.y) + dy;
+      const box = { x0: cx - halfW, x1: cx + halfW, y0: cy - NAME_HALF_H_PX, y1: cy + NAME_HALF_H_PX };
+      const starHits = starDots.filter(
+        (p) => p.x > box.x0 - p.reach && p.x < box.x1 + p.reach && p.y > box.y0 - p.reach && p.y < box.y1 + p.reach,
+      ).length;
+      const nameHit = placedBoxes.some((b) => b.x0 < box.x1 && b.x1 > box.x0 && b.y0 < box.y1 && b.y1 > box.y0);
+      return { cx, cy, box, starHits, nameHit };
+    });
+    const free = candidates.filter((cand) => !cand.nameHit);
+    const pool = free.length > 0 ? free : candidates;
+    const best = pool.find((cand) => cand.starHits === 0) ?? pool.reduce((a, b) => (b.starHits < a.starHits ? b : a));
+    placedBoxes.push(best.box);
+    return { con: c.con, name: c.name, x: best.cx, y: best.cy };
+  });
   return (
     <g>
-      {centroids.map((c) => (
+      {names.map((c) => (
         <text
           key={c.con}
-          x={xs(c.x)}
-          y={ys(c.y)}
+          x={c.x}
+          y={c.y}
           fill={t.inkSoft}
           fontSize={14}
           fontStyle="italic"
           textAnchor="middle"
+          dominantBaseline="central"
           {...labelHalo}
         >
           {c.name}
@@ -348,7 +387,7 @@ function SkyLabels() {
         const note = i === 0 ? "  (brightest)" : i === legendMags.length - 1 ? "  (faintest)" : "";
         return (
           <g key={mag}>
-            <circle cx={x0 + 11} cy={cy} r={magAxis.sizeScale(mag)} fill={magAxis.colorScale(mag)} />
+            <circle cx={x0 + 11} cy={cy} r={magAxis.sizeScale(mag)} fill={t.ink} />
             <text x={x0 + 32} y={cy} fill={t.inkSoft} fontSize={14} dominantBaseline="central">
               {`${mag > 0 ? "+" : ""}${mag}${note}`}
             </text>
@@ -391,7 +430,6 @@ export default function Chart() {
         zAxis={[
           {
             id: "mag",
-            colorMap: { type: "continuous", min: magMin, max: magMax, color: [t.seq[0], t.seq[1]] },
             sizeMap: { type: "continuous", min: magMin, max: magMax, size: STAR_RADIUS as [number, number], interpolator: "linear" },
           },
         ]}
@@ -401,7 +439,8 @@ export default function Chart() {
             id: "stars",
             label: STAR,
             data: stars,
-            colorAxisId: "mag",
+            // stars in ink: light on the dark night sky, dark on the light atlas page
+            color: t.ink,
             sizeAxisId: "mag",
             markerSize: STAR_RADIUS[1],
           },
