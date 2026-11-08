@@ -1287,18 +1287,18 @@ instead.
 
 #### What a turn changed
 
-The `done` of a turn that ended without an `error` or a `refusal` carries
-`turn`, one value that names what the turn changed. A refused or failed turn
-carries none. The agents service reads it from its own record of the
+The `done` of a turn that ended without an `error`, a `refusal` or your stop
+carries `turn`, one value that names what the turn changed. A refused, failed
+or stopped turn carries none. The agents service reads it from its own record of the
 assistant's tool calls, never from the reply's text:
 
 | `turn` | The turn |
 |---|---|
 | `data` | changed the data or its bindings (`prepare_data`, `generate_data`, `run_data_code`, `set_bindings`, or the conversions of a paste's summary) |
-| `plot` | ran the plot pipeline: a shipped version, a failed run, or a run that stopped because the data or a binding is missing |
+| `plot` | ran the plot pipeline: a shipped version, a failed run, or a run that stopped because the data or a binding is missing, which the page shows as a failed plot card |
 | `switch` | asked for the plot in another library (`done.switch`) |
-| `language` | set a language you asked for (`set_language`) |
-| `kept` | kept a wish for the first plot (`keep_plot_request`, or a plot that stopped on `data_unconfirmed` or `incomplete_bindings` and kept the request), which the stream shows nothing of |
+| `language` | set a language you asked for (`set_language`), also the one already set: the choice is stored, and language detection no longer changes it |
+| `kept` | kept a wish for the first plot (`keep_plot_request`, or a plot that stopped on `data_unconfirmed` and kept the request), which the stream shows nothing of |
 | `memory` | removed a decision from the plot memory (`forget`) |
 | `answer` | changed nothing: it answered from the data, the profile or the code, or a change it tried stored nothing |
 

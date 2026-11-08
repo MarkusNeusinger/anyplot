@@ -5,6 +5,7 @@ outcome derived from it (`stream.turn_outcome`) and the translator's fields; the
 scripted models, one per outcome value.
 """
 
+import asyncio
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
 from typing import Any
@@ -22,7 +23,7 @@ from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, call_outcome
 from agents.anyplot.schemas import RememberItem
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
-from agents.main import Runtime, app, get_runtime
+from agents.main import ActiveRun, Runtime, app, ended_well, get_runtime
 from agents.stream import CALL_CHANGES, TURN_ORDER, Translator, plot_memory, turn_outcome
 
 from .fakes import SCATTER_PLAN, VERDICT_OK
@@ -115,8 +116,9 @@ class TestRecord:
     async def test_a_call_the_budget_answered_first_is_refused_by_budget(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("AGENT_DAILY_PIPELINE_RUNS", "0")
+        monkeypatch.setenv("AGENT_DAILY_PIPELINE_RUNS", "1")
         get_settings.cache_clear()
+        services.usage.add_pipeline_run("adm_1")  # the day's one run is spent
         context = FakeContext(function_call_id="c1")
         refusal = await BudgetPlugin().before_tool_callback(
             tool=FakeTool("plot_pipeline"),
@@ -174,6 +176,59 @@ class TestRecord:
         assert ledger.tool_calls == [ToolCall("run_data_code", "allowed", "unfinished")]
         assert turn_outcome(ledger) == "answer"
 
+    @pytest.mark.parametrize(
+        ("setup", "name", "args", "verdict"),
+        [
+            ({"switch_request": {"library": "seaborn", "plot": True}}, "plot_pipeline", {}, "switch_requested"),
+            ({"pipeline_calls": 1}, "switch_plot", {"library": "seaborn"}, "plot_already_run"),
+            (
+                {"data_code_calls": 2},
+                "run_data_code",
+                {"code": "df = 1", "source_language": "python"},
+                "too_many_data_runs",
+            ),
+            ({}, "plot_pipeline", {"change_request": "as on https://example.com/chart"}, "url_or_path_not_allowed"),
+        ],
+    )
+    async def test_every_refusal_is_a_closed_verdict(
+        self, ledger: RequestLedger, setup: dict[str, Any], name: str, args: dict[str, Any], verdict: str
+    ) -> None:
+        for key, value in setup.items():
+            setattr(ledger, key, value)
+
+        await call(ToolSafetyPlugin(), name, args, {"status": "ok"})
+
+        assert ledger.tool_calls == [ToolCall(name, verdict, "refused")]  # type: ignore[arg-type]
+
+    async def test_a_readers_answer_the_checks_refused_is_an_error_and_a_stored_change_still_counts(
+        self, ledger: RequestLedger
+    ) -> None:
+        plugin = ToolSafetyPlugin()
+        await call(plugin, "get_dataset_profile", {}, {"status": "ok", "unexpected": 1})
+        await call(plugin, "prepare_data", {"operations": [DERIVE]}, {"status": "ok", "unexpected": 1})
+
+        assert ledger.tool_calls == [
+            ToolCall("get_dataset_profile", "allowed", "error"),  # the root got `invalid_result`
+            ToolCall("prepare_data", "allowed", "changed"),  # the version is stored all the same
+        ]
+
+    def test_a_code_outside_the_verdicts_reads_unknown(self) -> None:
+        ledger = RequestLedger()
+        ledger.open_call("c1", "forget", "a_refusal_added_later")
+        assert ledger.tool_calls == [ToolCall("forget", "unknown", "refused")]
+
+    def test_a_call_that_ran_without_its_note_still_counts(self) -> None:
+        """Only an error answer without a note is a refusal from before ToolSafety; a change the tool stored counts."""
+        ledger = RequestLedger()
+        ledger.close_call("c1", "prepare_data", "changed", early_verdict="unknown")
+        ledger.close_call("c2", "plot_pipeline", "error", early_verdict="budget")
+
+        assert ledger.tool_calls == [
+            ToolCall("prepare_data", "allowed", "changed"),
+            ToolCall("plot_pipeline", "budget", "refused"),
+        ]
+        assert turn_outcome(ledger) == "data"
+
 
 @pytest.mark.parametrize(
     ("tool", "result", "outcome"),
@@ -195,6 +250,8 @@ class TestRecord:
         ("plot_pipeline", {"status": "needs_attention"}, "shipped"),
         ("plot_pipeline", {"status": "failed", "reason": "render"}, "failed"),
         ("plot_pipeline", {"status": "not_ready", "reason": "incomplete_bindings"}, "not_ready"),
+        # A stop with a failed plot card is the plot turn the page shows, a wish it kept or not.
+        ("plot_pipeline", {"status": "not_ready", "reason": "incomplete_bindings", "request_kept": True}, "not_ready"),
         ("plot_pipeline", {"status": "not_ready", "reason": "data_unconfirmed"}, "unconfirmed"),
         ("plot_pipeline", {"status": "not_ready", "reason": "data_unconfirmed", "request_kept": True}, "kept"),
         ("plot_pipeline", {"status": "error", "code": "budget"}, "error"),
@@ -246,6 +303,32 @@ class TestTurnOutcome:
     def test_every_change_has_its_place_in_the_order(self) -> None:
         assert set(CALL_CHANGES.values()) == set(TURN_ORDER)
         assert len(TURN_ORDER) == len(set(TURN_ORDER))
+
+
+class TestEndedWell:
+    """Only a turn that ended well says what it changed: the page marks no refused, failed or stopped turn."""
+
+    def run(self, *, aborted: bool = False, deadline: bool = False) -> ActiveRun:
+        run = ActiveRun(abort=asyncio.Event(), deadline_hit=deadline)
+        if aborted:
+            run.abort.set()
+        return run
+
+    def test_a_plain_turn(self) -> None:
+        assert ended_well(RequestLedger(), self.run(), None)
+
+    def test_an_error_or_a_refusal(self) -> None:
+        refused = RequestLedger()
+        refused.refuse("out_of_scope", "Only plots.")
+        assert not ended_well(RequestLedger(), self.run(), "internal")
+        assert not ended_well(refused, self.run(), None)
+
+    def test_the_users_stop(self) -> None:
+        assert not ended_well(RequestLedger(), self.run(aborted=True), None)
+
+    def test_a_deadline_after_a_shipped_plot(self) -> None:
+        """The route fails a deadline only before a plot went out; after one, the turn ended well."""
+        assert ended_well(RequestLedger(), self.run(aborted=True, deadline=True), None)
 
 
 # --- the translator's fields ----------------------------------------------------------------
@@ -495,3 +578,20 @@ async def test_a_refused_turn_has_no_outcome(client: httpx.AsyncClient, swap_mod
 
     assert [name for name, _ in events] == ["ready", "refusal", "done"]
     assert "turn" not in done_of(events)
+
+
+async def test_a_plot_the_day_budget_refused_changed_nothing(
+    client: httpx.AsyncClient, swap_models, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Through ADK's own flow: the Budget plugin answers the call before ToolSafety sees it, and the record still
+    closes it as refused, so the turn reads as one that changed nothing."""
+    monkeypatch.setenv("AGENT_DAILY_PIPELINE_RUNS", "1")
+    get_settings.cache_clear()
+    swap_models("gemini", root({"call": "plot_pipeline", "args": {}}, reply="Today's plots are used up."))
+    sid = await open_session(client)
+    services.usage.add_pipeline_run(USER)  # the day's one run is spent
+
+    events = await say(client, sid, "plot it")
+
+    assert "plot" not in [name for name, _ in events]
+    assert done_of(events)["turn"] == "answer"

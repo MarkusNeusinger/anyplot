@@ -2444,6 +2444,14 @@ async def _produce(
         outbox.put_nowait(("end", None))
 
 
+def ended_well(ledger: RequestLedger, run: ActiveRun, failure: str | None) -> bool:
+    """Whether a turn ended without an error, a refusal or the user's stop: only such a turn's `done` says what it
+    changed (`turn`), since the page marks no refused, failed or stopped turn. A run the deadline cut after its plot
+    shipped ended well; the user's `.stop()` (`POST .../cancel`) aborts it without the deadline."""
+    stopped = run.abort.is_set() and not run.deadline_hit
+    return failure is None and ledger.refusal is None and not stopped
+
+
 def _error_code(exc: BaseException) -> str:
     if model_busy(exc):  # a model quota or overload after the SDK's retries: busy, like a full queue
         return "capacity"
@@ -2659,8 +2667,7 @@ async def post_message(
         # A switch the root asked for goes to the page only with a turn that ended well: after a failure the page
         # shows the error and the user asks again.
         switch = ledger.switch_request if failure is None else None
-        # What the turn changed, only for a turn that ended well: the page marks no refused or failed turn.
-        turn = turn_outcome(ledger) if failure is None and ledger.refusal is None else None
+        turn = turn_outcome(ledger) if ended_well(ledger, run, failure) else None
         yield translator.done(**sync, switch=switch, turn=turn)
 
     return _turn_stream(stream(), log, BackgroundTask(runtime.finish, sid, run))

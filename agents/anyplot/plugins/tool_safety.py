@@ -47,8 +47,9 @@
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
   with a fixed code; the exception text never reaches the model.
 * The turn's record of the root's calls (`RequestLedger.tool_calls`): `before_tool_callback` notes each call with its
-  verdict, `after_tool_callback` what it did (`call_outcome`, read from the tool's own answer before the checks
-  above), a call the Budget plugin answered first as refused by `budget`. Closed names and codes only, never an
+  verdict, `after_tool_callback` what it did (`call_outcome`, read from the tool's own answer, so a change stored
+  before the checks above refused the result still counts; a reader's answer they refused is an `error`), a call the
+  Budget plugin answered first as refused by `budget`. Closed names and codes only, never an
   argument or a result: the `done` event's `turn` and the feedback case bundle read it.
 
 Every refusal is `{"status": "error", "code": <enum>}`. The plugin never raises.
@@ -249,7 +250,7 @@ READ_TOOLS = frozenset({"get_dataset_profile", "get_spec_brief", "get_current_co
 """The root's tools that only read: an `ok` answer of one changes nothing."""
 EARLY_VERDICTS = frozenset({"budget", "internal"})
 """The refusals of a call that a plugin before ToolSafety answered (the Budget plugin's daily pipeline runs, or its own
-failure); any other code there reads `other`."""
+failure); any other code there reads `unknown`."""
 
 
 def recorded_name(name: str) -> str:
@@ -280,9 +281,11 @@ def call_outcome(tool_name: str, result: Any) -> CallOutcome:
         if status == "failed":
             return "failed"
         if status == "not_ready":
-            if result.get("request_kept") is True:
-                return "kept"
-            return "unconfirmed" if result.get("reason") == "data_unconfirmed" else "not_ready"
+            # Only a stop on unconfirmed data shows the page no plot card; any other stop shows a failed one, which
+            # is what the turn did, whether or not it also kept the wish.
+            if result.get("reason") != "data_unconfirmed":
+                return "not_ready"
+            return "kept" if result.get("request_kept") is True else "unconfirmed"
         return "error"
     if status == "not_ready":
         return "not_ready"
@@ -490,18 +493,22 @@ class ToolSafetyPlugin(BasePlugin):
             logger.warning("tool call record failed: %s", type(exc).__name__)
 
     @staticmethod
-    def _close(tool: BaseTool, tool_context: ToolContext, result: Any) -> None:
-        """Note what the root's call did, from the tool's own answer (or the refusal that stood in for it), before
-        this plugin checks or fences it: a result refused for its size still stored what it stored."""
+    def _close(tool: BaseTool, tool_context: ToolContext, result: Any, *, rejected: bool) -> None:
+        """Note what the root's call did, from the tool's own answer (or the refusal that stood in for it): a result
+        this plugin refused for its keys or size still stored what it stored, while a reader's answer it refused
+        reached the root as an error (`rejected`)."""
         try:
             if tool_context.agent_name != ROOT_AGENT:
                 return
+            outcome = call_outcome(tool.name, result)
+            if rejected and outcome == "ok":
+                outcome = "error"
             code = result.get("code") if isinstance(result, dict) else None
             ledger_for(tool_context.invocation_id).close_call(
                 call_key(tool_context, tool.name),
                 recorded_name(tool.name),
-                call_outcome(tool.name, result),
-                early_verdict=code if isinstance(code, str) and code in EARLY_VERDICTS else "other",
+                outcome,
+                early_verdict=code if isinstance(code, str) and code in EARLY_VERDICTS else "unknown",
             )
         except Exception as exc:
             logger.warning("tool call record failed: %s", type(exc).__name__)
@@ -509,15 +516,21 @@ class ToolSafetyPlugin(BasePlugin):
     async def after_tool_callback(
         self, *, tool: BaseTool, tool_args: dict[str, Any], tool_context: ToolContext, result: dict[str, Any]
     ) -> dict[str, Any] | None:
-        self._close(tool, tool_context, result)
+        answer, rejected = self._checked(tool, result)
+        self._close(tool, tool_context, result, rejected=rejected)
+        return answer
+
+    @staticmethod
+    def _checked(tool: BaseTool, result: Any) -> tuple[dict[str, Any] | None, bool]:
+        """The result as the root gets it (None: unchanged), and whether this plugin refused it."""
         try:
             if not isinstance(result, dict):
-                return tool_error("invalid_result")
+                return tool_error("invalid_result"), True
             allowed = RESULT_KEYS.get(tool.name)
             if allowed is None:
-                return tool_error("tool_not_allowed")
+                return tool_error("tool_not_allowed"), True
             if set(result) - allowed:
-                return tool_error("invalid_result")
+                return tool_error("invalid_result"), True
             replaced = fence_pipeline_notes(result) if tool.name == PIPELINE_TOOL else None
             if replaced is not None and result_size(replaced) > result_limit(tool.name):
                 # A shipped plot never turns into an error for its size: `shows` gives way first.
@@ -526,15 +539,17 @@ class ToolSafetyPlugin(BasePlugin):
                     if result_size(replaced) <= result_limit(tool.name):
                         break
             if result_size(replaced or result) > result_limit(tool.name):
-                return tool_error("result_too_large")
-            return replaced
+                return tool_error("result_too_large"), True
+            return replaced, False
         except Exception as exc:
             logger.warning("tool result check failed: %s", type(exc).__name__)
-            return tool_error("internal")
+            return tool_error("internal"), True
 
     async def on_tool_error_callback(
         self, *, tool: BaseTool, tool_args: dict[str, Any], tool_context: ToolContext, error: Exception
     ) -> dict[str, Any] | None:
+        # The error result returned here reaches `after_tool_callback`, which closes the call in the turn's record
+        # as `error`; a cancelled call never gets there and stays `unfinished`.
         code = error_code(error)
         try:
             attribution("tool_error", ledger_for(tool_context.invocation_id), tool=tool.name, code=code)

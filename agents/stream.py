@@ -13,7 +13,7 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `memory`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `memory`, only with `version`, the plot memory the version stands on as entry ids, `{kept, added}` (the entries from before the run it kept, the ones it added; two empty lists for a session without memory), from the ledger (`shipped_memory`), set once the memory is settled with the version; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`: the step it ended in, whether its render is the one shipped, the rubric ids it passed on to the repair, and the closed ids of the gates its renders failed and of a crash, which the page does not show) |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched), `other_library` (this plot in another library or language: a fixed pointer to the catalogue, not counted toward closing by default), `unsupported_content`, `locked_out` (past the day's `attack` strikes) and `session_closed` (the session's third counted refusal) from the scope guard, `budget` from the budgets (`service_paused` when only the service's day budget is spent, for every user); the refusal one before the closing one ends with the fixed `close_warning` sentence; right after `ready`, before the scope judge: `locked_out`, `budget` for a user over the daily budget, `service_paused` for everyone else once the service's day budget is spent, `rate_limited` or `daily_limit` past the user's message limits, `session_closed` in a closed session |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `run_limit` (the user already has `AGENT_USER_MAX_RUNS` sandbox runs queued or running in other sessions; the turn ends the same way), `deadline`, `no_reply` (the root wrote no reply, also when asked once more: `plugins/empty_reply.py`) or `internal` |
-| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset`, and last `turn` (`TurnOutcome`: `answer`, `data`, `plot`, `switch`, `language`, `kept` or `memory`) after a turn that ended without an error or a refusal | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) and `turn` (`turn_outcome`, from the ledger's record of the root's tool calls) |
+| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset`, and last `turn` (`TurnOutcome`: `answer`, `data`, `plot`, `switch`, `language`, `kept` or `memory`) after a turn that ended without an error, a refusal or the user's stop | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) and `turn` (`turn_outcome`, from the ledger's record of the root's tool calls) |
 
 The route numbers every event on its way out (`id: <run_id>.<n>`, `agents/turn_log.py`) and keeps the
 session's latest turn, which `GET /v1/sessions/{sid}/turn` reads to the end for a page that lost the stream.
@@ -106,9 +106,11 @@ CALL_CHANGES: dict[tuple[str, CallOutcome], TurnOutcome] = {
 }
 """What a root tool call changed, by its name and outcome (`ledger.ToolCall`); every other call changes nothing.
 
-A bindings change is a change of the data card, where the bindings stand. A `plot_pipeline` call that stopped
-`not_ready` for missing data or open roles is a plot turn, as the page shows it (a failed plot card); one refused for
-unconfirmed data (`unconfirmed`) shows no card and changes nothing, unless it kept the wish (`kept`)."""
+A bindings change is a change of the data card, where the bindings stand. A `set_language` call counts also when it
+named the language already set: it stores the choice (source `chosen`), which detection never writes over. A
+`plot_pipeline` call that stopped `not_ready` for missing data or open roles is a plot turn, as the page shows it (a
+failed plot card); one refused for unconfirmed data (`unconfirmed`) shows no card and changes nothing, unless it kept
+the wish (`kept`)."""
 
 
 def turn_outcome(ledger: RequestLedger) -> TurnOutcome:
@@ -279,8 +281,8 @@ class Translator:
         language, which the turn may have changed, so the page's card always names what `.to_long()` applies.
         `switch` is `{library, plot}` after a turn whose root asked for a switch the user wanted in the chat
         (`switch_plot`, 2026-11-02): the page carries it out with the switch route and, with `plot`, the carry run.
-        `turn` is what the turn changed (`turn_outcome`), after a turn that ended without an error or a refusal; it
-        goes last, so the fields before it read as they did without it.
+        `turn` is what the turn changed (`turn_outcome`), after a turn that ended without an error, a refusal or the
+        user's stop (`main.ended_well`); it goes last, so the fields before it read as they did without it.
         """
         payload: dict[str, Any] = {
             "llm_calls": self.ledger.llm_calls,
