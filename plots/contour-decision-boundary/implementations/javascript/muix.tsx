@@ -16,8 +16,8 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const K_NEIGHBORS = 13; // k-nearest-neighbour classifier: majority vote of the 13 closest training points
-const MESH_STEPS = 180; // prediction mesh nodes per axis, fine enough that the boundary shows no grid steps
+const K_NEIGHBORS = 13; // k-nearest-neighbour classifier: distance-weighted vote of the 13 closest training points
+const MESH_STEPS = 200; // prediction mesh nodes per axis, the spec's finest mesh, so the boundary shows no grid steps
 const PAD_SHARE = 0.12; // feature plane beyond the training points, as a share of each feature's range
 const REGION_OPACITY = 0.24; // region tint, light enough that the training points stay the strongest marks
 
@@ -69,8 +69,11 @@ const [xDomain, yDomain] = [points.map((p) => p.x), points.map((p) => p.y)].map(
 const meshX = Array.from({ length: MESH_STEPS }, (_, i) => xDomain[0] + (i / (MESH_STEPS - 1)) * (xDomain[1] - xDomain[0]));
 const meshY = Array.from({ length: MESH_STEPS }, (_, j) => yDomain[0] + (j / (MESH_STEPS - 1)) * (yDomain[1] - yDomain[0]));
 
-// k-NN votes per class: every training point is classified leave-one-out (it never votes for itself),
-// every mesh node by all training points
+// Distance-weighted k-NN votes per class: each of the k nearest training points votes with the weight
+// 1 − d² / d²₍ₖ₊₁₎, which falls to zero at the distance of the next neighbour, so the score changes
+// smoothly as points enter or leave the vote and the boundary can be interpolated between mesh nodes
+// (a plain vote count is piecewise constant and shows the mesh as stair-steps). Every training point
+// is classified leave-one-out (it never votes for itself), every mesh node by all training points.
 const queries = [
   ...points.map((p, i) => ({ x: p.x, y: p.y, skip: i })),
   ...meshY.flatMap((y) => meshX.map((x) => ({ x, y, skip: -1 }))),
@@ -80,8 +83,15 @@ const votes = queries.map((q) => {
     .map((p, i) => ({ i, cls: p.cls, d2: (p.x - q.x) ** 2 + (p.y - q.y) ** 2 }))
     .filter((n) => n.i !== q.skip)
     .sort((a, b) => a.d2 - b.d2)
-    .slice(0, K_NEIGHBORS);
-  return classes.map((_, c) => nearest.filter((n) => n.cls === c).length);
+    .slice(0, K_NEIGHBORS + 1);
+  // with fewer than k + 1 other points, or a next neighbour on the same spot, every vote weighs 1
+  const reach = nearest[K_NEIGHBORS]?.d2 || Infinity;
+  return classes.map((_, c) =>
+    nearest
+      .slice(0, K_NEIGHBORS)
+      .filter((n) => n.cls === c)
+      .reduce((s, n) => s + 1 - n.d2 / reach, 0),
+  );
 });
 const predicted = points.map((_, i) => votes[i].indexOf(Math.max(...votes[i])));
 const misclassified = points.filter((p, i) => predicted[i] !== p.cls);
@@ -155,7 +165,7 @@ const series = [
 ];
 
 const TITLE = "Iris Species by k-NN · contour-decision-boundary · javascript · muix · anyplot.ai";
-const subtitle = `${points.length} training points · k = ${K_NEIGHBORS} nearest-neighbour vote on a ${MESH_STEPS} × ${MESH_STEPS} mesh · ${misclassified.length} misclassified in leave-one-out`;
+const subtitle = `${points.length} training points · k = ${K_NEIGHBORS} distance-weighted nearest-neighbour vote on a ${MESH_STEPS} × ${MESH_STEPS} mesh · ${misclassified.length} misclassified in leave-one-out`;
 const HEADER_H = 84;
 const LEGEND_W = 280;
 
