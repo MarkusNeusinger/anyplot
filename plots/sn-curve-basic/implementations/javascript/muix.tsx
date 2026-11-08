@@ -104,17 +104,16 @@ const stressTicks = Array.from(
   { length: Math.floor(yMax / stressStep) - Math.ceil(yMin / stressStep) + 1 },
   (_, i) => (Math.ceil(yMin / stressStep) + i) * stressStep,
 );
-const formatCycles = (n) =>
-  `10${String(Math.round(Math.log10(n)))
-    .split("")
-    .map((digit) => SUPERSCRIPT[Number(digit)])
-    .join("")}`;
 
-// Fit curve on a log-spaced grid: the Basquin line down to the knee, then the endurance plateau
-const fitCycles = Array.from({ length: FIT_POINTS }, (_, i) =>
-  10 ** (Math.log10(xMin) + (i / (FIT_POINTS - 1)) * (Math.log10(xMax) - Math.log10(xMin))),
-);
-const fitStress = fitCycles.map((n) => Math.max(enduranceLimit, 10 ** (basquinLogA + basquinExponent * Math.log10(n))));
+// Fit curve on a log-spaced grid: the Basquin line from the left edge down to the knee, where it
+// meets the endurance limit; the limit's reference line carries the plateau beyond
+const fitCycles = [
+  ...Array.from({ length: FIT_POINTS }, (_, i) =>
+    10 ** (Math.log10(xMin) + (i / (FIT_POINTS - 1)) * (Math.log10(xMax) - Math.log10(xMin))),
+  ).filter((n) => Math.log10(n) < logKnee),
+  10 ** logKnee,
+];
+const fitStress = fitCycles.map((n) => 10 ** (basquinLogA + basquinExponent * Math.log10(n)));
 
 // Fatigue regions along the cycle axis, clipped to the axis extent
 const regionEdges = [xMin, Math.min(Math.max(LCF_HCF_BOUNDARY, xMin), xMax), Math.min(10 ** logKnee, xMax), xMax];
@@ -124,13 +123,14 @@ const regions = REGION_NAMES.map((name, i) => ({ name, from: regionEdges[i], to:
 
 const specimens = data.map((d, i) => ({ id: `specimen-${i}`, x: d[CYCLES], y: d[STRESS] }));
 const levelCount = new Set(data.map((d) => d[STRESS])).size;
+const kneeExponent = [...String(Math.floor(logKnee))].map((digit) => SUPERSCRIPT[Number(digit)]).join("");
 
 const TITLE = "sn-curve-basic · javascript · muix · anyplot.ai";
 const SUBTITLE = `n = ${data.length} · ${levelCount} stress levels · ${FIT_LABEL} S = ${Math.round(
   10 ** basquinLogA,
 )} · N^${basquinExponent.toFixed(3).replace("-", "−")} (R² = ${rSquared.toFixed(2)}) · knee at N = ${(
   10 ** (logKnee - Math.floor(logKnee))
-).toFixed(1)} × ${formatCycles(10 ** Math.floor(logKnee))}`;
+).toFixed(1)} × 10${kneeExponent}`;
 const HEADER_H = 80;
 const LEGEND_H = 40;
 const X_AXIS_H = 64;
@@ -220,7 +220,8 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             tickInterval: cycleTicks,
-            valueFormatter: formatCycles,
+            valueFormatter: (n) =>
+              `10${[...String(Math.round(Math.log10(n)))].map((digit) => SUPERSCRIPT[Number(digit)]).join("")}`,
             label: CYCLES,
             height: X_AXIS_H,
             tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
