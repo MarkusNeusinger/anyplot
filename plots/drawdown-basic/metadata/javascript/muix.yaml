@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: drawdown-basic
 created: '2026-08-24T23:27:39Z'
-updated: '2026-11-08T02:10:14Z'
+updated: '2026-11-08T02:15:22Z'
 generated_by: claude-opus-5-5
 adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
 workflow_run: 42437042683
@@ -16,42 +16,40 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 quality_score: 86
 review:
   strengths:
-  - Drawdown computed from the running maximum and drawn as a semi-transparent matte-red
-    (#AE3030) area that stays at or below zero, touching zero only at new highs, with
-    0% at the top of the axis
-  - Composes a custom SVG overlay from MUI X hooks (useXScale, useYScale, useDrawingArea)
-    to shade the peak-to-recovery span of the maximum drawdown and label the trough,
-    with the trough label side chosen from its x position
-  - Key statistics (max drawdown -45.5%, 353-day decline Mar 8 2024 to Feb 24 2025,
-    121-day recovery to Jun 25 2025) are computed from the data and sit in a subtitle
-    clear of the curve
-  - Dual y-axes via yAxisId keep the underlying NAV series (allowed by the Notes)
-    on its own right-hand scale; recovery markers follow a stated rule shown in the
-    legend
-  - Theme tokens threaded through every text, axis, grid, reference-line and marker
-    stroke, so both renders read cleanly; skipAnimation set and sizing follows window.ANYPLOT_SIZE
+  - Drawdown is computed from the running maximum and plotted on its own axis with
+    0% at the top and losses deeper down; the curve touches zero only at new highs
+  - Semi-transparent matte red (#AE3030, the Imprint loss anchor) fill to a clearly
+    visible ink-colored zero line drawn with ChartsReferenceLine, readable in both
+    themes
+  - Maximum drawdown is highlighted by a shaded peak-to-recovery band, a trough marker
+    and a bold '-45.5% on Feb 24, 2025' label, all computed from the data
+  - Key statistics in the header (max drawdown -45.5%, decline 353 days, recovery
+    121 days) fall out of the computation and match the curve without touching it
+  - Recovery points are marker-only null-padded series with a page-colored halo, and
+    the legend states the exact marking threshold the code applies
+  - 'Idiomatic MUI X v9 composition: dual y-axes with sized bands, custom SVG child
+    using useXScale/useYScale/useDrawingArea, per-series data-series CSS selectors,
+    skipAnimation, native tooltips in the HTML'
   weaknesses:
-  - 'VQ-02 (both): between Jan and Mar 2025 the green NAV line runs on top of the
-    red drawdown curve and covers most of its lowest stretch next to the trough marker,
-    so the drawdown line cannot be followed there → keep the two lines apart, e.g.
-    a right-axis domain that places the NAV band above the deepest drawdown (about
-    min 0, max 140). Likely cause: the right yAxis ''value'' has no min/max, so its
-    auto domain 55–140 maps the NAV low onto the drawdown low.'
-  - 'Suggestion: the long legend entry ''Recovery from a drawdown of 4.5% or more''
-    could be shortened to ''Recovery (≥ 4.5% drawdown)'' to tighten the header row.'
-  - 'Suggestion: the ''Max drawdown period'' band label could carry the full peak-to-recovery
-    span length (about 474 days) so the duration reads directly in the chart.'
+  - 'VQ-02 (both): between Oct 2024 and Jan 2025 the green NAV line runs directly
+    on top of the red drawdown curve (both near -17% / 88 USD), so the two lines cannot
+    be traced apart over about three months → keep the value line in its own vertical
+    band, e.g. set the right axis so the NAV range sits clear of the drawdown curve.
+    Likely cause: value yAxis min: 0 with max = peak × 1.05 maps the dip to the same
+    height as the drawdown plateau.'
+  - 'Suggestion: state the full max-drawdown duration (peak to recovery, 474 days)
+    next to the decline and recovery figures in the header.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1.
-      Chrome: bold title "drawdown-basic · javascript · muix · anyplot.ai" top left, grey subtitle with the statistics ("Max drawdown -45.5% · decline 353 days (Mar 8, 2024 → Feb 24, 2025) · recovery 121 days (to Jun 25, 2025)"), a horizontal legend at top right (Drawdown (%), NAV per share (USD), Maximum drawdown, Recovery from a drawdown of 4.5% or more). Left axis "Drawdown from running peak (%)" 0% to -45% in 5% steps, right axis "NAV per share (USD)" 55–140, x axis "Date" Feb 2024–Dec 2025. Subtle horizontal grid, dark 0% reference line. All text dark ink and readable.
-      Data: matte-red drawdown line with a semi-transparent red fill down from the zero line; deep V to -45.5% in Feb 2025 marked by a red dot and the bold label "-45.5% on Feb 24, 2025"; a light grey band shades Mar 2024–Jun 2025 with the label "Max drawdown period"; black dots on the zero line at the Jun 2025 and Nov 2025 recoveries; a small open drawdown at the right edge. Brand green #009E73 NAV line on the right axis; between Jan and Mar 2025 it lies on top of the red drawdown curve near the trough.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "drawdown-basic · javascript · muix · anyplot.ai" at top left with a softer stats line beneath (Max drawdown -45.5% · decline 353 days (Mar 8, 2024 → Feb 24, 2025) · recovery 121 days (to Jun 25, 2025)); top-right horizontal legend (Drawdown (%), NAV per share (USD), Maximum drawdown, Recovery from a drawdown of 4.5% or more); left axis "Drawdown from running peak (%)" 0% to -45%, right axis "NAV per share (USD)" 0–140, x axis "Date" Feb 2024–Dec 2025 monthly ticks; subtle horizontal grid. All text dark and readable.
+      Data: matte red #AE3030 drawdown line with ~35% red fill down from a black zero line; shallow dips early 2024, deep drawdown to -45.5% in Feb 2025, recovery to zero late Jun 2025, small -5% dip in Nov 2025 and an open drawdown at the end. Light gray band over the max drawdown period labelled "Max drawdown period"; red trough dot with bold "-45.5% on Feb 24, 2025" label; black recovery dots on the zero line at Jun 2025 and Nov 2025. Brand green #009E73 NAV line on the right axis, which coincides with the red curve Oct 2024–Jan 2025.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17.
-      Chrome: title, subtitle, legend, axis titles and tick labels all in light ink and readable; grid subtle; the zero reference line flips to light ink; the max-drawdown band is a slightly lighter grey and still visible. No dark-on-dark text.
-      Data: identical data colours to the light render (matte red drawdown with darker-looking translucent fill on the dark page, brand green NAV line, red trough dot); recovery dots flip to light ink with a page-coloured outline. Same overlap of the green NAV line on the red curve near the trough.
+      Background: warm near-black #1A1A17.
+      Chrome: title, stats line, legend, axis titles and tick labels in light ink, all readable; no dark-on-dark text; zero line in light ink; grid subtle; max drawdown band slightly lighter gray.
+      Data: same #AE3030 red line/fill and #009E73 NAV line as light; recovery dots flip to light ink with a dark halo (chrome-colored markers, as intended); trough label in light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -63,48 +61,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, axis titles 16, legend 15 CSS
-          px); all text readable in both themes
+        comment: Title 22 px, stats 15 px, ticks 14 px, axis titles 16 px; readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text collisions; the NAV line covers the drawdown curve's lowest
-          stretch Jan–Mar 2025 (defect line)
+        comment: No text collisions; NAV line runs on top of the drawdown curve Oct
+          2024–Jan 2025 (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines 2–2.5 px suit 500 daily points; trough and recovery markers
-          prominent with page-coloured outline; legend glyphs visible in both themes
+        comment: Lines 2–2.5 px for 500 points, prominent trough/recovery markers
+          with halo, legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red vs green also separated by axis, line weight and fill; markers
-          distinct by colour and position
+        comment: Red loss vs green value separated by axis and legend, not color alone;
+          good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced header band, axes and legend; nothing cut off
+        comment: 3200x1800, balanced axis bands, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (%, USD)
+        comment: Descriptive labels with units (%, USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Matte red #AE3030 for loss (semantic exception the Notes ask for),
-          brand green for the NAV series, correct backgrounds in both themes'
+        comment: 'Loss in semantic red #AE3030 as the spec asks, value series #009E73,
+          correct backgrounds, chrome flips correctly'
     design_excellence:
       score: 10
       max: 20
@@ -114,22 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom title/subtitle hierarchy with the statistics line set in inkSoft,
-          legend placed in the header band
+        comment: 'Typographic hierarchy decided beyond baseline: bold title over a
+          soft-ink statistics subtitle, bold trough label'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Trough label side chosen from its x position; page-coloured marker
-          outlines; band label inset at the top of the band
+        comment: Markers carry a page-colored halo so they read on the zero line;
+          generous Y padding keeps the period label clear of the zero line
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Highlight and statistics are what the Notes prescribe; no further
-          hierarchy chosen
+        passed: false
+        comment: Focal points are those the Notes prescribe; no further hierarchy
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Drawdown area chart; only the elements the Notes ask for or allow
-          (zero line, max-drawdown highlight, recovery markers, statistics, NAV series)
+        comment: Drawdown area chart; underlying value series is allowed by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Running-max drawdown, semi-transparent red fill, clear zero line,
-          max-drawdown band and trough marker, recovery markers, statistics text,
-          secondary NAV axis
+        comment: Running-max drawdown, red semi-transparent fill, visible zero line,
+          max drawdown highlight, recovery markers, statistics text all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on x, drawdown on left axis with 0 at top, NAV on right axis;
-          all data shown
+        comment: Marks at data values, full date range shown, no smoothing
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend entries readable and match marks
+        comment: Correct title format; legend entries readable and match the marks
     data_quality:
       score: 15
       max: 15
@@ -171,22 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shallow dips, a deep crash, long recovery, flat new-high stretch
+        comment: Shallow dips, a deep crash, slow recovery, flat runs at new highs
           and an open final drawdown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated fund NAV per share over 500 trading days; neutral
+        comment: Fund NAV per share over 500 trading days, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: No Check values in spec; checked -45.5% trough against the NAV axis
-          (about 106 peak to about 58 trough) and the 353/121-day spans against the
-          band edges
+        comment: 'Checked: -45.5% trough matches the axis; Mar 8 2024→Feb 24 2025
+          = 353 days and Feb 24→Jun 25 2025 = 121 days, computed from the data'
     code_quality:
       score: 10
       max: 10
@@ -196,14 +190,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data → computation → chart; the overlay component is required
-          for MUI X hooks
+        comment: Columns → data → plot zones; the single child component is the MUI
+          X composition idiom
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG seed 42
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -215,14 +209,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no available call replaces the episode scan
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, ANYPLOT_SIZE; current
-          v9 API
+        comment: Default-exported component, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -232,19 +225,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Multi-axis via yAxisId, ChartsReferenceLine, sx styling with data-series
-          selectors, null-gapped marker series
+        comment: Series/axis config, ChartsReferenceLine child, data-series CSS selectors,
+          sized axis bands
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG overlay composed from useXScale/useYScale/useDrawingArea
-          inside the chart context
-  verdict: REJECTED
+        comment: Custom SVG overlay via useXScale/useYScale/useDrawingArea hooks,
+          multi y-axis with yAxisId, null-padded marker-only series
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T02:07:15Z'
+  rendered_at: '2026-11-08T02:12:27Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -259,3 +252,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - publication-ready
