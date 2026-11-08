@@ -9,18 +9,21 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const ICE_OPACITY = 0.3; // individual curves stay translucent so dense stretches read darker
+// Individual curves stay translucent so dense stretches read darker; the alpha
+// (30 %) is baked into the colour so the legend swatches match the lines
+const ICE_ALPHA_HEX = "4D";
 
 // Columns: set these to your data's column names
 const HOUSE = "House ID"; // role: observation_id
 const SQFT = "Square Footage (sq ft)"; // role: feature_value
 const PRICE = "Predicted Price (USD)"; // role: prediction
-const SEGMENT = "Home segment"; // role: extra
+const SEGMENT = "Year built"; // role: extra
 
 // Data: replace this block with your own records, one object per observation and grid value
 // ICE curves of a gradient-boosting house-price model: for each of 70 houses the
 // predicted price over 55 square-footage values, every other feature held fixed.
-// About a quarter of the houses (the luxury segment) show diminishing returns.
+// About a quarter of the houses, built before 1960, show diminishing returns:
+// in older stock, extra floor space adds less and less to the predicted price.
 const data = (() => {
   let seed = 42;
   const rng = () => {
@@ -39,8 +42,8 @@ const data = (() => {
   for (let house = 1; house <= 70; house += 1) {
     const basePrice = gaussian(210000, 22000);
     const pricePerSqft = gaussian(145, 22);
-    const luxury = rng() < 0.25;
-    const curvature = luxury ? gaussian(-0.028, 0.006) : gaussian(-0.003, 0.004);
+    const older = rng() < 0.25;
+    const curvature = older ? gaussian(-0.028, 0.006) : gaussian(-0.003, 0.004);
     for (let i = 0; i < gridCount; i += 1) {
       const sqft = sqftMin + (i * (sqftMax - sqftMin)) / (gridCount - 1);
       const delta = sqft - sqftMin;
@@ -48,7 +51,7 @@ const data = (() => {
         [HOUSE]: house,
         [SQFT]: Math.round(sqft),
         [PRICE]: Math.round(basePrice + pricePerSqft * delta + curvature * delta * delta),
-        [SEGMENT]: luxury ? "Luxury" : "Standard",
+        [SEGMENT]: older ? "Before 1960" : "1960 or later",
       });
     }
   }
@@ -98,11 +101,12 @@ export default function Chart() {
           ...curves.map((c) => ({
             id: `obs-${c.id}`,
             data: c.data,
-            color: t.palette[segments.indexOf(c.segment)],
+            color: `${t.palette[segments.indexOf(c.segment)]}${ICE_ALPHA_HEX}`,
             showMark: false,
+            labelMarkType: "line",
             label: labelled.has(c.id) ? `${SEGMENT}: ${c.segment}` : undefined,
           })),
-          { id: "pdp", data: partialDependence, color: t.ink, label: PDP_LABEL, showMark: false },
+          { id: "pdp", data: partialDependence, color: t.ink, label: PDP_LABEL, showMark: false, labelMarkType: "line" },
         ]}
         xAxis={[
           {
@@ -131,13 +135,13 @@ export default function Chart() {
           legend: {
             direction: "horizontal",
             position: { vertical: "top", horizontal: "end" },
-            sx: { fontSize: 15, color: t.ink, pr: "40px", gap: "24px" },
+            sx: { fontSize: 15, color: t.ink, pr: "40px", gap: "24px", "& .MuiChartsLegend-mark.MuiChartsLabelMark-line": { width: 30, height: 10, "& path": { strokeWidth: 6 } } },
           },
           tooltip: { trigger: "item" },
         }}
         sx={{
-          "& .MuiLineChart-line": { strokeWidth: 1.5, strokeOpacity: ICE_OPACITY },
-          '& .MuiLineChart-line[data-series="pdp"]': { strokeWidth: 4, strokeOpacity: 1 },
+          "& .MuiLineChart-line": { strokeWidth: 1.5 },
+          '& .MuiLineChart-line[data-series="pdp"]': { strokeWidth: 4 },
           "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       />
