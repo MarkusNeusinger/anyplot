@@ -11,7 +11,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const MAX_ICONS = 8; // the longest row holds at most this many icons
 const NICE_STEPS = [1, 2, 2.5, 5, 10]; // icon values are one of these times a power of ten
-const ICON_SHARE = 0.4; // icon radius as a share of its square cell
+const ICON_SHARE = 0.4; // icon radius as a share of the smaller of row height and icon pitch
 const MIN_REMAINDER = 0.02; // remainders below this share of an icon are not drawn
 const TITLE_H = 52;
 const LEGEND_H = 44;
@@ -55,18 +55,20 @@ const TITLE = "Weekly Fruit Harvest · pictogram-basic · javascript · muix · 
 function IconRows() {
   const yScale = useYScale("fruit");
   const { left, width } = useDrawingArea();
-  const cell = Math.min(yScale.bandwidth(), width / iconSlots);
-  const radius = cell * ICON_SHARE;
+  // Icons sit at one pitch across the full drawing width, so the longest row reaches its right
+  // edge; the radius fits both that pitch and the row height, so every icon keeps one size
+  const pitch = width / iconSlots;
+  const radius = Math.min(yScale.bandwidth(), pitch) * ICON_SHARE;
 
   return (
     <g>
       {rows.map((row, r) => {
         const cy = yScale(row.fruit) + yScale.bandwidth() / 2;
-        const partialX = left + (row.full + 0.5) * cell;
+        const partialX = left + (row.full + 0.5) * pitch;
         return (
           <g key={row.fruit}>
             {Array.from({ length: row.full }, (_, i) => (
-              <circle key={i} cx={left + (i + 0.5) * cell} cy={cy} r={radius} fill={t.palette[0]} />
+              <circle key={i} cx={left + (i + 0.5) * pitch} cy={cy} r={radius} fill={t.palette[0]} />
             ))}
             {row.remainder > 0 && (
               <g>
