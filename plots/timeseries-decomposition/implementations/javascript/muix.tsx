@@ -21,9 +21,10 @@ const COMPONENTS = [
 ];
 const HEADER_H = 72;
 const PANEL_GAP = 6;
-const X_AXIS_H = 44;
+const X_AXIS_H = 64;
 const Y_AXIS_W = 72;
-const MARGIN = { top: 30, right: 32, bottom: 6, left: 16 };
+// the bottom margin leaves room for half a tick label, so the lowest y tick keeps its label
+const MARGIN = { top: 30, right: 32, bottom: 12, left: 16 };
 
 // Columns: set these to your data's column names
 const DATE = "Month"; // role: date
@@ -120,6 +121,7 @@ export default function Chart() {
                   max: dates[dates.length - 1],
                   tickNumber: 10,
                   valueFormatter: formatMonth,
+                  label: isLast ? DATE : undefined,
                   position: isLast ? "bottom" : "none",
                   height: X_AXIS_H,
                   ...axisText,
