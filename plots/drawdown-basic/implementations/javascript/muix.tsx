@@ -1,7 +1,7 @@
 // anyplot.ai
 // drawdown-basic: Drawdown Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 86/100 | Updated: 2026-11-08
+// Quality: 89/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
@@ -12,11 +12,17 @@ const t = window.ANYPLOT_TOKENS;
 const LOSS = t.palette[4]; // drawdown in the loss red, as the Notes ask
 const VALUE_COLOR = t.palette[0]; // first palette position not taken by the loss colour
 const RECOVERY_MARK_SHARE = 0.1; // recoveries are marked for drawdowns at least this share as deep as the maximum
-const Y_PAD = 0.05; // share of the deepest drawdown left free below it and above the zero line
+const Y_PAD = 0.05; // share of each axis span left free beyond the outermost values
+const ZERO_PAD = 0.08; // share of the deepest drawdown left free above the zero line, where the period is named
+const DATE_TICKS = 8; // target count of date ticks; the time scale rounds the step to whole calendar units
+// The value series gets its own panel above the drawdown on the same date axis, so the two lines never cross
+const VALUE_PANEL_SHARE = 0.3; // share of the chart height for the value panel
+const Y_AXIS_W = 84; // both panels share this axis width and the margins, so their dates line up
+const PANEL_MARGIN_X = 24;
 const DAY_MS = 86400000;
 const TITLE = "drawdown-basic · javascript · muix · anyplot.ai";
 const HEADER_H = 84;
-const LEGEND_H = 40;
+const FOOT_H = 16;
 
 // Columns: set these to your data's column names
 const DATE = "Date"; // role: date
@@ -83,16 +89,21 @@ const recoveryText =
 const stats = `Max drawdown ${maxDrawdown.toFixed(1)}% · decline ${declineDays} days (${fmtDate(dates[worst.peak])} → ${fmtDate(dates[worst.trough])}) · ${recoveryText}`;
 
 const yMin = maxDrawdown * (1 + Y_PAD);
-const yMax = -maxDrawdown * Y_PAD;
+const yMax = -maxDrawdown * ZERO_PAD;
+const valueLow = Math.min(...values);
+const valueHigh = Math.max(...values);
+const valueMin = valueLow - (valueHigh - valueLow) * Y_PAD;
+const valueMax = valueHigh + (valueHigh - valueLow) * Y_PAD;
 
 // Marker-only series: a value at the trough and at each marked recovery, null elsewhere
 const recoveryIdx = new Set(marked.map((e) => e.recovery));
 const troughSeries = drawdown.map((dd, i) => (i === worst.trough ? dd : null));
 const recoverySeries = drawdown.map((dd, i) => (recoveryIdx.has(i) ? dd : null));
 
-function MaxDrawdownPeriod() {
+// The maximum drawdown period, shaded in both panels; the drawdown panel also names it and labels the trough
+function MaxDrawdownPeriod({ annotate }: { annotate: boolean }) {
   const xScale = useXScale();
-  const yScale = useYScale("drawdown");
+  const yScale = useYScale();
   const { left, top, width, height } = useDrawingArea();
   const x0 = xScale(dates[worst.peak]);
   const x1 = xScale(dates[worst.recovery > -1 ? worst.recovery : dates.length - 1]);
@@ -102,18 +113,29 @@ function MaxDrawdownPeriod() {
   return (
     <g>
       <rect x={x0} y={top} width={x1 - x0} height={height} fill={t.inkSoft} fillOpacity={0.08} />
-      <text x={x0 + 10} y={top + 18} fontSize={14} fill={t.inkSoft}>
-        Max drawdown period
-      </text>
-      <text x={troughRight ? tx + 16 : tx - 16} y={ty + 5} textAnchor={troughRight ? "start" : "end"} fontSize={15} fontWeight={600} fill={t.ink}>
-        {`${maxDrawdown.toFixed(1)}% on ${fmtDate(dates[worst.trough])}`}
-      </text>
+      {annotate && (
+        <g>
+          <text x={x0 + 10} y={top + 18} fontSize={14} fill={t.inkSoft}>
+            Max drawdown period
+          </text>
+          <text x={troughRight ? tx + 16 : tx - 16} y={ty + 5} textAnchor={troughRight ? "start" : "end"} fontSize={15} fontWeight={600} fill={t.ink}>
+            {`${maxDrawdown.toFixed(1)}% on ${fmtDate(dates[worst.trough])}`}
+          </text>
+        </g>
+      )}
     </g>
   );
 }
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
+  const valuePanelH = Math.round((height - HEADER_H - FOOT_H) * VALUE_PANEL_SHARE);
+  const drawdownPanelH = height - HEADER_H - FOOT_H - valuePanelH;
+  const axisStyle = {
+    "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+    "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+    "& .MuiChartsGrid-line": { stroke: t.grid },
+  };
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column" }}>
       <div style={{ height: HEADER_H, padding: "22px 40px 0", boxSizing: "border-box" }}>
@@ -122,16 +144,50 @@ export default function Chart() {
       </div>
       <LineChart
         width={width}
-        height={height - HEADER_H - LEGEND_H}
+        height={valuePanelH}
+        skipAnimation
+        hideLegend
+        grid={{ horizontal: true }}
+        margin={{ top: 12, right: PANEL_MARGIN_X, bottom: 4, left: PANEL_MARGIN_X }}
+        xAxis={[{ data: dates, scaleType: "time", position: "none" }]}
+        yAxis={[
+          {
+            id: "value",
+            label: NAV,
+            min: valueMin,
+            max: valueMax,
+            tickNumber: 4,
+            width: Y_AXIS_W,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={[
+          {
+            id: "value",
+            data: values,
+            label: NAV,
+            color: VALUE_COLOR,
+            showMark: false,
+          },
+        ]}
+        sx={{ '& .MuiLineChart-line[data-series="value"]': { strokeWidth: 2.5 }, ...axisStyle }}
+      >
+        <MaxDrawdownPeriod annotate={false} />
+      </LineChart>
+      <LineChart
+        width={width}
+        height={drawdownPanelH}
         skipAnimation
         grid={{ horizontal: true }}
-        margin={{ top: 12, right: 24, bottom: 8, left: 24 }}
+        margin={{ top: 8, right: PANEL_MARGIN_X, bottom: 8, left: PANEL_MARGIN_X }}
         xAxis={[
           {
             data: dates,
             scaleType: "time",
             label: DATE,
             height: 64,
+            tickNumber: DATE_TICKS,
             valueFormatter: (d) => d.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
@@ -143,19 +199,8 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             label: "Drawdown from running peak (%)",
-            width: 84,
+            width: Y_AXIS_W,
             valueFormatter: (v) => `${v.toFixed(0)}%`,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
-          },
-          {
-            id: "value",
-            position: "right",
-            label: NAV,
-            // Anchored at zero so the value line rides above the deep end of the drawdown instead of on top of it
-            min: 0,
-            max: Math.max(...values) * (1 + Y_PAD),
-            width: 84,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
@@ -170,14 +215,6 @@ export default function Chart() {
             area: true,
             showMark: false,
             valueFormatter: (v) => `${v.toFixed(1)}%`,
-          },
-          {
-            id: "value",
-            yAxisId: "value",
-            data: values,
-            label: NAV,
-            color: VALUE_COLOR,
-            showMark: false,
           },
           {
             id: "trough",
@@ -210,16 +247,13 @@ export default function Chart() {
         sx={{
           '& .MuiLineChart-area[data-series="drawdown"]': { fillOpacity: 0.35 },
           '& .MuiLineChart-line[data-series="drawdown"]': { strokeWidth: 2.5 },
-          '& .MuiLineChart-line[data-series="value"]': { strokeWidth: 2 },
           '& .MuiLineChart-mark[data-series="trough"]': { r: 8, fill: LOSS, stroke: t.pageBg, strokeWidth: 2.5 },
           '& .MuiLineChart-mark[data-series="recovery"]': { r: 7, fill: t.ink, stroke: t.pageBg, strokeWidth: 2.5 },
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
-          "& .MuiChartsGrid-line": { stroke: t.grid },
+          ...axisStyle,
         }}
       >
         <ChartsReferenceLine y={0} axisId="drawdown" lineStyle={{ stroke: t.ink, strokeWidth: 1.5 }} />
-        <MaxDrawdownPeriod />
+        <MaxDrawdownPeriod annotate />
       </LineChart>
     </div>
   );

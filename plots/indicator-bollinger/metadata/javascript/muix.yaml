@@ -2,142 +2,132 @@ library: muix
 language: javascript
 specification_id: indicator-bollinger
 created: '2026-09-02T01:39:26Z'
-updated: '2026-09-02T01:44:41Z'
-generated_by: claude-sonnet
-workflow_run: 33579593804
+updated: '2026-11-08T07:34:02Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42440362650
 issue: 3237
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 87
 review:
   strengths:
-  - Creative use of a stacked-area pair (invisible lowerBand base + visible bandWidth
-    delta) to render a translucent Bollinger band fill, since MUI X community LineChart
-    has no native range/band series — a genuine distinctive-feature use of the library.
-  - 'Correct, deliberate Imprint color hierarchy: brand green (#009E73) reserved for
-    the primary MRDN Close line (the semantically most important series), lavender
-    dashed for the 20-day SMA, blue translucent fill for the band — plus a dashed
-    stroke on the SMA as a redundant (non-color) differentiator for accessibility.'
-  - Deterministic fixed-seed LCG data generation with explicit squeeze (days 40-65,
-    low volatility) and breakout (days 90+, high volatility) regimes, so the bands
-    visibly narrow and then widen — directly demonstrates the spec's 'Notes' guidance
-    about squeeze/breakout patterns.
-  - 'Clean theme handling in both renders: warm off-white / near-black backgrounds,
-    fully legible chrome, identical data colors between light and dark, subtle horizontal-only
-    grid, minimal spines (only left/bottom axis lines).'
-  - No edge clipping, no text/data overlap, balanced axis label and tick sizing between
-    X and Y axes.
+  - Uses the MUI X v9 composition API (ChartsDataProvider + ChartsWrapper + ChartsSurface)
+    with a custom BandFill layer that reads useXScale/useYScale, so the semi-transparent
+    fill between the bands sits in the chart's own coordinate system and lines up
+    with the band lines on every date
+  - Bollinger values are computed from the generated closes (20-day window, 2σ, population
+    SD), and the bands start only where a full window exists, at Jan 29
+  - 'Clear stroke hierarchy: the close at 3.5 px in brand green, the SMA at 2.5 px
+    dashed in lavender, both bands at 1.5 px in one shared blue with 0.16 fill opacity,
+    so price and SMA stay visible through the fill in both themes'
+  - The data shows a calm stretch that visibly squeezes the bands (around late March/early
+    April) and a volatile run in May–June that widens them, with the price piercing
+    the bands several times
+  - The subtitle states the period range and the computed tightest squeeze (1.4 %
+    of the SMA on Apr 8, 2024), and that date matches where the bands narrow in the
+    render
+  - Native axis tooltip and x-axis highlight (ChartsTooltip trigger="axis", ChartsAxisHighlight)
+    give per-date values in the HTML view; series are styled with v9 data-series CSS
+    selectors
   weaknesses:
-  - Title occupies only ~35-40% of plot width at fontsize 22 — below the style guide's
-    ~50-70% comfortable range (no deduction taken since it is fully legible and not
-    squeezed, but a slightly larger fontsize would give it more visual weight consistent
-    with other implementations).
-  - The legend swatch for 'Bollinger Band (SMA ± 2σ)' renders as a fully opaque blue
-    square while the actual area fill uses 16% alpha — a minor mismatch between the
-    legend affordance and the rendered fill; consider a lighter/semi-transparent custom
-    legend swatch if MUI X's slotProps allow it.
-  - The spec's 'consider showing band width as a secondary indicator or noting squeeze
-    patterns' is only implicitly conveyed through the data's visible narrowing/widening
-    — no explicit annotation or reference line calls out the squeeze/breakout regions
-    for a viewer scanning without prior context.
+  - 'Suggestion: a light marker at the Apr 8 squeeze (the spec allows a squeeze annotation)
+    would show where the subtitle''s narrowest band sits on the chart.'
+  - 'Suggestion: no January tick label means the first month on the x axis is unlabeled;
+    a Jan tick or domainLimit "nice" would anchor the start date.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches the required light-theme surface — not pure white, not dark.
-      Chrome: Title "MRDN · indicator-bollinger · javascript · muix · anyplot.ai" in bold dark text, top-left, fully visible and not clipped. Legend centered below the title with three entries: a blue swatch for "Bollinger Band (SMA ± 2σ)", a lavender swatch for "20-Day SMA", and a green swatch for "MRDN Close". Y-axis titled "Price (USD)" with $-formatted ticks from $156 to $184; X-axis titled "Trading Date" with weekly date ticks from Dec 31 to Jun 23. Subtle horizontal gridlines only, dark ink axis lines on the left/bottom only (no top/right frame). All text is clearly readable against the light background — dark ink on cream, no light-on-light issues anywhere.
-      Data: A thick green line (MRDN Close, #009E73 brand green) is the most visually prominent series, tracing a volatile price path. A dashed lavender line (20-Day SMA) runs smoothly beneath/through it. A translucent blue-gray band (Bollinger Band, SMA ± 2σ) envelopes both, starting at day 20 (Jan 28, once the rolling window is filled) and clearly narrowing during the "squeeze" period (~Feb) and widening during the "breakout" period (~May-Jun), matching the spec's technical-indicator intent.
-      Legibility verdict: PASS.
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: bold dark title "indicator-bollinger · javascript · muix · anyplot.ai" centered at top, grey subtitle "120 periods, Jan 2, 2024 – Jun 17, 2024 · narrowest band 1.4 % of the SMA on Apr 8, 2024", horizontal legend of four line entries (MRDN close, 20-day SMA, Upper band SMA + 2σ, Lower band SMA − 2σ), y axis "MRDN price (USD)" with ticks 162–182, x axis "Trading date" with month ticks Feb 1–Jun 1, subtle horizontal grid lines. All text dark and readable.
+      Data: close as a thick #009E73 line across all 120 days; dashed lavender (#C475FD) SMA from Jan 29; upper and lower bands as thin blue (#4467A3) lines with a semi-transparent blue-grey fill between them, starting at Jan 29. Bands narrow in late March/early April and widen in May–June; the price pierces the bands several times.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches the required dark-theme surface — not pure black, not light.
-      Chrome: Same title, now in bright off-white text, fully visible and not clipped. Same three-entry legend, now with light-colored text labels. Axis titles and $-formatted tick labels render in light ink, clearly legible against the dark background — no dark-on-dark failures observed anywhere (all text/ticks are light-colored). Gridlines remain subtle but visible as faint light horizontal lines.
-      Data: Colors are identical to the light render — brand green Close line, lavender dashed SMA, blue translucent band fill — confirming only chrome (background/text/grid) flips between themes while data colors stay fixed, as required. The blue band fill remains distinguishable against the near-black background without appearing washed out or invisible.
-      Legibility verdict: PASS.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, axis titles and tick labels flip to light ink and are all readable; grid lines are dim but visible; no dark-on-dark text.
+      Data: identical colors to the light render (green close, lavender dashed SMA, blue bands with translucent fill); the fill reads as a dark navy veil and the price and SMA stay clearly visible through it.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at sensible sizes (14-16px ticks/labels,
-          22px title); title runs slightly smaller than the style guide's suggested
-          proportion but is fully legible.
+        comment: Explicit font sizes for title, subtitle, legend, axis titles and
+          ticks; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, axis text, or data in either
-          render.
+        comment: No text collisions; legend sits clear of the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weights create clear hierarchy (Close 3.5px thick, SMA 2.25px
-          dashed, band outline 1.5px at 0.6 opacity); band fill at 16% alpha stays
-          visible without overpowering the price line.
+        comment: Thick price line, dashed SMA, thin band lines and translucent fill
+          all visible in both themes; legend glyphs match the strokes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three CVD-distinct Imprint hues (green/lavender/blue) plus a dashed
-          stroke on the SMA as a non-color differentiator; no red-green as sole signal.
+        comment: Green / lavender / blue are CVD-separable and the SMA is also told
+          apart by its dash
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (no /tmp/anyplot-canvas-gate.txt). No
-          overflow/clipping, generous margins, balanced axis label sizing.
+        comment: 3200x1800, plot fills the canvas, balanced axis titles, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ('Price (USD)', 'Trading Date');
-          mandated title format followed.
+        comment: '"MRDN price (USD)" and "Trading date" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green (#009E73) on the primary Close series, Imprint lavender/blue
-          on secondary series, correct theme-adaptive backgrounds in both renders.
+        comment: 'Close #009E73 first, then Imprint #C475FD and #4467A3 in canonical
+          order; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom translucent band fill, differentiated stroke widths/styles
-          per series, deliberate color-to-role mapping — clearly above generic defaults.
+        comment: Deliberate stroke-weight hierarchy (3.5 / 2.5 dashed / 1.5 at 0.8
+          opacity) and a title-plus-subtitle typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Minimal chrome (no top/right frame), subtle horizontal-only grid,
-          generous whitespace and margins.
+        comment: Band lines softened with strokeOpacity so the fill carries the envelope;
+          y range padded by 6 % of the price range
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear focal point (thick green Close line) with supporting context
-          (dashed SMA, band envelope); squeeze/breakout volatility regimes baked into
-          the data create a legible narrative arc.
+        comment: The squeeze note follows what the Notes allow; no focal point chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -147,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bollinger Bands line chart with envelope fill.
+        comment: Price line with Bollinger envelope on one price axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price line, upper/lower bands with semi-transparent fill, dashed
-          middle SMA — all present per spec Notes.
+        comment: Prominent price, same-color bands with semi-transparent fill, dashed
+          SMA midway between bands, standard 20/2 parameters labelled, squeeze noted
+          in subtitle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date (time scale), Y=price (USD); axes cover the full data range.
+        comment: Linear curves, every line at its computed value; strict time domain
+          covers all dates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows '{Ticker} · indicator-bollinger · javascript · muix
-          · anyplot.ai'; legend labels match the three conceptual series.
+        comment: Mandated title; legend entries are reader text with units
     data_quality:
       score: 15
       max: 15
@@ -177,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows price, SMA, upper/lower bands, and volatility-regime variation
-          (squeeze then breakout).
+        comment: Squeeze, expansion, band touches and piercings all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible fictional ticker (MRDN) and price range ($162-$184), neutral
-          subject matter.
+        comment: Fictional mid-cap ticker MRDN, daily weekday closes over 120 trading
+          days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 trading-day periods with a 20-period window, within the spec's
-          60-200 range and standard 20/2 Bollinger parameters.
+        comment: Prices 162–182 USD; checked in code that SMA/bands are computed from
+          a 20-day window with 2σ and start at day 20 (Jan 29 on the axis), and that
+          the subtitle's narrowest band is computed, not placed
     code_quality:
       score: 10
       max: 10
@@ -202,36 +193,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; only small deterministic helper functions (rand, gaussian,
-          round2).
+        comment: Constants → data → plot; BandFill is the MUI composition idiom for
+          a custom layer that needs the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG — fully deterministic across runs.
+        comment: Seeded LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography imported and used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a rolling-window indicator; no fake UI
-          or simulated interactivity.
+        comment: Rolling statistics written out is fine (no stats helpers available);
+          no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports the component per the harness contract; current MUI
-          X community API (area+stack series, valueFormatter, slotProps.legend).
+        comment: Default export, v9 API, skipAnimation on provider and LinePlot
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -239,20 +229,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic time-scale xAxis, valueFormatter-based tick formatting,
-          slotProps.legend positioning, sx-based per-series line styling.
+        comment: Composed chart via ChartsDataProvider/ChartsWrapper/ChartsSurface
+          with v9 data-series CSS selectors
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Stacked invisible-base + visible-delta area pair to fake a range/band
-          series MUI X doesn't natively provide — a genuinely distinctive technique.
+        comment: Custom SVG layer drawn through useXScale/useYScale, axis-trigger
+          tooltip and ChartsAxisHighlight
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T07:31:12Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
