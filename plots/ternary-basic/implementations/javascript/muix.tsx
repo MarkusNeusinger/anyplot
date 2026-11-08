@@ -27,12 +27,12 @@ const HEADER_H = 84;
 const MARGIN = 16;
 
 // Columns: set these to your data's column names
-const COPPER = "Copper (%)"; // role: component_a
-const TIN = "Tin (%)"; // role: component_b
-const ZINC = "Zinc (%)"; // role: component_c
+const SAND = "Sand (%)"; // role: component_a
+const SILT = "Silt (%)"; // role: component_b
+const CLAY = "Clay (%)"; // role: component_c
 
 // Data: replace this block with your own records, one object per row
-// Copper-tin-zinc compositions of 65 foundry bronze and gunmetal samples
+// Sand-silt-clay texture of 65 topsoil samples from a field survey
 const data = (() => {
   let seed = 20260804 >>> 0;
   const rand = () => {
@@ -40,14 +40,14 @@ const data = (() => {
     return seed / 4294967296;
   };
   return Array.from({ length: 65 }, () => {
-    const [gCu, gSn, gZn] = [5, 2, 2].map((shape) =>
+    const [gSand, gSilt, gClay] = [5, 2, 2].map((shape) =>
       Array.from({ length: shape }, () => -Math.log(rand() || 1e-9)).reduce((s, v) => s + v, 0),
     );
-    const sum = gCu + gSn + gZn;
+    const sum = gSand + gSilt + gClay;
     return {
-      [COPPER]: Number(((gCu / sum) * 100).toFixed(1)),
-      [TIN]: Number(((gSn / sum) * 100).toFixed(1)),
-      [ZINC]: Number(((gZn / sum) * 100).toFixed(1)),
+      [SAND]: Number(((gSand / sum) * 100).toFixed(1)),
+      [SILT]: Number(((gSilt / sum) * 100).toFixed(1)),
+      [CLAY]: Number(((gClay / sum) * 100).toFixed(1)),
     };
   });
 })();
@@ -55,7 +55,7 @@ const data = (() => {
 // Plot: reads only data and the constants above
 // Barycentric shares to the plane: the first component at the top apex, the second at
 // the bottom left, the third at the bottom right, on a triangle of side 1
-const COMPONENTS = [COPPER, TIN, ZINC];
+const COMPONENTS = [SAND, SILT, CLAY];
 const SQRT3_2 = Math.sqrt(3) / 2;
 const rows = data.filter(
   (d) => COMPONENTS.every((k) => Number.isFinite(d[k])) && COMPONENTS.reduce((s, k) => s + d[k], 0) > 0,
@@ -64,8 +64,8 @@ const rowTotals = rows.map((d) => COMPONENTS.reduce((s, k) => s + d[k], 0));
 const total = rowTotals.reduce((s, v) => s + v, 0) / rows.length; // the constant sum, 100 for percentages
 const points = rows.map((d, i) => ({
   id: i,
-  x: d[ZINC] / rowTotals[i] + d[COPPER] / rowTotals[i] / 2,
-  y: (SQRT3_2 * d[COPPER]) / rowTotals[i],
+  x: d[CLAY] / rowTotals[i] + d[SAND] / rowTotals[i] / 2,
+  y: (SQRT3_2 * d[SAND]) / rowTotals[i],
 }));
 
 // Lines of constant share: for component k at share f they run between the edge where
@@ -111,9 +111,9 @@ const [tickDir, vertexDir] = [
     baseline: d.y > 0.3 ? "auto" : d.y < -0.3 ? "hanging" : "central",
   })),
 );
-const unit = COPPER.match(/\(([^)]+)\)/)?.[1] ?? "";
+const unit = SAND.match(/\(([^)]+)\)/)?.[1] ?? "";
 
-const TITLE = "Bronze Alloy Composition · ternary-basic · javascript · muix · anyplot.ai";
+const TITLE = "Topsoil Texture · ternary-basic · javascript · muix · anyplot.ai";
 const SUBTITLE = `${rows.length} compositions · grid and ticks every ${Number((LEVEL_SHARE * total).toFixed(2))} ${unit}`;
 
 function TernaryLayer() {
