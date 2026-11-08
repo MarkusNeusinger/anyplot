@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: spectrogram-mel
 created: '2026-08-24T09:19:21Z'
-updated: '2026-11-08T05:47:01Z'
+updated: '2026-11-08T05:51:42Z'
 generated_by: claude-opus-5-5
 adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
 workflow_run: 42451841779
@@ -13,112 +13,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Mel filterbank computed from first principles (HTK mel edges, Slaney area normalisation,
-    Hann-windowed DFT, dB re peak with a 70 dB floor); note fundamentals and harmonics
-    land at the expected Hz
-  - Y ticks sit exactly on mel band edges and are formatted back to Hz, so the axis
-    itself shows the mel warping (14 → 273 → 627 → … → 7,833)
-  - 'Idiomatic v9 composition: ChartsContainer with linear axes plus custom SVG layers
-    drawn through useXScale / useYScale / useDrawingArea, staying in community @mui/x-charts'
-  - Colour scale built from the t.seq Imprint stops, all chrome threaded through theme
-    tokens, skipAnimation set
+  - 'Builds the mel-spectrogram from first principles in the browser: Hann-windowed
+    STFT, HTK mel filterbank with Slaney area normalisation and dB relative to the
+    peak, all derived from the sample records (sample rate is computed from the time
+    column, not typed)'
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with custom SVG children that
+    read useXScale/useYScale/useDrawingArea, so the mel cells and the colorbar share
+    the chart''s own scales and drawing area'
+  - The y axis is linear in mel with tickInterval at every eighth band edge and a
+    valueFormatter that converts mel back to Hz, so the labels (14, 273, 627 … 7,833
+    Hz) bunch toward the top exactly as a mel axis should
+  - 'Colorbar is a hand-placed Imprint seq gradient (#009E73 to #4467A3) aligned exactly
+    to the plot height, labelled ''Power (dB re peak)'' with true minus signs; data
+    colors are identical in both themes and all chrome uses ink/inkSoft tokens'
+  - A sung C-major arpeggio with three harmonics, vibrato and a breathy onset gives
+    a readable rising staircase of fundamentals and overtones (261/523/785 Hz, then
+    E4, G4, C5) against a quiet noise floor
+  - Subtitle states sample count, sample rate, band count, FFT size and hop — a clear
+    secondary hierarchy under the mandated title
   weaknesses:
-  - 'VQ-01 (both): tick labels at 15 px and axis titles at 16 px on the 2000 px-wide
-    CSS canvas shrink to about 3 px in the 400 px thumbnail → tick labels about 18
-    px (+3 px), axis titles about 20 px (+4 px). Likely cause: tickLabelStyle.fontSize:
-    15 / labelStyle.fontSize: 16 on both axes and fontSize={14} on the colour-bar
-    ticks.'
-  - 'Suggestion: the header says muix 7.29.1 while the harness pins @mui/x-charts
-    9.16; align it.'
-  - 'Suggestion: v9''s ContinuousColorLegend with a colorMap could replace the hand-drawn
-    gradient colour bar.'
+  - 'Suggestion: a higher noise-floor clamp (e.g. a 60 dB range) would push more of
+    the quiet background to the green end and let the weaker third harmonics separate
+    further from it.'
+  - 'Suggestion: MUI X''s ChartsTooltip or a hover readout of time, band frequency
+    and dB per cell would add value in the interactive HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: dark bold title "spectrogram-mel · javascript · muix · anyplot.ai", soft-ink parameter subtitle, x axis "Time (s)" 0.2–2.2, y axis "Frequency (Hz, mel-scaled)" with Hz labels at every 8th mel band edge (14 … 7,833), right-hand colour bar 0 to −70 dB labelled "Power (dB re peak)". All readable.
-      Data: fully tiled 64-band × ~93-frame heatmap in imprint_seq (#009E73 at −70 dB → #4467A3 at 0 dB); four 0.6 s notes, each with fundamental + two harmonics as blue bands stepping upward; faint onset column at t≈0.
+      Background: warm off-white #FAF8F1 page around the plot; the plot area is fully tiled by mel cells.
+      Chrome: bold title "spectrogram-mel · javascript · muix · anyplot.ai" centred at top with an inkSoft subtitle (38,400 samples at 16,000 Hz · 64 mel bands up to 8,000 Hz · FFT 1024, hop 400 (25 ms per frame)); x axis "Time (s)" with ticks 0.2–2.2; y axis "Frequency (Hz, mel-scaled)" with Hz labels 14, 273, 627, 1,110, 1,768, 2,665, 3,889, 5,558, 7,833 at mel band edges (spacing compresses toward the top); right-side colorbar 0 to −70 labelled "Power (dB re peak)". All text dark and readable, no clipping.
+      Data: Imprint seq ramp — quiet noise floor in brand green #009E73, energy toward blue #4467A3. Four notes at 0–0.6, 0.6–1.2, 1.2–1.8, 1.8–2.4 s each show a fundamental plus two harmonics as horizontal blue bands, stepping upward (C4, E4, G4, C5); a faint darker left edge marks the breathy onset. Cells tile contiguously.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, tick labels, axis titles and colour-bar labels in light ink / light soft ink; no dark-on-dark.
-      Data: heatmap cells and colour-bar gradient identical to the light render.
+      Background: warm near-black #1A1A17 page.
+      Chrome: title, subtitle, tick labels, axis titles and colorbar labels in light ink/inkSoft — all readable, no dark-on-dark text; axis lines light.
+      Data: mel cells and colorbar gradient identical to the light render (same green → blue ramp); only the chrome flipped. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Readable in both themes at full size; 15 px tick labels shrink to
-          ~3 px in the 400 px thumbnail (defect line)
+        passed: true
+        comment: Title 26 px, ticks 18 px, axis titles 20 px set explicitly; readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions
+        comment: No text collisions; colorbar labels clear of the bar and plot
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Contiguous cells, harmonics clearly visible
+        comment: Harmonic bands clearly visible against the noise floor; colorbar
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential ramp, monotone, CVD-safe
+        comment: Green→blue Imprint seq ramp with a luminance step; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, colour bar inside canvas
+        comment: 3200x1800; plot fills the canvas, colorbar aligned to the plot height,
+          balanced axis fonts
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s), Frequency (Hz, mel-scaled), Power (dB re peak)
+        comment: Time (s), Frequency (Hz, mel-scaled), Power (dB re peak) — descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq from t.seq, correct backgrounds, both themes correct
+        comment: 'Continuous data uses imprint_seq from t.seq; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Parameter subtitle in soft ink under the title adds a typographic
-          hierarchy beyond the baseline
+        passed: true
+        comment: 'Beyond baseline: weighted title over an informative parameter subtitle,
+          true minus signs on colorbar ticks'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: crispEdges tiling with sub-pixel overlap, no seams; colour-bar 10
-          dB ticks aligned to plot top and bottom
+        comment: 'Beyond baseline: gridless crispEdges tiling, colorbar exactly matched
+          to the drawing-area height with its own tick marks'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        comment: Arpeggio chosen so fundamentals and harmonics step up note by note
+          — a readable progression the eye follows left to right
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mel-spectrogram heatmap
+        comment: Mel-spectrogram heatmap of time × mel band
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: dB scale, sequential map, dB colour bar, time in s, mel y axis with
-          Hz labels at band edges; all good-version bullets met
+        comment: dB scale, sequential colormap, colorbar in dB, time in s, mel axis
+          with Hz labels at band edges, contiguous cells, harmonics stand out — all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bands centred on filter centres, frames centred on window centres,
-          image fully tiled
+        comment: Each cell at its frame centre time and band mel; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; colour bar labelled in dB
+        comment: Title in mandated format; colorbar labelled; no categorical legend
+          needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -158,20 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Harmonics, note onsets/steps, onset noise, quiet background all visible
+        comment: Harmonics, note onsets, vibrato and noise floor shown — mel compression
+          visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sung C-major arpeggio with harmonics and vibrato
+        comment: Sung C-major arpeggio at 16 kHz — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 kHz, 64 mels, 70 dB range; checked C4 fundamental ~262 Hz below
-          273 Hz edge and C5 3rd harmonic ~1,570 Hz below 1,768 Hz
+        comment: 'Checked: bands at ~261/523/785 Hz for C4 and ~523/1046/1569 Hz for
+          C5 on the axis; top edge 7,833 Hz below Nyquist 8,000 Hz; 70 dB range'
     code_quality:
       score: 10
       max: 10
@@ -181,64 +193,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script plus the React layer components muix requires
+        comment: Module-level pipeline; MelCells and Colorbar are the React children
+          needed to call the MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All four imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Written-out DFT/filterbank allowed by the muix Computation line
+        comment: Written-out DFT/filterbank allowed by the library prompt's Computation
+          line; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, v9 ChartsContainer, skipAnimation
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          current v9 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: ChartsContainer composition with axis config, valueFormatter and
-          tickInterval for band edges
+        passed: true
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis and axis
+          configs (tickLabelStyle, labelStyle, sized height/width)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Custom layers via useXScale/useYScale/useDrawingArea hooks
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale/useDrawingArea hooks to draw custom marks and
+          a colorbar in chart coordinates; tickInterval array plus valueFormatter
+          for mel→Hz
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T05:44:23Z'
+  rendered_at: '2026-11-08T05:48:57Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
-  - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
-  - spectral-analysis
-  - normalization
+  - fft
+  - binning
   styling:
   - custom-colormap
   - minimal-chrome
