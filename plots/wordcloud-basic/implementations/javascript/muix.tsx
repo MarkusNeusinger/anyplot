@@ -1,7 +1,7 @@
 // anyplot.ai
 // wordcloud-basic: Basic Word Cloud
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-08-04
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 85/100 | Updated: 2026-11-08
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
