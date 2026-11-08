@@ -1,190 +1,211 @@
 // anyplot.ai
 // eye-diagram-basic: Signal Integrity Eye Diagram
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-18
-//# anyplot-orientation: landscape
-
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Seeded LCG for reproducible data generation
-let _s = 42;
-function rand(): number {
-  _s = (Math.imul(1664525, _s) + 1013904223) >>> 0;
-  return _s / 0x100000000;
-}
-function randn(): number {
-  const u = rand() || 1e-10;
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
-}
+// Constants
+const TIME_BINS = 100; // density cells across the time window
+const VOLTAGE_BINS = 56; // density cells across the voltage range
+const DENSITY_LABEL = "Traces per cell (log scale)";
+const TITLE = "eye-diagram-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_W = 150;
 
-// NRZ eye diagram: 300 overlaid traces, each 2 UI long, 200 samples per trace
-const N_TRACES = 300;
-const N_SAMPLES = 200;
+// Columns: set these to your data's column names
+const TIME = "Time (UI)"; // role: time
+const VOLTAGE = "Voltage (V)"; // role: voltage
+const TRACE = "Trace"; // role: trace_id
 
-function sigm(x: number): number {
-  return 1 / (1 + Math.exp(-12 * x));
-}
-
-// Generate raw trace points: sigmoid transitions + random jitter + Gaussian noise
-const rawPts: Array<{ x: number; y: number }> = [];
-for (let i = 0; i < N_TRACES; i++) {
-  const b0 = rand() > 0.5 ? 1 : 0;
-  const b1 = rand() > 0.5 ? 1 : 0;
-  const b2 = rand() > 0.5 ? 1 : 0;
-  const j0 = randn() * 0.03;
-  const j1 = randn() * 0.03;
-  for (let s = 0; s < N_SAMPLES; s++) {
-    const time = (s / (N_SAMPLES - 1)) * 2;
-    const voltage =
-      b0 +
-      (b1 - b0) * sigm(time - j0) +
-      (b2 - b1) * sigm(time - 1 - j1) +
-      randn() * 0.05;
-    rawPts.push({ x: time, y: voltage });
-  }
-}
-
-// Bin all trace points into a 2D density grid (time × voltage)
-const TB = 60;
-const VB = 36;
-const V0 = -0.2;
-const V1 = 1.2;
-const grid = new Int32Array(TB * VB);
-for (const p of rawPts) {
-  if (p.y < V0 || p.y > V1) continue;
-  const ti = Math.min(Math.floor((p.x / 2) * TB), TB - 1);
-  const vi = Math.min(Math.floor(((p.y - V0) / (V1 - V0)) * VB), VB - 1);
-  if (ti >= 0 && vi >= 0) grid[ti * VB + vi]++;
-}
-
-// Convert non-zero cells to scatter data with log-density for color mapping
-const eyeData: Array<{ id: number; x: number; y: number; z: number }> = [];
-let maxZ = 0;
-for (let ti = 0; ti < TB; ti++) {
-  for (let vi = 0; vi < VB; vi++) {
-    const d = grid[ti * VB + vi];
-    if (d > 0) {
-      const z = Math.log(d + 1);
-      if (z > maxZ) maxZ = z;
-      eyeData.push({
-        id: ti * VB + vi,
-        x: ((ti + 0.5) / TB) * 2,
-        y: V0 + ((vi + 0.5) / VB) * (V1 - V0),
-        z,
-      });
+// Data: replace this block with your own records, one object per row
+// 300 overlaid 2-UI windows of a simulated NRZ bit stream, bit edges at 0, 1 and 2 UI: sigmoid band-limited edges,
+// Gaussian timing jitter (sigma 3 % of a UI) and additive noise (sigma 5 % of the 1 V swing)
+const data = (() => {
+  let state = 42;
+  const rand = () => {
+    state = (Math.imul(1664525, state) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+  const randn = () => {
+    const u = rand() || 1e-10;
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
+  };
+  const edge = (x: number) => 1 / (1 + Math.exp(-12 * x));
+  const rows: { [TIME]: number; [VOLTAGE]: number; [TRACE]: number }[] = [];
+  for (let trace = 1; trace <= 300; trace++) {
+    const b0 = rand() > 0.5 ? 1 : 0;
+    const b1 = rand() > 0.5 ? 1 : 0;
+    const b2 = rand() > 0.5 ? 1 : 0;
+    const b3 = rand() > 0.5 ? 1 : 0;
+    const j0 = randn() * 0.03;
+    const j1 = randn() * 0.03;
+    const j2 = randn() * 0.03;
+    for (let s = 0; s < 200; s++) {
+      const time = (s / 199) * 2;
+      const voltage =
+        b0 +
+        (b1 - b0) * edge(time - j0) +
+        (b2 - b1) * edge(time - 1 - j1) +
+        (b3 - b2) * edge(time - 2 - j2) +
+        randn() * 0.05;
+      rows.push({ [TIME]: time, [VOLTAGE]: voltage, [TRACE]: trace });
     }
   }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const samples = data.filter((d) => Number.isFinite(d[TIME]) && Number.isFinite(d[VOLTAGE]));
+const timeMin = samples.reduce((m, d) => Math.min(m, d[TIME]), Infinity);
+const timeMax = samples.reduce((m, d) => Math.max(m, d[TIME]), -Infinity);
+const voltageMin = samples.reduce((m, d) => Math.min(m, d[VOLTAGE]), Infinity);
+const voltageMax = samples.reduce((m, d) => Math.max(m, d[VOLTAGE]), -Infinity);
+const timeStep = (timeMax - timeMin) / TIME_BINS;
+const voltageStep = (voltageMax - voltageMin) / VOLTAGE_BINS;
+
+// Trace density: the number of distinct traces that pass through each time × voltage cell
+const tracesByCell = new Map<number, Set<number>>();
+samples.forEach((d) => {
+  const ti = Math.min(Math.floor((d[TIME] - timeMin) / timeStep), TIME_BINS - 1);
+  const vi = Math.min(Math.floor((d[VOLTAGE] - voltageMin) / voltageStep), VOLTAGE_BINS - 1);
+  const key = ti * VOLTAGE_BINS + vi;
+  const traces = tracesByCell.get(key) ?? new Set<number>();
+  traces.add(d[TRACE]);
+  tracesByCell.set(key, traces);
+});
+const cells = [...tracesByCell].map(([key, traces]) => {
+  const ti = Math.floor(key / VOLTAGE_BINS);
+  const vi = key % VOLTAGE_BINS;
+  return {
+    key,
+    time0: timeMin + ti * timeStep,
+    time1: timeMin + (ti + 1) * timeStep,
+    voltage0: voltageMin + vi * voltageStep,
+    voltage1: voltageMin + (vi + 1) * voltageStep,
+    logCount: Math.log(traces.size),
+  };
+});
+const logCountMax = Math.max(...cells.map((c) => c.logCount));
+const traceCount = new Set(samples.map((d) => d[TRACE])).size;
+const subtitle = `${traceCount} overlaid traces · ${Math.round(samples.length / traceCount)} samples per trace · ${TIME_BINS} × ${VOLTAGE_BINS} density cells`;
+
+function DensityCells() {
+  const xScale = useXScale() as unknown as (v: number) => number;
+  const yScale = useYScale() as unknown as (v: number) => number;
+  const colorScale = useZColorScale() as unknown as (v: number) => string;
+  return (
+    <g>
+      {cells.map((c) => {
+        const x0 = xScale(c.time0);
+        const y1 = yScale(c.voltage1);
+        return (
+          <rect
+            key={c.key}
+            x={x0}
+            y={y1}
+            width={xScale(c.time1) - x0 + 0.5}
+            height={yScale(c.voltage0) - y1 + 0.5}
+            fill={colorScale(c.logCount)}
+          />
+        );
+      })}
+    </g>
+  );
 }
 
-const TITLE_H = 52;
-const COLORBAR_H = 52;
-
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const chartH = H - TITLE_H - COLORBAR_H;
-
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <Box
-      width={W}
-      height={H}
-      sx={{
-        background: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-      <Typography
-        sx={{
-          fontSize: "22px",
-          fontWeight: 500,
-          color: t.ink,
-          px: "32px",
-          pt: "16px",
-          pb: "4px",
-          lineHeight: 1.2,
-          textAlign: "center",
-        }}
-      >
-        eye-diagram-basic · javascript · muix · anyplot.ai
-      </Typography>
-      <ScatterChart
-        width={W}
-        height={chartH}
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
+      </Box>
+      <ChartsDataProvider
+        width={width - LEGEND_W}
+        height={height - TITLE_H}
+        series={[]}
         skipAnimation
-        margin={{ left: 70, right: 40, top: 20, bottom: 60 }}
-        grid={{ vertical: false, horizontal: true }}
-        zAxis={[
-          {
-            id: "density",
-            min: 0,
-            max: maxZ,
-            colorMap: {
-              type: "continuous",
-              min: 0,
-              max: maxZ,
-              color: [t.seq[0], t.seq[1]] as [string, string],
-            },
-          },
-        ]}
-        series={[
-          {
-            data: eyeData,
-            markerSize: 9,
-            zAxisId: "density",
-          },
-        ]}
+        margin={{ top: 12, right: 24, bottom: 20, left: 24 }}
         xAxis={[
           {
-            label: "Time (UI)",
-            min: 0,
-            max: 2,
-            tickNumber: 5,
-            labelStyle: { fontSize: 15, fontWeight: 500, fill: t.ink },
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            scaleType: "linear",
+            min: timeMin,
+            max: timeMax,
+            label: TIME,
+            height: 68,
+            tickNumber: 9,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Voltage (V)",
-            min: V0,
-            max: V1,
-            tickNumber: 7,
-            labelStyle: { fontSize: 15, fontWeight: 500, fill: t.ink },
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            scaleType: "linear",
+            min: voltageMin,
+            max: voltageMax,
+            label: VOLTAGE,
+            width: 56,
+            tickNumber: 8,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-      />
-      {/* Density scale colorbar */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "12px",
-          pb: "14px",
-        }}
+        zAxis={[
+          {
+            colorMap: { type: "continuous", min: 0, max: logCountMax, color: [t.seq[0], t.seq[1]] },
+          },
+        ]}
       >
-        <Typography sx={{ fontSize: "13px", color: t.inkSoft }}>
-          Low density
-        </Typography>
-        <Box
-          sx={{
-            width: 200,
-            height: 14,
-            borderRadius: "3px",
-            background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`,
-          }}
-        />
-        <Typography sx={{ fontSize: "13px", color: t.inkSoft }}>
-          High density
-        </Typography>
-      </Box>
+        <ChartsWrapper
+          legendPosition={{ vertical: "middle", horizontal: "end" }}
+          legendDirection="vertical"
+          sx={{ width, height: height - TITLE_H }}
+        >
+          <Box
+            sx={{
+              gridArea: "legend",
+              width: LEGEND_W,
+              height: 460,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Typography sx={{ fontSize: 15, color: t.ink, textAlign: "center", lineHeight: 1.3, maxWidth: 120, mb: "10px" }}>
+              {DENSITY_LABEL}
+            </Typography>
+            <ContinuousColorLegend
+              direction="vertical"
+              thickness={20}
+              labelPosition="end"
+              minLabel={({ value }) => String(Math.round(Math.exp(Number(value))))}
+              maxLabel={({ value }) => String(Math.round(Math.exp(Number(value))))}
+              sx={{ flex: 1, color: t.inkSoft, fontSize: 14 }}
+            />
+          </Box>
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+            }}
+          >
+            <DensityCells />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </Box>
   );
 }

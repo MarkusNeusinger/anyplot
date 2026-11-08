@@ -2,141 +2,136 @@ library: muix
 language: javascript
 specification_id: stock-event-flags
 created: '2026-08-26T16:13:19Z'
-updated: '2026-08-26T16:35:07Z'
-generated_by: claude-sonnet
-workflow_run: 32986667641
+updated: '2026-11-08T06:05:33Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42453024741
 issue: 3749
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 90
 review:
   strengths:
-  - Custom SVG icons per event type (bar icon for earnings, $ circle for dividends,
-    split arrows, five-point star for news) differentiate categories beyond color
-    alone — CVD-safe by design.
-  - 'Robust flag-placement algorithm: alternating above/below anchors, drawingArea-clamped
-    box positions, and an elbow-routed dashed connector when the box has to be nudged
-    in from the plot edge — no collisions across 8 densely-timed events.'
-  - 'Correct Imprint palette usage: brand green (#009E73) reserved for the price line,
-    event colors drawn from canonical palette positions with a sensible semantic exception
-    (ochre for dividends/money).'
-  - Idiomatic MUI X composition pattern — custom marks drawn via useXScale/useYScale/useDrawingArea
-    against the shared LineChart scale, exactly the documented approach for content
-    outside the community chart surface.
-  - Theme-correct chrome in both renders with identical data colors; only background/grid/text
-    flip as expected.
-  - Explicit font sizing throughout (title auto-shrinks for long strings, axis/tick/legend
-    sizes all set), deterministic LCG-seeded data generation, clean imports.
-  - Compact pill-style legend for event types sits directly under the plot rather
-    than floating isolated.
+  - Each event type gets both a distinct stroked icon (bar chart for earnings, dollar
+    for dividend, star for news, split fork for the stock split) and a distinct Imprint
+    color, carried consistently through flag tab, border, dashed pole, event ring
+    marker and the pill legend
+  - Flags alternate above and below the price and are placed with the drawing-area
+    scale hooks against the price extremes under each flag's span, so no flag covers
+    the price line and none collides with a neighbour in either render
+  - Composes a custom SVG layer as a child of LineChart using useXScale / useYScale
+    / useDrawingArea, so flags share the chart's exact coordinate system and the native
+    line tooltip still works in the HTML
+  - Month ticks via a tickInterval function and a location-aware valueFormatter (month
+    on ticks, full day in the tooltip) - idiomatic MUI X v9 axis configuration
+  - 'Price data is plausible and tied to the events: earnings beats/miss move the
+    close on the day while the ex-dividend dates and the (adjusted) split do not,
+    so the chart reads as a real event-impact study'
+  - All chrome is threaded from ANYPLOT_TOKENS (ink, inkSoft, grid, elevatedBg, pageBg);
+    both themes are fully legible with identical data colors
   weaknesses:
-  - Title font auto-shrinks proportionally for the 78-char prefixed title, landing
-    near ~45% of plot width — noticeably under the ~70-85% typical for the mandated-title
-    format; could size a touch larger for stronger visual presence without risking
-    overflow.
-  - Y_MAX headroom (maxClose + 0.5*range) leaves a sizeable empty band above the highest
-    price that only some flags occupy, giving the chart a slightly top-heavy asymmetric
-    margin versus the tighter bottom padding.
-  - Design is polished and semantically color-coded but stays within standard patterns
-    (palette + custom icons); a stronger visual anchor (e.g., a subtle callout of
-    % price move at each flag) would push it into truly publication-grade territory.
+  - 'VQ-07 (both): the Stock split event type is drawn in #AE3030, the matte-red semantic
+    anchor reserved for bad / loss / error, reached here only by ordinal position
+    although a split carries no negative meaning → a non-semantic Imprint hue such
+    as slot 6 cyan #2ABCCD. Likely cause: color: t.palette[1 + eventTypes.indexOf(type)]
+    walks the palette in order into slot 5.'
+  - 'Suggestion: the area fill runs down to the axis minimum of about 136 rather than
+    to zero; a plain line (area: false) would avoid implying a baseline the price
+    does not have.'
+  - 'Suggestion: tie the Q2 earnings miss to its drop more visibly, e.g. by naming
+    the move in the flag''s detail line ("-7 %"), to strengthen the event-impact reading.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white.
-      Chrome: Title "TechCore Inc. Stock Price · stock-event-flags · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis "Share Price (USD)" rotated on the far left, X-axis "Trading Date" below the plot, both dark and legible. Tick labels ($140-$205, Jan-Nov) in soft dark gray, subtle dashed horizontal gridlines. Pill-shaped legend (Earnings/Dividend/Stock Split/News) centered below the chart.
-      Data: Brand-green (#009E73) price line with a light green area fill beneath it. Eight event flag boxes (white/elevated background, colored left accent bar and border) connected to their exact trading day via a thin dashed pole (plus an elbow segment when nudged off a point) and a small ring marker on the line. Flags alternate above/below the line and use distinct colored icons (blue bar-chart for earnings, ochre $-circle for dividends, lavender arrows for the split, cyan star for news).
-      Legibility verdict: PASS — all title, axis, tick, and flag text is clearly readable against the light background; no light-on-light text found.
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: centered bold title "stock-event-flags · javascript · muix · anyplot.ai" (~31% width) with a soft subtitle "220 trading days, Jan 2, 2024 to Nov 4, 2024 · 8 events"; y-axis "Close (USD)" 140-200 by 5, x-axis "Trading date" with month ticks Jan-Nov; subtle horizontal grid; a row of pill-shaped legend chips at the bottom (News star, Earnings bars, Dividend $, Stock split fork). All text dark and readable.
+      Data: brand-green #009E73 close line with a faint green area fill; 8 flag cards (elevated background, colored left tab and border, icon, bold label, soft "type · date" detail) alternating above/below the price with dashed poles to page-filled ring markers on the price at the event date. News lavender, Earnings blue, Dividend ochre, Stock split matte red. No flag covers the price line or another flag.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/gray, fully legible against the dark surface. Gridlines remain subtle dashed lines, visible but unobtrusive. Legend pills use a dark elevated background with light text.
-      Data: Price line and area fill are the identical brand-green (#009E73) as the light render — confirmed unchanged. Event flag boxes keep their identical colored borders/icons (blue, ochre, lavender, cyan); box fill uses the dark elevated surface with light-colored event-label text, and the event sub-label (type · date) in a lighter gray.
-      Legibility verdict: PASS — no dark-on-dark failures; all flag text, axis ticks, and title remain clearly visible against the near-black background.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles and ticks in light ink, grid lines subtle but visible, flag cards and legend chips on the dark elevated surface with light text; no dark-on-dark text anywhere.
+      Data: identical colors to the light render (green line, lavender/blue/ochre/red event colors); area fill reads as a dark green tint; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title auto-shrinks
-          but lands under the typical proportion for the prefixed mandated title (~45%
-          vs ~70-85% expected)
+        comment: Explicit sizes (title 22, flags 15/14, ticks 14, axis titles 16 CSS
+          px); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Flag boxes are collision-clamped to the drawing area; no text overlaps
-          other text or data across all 8 events
+        comment: No text collisions; flags clear of price line and of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2.5px line, 5px ring markers, and 16px icons are all clearly visible
-          at the sparse 220-point density
+        comment: 2.5 px line, ring markers, dashed poles and legend icons visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct icon shapes accompany every color so no event type relies
-          on hue alone; good contrast throughout
+        comment: Event types double-encoded by icon and color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart, title band, and legend band fill the canvas with balanced
-          margins; legend sits directly under the plot
+        comment: 3200x1800; balanced layout, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Share Price (USD)" and "Trading Date" are descriptive with units
-          where applicable'
+        comment: Close (USD), Trading date
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Price line is #009E73; event colors are canonical Imprint palette
-          positions with a sensible semantic exception (ochre for dividends); backgrounds
-          and chrome are theme-correct in both renders'
+        comment: 'First series #009E73, correct backgrounds; Stock split lands on
+          the matte-red semantic anchor by ordinal position (defect line)'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom icons and semantic color mapping clearly exceed library defaults,
-          though it stops short of fully publication-grade polish
+        comment: Flag cards with colored tab, icon, bold label + soft detail line,
+          subtitle with context and pill legend chips - typography and hierarchy beyond
+          baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle dashed horizontal-only grid, low-opacity axis line, generous
-          whitespace; axis line not fully removed
+        comment: Page-filled ring markers at event points, faint area tint, consistent
+          card radii and gaps, month-only ticks
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Alternating flags with dashed poles make the event-to-price correlation
-          immediately legible (e.g. Q2 miss vs. the visible dip, Q4 beat vs. the year-high)
+        comment: Event-driven price jumps visible right under their flags; subtitle
+          frames the window; no further chosen focal point
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line/area price chart with flag-style event annotations, exactly
-          as specified
+        comment: Price line with event flags
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alternating flag heights, distinct icons/colors per type, dashed
-          connector lines to exact dates all present; optional OHLC candlesticks and
-          highlighted background regions are explicitly optional in the spec
+        comment: Alternating flags, dashed poles, distinct icons and colors, short
+          labels; hover via native line tooltip; optional background regions not drawn
+          (no deduction)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, price on Y, all 220 trading days and 8 events visible
+        comment: Close at data values on every date; flags only placed, not data marks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches "{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai"; legend labels match the four event types
+        comment: Correct title format; legend chips name event types
     data_quality:
       score: 15
       max: 15
@@ -178,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers earnings beats AND a miss, two dividends, a split, and a news
-          event — both positive and negative price shocks represented
+        comment: 4 event types, 8 events, flags above and below, events bunched and
+          spread
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible technology-company stock scenario, neutral topic
+        comment: Tech share with earnings, ex-dividends, split and product launch
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices, dividend amount, and split ratio are all realistic for a
-          large-cap tech stock; split correctly treated as already price-adjusted
+        comment: Close 148-189 USD, $0.24 dividend, 220 trading days and 8 events
+          within spec range
     code_quality:
       score: 10
       max: 10
@@ -202,63 +195,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Component functions are the idiomatic MUI X/React structure, not
-          over-engineered
+        comment: Flat script; EventFlags child component is required to use chart
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, the three scale/drawing hooks, Box, and Typography
-          — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering; complexity matches the custom-overlay
-          requirement
+        comment: Appropriate complexity for collision-free flag placement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, harness-mounted default export, current API
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses the documented ChartContainer/LineChart composition pattern
-          for marks outside the community surface
+        comment: LineChart composition with children and drawing-area/scale hooks,
+          axis width/height bands, sx class overrides
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale/useDrawingArea composition hooks for a fully
-          custom annotation layer are distinctive to MUI X's React model — hard to
-          replicate as cleanly in other libraries
+        comment: Custom SVG layer via useXScale/useYScale/useDrawingArea, tickInterval
+          function and location-aware valueFormatter
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:02:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
