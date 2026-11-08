@@ -15,7 +15,7 @@
   field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
   hygiene; then the turn's caps (`TURN_CAPS`, counted from the turn's allowed calls, so a refused
-  call never counts): one `plot_pipeline` call per invocation (the "one repair round" bound),
+  call never counts): one `plot_pipeline` call per turn (the "one repair round" bound),
   two `prepare_data`, two `generate_data`, three `query_data` and `MAX_DATA_CODE_CALLS` (2)
   `run_data_code` calls, each refusal with a fixed `message` (`CAP_MESSAGE`). `run_data_code`'s `code`
   (at most `MAX_DATA_CODE_CHARS`, a `source_language` of a fixed set) is exempt from the
