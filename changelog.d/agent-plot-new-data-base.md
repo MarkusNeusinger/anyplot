@@ -10,3 +10,4 @@
   asked for. The plot's `new_data` says which, the card's label names it
   (`new data on v3`), and `.start_over()` stands beside the button whenever
   the library has a plot. The usage telemetry counts the base per run.
+  (#12834)
