@@ -2,133 +2,189 @@
 // line-retention-cohort: User Retention Curve by Cohort
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 89/100 | Created: 2026-06-20
-//# anyplot-orientation: landscape
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { LinePlot } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Deterministic LCG — reproducible cohort noise without a seeded global RNG
-function makeLcg(seed) {
-  let s = seed >>> 0;
-  return () => {
+// Constants
+const TARGET = 20; // benchmark retention in percent
+const Y_DOMAIN_MAX = 100; // retention runs from 0 to 100 percent
+const Y_HEAD_SHARE = 0.03; // headroom so the 100 % starts keep their full stroke
+const WIDTH_OLDEST = 1.75; // older cohorts draw thinner and fainter, the newest at full weight
+const WIDTH_NEWEST = 3.25;
+const OPACITY_OLDEST = 0.75;
+
+// Columns: set these to your data's column names
+const WEEK = "Weeks since signup"; // role: time_period
+const RETENTION = "Retained users (%)"; // role: retention_rate
+const COHORT = "Signup cohort"; // role: cohort
+const COHORT_SIZE = "Cohort size (users)"; // role: cohort_size
+
+// Data: replace this block with your own records, one object per row
+// A SaaS product's five monthly signup cohorts, tracked weekly for 12 weeks; newer cohorts retain better.
+const data = (() => {
+  let s = 42 >>> 0;
+  const rand = () => {
     s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
     return s / 4294967296;
   };
-}
-
-// SaaS product: 5 monthly signup cohorts tracked weekly for 12 weeks
-const COHORTS = [
-  { label: "Jan 2025", size: 1245 },
-  { label: "Feb 2025", size: 1089 },
-  { label: "Mar 2025", size: 1312 },
-  { label: "Apr 2025", size:  987 },
-  { label: "May 2025", size: 1567 },
-];
-
-const WEEKS = Array.from({ length: 12 }, (_, i) => i);
-
-// Exponential decay toward a long-term retention floor, with small realistic jitter
-function buildCurve(rng, floor) {
-  return WEEKS.map((w) => {
-    if (w === 0) return 100;
-    const smooth = floor + (100 - floor) * Math.exp(-0.45 * w);
-    const jitter = (rng() - 0.5) * 1.6;
-    return Math.round(Math.max(floor - 2, smooth + jitter) * 10) / 10;
+  const cohorts = [
+    ["Jan 2025", 1245],
+    ["Feb 2025", 1089],
+    ["Mar 2025", 1312],
+    ["Apr 2025", 987],
+    ["May 2025", 1567],
+  ];
+  return cohorts.flatMap(([label, size], i) => {
+    const floor = 17 + i * 3.5;
+    return Array.from({ length: 12 }, (_, w) => {
+      if (w === 0) return { [COHORT]: label, [COHORT_SIZE]: size, [WEEK]: 0, [RETENTION]: 100 };
+      const smooth = floor + (100 - floor) * Math.exp(-0.45 * w);
+      const jitter = (rand() - 0.5) * 1.6;
+      return { [COHORT]: label, [COHORT_SIZE]: size, [WEEK]: w, [RETENTION]: Math.round(Math.max(floor - 2, smooth + jitter) * 10) / 10 };
+    });
   });
-}
+})();
 
-const rng = makeLcg(42);
-// Newer cohorts retain better — product improving month over month
-const retentionData = COHORTS.map((_, i) => buildCurve(rng, 17 + i * 3.5));
+// Plot: reads only data and the constants above
+const cohorts = [...new Set(data.map((d) => d[COHORT]))];
+const weeks = [...new Set(data.map((d) => d[WEEK]))].sort((a, b) => a - b);
 
-// Visual hierarchy: older cohorts fade back, newer stand out
-const LINE_WIDTHS   = [1.5, 1.75, 2.0, 2.25, 2.75];
-const LINE_OPACITIES = [0.45, 0.6, 0.75, 0.875, 1.0];
+// Recency from the signup period in each cohort label ("Jan 2025"); labels that are not
+// dates fall back to their order of appearance.
+const parsed = cohorts.map((c) => Date.parse(`1 ${c}`));
+const signupKey = parsed.every(Number.isFinite) ? parsed : cohorts.map((_, i) => i);
+const lines = cohorts.map((cohort, i) => {
+  const rows = data.filter((d) => d[COHORT] === cohort);
+  const rank = signupKey.filter((k) => k < signupKey[i]).length; // 0 = oldest signup
+  const recency = cohorts.length > 1 ? rank / (cohorts.length - 1) : 1;
+  return {
+    id: `cohort-${i}`,
+    label: `${cohort} (n = ${rows[0][COHORT_SIZE].toLocaleString("en-US")})`,
+    color: t.palette[i],
+    size: rows[0][COHORT_SIZE],
+    width: WIDTH_OLDEST + (WIDTH_NEWEST - WIDTH_OLDEST) * recency,
+    opacity: OPACITY_OLDEST + (1 - OPACITY_OLDEST) * recency,
+    values: weeks.map((w) => rows.find((d) => d[WEEK] === w)?.[RETENTION] ?? null),
+  };
+});
+const finals = lines.map((l) => l.values.filter((v) => v != null).at(-1));
+const unit = RETENTION.match(/\(([^)]+)\)/)?.[1] ?? "";
 
-// Imprint palette: first series (#009E73) through position 5 via t.palette
-const SERIES = COHORTS.map((c, i) => ({
-  id: `cohort-${i}`,
-  data: retentionData[i],
-  label: `${c.label}  (n = ${c.size.toLocaleString()})`,
-  color: t.palette[i],
-  showMark: false,
-  curve: "monotoneX",
-}));
+const TITLE = "line-retention-cohort · javascript · muix · anyplot.ai";
+const SUBTITLE = `${cohorts.length} cohorts · ${lines.reduce((s, l) => s + l.size, 0).toLocaleString("en-US")} users · ${weeks.length} observations each · last-period retention ${Math.min(...finals).toFixed(1)}${unit} to ${Math.max(...finals).toFixed(1)}${unit}`;
+const HEADER_H = 80;
+const LEGEND_H = 44;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const titleHeight = 52;
+
   return (
-    <Box sx={{ width, height, display: "flex", flexDirection: "column", pt: "16px" }}>
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-          mb: "4px",
-          fontFamily: "inherit",
-        }}
-      >
-        line-retention-cohort · javascript · muix · anyplot.ai
-      </Typography>
-      <LineChart
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 100px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
+      <ChartsDataProvider
         width={width}
-        height={height - titleHeight}
+        height={height - HEADER_H - LEGEND_H}
+        margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
         skipAnimation
-        series={SERIES}
-        xAxis={[{
-          data: WEEKS,
-          label: "Weeks since signup",
-          tickMinStep: 1,
-          labelStyle: { fontSize: 16, fill: t.inkSoft },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          disableLine: true,
-          disableTicks: true,
-        }]}
-        yAxis={[{
-          min: 0,
-          max: 100,
-          label: "Retained users (%)",
-          labelStyle: { fontSize: 16, fill: t.inkSoft },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          tickMinStep: 10,
-          disableLine: true,
-          disableTicks: true,
-        }]}
-        grid={{ horizontal: true }}
-        margin={{ top: 60, right: 240, bottom: 80, left: 90 }}
-        sx={{
-          "& .MuiLineElement-series-cohort-0": { strokeWidth: LINE_WIDTHS[0], opacity: LINE_OPACITIES[0] },
-          "& .MuiLineElement-series-cohort-1": { strokeWidth: LINE_WIDTHS[1], opacity: LINE_OPACITIES[1] },
-          "& .MuiLineElement-series-cohort-2": { strokeWidth: LINE_WIDTHS[2], opacity: LINE_OPACITIES[2] },
-          "& .MuiLineElement-series-cohort-3": { strokeWidth: LINE_WIDTHS[3], opacity: LINE_OPACITIES[3] },
-          "& .MuiLineElement-series-cohort-4": { strokeWidth: LINE_WIDTHS[4], opacity: LINE_OPACITIES[4] },
-          "& .MuiChartsGrid-line": { opacity: 0.22, strokeDasharray: "3 3" },
-        }}
-        slotProps={{
-          legend: {
-            position: { vertical: "middle", horizontal: "right" },
-            direction: "column",
-            padding: { left: 16, top: 0 },
-            itemMarkWidth: 20,
-            itemMarkHeight: 3,
+        series={lines.map((line) => ({
+          type: "line",
+          id: line.id,
+          data: line.values,
+          label: line.label,
+          color: line.color,
+          curve: "monotoneX",
+          showMark: false,
+          labelMarkType: "line",
+          valueFormatter: (v: number | null) => (v == null ? "" : `${v.toFixed(1)}${unit}`),
+        }))}
+        xAxis={[
+          {
+            data: weeks,
+            scaleType: "linear",
+            min: weeks[0],
+            max: weeks[weeks.length - 1],
+            tickInterval: weeks,
+            valueFormatter: (v: number) => `${v}`,
+            label: WEEK,
+            height: 64,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
-        }}
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            max: Y_DOMAIN_MAX * (1 + Y_HEAD_SHARE),
+            tickNumber: 11,
+            label: RETENTION,
+            width: 72,
+            disableLine: true,
+            disableTicks: true,
+            valueFormatter: (v: number) => `${v}${unit}`,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
       >
-        <ChartsReferenceLine
-          y={20}
-          label="20% retention target"
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
-          labelAlign="end"
-        />
-      </LineChart>
-    </Box>
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "end" }} legendDirection="horizontal">
+          <ChartsLegend
+            sx={{
+              fontSize: 16,
+              color: t.ink,
+              columnGap: 3,
+              pr: 5,
+              "& .MuiChartsLegend-mark": { width: 28 },
+              // Each swatch carries its line's width and opacity, so the legend explains the recency encoding
+              ...Object.fromEntries(
+                lines.map((line) => [
+                  `& .MuiChartsLegend-item[data-series="${line.id}"] .MuiChartsLegend-mark path`,
+                  { strokeWidth: line.width, strokeOpacity: line.opacity },
+                ]),
+              ),
+            }}
+          />
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+              ...Object.fromEntries(
+                lines.map((line) => [
+                  `& .MuiLineChart-line[data-series="${line.id}"]`,
+                  { strokeWidth: line.width, strokeOpacity: line.opacity },
+                ]),
+              ),
+            }}
+          >
+            <ChartsGrid horizontal />
+            {/* The target line sits behind the curves */}
+            <ChartsReferenceLine
+              y={TARGET}
+              label={`Target ${TARGET}${unit}`}
+              labelAlign="start"
+              spacing={{ x: 12, y: 8 }}
+              lineStyle={{ stroke: t.inkSoft, strokeDasharray: "7 5", strokeWidth: 1.75 }}
+              labelStyle={{ fontSize: 15, fill: t.ink }}
+            />
+            <LinePlot skipAnimation />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
