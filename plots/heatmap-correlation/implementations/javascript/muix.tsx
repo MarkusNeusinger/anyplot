@@ -3,196 +3,189 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-08-18
 //# anyplot-orientation: square
-
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
-const tokens = window.ANYPLOT_TOKENS;
+const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) — portfolio diversification example ---
-const variables = ["Equities", "Bonds", "Real Estate", "Commodities", "Gold", "Cash"];
-const correlationMatrix = [
-  [1.0, -0.35, 0.55, 0.2, -0.1, -0.05],
-  [-0.35, 1.0, 0.15, -0.2, 0.3, 0.1],
-  [0.55, 0.15, 1.0, 0.25, 0.05, -0.15],
-  [0.2, -0.2, 0.25, 1.0, 0.65, -0.1],
-  [-0.1, 0.3, 0.05, 0.65, 1.0, 0.2],
-  [-0.05, 0.1, -0.15, -0.1, 0.2, 1.0],
+// Constants
+const R_MIN = -1; // the colour bar spans the full correlation range
+const R_MAX = 1;
+const COLORBAR_TICKS = [-1, -0.5, 0, 0.5, 1];
+const TITLE = "heatmap-correlation · javascript · muix · anyplot.ai";
+const TITLE_H = 92;
+const Y_AXIS_W = 130;
+const X_AXIS_H = 48;
+const COLORBAR_AREA_W = 150;
+const DIV_RGB = t.div.map((hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+
+// Columns: set these to your data's column names
+const ASSET = "Asset class"; // role: variables
+const CORRELATION = "Correlation (Pearson r)"; // role: correlation_matrix
+
+// Data: replace this block with your own records, one row of the square matrix per object,
+// keyed by the row's name and one column per variable
+// Correlations of monthly returns across six asset classes in a diversified portfolio
+const data = [
+  { [ASSET]: "Equities", Equities: 1.0, Bonds: -0.35, "Real Estate": 0.55, Commodities: 0.2, Gold: -0.1, Cash: -0.05 },
+  { [ASSET]: "Bonds", Equities: -0.35, Bonds: 1.0, "Real Estate": 0.15, Commodities: -0.2, Gold: 0.3, Cash: 0.1 },
+  { [ASSET]: "Real Estate", Equities: 0.55, Bonds: 0.15, "Real Estate": 1.0, Commodities: 0.25, Gold: 0.05, Cash: -0.15 },
+  { [ASSET]: "Commodities", Equities: 0.2, Bonds: -0.2, "Real Estate": 0.25, Commodities: 1.0, Gold: 0.65, Cash: -0.1 },
+  { [ASSET]: "Gold", Equities: -0.1, Bonds: 0.3, "Real Estate": 0.05, Commodities: 0.65, Gold: 1.0, Cash: 0.2 },
+  { [ASSET]: "Cash", Equities: -0.05, Bonds: 0.1, "Real Estate": -0.15, Commodities: -0.1, Gold: 0.2, Cash: 1.0 },
 ];
 
-// Mask the strict upper triangle — a symmetric matrix repeats every
-// off-diagonal value, so only the diagonal and lower triangle carry ink.
-const points = [];
-for (let row = 0; row < variables.length; row += 1) {
-  for (let col = 0; col <= row; col += 1) {
-    points.push({
-      id: `${row}-${col}`,
-      x: variables[col],
-      y: variables[row],
-      z: correlationMatrix[row][col],
-    });
-  }
-}
+// Plot: reads only data and the constants above
+// The variable list comes from the row labels and the column keys, in order of first appearance
+const variables = [
+  ...new Set([...data.map((d) => String(d[ASSET])), ...data.flatMap((d) => Object.keys(d).filter((k) => k !== ASSET))]),
+];
+const rowOf = new Map(data.map((d) => [String(d[ASSET]), d]));
 
-// --- Diverging Imprint color scale (imprint_div, theme-adaptive midpoint) ---
-function mixHex(hexA, hexB, ratio) {
-  const a = parseInt(hexA.slice(1), 16);
-  const b = parseInt(hexB.slice(1), 16);
-  const channel = (shift) => {
-    const av = (a >> shift) & 255;
-    const bv = (b >> shift) & 255;
-    return Math.round(av + (bv - av) * ratio);
-  };
-  return `#${[16, 8, 0].map((shift) => channel(shift).toString(16).padStart(2, "0")).join("")}`;
-}
+// The matrix is symmetric: show the diagonal and the lower triangle, mask the mirrored upper triangle
+const cells = variables.flatMap((row, i) =>
+  variables.slice(0, i + 1).map((col) => ({ key: `${row}|${col}`, row, col, r: Number(rowOf.get(row)?.[col]) })),
+);
+const offDiagonal = cells.filter((c) => c.row !== c.col && Number.isFinite(c.r));
+const strongest = offDiagonal.reduce((best, c) => (Math.abs(c.r) > Math.abs(best.r) ? c : best), offDiagonal[0]);
+const subtitle = `${variables.length} × ${variables.length} matrix, lower triangle shown (the upper one mirrors it) · strongest pair: ${strongest.row} – ${strongest.col}, r = ${strongest.r.toFixed(2)}`;
 
-// `t` arrives pre-normalized to [0, 1] by the zAxis colorMap's scaleSequential
-// (from the -1..1 domain below) — 0 is the red end, 0.5 the neutral midpoint.
-function divergingColor(t) {
-  const [low, mid, high] = tokens.div;
-  return t <= 0.5 ? mixHex(low, mid, t / 0.5) : mixHex(mid, high, (t - 0.5) / 0.5);
-}
-
-function relativeLuminance(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = ((n >> 16) & 255) / 255;
-  const g = ((n >> 8) & 255) / 255;
-  const b = (n & 255) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-// Custom marker: filled square cells (matrix entries) instead of the default
-// circles, each annotated with its correlation value to 2 decimal places.
-function CorrelationCell(props) {
-  const { series, xScale, yScale, colorGetter, color } = props;
-  const cellWidth = xScale.bandwidth();
-  const cellHeight = yScale.bandwidth();
-  const fontSize = Math.round(Math.min(cellWidth, cellHeight) * 0.22);
-
+function CorrelationLayer() {
+  const xScale = useXScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const colorScale = useZColorScale() as unknown as (v: number) => string;
+  const { left, top, width, height } = useDrawingArea();
+  const cellW = xScale.bandwidth();
+  const cellH = yScale.bandwidth();
+  const barX = left + width + 36;
+  const barW = 22;
   return (
     <g>
-      {series.data.map((point, i) => {
-        const x0 = xScale(point.x) ?? 0;
-        const y0 = yScale(point.y) ?? 0;
-        const fill = colorGetter ? colorGetter(i) : color;
-        const textFill = relativeLuminance(fill) > 0.5 ? "#1A1A17" : "#F0EFE8";
+      <defs>
+        <linearGradient id="correlation-colorbar" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={t.div[0]} />
+          <stop offset="50%" stopColor={t.div[1]} />
+          <stop offset="100%" stopColor={t.div[2]} />
+        </linearGradient>
+      </defs>
+      {cells
+        .filter((c) => Number.isFinite(c.r))
+        .map((c) => {
+          const fill = colorScale(c.r);
+          const [r, g, b] = (fill.match(/\d+/g) ?? []).map(Number);
+          const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+          return (
+            <g key={c.key}>
+              <rect x={xScale(c.col)} y={yScale(c.row)} width={cellW} height={cellH} fill={fill} stroke={t.grid} strokeWidth={1} />
+              <text
+                x={xScale(c.col) + cellW / 2}
+                y={yScale(c.row) + cellH / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={24}
+                fontWeight={600}
+                fill={luminance > 0.5 ? "#1A1A17" : "#FAF8F1"}
+              >
+                {c.r.toFixed(2)}
+              </text>
+            </g>
+          );
+        })}
+      <rect x={barX} y={top} width={barW} height={height} fill="url(#correlation-colorbar)" stroke={t.inkSoft} strokeWidth={1} />
+      {COLORBAR_TICKS.map((tick) => {
+        const ty = top + height * (1 - (tick - R_MIN) / (R_MAX - R_MIN));
         return (
-          <g key={point.id}>
-            <rect x={x0} y={y0} width={cellWidth} height={cellHeight} fill={fill} />
-            <text
-              x={x0 + cellWidth / 2}
-              y={y0 + cellHeight / 2}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={fontSize}
-              fontFamily="inherit"
-              fill={textFill}
-            >
-              {point.z.toFixed(2)}
+          <g key={tick}>
+            <line x1={barX + barW} x2={barX + barW + 6} y1={ty} y2={ty} stroke={t.inkSoft} strokeWidth={1} />
+            <text x={barX + barW + 10} y={ty} fontSize={14} fill={t.inkSoft} dominantBaseline="central">
+              {tick.toFixed(1)}
             </text>
           </g>
         );
       })}
+      <text
+        x={barX + barW + 66}
+        y={top + height / 2}
+        fontSize={16}
+        fill={t.ink}
+        textAnchor="middle"
+        transform={`rotate(-90, ${barX + barW + 66}, ${top + height / 2})`}
+      >
+        {CORRELATION}
+      </text>
     </g>
   );
 }
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_HEIGHT = 80;
-  const RIGHT_BUFFER = 40; // room for the legend's max-value label at the true edge
-  const TOP_MARGIN = 70;
-  const LEFT_MARGIN = 160;
-  const RIGHT_MARGIN = 20;
-  const LEGEND_SPACE = 70;
-
-  const chartWidth = width - RIGHT_BUFFER;
-  const chartHeight = height - TITLE_HEIGHT;
-
+  const chartH = height - TITLE_H;
+  // Square cells: the matrix is a square of the smaller available side, centred vertically
+  const availW = width - 16 - Y_AXIS_W - COLORBAR_AREA_W;
+  const availH = chartH - 32 - X_AXIS_H;
+  const side = Math.min(availW, availH);
   return (
-    <Box sx={{ width, height, bgcolor: tokens.pageBg, display: "flex", flexDirection: "column" }}>
-      <Typography
-        sx={{
-          color: tokens.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-          pt: "16px",
-          height: TITLE_HEIGHT,
-          fontFamily: "inherit",
-        }}
-      >
-        heatmap-correlation · javascript · muix · anyplot.ai
-      </Typography>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "flex-start" }}>
-        <ScatterChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          disableVoronoi
-          series={[
-            {
-              id: "correlation",
-              type: "scatter",
-              data: points,
-              label: "Correlation",
-              xAxisId: "col",
-              yAxisId: "row",
-              zAxisId: "corr",
-            },
-          ]}
-          xAxis={[
-            {
-              id: "col",
-              scaleType: "band",
-              data: variables,
-              categoryGapRatio: 0.08,
-              tickLabelStyle: { fontSize: 16, fill: tokens.inkSoft },
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
-          yAxis={[
-            {
-              id: "row",
-              scaleType: "band",
-              data: variables,
-              categoryGapRatio: 0.08,
-              tickLabelStyle: { fontSize: 16, fill: tokens.inkSoft },
-              disableTicks: true,
-              disableLine: true,
-            },
-          ]}
-          zAxis={[
-            {
-              id: "corr",
-              min: -1,
-              max: 1,
-              colorMap: { type: "continuous", min: -1, max: 1, color: divergingColor },
-            },
-          ]}
-          topAxis="col"
-          bottomAxis={null}
-          leftAxis="row"
-          rightAxis={null}
-          margin={{ top: TOP_MARGIN, right: RIGHT_MARGIN, bottom: LEGEND_SPACE, left: LEFT_MARGIN }}
-          slots={{ scatter: CorrelationCell }}
-          slotProps={{ legend: { hidden: true } }}
-        >
-          <ContinuousColorLegend
-            axisId="corr"
-            axisDirection="z"
-            position={{ horizontal: "right", vertical: "bottom" }}
-            direction="row"
-            length="50%"
-            thickness={14}
-            labelStyle={{ fontSize: 14, fill: tokens.inkSoft, fontFamily: "inherit" }}
-          />
-        </ScatterChart>
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", px: "24px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
       </Box>
+      <ChartsContainer
+        width={width}
+        height={chartH}
+        series={[]}
+        skipAnimation
+        margin={{
+          top: 16 + (availH - side) / 2,
+          bottom: 16 + (availH - side) / 2,
+          left: 16,
+          right: COLORBAR_AREA_W + availW - side,
+        }}
+        xAxis={[
+          {
+            scaleType: "band",
+            data: variables,
+            height: X_AXIS_H,
+            categoryGapRatio: 0.04,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: variables,
+            width: Y_AXIS_W,
+            categoryGapRatio: 0.04,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
+          },
+        ]}
+        zAxis={[
+          {
+            colorMap: {
+              type: "continuous",
+              min: R_MIN,
+              max: R_MAX,
+              // Three-stop Imprint diverging ramp: red at −1, the page colour at 0, blue at +1
+              color: (f: number) => {
+                const [from, to, share] = f < 0.5 ? [DIV_RGB[0], DIV_RGB[1], f * 2] : [DIV_RGB[1], DIV_RGB[2], f * 2 - 1];
+                return `rgb(${from.map((c: number, i: number) => Math.round(c + (to[i] - c) * share)).join(", ")})`;
+              },
+            },
+          },
+        ]}
+      >
+        <CorrelationLayer />
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
     </Box>
   );
 }
