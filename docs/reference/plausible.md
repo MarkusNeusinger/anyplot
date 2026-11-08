@@ -336,11 +336,12 @@ Since 2026-11-08 `$is_headless_client` carries one more entry, which matches
 - Edge and Opera add `Edg/` or `OPR/` after `Safari/537.36`, so the anchored
   tail keeps them out.
 - Windows 7 and 8.1 send `Windows NT 6.x`.
-- Chrome 140 and later is not matched.
+- Chrome 140 and later is not matched. Brave and Vivaldi send Chrome's user
+  agent unchanged, so only their old builds fall under the entry.
 
-The entry costs real visitors on Windows 10 with a pinned old Chrome: about
-2 % of visits (37 of 2,069 in the 28 days before 2026-11-08) are no longer
-counted. `tests/unit/api/test_analytics_shield.py` holds the map against the
+The entry costs real visitors on Windows 10 or 11 (both send
+`Windows NT 10.0`) with a pinned old Chrome: about 2 % of visits (37 of 2,069
+in the 28 days before 2026-11-08) are no longer counted. `tests/unit/api/test_analytics_shield.py` holds the map against the
 farm's user agents and against current browsers.
 
 To review the entry:

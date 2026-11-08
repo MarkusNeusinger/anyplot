@@ -51,19 +51,23 @@ def _map_entries(variable: str) -> list[tuple[str, str]]:
 
 
 def is_headless_client(user_agent: str) -> bool:
-    """Evaluate `$is_headless_client` for one user agent the way nginx does."""
-    default = "0"
-    for key, value in _map_entries("is_headless_client"):
-        if key == "default":
-            default = value
-        elif key.startswith("~*"):
+    """Evaluate `$is_headless_client` for one user agent the way nginx does.
+
+    nginx looks up the exact-string keys first and only then tries the regexes, in the
+    order they appear; the first regex that matches wins.
+    """
+    entries = _map_entries("is_headless_client")
+    default = dict(entries).get("default", "0")
+    exact = {key: value for key, value in entries if key != "default" and not key.startswith("~")}
+    if user_agent in exact:
+        return exact[user_agent] == "1"
+    for key, value in entries:
+        if key.startswith("~*"):
             if re.search(key[2:], user_agent, re.IGNORECASE):
                 return value == "1"
         elif key.startswith("~"):
             if re.search(key[1:], user_agent):
                 return value == "1"
-        elif key == user_agent:
-            return value == "1"
     return default == "1"
 
 
@@ -73,6 +77,9 @@ def is_headless_client(user_agent: str) -> bool:
         WIN10_CHROME.format("109.0.0.0", "537.36"),
         WIN10_CHROME.format("103.0.0.0", "537.36"),
         WIN10_CHROME.format("138.0.0.0", "537.36"),
+        # The ceiling's two ends: the entry spans Chrome 100 to 139.
+        WIN10_CHROME.format("100.0.0.0", "537.36"),
+        WIN10_CHROME.format("139.0.0.0", "537.36"),
         # A full build number instead of the reduced 0.0.0 tail.
         WIN10_CHROME.format("104.0.5112.81", "537.36"),
         # The truncated variant some of the pool sends.
@@ -91,6 +98,7 @@ def test_the_crawler_farm_is_shielded(user_agent):
     [
         WIN10_CHROME.format("156.0.0.0", "537.36"),
         WIN10_CHROME.format("140.0.0.0", "537.36"),
+        WIN10_CHROME.format("99.0.0.0", "537.36"),
         WIN10_CHROME.format("156.0.0.0", "537.36 Edg/156.0.0.0"),
         WIN10_CHROME.format("120.0.0.0", "537.36 Edg/120.0.0.0"),
         WIN10_CHROME.format("120.0.0.0", "537.36 OPR/106.0.0.0"),
