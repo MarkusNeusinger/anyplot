@@ -157,9 +157,9 @@ export default function Chart() {
         series={series}
         margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
         sx={{
-          '& .MuiLineChart-area[data-series^="line-"]': { fillOpacity: 0.85 },
+          '& .MuiLineChart-area[data-series^="line-"]': { fillOpacity: 0.85, filter: "none" },
           '& .MuiLineChart-line[data-series^="line-"]': { strokeWidth: 2.5 },
-          '& .MuiLineChart-area[data-series^="band-width-"]': { fillOpacity: BAND_OPACITY },
+          '& .MuiLineChart-area[data-series^="band-width-"]': { fillOpacity: BAND_OPACITY, filter: "none" },
           '& .MuiLineChart-line[data-series^="band-"]': { display: "none" },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
