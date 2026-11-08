@@ -2,170 +2,159 @@ library: matplotlib
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:53:23Z'
-updated: '2026-05-15T05:51:45Z'
+updated: '2026-11-08T20:47:19Z'
 generated_by: claude-haiku
-workflow_run: 25901961490
+adopted_from: main (473023d4fa28ccfd1f6a8ce6f718720f5313a7e0)
+workflow_run: 42520975014
 issue: 3069
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 85
 review:
   strengths:
-  - Excellent theme-aware styling with proper light/dark color adaptation
-  - Clean KISS code structure with no unnecessary functions or classes
-  - Data is realistic, geographically diverse (54-84 year range across continents),
-    and factually accurate
-  - Readable at full resolution with explicitly-set font sizes (24pt title, 18pt label,
-    14pt ticks)
-  - No overlapping elements; marker sizing scaled appropriately by data value
-  - 'Subtle visual refinement: grid alpha 0.05, spines hidden, generous whitespace'
+  - Real Natural Earth country outlines projected to Robinson, with the projection's
+    curved frame drawn as an elevated ocean surface, fit for a world extent in both
+    themes
+  - A single PolyCollection driven by array/cmap/norm with a masked array and imprint_seq.with_extremes(bad=NO_DATA)
+    renders missing countries (Greenland, Western Sahara, Somaliland, Falklands) in
+    a neutral gray that never reads as a low value, explained by a 'No data' swatch
+  - Country boundaries drawn in the page color at 0.25 pt separate similar neighbours
+    (Europe, West Africa) in both themes without overpowering the fills
+  - 'Realistic, plausible life-expectancy values for about 170 countries: the sub-Saharan
+    low (Nigeria, CAR around 54) against the high of Japan, Spain and Italy (84) reads
+    directly from the fills'
+  - The colour bar carries a descriptive label with units and theme-correct ticks
+    and outline; the data colours are identical in light and dark
   weaknesses:
-  - 'Chart type deviation: spec requires choropleth (shaded regions), implementation
-    provides bubble map/symbolic map with point markers - fundamentally different
-    visualization approach'
-  - 'Non-approved colormap: RdYlGn (diverging) used for sequential data; style guide
-    recommends viridis/cividis (sequential) or BrBG (diverging with meaningful center)'
-  - 'Text contrast suboptimal on light-colored markers in dark render: light text
-    (#F0EFE8) on yellow markers creates low contrast; text color strategy doesn''t
-    account for colormap hues'
-  - 'Missing geographic features: no map projection (spec mentions Robinson/Albers),
-    no region boundaries, no cartographic elements that define true choropleth'
-  - 'Generic design: no custom palette beyond colormap choice, no intentional visual
-    hierarchy beyond size variation'
+  - 'VQ-05 (both): the map fills only about 64 % of the canvas height, with roughly
+    12 % empty band above the title and about 15 % empty below the map frame, so the
+    world reads small for a 3200×1800 canvas → enlarge the map axes to about 0.92
+    of the figure height (+0.08) and move the title up to keep a normal gap. Likely
+    cause: fig.add_axes([0.01, 0.05, 0.86, 0.84]) with the ylim padding and suptitle
+    y=0.875.'
+  - 'Suggestion: in the dark render the no-data gray #3A3A35 sits close to the elevated
+    ocean #242420; a slightly lighter no-data tone would make Greenland stand out
+    more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at approximately #FAF8F1 (correctly themed). Title "World Life Expectancy · choropleth-basic · matplotlib · anyplot.ai" rendered in dark ink (#1A1A17) and clearly legible against the light background.
-      Chrome: All text elements (title, colorbar label "Life Expectancy (years)", colorbar tick marks at 14pt) are clearly readable. Geographic axes hidden appropriately for cleaner appearance.
-      Data: Hexagonal markers representing 35 countries positioned by latitude/longitude coordinates, colored by RdYlGn colormap gradient (purple ~54 to yellow ~84). Country abbreviations (3-letter codes) displayed at fontsize=9. Marker sizes scaled by life expectancy (range 80-320). Grid subtle with very low alpha (0.05).
-      Legibility verdict: PASS - all elements readable, no text-on-text conflicts
+      Background: warm off-white #FAF8F1 page; the Robinson-shaped map frame is filled with the elevated #FFFDF6 surface and outlined in INK_SOFT.
+      Chrome: title "World Life Expectancy · choropleth-basic · python · matplotlib · anyplot.ai" in dark ink, about 70 % of the width; vertical colour bar at right labelled "Life expectancy at birth (years)" with ticks 55–80 in dark gray; "No data" swatch and label at lower left of the frame. All readable.
+      Data: countries filled with imprint_seq from #009E73 (low, sub-Saharan Africa) to #4467A3 (high, Western Europe, Japan, Australia, Canada); thin page-coloured boundaries; Greenland, Western Sahara, Somaliland and the Falklands in gray #D9D6CC; Antarctica omitted.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at approximately #1A1A17 (correctly themed). Title rendered in light ink (#F0EFE8) with good contrast against dark background.
-      Chrome: Title, colorbar label, and tick labels all clearly visible in light colors. Theme adaptation correctly applied throughout.
-      Data: Identical data colors to light render (RdYlGn gradient preserved correctly - only chrome flips, not data colors). Country codes visible across all markers. Text color strategy uses INK (#F0EFE8) for high values (≥70) and INK_SOFT (#B8B7B0) for low values (<70).
-      Legibility verdict: PASS - all text readable, though contrast is suboptimal on light-colored markers (light text on yellow backgrounds) but still acceptable
+      Background: warm near-black #1A1A17 page; map frame filled with #242420 and outlined in light gray.
+      Chrome: title in light ink, colour bar label in light ink, ticks and "No data" label in light gray #B8B7B0; no dark-on-dark text.
+      Data: identical fills to the light render; boundaries now drawn in the dark page colour; no-data regions in #3A3A35, visible but low-contrast against the frame.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: All text readable but relying on good fortune with colormap colors;
-          light text on yellow markers in dark render creates suboptimal contrast;
-          9pt country codes are small but legible
+        comment: Title ~10 pt, colour bar label 9 pt, ticks and legend 8 pt; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all country codes clearly separated
+        comment: No text collisions; colour bar and no-data legend clear of the map
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizing well-adapted to 35 data points; hexagons clearly visible
-          with edge colors for definition
+        comment: Fills, boundaries and the no-data swatch visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdYlGn provides good perceptual uniformity and luminance variation;
-          colorblind-safe beyond hue
+        comment: Green-to-blue ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas; margins balanced; colorbar positioned
-          naturally on right
+        comment: Map fills only ~64 % of the canvas height with large empty bands
+          top and bottom (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and properly formatted; colorbar label includes
-          units (years)
+        comment: Colour bar label 'Life expectancy at birth (years)' with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'ISSUE: RdYlGn is diverging colormap used for sequential data; style
-          guide recommends viridis/cividis for sequential or BrBG for true diverging.
-          Data colors preserved identically between light/dark (correct); backgrounds
-          theme-correct (#FAF8F1 light, #1A1A17 dark); chrome properly adaptive'
+        passed: true
+        comment: imprint_seq for continuous values; correct page backgrounds and chrome
+          in both themes
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Looks like well-configured library default; RdYlGn is interesting
-          but non-standard choice; no custom palette beyond colormap; no intentional
-          design hierarchy
+        comment: Robinson frame as an elevated ocean surface with a thin ink outline,
+          page-coloured borders that flip with the theme
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid subtle with 0.05 alpha; axes hidden; markers have edge colors;
-          good whitespace. Some refinement visible but mostly defaults
+        comment: Thin outlined colour bar, frameless no-data swatch tucked into the
+          frame corner; vertical whitespace not tuned
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through marker size (larger = higher life expectancy)
-          guides viewer to disparities. Colormap gradient helps identify patterns.
-          Some storytelling through emphasis but not exceptional
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the spec
     spec_compliance:
-      score: 9
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: 'MAJOR ISSUE: Spec requires choropleth (shaded geographic regions/boundaries).
-          Implementation provides bubble map/symbolic map (point markers positioned
-          by coordinates). Fundamentally different chart types. Addresses same data
-          concept (regional variation) but wrong visualization approach'
+        passed: true
+        comment: Basic choropleth, single shaded layer, no extra layers
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: 'Color legend present (✓). Missing: shaded region boundaries, map
-          projection (Robinson/Albers mentioned), cartographic context'
+        passed: true
+        comment: 'Colour bar with value range, Robinson projection, visible but quiet
+          boundaries, gray no-data regions: all Notes and good-version bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = longitude, Y = latitude, Color = life expectancy, Size = life
-          expectancy. All data visible. Mapping correct
+        comment: Each country shaded by its own value via ISO alpha-3 join; norm spans
+          data min-max
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''World Life Expectancy · choropleth-basic · matplotlib ·
-          anyplot.ai'' (correct format). Colorbar labeled ''Life Expectancy (years)''
-          with units'
+        comment: Title format correct with descriptive prefix; legend labels for readers
     data_quality:
       score: 15
       max: 15
@@ -175,24 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data range 54-84 years shows full variation. Countries span continents
-          (Americas, Europe, Africa, Asia, Oceania). Mix of developed and developing
-          nations. Demonstrates all aspects of the data type
+        comment: Shows a clear regional pattern, a full value range and missing-data
+          regions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Life expectancy is real-world, neutral, comprehensible scenario.
-          Factually plausible values (Canada 82, Nigeria 54, Japan 84). No controversial
-          or sensitive content
+        comment: Real-world life expectancy at birth, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values fall within realistic global life expectancy range. Proportions
-          and relationships accurate for real-world data
+        comment: 'Checked: values 53.9 (CAF) to 84.0 (JPN, ITA, ESP), plausible for
+          the domain; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -202,34 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme setup → data dict → plot creation →
-          save. No unnecessary functions or classes'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; no randomization; fully deterministic and reproducible
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Imports: os, sys (path shadowing fix), matplotlib.pyplot, numpy.
-          All used. No bloat'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Marker size scaling is straightforward. No over-engineering.
-          No fake functionality
+        comment: Robinson table written out, but no projection library (cartopy, pyproj)
+          is available; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Correct filename format. DPI 300, bbox_inches='tight'
+        comment: Saves plot-{THEME}.png at default bbox, current API
     library_mastery:
       score: 6
       max: 10
@@ -239,27 +223,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses fig, ax = plt.subplots(). Proper ax methods (scatter, text,
-          grid). Theme-adaptive styling. Good patterns. Could leverage Basemap/Cartopy
-          for true choropleth but external dependency
+        comment: PolyCollection with array/cmap/norm and fig.colorbar on a ScalarMappable
+          collection, Axes methods throughout
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses hex markers, custom Normalize with RdYlGn colormap, ScalarMappable
-          for colorbar, geographic coordinate system. Some distinctive choices but
-          fairly standard overall
+        passed: false
+        comment: Colormap.with_extremes(bad=...) with a masked array for no-data regions
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-08T20:44:17Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
-  - manual-ticks
+  - custom-legend
+  - manual-projection
   patterns:
-  - data-generation
+  - dataset-loading
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
-  - alpha-blending
+  - publication-ready
+  - minimal-chrome
