@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Länge (cm),Messwert\n20,3.2\n30,8.2\n40,13.2\n50,7.2\n60,12.2\n70,6.2\n80,11.2\n90,5.2\n100,10.2\n20,4.2\n30,9.2\n40,3.2\n50,8.2\n60,13.2\n70,7.2\n80,12.2\n90,6.2\n100,11.2\n20,5.2\n30,10.2\n40,4.2\n50,9.2\n60,3.2\n70,8.2\n80,13.2\n90,7.2\n100,12.2\n",
+  "message": "Zeichne pro Länge nur einen Punkt, den Mittelwert der drei Messungen.",
+  "expected_operations": [
+    {"op": "aggregate", "by": ["Länge (cm)"], "column": "Messwert", "how": "mean"}
+  ],
+  "locale": "de",
+  "spec_id": "line-styled",
+  "tags": ["aggregate", "mean", "repeated_key"]
+}

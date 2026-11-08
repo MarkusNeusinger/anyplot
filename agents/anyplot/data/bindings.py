@@ -54,6 +54,11 @@ bindings the code makes are a suggestion and take each column once: the defaults
 stays once (`y1` and `y2` on one column draw the same series twice, which is never meant): the page
 moves it from the member that held it, and `check_bindings` refuses it. A lower and upper bound pair
 on one column is never inverted, so it carries no warning.
+
+A spec whose plot draws one value per key (`DataRole.key`, `fidelity.KEY_ROLES`: a bar per category, a point per x)
+gets one more warning when the bound key columns repeat in the rows, with the counts (`fidelity.repeated_key`, owner
+decision of 2026-11-08): `x: column 'Length' holds 9 values in 27 rows; ...`. It is a fact of the rows, not of the
+binding, so it changes no default and no carry (`BindingCheck.fit_warnings`).
 """
 
 import itertools
@@ -67,6 +72,7 @@ from core.spec_roles import DataRole, RoleKind
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
 from .bounds import bound_pairs, inverted, inverted_line, ordered
 from .computed import binds_by_name, match_score, window_line, window_rank
+from .fidelity import Held, RepeatedKey, repeated_key
 from .parse import value_like
 from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
@@ -157,13 +163,24 @@ class BindingCheck:
     20-period band); and one per role that takes labels bound to a measurement column of a
     table that is wide for the spec (`sibling_line`: a heatmap's `y` on the numbers of `Mo`);
     and one per lower and upper bound pair whose lower column starts above the largest value
-    of the upper one (`bounds.inverted_line`).
+    of the upper one (`bounds.inverted_line`); and, last, one for a key of the marks that the
+    rows repeat (`repeated_key`, its `RepeatedKey.line`).
     """
 
     complete: bool
     errors: list[str]
     missing_roles: list[str]
     warnings: list[str] = field(default_factory=list)
+    repeated_key: RepeatedKey | None = None
+    """The key of a spec that draws one value per key, when the bound columns repeat it in the rows
+    (`fidelity.repeated_key`); its line is the last of `warnings`."""
+
+    @property
+    def fit_warnings(self) -> list[str]:
+        """`warnings` without the repeated key's line: what the bindings themselves do not fit. A key that repeats is a
+        fact of the rows, which a binding carried to new data keeps (`carry_by_name`)."""
+        repeated = self.repeated_key.line() if self.repeated_key is not None else None
+        return [warning for warning in self.warnings if warning != repeated]
 
 
 @dataclass(frozen=True)
@@ -622,15 +639,16 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
     carried: list[Binding] = []
     # The warnings of the unbound table (an open role whose every column is negative) are no fault of a carry.
     # Each binding is judged with the ones carried before it, so the second role of a lower and upper bound pair
-    # is left behind when the pair would come out inverted on the new data.
-    allowed = set(check_bindings([], roles, profile).warnings)
+    # is left behind when the pair would come out inverted on the new data. A key the new rows repeat is a fact of
+    # the rows, not of the column's meaning: the binding carries, and its warning stands (`fit_warnings`).
+    allowed = set(check_bindings([], roles, profile).fit_warnings)
     for binding in bindings:
         new = target.get(binding.column)
         if new is None:
             continue
         moved = Binding(role=binding.role, column=new)
         check = check_bindings([*carried, moved], roles, profile)
-        if not check.errors and set(check.warnings) <= allowed:
+        if not check.errors and set(check.fit_warnings) <= allowed:
             carried.append(moved)
     if not carried:
         return default_bindings(roles, profile)
@@ -892,7 +910,9 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     unbound non-negative role whose every fitting column that no other role holds has one,
     and a role that takes labels bound to a measurement column of a wide table
     (`label_siblings`, `sibling_line`), and a lower and upper bound pair whose lower column
-    starts above the largest value of the upper one (`bounds.inverted_line`).
+    starts above the largest value of the upper one (`bounds.inverted_line`), and, last, a key
+    of a spec that draws one value per key whose bound columns the rows repeat
+    (`fidelity.repeated_key`, also as `repeated_key`).
     """
     columns = {column.name: column for column in profile.columns}
     siblings = label_siblings(roles, profile)
@@ -903,6 +923,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     members: set[tuple[str, str]] = set()  # (family, column) of every family member: a column once per family
     bound: set[str] = set()
     held: dict[str, ColumnProfile] = {}  # the column of each valid binding, by its role's binding name
+    valid: list[Held] = []  # each valid binding with its role and column, in binding order
     for binding in bindings:
         role = resolve_role(binding.role, roles)
         if role is None:
@@ -930,6 +951,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
             continue
         bound.add(role.name)
         held[binding.role] = column
+        valid.append((binding.role, role, column))
         if column.name in siblings and takes_labels(role):
             warnings.append(sibling_line(binding.role, column.name, siblings))
         if role.non_negative and has_negative(column):
@@ -956,8 +978,32 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
                 f"{role.name}: not bound, because every column that fits it ({names}) has negative values; "
                 "this role needs values of 0 or more"
             )
+    # Judged on the bindings in spec order, so the spec's first key role names the line.
+    order = {role.name: position for position, role in enumerate(roles)}
+    repeated = repeated_key(sorted(valid, key=lambda item: order.get(item[1].name, len(roles))), profile.rows)
+    if repeated is not None:
+        warnings.append(repeated.line())
     missing = [role.name for role in roles if role.required and not role.computed and role.name not in bound]
-    return BindingCheck(complete=not errors and not missing, errors=errors, missing_roles=missing, warnings=warnings)
+    return BindingCheck(
+        complete=not errors and not missing,
+        errors=errors,
+        missing_roles=missing,
+        warnings=warnings,
+        repeated_key=repeated,
+    )
+
+
+def valid_bindings(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Held]:
+    """Each binding `check_bindings` accepts on its own (a known role, a column of the profile its role takes), with
+    its role and its column's profile, in binding order: what `fidelity.left_out_line` counts."""
+    columns = {column.name: column for column in profile.columns}
+    valid: list[Held] = []
+    for binding in bindings:
+        role = resolve_role(binding.role, roles)
+        column = columns.get(binding.column)
+        if role is not None and column is not None and accepts(role, column.dtype):
+            valid.append((binding.role, role, column))
+    return valid
 
 
 def resolve_role(name: str, roles: list[DataRole]) -> DataRole | None:

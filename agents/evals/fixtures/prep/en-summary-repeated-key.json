@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Length,Reading\n10,20.5\n15,27.5\n20,21.5\n25,28.5\n30,22.5\n35,29.5\n40,23.5\n45,30.5\n50,24.5\n10,31.5\n15,25.5\n20,32.5\n25,26.5\n30,20.5\n35,27.5\n40,21.5\n45,28.5\n50,22.5\n10,29.5\n15,23.5\n20,30.5\n25,24.5\n30,31.5\n35,25.5\n40,32.5\n45,26.5\n50,20.5\n",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "line-styled",
+  "tags": [
+    "summary",
+    "no_tool",
+    "repeated_key"
+  ]
+}

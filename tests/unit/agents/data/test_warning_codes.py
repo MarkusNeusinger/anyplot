@@ -6,6 +6,7 @@ from typing import get_args
 import pytest
 
 from agents.anyplot.data.bounds import BoundPair, inverted_line
+from agents.anyplot.data.fidelity import RepeatedKey
 from agents.anyplot.data.parse import (
     AMBIGUOUS_DATE_ORDER,
     HEADERLESS_LIST_WARNING,
@@ -214,10 +215,15 @@ def test_binding_warnings_map_to_codes() -> None:
         ColumnProfile(name="games", dtype="integer", missing=0, unique=3, min=140, max=146),
         ColumnProfile(name="mean", dtype="number", missing=0, unique=3, min=61.5, max=67.2),
     )
-    assert binding_warning_codes([negative, unbound, sibling, pair, "CANARY"]) == [
+    repeated = RepeatedKey(roles=("x",), columns=("Length",), values=9, combinations=9, rows=27).line()
+    crossed = RepeatedKey(
+        roles=("category", "group"), columns=("Subject", "Grade"), values=1, combinations=3, rows=1_200
+    ).line()
+    assert binding_warning_codes([negative, unbound, sibling, pair, repeated, crossed, "CANARY"]) == [
         "bound_pair_inverted",
         "label_sibling",
         "negative_unbound",
         "negative_values",
         "other",
+        "repeated_key",
     ]
