@@ -1,203 +1,156 @@
 // anyplot.ai
 // cartogram-area-distortion: Cartogram with Area Distortion by Data Value
-// Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-08
+// Library: d3 7.9.0 | JavaScript 22.23.4
+// Quality: 82/100 | Updated: 2026-11-08
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-const margin = { top: 130, right: 230, bottom: 60, left: 30 };
+const margin = { top: 130, right: 250, bottom: 50, left: 30 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// US states: name, abbreviation, centroid lon/lat, population 2023 (M), GDP 2022 (B$)
-const states = [
-  { name: "Alabama",        abbr: "AL", lon: -86.7,  lat: 32.8, pop: 5.1,  gdp: 271  },
-  { name: "Alaska",         abbr: "AK", lon: -153.0, lat: 64.2, pop: 0.74, gdp: 61   },
-  { name: "Arizona",        abbr: "AZ", lon: -111.7, lat: 34.3, pop: 7.4,  gdp: 488  },
-  { name: "Arkansas",       abbr: "AR", lon: -92.4,  lat: 34.9, pop: 3.1,  gdp: 155  },
-  { name: "California",     abbr: "CA", lon: -119.7, lat: 37.2, pop: 39.0, gdp: 3890 },
-  { name: "Colorado",       abbr: "CO", lon: -105.5, lat: 39.0, pop: 5.9,  gdp: 498  },
-  { name: "Connecticut",    abbr: "CT", lon: -72.7,  lat: 41.6, pop: 3.6,  gdp: 331  },
-  { name: "Delaware",       abbr: "DE", lon: -75.5,  lat: 39.0, pop: 1.0,  gdp: 91   },
-  { name: "Florida",        abbr: "FL", lon: -81.5,  lat: 27.8, pop: 22.6, gdp: 1460 },
-  { name: "Georgia",        abbr: "GA", lon: -83.4,  lat: 32.7, pop: 11.0, gdp: 743  },
-  { name: "Hawaii",         abbr: "HI", lon: -157.5, lat: 20.3, pop: 1.44, gdp: 96   },
-  { name: "Idaho",          abbr: "ID", lon: -114.5, lat: 44.4, pop: 2.0,  gdp: 110  },
-  { name: "Illinois",       abbr: "IL", lon: -89.2,  lat: 40.1, pop: 12.6, gdp: 1023 },
-  { name: "Indiana",        abbr: "IN", lon: -86.3,  lat: 40.0, pop: 6.9,  gdp: 432  },
-  { name: "Iowa",           abbr: "IA", lon: -93.5,  lat: 42.1, pop: 3.2,  gdp: 229  },
-  { name: "Kansas",         abbr: "KS", lon: -98.4,  lat: 38.5, pop: 2.9,  gdp: 207  },
-  { name: "Kentucky",       abbr: "KY", lon: -84.3,  lat: 37.5, pop: 4.5,  gdp: 263  },
-  { name: "Louisiana",      abbr: "LA", lon: -91.8,  lat: 31.2, pop: 4.6,  gdp: 279  },
-  { name: "Maine",          abbr: "ME", lon: -69.2,  lat: 45.4, pop: 1.4,  gdp: 79   },
-  { name: "Maryland",       abbr: "MD", lon: -76.8,  lat: 39.1, pop: 6.2,  gdp: 511  },
-  { name: "Massachusetts",  abbr: "MA", lon: -71.8,  lat: 42.3, pop: 7.1,  gdp: 709  },
-  { name: "Michigan",       abbr: "MI", lon: -84.5,  lat: 44.3, pop: 10.0, gdp: 634  },
-  { name: "Minnesota",      abbr: "MN", lon: -94.3,  lat: 46.4, pop: 5.7,  gdp: 501  },
-  { name: "Mississippi",    abbr: "MS", lon: -89.7,  lat: 32.7, pop: 3.0,  gdp: 139  },
-  { name: "Missouri",       abbr: "MO", lon: -92.6,  lat: 38.4, pop: 6.2,  gdp: 395  },
-  { name: "Montana",        abbr: "MT", lon: -109.6, lat: 47.0, pop: 1.1,  gdp: 68   },
-  { name: "Nebraska",       abbr: "NE", lon: -99.9,  lat: 41.5, pop: 2.0,  gdp: 163  },
-  { name: "Nevada",         abbr: "NV", lon: -116.7, lat: 39.5, pop: 3.2,  gdp: 244  },
-  { name: "New Hampshire",  abbr: "NH", lon: -71.6,  lat: 43.7, pop: 1.4,  gdp: 109  },
-  { name: "New Jersey",     abbr: "NJ", lon: -74.5,  lat: 40.1, pop: 9.3,  gdp: 748  },
-  { name: "New Mexico",     abbr: "NM", lon: -106.1, lat: 34.5, pop: 2.1,  gdp: 131  },
-  { name: "New York",       abbr: "NY", lon: -75.5,  lat: 42.9, pop: 19.8, gdp: 2053 },
-  { name: "North Carolina", abbr: "NC", lon: -79.4,  lat: 35.6, pop: 10.7, gdp: 714  },
-  { name: "North Dakota",   abbr: "ND", lon: -100.5, lat: 47.5, pop: 0.78, gdp: 71   },
-  { name: "Ohio",           abbr: "OH", lon: -82.8,  lat: 40.4, pop: 11.8, gdp: 838  },
-  { name: "Oklahoma",       abbr: "OK", lon: -97.5,  lat: 35.5, pop: 4.0,  gdp: 239  },
-  { name: "Oregon",         abbr: "OR", lon: -120.5, lat: 43.9, pop: 4.3,  gdp: 347  },
-  { name: "Pennsylvania",   abbr: "PA", lon: -77.2,  lat: 40.6, pop: 13.1, gdp: 913  },
-  { name: "Rhode Island",   abbr: "RI", lon: -71.5,  lat: 41.7, pop: 1.1,  gdp: 79   },
-  { name: "South Carolina", abbr: "SC", lon: -80.9,  lat: 33.8, pop: 5.3,  gdp: 281  },
-  { name: "South Dakota",   abbr: "SD", lon: -100.3, lat: 44.4, pop: 0.91, gdp: 71   },
-  { name: "Tennessee",      abbr: "TN", lon: -86.3,  lat: 35.9, pop: 7.1,  gdp: 481  },
-  { name: "Texas",          abbr: "TX", lon: -99.3,  lat: 31.5, pop: 30.1, gdp: 2355 },
-  { name: "Utah",           abbr: "UT", lon: -111.1, lat: 39.3, pop: 3.4,  gdp: 270  },
-  { name: "Vermont",        abbr: "VT", lon: -72.7,  lat: 44.0, pop: 0.65, gdp: 40   },
-  { name: "Virginia",       abbr: "VA", lon: -79.4,  lat: 37.5, pop: 8.7,  gdp: 704  },
-  { name: "Washington",     abbr: "WA", lon: -120.5, lat: 47.4, pop: 7.9,  gdp: 785  },
-  { name: "West Virginia",  abbr: "WV", lon: -80.6,  lat: 38.6, pop: 1.8,  gdp: 89   },
-  { name: "Wisconsin",      abbr: "WI", lon: -90.0,  lat: 44.6, pop: 5.9,  gdp: 433  },
-  { name: "Wyoming",        abbr: "WY", lon: -107.6, lat: 43.0, pop: 0.58, gdp: 46   },
-  { name: "D.C.",           abbr: "DC", lon: -77.0,  lat: 38.9, pop: 0.69, gdp: 162  },
+// Columns: set these to your data's column names
+const REGION = "State";  // role: region
+const LABEL = "Abbreviation";  // role: label
+const LON = "Longitude";  // role: x (centroid)
+const LAT = "Latitude";  // role: y (centroid)
+const VALUE = "Population (millions)";  // role: value (area)
+const SECONDARY = "GDP per capita (USD)";  // role: color
+
+// Data: replace this block with your own records, one object per row
+// US states + D.C.: centroid, population 2023, GDP per capita 2022
+const data = [
+  { [REGION]: "Alabama",        [LABEL]: "AL", [LON]: -86.7,  [LAT]: 32.8, [VALUE]: 5.1,  [SECONDARY]: 53100  },
+  { [REGION]: "Alaska",         [LABEL]: "AK", [LON]: -153.0, [LAT]: 64.2, [VALUE]: 0.74, [SECONDARY]: 82400  },
+  { [REGION]: "Arizona",        [LABEL]: "AZ", [LON]: -111.7, [LAT]: 34.3, [VALUE]: 7.4,  [SECONDARY]: 65900  },
+  { [REGION]: "Arkansas",       [LABEL]: "AR", [LON]: -92.4,  [LAT]: 34.9, [VALUE]: 3.1,  [SECONDARY]: 50000  },
+  { [REGION]: "California",     [LABEL]: "CA", [LON]: -119.7, [LAT]: 37.2, [VALUE]: 39.0, [SECONDARY]: 99700  },
+  { [REGION]: "Colorado",       [LABEL]: "CO", [LON]: -105.5, [LAT]: 39.0, [VALUE]: 5.9,  [SECONDARY]: 84400  },
+  { [REGION]: "Connecticut",    [LABEL]: "CT", [LON]: -72.7,  [LAT]: 41.6, [VALUE]: 3.6,  [SECONDARY]: 91900  },
+  { [REGION]: "Delaware",       [LABEL]: "DE", [LON]: -75.5,  [LAT]: 39.0, [VALUE]: 1.0,  [SECONDARY]: 91000  },
+  { [REGION]: "Florida",        [LABEL]: "FL", [LON]: -81.5,  [LAT]: 27.8, [VALUE]: 22.6, [SECONDARY]: 64600  },
+  { [REGION]: "Georgia",        [LABEL]: "GA", [LON]: -83.4,  [LAT]: 32.7, [VALUE]: 11.0, [SECONDARY]: 67500  },
+  { [REGION]: "Hawaii",         [LABEL]: "HI", [LON]: -157.5, [LAT]: 20.3, [VALUE]: 1.44, [SECONDARY]: 66700  },
+  { [REGION]: "Idaho",          [LABEL]: "ID", [LON]: -114.5, [LAT]: 44.4, [VALUE]: 2.0,  [SECONDARY]: 55000  },
+  { [REGION]: "Illinois",       [LABEL]: "IL", [LON]: -89.2,  [LAT]: 40.1, [VALUE]: 12.6, [SECONDARY]: 81200  },
+  { [REGION]: "Indiana",        [LABEL]: "IN", [LON]: -86.3,  [LAT]: 40.0, [VALUE]: 6.9,  [SECONDARY]: 62600  },
+  { [REGION]: "Iowa",           [LABEL]: "IA", [LON]: -93.5,  [LAT]: 42.1, [VALUE]: 3.2,  [SECONDARY]: 71600  },
+  { [REGION]: "Kansas",         [LABEL]: "KS", [LON]: -98.4,  [LAT]: 38.5, [VALUE]: 2.9,  [SECONDARY]: 71400  },
+  { [REGION]: "Kentucky",       [LABEL]: "KY", [LON]: -84.3,  [LAT]: 37.5, [VALUE]: 4.5,  [SECONDARY]: 58400  },
+  { [REGION]: "Louisiana",      [LABEL]: "LA", [LON]: -91.8,  [LAT]: 31.2, [VALUE]: 4.6,  [SECONDARY]: 60700  },
+  { [REGION]: "Maine",          [LABEL]: "ME", [LON]: -69.2,  [LAT]: 45.4, [VALUE]: 1.4,  [SECONDARY]: 56400  },
+  { [REGION]: "Maryland",       [LABEL]: "MD", [LON]: -76.8,  [LAT]: 39.1, [VALUE]: 6.2,  [SECONDARY]: 82400  },
+  { [REGION]: "Massachusetts",  [LABEL]: "MA", [LON]: -71.8,  [LAT]: 42.3, [VALUE]: 7.1,  [SECONDARY]: 99900  },
+  { [REGION]: "Michigan",       [LABEL]: "MI", [LON]: -84.5,  [LAT]: 44.3, [VALUE]: 10.0, [SECONDARY]: 63400  },
+  { [REGION]: "Minnesota",      [LABEL]: "MN", [LON]: -94.3,  [LAT]: 46.4, [VALUE]: 5.7,  [SECONDARY]: 87900  },
+  { [REGION]: "Mississippi",    [LABEL]: "MS", [LON]: -89.7,  [LAT]: 32.7, [VALUE]: 3.0,  [SECONDARY]: 46300  },
+  { [REGION]: "Missouri",       [LABEL]: "MO", [LON]: -92.6,  [LAT]: 38.4, [VALUE]: 6.2,  [SECONDARY]: 63700  },
+  { [REGION]: "Montana",        [LABEL]: "MT", [LON]: -109.6, [LAT]: 47.0, [VALUE]: 1.1,  [SECONDARY]: 61800  },
+  { [REGION]: "Nebraska",       [LABEL]: "NE", [LON]: -99.9,  [LAT]: 41.5, [VALUE]: 2.0,  [SECONDARY]: 81500  },
+  { [REGION]: "Nevada",         [LABEL]: "NV", [LON]: -116.7, [LAT]: 39.5, [VALUE]: 3.2,  [SECONDARY]: 76300  },
+  { [REGION]: "New Hampshire",  [LABEL]: "NH", [LON]: -71.6,  [LAT]: 43.7, [VALUE]: 1.4,  [SECONDARY]: 77900  },
+  { [REGION]: "New Jersey",     [LABEL]: "NJ", [LON]: -74.5,  [LAT]: 40.1, [VALUE]: 9.3,  [SECONDARY]: 80400  },
+  { [REGION]: "New Mexico",     [LABEL]: "NM", [LON]: -106.1, [LAT]: 34.5, [VALUE]: 2.1,  [SECONDARY]: 62400  },
+  { [REGION]: "New York",       [LABEL]: "NY", [LON]: -75.5,  [LAT]: 42.9, [VALUE]: 19.8, [SECONDARY]: 103700 },
+  { [REGION]: "North Carolina", [LABEL]: "NC", [LON]: -79.4,  [LAT]: 35.6, [VALUE]: 10.7, [SECONDARY]: 66700  },
+  { [REGION]: "North Dakota",   [LABEL]: "ND", [LON]: -100.5, [LAT]: 47.5, [VALUE]: 0.78, [SECONDARY]: 91000  },
+  { [REGION]: "Ohio",           [LABEL]: "OH", [LON]: -82.8,  [LAT]: 40.4, [VALUE]: 11.8, [SECONDARY]: 71000  },
+  { [REGION]: "Oklahoma",       [LABEL]: "OK", [LON]: -97.5,  [LAT]: 35.5, [VALUE]: 4.0,  [SECONDARY]: 59800  },
+  { [REGION]: "Oregon",         [LABEL]: "OR", [LON]: -120.5, [LAT]: 43.9, [VALUE]: 4.3,  [SECONDARY]: 80700  },
+  { [REGION]: "Pennsylvania",   [LABEL]: "PA", [LON]: -77.2,  [LAT]: 40.6, [VALUE]: 13.1, [SECONDARY]: 69700  },
+  { [REGION]: "Rhode Island",   [LABEL]: "RI", [LON]: -71.5,  [LAT]: 41.7, [VALUE]: 1.1,  [SECONDARY]: 71800  },
+  { [REGION]: "South Carolina", [LABEL]: "SC", [LON]: -80.9,  [LAT]: 33.8, [VALUE]: 5.3,  [SECONDARY]: 53000  },
+  { [REGION]: "South Dakota",   [LABEL]: "SD", [LON]: -100.3, [LAT]: 44.4, [VALUE]: 0.91, [SECONDARY]: 78000  },
+  { [REGION]: "Tennessee",      [LABEL]: "TN", [LON]: -86.3,  [LAT]: 35.9, [VALUE]: 7.1,  [SECONDARY]: 67700  },
+  { [REGION]: "Texas",          [LABEL]: "TX", [LON]: -99.3,  [LAT]: 31.5, [VALUE]: 30.1, [SECONDARY]: 78200  },
+  { [REGION]: "Utah",           [LABEL]: "UT", [LON]: -111.1, [LAT]: 39.3, [VALUE]: 3.4,  [SECONDARY]: 79400  },
+  { [REGION]: "Vermont",        [LABEL]: "VT", [LON]: -72.7,  [LAT]: 44.0, [VALUE]: 0.65, [SECONDARY]: 61500  },
+  { [REGION]: "Virginia",       [LABEL]: "VA", [LON]: -79.4,  [LAT]: 37.5, [VALUE]: 8.7,  [SECONDARY]: 80900  },
+  { [REGION]: "Washington",     [LABEL]: "WA", [LON]: -120.5, [LAT]: 47.4, [VALUE]: 7.9,  [SECONDARY]: 99400  },
+  { [REGION]: "West Virginia",  [LABEL]: "WV", [LON]: -80.6,  [LAT]: 38.6, [VALUE]: 1.8,  [SECONDARY]: 49400  },
+  { [REGION]: "Wisconsin",      [LABEL]: "WI", [LON]: -90.0,  [LAT]: 44.6, [VALUE]: 5.9,  [SECONDARY]: 73400  },
+  { [REGION]: "Wyoming",        [LABEL]: "WY", [LON]: -107.6, [LAT]: 43.0, [VALUE]: 0.58, [SECONDARY]: 79300  },
+  { [REGION]: "D.C.",           [LABEL]: "DC", [LON]: -77.0,  [LAT]: 38.9, [VALUE]: 0.69, [SECONDARY]: 234800 },
 ];
 
-// GDP per capita in USD
-states.forEach(d => { d.gdpPerCapita = (d.gdp / d.pop) * 1000; });
+// Plot: reads only data and the constants above
+const regions = data.filter((d) => d[VALUE] != null);
 
-// AlbersUSA composite projection handles AK + HI insets automatically
+// AlbersUSA composite projection places AK + HI in their conventional insets
 const geoFeatures = {
   type: "FeatureCollection",
-  features: states.map(d => ({
+  features: regions.map((d) => ({
     type: "Feature",
-    geometry: { type: "Point", coordinates: [d.lon, d.lat] },
+    geometry: { type: "Point", coordinates: [d[LON], d[LAT]] },
   })),
 };
 
-const projection = d3.geoAlbersUsa().fitExtent(
-  [[0, 12], [iw, ih]],
-  geoFeatures
-);
+const projection = d3.geoAlbersUsa().fitExtent([[0, 12], [iw, ih]], geoFeatures);
 
-states.forEach(d => {
-  const p = projection([d.lon, d.lat]);
-  d.x = p ? p[0] : iw / 2;
-  d.y = p ? p[1] : ih / 2;
+const nodes = regions.map((d) => {
+  const p = projection([d[LON], d[LAT]]) ?? [iw / 2, ih / 2];
+  return { d, x: p[0], y: p[1], x0: p[0], y0: p[1] };
 });
 
-// Radius scale: area ∝ population (Dorling cartogram style)
-const maxPop = d3.max(states, d => d.pop);
+// Area ∝ value: radius on a square-root scale
 const maxR = 70;
-const rScale = d3.scaleSqrt().domain([0, maxPop]).range([0, maxR]);
+const rScale = d3.scaleSqrt().domain([0, d3.max(regions, (d) => d[VALUE])]).range([0, maxR]);
 
-// Save projected positions as attraction anchors
-states.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
-
-// Force simulation: pull circles toward geographic centroids, repel overlaps
-const sim = d3.forceSimulation(states)
-  .force("attract-x", d3.forceX(d => d.x0).strength(0.65))
-  .force("attract-y", d3.forceY(d => d.y0).strength(0.65))
-  .force("collide", d3.forceCollide(d => rScale(d.pop) + 2).strength(1.0))
+// Dorling layout: pull circles to their centroids, collide to remove overlaps
+const sim = d3.forceSimulation(nodes)
+  .force("attract-x", d3.forceX((n) => n.x0).strength(0.65))
+  .force("attract-y", d3.forceY((n) => n.y0).strength(0.65))
+  .force("collide", d3.forceCollide((n) => rScale(n.d[VALUE]) + 2).strength(1.0))
   .stop();
-
 for (let i = 0; i < 350; i++) sim.tick();
 
-// Color: GDP per capita using Imprint sequential scale (green → blue)
-const gdpPCValues = states.map(d => d.gdpPerCapita);
-const minGdpPC = d3.min(gdpPCValues);
-const maxGdpPC = d3.max(gdpPCValues);
-const colorScale = d3.scaleSequential(
-  d3.interpolateRgbBasis(t.seq)
-).domain([minGdpPC, maxGdpPC]);
+// Color domain ends at the 95th percentile so a single outlier (D.C.) does not
+// flatten the ramp for every other region; values above it clamp to the top stop
+const secValues = regions.map((d) => d[SECONDARY]).filter((v) => v != null);
+const secLo = d3.min(secValues);
+const secHi = d3.quantile(secValues, 0.95);
+const colorScale = d3.scaleSequential(d3.interpolateRgbBasis(t.seq))
+  .domain([secLo, secHi])
+  .clamp(true);
+const fmtK = (v) => `$${Math.round(v / 1000)}k`;
 
-// SVG
-const svg = d3.select("#container")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height);
+const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-const g = svg.append("g")
-  .attr("transform", `translate(${margin.left},${margin.top})`);
+// Larger circles first so smaller neighbours stay on top
+const sorted = [...nodes].sort((a, b) => b.d[VALUE] - a.d[VALUE]);
 
-// Circles — sorted by size descending so small circles render on top
-const sortedStates = [...states].sort((a, b) => b.pop - a.pop);
-
-g.selectAll("circle.state")
-  .data(sortedStates)
+g.selectAll("circle.region")
+  .data(sorted)
   .join("circle")
-  .attr("class", "state")
-  .attr("cx", d => d.x)
-  .attr("cy", d => d.y)
-  .attr("r", d => rScale(d.pop))
-  .attr("fill", d => colorScale(d.gdpPerCapita))
+  .attr("class", "region")
+  .attr("cx", (n) => n.x)
+  .attr("cy", (n) => n.y)
+  .attr("r", (n) => rScale(n.d[VALUE]))
+  .attr("fill", (n) => (n.d[SECONDARY] == null ? t.grid : colorScale(n.d[SECONDARY])))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
-// Abbreviation labels: threshold lowered to 8px; AK always labeled
+// Two letters at 11 px need a radius of about 11 px; smaller circles stay unlabeled
+const minLabelR = 11;
 g.selectAll("text.abbr")
-  .data(states.filter(d => rScale(d.pop) >= 8 || d.abbr === "AK"))
+  .data(sorted.filter((n) => rScale(n.d[VALUE]) >= minLabelR))
   .join("text")
   .attr("class", "abbr")
-  .attr("x", d => d.x)
-  .attr("y", d => d.y)
+  .attr("x", (n) => n.x)
+  .attr("y", (n) => n.y)
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "central")
   .attr("fill", t.pageBg)
-  .style("font-size", d => `${Math.max(9, Math.min(16, rScale(d.pop) * 0.44))}px`)
+  .style("font-size", (n) => `${Math.max(11, Math.min(18, rScale(n.d[VALUE]) * 0.46))}px`)
   .style("font-weight", "700")
   .style("pointer-events", "none")
-  .text(d => d.abbr);
+  .text((n) => n.d[LABEL]);
 
-// --- Geographic reference inset (bottom-right of inner plot) ---
-// Shows states at equal size by actual geographic position — contrast with cartogram
-const insetW = 270, insetH = 155;
-const insetX = iw - insetW - 4;
-const insetY = ih - insetH - 4;
-
-const insetProj = d3.geoAlbersUsa().fitExtent(
-  [[6, 6], [insetW - 6, insetH - 22]],
-  geoFeatures
-);
-
-g.append("rect")
-  .attr("x", insetX)
-  .attr("y", insetY)
-  .attr("width", insetW)
-  .attr("height", insetH)
-  .attr("fill", t.elevatedBg)
-  .attr("stroke", t.grid)
-  .attr("stroke-width", 1)
-  .attr("rx", 4)
-  .attr("opacity", 0.95);
-
-g.append("text")
-  .attr("x", insetX + insetW / 2)
-  .attr("y", insetY + insetH - 5)
-  .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
-  .style("font-style", "italic")
-  .text("Geographic reference (equal-size dots)");
-
-states.forEach(d => {
-  const p = insetProj([d.lon, d.lat]);
-  if (!p) return;
-  g.append("circle")
-    .attr("cx", insetX + p[0])
-    .attr("cy", insetY + p[1])
-    .attr("r", 4)
-    .attr("fill", colorScale(d.gdpPerCapita))
-    .attr("stroke", t.pageBg)
-    .attr("stroke-width", 0.8);
-});
-
-// Title (scaled for length)
+// Title
 const titleStr = "US Population Cartogram · cartogram-area-distortion · javascript · d3 · anyplot.ai";
 const titlePx = Math.round(22 * Math.min(1, 67 / titleStr.length));
-
 svg.append("text")
   .attr("x", width / 2)
   .attr("y", 52)
@@ -207,30 +160,39 @@ svg.append("text")
   .style("font-weight", "600")
   .text(titleStr);
 
-// Subtitle — moved to y=96 to clear WA circle overlap; font bumped to 14px
+// Subtitle sits below the title band so it clears the northernmost circles
 svg.append("text")
   .attr("x", margin.left)
   .attr("y", 96)
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
-  .text("Circle area ∝ population (2023, millions) · Color = GDP per capita (USD, 2022)");
+  .text(`Circle area ∝ ${VALUE.toLowerCase()} · Color = ${SECONDARY}`);
 
-// --- Color legend ---
+// Legend column to the right of the map, so no legend element covers a circle
 const legX = margin.left + iw + 28;
-const legY = margin.top + 24;
-const legH = 190;
+const colW = width - legX - 16;
+const legendTitle = (y, text) =>
+  svg.append("text")
+    .attr("x", legX)
+    .attr("y", y)
+    .attr("fill", t.ink)
+    .style("font-size", "14px")
+    .style("font-weight", "600")
+    .text(text);
+
+// Color legend
+const legY = margin.top + 10;
+const legH = 170;
 const legW = 16;
 
-const defs = svg.append("defs");
-const grad = defs.append("linearGradient")
+const grad = svg.append("defs").append("linearGradient")
   .attr("id", "cleg-grad")
   .attr("x1", "0%").attr("y1", "100%")
   .attr("x2", "0%").attr("y2", "0%");
-
-[0, 0.25, 0.5, 0.75, 1].forEach(s => {
+d3.range(0, 1.0001, 0.25).forEach((s) => {
   grad.append("stop")
     .attr("offset", `${s * 100}%`)
-    .attr("stop-color", colorScale(minGdpPC + s * (maxGdpPC - minGdpPC)));
+    .attr("stop-color", colorScale(secLo + s * (secHi - secLo)));
 });
 
 svg.append("rect")
@@ -241,65 +203,83 @@ svg.append("rect")
   .attr("fill", "url(#cleg-grad)")
   .attr("rx", 2);
 
-const cLegScale = d3.scaleLinear().domain([minGdpPC, maxGdpPC]).range([legH, 0]);
-const cAxis = d3.axisRight(cLegScale)
-  .ticks(5)
-  .tickFormat(d => `$${Math.round(d / 1000)}k`);
-
+const cLegScale = d3.scaleLinear().domain([secLo, secHi]).range([legH, 0]);
 const cAxisG = svg.append("g")
   .attr("transform", `translate(${legX + legW}, ${legY})`)
-  .call(cAxis);
-
+  .call(d3.axisRight(cLegScale).ticks(4).tickFormat(fmtK));
 cAxisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "13px");
 cAxisG.selectAll("line").attr("stroke", t.inkSoft).attr("stroke-opacity", 0.5);
 cAxisG.select(".domain").remove();
 
-svg.append("text")
-  .attr("x", legX)
-  .attr("y", legY - 12)
-  .attr("fill", t.ink)
-  .style("font-size", "14px")
-  .style("font-weight", "600")
-  .text("GDP / capita");
+legendTitle(legY - 12, "GDP / capita");
 
-// --- Size legend ---
-const szLegY = legY + legH + 52;
+const nAbove = secValues.filter((v) => v > secHi).length;
+if (nAbove > 0) {
+  svg.append("text")
+    .attr("x", legX)
+    .attr("y", legY + legH + 22)
+    .attr("fill", t.inkSoft)
+    .style("font-size", "13px")
+    .text(`top color = ${fmtK(secHi)} and above`);
+}
 
-svg.append("text")
-  .attr("x", legX)
-  .attr("y", szLegY - 12)
-  .attr("fill", t.ink)
-  .style("font-size", "14px")
-  .style("font-weight", "600")
-  .text("Population");
+// Size legend: nested circles at round values of the data range
+const szLegY = legY + legH + 72;
+legendTitle(szLegY - 12, "Population");
 
-const szVals = [1, 10, 30];
-const szCx = legX + maxR + 4;
-let szY = szLegY;
-
-szVals.forEach(v => {
+const szMax = d3.max(regions, (d) => d[VALUE]);
+const szVals = [1, 10, 30].filter((v) => v <= szMax);
+const szR = rScale(d3.max(szVals));
+const szCx = legX + szR + 2;
+const szBase = szLegY + 2 * szR;
+szVals.forEach((v) => {
   const r = rScale(v);
-  szY += r;
+  const cy = szBase - r;
   svg.append("circle")
     .attr("cx", szCx)
-    .attr("cy", szY)
+    .attr("cy", cy)
     .attr("r", r)
     .attr("fill", "none")
     .attr("stroke", t.inkSoft)
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "3,2");
   svg.append("line")
-    .attr("x1", szCx + r)
-    .attr("y1", szY)
-    .attr("x2", szCx + r + 6)
-    .attr("y2", szY)
+    .attr("x1", szCx)
+    .attr("y1", cy - r)
+    .attr("x2", szCx + szR + 8)
+    .attr("y2", cy - r)
     .attr("stroke", t.inkSoft)
     .attr("stroke-width", 1);
   svg.append("text")
-    .attr("x", szCx + r + 10)
-    .attr("y", szY + 4)
+    .attr("x", szCx + szR + 12)
+    .attr("y", cy - r + 4)
     .attr("fill", t.inkSoft)
     .style("font-size", "13px")
     .text(`${v}M`);
-  szY += r + 6;
 });
+
+// Reference inset: equal-size dots at true positions, for comparison with the cartogram
+const insetY = szBase + 52;
+// AlbersUSA spans roughly 1.6 : 1, so the box follows that aspect within the free column height
+const insetH = Math.min(height - margin.bottom - insetY + 20, colW * 0.66);
+legendTitle(insetY - 12, "Actual geography");
+
+const inset = svg.append("g").attr("transform", `translate(${legX},${insetY})`);
+inset.append("rect")
+  .attr("width", colW)
+  .attr("height", insetH)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1)
+  .attr("rx", 4);
+
+const insetProj = d3.geoAlbersUsa().fitExtent([[8, 8], [colW - 8, insetH - 8]], geoFeatures);
+inset.selectAll("circle")
+  .data(regions)
+  .join("circle")
+  .attr("cx", (d) => insetProj([d[LON], d[LAT]])?.[0] ?? -99)
+  .attr("cy", (d) => insetProj([d[LON], d[LAT]])?.[1] ?? -99)
+  .attr("r", 4)
+  .attr("fill", (d) => (d[SECONDARY] == null ? t.grid : colorScale(d[SECONDARY])))
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 0.6);
