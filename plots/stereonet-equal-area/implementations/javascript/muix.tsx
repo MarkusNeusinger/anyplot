@@ -19,6 +19,7 @@ const KAMB_MAX_LEVELS = 5; // contour levels are even multiples of sigma, at mos
 const DENSITY_GRID = 80; // density nodes across the net diameter
 const CURVE_STEPS = 120; // points per projected great or small circle
 const NET_LIMIT = 1.15; // drawing extent in primitive radii, room for the perimeter labels
+const PLANE_ARC_OPACITY = 0.15; // each plane's own great circle, faint behind the poles and the bold mean
 const CARDINALS = ["N", "E", "S", "W"];
 
 // Columns: set these to your data's column names
@@ -81,6 +82,20 @@ const poleRows = rows.map((d) => {
   };
 });
 
+// Each plane's own great circle: its lines run from strike to strike, plunging by the
+// apparent dip atan(tan(dip) · cos(trend − dip direction))
+const planeArcs = rows.map((d) => {
+  const dip = (d[DIP] as number) * RAD;
+  const dipDir = (d[DIP_DIRECTION] as number) * RAD;
+  const pts = Array.from({ length: CURVE_STEPS + 1 }, (_, k) => {
+    const trend = dipDir - Math.PI / 2 + (k * Math.PI) / CURVE_STEPS;
+    const apparent = Math.atan(Math.tan(dip) * Math.cos(trend - dipDir));
+    const r = Math.SQRT2 * Math.sin((Math.PI / 2 - apparent) / 2);
+    return { x: r * Math.sin(trend), y: r * Math.cos(trend) };
+  });
+  return { color: t.palette[features.indexOf(d[FEATURE] as string)], pts };
+});
+
 // Mean plane per feature: the normalised sum of its pole axes, each turned to agree with the first
 const meanPlanes = features.map((feature, i) => {
   const vecs = poleRows.filter((p) => p.feature === feature).map((p) => p.vec);
@@ -96,7 +111,6 @@ const meanPlanes = features.map((feature, i) => {
   const plunge = Math.asin((down * sum[2]) / len);
   const dip = Math.PI / 2 - plunge;
   const dipDir = Math.atan2(down * sum[1], down * sum[0]) + Math.PI;
-  // The plane's lines run from strike to strike, plunging by the apparent dip atan(tan(dip) · cos(trend − dip direction))
   const pts = Array.from({ length: CURVE_STEPS + 1 }, (_, k) => {
     const trend = dipDir - Math.PI / 2 + (k * Math.PI) / CURVE_STEPS;
     const apparent = Math.atan(Math.tan(dip) * Math.cos(trend - dipDir));
@@ -135,7 +149,10 @@ for (let deg = NET_STEP_DEG; deg < 180; deg += NET_STEP_DEG) {
   );
 }
 
-// Kamb density (exponential kernel, Vollmer 1995) on a grid over the net, in units of sigma
+// Kamb density (exponential kernel, Vollmer 1995) on a grid over the net, in units of sigma.
+// A node beyond the primitive maps onto the upper hemisphere (the equal-area projection
+// reaches the zenith at radius √2), where the axial density equals that of the antipode
+// just inside the opposite rim, so contours cross the rim and the clip cuts them there.
 const nPoles = poleRows.length;
 const kambK = 2 * (1 + nPoles / KAMB_SIGMA ** 2);
 const kambUnit = Math.sqrt((nPoles * (kambK / 2 - 1)) / kambK ** 2);
@@ -145,8 +162,7 @@ for (let j = 0; j < DENSITY_GRID; j += 1) {
   for (let i = 0; i < DENSITY_GRID; i += 1) {
     const gx = -1 + i * gridStep;
     const gy = -1 + j * gridStep;
-    const r = Math.hypot(gx, gy);
-    if (r > 1) continue;
+    const r = Math.min(Math.hypot(gx, gy), Math.SQRT2);
     const theta = 2 * Math.asin(r / Math.SQRT2);
     const az = Math.atan2(gx, gy);
     const node = [Math.sin(theta) * Math.cos(az), Math.sin(theta) * Math.sin(az), Math.cos(theta)];
@@ -203,7 +219,7 @@ const scatterSeries = features.map((feature, i) => ({
 }));
 
 const TITLE = "stereonet-equal-area · javascript · muix · anyplot.ai";
-const SUBTITLE = `n = ${nPoles} planes · lower-hemisphere equal-area (Schmidt) net · poles with each feature's mean great circle · Kamb contours every ${levelStep}σ`;
+const SUBTITLE = `n = ${nPoles} planes · lower-hemisphere equal-area (Schmidt) net · great circles and poles, each feature's mean bold · Kamb contours every ${levelStep}σ`;
 const HEADER_H = 76;
 const LEGEND_H = 52;
 const MARGIN = 10;
@@ -234,6 +250,16 @@ function NetLayer() {
       ))}
       <line x1={xs(-1)} y1={cy} x2={xs(1)} y2={cy} stroke={t.grid} strokeWidth={1} />
       <line x1={cx} y1={ys(-1)} x2={cx} y2={ys(1)} stroke={t.grid} strokeWidth={1} />
+      {planeArcs.map((arc, k) => (
+        <path
+          key={`arc-${k}`}
+          d={`M${arc.pts.map((p) => `${xs(p.x)} ${ys(p.y)}`).join(" L")}`}
+          fill="none"
+          stroke={arc.color}
+          strokeWidth={1}
+          strokeOpacity={PLANE_ARC_OPACITY}
+        />
+      ))}
       <g clipPath={`url(#${CLIP_ID})`}>
         {contours.map((c) => (
           <path
