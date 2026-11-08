@@ -18,7 +18,7 @@ const STEP_SHARE = 0.2; // integration step as a share of a grid cell
 const MAX_STEPS = 1500; // steps per direction from a seed
 const MIN_POINTS = 22; // shorter traces are dropped, so no isolated dashes stay behind
 const SEGMENT_POINTS = 6; // points per coloured piece of a line
-const COHERENT_COS = 0.7; // a cell whose corner directions spread wider than ~45° holds a source, sink or singular point
+const COHERENT_COS = 0.85; // a cell whose corner directions spread wider than ~30° holds a source, sink or singular point
 const COLOR_QUANTITY = "log₁₀ magnitude"; // what the colour of a line encodes, for any (u, v) field
 
 // Columns: set these to your data's column names
@@ -29,17 +29,17 @@ const V = "Ey (normalized field)"; // role: v
 
 // Data: replace this block with your own records, one object per row
 // Electric field of a dipole (a positive and a negative unit charge on the x axis),
-// sampled on a 36 x 20 grid; one row per grid point
+// sampled on a 50 x 28 grid; one row per grid point
 const data = (() => {
   const charges = [
     { x: -1.1, y: 0, q: 1 },
     { x: 1.1, y: 0, q: -1 },
   ];
   const rows: Record<string, number>[] = [];
-  for (let j = 0; j < 20; j += 1) {
-    for (let i = 0; i < 36; i += 1) {
-      const x = -4.5 + (i * 9) / 35;
-      const y = -2.5 + (j * 5) / 19;
+  for (let j = 0; j < 28; j += 1) {
+    for (let i = 0; i < 50; i += 1) {
+      const x = -4.5 + (i * 9) / 49;
+      const y = -2.5 + (j * 5) / 27;
       let ex = 0;
       let ey = 0;
       for (const c of charges) {
