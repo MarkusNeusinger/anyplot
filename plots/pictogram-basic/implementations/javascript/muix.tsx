@@ -1,81 +1,84 @@
 // anyplot.ai
 // pictogram-basic: Pictogram Chart (Isotype Visualization)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-08-20
-//# anyplot-orientation: landscape
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
-const BRAND = t.palette[0];
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Weekly harvest volume for a small farm co-op, in tons.
-const categories = ["Apples", "Oranges", "Bananas", "Mangoes", "Grapes"];
-const harvestTons = [35, 22, 18, 27, 14];
-const tonsPerIcon = 5;
+// Constants
+const MAX_ICONS = 8; // the longest row holds at most this many icons
+const NICE_STEPS = [1, 2, 2.5, 5, 10]; // icon values are one of these times a power of ten
+const ICON_SHARE = 0.4; // icon radius as a share of the smaller of row height and icon pitch
+const MIN_REMAINDER = 0.02; // remainders below this share of an icon are not drawn
+const TITLE_H = 52;
+const LEGEND_H = 44;
+const LEGEND_ICON = 20;
 
-const iconCounts = harvestTons.map((tons) => tons / tonsPerIcon);
-const maxIconCount = Math.max(...iconCounts);
-const labelX = Math.ceil(maxIconCount) + 0.6;
-const xMax = labelX + 0.9;
+// Columns: set these to your data's column names
+const FRUIT = "Fruit"; // role: category
+const HARVEST = "Weekly harvest (tons)"; // role: value
 
-// One data point per full icon, plus one clipped point for the remainder,
-// plus a trailing "label" point carrying the exact harvested tonnage.
-const points = [];
-categories.forEach((_, row) => {
-  const count = iconCounts[row];
-  const fullIcons = Math.floor(count + 1e-9);
-  for (let i = 0; i < fullIcons; i += 1) {
-    points.push({ id: `icon-${row}-${i}`, kind: "icon", x: i + 0.5, y: row, frac: 1 });
-  }
-  const remainder = count - fullIcons;
-  if (remainder > 0.02) {
-    points.push({ id: `icon-${row}-${fullIcons}`, kind: "icon", x: fullIcons + 0.5, y: row, frac: remainder });
-  }
-  points.push({ id: `label-${row}`, kind: "label", x: labelX, y: row, text: `${harvestTons[row]} t` });
+// Data: replace this block with your own records, one object per row
+// Weekly harvest of a small farm co-op
+const data = [
+  { [FRUIT]: "Apples", [HARVEST]: 35 },
+  { [FRUIT]: "Oranges", [HARVEST]: 22 },
+  { [FRUIT]: "Bananas", [HARVEST]: 18 },
+  { [FRUIT]: "Mangoes", [HARVEST]: 27 },
+  { [FRUIT]: "Grapes", [HARVEST]: 14 },
+];
+
+// Plot: reads only data and the constants above
+const fruits = data.map((d) => d[FRUIT]);
+const maxValue = Math.max(...data.map((d) => d[HARVEST]));
+
+// Value of one icon: the smallest nice step that keeps the longest row within MAX_ICONS
+const magnitude = 10 ** Math.floor(Math.log10(maxValue / MAX_ICONS));
+const unitValue = magnitude * NICE_STEPS.find((step) => step * magnitude >= maxValue / MAX_ICONS);
+const iconSlots = Math.ceil(maxValue / unitValue - 1e-9);
+
+const rows = data.map((d) => {
+  const count = d[HARVEST] / unitValue;
+  const full = Math.floor(count + 1e-9);
+  const remainder = count - full;
+  return { fruit: d[FRUIT], full, remainder: remainder >= MIN_REMAINDER ? remainder : 0 };
 });
 
-const ICON_RADIUS = 42;
+const unitMatch = HARVEST.match(/\(([^)]+)\)/);
+const unit = unitMatch ? unitMatch[1] : "";
 
-// Custom scatter renderer: draws each unit as a circle icon (fully filled,
-// or clipped to its fractional remainder), plus the row's exact-value label —
-// the pictogram encoding itself, using the real xScale/yScale MUI X computes.
-function PictogramMarks({ series, xScale, yScale, color }) {
+const TITLE = "Weekly Fruit Harvest · pictogram-basic · javascript · muix · anyplot.ai";
+
+function IconRows() {
+  const yScale = useYScale("fruit");
+  const { left, width } = useDrawingArea();
+  // Icons sit at one pitch across the full drawing width, so the longest row reaches its right
+  // edge; the radius fits both that pitch and the row height, so every icon keeps one size
+  const pitch = width / iconSlots;
+  const radius = Math.min(yScale.bandwidth(), pitch) * ICON_SHARE;
+
   return (
     <g>
-      {series.data.map((d) => {
-        const cx = xScale(d.x);
-        const cy = yScale(d.y);
-        if (d.kind === "label") {
-          return (
-            <text
-              key={d.id}
-              x={cx}
-              y={cy}
-              fill={t.ink}
-              fontSize={18}
-              fontWeight={600}
-              textAnchor="start"
-              dominantBaseline="central"
-            >
-              {d.text}
-            </text>
-          );
-        }
-        if (d.frac >= 1) {
-          return <circle key={d.id} cx={cx} cy={cy} r={ICON_RADIUS} fill={color} />;
-        }
-        const clipId = `pictogram-clip-${d.id}`;
+      {rows.map((row, r) => {
+        const cy = yScale(row.fruit) + yScale.bandwidth() / 2;
+        const partialX = left + (row.full + 0.5) * pitch;
         return (
-          <g key={d.id}>
-            <circle cx={cx} cy={cy} r={ICON_RADIUS} fill="none" stroke={color} strokeWidth={2} strokeOpacity={0.4} />
-            <clipPath id={clipId}>
-              <rect x={cx - ICON_RADIUS} y={cy - ICON_RADIUS} width={2 * ICON_RADIUS * d.frac} height={2 * ICON_RADIUS} />
-            </clipPath>
-            <circle cx={cx} cy={cy} r={ICON_RADIUS} fill={color} clipPath={`url(#${clipId})`} />
+          <g key={row.fruit}>
+            {Array.from({ length: row.full }, (_, i) => (
+              <circle key={i} cx={left + (i + 0.5) * pitch} cy={cy} r={radius} fill={t.palette[0]} />
+            ))}
+            {row.remainder > 0 && (
+              <g>
+                <clipPath id={`pictogram-remainder-${r}`}>
+                  <rect x={partialX - radius} y={cy - radius} width={2 * radius * row.remainder} height={2 * radius} />
+                </clipPath>
+                <circle cx={partialX} cy={cy} r={radius} fill="none" stroke={t.palette[0]} strokeWidth={2.5} strokeOpacity={0.7} />
+                <circle cx={partialX} cy={cy} r={radius} fill={t.palette[0]} clipPath={`url(#pictogram-remainder-${r})`} />
+              </g>
+            )}
           </g>
         );
       })}
@@ -83,62 +86,47 @@ function PictogramMarks({ series, xScale, yScale, color }) {
   );
 }
 
-const title = `Weekly Fruit Harvest · pictogram-basic · javascript · muix · anyplot.ai`;
-const titleFontSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
-
-const HEADER_HEIGHT = 90;
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
   return (
-    <Box
-      sx={{
-        width: SIZE.width,
-        height: SIZE.height,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-      }}
-    >
-      <Box
-        sx={{
-          height: HEADER_HEIGHT,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Typography sx={{ color: t.ink, fontSize: titleFontSize, fontWeight: 600, lineHeight: 1.2 }}>
-          {title}
-        </Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 14, lineHeight: 1.2, pt: 0.5 }}>
-          ● = {tonsPerIcon} tons of fruit
-        </Typography>
-      </Box>
-      <ScatterChart
-        width={SIZE.width}
-        height={SIZE.height - HEADER_HEIGHT}
-        margin={{ top: 50, right: 90, bottom: 50, left: 190 }}
-        colors={[BRAND]}
-        disableVoronoi
-        tooltip={{ trigger: "none" }}
-        series={[{ id: "harvest", data: points }]}
-        xAxis={[{ id: "icons", min: 0, max: xMax, scaleType: "linear" }]}
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 16, color: t.inkSoft }}>
+        <svg width={LEGEND_ICON} height={LEGEND_ICON}>
+          <circle cx={LEGEND_ICON / 2} cy={LEGEND_ICON / 2} r={LEGEND_ICON / 2} fill={t.palette[0]} />
+        </svg>
+        <span>
+          = {unitValue.toLocaleString("en-US")} {unit} · a cut icon shows the remainder
+        </span>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
+        margin={{ top: 16, right: 64, bottom: 32, left: 24 }}
+        series={[]}
+        xAxis={[{ id: "slots", scaleType: "linear", min: 0, max: iconSlots, position: "none" }]}
         yAxis={[
           {
-            id: "categories",
-            scaleType: "point",
-            data: categories.map((_, i) => i),
-            valueFormatter: (i) => categories[i],
+            id: "fruit",
+            scaleType: "band",
+            data: fruits,
+            categoryGapRatio: 0.15,
+            label: FRUIT,
+            width: 140,
             disableTicks: true,
-            tickLabelStyle: { fontSize: 16 },
+            disableLine: true,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        bottomAxis={null}
-        slots={{ scatter: PictogramMarks }}
-      />
-    </Box>
+        skipAnimation
+      >
+        <IconRows />
+        <ChartsYAxis axisId="fruit" />
+      </ChartsContainer>
+    </div>
   );
 }
