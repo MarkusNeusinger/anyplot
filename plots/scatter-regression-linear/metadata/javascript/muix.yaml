@@ -2,122 +2,129 @@ library: muix
 language: javascript
 specification_id: scatter-regression-linear
 created: '2026-08-05T13:40:38Z'
-updated: '2026-08-05T13:56:20Z'
-generated_by: claude-sonnet
-workflow_run: 31010524716
+updated: '2026-11-08T05:14:20Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42449682389
 issue: 1821
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-linear/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'All required statistical elements present: regression line, 95% CI band, R²/r,
-    and the fitted equation, matching every bullet in the spec''s Notes section.'
-  - Confidence band correctly uses the theme-adaptive "muted" anchor (per the style
-    guide's documented confidence-band-fill role), so it looks appropriate in both
-    themes without a custom hex.
-  - Advanced, idiomatic use of MUI X's useXScale/useYScale hooks to render a custom
-    band overlay — real library mastery, not a generic default chart.
-  - Canvas is exactly on-target (3200x1800) with generous margins; no clipping anywhere
-    in either render.
-  - Data colors are identical between light and dark; only chrome flips, exactly as
-    required.
+  - Composes the chart from ChartsDataProvider + ChartsSurface and draws the confidence
+    band and fit statistics as custom SVG components that read the chart's own scales
+    through useXScale/useYScale/useDrawingArea, so band, line and points share one
+    coordinate system
+  - 'Statistically correct band: 95% CI for the mean response from the residual standard
+    error and a t critical value (df = 88), visibly narrowest at the x mean and widening
+    toward both ends'
+  - 'Clear typographic hierarchy: bold 22 px R² in the empty top-left corner with
+    a softer equation beneath it, and a three-tier header that explains the fit (n,
+    r) and what the shaded band is, standing in for a legend'
+  - 'Fully theme-adaptive chrome: ink regression line (dark on light, light on dark),
+    muted band fill and page-coloured marker outlines flip with the theme while the
+    brand-green points stay identical'
+  - Deterministic LCG data with a plausible advertising-spend vs. sales-revenue scenario;
+    sign of r and slope agree with the rising line
   weaknesses:
-  - Regression line color (t.palette[2], blue) skips t.palette[1] (lavender) without
-    a documented semantic justification — use the next ordinal palette position (t.palette[1])
-    for the second series, or make the semantic case explicit if blue is intentional.
-  - Scatter markers (size 7, alpha ~0.6) are solid but could be a touch more prominent
-    given the point count is on the lower-density side (90 points, well under the
-    500-point 'reduce size' threshold) — a marginal size bump would sharpen the cloud
-    further.
+  - 'Suggestion: a descriptive title prefix such as ''Ad Spend vs. Sales Revenue Regression
+    · '' would name the regression analysis in the title itself, not only via the
+    spec id and subtitle.'
+  - 'Suggestion: x ticks every 2 $k (23 vertical grid lines) make the grid busier
+    than the data needs; a 5 $k step would quieten the background.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "scatter-regression-linear · javascript · muix · anyplot.ai" is dark and centered, fully readable. Axis labels ("Advertising Spend ($k)", "Sales Revenue ($k)") and tick labels are dark and crisp. Equation annotation ("y = 3.59x + 16.4 · R² = 0.828 · r = 0.910") and confidence-band caption are gray but legible. Horizontal-only gridlines are subtle.
-      Data: ~90 semi-transparent brand-green (#009E73-based) scatter points, a solid blue regression line, and a light-gray shaded 95% confidence band. Clear upward linear trend.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: centered bold title "scatter-regression-linear · javascript · muix · anyplot.ai", subtitle "Least-squares fit to n = 90 observations · r = 0.910", and a softer third line "Shaded band: 95% confidence interval for the mean response". Axis titles "Advertising spend ($k)" (x, 6–50) and "Sales revenue ($k)" (y, 0–240) in dark ink, tick labels in inkSoft; subtle grid on both axes; only left and bottom axis lines. Bold "R² = 0.828" with "y = 3.59x + 16.4" beneath it in the empty top-left corner, clear of points and line. All text readable.
+      Data: 90 translucent brand-green #009E73 points with thin page-coloured outlines, a solid near-black straight fit line, and a light grey semi-transparent confidence band that is narrowest mid-range and widens toward both ends; points inside the band remain visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels flip to light/white text, fully readable. Equation and confidence-band caption text dims slightly but remains legible — no dark-on-dark failure.
-      Data: Same brand-green points and blue regression line as the light render (colors identical between themes, only chrome flipped). Confidence band renders as a visible lighter-gray tint against the near-black surface via the theme-adaptive "muted" anchor.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitles, axis titles, ticks and the R²/equation note all render in light ink; no dark-on-dark text. Grid subtle but visible.
+      Data: points use the identical #009E73 green (dark outlines now), the fit line flips to light ink, and the band uses the lighter muted grey; the data colour is the same as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Explicit sizes (title 22, axis titles 17, ticks 15, R² 22 px); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, markers, band, or line
+        comment: R²/equation note sits in the empty top-left corner; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers appropriately sized/blended; line and band clearly distinct
+        comment: 90 points at markerSize 7, opacity 0.65 with outline; 3 px fit line;
+          band visible but light
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue is CVD-safe, no red-green-only signal
+        comment: Green points vs ink line vs grey band separate by luminance; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, nothing clipped or overflowing
+        comment: 3200x1800, balanced margins, title ~36% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title matches required format
+        comment: Descriptive labels with units ($k)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correct brand green, but regression line skips palette[1]
-          for palette[2] without semantic justification
+        passed: true
+        comment: 'Single series in #009E73; line in ink, band in muted anchor; backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful composition: equation/R2/r annotation, confidence band,
-          restrained hierarchy'
+        comment: Three-tier header (bold title, ink stats line, soft band note) and
+          bold-R²/soft-equation pairing go beyond baseline typography
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Minimal chrome, subtle horizontal grid, generous whitespace
+        comment: Page-coloured marker outlines and band explanation moved to the header
+          instead of a legend box; grid density not tuned (2 $k step)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Regression line + band + equation create a clear analytical focal
-          point
+        comment: R² made the focal number via weight/size hierarchy, with r and n
+          in the subtitle
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with fitted linear regression line, exactly as specified
+        comment: Scatter with linear fit and CI band
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Regression line, CI band, R2/r annotation, and equation all present
+        comment: R² and r shown, solid contrasting line, semi-transparent 95% CI band,
+          alpha 0.65 points, equation annotation, band explained; all good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = ad spend, Y = sales revenue, full data range shown
+        comment: Points at exact (x, y); axes cover all data and the band
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; no legend needed
+        comment: Mandated title format; legend hidden, band identified in header text
     data_quality:
       score: 15
       max: 15
@@ -155,82 +164,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 90 points, realistic noise, clear linear trend, band widens at domain
-          edges
+        comment: Visible scatter, outliers, band widening at ends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Advertising spend vs sales revenue is plausible and neutral
+        comment: Advertising spend vs sales revenue for 90 regional campaigns, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible, non-arbitrary magnitudes
+        comment: Spend 6–50 $k, revenue 12–234 $k; slope 3.59 near generating 3.4;
+          r = sqrt(R²) with slope sign checked; t = 1.99 for df 88
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Small helper functions and ConfidenceBand component are necessary,
-          not over-engineered
+        comment: Linear flow; the two small components are required to use MUI X scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Hand-written OLS and t lookup are allowed (no stats helpers in MUI
+          X)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current composed ChartContainer API
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 class names
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct composed ChartContainer + series config + skipAnimation
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks build a custom confidence-band overlay
+        comment: Composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface with
+          ScatterPlot + LinePlot) and sx styling of v9 classes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom SVG layers driven by useXScale/useYScale/useDrawingArea hooks;
+          HTML keeps native scatter tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:11:39Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
-  - regression-line
-  - confidence-band
+  - patches
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
