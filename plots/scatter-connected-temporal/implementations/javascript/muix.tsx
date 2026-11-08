@@ -26,10 +26,13 @@ const LABEL_STEP = 4; // px per step outwards
 const LABEL_DIRECTIONS = 16; // candidate label positions around each labelled point
 const LABEL_FONT = 14;
 const LABEL_HALF_H = 8; // px, half the height of a label box, halo included
-const PATH_ROOM = 9; // px a label box keeps from every segment, arrowheads included
+const PATH_ROOM = 9; // px a label box keeps from every segment, the direction chevrons on it included
 const MARKER_ROOM = 26; // px a label box keeps from any other point's marker centre
-const ARROW_LENGTH = 22; // px
-const ARROW_HEAD = 17; // px, large enough to stand out from the 2.5 px line
+// The direction cue is an open chevron drawn on the path in the line's own stroke, well below marker
+// size and unfilled, so it reads as part of the line and never as a further observation
+const CHEVRON_ARM = 7; // px, the length of each arm
+const CHEVRON_SPREAD = (35 * Math.PI) / 180; // the angle between each arm and the path
+const LINE_WIDTH = 2.5; // px
 const MARK_SCALE = 1.6; // the default mark symbol is too small a bead for a few dozen sparse points
 
 // Columns: set these to your data's column names
@@ -183,41 +186,27 @@ function TemporalLayer() {
 
   return (
     <g>
-      <defs>
-        {arrows.map((a, k) => (
-          <marker
-            key={`head-${k}`}
-            id={`temporal-head-${k}`}
-            viewBox="0 0 10 10"
-            refX={10}
-            refY={5}
-            markerWidth={ARROW_HEAD}
-            markerHeight={ARROW_HEAD}
-            markerUnits="userSpaceOnUse"
-            orient="auto"
-          >
-            <path d="M0,0 L10,5 L0,10 Z" fill={a.color} />
-          </marker>
-        ))}
-      </defs>
       {arrows.map((a, k) => {
         const [ax, ay] = pts[a.from];
         const [bx, by] = pts[a.from + 1];
         const len = Math.hypot(bx - ax, by - ay) || 1;
-        const mx = (ax + bx) / 2;
-        const my = (ay + by) / 2;
         const ux = (bx - ax) / len;
         const uy = (by - ay) / len;
+        // The tip sits half the chevron's depth past the segment's midpoint, so the chevron is centred on it;
+        // each arm runs back from the tip, turned off the path by the spread to either side
+        const back = CHEVRON_ARM * Math.cos(CHEVRON_SPREAD);
+        const side = CHEVRON_ARM * Math.sin(CHEVRON_SPREAD);
+        const tipX = (ax + bx) / 2 + (ux * back) / 2;
+        const tipY = (ay + by) / 2 + (uy * back) / 2;
         return (
-          <line
-            key={`arrow-${k}`}
-            x1={mx - (ux * ARROW_LENGTH) / 2}
-            y1={my - (uy * ARROW_LENGTH) / 2}
-            x2={mx + (ux * ARROW_LENGTH) / 2}
-            y2={my + (uy * ARROW_LENGTH) / 2}
+          <path
+            key={`chevron-${k}`}
+            d={`M ${tipX - ux * back - uy * side},${tipY - uy * back + ux * side} L ${tipX},${tipY} L ${tipX - ux * back + uy * side},${tipY - uy * back - ux * side}`}
+            fill="none"
             stroke={a.color}
-            strokeWidth={2.5}
-            markerEnd={`url(#temporal-head-${k})`}
+            strokeWidth={LINE_WIDTH}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         );
       })}
@@ -305,7 +294,7 @@ export default function Chart() {
           />
           <ChartsSurface
             sx={{
-              "& .MuiLineChart-line": { strokeWidth: 2.5 },
+              "& .MuiLineChart-line": { strokeWidth: LINE_WIDTH },
               "& .MuiLineChart-mark": { stroke: t.pageBg, strokeWidth: 1 },
               ...markFills,
               "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
