@@ -1,168 +1,125 @@
 // anyplot.ai
 // scatter-categorical: Categorical Scatter Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
-//# anyplot-orientation: landscape
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
+
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// Deterministic LCG (seed 42) — no Math.random() in the browser harness
-let seed = 42;
-function rng() {
-  seed = (1664525 * seed + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
-function randn() {
-  const u = Math.max(rng(), 1e-9);
-  const v = rng();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
+// Constants
+const PAD_SHARE = 0.08; // axis padding on each side as a share of the data span
+const POINT_ALPHA = 0.82; // translucent fill plus a page-coloured edge keeps overlapping groups apart
 
-// --- Data: penguin body measurements by species — flipper length vs body
-// mass, three overlapping-but-separable clusters (a classic categorical
-// scatter scenario). ---------------------------------------------------------
-const SPECIES = [
-  {
-    name: "Adelie",
-    flipperMean: 190,
-    flipperSd: 6.5,
-    massMean: 3700,
-    massSd: 460,
-    n: 40,
-  },
-  {
-    name: "Chinstrap",
-    flipperMean: 196,
-    flipperSd: 7.2,
-    massMean: 3730,
-    massSd: 380,
-    n: 34,
-  },
-  {
-    name: "Gentoo",
-    flipperMean: 217,
-    flipperSd: 6.5,
-    massMean: 5090,
-    massSd: 500,
-    n: 38,
-  },
-];
+// Columns: set these to your data's column names
+const FLIPPER = "Flipper length (mm)"; // role: x
+const MASS = "Body mass (kg)"; // role: y
+const SPECIES = "Species"; // role: category
 
-let pointId = 0;
-const series = SPECIES.map((sp, i) => ({
-  id: sp.name,
-  label: sp.name,
-  color: t.palette[i],
-  markerSize: 7,
-  // Fade the other two species when one is hovered, showcasing MUI X's
-  // built-in cross-series highlight/fade interaction (purely additive —
-  // has no effect on the static screenshot).
-  highlightScope: { highlight: "series", fade: "global" },
-  data: Array.from({ length: sp.n }, () => ({
-    x: Math.round(sp.flipperMean + randn() * sp.flipperSd),
-    // Body mass in kg (not g) — keeps y tick labels short ("3.7", not
-    // "3,700"), which avoids the label colliding with the axis title (MUI X
-    // offsets the y-axis title from a fixed tick-fontsize heuristic, not the
-    // tick label's actual rendered width).
-    y: Math.round(sp.massMean + randn() * sp.massSd) / 1000,
-    id: pointId++,
-  })),
-}));
+// Data: replace this block with your own records, one object per row
+// Penguin body measurements: three overlapping but separable species clusters.
+const data = (() => {
+  let seed = 42;
+  const rng = () => {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const randn = () => Math.sqrt(-2 * Math.log(Math.max(rng(), 1e-9))) * Math.cos(2 * Math.PI * rng());
+  const species = [
+    { name: "Adelie", flipperMean: 190, flipperSd: 6.5, massMean: 3700, massSd: 460, n: 40 },
+    { name: "Chinstrap", flipperMean: 196, flipperSd: 7.2, massMean: 3730, massSd: 380, n: 34 },
+    { name: "Gentoo", flipperMean: 217, flipperSd: 6.5, massMean: 5090, massSd: 500, n: 38 },
+  ];
+  return species.flatMap((sp) =>
+    Array.from({ length: sp.n }, () => ({
+      [FLIPPER]: Math.round(sp.flipperMean + randn() * sp.flipperSd),
+      [MASS]: Math.round(sp.massMean + randn() * sp.massSd) / 1000,
+      [SPECIES]: sp.name,
+    })),
+  );
+})();
 
-const allPoints = series.flatMap((s) => s.data);
-const xs = allPoints.map((p) => p.x);
-const ys = allPoints.map((p) => p.y);
-const xPad = (Math.max(...xs) - Math.min(...xs)) * 0.1;
-const yPad = (Math.max(...ys) - Math.min(...ys)) * 0.1;
-const X_MIN = Math.min(...xs) - xPad;
-const X_MAX = Math.max(...xs) + xPad;
-const Y_MIN = Math.min(...ys) - yPad;
-const Y_MAX = Math.max(...ys) + yPad;
+// Plot: reads only data and the constants above
+const groups = [...new Set(data.map((d) => d[SPECIES]))];
+const xs = data.map((d) => d[FLIPPER]);
+const ys = data.map((d) => d[MASS]);
+const xPad = (Math.max(...xs) - Math.min(...xs)) * PAD_SHARE;
+const yPad = (Math.max(...ys) - Math.min(...ys)) * PAD_SHARE;
 
 const TITLE = "scatter-categorical · javascript · muix · anyplot.ai";
-const MARGIN = { top: 90, right: 210, bottom: 90, left: 120 };
-const Y_LABEL_X = 36;
-const Y_LABEL_Y = MARGIN.top + (height - MARGIN.top - MARGIN.bottom) / 2;
+const HEADER_HEIGHT = 64;
+const LEGEND_WIDTH = 170;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ScatterChart
-      width={width}
-      height={height}
-      margin={MARGIN}
-      series={series}
-      skipAnimation
-      grid={{ vertical: true, horizontal: true }}
-      // Scatter markers are the only <circle> elements this chart renders
-      // (legend swatches are <rect>s) — a page-background-colored edge
-      // stroke plus slight fill transparency keeps overlapping Adelie/
-      // Chinstrap points individually distinguishable instead of merging
-      // into solid blobs, in both themes.
-      sx={{
-        "& circle": {
-          stroke: t.pageBg,
-          strokeWidth: 1.5,
-          fillOpacity: 0.82,
-        },
-      }}
-      xAxis={[
-        {
-          min: X_MIN,
-          max: X_MAX,
-          label: "Flipper Length (mm)",
-          labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          stroke: t.inkSoft,
-        },
-      ]}
-      yAxis={[
-        {
-          min: Y_MIN,
-          max: Y_MAX,
-          valueFormatter: (v) => v.toFixed(1),
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          stroke: t.inkSoft,
-        },
-      ]}
-      legend={{
-        position: { vertical: "middle", horizontal: "right" },
-        direction: "column",
-        labelStyle: { fontSize: 15, fill: t.ink },
-        itemMarkWidth: 14,
-        itemMarkHeight: 14,
-        markGap: 8,
-        itemGap: 16,
-      }}
-    >
-      <text
-        x={width / 2}
-        y={48}
-        textAnchor="middle"
-        fontSize={26}
-        fontWeight={600}
-        fill={t.ink}
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontWeight: 600,
+          color: t.ink,
+        }}
       >
         {TITLE}
-      </text>
-      {/* Manually placed y-axis title (independent of MUI X's built-in
-          label offset, which is sized off tickFontSize rather than the tick
-          labels' actual rendered width) — guarantees no collision with the
-          tick numbers regardless of their digit count. */}
-      <text
-        x={Y_LABEL_X}
-        y={Y_LABEL_Y}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={16}
-        fontWeight={500}
-        fill={t.ink}
-        transform={`rotate(-90, ${Y_LABEL_X}, ${Y_LABEL_Y})`}
-      >
-        Body Mass (kg)
-      </text>
-    </ScatterChart>
+      </div>
+      <ScatterChart
+        width={width - LEGEND_WIDTH}
+        height={height - HEADER_HEIGHT}
+        skipAnimation
+        grid={{ vertical: true, horizontal: true }}
+        margin={{ top: 16, right: 32, bottom: 16, left: 24 }}
+        series={groups.map((group, i) => ({
+          id: `species-${i}`,
+          label: group,
+          color: t.palette[i],
+          markerSize: 7,
+          highlightScope: { highlight: "series", fade: "global" },
+          data: data
+            .map((d, j) => ({ id: j, x: d[FLIPPER], y: d[MASS], group: d[SPECIES] }))
+            .filter((p) => p.group === group),
+        }))}
+        xAxis={[
+          {
+            min: Math.min(...xs) - xPad,
+            max: Math.max(...xs) + xPad,
+            label: FLIPPER,
+            tickNumber: 8,
+            height: 72,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: Math.min(...ys) - yPad,
+            max: Math.max(...ys) + yPad,
+            label: MASS,
+            tickNumber: 6,
+            width: 72,
+            valueFormatter: (v: number) => v.toFixed(1),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        slotProps={{
+          legend: {
+            direction: "vertical",
+            position: { vertical: "middle", horizontal: "end" },
+            sx: { fontSize: 16, color: t.ink, gap: 2, pl: 3 },
+          },
+        }}
+        sx={{
+          "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1.5, fillOpacity: POINT_ALPHA },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      />
+    </div>
   );
 }
