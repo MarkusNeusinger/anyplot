@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-matrix: Scatter Plot Matrix
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 87/100 | Updated: 2026-11-08
+// Quality: 88/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { BarChart } from "@mui/x-charts/BarChart";
