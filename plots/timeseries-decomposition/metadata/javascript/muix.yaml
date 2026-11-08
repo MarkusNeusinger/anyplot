@@ -2,116 +2,109 @@ library: muix
 language: javascript
 specification_id: timeseries-decomposition
 created: '2026-09-09T20:44:09Z'
-updated: '2026-09-09T21:02:00Z'
-generated_by: claude-sonnet
-workflow_run: 34402090160
+updated: '2026-11-08T06:32:00Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42454852282
 issue: 2992
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - Panel colors now follow the canonical Imprint 1->N order top to bottom (Original=#009E73,
-    Trend=#C475FD, Seasonal=#4467A3, Residual=#BD8233), fixing the previous swap/theme-flip
-    issues.
-  - Every panel now carries an explicit '$k' units label via a hand-drawn rotated
-    Typography box, addressing the earlier missing-units weakness without colliding
-    with tick numbers.
-  - Creative simulation of native faceting (which MUI X community lacks) via four
-    stacked LineChart panels sharing consistent left/right margins and the same time
-    domain, so panels stay visually aligned.
-  - Deterministic in-browser LCG (no seeded Math.random available) produces a realistic
-    quadratic trend, a strong annual seasonal cycle with a holiday spike, and bounded
-    noise that reconstruct into a plausible additive original series.
-  - Clear per-panel component labels plus dashed zero-reference lines on Seasonal/Residual
-    make the decomposition easy to read at a glance; monotoneX curve smoothing avoids
-    distracting sharp kinks.
+  - Four vertically stacked panels in spec order, each on its own y scale, so the
+    ±24 seasonal and ±18 residual components are not flattened by the 220-575 original
+    range
+  - One shared time axis (identical min/max on every panel, x axis drawn only on the
+    last) with year-aligned vertical grid lines, so a date reads straight down through
+    all four panels
+  - 'Correct classical additive decomposition: centred 2x12 moving average, normalised
+    seasonal indices, trend/residual left as null gaps at the unestimated edges via
+    connectNulls: false'
+  - Informative subtitle naming the quantity, observation count, date span and method
+    (additive, period 12)
+  - 'Clean theme threading: ink/inkSoft/grid tokens on all chrome, Imprint positions
+    1-4 identical in both renders'
+  - 'Idiomatic MUI X v9: scaleType ''time'' with valueFormatter, explicit axis bands,
+    position ''none'', skipAnimation; native tooltips in the HTML view'
   weaknesses:
-  - Title occupies only ~34% of canvas width at fontsize=22 -- well under the ~70-85%
-    naturally expected for the ~59-char mandated title -- which makes it noticeably
-    small when the PNG is scaled down to a ~400px mobile thumbnail. Consider growing
-    the title fontsize slightly (e.g. 26-28px CSS) for better mobile legibility, as
-    long as it still fits the 46px title bar without clipping.
-  - Panel labels ('Original', 'Trend', 'Seasonal', 'Residual') and the '$k' unit label
-    are quite small at mobile thumbnail scale, an inherent trade-off of splitting
-    the canvas into 4 stacked panels -- worth a minor bump in fontsize if headroom
-    allows.
-  - '''$k'' is a minimal unit label; a slightly more descriptive axis label (e.g.
-    ''Revenue ($k)'') on at least the Original panel would remove any residual ambiguity
-    about what is being decomposed.'
+  - 'Suggestion: the x-axis title ''Month'' sits about 40 px below the tick labels;
+    a smaller x-axis band would tie it to the axis.'
+  - 'Suggestion: naming the quantity on the y axes (''Sales (thousand USD)'') instead
+    of the bare unit would let each panel read without the subtitle.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "timeseries-decomposition · javascript · muix · anyplot.ai" in dark ink, top-left, fully visible and not clipped (measured ~34% of canvas width). Each of the four stacked panels (Original, Trend, Seasonal, Residual) has a bold dark-ink label at its top-left, and each now also has a small rotated "$k" units label on the far left that does not collide with the y-axis tick numbers. Y-axis tick numbers and the shared bottom x-axis month/year ticks (Jan 2015 .. Jan 2025) are dark and clearly legible. Horizontal grid lines are thin and subtle, visible but not dominant.
-      Data: Original is brand green (#009E73), Trend is lavender/purple (#C475FD), Seasonal is blue (#4467A3), Residual is ochre/orange (#BD8233) -- this now matches the canonical Imprint 1->N order top to bottom. Dashed zero-reference lines appear on the Seasonal and Residual panels. All lines are clearly distinguishable from the cream background and from each other.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "timeseries-decomposition · javascript · muix · anyplot.ai" centred at the top, grey subtitle "Retail sales (thousand USD) · 120 observations, Jan 2015 – Dec 2024 · additive, period 12". Four stacked panels labelled Original, Trend, Seasonal, Residual in bold dark text at their top-left; each has a rotated "thousand USD" y-axis title and its own ticks (200–600, 200–600, −40–40, −20–20). A single x axis at the bottom with yearly ticks Jan 2015 … Jan 2024 and the title "Month". Subtle grey horizontal and year-aligned vertical grid in every panel; dashed zero lines in the Seasonal and Residual panels. All text readable.
+      Data: Original in brand green #009E73 rising from ~220 to ~575 with December spikes; Trend in purple (Imprint 2), smooth, starting mid-2015 and ending mid-2024; Seasonal in blue (Imprint 3) repeating a sawtooth with a December peak every year; Residual in ochre (Imprint 4), irregular within ±18, also starting/ending at the unestimated edges.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Same title, now in light text, fully visible and not clipped. Panel labels are light-colored and legible against the dark background. The "$k" units label uses the theme-adaptive inkSoft token so it renders as light gray, readable but intentionally secondary. Y-axis and x-axis tick labels are light and clearly readable -- no dark-on-dark text anywhere. Horizontal grid lines are faint but visible light lines.
-      Data: Original (green), Trend (lavender), Seasonal (blue), and Residual (ochre) are the identical hex colors as the light render -- only the chrome (background/text/grid) flipped, as required. This fixes the prior review's flagged issue where Residual used the theme-flipping inkSoft token for its line color; Residual is now a fixed Imprint hex identical across both themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title and panel names in light ink, ticks/axis titles/subtitle in light grey inkSoft, grid lines dim grey but visible, dashed zero lines light grey. No dark-on-dark text anywhere.
+      Data: green, purple, blue and ochre lines identical to the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, panel labels, tick labels and the new '$k' units label are
-          all readable in both themes at full resolution; title is comfortably sized
-          but small at mobile thumbnail scale (~34% of canvas width).
+        comment: All fonts set explicitly (title 22 px, subtitle 15, panel names 16
+          bold, ticks and axis titles 14 in a 1600 px CSS canvas); every element readable
+          in both themes, ink and inkSoft tokens
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions across any of the four panels; the new '$k'
-          label sits clear of tick numbers.
+        comment: No text collisions; panel names sit in the top margin above each
+          plot area, clear of the lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line-only rendering (showMark=false) with monotoneX smoothing suits
-          the 120-point monthly density well.
+        comment: 2.5 px lines without markers suit 120 monthly points; every component
+          line clearly visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues are CVD-safe; no red-green sole signal.
+        comment: Four distinct Imprint hues, each in its own labelled panel, so color
+          is never the only identifier
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Four panels evenly sized, no overflow or clipping, consistent margins
-          keep the shared x-axis aligned.
+        comment: 3200x1800, four equal-height panels with aligned plot areas, one
+          shared x axis at the bottom, title ~68 % of width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Fixed: every panel now shows an explicit ''$k'' units label; title
-          format correct.'
+        comment: x axis 'Month', y axes carry the unit 'thousand USD'; the measured
+          quantity is named in the subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Fixed: canonical Imprint 1->N order restored (green/lavender/blue/ochre),
-          and Residual now uses a fixed palette hex instead of the theme-flipping
-          inkSoft token, so all data colors are identical across themes.'
+        comment: 'Imprint positions 1-4 in order (#009E73 first), identical across
+          themes; backgrounds #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -119,23 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom subplot-simulation layout and deliberate color choices beyond
-          generic defaults, but no additional visual polish (annotations, custom typography)
-          beyond that.
+        comment: 'Above baseline: a two-level header with a subtitle stating the quantity,
+          observation count, date span and method (additive, period 12); bold panel
+          names left-aligned to the plot area edge for a consistent hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid and generous panel whitespace; relies
-          on MUI X default axis/spine styling otherwise.
+        comment: 'Above baseline: x-axis drawn only on the last panel so the panels
+          stack tightly with a 6 px gap; vertical grid at year boundaries shared by
+          all panels so dates line up; y tick count reduced to four per panel'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Top-to-bottom hierarchy (Original -> Trend -> Seasonal -> Residual)
-          with zero-reference lines guides the reader through the decomposition narrative.
+        passed: false
+        comment: Data displayed clearly; no focal point chosen beyond what the Notes
+          prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Four vertically stacked subplots as required.
+        comment: Correct four-panel stacked decomposition
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Original, Trend, Seasonal, Residual all present, labeled, shared
-          time axis, light grid lines.
+        comment: Original/Trend/Seasonal/Residual in order and labelled; shared time
+          axis with equal min/max; each panel on its own y scale; trend smooth, seasonal
+          repeats with period 12; light grid in every panel
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=value per panel; full date range shown on each; additive
-          decomposition (original = trend + seasonal + residual) verified in code.
+        comment: Time on x for all panels, values at their data positions; linear
+          curves, no spline overshoot; null edges left as gaps
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; legend appropriately hidden
-          since each panel is single-series and self-labeled.
+        comment: Title matches 'timeseries-decomposition · javascript · muix · anyplot.ai';
+          legend N/A (panel names identify each component)
     data_quality:
       score: 15
       max: 15
@@ -176,21 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Quadratic trend, strong annual seasonal cycle, bounded residual noise,
-          and their additive sum are all present.
+        comment: Rising, slightly accelerating trend, clear holiday seasonality, irregular
+          residual with occasional spikes; unestimated trend/residual edges are permitted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly retail sales revenue, neutral and plausible.
+        comment: Monthly retail sales 2015-2024 with a November/December holiday peak
+          - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (~220-580 $k) and seasonal swing (+/-28) are sensible for
-          the domain.
+        comment: 220-575 thousand USD per month, seasonal ±24, residual ±18 - sensible
+          for a retailer; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -200,35 +196,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; a single loop builds the data, one component renders
-          it.
+        comment: Module-level data and computation, one default-exported component
+          as the harness requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG since the browser has no seeded Math.random.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, ChartsReferenceLine, Box, Typography -- all used.
+        comment: LineChart, ChartsReferenceLine, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the task; no fake/simulated UI.
+        comment: Classical decomposition (centred 2x12 MA, seasonal indices) written
+          out compactly; the library prompt allows hand-written statistics since MUI
+          X has none
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports Chart(), skipAnimation set on every LineChart, harness
-          contract respected.
+        comment: Default export, skipAnimation, sized from ANYPLOT_SIZE, v9 API (position:'none',
+          hideLegend, per-chart CSS classes)
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -236,25 +234,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of scaleType='time', valueFormatter, margin tuning, and
-          grid config.
+        comment: 'Idiomatic v9 composition: per-panel LineChart with scaleType ''time'',
+          valueFormatter, explicit axis width/height bands, position ''none'' to hide
+          inner x axes, connectNulls false for unestimated edges, MUI Box/Typography
+          for layout'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: ChartsReferenceLine for zero baselines and a stacked-panel workaround
-          for MUI X's lack of native faceting are genuinely distinctive uses of the
-          community surface.
+        passed: false
+        comment: Time-scale axis with valueFormatter and library-native tooltips in
+          the HTML output; little else MUI X-specific
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:29:21Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
+  - rolling-window
   - time-series
   styling:
-  - grid-styling
-  - alpha-blending
+  - minimal-chrome

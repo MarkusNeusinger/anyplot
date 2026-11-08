@@ -1,166 +1,145 @@
 // anyplot.ai
 // raincloud-basic: Basic Raincloud Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-26
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-// --- Data: reaction times (ms) across a 4-arm drug trial ---------------------
-// Deterministic LCG so the sampled distributions (and their KDEs) are stable
-// across renders — the browser has no seeded Math.random().
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return function next() {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
+// Constants
+const PAD_SHARE = 0.06; // x padding around the observed range, share of the span
+const KDE_POINTS = 160; // evaluation points of each density curve
+const CLOUD_CUTOFF = 0.01; // the cloud ends where its density falls below this share of its peak
+const WHISKER_IQR = 1.5; // Tukey whiskers reach the furthest value within 1.5 IQR of the box
+const GOLDEN = 0.6180339887; // low-discrepancy step for the rain's vertical spread
+const CLOUD_SHARE = 0.84; // cloud peak height as a share of the half band above the baseline
+const RAIN_NEAR = 0.22; // rain band, as shares of the half band below the baseline
+const RAIN_FAR = 0.9;
+const BOX_HALF_PX = 11;
+const TITLE_H = 56;
+
+// Columns: set these to your data's column names
+const ARM = "Treatment arm"; // role: category
+const REACTION_TIME = "Reaction time (ms)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+// Simple reaction times in a four-arm drug trial, 70 participants per arm; the 50 mg arm
+// splits into fast responders (55 %, around 340 ms) and non-responders (around 490 ms).
+// Fixed-seed LCG with Box-Muller normals.
+const data = (() => {
+  let seed = 42;
+  const uniform = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
   };
-}
-const rand = makeLcg(42);
-function gaussianSample() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+  const normal = () => Math.sqrt(-2 * Math.log(Math.max(uniform(), 1e-9))) * Math.cos(2 * Math.PI * uniform());
+  return [
+    ...Array.from({ length: 70 }, () => ({ [ARM]: "Placebo", [REACTION_TIME]: 540 + 55 * normal() })),
+    ...Array.from({ length: 70 }, () => ({ [ARM]: "10 mg dose", [REACTION_TIME]: 495 + 50 * normal() })),
+    ...Array.from({ length: 70 }, () => ({ [ARM]: "25 mg dose", [REACTION_TIME]: 445 + 48 * normal() })),
+    ...Array.from({ length: 70 }, () => ({
+      [ARM]: "50 mg dose",
+      [REACTION_TIME]: uniform() < 0.55 ? 340 + 28 * normal() : 490 + 32 * normal(),
+    })),
+  ].map((d) => ({ ...d, [REACTION_TIME]: Math.round(d[REACTION_TIME]) }));
+})();
 
-const CATEGORIES = ["Placebo", "10 mg Dose", "25 mg Dose", "50 mg Dose"];
-const N_PER_GROUP = 70;
-
-// The 50 mg arm is deliberately bimodal (fast responders vs. non-responders)
-// — exactly the shape a plain box plot would hide and a raincloud reveals.
-const valuesByCategory = [
-  Array.from({ length: N_PER_GROUP }, () => 540 + 55 * gaussianSample()),
-  Array.from({ length: N_PER_GROUP }, () => 495 + 50 * gaussianSample()),
-  Array.from({ length: N_PER_GROUP }, () => 445 + 48 * gaussianSample()),
-  Array.from({ length: N_PER_GROUP }, () =>
-    rand() < 0.55 ? 360 + 35 * gaussianSample() : 470 + 40 * gaussianSample()
-  ),
-];
-// Jitter fractions for the "rain", drawn from the same deterministic stream
-// right after the data so the whole script's randomness stays reproducible.
-const jittersByCategory = valuesByCategory.map((values) => values.map(() => rand()));
-
-const allValues = valuesByCategory.flat();
-const dataMin = Math.min(...allValues);
-const dataMax = Math.max(...allValues);
-const xPad = (dataMax - dataMin) * 0.08;
-const X_MIN = dataMin - xPad;
-const X_MAX = dataMax + xPad;
-
-// --- Box-plot summary stats (Tukey whiskers, 1.5×IQR) ------------------------
-function quantile(sorted, q) {
-  const pos = (sorted.length - 1) * q;
-  const base = Math.floor(pos);
-  const rest = pos - base;
-  return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
-}
-function boxStats(values) {
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => Number.isFinite(d[REACTION_TIME]));
+const arms = [...new Set(rows.map((d) => d[ARM]))];
+// The arms are ordered dose levels, so their colour runs along the sequential ramp in order of
+// first appearance instead of taking unrelated palette hues
+const seqRgb = t.seq.map((hex) => [16, 8, 0].map((shift) => (parseInt(hex.slice(1), 16) >> shift) & 255));
+// Per arm: linear-interpolated quartiles, Tukey whiskers, and a Gaussian KDE with Silverman's
+// bandwidth over the values widened by three bandwidths, scaled to its own peak so each cloud
+// shows shape rather than group size
+const groups = arms.map((arm, i) => {
+  const values = rows.filter((d) => d[ARM] === arm).map((d) => d[REACTION_TIME]);
   const sorted = [...values].sort((a, b) => a - b);
-  const q1 = quantile(sorted, 0.25);
-  const median = quantile(sorted, 0.5);
-  const q3 = quantile(sorted, 0.75);
+  const [q1, median, q3] = [0.25, 0.5, 0.75].map((q) => {
+    const pos = (sorted.length - 1) * q;
+    const lo = Math.floor(pos);
+    return sorted[lo] + (pos - lo) * ((sorted[lo + 1] ?? sorted[lo]) - sorted[lo]);
+  });
   const iqr = q3 - q1;
-  const lowerFence = q1 - 1.5 * iqr;
-  const upperFence = q3 + 1.5 * iqr;
-  const lowerWhisker = sorted.find((v) => v >= lowerFence) ?? sorted[0];
-  const upperWhisker = [...sorted].reverse().find((v) => v <= upperFence) ?? sorted[sorted.length - 1];
-  return { q1, median, q3, lowerWhisker, upperWhisker };
-}
-const statsByCategory = valuesByCategory.map(boxStats);
-
-// --- Gaussian KDE per group, Silverman bandwidth, normalized to its own peak
-// so the "cloud" shows shape (including the 50 mg arm's two humps), not raw n.
-const GRID_N = 140;
-const grid = Array.from({ length: GRID_N }, (_, k) => X_MIN + (k * (X_MAX - X_MIN)) / (GRID_N - 1));
-function stdOf(values) {
-  const m = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + (b - m) ** 2, 0) / (values.length - 1);
-  return Math.sqrt(variance);
-}
-function kde(values) {
-  const n = values.length;
-  const bandwidth = 0.9 * stdOf(values) * Math.pow(n, -0.2);
-  const raw = grid.map((gx) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((gx - v) / bandwidth) ** 2), 0));
+  const whiskerLow = sorted.find((v) => v >= q1 - WHISKER_IQR * iqr);
+  const whiskerHigh = [...sorted].reverse().find((v) => v <= q3 + WHISKER_IQR * iqr);
+  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+  const sd = Math.sqrt(values.reduce((s, v) => s + (v - mean) ** 2, 0) / Math.max(values.length - 1, 1));
+  const bandwidth = 0.9 * Math.min(sd, iqr / 1.34 || sd) * Math.pow(values.length, -0.2);
+  const lo = sorted[0] - 3 * bandwidth;
+  const hi = sorted[sorted.length - 1] + 3 * bandwidth;
+  const grid = Array.from({ length: KDE_POINTS }, (_, k) => lo + (k * (hi - lo)) / (KDE_POINTS - 1));
+  const raw = grid.map((g) => values.reduce((s, v) => s + Math.exp(-0.5 * ((g - v) / bandwidth) ** 2), 0));
   const peak = Math.max(...raw);
-  return raw.map((v) => v / peak);
-}
-const densityByCategory = valuesByCategory.map(kde);
+  const density = raw.map((v) => v / peak);
+  // The cloud spans the grid points where the density is still visible, so its tails end on the baseline
+  const first = density.findIndex((v) => v >= CLOUD_CUTOFF);
+  const last = density.length - 1 - [...density].reverse().findIndex((v) => v >= CLOUD_CUTOFF);
+  const cloud = grid.slice(first, last + 1).map((x, k) => [x, density[first + k]]);
+  const share = arms.length > 1 ? i / (arms.length - 1) : 0;
+  const rgb = seqRgb[0].map((c, k) => Math.round(c + (seqRgb[1][k] - c) * share));
+  return { arm, values, q1, median, q3, whiskerLow, whiskerHigh, cloud, color: `rgb(${rgb.join(", ")})` };
+});
 
-// --- Cloud (half-violin, upward) + rain (jittered points, downward) + box ---
-// drawn with raw SVG positioned by the chart's own scales — MUI X's documented
-// composition API for chart types the community package has no built-in for.
-function CloudRainBox() {
-  const xScale = useXScale("value");
-  const yScale = useYScale("category");
+// The value axis covers every cloud and every raindrop
+const extent = groups.flatMap((g) => [g.cloud[0][0], g.cloud[g.cloud.length - 1][0], ...g.values]);
+const span = Math.max(...extent) - Math.min(...extent);
+const xMin = Math.min(...extent) - span * PAD_SHARE;
+const xMax = Math.max(...extent) + span * PAD_SHARE;
+
+const TITLE = "raincloud-basic · javascript · muix · anyplot.ai";
+
+function RaincloudLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const halfBand = yScale.bandwidth() / 2;
 
   return (
     <g>
-      {CATEGORIES.map((cat, i) => {
-        const color = t.palette[i % t.palette.length];
-        const bandWidth = yScale.bandwidth();
-        const baselineY = yScale(cat) + bandWidth / 2;
-        const halfBand = bandWidth / 2;
-        const cloudPeakPx = halfBand * 0.82;
-        const rainNear = halfBand * 0.2;
-        const rainFar = halfBand * 0.92;
-        const boxHalfHeight = Math.min(11, halfBand * 0.18);
-
-        const density = densityByCategory[i];
-        const cloudPoints = grid.map((gx, k) => `${xScale(gx)},${baselineY - density[k] * cloudPeakPx}`);
-        const cloudPath = `M${xScale(grid[0])},${baselineY} L${cloudPoints.join(" L")} L${xScale(grid[GRID_N - 1])},${baselineY} Z`;
-
-        const { q1, median, q3, lowerWhisker, upperWhisker } = statsByCategory[i];
-        const boxTop = baselineY - boxHalfHeight;
-        const boxBottom = baselineY + boxHalfHeight;
-
+      {groups.map((g) => {
+        const color = g.color;
+        const base = yScale(g.arm) + halfBand;
+        const cloud = g.cloud.map(([x, density]) => `${xScale(x)},${base - density * halfBand * CLOUD_SHARE}`);
         return (
-          <g key={cat}>
-            <path d={cloudPath} fill={color} fillOpacity={0.5} stroke={color} strokeOpacity={0.7} strokeWidth={1} />
-            {valuesByCategory[i].map((v, j) => (
+          <g key={g.arm}>
+            <path
+              d={`M${xScale(g.cloud[0][0])},${base} L${cloud.join(" L")} L${xScale(g.cloud[g.cloud.length - 1][0])},${base} Z`}
+              fill={color}
+              fillOpacity={0.5}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+            {g.values.map((v, j) => (
               <circle
                 key={j}
                 cx={xScale(v)}
-                cy={baselineY + rainNear + jittersByCategory[i][j] * (rainFar - rainNear)}
+                cy={base + halfBand * (RAIN_NEAR + ((j * GOLDEN) % 1) * (RAIN_FAR - RAIN_NEAR))}
                 r={4}
                 fill={color}
-                fillOpacity={0.55}
-                stroke={t.pageBg}
-                strokeWidth={0.75}
+                fillOpacity={0.6}
               />
             ))}
-            <line x1={xScale(lowerWhisker)} x2={xScale(upperWhisker)} y1={baselineY} y2={baselineY} stroke={t.ink} strokeWidth={1.5} />
-            <line
-              x1={xScale(lowerWhisker)}
-              x2={xScale(lowerWhisker)}
-              y1={baselineY - boxHalfHeight * 0.8}
-              y2={baselineY + boxHalfHeight * 0.8}
-              stroke={t.ink}
-              strokeWidth={1.5}
-            />
-            <line
-              x1={xScale(upperWhisker)}
-              x2={xScale(upperWhisker)}
-              y1={baselineY - boxHalfHeight * 0.8}
-              y2={baselineY + boxHalfHeight * 0.8}
-              stroke={t.ink}
-              strokeWidth={1.5}
-            />
+            <line x1={xScale(g.whiskerLow)} x2={xScale(g.whiskerHigh)} y1={base} y2={base} stroke={t.ink} strokeWidth={1.5} />
+            {[g.whiskerLow, g.whiskerHigh].map((w, k) => (
+              <line key={k} x1={xScale(w)} x2={xScale(w)} y1={base - BOX_HALF_PX * 0.7} y2={base + BOX_HALF_PX * 0.7} stroke={t.ink} strokeWidth={1.5} />
+            ))}
             <rect
-              x={xScale(q1)}
-              y={boxTop}
-              width={xScale(q3) - xScale(q1)}
-              height={boxHalfHeight * 2}
+              x={xScale(g.q1)}
+              y={base - BOX_HALF_PX}
+              width={xScale(g.q3) - xScale(g.q1)}
+              height={2 * BOX_HALF_PX}
+              rx={2}
               fill={t.elevatedBg}
               stroke={t.ink}
-              strokeWidth={1.25}
-              rx={2}
+              strokeWidth={1.5}
             />
-            <line x1={xScale(median)} x2={xScale(median)} y1={boxTop} y2={boxBottom} stroke={t.ink} strokeWidth={2.2} />
+            <line x1={xScale(g.median)} x2={xScale(g.median)} y1={base - BOX_HALF_PX} y2={base + BOX_HALF_PX} stroke={t.ink} strokeWidth={2.5} />
           </g>
         );
       })}
@@ -168,72 +147,55 @@ function CloudRainBox() {
   );
 }
 
-// Subtle vertical gridlines (15%-opacity ink, per style guide) aligned with
-// the x-axis ticks, so exact reaction-time values are easier to compare
-// across the four category rows.
-function Gridlines() {
-  const xScale = useXScale("value");
-  const { top, height } = useDrawingArea();
-  const ticks = xScale.ticks ? xScale.ticks(8) : [];
-
-  return (
-    <g>
-      {ticks.map((tick) => (
-        <line key={tick} x1={xScale(tick)} x2={xScale(tick)} y1={top} y2={top + height} stroke={t.grid} strokeWidth={1} />
-      ))}
-    </g>
-  );
-}
-
-function ChartTitle({ text, fontSize }) {
-  const { left, top, width: drawW } = useDrawingArea();
-  return (
-    <text x={left + drawW / 2} y={top - 46} textAnchor="middle" fontSize={fontSize} fontWeight={600} fill={t.ink} fontFamily={FONT}>
-      {text}
-    </text>
-  );
-}
-
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  const title = "raincloud-basic · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <ChartContainer
-      width={W}
-      height={H}
-      skipAnimation
-      series={[]}
-      xAxis={[
-        {
-          id: "value",
-          scaleType: "linear",
-          min: X_MIN,
-          max: X_MAX,
-          label: "Reaction Time (ms)",
-          labelStyle: { fontSize: 16 },
-          tickLabelStyle: { fontSize: 14 },
-        },
-      ]}
-      yAxis={[
-        {
-          id: "category",
-          scaleType: "band",
-          data: CATEGORIES,
-          categoryGapRatio: 0.35,
-          tickLabelStyle: { fontSize: 15 },
-        },
-      ]}
-      margin={{ top: 110, right: 70, bottom: 90, left: 190 }}
-    >
-      <ChartTitle text={title} fontSize={titleSize} />
-      <Gridlines />
-      <CloudRainBox />
-      <ChartsXAxis axisId="value" position="bottom" />
-      <ChartsYAxis axisId="category" position="left" disableTicks disableLine />
-    </ChartContainer>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H}
+        skipAnimation
+        series={[]}
+        margin={{ top: 24, right: 56, bottom: 16, left: 24 }}
+        xAxis={[
+          {
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            label: REACTION_TIME,
+            height: 64,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: arms,
+            categoryGapRatio: 0.3,
+            label: ARM,
+            width: 118,
+            disableTicks: true,
+            disableLine: true,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.ink },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      >
+        <ChartsGrid vertical />
+        <RaincloudLayer />
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
+    </div>
   );
 }
