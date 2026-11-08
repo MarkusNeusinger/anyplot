@@ -151,14 +151,15 @@ airports <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Synthetic international air passenger flows (millions per year)
+# Illustrative passenger volumes (millions per year) on real airport pairs;
+# not published route statistics
 flows_raw <- data.frame(
   origin = c("New York", "New York", "New York", "London", "London",
              "London", "Dubai", "Dubai", "Dubai", "Singapore",
              "Singapore", "Singapore", "Tokyo", "Frankfurt", "Amsterdam"),
   dest   = c("London", "Paris", "Dubai", "Dubai", "Tokyo",
-             "Amsterdam", "Singapore", "Frankfurt", "Tokyo", "Hong Kong",
-             "Sydney", "Tokyo", "Hong Kong", "Amsterdam", "Paris"),
+             "Hong Kong", "Singapore", "Frankfurt", "Tokyo", "Hong Kong",
+             "Sydney", "Tokyo", "Hong Kong", "New York", "Dubai"),
   flow   = c(4.2, 2.8, 3.6, 6.5, 3.1, 2.5, 5.8, 3.4, 2.6, 4.7,
              2.3, 3.2, 5.1, 3.8, 2.9),
   stringsAsFactors = FALSE
@@ -220,7 +221,7 @@ p <- ggplot() +
     aes(x = lon, y = lat, fill = region),
     shape  = 21,
     color  = PAGE_BG,
-    size   = 3.5,
+    size   = 2.6,
     stroke = 0.8
   ) +
   geom_label(
@@ -240,7 +241,7 @@ p <- ggplot() +
   coord_cartesian(xlim = c(-100, 165), ylim = c(-40, 65), expand = FALSE) +
   labs(
     title    = "Global Air Passenger Flows · flowmap-origin-destination · r · ggplot2 · anyplot.ai",
-    subtitle = "LHR–DXB is the busiest corridor at 6.5M pax/yr",
+    subtitle = "Illustrative network: LHR–DXB is the busiest corridor at 6.5M pax/yr",
     x = "Longitude", y = "Latitude"
   ) +
   theme_minimal(base_size = 8) +
