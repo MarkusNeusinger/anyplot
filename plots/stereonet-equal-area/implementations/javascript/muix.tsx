@@ -19,7 +19,7 @@ const KAMB_MAX_LEVELS = 5; // contour levels are even multiples of sigma, at mos
 const DENSITY_GRID = 80; // density nodes across the net diameter
 const CURVE_STEPS = 120; // points per projected great or small circle
 const NET_LIMIT = 1.15; // drawing extent in primitive radii, room for the perimeter labels
-const PLANE_ARC_OPACITY = 0.15; // each plane's own great circle, faint behind the poles and the bold mean
+const PLANE_ARC_OPACITY = 0.28; // each plane's own great circle, faint behind the poles and the bold mean
 const CARDINALS = ["N", "E", "S", "W"];
 
 // Columns: set these to your data's column names
