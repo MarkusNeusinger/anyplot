@@ -2,6 +2,7 @@
 // contour-basic: Basic Contour Plot
 // Library: muix 7.29.1 | JavaScript 22.23.0
 // Quality: 84/100 | Created: 2026-06-25
+//# anyplot-orientation: square
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
@@ -15,7 +16,7 @@ import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const LEVEL_COUNT = 6; // filled bands between the field's minimum and maximum, evenly stepped
+const LEVEL_COUNT = 9; // filled bands between the field's minimum and maximum, evenly stepped
 const ISOLINE_INK = "#1A1A17"; // fixed ink: the bands keep their colours in both themes
 
 // Columns: set these to your data's column names
@@ -120,7 +121,7 @@ const HEADER_H = 84;
 const X_AXIS_H = 60;
 const Y_AXIS_W = 72;
 const MARGIN = { top: 16, bottom: 20, left: 24, right: 48 };
-const LEGEND_W = 210;
+const LEGEND_W = 170;
 const xSpan = xs[xs.length - 1] - xs[0];
 const ySpan = ys[ys.length - 1] - ys[0];
 const plotH = Math.min(H - HEADER_H - X_AXIS_H - MARGIN.top - MARGIN.bottom, ((W - LEGEND_W - Y_AXIS_W - MARGIN.left - MARGIN.right) * ySpan) / xSpan);
