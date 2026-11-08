@@ -77,7 +77,7 @@ function Zones() {
   return (
     <g>
       <rect x={left} y={top} width={xOpt - left} height={height} fill={t.inkSoft} fillOpacity={0.07} />
-      <rect x={xOpt} y={top} width={left + width - xOpt} height={height} fill={t.amber} fillOpacity={0.12} />
+      <rect x={xOpt} y={top} width={left + width - xOpt} height={height} fill={t.inkSoft} fillOpacity={0.13} />
       <text x={(left + xOpt) / 2} y={top + 28} fill={t.inkSoft} fontSize={15} fontWeight={600} letterSpacing={1} textAnchor="middle">
         UNDERFITTING
       </text>
