@@ -1,7 +1,7 @@
 // anyplot.ai
 // swarm-basic: Basic Swarm Plot
-// Library: muix 9.17.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-26
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
