@@ -2,57 +2,52 @@ library: muix
 language: javascript
 specification_id: bar-grouped
 created: '2026-08-05T01:26:23Z'
-updated: '2026-08-05T01:44:44Z'
-generated_by: claude-sonnet
-workflow_run: 30966213739
+updated: '2026-11-08T01:10:10Z'
+generated_by: claude-opus-5-5
+adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
+workflow_run: 42432269743
 issue: 1822
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - 'Fully addressed the prior review''s core complaint: the data now has a genuine
-    rank crossover (Software overtakes Hardware in Q3; Services overtakes Hardware
-    by Q4) instead of three series rising in lockstep, and the new subtitle explicitly
-    narrates that insight'
-  - 'Correct Imprint palette in canonical order (brand green #009E73 for Hardware,
-    lavender #C475FD for Software, blue #4467A3 for Services) — identical data colors
-    and theme-correct chrome across both light and dark renders'
-  - New in-bar value labels use a contrast-aware fill color chosen per series (dark
-    ink on the green/lavender bars, light ink on the darker blue bars) rather than
-    a single fixed color — a genuinely thoughtful legibility detail
-  - Explicit font sizing throughout (title, subtitle, axis labels, ticks, legend,
-    bar labels) with no overlap, no clipping, full legibility in both themes
-  - 'Layout balance improved: CHART_TOP and margin.top were tightened, closing most
-    of the previous top-heavy gap between title and chart area'
-  - 'Idiomatic MUI X usage: barLabel + slotProps.barLabel with an ownerState-based
-    callback for per-series label styling, band-scale x-axis with categoryGapRatio,
-    horizontal-only grid, sx-based MuiChartsAxis-line/MuiChartsGrid-line overrides'
+  - 'Clean grouped layout: three bars per quarter cluster share one zero baseline
+    on an untruncated 0–6 axis, with categoryGapRatio 0.35 / barGapRatio 0.12 giving
+    clearly wider gaps between clusters than within them'
+  - 'Imprint palette in canonical order (#009E73 Hardware, #C475FD Software, #4467A3
+    Services), identical across both themes; chrome flips correctly through ANYPLOT_TOKENS'
+  - Native MUI X barLabel per series with in-bar ink chosen per fill color, so every
+    value label reads in both themes
+  - Two-level title block (mandated title plus a data-derived subtitle naming the
+    Q1 and Q4 leaders) gives a clear reading entry point
+  - 'Idiomatic MUI X v9 configuration: valueFormatter for tooltips, borderRadius,
+    disableTicks, per-series [data-series] CSS selectors, skipAnimation, axis bands
+    sized explicitly'
+  - 'Data block follows the adaptable-code zones: role constants, long records, categories
+    and groups from order of appearance, null for missing values'
   weaknesses:
-  - Design Excellence is solid but still mid-range — beyond the subtitle text and
-    rounded bar corners there's no additional visual emphasis (e.g., a highlighted
-    focal bar or callout at the crossover point) that would push this into publication-ready
-    territory (DE-01/DE-02)
-  - Right margin is only 28 CSS px with the legend column sitting close to the canvas
-    edge — comfortable today but leaves little breathing room; a slightly larger right
-    margin would add polish (minor VQ-05 note)
-  - The per-series conditional label-fill technique (LM-02) is a nice touch but relies
-    on a pattern (callback-based per-item styling) that's replicable in most modern
-    charting libraries, so it's only moderately distinctive to MUI X specifically
+  - 'CQ-04 (code): lines 51–58 write out the WCAG relative-luminance and contrast-ratio
+    formula by hand to pick the in-bar label ink → use getContrastRatio (or getLuminance)
+    from @mui/material/styles, which computes the same thing in one call per ink.
+    Likely cause: hand-rolled sRGB linearization in the labelInks map.'
+  - 'Suggestion: placing value labels just inside the bar top instead of at mid-height
+    would put each number next to the bar end it describes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches the #FAF8F1 Imprint light surface — not pure white.
-      Chrome: Title "bar-grouped · javascript · muix · anyplot.ai" top-left in dark ink, with a new subtitle below it ("Software overtakes Hardware in Q3 as Services closes the gap by Q4") in soft gray. Y-axis label "Revenue ($M)" rotated on the left, x-axis label "Fiscal Quarter" centered below the ticks, Q1–Q4 tick labels under each group. Legend (Hardware / Software / Services) now sits vertically stacked at the right-middle of the plot, not overlapping any bar. Subtle horizontal-only gridlines. In-bar value labels ($4.2M, $3.1M, etc.) render in dark ink on the green/lavender bars and light ink on the blue bars. All chrome and labels are clearly readable against the light background.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "Quarterly Revenue by Product Line · bar-grouped · javascript · muix · anyplot.ai" (~55% width) with a softer subtitle "3 product lines across 4 quarters · Hardware leads Q1, Software leads Q4"; horizontal legend top-center (Hardware, Software, Services); y-axis "Revenue (million USD)" with ticks 0.0–6.0 in 0.5 steps; x-axis "Fiscal quarter" with Q1–Q4; subtle horizontal grid; all text dark and readable.
+      Data: four clusters of three rounded bars from a shared zero baseline; first series Hardware in #009E73, Software lavender #C475FD, Services blue #4467A3; bold value labels at mid-bar (dark ink on green/lavender, light ink on blue), none colliding.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches the #1A1A17 Imprint dark surface — not pure black.
-      Chrome: Same title, subtitle, axis labels, tick labels, and legend as the light render, now rendered in light ink against the dark background — no dark-on-dark or low-contrast elements observed. Gridlines remain subtle and visible.
-      Data: Bar colors are pixel-identical to the light render (green #009E73 / lavender #C475FD / blue #4467A3) — only the chrome (background, text, grid) flipped as expected. The in-bar value labels keep the same fixed per-series fill colors as the light render (by design, since bar fills don't change with theme) and remain fully legible on both bar surfaces.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and tick labels all render in light ink; grid lines subtle dark grey but visible; no dark-on-dark text.
+      Data: bar colors and value-label inks identical to the light render; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,75 +59,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes for title/subtitle/axis/ticks/legend/bar-labels;
-          fully readable in both themes, no overflow
+        comment: Explicit 15–22 px fonts; all text readable in both themes and at
+          thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements even with the
-          legend repositioned to the right-middle
+        comment: No text collisions; value labels sit inside their own bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar widths and group spacing (categoryGapRatio) well proportioned
-          for 4 categories x 3 groups; borderRadius adds subtle definition
+        comment: 12 wide bars, legend swatches match the bars in both themes; 12 value
+          labels fit their bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are distinct hues with good contrast; no red-green
-          pairing
+        comment: Green/lavender/blue are CVD-distinct; label inks chosen for contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Top-heavy imbalance from the prior review is fixed (CHART_TOP/margin.top
-          tightened); good canvas utilization, nothing cut off
+        comment: 3200x1800, balanced margins, title ~55% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units ("Revenue ($M)")
+        comment: '''Revenue (million USD)'' and ''Fiscal quarter'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3), theme-correct
-          chrome in both renders'
+        comment: 'Imprint canonical order, first series #009E73, correct theme backgrounds'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above a bare default now: contrast-aware value labels, rounded bars,
-          and a narrative subtitle, but no truly distinctive layout treatment'
+        passed: true
+        comment: Title/subtitle hierarchy and per-fill label inks beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Some refinement visible (rounded bars, horizontal-only grid, disabled
-          ticks, tightened margins) but not fully polished
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Data was redesigned for a genuine rank crossover (Software over Hardware
-          in Q3, Services over Hardware by Q4) and the subtitle names the insight
-          directly
+        comment: Tuned category/bar gap ratios, ticks removed, rounded bar tops
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Data-derived subtitle names the leader shift from Hardware (Q1) to
+          Software (Q4)
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped bar chart, bars side-by-side per category
+        comment: Grouped (side-by-side) bar chart, not stacked
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, consistent bar widths, adequate group
-          spacing
+        comment: Distinct colors with legend, consistent widths, wider inter-cluster
+          gaps, chronological order, readable value labels; all 'A good version shows'
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarters on x-axis, revenue on y-axis, product lines as grouped series
+        comment: Bars at their values from a zero baseline, axis 0–6 covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match series
-          names
+        comment: Title follows the format with descriptive prefix; legend names match
+          the groups
     data_quality:
       score: 15
       max: 15
@@ -172,24 +162,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Now shows a genuine rank crossover across quarters (previously all
-          three series kept the same rank order every quarter)
+        comment: Unequal heights and rank swaps across quarters show what the chart
+          type is for
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible business scenario (quarterly revenue by product
-          line)
+        comment: 'Quarterly revenue by Hardware/Software/Services product lines: plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values and the hardware-plateau / software-growth trend are
-          factually plausible
+        comment: 2.0–5.6 million USD per line per quarter is sensible; no Check values
+          in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -197,59 +187,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: data, then default-exported Chart component'
+        comment: Module-level data and one default-exported component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart, Box, Typography — all used
+        comment: BarChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality
+        comment: Hand-written luminance/contrast formula (lines 51–58) that getContrastRatio
+          from @mui/material/styles computes (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sized from window.ANYPLOT_SIZE, harness contract
-          respected
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, current v9
+          API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: barLabel + slotProps.barLabel ownerState callback, band scale, categoryGapRatio,
-          grid, margin, slotProps.legend — expert use of the high-level API
+        comment: barLabel/valueFormatter per series, categoryGapRatio/barGapRatio,
+          [data-series] selectors, slotProps.legend
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses MUI X-specific slot styling and an ownerState-based per-series
-          label callback, but the pattern is replicable in other libraries with similar
-          callback APIs
+        passed: false
+        comment: borderRadius bars and per-series barLabel callbacks with formatted
+          tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:06:15Z'
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
+  - html-export
   patterns:
+  - data-generation
+  - long-to-wide
   - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
-  - minimal-chrome
