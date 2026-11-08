@@ -1,225 +1,262 @@
 // anyplot.ai
 // indicator-sma: Simple Moving Average (SMA) Indicator Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-02
-import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { Box, Typography } from "@mui/material";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { ChartsAxisHighlight } from "@mui/x-charts/ChartsAxisHighlight";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const [BRAND, SHORT_COLOR, MEDIUM_COLOR, LONG_COLOR] = t.palette;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-const SYMBOL = "AURA";
-const N = 300;
-const WINDOW_SHORT = 20;
-const WINDOW_MEDIUM = 50;
-const WINDOW_LONG = 200;
-const START_PRICE = 68;
+// Constants
+const Y_PAD_SHARE = 0.06; // share of the price range added above and below the outermost line
 
-// Fixed-seed LCG (Numerical Recipes constants) — the browser has no seeded RNG.
-let seed = 42;
-const rand = () => {
-  seed = (seed * 1664525 + 1013904223) % 4294967296;
-  return seed / 4294967296;
-};
-const gaussian = () => {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-};
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const CLOSE = "AURA close (USD)"; // role: close
+const SMA_SHORT = "SMA 20 (USD)"; // role: sma_short
+const SMA_MEDIUM = "SMA 50 (USD)"; // role: sma_medium
+const SMA_LONG = "SMA 200 (USD)"; // role: sma_long
 
-// Trading dates (weekdays only)
-const dates = [];
-const cursor = new Date(2023, 5, 1);
-while (dates.length < N) {
-  const day = cursor.getDay();
-  if (day !== 0 && day !== 6) dates.push(new Date(cursor));
-  cursor.setDate(cursor.getDate() + 1);
-}
+// Data: replace this block with your own records, one object per trading day
+// 300 weekdays of a stock from 1 Jun 2023: a steady uptrend, a choppy pullback (days 110-189)
+// that gives back about 12 % of the price, and a recovery. Each SMA averages the last 20, 50
+// or 200 closes and stays empty until its window is full.
+const data = (() => {
+  const periods = 300;
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+  const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+  const round2 = (v: number) => Math.round(v * 100) / 100;
 
-// Daily close through three regimes — steady uptrend, a choppy pullback
-// (death cross), then a recovery uptrend (golden cross) — so the SMA
-// crossovers described in the spec's applications are visible.
-const PULLBACK_START = 110;
-const PULLBACK_END = 190;
-const close = [START_PRICE];
-for (let i = 1; i < N; i += 1) {
-  const pullback = i >= PULLBACK_START && i < PULLBACK_END;
-  const driftPct = pullback ? -0.12 : 0.09;
-  const dailyVolPct = pullback ? 1.3 : 0.9;
-  const changePct = driftPct + dailyVolPct * gaussian();
-  close.push(Math.max(10, close[i - 1] * (1 + changePct / 100)));
-}
+  const days: string[] = [];
+  const cursor = new Date(Date.UTC(2023, 5, 1));
+  while (days.length < periods) {
+    if (cursor.getUTCDay() % 6 !== 0) days.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
 
-const round2 = (v) => Math.round(v * 100) / 100;
+  const close = [68];
+  for (let i = 1; i < periods; i += 1) {
+    const pullback = i >= 110 && i < 190;
+    const changePct = (pullback ? -0.3 : 0.09) + (pullback ? 1.3 : 0.9) * gaussian();
+    close.push(close[i - 1] * (1 + changePct / 100));
+  }
 
-const sma = (data, window) =>
-  data.map((_, i) => {
-    if (i < window - 1) return null;
-    const windowSlice = data.slice(i - window + 1, i + 1);
-    return round2(windowSlice.reduce((sum, v) => sum + v, 0) / window);
+  // Running sums over the last 20, 50 and 200 closes
+  let sumShort = 0;
+  let sumMedium = 0;
+  let sumLong = 0;
+  const rows = [];
+  for (let i = 0; i < periods; i += 1) {
+    sumShort += close[i] - (i >= 20 ? close[i - 20] : 0);
+    sumMedium += close[i] - (i >= 50 ? close[i - 50] : 0);
+    sumLong += close[i] - (i >= 200 ? close[i - 200] : 0);
+    rows.push({
+      [DATE]: days[i],
+      [CLOSE]: round2(close[i]),
+      [SMA_SHORT]: i >= 19 ? round2(sumShort / 20) : null,
+      [SMA_MEDIUM]: i >= 49 ? round2(sumMedium / 50) : null,
+      [SMA_LONG]: i >= 199 ? round2(sumLong / 200) : null,
+    });
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+// ISO dates are read as local midnight, the frame the time axis places its ticks in
+const rows = [...data].sort((a, b) => Date.parse(a[DATE]) - Date.parse(b[DATE]));
+const n = rows.length;
+const dates = rows.map((d) => new Date(`${d[DATE]}T00:00:00`));
+const closes = rows.map((d) => d[CLOSE] ?? null);
+const shorts = rows.map((d) => d[SMA_SHORT] ?? null);
+const mediums = rows.map((d) => d[SMA_MEDIUM] ?? null);
+const longs = rows.map((d) => d[SMA_LONG] ?? null);
+
+// A crossover of the short over the medium SMA is a change of side against the last day on
+// which the two differed; its mark sits where the two straight segments meet, or on the day
+// they were equal
+const crossovers: { time: number; value: number; upward: boolean }[] = [];
+let side = 0; // sign of the last non-zero difference short - medium
+for (let i = 1; i < n; i += 1) {
+  const s0 = shorts[i - 1];
+  const m0 = mediums[i - 1];
+  const s1 = shorts[i];
+  const m1 = mediums[i];
+  if (s0 == null || m0 == null || s1 == null || m1 == null) continue;
+  const before = s0 - m0;
+  const after = s1 - m1;
+  if (before !== 0) side = Math.sign(before);
+  if (after === 0 || side === 0 || Math.sign(after) === side) continue;
+  const f = before / (before - after); // 0 when the two were equal on the day before
+  crossovers.push({
+    time: dates[i - 1].getTime() + f * (dates[i].getTime() - dates[i - 1].getTime()),
+    value: s0 + f * (s1 - s0),
+    upward: after > 0,
   });
-
-const smaShort = sma(close, WINDOW_SHORT);
-const smaMedium = sma(close, WINDOW_MEDIUM);
-const smaLong = sma(close, WINDOW_LONG);
-const closeRounded = close.map(round2);
-
-// Detect 20/50-day SMA crossovers so the chart can call out the death-cross /
-// golden-cross moments described in the spec's Applications section. Only the
-// crossovers that actually confirm each regime change (the first death cross
-// once the pullback starts, the first golden cross once the recovery starts)
-// are annotated, keeping the markers tied to the story instead of every
-// short-term wiggle.
-const crossovers = [];
-for (let i = 1; i < N; i += 1) {
-  if (smaShort[i - 1] === null || smaMedium[i - 1] === null) continue;
-  if (smaShort[i] === null || smaMedium[i] === null) continue;
-  const prevDiff = smaShort[i - 1] - smaMedium[i - 1];
-  const diff = smaShort[i] - smaMedium[i];
-  if (prevDiff === 0 || Math.sign(prevDiff) === Math.sign(diff)) continue;
-  crossovers.push({ index: i, date: dates[i], golden: diff > 0 });
 }
-const deathCross = crossovers.find((c) => c.index >= PULLBACK_START && !c.golden);
-const goldenCross = crossovers.find((c) => c.index >= PULLBACK_END && c.golden);
-const signals = [deathCross, goldenCross]
-  .filter(Boolean)
-  .map((c) => ({ date: c.date, label: c.golden ? "Golden Cross" : "Death Cross" }));
+const upwardCount = crossovers.filter((c) => c.upward).length;
+const downwardCount = crossovers.length - upwardCount;
 
-// Explicit y-axis bounds so the four overlapping lines use the full canvas.
-const allValues = [...closeRounded, ...smaShort, ...smaMedium, ...smaLong].filter(
-  (v) => v !== null,
-);
-const dataMin = Math.min(...allValues);
-const dataMax = Math.max(...allValues);
-const axisPadding = (dataMax - dataMin) * 0.1;
-const yMin = Math.floor((dataMin - axisPadding) / 5) * 5;
-const yMax = Math.ceil((dataMax + axisPadding) / 5) * 5;
+const drawn = [...closes, ...shorts, ...mediums, ...longs].filter((v) => v != null);
+const yLow = Math.min(...drawn);
+const yHigh = Math.max(...drawn);
+const yPad = (yHigh - yLow) * Y_PAD_SHARE;
 
-const TITLE = `${SYMBOL} · indicator-sma · javascript · muix · anyplot.ai`;
+const monthFormat = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
+const fullFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
+const shortName = SMA_SHORT.replace(/\s*\([^)]*\)\s*$/, "");
+const mediumName = SMA_MEDIUM.replace(/\s*\([^)]*\)\s*$/, "");
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+const TITLE = "indicator-sma · javascript · muix · anyplot.ai";
+const SUBTITLE =
+  `${n} periods, ${fullFormat.format(dates[0])} – ${fullFormat.format(dates[n - 1])} · ` +
+  `▲ ${shortName} crosses above ${mediumName} (${upwardCount}×) · ▼ crosses below (${downwardCount}×)`;
+const HEADER_H = 84;
+const LEGEND_H = 44;
+const MARK_PX = 8; // half the width of a crossover triangle
+
+function CrossoverMarks() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  return (
+    <g>
+      {crossovers.map((c) => {
+        const x = xScale(new Date(c.time));
+        const y = yScale(c.value);
+        const tip = c.upward ? -1.15 * MARK_PX : 1.15 * MARK_PX;
+        return (
+          <path
+            key={c.time}
+            d={`M${x},${y + tip}L${x + MARK_PX},${y - tip * 0.6}L${x - MARK_PX},${y - tip * 0.6}Z`}
+            fill={t.ink}
+            stroke={t.pageBg}
+            strokeWidth={1.5}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const titleHeight = 70;
 
   return (
-    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
-      <Typography
-        color="text.primary"
-        sx={{
-          height: titleHeight,
-          lineHeight: `${titleHeight}px`,
-          pl: 1,
-          fontSize: 28,
-          fontWeight: 700,
-        }}
-      >
-        {TITLE}
-      </Typography>
-      <LineChart
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "14px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.6 }}>{SUBTITLE}</Typography>
+      </Box>
+      <ChartsDataProvider
         width={width}
-        height={height - titleHeight}
+        height={height - HEADER_H - LEGEND_H}
+        margin={{ top: 12, right: 40, bottom: 8, left: 20 }}
         skipAnimation
-        margin={{ top: 72, right: 48, bottom: 76, left: 132 }}
+        // The averages come first so the close is drawn on top of them; the legend reverses
+        // this order so it reads close, then the SMAs by ascending period
+        series={[
+          {
+            type: "line",
+            id: "smaLong",
+            data: longs,
+            label: SMA_LONG,
+            color: t.palette[3],
+            curve: "linear",
+            showMark: false,
+            labelMarkType: "line",
+          },
+          {
+            type: "line",
+            id: "smaMedium",
+            data: mediums,
+            label: SMA_MEDIUM,
+            color: t.palette[2],
+            curve: "linear",
+            showMark: false,
+            labelMarkType: "line",
+          },
+          {
+            type: "line",
+            id: "smaShort",
+            data: shorts,
+            label: SMA_SHORT,
+            color: t.palette[1],
+            curve: "linear",
+            showMark: false,
+            labelMarkType: "line",
+          },
+          {
+            type: "line",
+            id: "close",
+            data: closes,
+            label: CLOSE,
+            color: t.palette[0],
+            curve: "linear",
+            showMark: false,
+            labelMarkType: "line",
+          },
+        ]}
         xAxis={[
           {
-            data: dates,
             scaleType: "time",
-            label: "Trading Date",
-            labelStyle: { fontSize: 16 },
-            tickLabelStyle: { fontSize: 14 },
-            valueFormatter: (date) =>
-              date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              }),
+            data: dates,
+            domainLimit: "strict",
+            label: DATE,
+            height: 64,
+            tickNumber: 10,
+            valueFormatter: (v: Date, context) =>
+              context.location === "tick" ? monthFormat.format(v) : fullFormat.format(v),
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Price (USD)",
-            labelStyle: { fontSize: 16 },
-            tickFontSize: 40,
-            tickLabelStyle: { fontSize: 14 },
-            valueFormatter: (v) => `$${v.toFixed(0)}`,
-            min: yMin,
-            max: yMax,
+            min: yLow - yPad,
+            max: yHigh + yPad,
+            width: 84,
+            label: CLOSE,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        series={[
-          {
-            id: "smaLong",
-            data: smaLong,
-            color: LONG_COLOR,
-            showMark: false,
-            connectNulls: false,
-            curve: "monotoneX",
-            label: "SMA 200",
-          },
-          {
-            id: "smaMedium",
-            data: smaMedium,
-            color: MEDIUM_COLOR,
-            showMark: false,
-            connectNulls: false,
-            curve: "monotoneX",
-            label: "SMA 50",
-          },
-          {
-            id: "smaShort",
-            data: smaShort,
-            color: SHORT_COLOR,
-            showMark: false,
-            connectNulls: false,
-            curve: "monotoneX",
-            label: "SMA 20",
-          },
-          {
-            id: "close",
-            data: closeRounded,
-            color: BRAND,
-            showMark: false,
-            curve: "monotoneX",
-            label: `${SYMBOL} Close`,
-          },
-        ]}
-        grid={{ horizontal: true }}
-        slotProps={{
-          legend: {
-            direction: "row",
-            position: { vertical: "top", horizontal: "middle" },
-            labelStyle: { fontSize: 14 },
-          },
-        }}
-        sx={{
-          "& .MuiLineElement-root": { strokeWidth: 2 },
-          "& .MuiLineElement-series-close": { strokeWidth: 3 },
-          "& .MuiLineElement-series-smaShort": {
-            strokeWidth: 2,
-            strokeDasharray: "8 5",
-          },
-          "& .MuiLineElement-series-smaMedium": {
-            strokeWidth: 2,
-            strokeDasharray: "2 4",
-          },
-          "& .MuiLineElement-series-smaLong": {
-            strokeWidth: 2.25,
-          },
-        }}
       >
-        {signals.map((c) => (
-          <ChartsReferenceLine
-            key={c.date.toISOString()}
-            x={c.date}
-            label={c.label}
-            labelAlign="start"
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1 }}
-            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-          />
-        ))}
-      </LineChart>
+        <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 15, color: t.ink, gap: "28px", flexDirection: "row-reverse" }} />
+          <ChartsSurface
+            sx={{
+              "& .MuiLineChart-line": { strokeWidth: 2 },
+              '& .MuiLineChart-line[data-series="close"]': { strokeWidth: 3 },
+              '& .MuiLineChart-line[data-series="smaShort"]': { strokeDasharray: "8 5" },
+              '& .MuiLineChart-line[data-series="smaMedium"]': { strokeWidth: 2.75, strokeDasharray: "2 4" },
+              '& .MuiLineChart-line[data-series="smaLong"]': { strokeWidth: 2.25 },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
+            }}
+          >
+            <ChartsGrid horizontal />
+            <LinePlot skipAnimation />
+            <CrossoverMarks />
+            <ChartsAxisHighlight x="line" />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+          <ChartsTooltip trigger="axis" />
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </Box>
   );
 }
