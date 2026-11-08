@@ -15,6 +15,9 @@ const STATUS_COLOR = { good: t.palette[0], warning: t.amber, critical: t.palette
 const SEVERITY_RANK = { critical: 0, warning: 1, good: 2 };
 const FAVORABLE = t.palette[0];
 const UNFAVORABLE = t.palette[4];
+// One neutral colour for every sparkline: the status reads from the tile's stripe alone, and the
+// amber warning hue is never needed as a thin line on the light page
+const SPARK_COLOR = t.inkSoft;
 const SPARK_PAD = 0.25; // share of a history's range left free above and below its sparkline
 const SPARK_H = 130;
 const TITLE = "dashboard-metrics-tiles · javascript · muix · anyplot.ai";
@@ -143,11 +146,9 @@ export default function Chart() {
                 minHeight: 0,
                 boxSizing: "border-box",
                 borderRadius: "10px",
-                border: `1px solid ${isCritical ? `${tile.accent}66` : t.grid}`,
+                border: `1px solid ${t.grid}`,
                 borderLeft: `${isCritical ? 8 : 6}px solid ${tile.accent}`,
-                background: isCritical
-                  ? `linear-gradient(${tile.accent}14, ${tile.accent}14), ${t.elevatedBg}`
-                  : t.elevatedBg,
+                background: t.elevatedBg,
                 padding: "18px 24px",
               }}
             >
@@ -175,7 +176,7 @@ export default function Chart() {
                   data={tile.values}
                   xAxis={{ data: tile.times, scaleType: "time" }}
                   yAxis={{ min: tile.yMin, max: tile.yMax }}
-                  color={tile.accent}
+                  color={SPARK_COLOR}
                   area
                   baseline="min"
                   curve="monotoneX"
@@ -189,8 +190,8 @@ export default function Chart() {
                 >
                   <defs>
                     <linearGradient id={`spark-fill-${i}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={tile.accent} stopOpacity={0.55} />
-                      <stop offset="100%" stopColor={tile.accent} stopOpacity={0.05} />
+                      <stop offset="0%" stopColor={SPARK_COLOR} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={SPARK_COLOR} stopOpacity={0.03} />
                     </linearGradient>
                   </defs>
                 </SparkLineChart>
