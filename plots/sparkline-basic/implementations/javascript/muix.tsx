@@ -19,7 +19,7 @@ const VALUE = "Value"; // role: values
 // Four dashboard KPIs over 45 days, each a fixed-seed random walk
 const data = (() => {
   const walks = [
-    { name: "Monthly revenue (k$)", seed: 7, start: 82, drift: 0.9, volatility: 6 },
+    { name: "Daily revenue (k$)", seed: 7, start: 82, drift: 0.9, volatility: 6 },
     { name: "Active users", seed: 19, start: 3400, drift: 12, volatility: 220 },
     { name: "Avg response time (ms)", seed: 31, start: 260, drift: -1.1, volatility: 14 },
     { name: "Conversion rate (%)", seed: 53, start: 4.2, drift: 0.02, volatility: 0.35 },
@@ -38,7 +38,7 @@ const data = (() => {
 })();
 
 // Plot: reads only data and the constants above
-const metrics = [...new Set(data.map((d) => d[METRIC]))].map((name, i) => {
+const metrics = [...new Set(data.map((d) => d[METRIC]))].map((name) => {
   const values = data
     .filter((d) => d[METRIC] === name)
     .sort((a, b) => a[DAY] - b[DAY])
@@ -47,7 +47,6 @@ const metrics = [...new Set(data.map((d) => d[METRIC]))].map((name, i) => {
   return {
     name,
     values,
-    color: t.palette[i],
     min: Math.min(...values),
     max: Math.max(...values),
     lastText: last.toFixed(Math.abs(last) >= 100 ? 0 : Math.abs(last) >= 10 ? 1 : 2),
@@ -106,7 +105,7 @@ export default function Chart() {
               data={m.values}
               width={sparkW}
               height={sparkH}
-              color={m.color}
+              color={t.palette[0]}
               curve="linear"
               area
               baseline="min"
