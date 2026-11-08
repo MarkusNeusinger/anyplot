@@ -2,141 +2,119 @@ library: muix
 language: javascript
 specification_id: line-win-probability
 created: '2026-06-21T04:00:22Z'
-updated: '2026-06-21T04:25:43Z'
-generated_by: claude-sonnet
-workflow_run: 27892497648
+updated: '2026-11-08T03:43:54Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42443663740
 issue: 4418
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 89
 review:
   strengths:
-  - Correct split-fill technique using two area series with baseline=0.5 — elegantly
-    captures home/away probability zones without custom SVG
-  - 'Excellent data storytelling: reference lines for all key events (goals, half-time)
-    plus the final-score subtitle make the match narrative immediately clear'
-  - Perfect Imprint palette compliance — home series uses t.palette[0] (#009E73 brand
-    green), away series uses t.palette[2] (#4467A3 Imprint blue) with semantic justification
-    for City Blue FC
-  - Deterministic LCG (seed=42) ensures full reproducibility without Math.random()
-  - 'Fully theme-adaptive chrome: all title, label, and reference-line text uses t.ink
-    / t.inkSoft / t.pageBg; both renders pass readability checks with no dark-on-dark
-    or light-on-light issues'
+  - 'Splits the fill exactly at each 50% crossing: interpolated crossing points feed
+    two null-gapped area series with baseline: 0.5'
+  - Goal annotations are composed natively inside the LineChart through useXScale/useYScale,
+    so they stay on their data positions
+  - 'Full theme threading: halos, reference lines, grid and text all come from ANYPLOT_TOKENS,
+    and both renders read cleanly'
+  - The final score sits in the subtitle, clear of the line and the fills, and every
+    event label carries the running score
+  - The series valueFormatter gives readable percentages in the interactive HTML tooltip
   weaknesses:
-  - 'VQ-01 minor: reference line labels are 12px CSS (~24px native at 2x) — on the
-    small side for the 3200x1800 canvas; raise to 13–14px for all ChartsReferenceLine
-    labelStyle entries for slightly better mobile readability'
-  - 'VQ-02 minor: labelAlign=end places both Goal-Home-84-prime and 50-pct-even-odds
-    labels in the right-hand zone at a shared horizontal band; with the 48px right
-    margin they are visually crowded and could overlap under different font-metric
-    conditions — consider labelAlign=start for the 84-minute reference line or increase
-    right margin to 72px'
-  - 'DE-02: MUI X default grid and axis chrome are mostly untouched; a lower-opacity
-    grid (e.g. strokeOpacity: 0.12) and explicit removal of axis spine lines where
-    MUI X allows it would lift the visual refinement further'
+  - 'Suggestion: the legend line glyphs are short and thin compared with the filled
+    areas they stand for; a wider glyph would read faster in the thumbnail.'
+  - 'Suggestion: the gap between the x tick labels and ''Match time (min)'' (axis
+    height 64) could tighten a little.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) cream surface — correct theme background.
-      Chrome: Title "line-win-probability · javascript · muix · anyplot.ai" in dark bold text, clearly readable. Subtitle "Forest Green FC 2 – 1 City Blue FC · 90 minutes" in secondary ink below. Y-axis label "Home Win Probability" (rotated) and X-axis label "Match Time (minutes)" both readable in secondary ink. Tick labels (0%–100% on Y; 0'–90' on X) in 12px CSS are legible. Reference-line labels "Goal (Away) 19'", "Half Time", "Goal (Home) 58'" at top of vertical lines, "Goal (Home) 84'" at bottom-right with labelAlign=end, and "50% — even odds" at the right end of the horizontal dashed line — all readable, though the right-side zone is somewhat crowded.
-      Data: Green (#009E73) area fill above the 50% baseline (home advantage), blue (#4467A3) area fill below 50% baseline (away advantage). Fill opacity 0.82. Probability starts at 50%, drops to ~27% after away goal (19'), stays suppressed through first half, bounces after equaliser (58'), then surges to ~89% after the winning home goal (84'). Legend top-right correctly labels both series.
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: warm off-white #FAF8F1, 3200x1800
+      Chrome: bold title "line-win-probability · javascript · muix · anyplot.ai"; muted subtitle with the final score "Harwick Town 2 – 1 Millbrook Rovers"; top-right legend; y axis "Home win probability" fixed 0-100% with subtle grid lines; x axis "Match time (min)" 0'-90'; dashed "Half time" marker at 45'; heavy dark 50% reference line. All text is readable.
+      Data: win probability line, purple (Imprint 2) with a translucent purple fill while below 50% and green #009E73 with a green fill above; the fill switches exactly at the crossings (brief blip near 15', main switch at 58'). Goal dots in the scoring team's colour with page-coloured halos and bold labels at 19', 58' and 84'. The line ends pinned at 100%.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface — correct dark theme background.
-      Chrome: Title and subtitle appear in light-cream ink, clearly readable against the dark background. Axis labels, tick labels, reference-line labels all render in theme-adaptive inkSoft — light text on dark background, no dark-on-dark failure observed. Legend text is light and legible. Grid lines are subtle against the dark surface.
-      Data: Green (#009E73) and blue (#4467A3) area fills are IDENTICAL to the light render — only the chrome (background, text) has flipped. Brand green #009E73 remains clearly visible on the dark surface. Reference lines (goal markers in team colors, half-time and 50% line in adaptive ink) are visible.
-      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark issues detected.
+      Background: warm near-black #1A1A17
+      Chrome: title, subtitle, ticks, axis titles, legend and event labels all in light ink; the 50% line is light grey; grid subtle; no dark-on-dark text
+      Data: green and purple identical to the light render; the fills are darker blends on the dark page; the halos follow the page colour
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all readable in both themes.
-          Reference line labels at 12px CSS are slightly small for the high-res canvas;
-          all text is theme-adaptive via t.ink/t.inkSoft tokens.
+        comment: All font sizes set explicitly; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No hard overlaps observed. Minor crowding in the right-hand zone
-          where labelAlign=end places Goal-Home-84-prime and 50-pct-even-odds close
-          together with 48px right margin.
+        comment: Event labels sit in empty space left of their swings
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area fills (fillOpacity 0.82) clearly visible. Lines at strokeWidth
-          2.5. Reference lines visible with appropriate dash/opacity. Both team zones
-          identifiable.
+        comment: 3 px line, haloed event dots, legend glyphs visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette positions 1 and 3 (#009E73 green / #4467A3 blue)
-          — CVD-safe pair. No red-green sole encoding.'
+        comment: CVD-safe green/purple, and position against the 50% line carries
+          the meaning
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed. Layout well-proportioned: TITLE_HEIGHT=70 +
-          chart fills remaining height. Margins adequate. Title occupies ~70% width
-          as expected.'
+        comment: 3200x1800, balanced, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title correct format. Y-axis: Home Win Probability, X-axis: Match
-          Time (minutes). Y formatted as percentage, X formatted with prime tick formatter.'
+        comment: Descriptive, with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series t.palette[0]=#009E73. Away series t.palette[2]=#4467A3
-          with semantic justification. pageBg used for container. All chrome via t.ink/t.inkSoft.
-          Data colors identical across themes.
+        comment: 'Home #009E73, away Imprint 2; theme-correct backgrounds'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Professional look: correct Imprint palette, semantic color mapping
-          (green=home, blue=away), custom subtitle with match score, area fills tell
-          a clear story. Not extraordinary but well above default.'
+        comment: 'Type hierarchy: bold title, muted subtitle, bold event labels set
+          apart from muted ticks'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Reference lines with custom dasharray and opacity. fillOpacity 0.82.
-          disableTicks. Custom sx targeting MuiAreaElement and MuiLineElement classes.
-          MUI default grid mostly unchanged.
+        comment: Page-coloured halos on event dots, labels on the inbound side of
+          each swing, half-time label tucked at the top
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Match narrative is immediately clear: probability zones with fill,
-          reference lines for all key events, subtitle with final score. The late
-          winning goal surge at 84 is a natural focal point.'
+        comment: Event dots coloured by the scoring team; the running score in each
+          label tells the comeback
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Win probability line chart with area fills — exactly matches spec.
+        comment: Win probability line with fills on either side of 50%
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y 0-100%, 50% reference line, home fill above 50%, away fill below
-          50%, event annotations, final score subtitle, half-time marker.
+        comment: 0-100% axis, 50% line, fills switching at crossings, annotated goals,
+          half-time marker, final score in the subtitle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=match time 0-90 min, Y=home win probability 0-1 (formatted as %).
-          Axes correctly span all data.
+        comment: Linear segments, interpolated crossings at exactly 50%, marks at
+          their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: line-win-probability · javascript · muix · anyplot.ai. Legend:
-          Home Win — Forest Green FC / Away Win — City Blue FC.'
+        comment: Mandated title; legend names the teams and their roles
     data_quality:
       score: 15
       max: 15
@@ -177,22 +154,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all spec aspects: probability line, dual-team fill, event
-          annotations (goals, half-time), final score, team labels.'
+        comment: Goal against, equaliser, late winner, near-crossing, flat stretch,
+          pinned end
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soccer match with 2-1 scoreline. Neutral fictional teams. Realistic
-          probability trajectory with plausible swings around goals.
+        comment: Fictional football match with plausible names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 90-minute match. Probability clamped to 0.05–0.97 (not extreme).
-          91 data points is appropriate density for this spec.
+        comment: 91 per-minute updates; probabilities in [0,1] settling to 1; the
+          spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -202,60 +178,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple functional component. lcg and clamp helpers are small and
-          necessary.
+        comment: Linear script; only the required Chart and a hook overlay component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with seed=42. No Math.random().
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart, ChartsReferenceLine, Box, Typography — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: homeArea/awayArea derivation is clean. No fake UI. Appropriate complexity.
+        comment: Crossing interpolation is needed for an exact fill split
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, window.ANYPLOT_SIZE sizing, no manual
-          createRoot.
+        comment: Harness mount, skipAnimation, current API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: LineChart with area series, ChartsReferenceLine, slotProps.legend,
-          labelStyle/tickLabelStyle — all idiomatic MUI X community patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: area+baseline=0.5 for mid-split fill is a distinctive MUI X technique.
-          sx targeting MuiAreaElement/MuiLineElement CSS classes. ChartsReferenceLine
-          used creatively for event markers.
+        comment: area with baseline 0.5 on null-gapped series, ChartsReferenceLine,
+          axis valueFormatters
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom SVG overlay composed as a LineChart child via useXScale/useYScale;
+          series valueFormatter for tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:41:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
+  - publication-ready
