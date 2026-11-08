@@ -97,11 +97,14 @@ const valueTicks = Array.from(
   (_, i) => (Math.ceil(vMin / valueStep) + i) * valueStep,
 );
 
-const dateText = (d) => d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const firstDateText = rows[0][DATE].toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const lastDateText = rows[rows.length - 1][DATE].toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
 const TITLE = "spiral-timeseries · javascript · muix · anyplot.ai";
-const SUBTITLE = `${rows.length.toLocaleString("en-US")} daily values, ${dateText(rows[0][DATE])} to ${dateText(
-  rows[rows.length - 1][DATE],
-)} · one revolution per ${CYCLE_PERIOD}, earliest at the centre`;
+const SUBTITLE = `${rows.length.toLocaleString("en-US")} daily values, ${firstDateText} to ${lastDateText} · one revolution per ${CYCLE_PERIOD}, earliest at the centre`;
 const HEADER_H = 84;
 const LEGEND_W = 150;
 const BASE_MARGIN = 40;
