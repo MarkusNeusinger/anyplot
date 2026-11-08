@@ -1,7 +1,7 @@
 // anyplot.ai
 // drawdown-basic: Drawdown Chart
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: pending | Updated: 2026-11-08
+// Quality: 89/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
