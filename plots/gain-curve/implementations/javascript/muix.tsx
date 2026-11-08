@@ -1,7 +1,7 @@
 // anyplot.ai
 // gain-curve: Cumulative Gains Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
