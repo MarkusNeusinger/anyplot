@@ -118,6 +118,7 @@ export default function Chart() {
           stackOffset: "expand" as const,
           area: true,
           showMark: false,
+          labelMarkType: "square" as const,
           valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) =>
             v == null ? "" : `${Math.round((shares[g][dataIndex] ?? 0) * 100)}% · ${v.toLocaleString("en-US")} ${UNIT}`.trim(),
         }))}
@@ -129,7 +130,7 @@ export default function Chart() {
           },
         }}
         sx={{
-          "& .MuiLineChart-area": { fillOpacity: 0.9 },
+          "& .MuiLineChart-area": { fillOpacity: 0.9, filter: "none" },
           "& .MuiLineChart-line": { strokeWidth: 2 },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
