@@ -4,6 +4,7 @@
 // Quality: 88/100 | Created: 2026-08-24
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -99,6 +100,39 @@ const limit = Math.ceil(reach / halfStep) * halfStep;
 const fmtSigned = (v: number) => `${v > 0 ? "+" : ""}${v}`;
 const SUBTITLE = `${rows.length} questions, sorted by net agreement (${fmtSigned(Math.max(...nets))} to ${fmtSigned(Math.min(...nets))} points) · neutral split across the midline`;
 
+// The neutral share is labelled once, in full, on the midline it straddles; a halo
+// in the segment's own fill breaks the midline behind the text
+function NeutralLabels() {
+  const xScale = useXScale("share");
+  const yScale = useYScale();
+  const bw = yScale.bandwidth();
+  return (
+    <g>
+      {rows.map((d) => {
+        const share = d[NEUTRAL];
+        if (share == null || Math.abs(xScale(share / 2) - xScale(-share / 2)) < MIN_LABEL_PX) return null;
+        return (
+          <text
+            key={d[QUESTION]}
+            x={xScale(0)}
+            y={yScale(d[QUESTION]) + bw / 2}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={15}
+            fontWeight={600}
+            fill={LEVEL_INKS[2]}
+            stroke={LEVEL_COLORS[2]}
+            strokeWidth={5}
+            paintOrder="stroke"
+          >
+            {`${share}%`}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
@@ -127,9 +161,9 @@ export default function Chart() {
           data: rows.map((d) => seg.sign * d[LEVELS[seg.level]] * seg.share),
           valueFormatter: (_v: number | null, { dataIndex }: { dataIndex: number }) =>
             `${rows[dataIndex][LEVELS[seg.level]]}%`,
-          // the neutral share is labelled once, in full, on its right half
+          // the neutral halves carry no label of their own: NeutralLabels draws it on the midline
           barLabel: (item: { dataIndex: number }, ctx: { bar: { width: number } }) =>
-            seg.id === "neutral-left" || ctx.bar.width < MIN_LABEL_PX ? null : `${rows[item.dataIndex][LEVELS[seg.level]]}%`,
+            seg.level === 2 || ctx.bar.width < MIN_LABEL_PX ? null : `${rows[item.dataIndex][LEVELS[seg.level]]}%`,
         }))}
         xAxis={[
           {
@@ -165,6 +199,7 @@ export default function Chart() {
         }}
       >
         <ChartsReferenceLine x={0} axisId="share" lineStyle={{ stroke: t.ink, strokeWidth: 2 }} />
+        <NeutralLabels />
       </BarChart>
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "28px" }}>
         {LEVELS.map((level, i) => (
