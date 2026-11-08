@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-08
@@ -17,11 +17,14 @@ import time
 from pathlib import Path
 
 import numpy as np
-from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, LabelSet, Legend, LegendItem, WMTSTileSource
+import pandas as pd
+from bokeh.events import DocumentReady
+from bokeh.io import curdoc, output_file, save
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, LabelSet, Legend, LegendItem, TapTool, WMTSTileSource
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -30,7 +33,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Tile basemap — USGS The National Map topo tiles: public domain and keyless (ArcGIS z/y/x order).
 # The tiles have no dark variant, so they are drawn translucent over the page background, which
@@ -38,82 +40,71 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 TILE_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{Z}/{Y}/{X}"
 TILE_ALPHA = 0.55 if THEME == "light" else 0.30
 
-# Imprint palette — canonical imprint slot order (green, lavender, blue, ochre)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette — canonical order, one position per store type
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — coffee shop chain locations across NYC neighborhoods
+# Constants
+CELL_SHARE = 0.18  # cluster cell edge as a share of the visible map height, so clusters split as you zoom in
+MIN_SIZE, MAX_SIZE = 55, 130  # cluster marker diameter in screen pixels, smallest to largest count
+
+# Columns: set these to your table's column names
+LAT = "Latitude (°)"  # role: lat
+LON = "Longitude (°)"  # role: lon
+STORE_TYPE = "Store Type"  # role: category
+NEIGHBORHOOD = "Neighborhood"  # role: label
+
+# Data: coffee chain store locations across NYC neighborhoods; replace with e.g. df = pd.read_csv("stores.csv")
 np.random.seed(42)
-
 neighborhoods = [
-    {"name": "Times Square", "lat": 40.758, "lon": -73.985, "stores": 45},
-    {"name": "Midtown", "lat": 40.755, "lon": -73.975, "stores": 35},
-    {"name": "Upper East", "lat": 40.773, "lon": -73.965, "stores": 28},
-    {"name": "Upper West", "lat": 40.785, "lon": -73.976, "stores": 22},
-    {"name": "Chelsea", "lat": 40.742, "lon": -74.000, "stores": 18},
-    {"name": "SoHo", "lat": 40.723, "lon": -73.998, "stores": 25},
-    {"name": "Financial", "lat": 40.707, "lon": -74.011, "stores": 32},
-    {"name": "Brooklyn Heights", "lat": 40.696, "lon": -73.993, "stores": 20},
-    {"name": "Williamsburg", "lat": 40.714, "lon": -73.961, "stores": 30},
-    {"name": "DUMBO", "lat": 40.703, "lon": -73.988, "stores": 15},
+    ("Times Square", 40.758, -73.985, 45),
+    ("Midtown", 40.755, -73.975, 35),
+    ("Upper East", 40.773, -73.965, 28),
+    ("Upper West", 40.785, -73.976, 22),
+    ("Chelsea", 40.742, -74.000, 18),
+    ("SoHo", 40.723, -73.998, 25),
+    ("Financial", 40.707, -74.011, 32),
+    ("Brooklyn Heights", 40.696, -73.993, 20),
+    ("Williamsburg", 40.714, -73.961, 30),
+    ("DUMBO", 40.703, -73.988, 15),
 ]
+rows = []
+for name, lat, lon, n in neighborhoods:
+    rows.append(
+        pd.DataFrame(
+            {
+                LAT: lat + np.random.normal(0, 0.008, n),
+                LON: lon + np.random.normal(0, 0.008, n),
+                STORE_TYPE: np.random.choice(["Coffee", "Express", "Roastery", "Reserve"], n, p=[0.5, 0.3, 0.15, 0.05]),
+                NEIGHBORHOOD: name,
+            }
+        )
+    )
+df = pd.concat(rows, ignore_index=True)
 
-categories = ["Coffee", "Express", "Roastery", "Reserve"]
-category_weights = [0.5, 0.3, 0.15, 0.05]
-category_colors = dict(zip(categories, IMPRINT, strict=False))
+# Plot: reads only df and the constants above
+stores = df.dropna(subset=[LAT, LON])
+categories = list(stores[STORE_TYPE].value_counts().index)  # most common type first, in brand green
+category_index = {cat: i for i, cat in enumerate(categories)}
 
-all_lats, all_lons, all_categories, all_hoods = [], [], [], []
-
-for hood in neighborhoods:
-    n = hood["stores"]
-    all_lats.extend(hood["lat"] + np.random.normal(0, 0.008, n))
-    all_lons.extend(hood["lon"] + np.random.normal(0, 0.008, n))
-    all_categories.extend(np.random.choice(categories, n, p=category_weights))
-    all_hoods.extend([hood["name"]] * n)
-
-lats = np.array(all_lats)
-lons = np.array(all_lons)
-store_categories = np.array(all_categories)
-store_hoods = np.array(all_hoods)
-
-# Convert lat/lon → Web Mercator (inline)
+# lat/lon → Web Mercator metres, the projection of the tile basemap
 k = 6378137
-mercator_x = lons * (k * np.pi / 180.0)
-mercator_y = np.log(np.tan((90 + lats) * np.pi / 360.0)) * k
+mercator_x = stores[LON].to_numpy(dtype=float) * (k * np.pi / 180.0)
+mercator_y = np.log(np.tan((90 + stores[LAT].to_numpy(dtype=float)) * np.pi / 360.0)) * k
 
-# Grid-based clustering — 3500m cells reduce overlap in dense areas
-grid_size = 3500  # metres
-grid_xi = np.floor(mercator_x / grid_size).astype(int)
-grid_yi = np.floor(mercator_y / grid_size).astype(int)
-cluster_ids = grid_xi * 10000 + grid_yi
-unique_clusters = np.unique(cluster_ids)
+# Every store, with its type as a palette index (-1 when missing); the browser clusters these
+store_source = ColumnDataSource(
+    data={
+        "x": mercator_x,
+        "y": mercator_y,
+        "cat": [category_index.get(c, -1) for c in stores[STORE_TYPE]],
+        "label": stores[NEIGHBORHOOD].astype("string").fillna("").tolist(),
+    }
+)
 
-cluster_cx, cluster_cy, cluster_counts, cluster_dominant, cluster_hood = [], [], [], [], []
-for cid in unique_clusters:
-    mask = cluster_ids == cid
-    cluster_cx.append(mercator_x[mask].mean())
-    cluster_cy.append(mercator_y[mask].mean())
-    cluster_counts.append(mask.sum())
-    unique_c, counts_c = np.unique(store_categories[mask], return_counts=True)
-    cluster_dominant.append(unique_c[counts_c.argmax()])
-    unique_h, counts_h = np.unique(store_hoods[mask], return_counts=True)
-    cluster_hood.append(unique_h[counts_h.argmax()])
+# View fitted to the stores, with a margin for the largest marker
+pad_x = (np.ptp(mercator_x) or 1000.0) * 0.08
+pad_y = (np.ptp(mercator_y) or 1000.0) * 0.08
 
-cluster_cx = np.array(cluster_cx)
-cluster_cy = np.array(cluster_cy)
-cluster_counts = np.array(cluster_counts)
-cluster_hood = np.array(cluster_hood)
-
-# Scale marker size by cluster count
-min_sz, max_sz = 55, 130
-norm = (cluster_counts - cluster_counts.min() + 1) / (cluster_counts.max() - cluster_counts.min() + 1)
-cluster_sizes = min_sz + np.sqrt(norm) * (max_sz - min_sz)
-
-# View fitted to the stores, with a margin for the largest marker; the tile layer
-# widens the shorter side to the frame's aspect and keeps the data centred
-pad_x = (mercator_x.max() - mercator_x.min()) * 0.08
-pad_y = (mercator_y.max() - mercator_y.min()) * 0.08
-
-# Build figure — landscape 3200×1800, no toolbar for PNG accuracy
 p = figure(
     width=3200,
     height=1800,
@@ -122,6 +113,8 @@ p = figure(
     x_axis_type="mercator",
     y_axis_type="mercator",
     title="map-marker-clustered · python · bokeh · anyplot.ai",
+    tools="pan,wheel_zoom,reset",
+    active_scroll="wheel_zoom",
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -132,57 +125,42 @@ p = figure(
 # Tile basemap — adds streets/boundaries geographic context
 p.add_tile(WMTSTileSource(url=TILE_URL, attribution="Basemap: USGS The National Map"), alpha=TILE_ALPHA)
 
-# Faint individual store markers
-individual_source = ColumnDataSource(data={"x": mercator_x, "y": mercator_y, "category": store_categories})
-p.scatter(
-    x="x", y="y", source=individual_source, size=8, fill_color=IMPRINT[0], fill_alpha=0.20, line_color=None
-)
+# Faint individual store markers beneath the clusters
+p.scatter(x="x", y="y", source=store_source, size=8, fill_color=IMPRINT_PALETTE[0], fill_alpha=0.20, line_color=None)
 
-# Per-category cluster renderers for legend (all 4 categories always present)
-legend_items = []
-cluster_renderers = []
-for cat, color in category_colors.items():
-    cat_mask = np.array([d == cat for d in cluster_dominant])
-    if cat_mask.any():
-        src = ColumnDataSource(
-            data={
-                "x": cluster_cx[cat_mask],
-                "y": cluster_cy[cat_mask],
-                "size": cluster_sizes[cat_mask],
-                "count": cluster_counts[cat_mask],
-                "category": [cat] * int(cat_mask.sum()),
-                "hood": cluster_hood[cat_mask],
-            }
-        )
-    else:
-        # Off-screen phantom point so the legend glyph renders with the right color
-        src = ColumnDataSource(
-            data={"x": [-9.9e8], "y": [-9.9e8], "size": [80.0], "count": [0], "category": [cat], "hood": [""]}
-        )
+# One cluster renderer per store type, filled by the browser
+cluster_columns = ["x", "y", "size", "count", "category", "hood", "x0", "x1", "y0", "y1"]
+cluster_sources, cluster_renderers, legend_items = [], [], []
+for i, cat in enumerate(categories):
+    src = ColumnDataSource(data={col: [] for col in cluster_columns})
     renderer = p.scatter(
-        x="x", y="y", source=src, size="size", fill_color=color, fill_alpha=0.88, line_color="white", line_width=2.5
+        x="x",
+        y="y",
+        source=src,
+        size="size",
+        fill_color=IMPRINT_PALETTE[i],
+        fill_alpha=0.88,
+        line_color="white",
+        line_width=2.5,
+        nonselection_fill_alpha=0.88,
     )
+    cluster_sources.append(src)
     cluster_renderers.append(renderer)
-    legend_items.append(LegendItem(label=cat, renderers=[renderer]))
-
-# Hover on the cluster markers only; the basemap's own labels name the areas in the PNG
-p.add_tools(
-    HoverTool(
-        renderers=cluster_renderers,
-        tooltips=[("Stores", "@count"), ("Dominant type", "@category"), ("Neighborhood", "@hood")],
+    # A twin holding one NaN point (never drawn on the map) gives the legend its glyph even when
+    # no cluster currently has this type
+    swatch = p.scatter(
+        x=[np.nan], y=[np.nan], size=30, fill_color=IMPRINT_PALETTE[i], fill_alpha=0.88, line_color="white"
     )
-)
+    legend_items.append(LegendItem(label=str(cat), renderers=[swatch]))
 
 # Cluster count labels
-cluster_source = ColumnDataSource(
-    data={"x": cluster_cx, "y": cluster_cy, "count_label": [str(c) for c in cluster_counts]}
-)
+label_source = ColumnDataSource(data={"x": [], "y": [], "text": []})
 p.add_layout(
     LabelSet(
         x="x",
         y="y",
-        text="count_label",
-        source=cluster_source,
+        text="text",
+        source=label_source,
         text_font_size="24pt",
         text_font_style="bold",
         text_color="white",
@@ -191,11 +169,109 @@ p.add_layout(
     )
 )
 
+# Grid clustering in the browser: the cell edge follows the visible height, so zooming in splits
+# clusters into smaller ones and finally into single stores at their own coordinates
+recluster = CustomJS(
+    args={
+        "stores": store_source,
+        "clusters": cluster_sources,
+        "labels": label_source,
+        "names": [str(c) for c in categories],
+        "yr": p.y_range,
+        "share": CELL_SHARE,
+        "min_size": MIN_SIZE,
+        "max_size": MAX_SIZE,
+    },
+    code="""
+    const {x, y, cat, label} = stores.data;
+    const cell = (yr.end - yr.start) * share;
+    const groups = new Map();
+    for (let i = 0; i < x.length; i++) {
+        const key = Math.floor(x[i] / cell) + ',' + Math.floor(y[i] / cell);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(i);
+    }
+    const found = [];
+    for (const members of groups.values()) {
+        const tally = new Array(names.length).fill(0);
+        const hoods = new Map();
+        let sx = 0, sy = 0, x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+        for (const i of members) {
+            sx += x[i]; sy += y[i];
+            x0 = Math.min(x0, x[i]); x1 = Math.max(x1, x[i]);
+            y0 = Math.min(y0, y[i]); y1 = Math.max(y1, y[i]);
+            if (cat[i] >= 0) tally[cat[i]] += 1;
+            if (label[i]) hoods.set(label[i], (hoods.get(label[i]) || 0) + 1);
+        }
+        let hood = '', best = 0;
+        for (const [h, c] of hoods) if (c > best) { hood = h; best = c; }
+        found.push({n: members.length, x: sx / members.length, y: sy / members.length,
+                    dom: tally.indexOf(Math.max(...tally)), hood, x0, x1, y0, y1});
+    }
+    const counts = found.map(f => f.n);
+    const lo = Math.min(...counts), hi = Math.max(...counts);
+    const out = clusters.map(() => ({x: [], y: [], size: [], count: [], category: [], hood: [],
+                                     x0: [], x1: [], y0: [], y1: []}));
+    const text = {x: [], y: [], text: []};
+    for (const f of found) {
+        const d = out[f.dom];
+        const size = min_size + Math.sqrt((f.n - lo + 1) / (hi - lo + 1)) * (max_size - min_size);
+        d.x.push(f.x); d.y.push(f.y); d.size.push(size); d.count.push(f.n);
+        d.category.push(names[f.dom]); d.hood.push(f.hood);
+        d.x0.push(f.x0); d.x1.push(f.x1); d.y0.push(f.y0); d.y1.push(f.y1);
+        text.x.push(f.x); text.y.push(f.y); text.text.push(String(f.n));
+    }
+    clusters.forEach((src, k) => { src.data = out[k]; });
+    labels.data = text;
+    """,
+)
+curdoc().js_on_event(DocumentReady, recluster)
+for rng in (p.x_range, p.y_range):
+    rng.js_on_change("start", recluster)
+    rng.js_on_change("end", recluster)
+
+# Click a cluster: an animated zoom to the box around its members, which then splits it apart
+p.add_tools(
+    TapTool(
+        renderers=cluster_renderers,
+        callback=CustomJS(
+            args={"xr": p.x_range, "yr": p.y_range},
+            code="""
+            const src = cb_data.source;
+            const i = src.selected.indices[0];
+            if (i === undefined) return;
+            const d = src.data;
+            src.selected.indices = [];
+            const w = xr.end - xr.start, h = yr.end - yr.start;
+            const fit = Math.max((d.x1[i] - d.x0[i]) / w, (d.y1[i] - d.y0[i]) / h) * 1.6;
+            const scale = Math.min(0.6, Math.max(0.15, d.count[i] > 1 ? fit : 0.4));
+            const from = [xr.start, xr.end, yr.start, yr.end];
+            const to = [d.x[i] - w * scale / 2, d.x[i] + w * scale / 2,
+                        d.y[i] - h * scale / 2, d.y[i] + h * scale / 2];
+            const t0 = performance.now(), duration = 600;
+            function step(now) {
+                const t = Math.min(1, (now - t0) / duration);
+                const e = 1 - Math.pow(1 - t, 3);
+                const v = from.map((a, j) => a + (to[j] - a) * e);
+                xr.setv({start: v[0], end: v[1]});
+                yr.setv({start: v[2], end: v[3]});
+                if (t < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+            """,
+        ),
+    ),
+    HoverTool(
+        renderers=cluster_renderers,
+        tooltips=[("Stores", "@count"), (f"Dominant {STORE_TYPE.lower()}", "@category"), (NEIGHBORHOOD, "@hood")],
+    ),
+)
+
 # Legend
 legend = Legend(
     items=legend_items,
     location="top_left",
-    title="Store Type",
+    title=STORE_TYPE,
     title_text_font_size="34pt",
     title_text_font_style="bold",
     title_text_color=INK,
@@ -216,8 +292,8 @@ p.add_layout(legend, "right")
 p.title.text_font_size = "50pt"
 p.title.text_color = INK
 
-p.xaxis.axis_label = "Longitude (°)"
-p.yaxis.axis_label = "Latitude (°)"
+p.xaxis.axis_label = LON
+p.yaxis.axis_label = LAT
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
@@ -243,10 +319,11 @@ p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 p.outline_line_width = 1
 
-# Save HTML (interactive artifact)
+# Save HTML (interactive artifact); the document carries the clustering callback
 html_path = f"plot-{THEME}.html"
+curdoc().add_root(p)
 output_file(html_path, title="map-marker-clustered · python · bokeh · anyplot.ai")
-save(p)
+save(curdoc())
 
 # Screenshot via headless Chrome (Selenium 4 / Selenium Manager)
 # Bokeh 3.9.0 adds a Notifications bar (~139 px) above the figure in the HTML
@@ -265,19 +342,9 @@ for arg in (
 ):
     opts.add_argument(arg)
 
-from selenium.webdriver.common.by import By
-
-
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H + 200)
 driver.get(f"file://{Path(html_path).resolve()}")
 time.sleep(8)  # extended wait for the tile layer: the USGS server answers in about 0.5 s per tile
-
-# Try to screenshot just the Bokeh figure element to avoid the notifications bar
-try:
-    fig_elem = driver.find_element(By.CSS_SELECTOR, ".bk-Figure")
-    fig_elem.screenshot(f"plot-{THEME}.png")
-except Exception:
-    driver.save_screenshot(f"plot-{THEME}.png")
-
+driver.find_element(By.CSS_SELECTOR, ".bk-Figure").screenshot(f"plot-{THEME}.png")
 driver.quit()
