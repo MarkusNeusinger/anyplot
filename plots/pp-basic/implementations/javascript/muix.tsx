@@ -1,7 +1,7 @@
 // anyplot.ai
 // pp-basic: Probability-Probability (P-P) Plot
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-09
+// Quality: pending | Created: 2026-06-09
 //# anyplot-orientation: square
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
