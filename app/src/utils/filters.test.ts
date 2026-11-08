@@ -32,6 +32,7 @@ describe('normalizeSearchQuery', () => {
   it('drops a generic word with sentence punctuation after it', () => {
     expect(normalizeSearchQuery('scatter plot, line')).toBe('scatter line');
     expect(normalizeSearchQuery('bar chart.')).toBe('bar');
+    expect(normalizeSearchQuery('pie chart!')).toBe('pie');
   });
 
   it('leaves Fuse operators and the words they carry alone', () => {

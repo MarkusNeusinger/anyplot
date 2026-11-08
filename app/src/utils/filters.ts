@@ -97,7 +97,7 @@ function foldWord(word: string): string {
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .replace(/ß/g, 'ss')
-    .replace(/[,;:.?]+$/, '');
+    .replace(/[,;:.?!]+$/, '');
 }
 
 /**

@@ -185,7 +185,7 @@ not only `anyplot.ai`. See [Agent usage telemetry](agent-telemetry.md).
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
 | `search` | `query`, `category` | FilterBar/FilterSearch.tsx | User searches and selects value |
-| `search_no_results` | `query` | FilterBar/FilterSearch.tsx | Search query returns no results inside the active filters (debounced 200ms). `query` is the text as typed, before the search drops generic words. It also fires when the dropdown offers `.search_all()`, because the same query finds matches without the filters. |
+| `search_no_results` | `query` | FilterBar/FilterSearch.tsx | Search query of at least 2 characters returns no results inside the active filters (debounced 200ms). `query` is the text as typed, before the search drops generic words. Such a query also fires it when the dropdown offers `.search_all()`, because the same query finds matches without the filters. |
 
 ### Feature usage
 
@@ -701,8 +701,8 @@ User lands on anyplot.ai
 | `agent_session_saved` | `include_data` | useAgentSession.ts |
 | `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts |
 | `agent_turn_resumed` | `outcome` | useAgentSession.ts |
-| `search` | `query`, `category` | FilterBar.tsx |
-| `search_no_results` | `query` | FilterBar.tsx |
+| `search` | `query`, `category` | FilterBar/FilterSearch.tsx |
+| `search_no_results` | `query` | FilterBar/FilterSearch.tsx |
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts |
 | `filter_remove` | `category`, `value` | useFilterState.ts |
 | `grid_resize` | `size` | ToolbarActions.tsx |
