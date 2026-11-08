@@ -10,8 +10,7 @@ import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { LinePlot } from "@mui/x-charts/LineChart";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -19,6 +18,8 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const PAD_SHARE = 0.06; // axis padding on each side as a share of the data span
 const PERIOD = 10; // years per colour step along the path (decades)
+// A second cue per period, in time order, so neighbouring steps of the ramp stay apart where loops cross
+const PERIOD_SHAPES = ["circle", "square", "triangle", "diamond", "star", "wye", "cross"] as const;
 const LABEL_GAP = 12; // px between a marker and its time label
 const LABEL_DIRECTIONS = 8; // candidate label positions around each labelled point
 const ARROW_LENGTH = 22; // px
@@ -70,26 +71,25 @@ const periodColor = periods.map((_, k) => {
 });
 
 // One line series per period; each also holds the last point of the period before it,
-// so the path stays unbroken where the colour changes
+// so the path stays unbroken where the colour changes, and marks only its own points
 const lineSeries = periods.map((period, k) => ({
   type: "line" as const,
   id: `path-${period}`,
-  color: periodColor[k],
-  curve: "linear" as const,
-  showMark: false,
-  data: rows.map((d, i) => (periodOf[i] === period || periodOf[i + 1] === period ? d[INFLATION] : null)),
-}));
-const markerSeries = periods.map((period, k) => ({
-  type: "scatter" as const,
-  id: `points-${period}`,
   label: `${period}s`,
   color: periodColor[k],
-  markerSize: 6,
-  data: rows
-    .map((d, i) => ({ id: i, x: d[UNEMPLOYMENT], y: d[INFLATION], period: periodOf[i] }))
-    .filter((p) => p.period === period),
-  valueFormatter: (p: any) => `${rows[p.id][YEAR]}: ${UNEMPLOYMENT} ${p.x}, ${INFLATION} ${p.y}`,
+  curve: "linear" as const,
+  shape: PERIOD_SHAPES[k],
+  showMark: ({ index }) => periodOf[index] === period,
+  labelMarkType: "line+mark" as const,
+  data: rows.map((d, i) => (periodOf[i] === period || periodOf[i + 1] === period ? d[INFLATION] : null)),
 }));
+// Marks, on the plot and in the legend, are filled with their period's colour; both default to hollow
+const markFills = Object.fromEntries(
+  periods.flatMap((period, k) => [
+    [`& [data-series="path-${period}"] .MuiLineChart-mark`, { fill: periodColor[k] }],
+    [`& [data-series="path-${period}"] .MuiChartsLabelMark-root path:last-of-type`, { fill: periodColor[k] }],
+  ]),
+);
 
 // One arrow per period, on the segment that leaves the period's middle point
 const arrows = periods
@@ -230,7 +230,7 @@ export default function Chart() {
         height={height - HEADER_HEIGHT - LEGEND_HEIGHT}
         margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
         skipAnimation
-        series={[...lineSeries, ...markerSeries]}
+        series={lineSeries}
         xAxis={[
           {
             id: "unemployment",
@@ -259,11 +259,21 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "end" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 15, color: t.ink, pr: 6 }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 15,
+              color: t.ink,
+              pr: 6,
+              "& .MuiChartsLabelMark-root": { width: 24, height: 24 },
+              "& .MuiChartsLabelMark-root path:last-of-type": { stroke: t.pageBg, strokeWidth: 1 },
+              ...markFills,
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiLineChart-line": { strokeWidth: 2.5 },
-              "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1.5 },
+              "& .MuiLineChart-mark": { stroke: t.pageBg, strokeWidth: 1.5 },
+              ...markFills,
               "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
               "& .MuiChartsAxis-line": { stroke: t.inkSoft },
               "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
@@ -271,7 +281,7 @@ export default function Chart() {
           >
             <ChartsGrid horizontal vertical />
             <LinePlot skipAnimation />
-            <ScatterPlot />
+            <MarkPlot skipAnimation />
             <TemporalLayer />
             <ChartsXAxis axisId="unemployment" />
             <ChartsYAxis axisId="inflation" />
