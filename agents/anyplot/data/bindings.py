@@ -624,31 +624,12 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
 
 
 def carried_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
-    """The old bindings whose column the new data has again, each on its new column, in their order.
-
-    By name: the same name once normalised (`_norm`), else the one column whose `name_similarity` reaches
-    `CARRY_SIMILARITY` (`Land area km2` and `Area km2`, one inside the other), never a tie. The new column must
-    fit the role without an error or a warning (`check_bindings`), and it takes the place of one old column only,
-    the closest one: a column the user bound to several roles is carried to each of them, two old columns never
-    land on one new column (the same series twice). Fewer than `bindings` means a column the old data was plotted
-    by is not in the new data: the paste answer says so (`columns_changed`), and the page shows the remembered
-    decisions on the new data's line, where the user can forget them (owner decision of 2026-11-08).
+    """The old bindings whose column the new data has again (`column_matches`), each on its new column, in their
+    order. The new column must fit the role without an error or a warning (`check_bindings`); a column that is there
+    but no longer fits (a number column that became text) is left behind, though it is no column that went
+    (`columns_gone`).
     """
-    old = list(dict.fromkeys(binding.column for binding in bindings))
-    scored: list[tuple[float, int, str, str]] = []
-    for position, name in enumerate(old):
-        ranked = sorted(
-            ((_carry_score(name, column.name), column.name) for column in profile.columns), key=lambda item: -item[0]
-        )
-        best = [item for item in ranked if item[0] >= CARRY_SIMILARITY]
-        if best and (len(best) == 1 or best[0][0] > best[1][0]):
-            scored.append((best[0][0], position, name, best[0][1]))
-    target: dict[str, str] = {}
-    taken: set[str] = set()
-    for _, _, name, match in sorted(scored, key=lambda item: (-item[0], item[1])):
-        if match not in taken:
-            target[name] = match
-            taken.add(match)
+    target = column_matches(bindings, profile)
     carried: list[Binding] = []
     # The warnings of the unbound table (an open role whose every column is negative) are no fault of a carry.
     # Each binding is judged with the ones carried before it, so the second role of a lower and upper bound pair
@@ -664,6 +645,38 @@ def carried_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile:
         if not check.errors and set(check.fit_warnings) <= allowed:
             carried.append(moved)
     return carried
+
+
+def column_matches(bindings: Sequence[Binding], profile: DatasetProfile) -> dict[str, str]:
+    """Each old bound column's column in the new data, by name: the same name once normalised (`_norm`), else the
+    one column whose `name_similarity` reaches `CARRY_SIMILARITY` (`Land area km2` and `Area km2`, one inside the
+    other), never a tie. A new column takes the place of one old column only, the closest one: a column the user
+    bound to several roles matches once for all of them, two old columns never land on one new column (the same
+    series twice). An old column without a match is not in the new data."""
+    old = list(dict.fromkeys(binding.column for binding in bindings))
+    scored: list[tuple[float, int, str, str]] = []
+    for position, name in enumerate(old):
+        ranked = sorted(
+            ((_carry_score(name, column.name), column.name) for column in profile.columns), key=lambda item: -item[0]
+        )
+        best = [item for item in ranked if item[0] >= CARRY_SIMILARITY]
+        if best and (len(best) == 1 or best[0][0] > best[1][0]):
+            scored.append((best[0][0], position, name, best[0][1]))
+    target: dict[str, str] = {}
+    taken: set[str] = set()
+    for _, _, name, match in sorted(scored, key=lambda item: (-item[0], item[1])):
+        if match not in taken:
+            target[name] = match
+            taken.add(match)
+    return target
+
+
+def columns_gone(bindings: Sequence[Binding], profile: DatasetProfile) -> bool:
+    """Whether a column the old data was bound to is not in the new data (`column_matches`), whether or not the ones
+    that are there still fit their roles: the paste answer's `columns_changed`, on which the page shows the
+    remembered decisions on the new data's line, where the user can forget them (owner decision of 2026-11-08)."""
+    matched = column_matches(bindings, profile)
+    return any(binding.column not in matched for binding in bindings)
 
 
 def _carry_score(old: str, new: str) -> float:

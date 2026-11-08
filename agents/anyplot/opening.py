@@ -37,7 +37,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .code.readiness import ReadinessStatus, scan
-from .data.bindings import carried_by_name, carry_by_name, default_bindings
+from .data.bindings import carry_by_name, columns_gone, default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
@@ -121,8 +121,8 @@ class IngestedDataset:
     number: int = 1
     """The session's number of the stored version (`StoredDataset.number`)."""
     columns_changed: bool = False
-    """The data replaces data, and a column a binding of the old data used is not in it (`bindings.carried_by_name`
-    carried fewer bindings than there were): the paste answer's `columns_changed`."""
+    """The data replaces data, and a column a binding of the old data used is not in it, by name or meaning
+    (`bindings.columns_gone`): the paste answer's `columns_changed`."""
 
     def state_delta(self) -> dict[str, Any]:
         """The delta of a paste: the first version of the data, with no history to undo.
@@ -188,8 +188,9 @@ def store_dataset(
             store.delete(old, session_id)
     roles = snapshot.roles()
     bindings = carry_by_name(carried, roles, parsed.profile) if carried else default_bindings(roles, parsed.profile)
-    # A column the replaced data was plotted by is not in the new data (`IngestedDataset.columns_changed`).
-    changed = bool(carried) and len(carried_by_name(carried, roles, parsed.profile)) < len(carried)
+    # A column the replaced data was plotted by is not in the new data (`IngestedDataset.columns_changed`); one that
+    # is there but no longer fits its role is no column that went.
+    changed = bool(carried) and columns_gone(carried, parsed.profile)
     return IngestedDataset(dataset_id, parsed, bindings, number, columns_changed=changed)
 
 

@@ -1909,12 +1909,16 @@ function storeVersion(session, parsed, changes) {
   session.top += 1;
   session.version = session.top;
   session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
-  session.carry = null; // a new data version drops the switch's carry (2026-11-08)
+  // A new data version drops the switch's carry and a wish kept for the first plot, as the
+  // service's version delta does (2026-11-08).
+  session.carry = null;
+  session.keptWish = null;
 }
 
 /**
  * New data (a paste, a copy, a table computed without data): its first version, under the
- * session's next number, with no history to undo. A switch's carry goes with the data before.
+ * session's next number, with no history to undo. A switch's carry and a kept wish go with the
+ * data before.
  */
 function newData(session) {
   session.history = [];
@@ -1922,6 +1926,7 @@ function newData(session) {
   session.version = session.top;
   session.first = session.top;
   session.carry = null;
+  session.keptWish = null;
 }
 
 /**
@@ -2922,7 +2927,9 @@ async function route(req, res) {
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // restored, but confirmed again by the user
     session.version = previous.number; // its own number again; the undone one is never given again
-    session.carry = null; // a new data version drops the switch's carry (2026-11-08)
+    // A new data version drops the switch's carry and a kept wish (2026-11-08).
+    session.carry = null;
+    session.keptWish = null;
     return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
   }
   if (method === 'PUT' && rest === '/bindings') {
