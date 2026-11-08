@@ -16,6 +16,7 @@ const RA_SPOKES = 12; // hour-circle spokes around the pole
 const DEC_GRID_DEG = 30; // declination circles on the fixed -90..+90 degree domain
 const RIM_PAD_SHARE = 0.015; // room between the southernmost star and the rim
 const SKY_LIMIT = 1.12; // drawing extent in rim radii, leaving room for the hour labels
+const RA_LABEL_RADIUS = 1.07; // hour labels, in rim radii
 const STAR_RADIUS = [11, 2]; // px, brightest to faintest
 const LEGEND_SAMPLES = 4;
 const IAU_NAMES: Record<string, string> = {
@@ -242,6 +243,19 @@ const sectorCrowding = sectorTurns.map(
     }).length,
 );
 const decLabelTurn = sectorTurns[sectorCrowding.indexOf(Math.min(...sectorCrowding))];
+// Grid labels in rim radii: hour labels just outside the rim, declination labels on their circles
+const raLabels = spokes.map((h) => ({
+  h,
+  text: `${h}${raUnit}`,
+  x: RA_LABEL_RADIUS * Math.sin((h / RA_PERIOD) * 2 * Math.PI),
+  y: RA_LABEL_RADIUS * Math.cos((h / RA_PERIOD) * 2 * Math.PI),
+}));
+const decLabels = decRings.map((dec) => ({
+  dec,
+  text: `${dec > 0 ? "+" : ""}${dec}${decUnit}`,
+  x: ((90 - dec) / rimDistance) * Math.sin(decLabelTurn * 2 * Math.PI),
+  y: ((90 - dec) / rimDistance) * Math.cos(decLabelTurn * 2 * Math.PI),
+}));
 const legendLo = Math.ceil(magMin);
 const legendHi = Math.floor(magMax);
 const legendMags = [
@@ -257,13 +271,19 @@ const SUBTITLE = `${stars.length} stars to magnitude ${MAG_LIMIT.toFixed(1)} · 
 const HEADER_H = 76;
 const V_MARGIN = 26;
 const labelHalo = { stroke: t.pageBg, strokeWidth: 4, paintOrder: "stroke" as const, strokeLinejoin: "round" as const };
-// A constellation name takes the shift from its centroid (px), nearest first, whose box
-// clears every star, every stick line and every name placed before it; names never overlap each other
+// A constellation name takes the shift from its own stars' centroid (px), nearest first, whose box
+// clears every star, every stick line and every name placed before it, and whose nearest figure
+// mark (star or stick line) belongs to its own constellation, so no name sits closer to a
+// neighbouring figure than to its own; names never overlap each other
 const NAME_STEP_PX = 10;
-const NAME_REACH_STEPS = 6;
+const NAME_REACH_STEPS = 8;
 const NAME_CHAR_PX = 7.2; // average glyph width of the 14 px italic names
 const NAME_HALF_H_PX = 9;
 const NAME_STAR_GAP_PX = 3;
+const NAME_OWN_MARGIN_PX = 6; // how much nearer its own figure a name sits than any other figure
+const NAME_GAP_X_PX = 16; // side by side, two labels this close would read as one string
+const NAME_GAP_Y_PX = 4;
+const STICK_SAMPLE_PX = 3; // spacing of the points a stick line is measured by
 const nameShifts: { dx: number; dy: number }[] = [];
 for (let i = -NAME_REACH_STEPS; i <= NAME_REACH_STEPS; i += 1) {
   for (let j = -NAME_REACH_STEPS; j <= NAME_REACH_STEPS; j += 1) {
@@ -272,32 +292,6 @@ for (let i = -NAME_REACH_STEPS; i <= NAME_REACH_STEPS; i += 1) {
 }
 nameShifts.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy));
 
-type Box = { x0: number; x1: number; y0: number; y1: number };
-// Liang–Barsky clip: does the segment p→q pass through the box?
-function segmentHitsBox(px: number, py: number, qx: number, qy: number, box: Box) {
-  const dx = qx - px;
-  const dy = qy - py;
-  let lo = 0;
-  let hi = 1;
-  const edgesPQ = [
-    [-dx, px - box.x0],
-    [dx, box.x1 - px],
-    [-dy, py - box.y0],
-    [dy, box.y1 - py],
-  ];
-  for (const [p, q] of edgesPQ) {
-    if (p === 0) {
-      if (q < 0) return false;
-    } else {
-      const r = q / p;
-      if (p < 0) lo = Math.max(lo, r);
-      else hi = Math.min(hi, r);
-      if (lo > hi) return false;
-    }
-  }
-  return true;
-}
-
 // Declination circles, hour spokes, the rim and the constellation stick figures
 function SkyGrid() {
   const xs = useXScale() as (v: number) => number;
@@ -305,46 +299,32 @@ function SkyGrid() {
   const unit = xs(1) - xs(0);
   const cx = xs(0);
   const cy = ys(0);
-  const labelTheta = decLabelTurn * 2 * Math.PI;
   return (
     <g>
-      {spokes.map((h) => {
-        const theta = (h / RA_PERIOD) * 2 * Math.PI;
-        return (
-          <g key={`ra-${h}`}>
-            <line x1={cx} y1={cy} x2={xs(Math.sin(theta))} y2={ys(Math.cos(theta))} stroke={t.grid} strokeWidth={1} />
-            <text
-              x={xs(1.07 * Math.sin(theta))}
-              y={ys(1.07 * Math.cos(theta))}
-              fill={t.inkSoft}
-              fontSize={15}
-              textAnchor="middle"
-              dominantBaseline="central"
-            >
-              {`${h}${raUnit}`}
-            </text>
-          </g>
-        );
-      })}
-      {decRings.map((dec) => {
-        const rr = (90 - dec) / rimDistance;
-        return (
-          <g key={`dec-${dec}`}>
-            <circle cx={cx} cy={cy} r={rr * unit} fill="none" stroke={t.grid} strokeWidth={1} />
-            <text
-              x={xs(rr * Math.sin(labelTheta))}
-              y={ys(rr * Math.cos(labelTheta))}
-              fill={t.inkSoft}
-              fontSize={14}
-              textAnchor="middle"
-              dominantBaseline="central"
-              {...labelHalo}
-            >
-              {`${dec > 0 ? "+" : ""}${dec}${decUnit}`}
-            </text>
-          </g>
-        );
-      })}
+      {raLabels.map((l) => (
+        <g key={`ra-${l.h}`}>
+          <line x1={cx} y1={cy} x2={xs(l.x / RA_LABEL_RADIUS)} y2={ys(l.y / RA_LABEL_RADIUS)} stroke={t.grid} strokeWidth={1} />
+          <text x={xs(l.x)} y={ys(l.y)} fill={t.inkSoft} fontSize={15} textAnchor="middle" dominantBaseline="central">
+            {l.text}
+          </text>
+        </g>
+      ))}
+      {decLabels.map((l) => (
+        <g key={`dec-${l.dec}`}>
+          <circle cx={cx} cy={cy} r={((90 - l.dec) / rimDistance) * unit} fill="none" stroke={t.grid} strokeWidth={1} />
+          <text
+            x={xs(l.x)}
+            y={ys(l.y)}
+            fill={t.inkSoft}
+            fontSize={14}
+            textAnchor="middle"
+            dominantBaseline="central"
+            {...labelHalo}
+          >
+            {l.text}
+          </text>
+        </g>
+      ))}
       <circle cx={cx} cy={cy} r={unit} fill="none" stroke={t.inkSoft} strokeWidth={1.8} opacity={0.7} />
       <g stroke={t.inkSoft} strokeWidth={1.2} strokeOpacity={0.45} strokeLinecap="round">
         {sticks.map(([a, b], i) => (
@@ -364,30 +344,65 @@ function SkyLabels() {
   const magAxis = useZAxis("mag");
   const x0 = left + 12;
   const y0 = top + height - legendMags.length * 30 - 6;
-  const starDots = stars.map((s) => ({
-    x: xs(s.x),
-    y: ys(s.y),
-    reach: (magAxis.sizeScale(s.sizeValue) as number) + NAME_STAR_GAP_PX,
+  // Every mark a name must clear: the stars, and the stick lines as points a few px apart, each
+  // tagged with its constellation (field stars carry none)
+  const marks = [
+    ...stars.map((s) => ({
+      x: xs(s.x),
+      y: ys(s.y),
+      reach: (magAxis.sizeScale(s.sizeValue) as number) + NAME_STAR_GAP_PX,
+      con: s.con,
+    })),
+    ...sticks.flatMap(([a, b]) => {
+      const [ax, ay, bx, by] = [xs(a.x), ys(a.y), xs(b.x), ys(b.y)];
+      const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / STICK_SAMPLE_PX));
+      return Array.from({ length: steps + 1 }, (_, k) => ({
+        x: ax + ((bx - ax) * k) / steps,
+        y: ay + ((by - ay) * k) / steps,
+        reach: 1,
+        con: a.con,
+      }));
+    }),
+  ];
+  const figureMarks = marks.filter((m) => m.con != null);
+  // The grid's hour and declination labels are taken space, like every name placed before
+  const placedBoxes = [...raLabels, ...decLabels].map((l) => ({
+    x0: xs(l.x) - (l.text.length * NAME_CHAR_PX) / 2,
+    x1: xs(l.x) + (l.text.length * NAME_CHAR_PX) / 2,
+    y0: ys(l.y) - NAME_HALF_H_PX,
+    y1: ys(l.y) + NAME_HALF_H_PX,
   }));
-  const stickPx = sticks.map(([a, b]) => [xs(a.x), ys(a.y), xs(b.x), ys(b.y)]);
-  const placedBoxes: Box[] = [];
   const names = centroids.map((c) => {
     const halfW = (c.name.length * NAME_CHAR_PX) / 2;
     const candidates = nameShifts.map(({ dx, dy }) => {
       const cx = xs(c.x) + dx;
       const cy = ys(c.y) + dy;
       const box = { x0: cx - halfW, x1: cx + halfW, y0: cy - NAME_HALF_H_PX, y1: cy + NAME_HALF_H_PX };
-      const starHits = starDots.filter(
+      const hits = marks.filter(
         (p) => p.x > box.x0 - p.reach && p.x < box.x1 + p.reach && p.y > box.y0 - p.reach && p.y < box.y1 + p.reach,
       ).length;
-      const stickHits = stickPx.filter(([ax, ay, bx, by]) => segmentHitsBox(ax, ay, bx, by, box)).length;
-      const hits = starHits + stickHits;
-      const nameHit = placedBoxes.some((b) => b.x0 < box.x1 && b.x1 > box.x0 && b.y0 < box.y1 && b.y1 > box.y0);
-      return { cx, cy, box, hits, nameHit };
+      const nameHit = placedBoxes.some(
+        (b) =>
+          b.x0 - NAME_GAP_X_PX < box.x1 &&
+          b.x1 + NAME_GAP_X_PX > box.x0 &&
+          b.y0 - NAME_GAP_Y_PX < box.y1 &&
+          b.y1 + NAME_GAP_Y_PX > box.y0,
+      );
+      let ownGap = Infinity;
+      let otherGap = Infinity;
+      for (const p of figureMarks) {
+        const gap = Math.hypot(Math.max(Math.abs(p.x - cx) - halfW, 0), Math.max(Math.abs(p.y - cy) - NAME_HALF_H_PX, 0));
+        if (p.con === c.con) ownGap = Math.min(ownGap, gap);
+        else otherGap = Math.min(otherGap, gap);
+      }
+      return { cx, cy, box, hits, nameHit, owned: ownGap + NAME_OWN_MARGIN_PX <= otherGap };
     });
     const free = candidates.filter((cand) => !cand.nameHit);
     const pool = free.length > 0 ? free : candidates;
-    const best = pool.find((cand) => cand.hits === 0) ?? pool.reduce((a, b) => (b.hits < a.hits ? b : a));
+    const best =
+      pool.find((cand) => cand.hits === 0 && cand.owned) ??
+      pool.find((cand) => cand.hits === 0) ??
+      pool.reduce((a, b) => (b.hits < a.hits ? b : a));
     placedBoxes.push(best.box);
     return { con: c.con, name: c.name, x: best.cx, y: best.cy };
   });
