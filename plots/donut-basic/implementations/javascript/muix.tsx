@@ -1,7 +1,7 @@
 // anyplot.ai
 // donut-basic: Basic Donut Chart
 // Library: muix 7.29.1 | JavaScript 22.23.0
-// Quality: 89/100 | Created: 2026-06-25
+// Quality: pending | Created: 2026-06-25
 //# anyplot-orientation: square
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useDrawingArea } from "@mui/x-charts/hooks";
