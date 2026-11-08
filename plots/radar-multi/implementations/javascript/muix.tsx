@@ -5,15 +5,12 @@
 //# anyplot-orientation: square
 
 import { RadarChart, RadarAxis, RadarSeriesArea, RadarSeriesMarks } from "@mui/x-charts/RadarChart";
-import { usePolarGeometry, useRadiusAxes } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const SCALE_MAX = 100; // the 0–100 rating scale the spec recommends
 const RINGS = 5; // gridlines at every fifth of the scale: 20, 40, 60, 80, 100
-const CALLOUT_GAP = 14; // px between the callout box and the outer ring's edge
-const CALLOUT_H = 52; // callout box height, px
 const TITLE_H = 48;
 const SUBTITLE_H = 28;
 const LEGEND_H = 48;
@@ -52,68 +49,8 @@ const series = models.map((model, i) => ({
   fillArea: true,
 }));
 
-// Focal point: the feature where the leading model is furthest ahead of the runner-up
-const leads = features.map((feature) => {
-  const ranked = models
-    .map((model) => ({ model, score: scores.get(`${model}\u0000${feature}`) }))
-    .filter((r) => Number.isFinite(r.score))
-    .sort((a, b) => b.score - a.score);
-  return { feature, leader: ranked[0], runnerUp: ranked[1], margin: ranked.length > 1 ? ranked[0].score - ranked[1].score : -Infinity };
-});
-const widest = leads.reduce((a, b) => (b.margin > a.margin ? b : a));
-
 const TITLE = "radar-multi · javascript · muix · anyplot.ai";
 const SUBTITLE = `${models.length} series × ${features.length} axes · ${SCORE}`;
-
-function WidestLead() {
-  const polar = usePolarGeometry();
-  const { radiusAxis } = useRadiusAxes();
-  if (!Number.isFinite(widest.margin)) return null;
-  const angle = polar.angleScale(widest.feature);
-  const radius = radiusAxis[widest.feature].scale(widest.leader.score);
-  const outer = radiusAxis[widest.feature].scale(SCALE_MAX);
-  const [vx, vy] = polar.point(radius, angle);
-  const color = t.palette[models.indexOf(widest.leader.model)];
-  const line1 = `Widest lead: ${widest.feature}`;
-  const line2 = `${widest.leader.model} ${widest.leader.score} vs ${widest.runnerUp.model} ${widest.runnerUp.score}`;
-  const boxW = Math.max(line1.length * 8.6, line2.length * 7.6) + 28;
-  // The box sits on the bisector half a spoke counter-clockwise, pushed out until its nearest
-  // corner clears the outer ring's edge (which lies at cos(pi / n) of the ring radius there)
-  const bisector = angle - Math.PI / features.length;
-  const [ux, uy] = polar.point(1, bisector);
-  const reach = (boxW / 2) * Math.abs(ux) + (CALLOUT_H / 2) * Math.abs(uy);
-  const [bx, by] = polar.point(outer * Math.cos(Math.PI / features.length) + reach + CALLOUT_GAP, bisector);
-  return (
-    <g>
-      <circle cx={polar.cx + vx} cy={polar.cy + vy} r={12} fill="none" stroke={color} strokeWidth={2.5} />
-      <line
-        x1={polar.cx + bx}
-        y1={polar.cy + by + (vy < by ? -CALLOUT_H / 2 : CALLOUT_H / 2)}
-        x2={polar.cx + vx}
-        y2={polar.cy + vy + (vy < by ? 12 : -12)}
-        stroke={color}
-        strokeWidth={1.5}
-        strokeDasharray="5 4"
-      />
-      <rect
-        x={polar.cx + bx - boxW / 2}
-        y={polar.cy + by - CALLOUT_H / 2}
-        width={boxW}
-        height={CALLOUT_H}
-        rx={8}
-        fill={t.pageBg}
-        fillOpacity={0.9}
-        stroke={t.grid}
-      />
-      <text x={polar.cx + bx} y={polar.cy + by - 7} fontSize={15} fontWeight={700} fill={t.ink} textAnchor="middle">
-        {line1}
-      </text>
-      <text x={polar.cx + bx} y={polar.cy + by + 15} fontSize={14} fill={t.inkSoft} textAnchor="middle">
-        {line2}
-      </text>
-    </g>
-  );
-}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -166,7 +103,6 @@ export default function Chart() {
         <RadarSeriesArea className="radar-outline" fill="none" strokeWidth={3} strokeLinejoin="round" />
         <RadarSeriesMarks />
         <RadarAxis metric={features[0]} divisions={RINGS} labelOrientation="horizontal" textAnchor="start" />
-        <WidestLead />
       </RadarChart>
     </div>
   );
