@@ -8,3 +8,4 @@
   version. A vote stored before this change inks nothing and blocks nothing. `/debug`'s top pages show the current
   version's count, with the earlier rows as "+n earlier". One rule in `core/plot_votes.py` serves the API, the
   debug lists and the audit skill's selector, which now counts a session once on each side of the update.
+  (#12830)
