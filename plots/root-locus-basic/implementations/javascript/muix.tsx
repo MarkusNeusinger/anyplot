@@ -2,6 +2,7 @@
 // root-locus-basic: Root Locus Plot for Control Systems
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 85/100 | Created: 2026-06-18
+//# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -31,14 +32,18 @@ const IMAGINARY = "Imaginary part ω (rad/s)"; // role: imaginary
 
 // Data: replace this block with your own records, one object per row
 // Closed-loop poles of G(s) = K / (s (s + 2) (s + 4)) for 501 gains K from 0 to 90, spaced
-// quadratically so the fast-moving poles near the breakaway are sampled densely: the real root of
+// quadratically so the fast-moving poles near the breakaway are sampled densely, plus the
+// breakaway gain itself, where the branches from 0 and −2 meet on the real axis (s is the root
+// of dK/ds = 3s² + 12s + 8 = 0 in (−2, 0), with K = −s (s + 2) (s + 4)): the real root of
 // s³ + 6s² + 8s + K = 0 by Newton's method, continued from the previous gain, and the remaining
 // pair from the quadratic factor; each branch is named after the open-loop pole it starts from
 const data = (() => {
   const rows = [];
+  const breakawayS = (-12 + Math.sqrt(12 * 12 - 4 * 3 * 8)) / (2 * 3);
+  const breakawayK = -breakawayS * (breakawayS + 2) * (breakawayS + 4);
+  const gains = [...Array.from({ length: 501 }, (_, i) => (i / 500) ** 2 * 90), breakawayK].sort((a, b) => a - b);
   let r3 = -4.001;
-  for (let i = 0; i <= 500; i++) {
-    const k = (i / 500) ** 2 * 90;
+  for (const k of gains) {
     for (let it = 0; it < 80; it++) {
       const step = (r3 ** 3 + 6 * r3 ** 2 + 8 * r3 + k) / (3 * r3 ** 2 + 12 * r3 + 8);
       r3 -= step;
