@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: sparkline-basic
 created: '2026-09-09T18:27:06Z'
-updated: '2026-09-09T18:42:44Z'
-generated_by: claude-sonnet
-workflow_run: 34388393037
+updated: '2026-11-08T05:40:32Z'
+generated_by: claude-opus-5-5
+adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
+workflow_run: 42451460303
 issue: 1011
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/muix/plot-light.html
@@ -15,43 +16,40 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline
 quality_score: 88
 review:
   strengths:
-  - Correct SparkLineChart usage assembled into a realistic multi-metric KPI dashboard
-    layout, directly matching the spec's "Dashboard KPI trend indicators" application
-  - Compact aspect ratio (~7.5:1 per sparkline) sits within the spec's 4:1-8:1 guidance,
-    and the chart is genuinely chromeless — no axes, ticks, or gridlines, as the spec
-    mandates
-  - 'Fully theme-adaptive chrome: card backgrounds, ink/soft-ink text, and page background
-    all flip correctly between light and dark while the four Imprint data colors stay
-    pixel-identical'
-  - Deterministic seeded LCG random walk per metric, area fill under each line for
-    visual interest, clean typographic hierarchy (soft label / bold value / spark)
-    inside rounded elevated cards
+  - Uses the native MUI X SparkLineChart per row, with curve="linear" so the line
+    never swings past its points, area plus baseline="min" for the fill, and a per-row
+    yAxis {min, max} so each sparkline fills its own frame from lowest to highest
+    value
+  - 'The dashboard KPI card layout gives a clear type hierarchy: a soft-ink metric
+    name, a large bold last value (Tufte''s name-plus-last-value convention, which
+    the Notes allow) and the line beside it'
+  - 'Theme tokens reach every element: pageBg, the elevatedBg cards, ink/inkSoft text
+    and t.palette[0] for every line, so light and dark differ only in chrome'
+  - Deterministic fixed-seed LCG random walks give four plausible KPIs with different
+    shapes (steady rise, flat then breakout, decline, slow erosion)
+  - skipAnimation is set and the snippet follows the default-export harness contract
   weaknesses:
-  - All four rows use identical line+area styling with no use of SparkLineChart's
-    distinctive sparkline-specific API (e.g. showHighlight, referenceLine, plotType="bar")
-    — a missed opportunity to demonstrate more of the library's surface
-  - 'Lower-contrast Imprint hues (lavender #C475FD row 2, ochre #BD8233 row 4) are
-    used for thin 3.5px lines with no stroke/outline — exactly the small-dashboard-tile
-    scenario the style guide flags for adding a 1px ink stroke for CVD/low-vision
-    legibility'
-  - None of the spec's optional trend-emphasis features (min/max highlight, first/last
-    point markers) are used, so the KPI-at-a-glance value-add beyond a plain line+area
-    is not fully explored
+  - 'Suggestion: the 320 px label column leaves a wide empty gap between the short
+    metric names and the start of each line; a narrower LABEL_W would give the sparklines
+    more width.'
+  - 'Suggestion: the header comment reads ''muix 7.29.1'' although the harness pins
+    @mui/x-charts 9; the review step rewrites the header, but the source could state
+    the pinned major.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: bold centered title "sparkline-basic · javascript · muix · anyplot.ai" in dark ink, clearly readable. Four stacked cards with a slightly lighter elevated cream fill and rounded corners, each holding a soft-gray metric label ("Monthly Revenue", "Active Users", "Avg Response Time", "Conversion Rate") and a large bold dark value ($125k, 3688, 216ms, 3.21%). All text reads cleanly against the light background.
-      Data: each row shows a single-color sparkline (thin line + translucent area fill) in Imprint order — brand green, lavender, blue, ochre — with no axes, ticks, or gridlines, matching the minimal sparkline spec. First series is #009E73 brand green as required.
+      Background: warm off-white page (#FAF8F1) with four slightly lighter rounded cards (elevatedBg), one per KPI row.
+      Chrome: centered bold title "sparkline-basic · javascript · muix · anyplot.ai" in dark ink, soft-ink subtitle "Day 1–45 · each line scaled to its own range · last value beside the name". Each card has the metric name in soft ink (Daily revenue (k$), Active users, Avg response time (ms), Conversion rate (%)) above a large bold last value (125, 3688, 216, 3.21). No axes, ticks or gridlines. All text is readable.
+      Data: four thin brand-green #009E73 linear sparklines with a light translucent green fill down to each row's minimum. Each one fills its own card height. Shapes: steady revenue rise, active users flat then breaking out around day 30, response time declining, conversion rate eroding.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: same title now in light cream text, clearly readable against the dark page. Cards use a slightly lighter dark elevated fill; metric labels render in soft light-gray, values in bright off-white bold text. No dark-on-dark issues found — all text has strong contrast against the card and page backgrounds.
-      Data: the four sparkline colors (green, lavender, blue, ochre) are visually identical hues to the light render — only the chrome (backgrounds, text) flips as required. Area fill opacity reads a bit richer against the dark card but the line colors themselves are unchanged.
+      Background: warm near-black page (#1A1A17) with slightly lighter dark cards.
+      Chrome: the title and last values in light ink, the names and subtitle in soft light ink. No dark-on-dark text; everything is readable.
+      Data: the same #009E73 lines as the light render; the fill shows as a dark translucent green on the dark cards. The data colors are identical between the renders and only the chrome flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,73 +57,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, labels, and values are all explicitly sized and fully readable
-          in both themes
+        comment: Explicit sizes (title 22, value 30, name 16, subtitle 15 CSS px);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Card layout keeps every element cleanly separated, no collisions
+        comment: No collisions; the labels sit in their own column
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3.5px line + area fill is well-suited to 45-point density, clearly
-          visible in both themes
+        comment: 2.5 px line is thin but clearly visible; the fill is subtle in both
+          themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lower-contrast hues (lavender, ochre) used for thin lines without
-          the style guide's suggested stroke; marginal for CVD/low-vision at dashboard-tile
-          scale
+        passed: true
+        comment: Single hue with strong contrast; no color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Title ~58% width, canvas correct 3200x1800, no overflow or clipping
+        comment: 3200x1800 canvas; the rows fill the canvas evenly; each sparkline
+          is wide and short (~6:1)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes expected for a sparkline; title format correct
+        comment: No axes by spec (N/A); the metric names carry their units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, first series brand green, correct theme
-          backgrounds both renders
+        comment: 'Every line is #009E73; correct page backgrounds in both themes'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Polished card-based dashboard composition beyond a bare sparkline,
-          but styling is identical across all four rows
+        comment: KPI-card typography hierarchy (soft name, large bold value) and elevated
+          cards beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: No chrome/spines needed and none added, generous whitespace, subtle
-          rounded cards
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Label + bold value + trend line format is clear, but no emphasis
-          technique (highlight point, arrow) marks the story within each spark
+        comment: Rounded cards with consistent padding and gaps, round line joins/caps,
+          tight 10 px vertical margin so the lines use the full frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: The last value is the focal number of each row; four contrasting
+          trend shapes read at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -135,50 +131,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sparkline via SparkLineChart
+        comment: Sparklines with no axes, gridlines, reference lines or callouts;
+          the optional fill and name/last value only
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No axes/labels/gridlines, aspect ratio ~7.5:1 within 4:1-8:1, area
-          fill used
+        comment: Thin linear line, own-range scaling, compact aspect, no chrome; every
+          'A good version shows' bullet holds
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full value array plotted sequentially per metric
+        comment: curve=linear means no overshoot; yAxis min/max equals the data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single-series
-          sparklines
+        comment: Mandated title format; no legend needed (N/A)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Line + area shown, but neither optional min/max nor first/last highlighting
-          is demonstrated
+        comment: 45 points per series; rising, falling and breakout shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Four plausible, neutral business KPIs (revenue, users, latency, conversion)
+        comment: Neutral dashboard KPIs with units
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges and units are sensible for each metric
+        comment: Plausible magnitudes (revenue ~82-125 k$, ~3400-3700 users, ~216-260
+          ms, 3-4.5 % conversion); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,31 +184,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small focused helper functions, no over-engineering
+        comment: Flat module with the mandatory default component; the data IIFE is
+          confined to the data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG, fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only SparkLineChart, Box, Typography, all used
+        comment: SparkLineChart only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Respects harness contract, skipAnimation set, sized from ANYPLOT_SIZE
+        comment: Harness contract, skipAnimation, v9 class names (.MuiLineChart-line/-area)
     library_mastery:
       score: 6
       max: 10
@@ -222,17 +219,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic SparkLineChart usage with curve, area, margin, colors tuned
+        comment: Dedicated SparkLineChart with area, curve, yAxis and margin props,
+          and sx class styling
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Doesn't use sparkline-specific features like showHighlight or referenceLine
+        passed: true
+        comment: SparkLineChart's baseline="min" area anchoring
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:38:02Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - subplots
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
