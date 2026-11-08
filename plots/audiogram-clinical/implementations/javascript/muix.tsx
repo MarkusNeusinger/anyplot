@@ -34,7 +34,8 @@ const BANDS = [
   { label: "Severe", to: 90 },
   { label: "Profound", to: Infinity },
 ];
-const BAND_OPACITY_STEP = 0.045; // band shade deepens with severity, in t.inkSoft
+const BAND_OPACITY_STEP = 0.055; // band shade deepens with severity, in t.inkSoft
+const BAND_EDGE_OPACITY = 0.45; // a thin rule at each band boundary keeps neighbouring shades apart
 // Clinical convention: right ear red circles, left ear blue crosses
 const RIGHT_COLOR = t.palette[4];
 const LEFT_COLOR = t.palette[2];
@@ -117,6 +118,31 @@ function SeverityBands() {
           </g>
         );
       })}
+    </g>
+  );
+}
+
+// Boundary rules between the bands, drawn above the grid so they stay visible where a
+// boundary falls on a grid line
+function BandEdges() {
+  const yScale = useYScale();
+  const { left, width } = useDrawingArea();
+  return (
+    <g>
+      {BANDS.slice(0, -1)
+        .filter((band) => band.to > yLo && band.to < yHi)
+        .map((band) => (
+          <line
+            key={band.label}
+            x1={left}
+            x2={left + width}
+            y1={yScale(band.to)}
+            y2={yScale(band.to)}
+            stroke={t.inkSoft}
+            strokeOpacity={BAND_EDGE_OPACITY}
+            strokeWidth={1.5}
+          />
+        ))}
     </g>
   );
 }
@@ -210,6 +236,7 @@ export default function Chart() {
       >
         <SeverityBands />
         <ChartsGrid horizontal vertical />
+        <BandEdges />
         <LinePlot skipAnimation />
         <EarSymbols />
         <ChartsXAxis axisId="freq" />
