@@ -2,63 +2,70 @@ library: muix
 language: javascript
 specification_id: star-chart-constellation
 created: '2026-06-17T00:24:15Z'
-updated: '2026-06-17T00:28:34Z'
-generated_by: claude-opus
-workflow_run: 27656851709
+updated: '2026-11-08T06:03:13Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42452501283
 issue: 4560
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 85
 review:
   strengths:
-  - Custom north-pole azimuthal-equidistant projection renders a natural circular
-    sky boundary with a labelled RA/Dec coordinate grid (RA spokes every 2h, declination
-    circles at +60/+30/0/-30) — exactly the orientation the spec calls for.
-  - 'Apparent magnitude is correctly inverted into marker size (brightest stars large,
-    faint field stars tiny) AND mapped onto the Imprint sequential ramp (brand green
-    #009E73 -> blue), with a clear bottom-left magnitude legend that doubles as a
-    brightness key.'
-  - Real, factually-accurate bright-star catalogue (Sirius -1.46, Vega 0.03, Arcturus
-    -0.05, etc.) across 23 constellations with proper IAU stick-figure edges and centroid-placed
-    constellation labels — strong, neutral, educational data.
-  - 'Expert idiomatic MUI X community usage: ChartContainer composed with ScatterPlot
-    plus custom SVG layers (SkyGrid, ConstellationLines, ConstellationLabels, ChartTitle,
-    MagnitudeLegend) that read the live chart scales through useXScale/useYScale/useDrawingArea
-    hooks — a distinctive composable-API pattern hard to replicate elsewhere.'
-  - 'Both renders are theme-correct: warm off-white #FAF8F1 / warm near-black #1A1A17
-    backgrounds, identical data colours across themes, all chrome legible, deterministic
-    LCG-seeded background star field (no network).'
+  - Composes the chart from ChartsContainer + ScatterPlot with a continuous zAxis
+    sizeMap, so star radius falls linearly with magnitude (Sirius largest, mag 5 stars
+    still visible at 2 px) and the hand-drawn magnitude key reads its circles from
+    the same useZAxis sizeScale, so the key always matches the marks
+  - 'Correct north-pole azimuthal equidistant projection with RA turning clockwise
+    from the top: Orion, Ursa Major, Cassiopeia and Leo appear as seen in the sky,
+    not mirrored, every star at its RA/Dec'
+  - 'Clear layer hierarchy in both themes: faint t.grid hour spokes and declination
+    rings, semi-transparent inkSoft stick figures that end on their stars, and ink
+    stars on top: light stars on the #1A1A17 night sky, printed-atlas dark stars on
+    #FAF8F1'
+  - Declination ring labels run through the least crowded spoke sector and carry a
+    page-colour halo, so +60°/+30°/0°/-30° stay readable without touching any figure
+  - Real approximate J2000 positions and magnitudes for 23 northern and equatorial
+    constellations plus a deterministic LCG field of faint stars, 243 stars in total,
+    inside the spec's 200–500 and 20–30 ranges; the subtitle states counts, the magnitude
+    limit and the projection
   weaknesses:
-  - In the dense central region of the disk (Ursa Minor / Draco / Hercules / Bootes
-    / Corona Borealis) several italic constellation labels sit close to or lightly
-    overlap stars and stick-figure lines — readable but slightly crowded. Consider
-    a small leader-offset or lower-priority de-cluttering for centroid labels that
-    land on top of markers.
-  - Constellation labels use inkSoft at opacity 0.78 and fontSize 13 — legible at
-    full 2400px but on the fainter side; a touch more weight/contrast would help them
-    survive the 400px mobile downscale.
-  - Grid colour is a hard-coded rgba(120,140,170,0.30) cool tone rather than the theme
-    RULE token. It reads well on both surfaces by design, but it is not strictly theme-adaptive
-    chrome — acceptable for a sky chart, just noting the deviation.
+  - 'SC-02 (both): the ''Canes Venatici'' name sits about 80 px below its two stars,
+    next to Muphrid of Boötes, while the ''Boötes'' name sits closer to the Canes
+    Venatici pair than its own label, so the name is not near its constellation''s
+    centroid as the Notes ask → keep each name within its own figure''s neighbourhood,
+    nearer its stars than any other constellation''s name. Likely cause: the name
+    search in SkyLabels places names in centroid order with a 60 px reach, so Boötes
+    takes the free slot beside the CVn pair first.'
+  - 'VQ-01 (both): constellation names and dec labels at 14 px on the 1200 px mount
+    shrink to about 5 px in the 400 px thumbnail and blur → about 16 px (+2 px). Likely
+    cause: fontSize={14} on the constellation-name and dec-ring <text> elements.'
+  - 'CQ-01 (code): a segmentHitsBox Liang–Barsky helper, a Box type and a 169-candidate
+    grid search with per-candidate star and stick hit counts (lines 260–299, 367–393)
+    add a layout engine to a snippet that should read top to bottom → a shorter placement
+    rule (for example a fixed offset from the centroid toward the outside of the figure).
+    Likely cause: the label-avoidance pass built for name placement.'
+  - 'Suggestion: a faint dashed ecliptic, which the Notes allow, would add an orientation
+    line through Taurus, Gemini and Leo.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), no pure white, no painted panel — page shows through the transparent SVG.
-      Chrome: dark title "star-chart-constellation · javascript · muix · anyplot.ai" centred at top, fully readable. RA hour labels (0h..22h) ring the rim; declination labels (+60°, +30°, 0°, -30°) along the 20h spoke; magnitude legend bottom-left. Faint cool grid circles + spokes visible but subtle. All text readable.
-      Data: stars coloured on the Imprint sequential ramp — brightest band is brand green #009E73 (large markers), fading to blue #4467A3 for the faintest. Sizes scale inversely with magnitude. Constellation stick-figure lines (subtle inkSoft) connect catalogue stars; italic constellation names near centroids.
-      Legibility verdict: PASS (minor crowding of a few centre labels, but nothing unreadable).
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas (printed-atlas style, as the Notes allow).
+      Chrome: bold title "star-chart-constellation · javascript · muix · anyplot.ai" at the top centre (~47 % width) with a grey subtitle "243 stars to magnitude 5.0 · 23 constellations · azimuthal equidistant projection, north celestial pole at the centre". A darker rim circle bounds the sky; 12 faint hour spokes labelled 0h–22h outside the rim, declination rings labelled +60°, +30°, 0°, -30° along one quiet sector. Italic grey constellation names (Pegasus, Andromeda, Cassiopeia, Cygnus, Lyra, Ursa Major, Orion, Canis Major, Leo, ...). Magnitude key in the lower-left corner: -1 (brightest), +1, +3, +5 (faintest). All text dark on light and readable.
+      Data: near-black ink star dots sized by magnitude (Sirius and Vega largest, faint field stars tiny), thin semi-transparent grey stick lines joining constellation stars. Single-series ink colour per the spec's dark-stars-on-light-ground option.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), not pure black.
-      Chrome: light title and labels, all clearly readable against the dark surface; no dark-on-dark failures. Grid and rim read correctly.
-      Data: star colours are identical to the light render (green->blue ramp, same sizes) — only the chrome flipped. Brand green #009E73 reads well on the dark surface.
-      Legibility verdict: PASS.
+      Background: warm near-black #1A1A17 night sky.
+      Chrome: title, subtitle, hour labels, dec labels, constellation names and the magnitude key all switch to light ink / inkSoft; rim circle light grey; grid spokes and rings subtle dark grey. No dark-on-dark text anywhere.
+      Data: same star positions, sizes, stick figures and labels; the stars are pale off-white (ink token) on the night sky as the Notes ask, stick lines light grey semi-transparent. Only chrome/ink flips; no categorical palette colours are used, so nothing differs between the renders except the theme tokens.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,72 +73,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set, title 22px, readable in both themes; constellation
-          labels slightly faint/small
+        comment: All text readable in both themes at full size; 14 px names and dec
+          labels blur in the 400 px thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor label/star/line crowding in the dense disk centre
+        comment: No text collides with text, stars or lines; dec labels carry page-colour
+          halos
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size excellently adapted to magnitude/density — bright large,
-          faint tiny
+        comment: Star radius 11→2 px by magnitude; faintest stars still visible; legend
+          circles drawn in ink and match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green->blue sequential ramp, CVD-safe, distinguishable
+        comment: Monochrome ink on page; high contrast in both themes, no colour-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400, circular chart fills canvas, no clipping, gate passed
+        comment: 2400x2400 square, sky disc centred, hour labels clear of the rim,
+          legend in the free lower-left corner, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: RA in hours, Dec in degrees with units; descriptive title
+        comment: Hour labels with 'h', dec labels with '°', subtitle names the projection;
+          legend title 'Apparent magnitude'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq for brightness, brand green first, theme-correct chrome
-          both renders
+        comment: 'Backgrounds #FAF8F1 / #1A1A17; stars in the ink token as the spec
+          asks (pale stars on dark sky, dark stars on light ground); no off-palette
+          colours'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Polished celestial map, custom projection, intentional brightness
-          hierarchy
+        comment: Italic haloed constellation names, a heavier rim against faint grid,
+          subtitle with computed star/constellation counts, brightest/faintest notes
+          in the key
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, clean composition; slight centre crowding holds it back
+        comment: Dec labels routed through the least crowded spoke sector; halos on
+          labels; key placed in the empty corner outside the disc
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Bright stars pop, constellation patterns emerge, magnitude legend
-          tells the brightness story
+        passed: false
+        comment: Data displayed; the star>line>grid hierarchy is what the Notes ask
+          for, no focal point chosen beyond it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,26 +153,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Star chart with constellations on azimuthal projection
+        comment: Azimuthal equidistant star chart with circular sky boundary, stick
+          figures and RA/Dec grid
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Projection, stick figures, mag->size, RA/Dec grid, con labels, mag
-          threshold, faint field
+        comment: Inverted magnitude sizing, thin semi-transparent stick lines, labelled
+          RA/Dec grid, dark/light sky per Notes, magnitude limit 5.0 all present;
+          Canes Venatici name sits away from its stars, beside Boötes (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA/Dec correctly projected to x/y
+        comment: Stars at their projected RA/Dec, not mirrored; sticks end on their
+          stars; only labels are shifted, never marks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; magnitude legend labels match
+        comment: Title matches the required format; magnitude key labelled for readers
     data_quality:
       score: 15
       max: 15
@@ -168,85 +185,94 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full magnitude range, 23 constellations, bright + faint field
+        comment: Shows magnitude range -1.46 to 5, connected and unconnected stars,
+          23 figures, full grid; optional ecliptic/Milky Way not drawn (no deduction)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real astronomy, neutral, educational
+        comment: Real bright stars with approximate J2000 coordinates and magnitudes;
+          neutral astronomy context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually accurate star coordinates and magnitudes (J2000)
+        comment: Checked Sirius -1.46 (largest), Vega 0.03, Polaris at dec 89.26 next
+          to the pole, Orion belt on the 0° ring at ~5.6h; no Check values in the
+          spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Imports -> data -> components -> default export; component split
-          required for hooks, idiomatic React
+        comment: React components are needed for the chart hooks, but the segmentHitsBox
+          helper and candidate-grid label search add a layout engine (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for background field; hard-coded catalogue
+        comment: Fixed-seed LCG for field stars; catalogue hard-coded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartContainer, ScatterPlot, hooks — all used
+        comment: ChartsContainer, ScatterPlot and the four hooks are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: No fake UI; no available MUI X call computes the projection or label
+          placement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-driven output, current community API, skipAnimation set
-    library_features:
-      score: 10
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer/hooks
+          API, sized to ANYPLOT_SIZE
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert ChartContainer composition with hook-driven custom layers
+        comment: Composition via ChartsContainer with ScatterPlot and custom SVG children
+          reading useXScale/useYScale/useDrawingArea; axes hidden with position:'none'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale/useDrawingArea custom SVG overlays — uniquely
-          MUI X composable API
+        comment: zAxis continuous sizeMap drives marker size via sizeAxisId, and the
+          key reads useZAxis('mag').sizeScale so legend and marks share one scale
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:59:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - custom-legend
   - annotations
-  - manual-ticks
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - minimal-chrome
-  - custom-colormap
-  - alpha-blending

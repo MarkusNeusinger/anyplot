@@ -1,167 +1,146 @@
 // anyplot.ai
 // line-timeseries-rolling: Time Series with Rolling Average Overlay
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-09-05
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG PRNG — no fetch, no Math.random) ----
-let seed = 42;
-function rand() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-}
+// Constants
+const DAY_MS = 86_400_000;
+const Y_PAD_SHARE = 0.06; // share of the value range added below and above the lines
 
-const NUM_DAYS = 120;
-const WINDOW = 7;
-const START_DATE = new Date(2026, 0, 1);
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const VISITORS = "Unique visitors"; // role: value
+const ROLLING = "Rolling average"; // role: rolling_avg
 
-const dates = Array.from({ length: NUM_DAYS }, (_, day) => {
-  const d = new Date(START_DATE);
-  d.setDate(d.getDate() + day);
-  return d;
-});
+// Data: replace this block with your own records, one object per row
+// Daily unique visitors to a blog over 120 days: weekend dips, a slow climb, a two-week surge
+// after a viral post, day-to-day noise, and the trailing 7-day mean (empty until the window is full).
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const WINDOW_DAYS = 7;
+  const visitors = Array.from({ length: 120 }, (_, day) => {
+    const date = new Date(2026, 0, 1 + day);
+    const weekendDip = date.getDay() === 0 || date.getDay() === 6 ? 0.62 : 1;
+    const surge = day >= 58 && day <= 74 ? 1 + 0.5 * Math.sin(((day - 58) / 16) * Math.PI) : 1;
+    const noise = 1 + (rand() - 0.5) * 0.22;
+    return { date, value: Math.max(300, Math.round(2200 * weekendDip * (1 + day * 0.004) * surge * noise)) };
+  });
+  return visitors.map((v, i) => ({
+    [DATE]: v.date,
+    [VISITORS]: v.value,
+    [ROLLING]:
+      i < WINDOW_DAYS - 1
+        ? null
+        : Math.round(visitors.slice(i - WINDOW_DAYS + 1, i + 1).reduce((s, w) => s + w.value, 0) / WINDOW_DAYS),
+  }));
+})();
 
-// Daily unique visitors to a blog: weekday/weekend seasonality, a slow
-// baseline climb, a two-week traffic surge around a viral post, plus
-// day-to-day noise — exactly the volatility a rolling average smooths.
-const SURGE_START_DAY = 58;
-const SURGE_END_DAY = 74;
-const rawVisitors = dates.map((date, day) => {
-  const weekday = date.getDay();
-  const weekendDip = weekday === 0 || weekday === 6 ? 0.62 : 1;
-  const trend = 1 + day * 0.004;
-  const surge =
-    day >= SURGE_START_DAY && day <= SURGE_END_DAY
-      ? 1 + 0.5 * Math.sin(((day - SURGE_START_DAY) / (SURGE_END_DAY - SURGE_START_DAY)) * Math.PI)
-      : 1;
-  const noise = 1 + (rand() - 0.5) * 0.22;
-  const baseline = 2200;
-  return Math.max(300, Math.round(baseline * weekendDip * trend * surge * noise));
-});
+// Plot: reads only data and the constants above
+const rows = [...data].sort((a, b) => a[DATE] - b[DATE]);
+const dates = rows.map((d) => d[DATE]);
+const raw = rows.map((d) => d[VISITORS]);
+const rolling = rows.map((d) => d[ROLLING]);
 
-// Trailing WINDOW-day rolling average — null until a full window of raw data
-// is available, so the smoothed line starts WINDOW-1 days after the raw one.
-const rollingAvg = rawVisitors.map((_, i) => {
-  if (i < WINDOW - 1) return null;
-  let sum = 0;
-  for (let k = i - WINDOW + 1; k <= i; k += 1) sum += rawVisitors[k];
-  return Math.round(sum / WINDOW);
-});
+// The trailing window is as long as the run of observations before the first rolling value, plus one
+const firstRolling = rolling.findIndex((v) => v != null);
+const windowSize = firstRolling + 1;
+const stepDays = Math.round((dates[1] - dates[0]) / DAY_MS);
+const windowLabel = stepDays === 1 ? `${windowSize}-day` : `${windowSize}-point`;
+
+const values = [...raw, ...rolling].filter((v) => v != null);
+const yLow = Math.min(...values);
+const yHigh = Math.max(...values);
+const yPad = (yHigh - yLow) * Y_PAD_SHARE;
+const formatDay = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const formatCount = (v: number | null) => (v == null ? "" : v.toLocaleString("en-US"));
 
 const TITLE = "Daily Unique Visitors · line-timeseries-rolling · javascript · muix · anyplot.ai";
+const SUBTITLE = `${rows.length} observations · ${formatDay(dates[0])} to ${formatDay(dates[dates.length - 1])} · trailing ${windowLabel} mean from ${formatDay(dates[firstRolling])}`;
+const HEADER_H = 80;
+const LEGEND_H = 44;
 
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const titleSize = TITLE.length > 67 ? Math.max(14, Math.round((22 * 67) / TITLE.length)) : 22;
-  const padding = { top: 28, right: 40, bottom: 24, left: 40 };
-  const titleBlockHeight = 56;
-  // MUI X's y-axis `label` offsets itself from a hardcoded tickFontSize guess
-  // rather than the tick labels' real measured width, so a 4-digit visitor
-  // count collides with it. A hand-rotated label in its own flex column
-  // sidesteps that and gives predictable, collision-free spacing.
-  const yLabelWidth = 34;
-  const chartWidth = size.width - padding.left - padding.right - yLabelWidth;
-  const chartHeight = size.height - padding.top - padding.bottom - titleBlockHeight;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: size.width,
-        height: size.height,
-        boxSizing: "border-box",
-        padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography sx={{ fontSize: titleSize, fontWeight: 600, color: "text.primary", mb: "20px", lineHeight: 1 }}>
-        {TITLE}
-      </Typography>
-      <Box sx={{ display: "flex", flexDirection: "row", height: chartHeight }}>
-        <Box sx={{ width: yLabelWidth, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography sx={{ fontSize: 16, color: "text.secondary", whiteSpace: "nowrap", transform: "rotate(-90deg)" }}>
-            Unique Visitors
-          </Typography>
-        </Box>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          series={[
-            {
-              id: "raw",
-              label: "Raw Data",
-              data: rawVisitors,
-              showMark: false,
-              color: t.palette[0],
-              valueFormatter: (v) => (v == null ? "" : `${v.toLocaleString("en-US")} visitors`),
-            },
-            {
-              id: "rolling",
-              label: `Rolling Average (${WINDOW}-Day)`,
-              data: rollingAvg,
-              // Only mark the latest point — a subtle callout of the current
-              // trend value without cluttering the smoothed line.
-              showMark: ({ index }) => index === rollingAvg.length - 1,
-              color: t.palette[1],
-              valueFormatter: (v) => (v == null ? "" : `${v.toLocaleString("en-US")} visitors`),
-            },
-          ]}
-          xAxis={[
-            {
-              data: dates,
-              scaleType: "time",
-              label: "Date",
-              valueFormatter: (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-              tickLabelStyle: { fontSize: 14 },
-              labelStyle: { fontSize: 16 },
-            },
-          ]}
-          yAxis={[
-            {
-              valueFormatter: (value) => value.toLocaleString("en-US"),
-              tickLabelStyle: { fontSize: 14 },
-            },
-          ]}
-          grid={{ vertical: true, horizontal: true }}
-          slotProps={{
-            legend: {
-              direction: "row",
-              labelStyle: { fontSize: 14 },
-              itemMarkWidth: 18,
-              itemMarkHeight: 10,
-              markGap: 8,
-            },
-          }}
-          sx={{
-            "& .MuiLineElement-series-raw": { strokeWidth: 1.5, strokeOpacity: 0.5 },
-            "& .MuiLineElement-series-rolling": { strokeWidth: 3.5 },
-            "& .MuiMarkElement-series-rolling": { r: 6, strokeWidth: 2.5 },
-            "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
-          }}
-        >
-          {/* Call out the viral-post surge — the chart's clearest story beat —
-              with a bracketed reference-line pair in the amber "caution/notable
-              event" anchor, distinct from both data-series colors. */}
-          <ChartsReferenceLine
-            x={dates[SURGE_START_DAY]}
-            label="Viral post surge"
-            labelAlign="start"
-            lineStyle={{ stroke: t.amber, strokeDasharray: "5 4", strokeWidth: 1.5 }}
-            labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.amber }}
-            spacing={{ x: 6, y: 6 }}
-          />
-          <ChartsReferenceLine
-            x={dates[SURGE_END_DAY]}
-            lineStyle={{ stroke: t.amber, strokeDasharray: "5 4", strokeWidth: 1.5 }}
-          />
-        </LineChart>
-      </Box>
-    </Box>
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: HEADER_H, padding: "16px 40px 0 112px", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{SUBTITLE}</div>
+      </div>
+      <LineChart
+        width={width}
+        height={height - HEADER_H - LEGEND_H}
+        skipAnimation
+        grid={{ horizontal: true, vertical: true }}
+        margin={{ top: 12, right: 48, bottom: 16, left: 24 }}
+        xAxis={[
+          {
+            data: dates,
+            scaleType: "time",
+            tickNumber: 10,
+            valueFormatter: (v: Date, context) =>
+              context.location === "tick" ? v.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : formatDay(v),
+            label: DATE,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: yLow - yPad,
+            max: yHigh + yPad,
+            tickNumber: 8,
+            label: VISITORS,
+            width: 84,
+            valueFormatter: (v: number) => v.toLocaleString("en-US"),
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={[
+          {
+            id: "raw",
+            data: raw,
+            label: `Raw data · ${VISITORS}`,
+            color: t.palette[0],
+            curve: "linear",
+            showMark: false,
+            valueFormatter: formatCount,
+          },
+          {
+            id: "rolling",
+            data: rolling,
+            label: `${ROLLING} (${windowLabel})`,
+            color: t.palette[1],
+            curve: "monotoneX",
+            showMark: false,
+            valueFormatter: formatCount,
+          },
+        ]}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 16, color: t.ink, columnGap: 3, pr: 5 },
+          },
+        }}
+        sx={{
+          '& .MuiLineChart-line[data-series="raw"]': { strokeWidth: 1.75, strokeOpacity: 0.65 },
+          '& .MuiLineChart-line[data-series="rolling"]': { strokeWidth: 4 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      />
+    </div>
   );
 }

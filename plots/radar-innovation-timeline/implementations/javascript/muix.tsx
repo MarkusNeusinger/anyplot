@@ -1,255 +1,289 @@
 // anyplot.ai
 // radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-26
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
+
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Strategic technology planning: emerging tech mapped by adoption horizon
-// (ring, inner→outer) across four thematic sectors (angular wedge).
-const RINGS = [
-  { key: "now", label: "Now (0–6 mo)" },
-  { key: "near", label: "Near-Term (6–18 mo)" },
-  { key: "mid", label: "Mid-Term (18–36 mo)" },
-  { key: "future", label: "Future (3+ yr)" },
+// Constants
+const SPREAD = 0.28; // several items in one cell sit between this share and its complement of the ring band
+const ARC_STEPS = 96; // segments per half-circle arc
+const TITLE_H = 48;
+const SUBTITLE_H = 28;
+const LEGEND_H = 44;
+const HEADER_PX = 52; // room above the outer ring for the sector headers
+const BASE_PX = 44; // room below the baseline for the ring names
+const SIDE_PX = 150; // room beside the half circle for the outermost sector headers
+const MARKER_R = 8;
+const LABEL_PX = 14; // item label font size
+const CHAR_PX = 7.6; // approximate width of one label character at LABEL_PX
+const HEADER_CHAR_PX = 10.6; // approximate width of one sector-header character at 18 px bold
+
+// Columns: set these to your data's column names
+const NAME = "Technology"; // role: name
+const HORIZON = "Adoption horizon"; // role: ring
+const SECTOR = "Domain"; // role: sector
+
+// Data: replace this block with your own records, one object per row
+// Strategic technology planning: 25 technologies by expected adoption horizon (listed nearest first)
+// across four domains; most cells hold one or two items, as real radars cluster
+const data = [
+  { [NAME]: "LLM Fine-Tuning", [HORIZON]: "Now (0–6 mo)", [SECTOR]: "AI & ML" },
+  { [NAME]: "AI Coding Assistants", [HORIZON]: "Now (0–6 mo)", [SECTOR]: "AI & ML" },
+  { [NAME]: "Multimodal Agents", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "AI & ML" },
+  { [NAME]: "RAG Pipelines", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "AI & ML" },
+  { [NAME]: "On-Device Inference", [HORIZON]: "Mid-Term (18–36 mo)", [SECTOR]: "AI & ML" },
+  { [NAME]: "Autonomous Coding Agents", [HORIZON]: "Mid-Term (18–36 mo)", [SECTOR]: "AI & ML" },
+  { [NAME]: "Neuromorphic Chips", [HORIZON]: "Future (3+ yr)", [SECTOR]: "AI & ML" },
+  { [NAME]: "Serverless Functions", [HORIZON]: "Now (0–6 mo)", [SECTOR]: "Cloud Infra" },
+  { [NAME]: "Edge Computing", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "Cloud Infra" },
+  { [NAME]: "Platform Engineering", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "Cloud Infra" },
+  { [NAME]: "WebAssembly Runtimes", [HORIZON]: "Mid-Term (18–36 mo)", [SECTOR]: "Cloud Infra" },
+  { [NAME]: "Confidential Computing", [HORIZON]: "Mid-Term (18–36 mo)", [SECTOR]: "Cloud Infra" },
+  { [NAME]: "Quantum-Safe Networking", [HORIZON]: "Future (3+ yr)", [SECTOR]: "Cloud Infra" },
+  { [NAME]: "Zero Trust Access", [HORIZON]: "Now (0–6 mo)", [SECTOR]: "Security" },
+  { [NAME]: "AI Threat Detection", [HORIZON]: "Now (0–6 mo)", [SECTOR]: "Security" },
+  { [NAME]: "Passwordless Auth", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "Security" },
+  { [NAME]: "Passkeys Everywhere", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "Security" },
+  { [NAME]: "Post-Quantum Crypto", [HORIZON]: "Mid-Term (18–36 mo)", [SECTOR]: "Security" },
+  { [NAME]: "Homomorphic Encryption", [HORIZON]: "Future (3+ yr)", [SECTOR]: "Security" },
+  { [NAME]: "Carbon-Aware IT", [HORIZON]: "Now (0–6 mo)", [SECTOR]: "Green Tech" },
+  { [NAME]: "Green Data Centers", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "Green Tech" },
+  { [NAME]: "Grid-Scale Battery Storage", [HORIZON]: "Near-Term (6–18 mo)", [SECTOR]: "Green Tech" },
+  { [NAME]: "Circular Hardware", [HORIZON]: "Mid-Term (18–36 mo)", [SECTOR]: "Green Tech" },
+  { [NAME]: "Direct Air Capture", [HORIZON]: "Future (3+ yr)", [SECTOR]: "Green Tech" },
+  { [NAME]: "Fusion Energy Pilots", [HORIZON]: "Future (3+ yr)", [SECTOR]: "Green Tech" },
 ];
 
-const SECTORS = [
-  { key: "ai", label: "AI & ML" },
-  { key: "cloud", label: "Cloud Infra" },
-  { key: "security", label: "Security" },
-  { key: "sustain", label: "Green Tech" },
-];
+// Plot: reads only data and the constants above
+// Rings in order of first appearance, nearest horizon innermost; sectors split the half circle evenly
+const rings = [...new Set(data.map((d) => d[HORIZON]))];
+const sectors = [...new Set(data.map((d) => d[SECTOR]))];
+const sectorSpan = Math.PI / sectors.length;
 
-// Uneven per-(ring, sector) density — real technology radars cluster rather
-// than filling a uniform grid: most cells hold one item, several hold two or
-// three. Every ring and sector still has at least one item.
-const ITEMS = [
-  { name: "LLM Fine-Tuning", ring: 0, sector: 0 },
-  { name: "AI Coding Assistants", ring: 0, sector: 0 },
-  { name: "Multimodal Agents", ring: 1, sector: 0 },
-  { name: "RAG Pipelines", ring: 1, sector: 0 },
-  { name: "On-Device Inference", ring: 2, sector: 0 },
-  { name: "Autonomous Coding Agents", ring: 2, sector: 0 },
-  { name: "Neuromorphic Chips", ring: 3, sector: 0 },
-  { name: "Serverless Functions", ring: 0, sector: 1 },
-  { name: "Edge Computing", ring: 1, sector: 1 },
-  { name: "Platform Engineering", ring: 1, sector: 1 },
-  { name: "WebAssembly Runtimes", ring: 2, sector: 1 },
-  { name: "Confidential Computing", ring: 2, sector: 1 },
-  { name: "Quantum-Safe Networking", ring: 3, sector: 1 },
-  { name: "Zero Trust Access", ring: 0, sector: 2 },
-  { name: "AI Threat Detection", ring: 0, sector: 2 },
-  { name: "Passwordless Auth", ring: 1, sector: 2 },
-  { name: "Passkeys Everywhere", ring: 1, sector: 2 },
-  { name: "Post-Quantum Crypto", ring: 2, sector: 2 },
-  { name: "Homomorphic Encryption", ring: 3, sector: 2 },
-  { name: "Carbon-Aware IT", ring: 0, sector: 3 },
-  { name: "Green Data Centers", ring: 1, sector: 3 },
-  { name: "Grid-Scale Battery Storage", ring: 1, sector: 3 },
-  { name: "Circular Hardware", ring: 2, sector: 3 },
-  { name: "Direct Air Capture", ring: 3, sector: 3 },
-  { name: "Fusion Energy Pilots", ring: 3, sector: 3 },
-];
+// Canvas geometry in px: the half circle sits on its baseline, one px-per-ring scale on both axes
+const { width, height } = window.ANYPLOT_SIZE;
+const svgH = height - TITLE_H - SUBTITLE_H - LEGEND_H;
+const radiusPx = Math.min(svgH - HEADER_PX - BASE_PX, width / 2 - SIDE_PX);
+const unit = radiusPx / rings.length;
+const below = BASE_PX + (svgH - HEADER_PX - BASE_PX - radiusPx) / 2; // px from the bottom edge to the baseline
+const cx = width / 2;
+const cy = svgH - below;
 
-// --- Geometry (half-circle: rings sweep 180°→0°, sectors divide the arc) ----
-// The chart's domain is set 1:1 with CSS px (chartWidth === xDomainLen,
-// chartHeight === yDomainLen, zero ChartContainer margin) so the semicircle
-// is sized directly against the canvas instead of being squeezed by a
-// height-driven aspect ratio that leaves the sides empty.
-const R_MAX = 640;
-const RING_BOUNDS = [0, 160, 320, 480, 640];
-const SECTOR_SPAN = 180 / SECTORS.length;
-const SECTOR_LABEL_R = R_MAX + 40;
-// Outward reach of each item's label, per ring — smallest on the outer ring
-// so it doesn't crowd the sector header just beyond R_MAX.
-const LABEL_OFFSET = [28, 48, 44, 24];
-// The outermost ring sits closest to the sector headers; nudging its items
-// off the sector's exact center angle keeps single-occupant outer cells from
-// landing directly under the header text (same ray, different radius only).
-const OUTER_RING_NUDGE = 12;
-const X_HALF = SECTOR_LABEL_R + 100;
-const Y_TOP = R_MAX + 24;
-const Y_BOTTOM = -60;
-
-// Group items by (ring, sector) cell, then fan multiple occupants across the
-// sector's angular span and stagger their radius within the ring band — the
-// "smart label placement / angular jitter / radial offset" the spec's Notes
-// call for. A lone occupant (n=1) still lands dead-center at the ring's
-// midpoint radius, matching the simple case exactly.
-const CELLS = new Map();
-ITEMS.forEach((item) => {
-  const key = `${item.ring}-${item.sector}`;
-  if (!CELLS.has(key)) CELLS.set(key, []);
-  CELLS.get(key).push(item);
+// Inside each (ring, sector) cell, n items fan out over the sector at (k + 1) / (n + 1) of its
+// angle and step outward across the ring band, so no item leaves its own cell. Positions are in
+// ring units: ring i spans radius i to i + 1, angle pi (left) to 0 (right).
+const cellSize = new Map();
+data.forEach((d) => {
+  const key = `${rings.indexOf(d[HORIZON])}:${sectors.indexOf(d[SECTOR])}`;
+  cellSize.set(key, (cellSize.get(key) ?? 0) + 1);
+});
+const cellSeen = new Map();
+const items = data.map((d) => {
+  const ring = rings.indexOf(d[HORIZON]);
+  const sector = sectors.indexOf(d[SECTOR]);
+  const key = `${ring}:${sector}`;
+  const n = cellSize.get(key);
+  const k = cellSeen.get(key) ?? 0;
+  cellSeen.set(key, k + 1);
+  const angle = Math.PI - (sector + (k + 1) / (n + 1)) * sectorSpan;
+  const radius = ring + (n === 1 ? 0.5 : SPREAD + ((1 - 2 * SPREAD) * k) / (n - 1));
+  const x = radius * Math.cos(angle);
+  const y = radius * Math.sin(angle);
+  return { name: d[NAME], sector, angle, x, y, px: cx + x * unit, py: cy - y * unit };
 });
 
-const POINTS = [];
-CELLS.forEach((cell, key) => {
-  const [ringIdx, sectorIdx] = key.split("-").map(Number);
-  const sectorStart = 180 - sectorIdx * SECTOR_SPAN;
-  const ringInner = RING_BOUNDS[ringIdx];
-  const ringOuter = RING_BOUNDS[ringIdx + 1];
-  const baseRadius = (ringInner + ringOuter) / 2;
-  const radialJitterStep = (ringOuter - ringInner) * 0.32;
-  const isOuterRing = ringIdx === RINGS.length - 1;
-  // Rings alternate which portion of the sector's angular span they favor,
-  // so two crowded cells sharing a sector but sitting in adjacent rings
-  // don't land on near-identical angles.
-  const [pad, span] = ringIdx % 2 === 0 ? [0.2, 0.6] : [0.3, 0.4];
-  // Within a sector, sin(angle) rises toward the sector nearest the top (90°)
-  // and falls away from it; staggering the radius in that same direction
-  // (instead of a fixed sign) makes the angular and radial spread compound
-  // into more vertical separation rather than canceling out.
-  const sign = sectorIdx < SECTORS.length / 2 ? 1 : -1;
-  const n = cell.length;
-  cell.forEach((item, i) => {
-    const frac = n === 1 ? 0.5 : pad + span * (i / (n - 1));
-    const angle = sectorStart - SECTOR_SPAN * frac - (isOuterRing ? OUTER_RING_NUDGE : 0);
-    const radius = baseRadius + sign * (i - (n - 1) / 2) * radialJitterStep;
-    POINTS.push({ ...item, angle, radius, labelOffset: LABEL_OFFSET[ringIdx] });
+// Sector headers just outside the outer ring, at each sector's middle angle
+const headers = sectors.map((sector, i) => {
+  const mid = Math.PI - (i + 0.5) * sectorSpan;
+  const cos = Math.cos(mid);
+  const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle";
+  return { sector, x: cx + (radiusPx + 26) * cos, y: cy - (radiusPx + 26) * Math.sin(mid), anchor };
+});
+
+// Label placement: markers stay on their positions; each label takes, of the slots around its
+// marker (outer side first) that are free of markers, headers, ring names and earlier labels, the
+// first one that stays in its own sector and crosses the fewest ring arcs
+const spokeAngles = Array.from({ length: sectors.length + 1 }, (_, i) => Math.PI - i * sectorSpan);
+const obstacles = [
+  ...items.map((it, i) => ({ owner: i, box: [it.px - MARKER_R - 3, it.py - MARKER_R - 3, it.px + MARKER_R + 3, it.py + MARKER_R + 3] })),
+  ...headers.map((h) => {
+    const w = h.sector.length * HEADER_CHAR_PX;
+    const x0 = h.anchor === "end" ? h.x - w : h.anchor === "middle" ? h.x - w / 2 : h.x;
+    return { owner: -1, box: [x0, h.y - 13, x0 + w, h.y + 13] };
+  }),
+  { owner: -1, box: [0, cy + 6, width, svgH] }, // the ring names below the baseline
+];
+const labels = items.map((it, i) => {
+  const w = it.name.length * CHAR_PX;
+  const out = Math.cos(it.angle) >= 0 ? 1 : -1;
+  const gap = MARKER_R + 6;
+  const slots = [
+    [out * gap, 0, out],
+    [0, -gap - 4, 0],
+    [0, gap + 4, 0],
+    [out * gap * 0.8, -gap, out],
+    [out * gap * 0.8, gap, out],
+    [-out * gap, 0, -out],
+    [-out * gap * 0.8, -gap, -out],
+    [-out * gap * 0.8, gap, -out],
+    // above and below, shifted outward by a quarter of the label so it clears a nearby spoke
+    [-out * w * 0.25, -gap - 4, out],
+    [-out * w * 0.25, gap + 4, out],
+  ].map(([dx, dy, side]) => {
+    const x0 = side > 0 ? it.px + dx : side < 0 ? it.px + dx - w : it.px - w / 2;
+    const box = [x0, it.py + dy - LABEL_PX / 2 - 2, x0 + w, it.py + dy + LABEL_PX / 2 + 2];
+    const clash = obstacles
+      .filter((o) => o.owner !== i)
+      .reduce((sum, { box: o }) => sum + Math.max(0, Math.min(box[2], o[2]) - Math.max(box[0], o[0])) * Math.max(0, Math.min(box[3], o[3]) - Math.max(box[1], o[1])), 0);
+    // The box corners relative to the centre (y up): a ring arc is crossed when its radius lies
+    // between the box's nearest and farthest point above the baseline, a spoke when the corners
+    // fall on both sides of it within its length
+    const corners = [[box[0], box[1]], [box[2], box[1]], [box[0], box[3]], [box[2], box[3]]].map(([x, y]) => [x - cx, cy - y]);
+    const near = Math.hypot(Math.max(box[0] - cx, 0, cx - box[2]), Math.max(box[1] - cy, 0, cy - box[3]));
+    const far = Math.max(...corners.map(([x, y]) => Math.hypot(x, y)));
+    const above = corners.some(([, y]) => y > 0);
+    const arcCrossings = above ? rings.filter((_, r) => near < (r + 1) * unit && (r + 1) * unit < far).length : 0;
+    const spokeCrossings = spokeAngles.filter((a) => {
+      const across = corners.map(([x, y]) => x * Math.sin(a) - y * Math.cos(a));
+      const along = corners.map(([x, y]) => x * Math.cos(a) + y * Math.sin(a));
+      return Math.min(...across) < 0 && Math.max(...across) > 0 && Math.max(...along) > 0 && Math.min(...along) < radiusPx;
+    }).length;
+    // A label reads as part of the sector its centre lies in, which can differ from its marker's
+    const centre = Math.atan2(cy - (box[1] + box[3]) / 2, (box[0] + box[2]) / 2 - cx);
+    const ownSector = centre <= Math.PI - it.sector * sectorSpan && centre >= Math.PI - (it.sector + 1) * sectorSpan;
+    return { dx, dy, anchor: side > 0 ? "start" : side < 0 ? "end" : "middle", box, clash, ownSector, lines: arcCrossings + spokeCrossings };
   });
+  // A free slot centred in the marker's own sector always wins; among those, the fewest crossings
+  const free = slots.filter((s) => s.clash === 0);
+  const inSector = free.filter((s) => s.ownSector);
+  const pool = inSector.length > 0 ? inSector : free;
+  const best = pool.length > 0 ? pool.reduce((a, b) => (b.lines < a.lines ? b : a)) : slots.reduce((a, b) => (b.clash < a.clash ? b : a));
+  obstacles.push({ owner: -1, box: best.box });
+  return best;
 });
 
-// --- Radar diagram (custom marks composed on the MUI X cartesian scales) ----
-function RadarDiagram() {
+const series = sectors.map((s, i) => ({
+  type: "scatter",
+  id: `sector-${i}`,
+  label: s,
+  color: t.palette[i],
+  markerSize: MARKER_R,
+  labelMarkType: "circle",
+  data: items.filter((it) => it.sector === i).map((it) => ({ x: it.x, y: it.y, id: it.name })),
+}));
+
+const TITLE = "radar-innovation-timeline · javascript · muix · anyplot.ai";
+const SUBTITLE = `${data.length} items · ${rings.length} rings, nearest horizon at the center · ${sectors.length} sectors`;
+
+function RadarFrame() {
   const xScale = useXScale();
   const yScale = useYScale();
-
-  const toPx = (radius, angleDeg) => {
-    const rad = (angleDeg * Math.PI) / 180;
-    return [xScale(radius * Math.cos(rad)), yScale(radius * Math.sin(rad))];
-  };
-  const arcPoints = (radius, steps = 48) =>
-    Array.from({ length: steps + 1 }, (_, i) => toPx(radius, 180 - (180 * i) / steps));
-  const toPath = (pts) => pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
-
-  const dividerAngles = Array.from({ length: SECTORS.length + 1 }, (_, i) => 180 - i * SECTOR_SPAN);
+  const ox = xScale(0);
+  const oy = yScale(0);
+  const at = (r, a) => [ox + r * Math.cos(a), oy - r * Math.sin(a)];
+  // Each boundary arc as points from the left end (angle pi) to the right end (angle 0)
+  const arcs = Array.from({ length: rings.length + 1 }, (_, i) =>
+    Array.from({ length: ARC_STEPS + 1 }, (_, s) => at(i * unit, Math.PI - (Math.PI * s) / ARC_STEPS)),
+  );
 
   return (
     <g>
-      {/* Subtle alternating fill per ring — separates the time horizons */}
-      {RINGS.map((ring, i) => {
-        const rInner = RING_BOUNDS[i];
-        const rOuter = RING_BOUNDS[i + 1];
-        const outerArc = arcPoints(rOuter);
-        const innerArc = rInner === 0 ? [toPx(0, 90)] : arcPoints(rInner).reverse();
-        const d = `${toPath(outerArc)} L${innerArc.map(([x, y]) => `${x},${y}`).join(" L")} Z`;
-        return <path key={ring.key} d={d} fill={t.ink} opacity={i % 2 === 0 ? 0.035 : 0.07} stroke="none" />;
-      })}
-
-      {/* Ring boundary lines (outer ring gets a bolder frame) */}
-      {RING_BOUNDS.slice(1).map((r, i) => (
+      {rings.map((ring, i) => (
         <path
-          key={`ring-line-${r}`}
-          d={toPath(arcPoints(r))}
-          fill="none"
-          stroke={i === RING_BOUNDS.length - 2 ? t.inkSoft : t.grid}
-          strokeWidth={i === RING_BOUNDS.length - 2 ? 2.5 : 1.5}
+          key={`band-${ring}`}
+          d={`M${[...arcs[i + 1], ...[...arcs[i]].reverse()].map((p) => p.join(",")).join(" L")} Z`}
+          fill={t.inkSoft}
+          fillOpacity={i % 2 === 0 ? 0.05 : 0.1}
         />
       ))}
-
-      {/* Baseline diameter */}
-      <path d={toPath([toPx(R_MAX, 180), toPx(R_MAX, 0)])} stroke={t.inkSoft} strokeWidth={2.5} />
-
-      {/* Sector divider spokes */}
-      {dividerAngles.map((angle) => (
-        <path key={`div-${angle}`} d={toPath([toPx(0, angle), toPx(R_MAX, angle)])} stroke={t.grid} strokeWidth={1.5} />
+      {rings.map((ring, i) => (
+        <path
+          key={`ring-${ring}`}
+          d={`M${arcs[i + 1].map((p) => p.join(",")).join(" L")}`}
+          fill="none"
+          stroke={i === rings.length - 1 ? t.inkSoft : t.grid}
+          strokeWidth={i === rings.length - 1 ? 2 : 1.5}
+        />
       ))}
-
-      {/* Ring names integrated at each ring's own boundary along the top
-          spine (a sector divider, so it never competes with an item label) —
-          closer to the rings than a separate row below the baseline. */}
-      {RING_BOUNDS.slice(1).map((r, i) => {
-        const [x, y] = toPx(r, 90);
-        return (
-          <text key={`ring-label-${RINGS[i].key}`} x={x + 10} y={y - 6} fontSize={13} fontWeight={600} fill={t.inkSoft} textAnchor="start" dominantBaseline="middle">
-            {RINGS[i].label}
+      {Array.from({ length: sectors.length + 1 }, (_, i) => {
+        const [x, y] = at(radiusPx, Math.PI - i * sectorSpan);
+        return <line key={`spoke-${i}`} x1={ox} y1={oy} x2={x} y2={y} stroke={t.grid} strokeWidth={1.5} />;
+      })}
+      <line x1={ox - radiusPx} y1={oy} x2={ox + radiusPx} y2={oy} stroke={t.inkSoft} strokeWidth={2} />
+      {rings.map((ring, i) =>
+        [-1, 1].map((side) => (
+          <text
+            key={`ring-name-${ring}-${side}`}
+            x={ox + side * (i + 0.5) * unit}
+            y={oy + 26}
+            fontSize={14}
+            fontWeight={600}
+            fill={t.inkSoft}
+            textAnchor="middle"
+          >
+            {ring}
           </text>
-        );
-      })}
-
-      {/* Sector headers along the outer edge */}
-      {SECTORS.map((sector, i) => {
-        const sectorStart = 180 - i * SECTOR_SPAN;
-        const mid = sectorStart - SECTOR_SPAN / 2;
-        const [x, y] = toPx(SECTOR_LABEL_R, mid);
-        const cos = Math.cos((mid * Math.PI) / 180);
-        const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle";
-        return (
-          <text key={`sector-label-${sector.key}`} x={x} y={y} fontSize={18} fontWeight={700} fill={t.ink} textAnchor={anchor} dominantBaseline="middle">
-            {sector.label}
-          </text>
-        );
-      })}
-
-      {/* Sector color legend, a single compact row below the baseline */}
-      {SECTORS.map((sector, i) => {
-        const slot = (2 * X_HALF) / SECTORS.length;
-        const cx = xScale(-X_HALF + slot * (i + 0.5));
-        const cy = yScale(-32);
-        return (
-          <g key={`legend-${sector.key}`}>
-            <circle cx={cx - 55} cy={cy} r={9} fill={t.palette[i]} stroke={t.pageBg} strokeWidth={2} />
-            <text x={cx - 40} y={cy} fontSize={14} fill={t.ink} textAnchor="start" dominantBaseline="middle">
-              {sector.label}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Items — marker + outward radial label, colored by sector */}
-      {POINTS.map((p) => {
-        const [mx, my] = toPx(p.radius, p.angle);
-        const [lx, ly] = toPx(p.radius + p.labelOffset, p.angle);
-        const cos = Math.cos((p.angle * Math.PI) / 180);
-        const anchor = cos > 0.2 ? "start" : cos < -0.2 ? "end" : "middle";
-        return (
-          <g key={p.name}>
-            <circle cx={mx} cy={my} r={9} fill={t.palette[p.sector]} stroke={t.pageBg} strokeWidth={2.2} />
-            <text x={lx} y={ly} fontSize={13} fill={t.ink} textAnchor={anchor} dominantBaseline="middle">
-              {p.name}
-            </text>
-          </g>
-        );
-      })}
+        )),
+      )}
+      {headers.map((h) => (
+        <text key={`header-${h.sector}`} x={h.x} y={h.y} fontSize={18} fontWeight={700} fill={t.ink} textAnchor={h.anchor} dominantBaseline="middle">
+          {h.sector}
+        </text>
+      ))}
+      {items.map((it, i) => (
+        <text
+          key={`label-${it.name}`}
+          x={xScale(it.x) + labels[i].dx}
+          y={yScale(it.y) + labels[i].dy}
+          fontSize={LABEL_PX}
+          fill={t.ink}
+          textAnchor={labels[i].anchor}
+          dominantBaseline="central"
+          stroke={t.pageBg}
+          strokeWidth={4}
+          paintOrder="stroke"
+        >
+          {it.name}
+        </text>
+      ))}
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const titleHeight = 64;
-  // Domain bounds are set 1:1 with CSS px (see geometry comment above), so
-  // the ChartContainer's own size *is* the drawing area, filling the
-  // available width directly instead of being derived from it.
-  const chartWidth = 2 * X_HALF;
-  const chartHeight = Y_TOP - Y_BOTTOM;
-
   return (
-    <Box sx={{ width: size.width, height: size.height, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-      <Box sx={{ height: titleHeight, display: "flex", alignItems: "center" }}>
-        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          radar-innovation-timeline · javascript · muix · anyplot.ai
-        </Typography>
-      </Box>
-      <ChartContainer
-        width={chartWidth}
-        height={chartHeight}
-        series={[]}
-        xAxis={[{ min: -X_HALF, max: X_HALF, scaleType: "linear", domainLimit: "strict" }]}
-        yAxis={[{ min: Y_BOTTOM, max: Y_TOP, scaleType: "linear", domainLimit: "strict" }]}
-        margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, display: "flex", alignItems: "flex-end", justifyContent: "center", fontSize: 22, fontWeight: 600, color: t.ink }}>
+        {TITLE}
+      </div>
+      <div style={{ height: SUBTITLE_H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: t.inkSoft }}>
+        {SUBTITLE}
+      </div>
+      <ChartsDataProvider
+        width={width}
+        height={svgH}
         skipAnimation
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        series={series}
+        xAxis={[{ scaleType: "linear", min: -cx / unit, max: (width - cx) / unit, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -below / unit, max: (svgH - below) / unit, position: "none" }]}
       >
-        <RadarDiagram />
-      </ChartContainer>
-    </Box>
+        <ChartsWrapper legendPosition={{ vertical: "bottom", horizontal: "center" }} legendDirection="horizontal">
+          <ChartsLegend sx={{ fontSize: 16, color: t.ink, height: LEGEND_H, alignItems: "center" }} />
+          <ChartsSurface sx={{ "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 2 } }}>
+            <RadarFrame />
+            <ScatterPlot />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
