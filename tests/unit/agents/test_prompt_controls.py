@@ -212,8 +212,9 @@ def test_the_remembered_bullet_names_exactly_the_buttons_of_the_decisions_list()
 
 def test_the_prompt_says_what_the_page_shows_of_questions_and_kept_decisions() -> None:
     """The page marks a message that changed nothing as a question and starts the reply with a label of its own,
-    and a plot card counts the remembered decisions it kept: the root knows both, so it never writes the label
-    into its reply, and it can point the user to what a version kept. The words are the page's own."""
+    and an open plot card names the remembered decisions it kept and added on its first line, while its label
+    keeps the request it answered: the root knows both, so it never writes the label into its reply, and it can
+    point the user to what a version kept. The words are the page's own."""
     messages = (AGENT_CHAT / "messages.ts").read_text(encoding="utf-8")
     labels = (AGENT_CHAT / "cardLabels.ts").read_text(encoding="utf-8")
     chapters = bullet_of("The data panel")
@@ -223,9 +224,9 @@ def test_the_prompt_says_what_the_page_shows_of_questions_and_kept_decisions() -
     assert "which the page adds by itself" in chapters
     assert "`· 2 questions`" in chapters
     assert "ANSWER_LABEL = 'answer · nothing changed'" in messages
-    assert "`plot v4 · seaborn · kept 3`" in card
+    assert "kept 3" not in card
     assert "`kept: y = 7 line · x label · new: log scale on y`" in card
-    assert "`kept ${kept}`" in labels
+    assert "`kept ${" not in labels
     assert "`${part}: " in labels
 
 

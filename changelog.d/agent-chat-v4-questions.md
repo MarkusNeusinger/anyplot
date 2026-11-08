@@ -11,13 +11,13 @@
   question, and the memory read after the turn still vetoes. The note typed
   with an attachment is never one: its reply summarizes the data that just
   came. (#12826)
-- **A plot card counts the remembered decisions it kept.** Its label reads
-  `plot v4 · seaborn · kept 3` in place of the request, and the open card's
-  first line names them, `kept: y = 7 line · x label · new: log scale on y`
-  (only `new: …` on a phone), from the ids the server sends with each version
-  (`plot.memory`). The texts stay with the version, so a later `.forget()`
-  never rewrites an older card, and a version whose memory the server did not
-  name shows no `kept` at all, never `kept 0`. (#12826)
+- **A plot card names the remembered decisions it kept.** The open card's
+  first line reads `kept: y = 7 line · x label · new: log scale on y` (under
+  the image on a phone), from the ids the server sends with each version
+  (`plot.memory`). The label keeps the request the version answered, so a
+  folded version still says what it was for. The texts stay with the version,
+  so a later `.forget()` never rewrites an older card, and a version whose
+  memory the server did not name shows no line, never `kept 0`. (#12826)
 
 ### Changed
 

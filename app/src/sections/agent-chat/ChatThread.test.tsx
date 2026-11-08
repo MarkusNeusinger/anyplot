@@ -978,7 +978,7 @@ describe('ChatThread plot cards', () => {
     ]);
   });
 
-  it('counts the decisions a version kept in place of its request, never kept 0', () => {
+  it('labels a version that kept decisions by its request, the first plot as first plot, never kept 0', () => {
     const decided = (number: number, kept: string[]): PlotVersion => ({
       ...version(number),
       decisions: {
@@ -1000,15 +1000,16 @@ describe('ChatThread plot cards', () => {
         { id: 6, kind: 'plot', version: 3 },
       ],
     });
-    // Nothing kept, or a memory the server did not name: the label keeps what the plot answered.
+    // What the version kept is the open card's line, never the label's: a folded version still
+    // says what it answered, kept decisions or not, and whether the server named its memory.
     expect(screen.getByRole('button', { name: 'Plot v1, matplotlib, first plot' })).toBeVisible();
     expect(
-      screen.getByRole('button', { name: 'Plot v2, matplotlib, kept 1 decision' })
-    ).toHaveTextContent(/^▸plot v2 · matplotlib · kept 1$/);
+      screen.getByRole('button', { name: 'Plot v2, matplotlib, log scale on y' })
+    ).toHaveTextContent(/^▸plot v2 · matplotlib · log scale on y$/);
     expect(
       screen.getByRole('button', { name: 'Plot v3, matplotlib, bigger markers' })
     ).toBeVisible();
-    expect(document.body).not.toHaveTextContent('kept 0');
+    expect(document.body).not.toHaveTextContent(/kept \d/);
   });
 });
 

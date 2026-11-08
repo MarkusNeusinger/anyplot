@@ -857,13 +857,15 @@ describe('ResultCard', () => {
         }))
       );
 
-    it('counts what it kept in its label and names both on its first line, each cut, in full for a screen reader', () => {
+    it('keeps the request in its label and names what it kept and added on its first line, each cut, in full for a screen reader', () => {
       renderCard({
         version: decided([LONG, 'x label "Monat"', 'title in German'], ['log scale on y']),
         summary: 'log scale on y please',
       });
-      const label = screen.getByRole('button', { name: 'Plot v2, matplotlib, kept 3 decisions' });
-      expect(label).toHaveTextContent(/^plot v2 · matplotlib · kept 3$/);
+      const label = screen.getByRole('button', {
+        name: 'Plot v2, matplotlib, log scale on y please',
+      });
+      expect(label).toHaveTextContent(/^plot v2 · matplotlib · log scale on y please$/);
       const line = screen.getByTestId('result-decisions');
       expect(line.firstElementChild).toHaveTextContent(
         'kept: horizontal reference line at y = 7, das… · x label "Monat" · title in German · new: log scale on y'
@@ -879,7 +881,7 @@ describe('ResultCard', () => {
       ).toBeTruthy();
     });
 
-    it('keeps the request in its label when it kept nothing, and shows no line for two empty lists', () => {
+    it('shows no line for two empty lists, and never kept 0', () => {
       renderCard({ version: decided([], []), summary: 'title in German' });
       expect(screen.getByTestId('result-label')).toHaveTextContent(
         /^plot v2 · matplotlib · title in German$/
@@ -890,28 +892,32 @@ describe('ResultCard', () => {
 
     it('counts a decision whose text no list named, and says how many more', () => {
       renderCard({ version: decided(['title in German', null], [null]) });
-      expect(screen.getByTestId('result-label')).toHaveTextContent('kept 2');
+      expect(screen.getByTestId('result-label')).not.toHaveTextContent('kept');
       expect(screen.getByTestId('result-decisions').firstElementChild).toHaveTextContent(
         'kept: title in German · 1 more · new: 1 decision'
       );
     });
 
-    it('shows only what is new on a phone, under the image and above its action line', () => {
+    it('shows the same line on a phone, under the image and above its action line', () => {
       phone();
       renderCard({ version: decided(['title in German'], ['log scale on y']) });
       const line = screen.getByTestId('result-decisions');
-      expect(line.firstElementChild).toHaveTextContent(/^new: log scale on y$/);
+      expect(line.firstElementChild).toHaveTextContent(
+        /^kept: title in German · new: log scale on y$/
+      );
       const image = screen.getByTestId('result-image-box');
       const actions = screen.getByTestId('result-image-actions');
       expect(image.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(line.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(screen.getByTestId('result-label')).toHaveTextContent('kept 1');
+      expect(screen.getByTestId('result-label')).not.toHaveTextContent('kept');
     });
 
-    it('shows no line on a phone for a version that only kept', () => {
+    it('shows what a version only kept on a phone too', () => {
       phone();
       renderCard({ version: decided(['title in German'], []) });
-      expect(screen.queryByTestId('result-decisions')).not.toBeInTheDocument();
+      expect(screen.getByTestId('result-decisions').firstElementChild).toHaveTextContent(
+        /^kept: title in German$/
+      );
     });
   });
 

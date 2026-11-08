@@ -66,8 +66,8 @@
  * decisions themselves stand on the latest `# plot` chapter line, `3 decisions ▾`
  * (before the first plot on the latest chapter line), which unfolds their list under
  * the line (`Remembered`), each with `.forget()`, and `.forget_all()` for a blank
- * start: nothing else clears them. A plot card says how many it kept (`plot v4 ·
- * seaborn · kept 3`) and, open, which (`kept: … · new: …`). A typed turn that
+ * start: nothing else clears them. An open plot card names the decisions it kept
+ * and added (`kept: … · new: …`); its label names the request it answered. A typed turn that
  * changed nothing, by the server's word and by what the page saw, reads as a question:
  * a `?` beside its bubble, `? answer · nothing changed` over its reply, and a count on
  * its chapter line that jumps to the chapter's questions in turn.

@@ -8,8 +8,8 @@
  * the fixed refusal under a plain label (its code behind the label's ⓘ), errors with their code
  * and request id, a library switch as a line of its own that names the decisions the plot in the
  * new library keeps, and a result card per plot version, its label on its border naming what it
- * answered (`plotSummaries`) or how many remembered decisions it kept. A lost confirmation adds
- * nothing here: the status line at the chat frame's foot names it.
+ * answered (`plotSummaries`), the open card naming the remembered decisions it kept and added. A
+ * lost confirmation adds nothing here: the status line at the chat frame's foot names it.
  *
  * Questions (the v4 mock): a typed turn that changed nothing (`isQuestion` in `threadModel.ts`)
  * gets a small round `?` at its bubble's left, which a screen reader skips, and its bubble starts

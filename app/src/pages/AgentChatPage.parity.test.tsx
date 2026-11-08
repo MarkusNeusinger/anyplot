@@ -543,14 +543,14 @@ const STATES: Record<string, State> = {
       );
     },
   },
-  // A version that kept the two decisions and added one: `kept 2` and its line.
+  // A version that kept the two decisions and added one: its request on the label, both on its line.
   'with a plot card and its kept line': {
     open: 'ok',
     decided: true,
     reach: async () => {
       await plotOnce();
       await send('log scale on y', 'Plot 2.');
-      await screen.findByRole('button', { name: 'Plot v2, matplotlib, kept 2 decisions' });
+      await screen.findByRole('button', { name: 'Plot v2, matplotlib, log scale on y' });
       await waitFor(() =>
         expect(screen.getByTestId('result-decisions')).toHaveTextContent(
           'kept: reference line at y = 7 · title in German · new: log scale on y'
