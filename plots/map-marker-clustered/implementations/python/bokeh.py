@@ -32,15 +32,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Map background — placeholder color visible before tiles load
-MAP_BG = "#E8EEF2" if THEME == "light" else "#1C2E35"
-
-# Tile basemap — CartoDB Positron (light) or Dark Matter (dark)
-TILE_URL = (
-    "https://a.basemaps.cartocdn.com/light_all/{Z}/{X}/{Y}.png"
-    if THEME == "light"
-    else "https://a.basemaps.cartocdn.com/dark_all/{Z}/{X}/{Y}.png"
-)
+# Tile basemap — USGS The National Map topo tiles: public domain and keyless (ArcGIS z/y/x order).
+# The tiles have no dark variant, so they are drawn translucent over the page background, which
+# keeps the map quieter than the markers and gives it the theme's tone.
+TILE_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{Z}/{Y}/{X}"
+TILE_ALPHA = 0.55 if THEME == "light" else 0.30
 
 # Imprint palette — canonical imprint slot order (green, lavender, blue, ochre)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
@@ -134,7 +130,7 @@ p = figure(
 )
 
 # Tile basemap — adds streets/boundaries geographic context
-p.add_tile(WMTSTileSource(url=TILE_URL, attribution="© OpenStreetMap contributors © CARTO"))
+p.add_tile(WMTSTileSource(url=TILE_URL, attribution="Basemap: USGS The National Map"), alpha=TILE_ALPHA)
 
 # Faint individual store markers
 individual_source = ColumnDataSource(data={"x": mercator_x, "y": mercator_y, "category": store_categories})
@@ -241,8 +237,8 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.08
 p.ygrid.grid_line_alpha = 0.08
 
-# Theme-adaptive background (tile placeholder + border area)
-p.background_fill_color = MAP_BG
+# Theme-adaptive background (shows through the translucent tiles + border area)
+p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 p.outline_line_width = 1
@@ -275,7 +271,7 @@ from selenium.webdriver.common.by import By
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H + 200)
 driver.get(f"file://{Path(html_path).resolve()}")
-time.sleep(5)  # extended wait for tile layer to load
+time.sleep(8)  # extended wait for the tile layer: the USGS server answers in about 0.5 s per tile
 
 # Try to screenshot just the Bokeh figure element to avoid the notifications bar
 try:
