@@ -19,11 +19,11 @@ const BINS_X = 26; // bin count along x
 const BINS_Y = 18; // bin count along y
 
 // Columns: set these to your data's column names
-const X = "Stock A Daily Return (%)"; // role: x
-const Y = "Stock B Daily Return (%)"; // role: y
+const X = "Tech Sector Fund Daily Return (%)"; // role: x
+const Y = "Semiconductor Fund Daily Return (%)"; // role: y
 
 // Data: replace this block with your own records, one object per point
-// Joint distribution of two correlated daily stock returns (correlation 0.65,
+// Joint distribution of two correlated daily fund returns (correlation 0.65,
 // volatilities 1.4 % and 1.6 %): 8,000 days, far past what a scatter plot can show.
 const data = (() => {
   let seed = 42;
@@ -88,7 +88,7 @@ for (let i = 0; i < xs.length; i += 1) {
 }
 const pearsonR = sxy / Math.sqrt(sxx * syy);
 
-const TITLE = "Correlated Stock Returns · histogram-2d · javascript · muix · anyplot.ai";
+const TITLE = "Correlated Fund Returns ·histogram-2d · javascript · muix · anyplot.ai";
 const SUBTITLE = `n = ${data.length.toLocaleString("en-US")} · ${BINS_X} × ${BINS_Y} bins · Pearson r = ${pearsonR.toFixed(2)}`;
 const LEGEND_LABEL = "Points per bin (log scale)";
 const HEADER_H = 82;
