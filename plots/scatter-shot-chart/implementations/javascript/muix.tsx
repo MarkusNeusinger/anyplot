@@ -59,9 +59,12 @@ for (let i = 0; i < 300; i += 1) {
     x = Math.cos(angle) * dist;
     y = RIM_FROM_BASELINE + Math.sin(angle) * dist;
   } else if (zone < 0.85) {
-    const angle = u[k++] * Math.PI;
+    // the angle range shrinks with the distance, so every arc three lands inside the sidelines
+    const share = u[k++];
     const dist = u[k++] * 4.5 + THREE_ARC_R;
-    x = Math.max(-24.5, Math.min(24.5, Math.cos(angle) * dist));
+    const edge = Math.acos(Math.min(1, (COURT_WIDTH / 2 - 0.5) / dist));
+    const angle = edge + share * (Math.PI - 2 * edge);
+    x = Math.cos(angle) * dist;
     y = RIM_FROM_BASELINE + Math.sin(angle) * dist;
     shotType = "3-pointer";
   } else {
@@ -124,10 +127,7 @@ const vertMargin = (chartH - pxPerFt * COURT_DEPTH) / 2;
 const title = "scatter-shot-chart · javascript · muix · anyplot.ai";
 const subtitle = [
   `${shots.length} attempts, ${madeTotal} made (${((100 * madeTotal) / shots.length).toFixed(1)}%)`,
-  ...types.map((type) => {
-    const s = typeStats.find((st) => st.type === type) as (typeof typeStats)[number];
-    return `${type} ${s.made}/${s.attempts} (${((100 * s.made) / s.attempts).toFixed(0)}%)`;
-  }),
+  ...typeStats.map((s) => `${s.type} ${s.made}/${s.attempts} (${((100 * s.made) / s.attempts).toFixed(0)}%)`),
 ].join(" · ");
 
 function Court() {
