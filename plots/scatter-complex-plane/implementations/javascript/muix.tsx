@@ -25,6 +25,9 @@ const LABEL_RINGS = [1, 2, 3]; // candidate distances as multiples of LABEL_GAP
 const LABEL_CLEARANCE = 8; // px of room that counts as clear; the nearest clear ring wins
 const AXIS_BAND = 28; // px beside each axis line taken by its tick labels
 const MARKER_RADIUS = 9; // px
+const UNIT_TICK_NUDGE = 14; // px a tick label on the unit circle moves outward along its axis, off the circle
+const ZERO_OFFSET = [14, 20]; // px from the origin to the "0" label, across and along the real axis
+const MINUS = "−"; // one minus sign for every number on the plot
 
 // Columns: set these to your data's column names
 const LABEL = "Label"; // role: label
@@ -52,12 +55,15 @@ const reach = Math.max(UNIT_RADIUS, ...data.map((d) => Math.max(Math.abs(d[REAL]
 const extent = reach * (1 + LABEL_ROOM_SHARE);
 const rawStep = reach / TICK_TARGET;
 const magnitude = 10 ** Math.floor(Math.log10(rawStep));
-const tickStep = (NICE_STEPS.find((s) => s * magnitude >= rawStep) ?? 10) * magnitude;
+const tickStep = NICE_STEPS.find((s) => s * magnitude >= rawStep) * magnitude;
 const ticks = Array.from(
   { length: 2 * Math.floor(extent / tickStep) + 1 },
   (_, k) => Number(((k - Math.floor(extent / tickStep)) * tickStep).toFixed(6)),
 );
-const offAxisTicks = ticks.filter((v) => v !== 0);
+// A tick label on the unit circle moves outward along its axis, so the circle does not run through it
+const offAxisTicks = ticks
+  .filter((v) => v !== 0)
+  .map((v) => ({ v, text: `${v}`.replace("-", MINUS), nudge: Math.abs(v) === UNIT_RADIUS ? Math.sign(v) * UNIT_TICK_NUDGE : 0 }));
 
 const points = data.map((d) => {
   const re = d[REAL];
@@ -67,8 +73,8 @@ const points = data.map((d) => {
     group: d[GROUP],
     re,
     im,
-    rect: `${d[LABEL]} = ${re.toFixed(2)} ${im < 0 ? "−" : "+"} ${Math.abs(im).toFixed(2)}i`,
-    polar: `|z| = ${Math.hypot(re, im).toFixed(2)} ∠ ${((Math.atan2(im, re) * 180) / Math.PI).toFixed(0)}°`,
+    rect: `${d[LABEL]} = ${re.toFixed(2).replace("-", MINUS)} ${im < 0 ? MINUS : "+"} ${Math.abs(im).toFixed(2)}i`,
+    polar: `|z| = ${Math.hypot(re, im).toFixed(2)} ∠ ${((Math.atan2(im, re) * 180) / Math.PI).toFixed(0).replace("-", MINUS)}°`,
   };
 });
 
@@ -91,37 +97,59 @@ const margin = {
 // Annotation placement in px from the origin: around each point, candidate text blocks on rings of
 // growing distance are scored by their room to every vector and both axes, inside the plane only
 const pxPerUnit = side / (2 * extent);
+
+// The origin's "0" goes into the quadrant where it lies furthest, in px, from every vector
+const zeroQuadrant = [
+  [1, 1],
+  [-1, 1],
+  [-1, -1],
+  [1, -1],
+]
+  .map(([sx, sy]) => {
+    const cx = sx * (ZERO_OFFSET[0] + 5); // the glyph's centre, half its width beyond the anchor
+    const cy = -sy * ZERO_OFFSET[1];
+    const room = Math.min(
+      ...points.map((q) => {
+        const qx = q.re * pxPerUnit;
+        const qy = -q.im * pxPerUnit;
+        const s = Math.max(0, Math.min(1, (cx * qx + cy * qy) / (qx * qx + qy * qy || 1)));
+        return Math.hypot(cx - s * qx, cy - s * qy);
+      }),
+    );
+    return { sx, sy, room };
+  })
+  .reduce((best, q) => (q.room > best.room ? q : best));
 const annotations = points.map((p) => {
   const px = p.re * pxPerUnit;
   const py = -p.im * pxPerUnit;
   const halfWidth = Math.max(p.rect.length * 8.8, p.polar.length * 7.6) / 2;
   const candidates = LABEL_RINGS.flatMap((ring) =>
     Array.from({ length: LABEL_DIRECTIONS }, (_, k) => (2 * Math.PI * k) / LABEL_DIRECTIONS).map((a) => {
-    const cos = Math.cos(a);
-    const sin = Math.sin(a);
-    const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
-    const x = px + cos * LABEL_GAP * ring;
-    const y = py - sin * (LABEL_GAP * ring + 14);
-    const centre = anchor === "start" ? x + halfWidth : anchor === "end" ? x - halfWidth : x;
-    // Room to the nearest vector, sampled across both text rows of the block
-    const samples = Array.from({ length: 9 }, (_, j) => centre - halfWidth + (j * halfWidth) / 4).flatMap((sx) => [
-      [sx, y - 10],
-      [sx, y + 10],
-    ]);
-    const vectorRoom = Math.min(
-      ...samples.flatMap(([sx, sy]) =>
-        points.map((q) => {
-          const qx = q.re * pxPerUnit;
-          const qy = -q.im * pxPerUnit;
-          const s = Math.max(0, Math.min(1, (sx * qx + sy * qy) / (qx * qx + qy * qy || 1)));
-          return Math.hypot(sx - s * qx, sy - s * qy) - 10;
-        }),
-      ),
-    );
-    // Axis room keeps clear of the tick labels beside each axis line; the outer ring costs a little
-    const inside = Math.abs(centre) + halfWidth < side / 2 && Math.abs(y) + 20 < side / 2;
-    const room = Math.min(vectorRoom, Math.abs(y) - 20 - AXIS_BAND, Math.abs(centre) - halfWidth - AXIS_BAND);
-    return { x, y, anchor, ring, room: inside ? room : -Infinity };
+      const cos = Math.cos(a);
+      const sin = Math.sin(a);
+      const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
+      const x = px + cos * LABEL_GAP * ring;
+      const y = py - sin * (LABEL_GAP * ring + 14);
+      const centre = anchor === "start" ? x + halfWidth : anchor === "end" ? x - halfWidth : x;
+      // Room to the nearest vector, sampled across both text rows of the block
+      const samples = Array.from({ length: 9 }, (_, j) => centre - halfWidth + (j * halfWidth) / 4).flatMap((sx) => [
+        [sx, y - 10],
+        [sx, y + 10],
+      ]);
+      const vectorRoom = Math.min(
+        ...samples.flatMap(([sx, sy]) =>
+          points.map((q) => {
+            const qx = q.re * pxPerUnit;
+            const qy = -q.im * pxPerUnit;
+            const s = Math.max(0, Math.min(1, (sx * qx + sy * qy) / (qx * qx + qy * qy || 1)));
+            return Math.hypot(sx - s * qx, sy - s * qy) - 10;
+          }),
+        ),
+      );
+      // Axis room keeps clear of the tick labels beside each axis line
+      const inside = Math.abs(centre) + halfWidth < side / 2 && Math.abs(y) + 20 < side / 2;
+      const room = Math.min(vectorRoom, Math.abs(y) - 20 - AXIS_BAND, Math.abs(centre) - halfWidth - AXIS_BAND);
+      return { x, y, anchor, ring, room: inside ? room : -Infinity };
     }),
   );
   // The nearest ring with a clear position, its roomiest position; with none clear, the roomiest overall
@@ -151,21 +179,12 @@ function PlaneAxes() {
       />
       <line x1={area.left} y1={zeroY} x2={right} y2={zeroY} stroke={t.ink} strokeWidth={2} />
       <line x1={zeroX} y1={area.top} x2={zeroX} y2={bottom} stroke={t.ink} strokeWidth={2} />
-      {offAxisTicks.map((v) => (
+      {offAxisTicks.map(({ v }) => (
         <g key={`tick-${v}`}>
           <line x1={xScale(v)} y1={zeroY - 7} x2={xScale(v)} y2={zeroY + 7} stroke={t.ink} strokeWidth={1.5} />
-          <text x={xScale(v)} y={zeroY + 26} textAnchor="middle" fontSize={15} fill={t.inkSoft} {...halo}>
-            {v}
-          </text>
           <line x1={zeroX - 7} y1={yScale(v)} x2={zeroX + 7} y2={yScale(v)} stroke={t.ink} strokeWidth={1.5} />
-          <text x={zeroX - 14} y={yScale(v)} textAnchor="end" dominantBaseline="central" fontSize={15} fill={t.inkSoft} {...halo}>
-            {`${v}i`}
-          </text>
         </g>
       ))}
-      <text x={zeroX - 12} y={zeroY + 26} textAnchor="end" fontSize={15} fill={t.inkSoft} {...halo}>
-        0
-      </text>
       <text x={right - 4} y={zeroY - 14} textAnchor="end" fontSize={17} fontWeight={600} fill={t.ink}>
         {REAL}
       </text>
@@ -220,6 +239,38 @@ function Vectors() {
           />
         );
       })}
+    </g>
+  );
+}
+
+// Tick labels sit above the vectors, so their halo keeps them legible where a vector passes
+function TickLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const zeroX = xScale(0);
+  const zeroY = yScale(0);
+  return (
+    <g {...halo}>
+      {offAxisTicks.map(({ v, text, nudge }) => (
+        <g key={`tick-label-${v}`}>
+          <text x={xScale(v) + nudge} y={zeroY + 26} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
+            {text}
+          </text>
+          <text x={zeroX - 14} y={yScale(v) - nudge} textAnchor="end" dominantBaseline="central" fontSize={15} fill={t.inkSoft}>
+            {`${text}i`}
+          </text>
+        </g>
+      ))}
+      <text
+        x={zeroX + zeroQuadrant.sx * ZERO_OFFSET[0]}
+        y={zeroY - zeroQuadrant.sy * ZERO_OFFSET[1]}
+        textAnchor={zeroQuadrant.sx > 0 ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize={15}
+        fill={t.inkSoft}
+      >
+        0
+      </text>
     </g>
   );
 }
@@ -290,6 +341,7 @@ export default function Chart() {
             <ChartsGrid vertical horizontal />
             <PlaneAxes />
             <Vectors />
+            <TickLabels />
             <ScatterPlot />
             <Annotations />
           </ChartsSurface>
