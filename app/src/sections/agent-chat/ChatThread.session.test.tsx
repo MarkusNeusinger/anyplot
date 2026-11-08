@@ -382,7 +382,7 @@ describe('ChatThread: the data versions of a long session', () => {
       '▸ data v3 · made long · 48 rows × 3 cols',
       // A question: its mark, the bubble's hidden word, and the label its reply starts with.
       '?Question: ❯what is in Region?',
-      '? answer · nothing changedFour regions.',
+      '? answer · nothing changedanswer, nothing changedFour regions.',
       '# plot',
       '❯.create_plot() →# matplotlib',
       '▸ plot v1 · matplotlib · first plot',

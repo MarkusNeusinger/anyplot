@@ -140,6 +140,8 @@ let plots: number;
 const QUESTION = 'what is on x?';
 /** The plot memory's entries: a typed change that ships adds one, the version names them. */
 let memory: { id: string; kind: string; target: null; text: string; expect: null; turn: number }[];
+/** The memory has no room left (`State.full`). */
+let full: boolean;
 /** Two decisions remembered before the session's first plot here (another library's, say). */
 const DECIDED = [
   {
@@ -216,7 +218,11 @@ function stubFetch() {
         return json(200, { bindings, complete: missing.length === 0, missing_roles: missing });
       }
       if (sub === '/memory' && method === 'GET') {
-        return json(200, { entries: memory, max_entries: 30, written: memory.length > 0 });
+        return json(200, {
+          entries: memory,
+          max_entries: full ? memory.length : 30,
+          written: memory.length > 0,
+        });
       }
       if (sub === '/dataset/confirm') return json(200, { confirmed: true, rows: 2, columns: 2 });
       if (sub === '/dataset/undo' && method === 'POST') return json(200, DATASET);
@@ -350,6 +356,8 @@ interface State {
   paused?: boolean;
   /** The plot memory holds two decisions from the start (`DECIDED`); empty unless said. */
   decided?: boolean;
+  /** The memory has no room left: its cap is the entries it holds. */
+  full?: boolean;
   /** The admins compared with the visitor; both unless said. */
   compare?: readonly Exclude<Who, 'visitor'>[];
 }
@@ -519,6 +527,22 @@ const STATES: Record<string, State> = {
       await screen.findByRole('button', { name: 'Forget: title in German' });
     },
   },
+  // Both counts on one line, and the memory full: `# plot · 2 decisions ▾ · full · 1 question`.
+  'with both counts and the memory full': {
+    open: 'ok',
+    decided: true,
+    full: true,
+    reach: async () => {
+      await plotOnce();
+      await send(QUESTION, 'The hours.');
+      await screen.findByRole('button', { name: '1 question in this chapter, go to it' });
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: '2 decisions remembered' }).parentElement
+        ).toHaveTextContent(/▾·full$/)
+      );
+    },
+  },
   // A version that kept the two decisions and added one: `kept 2` and its line.
   'with a plot card and its kept line': {
     open: 'ok',
@@ -686,6 +710,7 @@ async function pageFor(who: Who, state: string): Promise<string> {
   missingY = STATES[state].missingY ?? false;
   plots = 0;
   memory = STATES[state].decided ? DECIDED.map(entry => ({ ...entry })) : [];
+  full = STATES[state].full ?? false;
   stubFetch();
   renderPage();
   await STATES[state].reach();

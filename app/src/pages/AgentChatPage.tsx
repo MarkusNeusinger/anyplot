@@ -508,8 +508,13 @@ function AgentChat({
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const plotRef = useRef<HTMLButtonElement>(null);
-  // What the last removal from the remembered decisions did, which the footer's status region says.
-  const [memoryNote, setMemoryNote] = useState('');
+  // What the last removal from the remembered decisions did, which the footer's status region says;
+  // numbered, so the same words a second time (a second `.forget_all()`) are a new text to read.
+  const [memoryNote, setMemoryNote] = useState({ text: '', n: 0 });
+  const announceMemory = useCallback(
+    (text: string) => setMemoryNote(note => ({ text, n: note.n + 1 })),
+    []
+  );
   // `.feedback()` at the status line's end opened the chat's own feedback form above it; the
   // form takes the focus once, as it opens from that click.
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -1206,7 +1211,7 @@ function AgentChat({
                   onForget: session.forgetMemory,
                   onForgetAll: session.forgetAllMemory,
                   fallbackFocusRef: messageRef,
-                  onAnnounce: setMemoryNote,
+                  onAnnounce: announceMemory,
                 }}
               />
 
@@ -1256,7 +1261,7 @@ function AgentChat({
                     stands on a chapter line inside the thread's log, which would not read a
                     removal out, and comes and goes with the memory; this region stays. */}
                 <Box role="status" data-testid="memory-status" sx={visuallyHiddenSx}>
-                  {memoryNote}
+                  <span key={memoryNote.n}>{memoryNote.text}</span>
                 </Box>
 
                 <Composer

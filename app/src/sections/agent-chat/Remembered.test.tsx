@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { AgentApiError, type MemoryEntry, type PlotMemory } from 'src/lib/agent';
 import {
-  KeepFocus,
   Remembered,
   RememberedCount,
   type RememberedProps,
@@ -75,9 +74,7 @@ function Decisions({ open: startOpen = true, ...list }: ListProps & { open?: boo
           handoffRef={handoffRef}
         />
       </div>
-      <KeepFocus rootId={LIST_ID}>
-        <Remembered {...list} id={LIST_ID} open={open} onAnnounce={setNote} />
-      </KeepFocus>
+      <Remembered {...list} id={LIST_ID} open={open} onAnnounce={setNote} />
       <div role="status">{note}</div>
     </>
   );
@@ -277,6 +274,25 @@ describe('Remembered', () => {
   });
 });
 
+/**
+ * A browser drops the focus of an element whose node moves (it lands on the body), and React gives
+ * it back after the commit to the element that had it. For one rerender, the DOM's insert drops
+ * it as a browser does, so the test shows the focus comes back.
+ */
+function droppingFocusOnMove(run: () => void) {
+  const insert = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function <T extends Node>(this: Node, node: T, child: Node | null) {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && node.contains(active)) active.blur();
+    return insert.call(this, node, child) as T;
+  };
+  try {
+    run();
+  } finally {
+    Node.prototype.insertBefore = insert;
+  }
+}
+
 describe('Remembered: a newer chapter takes the decisions over', () => {
   /** Two chapter lines; the count and the list stand after the one `at` names, as one keyed row. */
   function Lines({ at, memory }: { at: 1 | 2; memory: PlotMemory }) {
@@ -299,16 +315,15 @@ describe('Remembered: a newer chapter takes the decisions over', () => {
       if (at !== index) return [line, <p key={`item-${index}`}>{`item ${index}`}</p>];
       return [
         line,
-        <KeepFocus key="remembered" rootId={LIST_ID}>
-          <Remembered
-            memory={memory}
-            id={LIST_ID}
-            open
-            disabled={false}
-            onForget={vi.fn(async () => undefined)}
-            onAnnounce={() => undefined}
-          />
-        </KeepFocus>,
+        <Remembered
+          key="remembered"
+          memory={memory}
+          id={LIST_ID}
+          open
+          disabled={false}
+          onForget={vi.fn(async () => undefined)}
+          onAnnounce={() => undefined}
+        />,
         <p key={`item-${index}`}>{`item ${index}`}</p>,
       ];
     };
@@ -320,7 +335,7 @@ describe('Remembered: a newer chapter takes the decisions over', () => {
     const { rerender } = render(<Lines at={1} memory={memory} />);
     const node = screen.getByTestId('plot-memory');
     forgetButton(LABEL.text).focus();
-    rerender(<Lines at={2} memory={memory} />);
+    droppingFocusOnMove(() => rerender(<Lines at={2} memory={memory} />));
     // The same element, now after the second line, with the focus where it was.
     expect(screen.getByTestId('plot-memory')).toBe(node);
     expect(screen.getByTestId('line-2').nextElementSibling).toBe(node);

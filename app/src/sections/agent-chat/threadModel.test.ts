@@ -420,6 +420,19 @@ describe('threadModel: questions and the decisions', () => {
     expect([...settled.answers]).toEqual([6]);
   });
 
+  it('never counts a turn that shows an error, which a later read of its cut stream marked', () => {
+    const items: ChatItem[] = [
+      { id: 1, kind: 'user', text: 'what is on x?', outcome: 'answer' },
+      { id: 2, kind: 'error', code: 'network', ref: null },
+      reply(3, 'The hours.'),
+      { id: 4, kind: 'user', text: 'tell me a joke', outcome: 'answer' },
+      { id: 5, kind: 'refusal', code: 'out_of_scope', text: 'Only plots.' },
+    ];
+    const model = threadModel(items);
+    expect(model.chapters[0].questions).toEqual([]);
+    expect(model.answers.size).toBe(0);
+  });
+
   it('opens a chapter from a server data or plot, with and without a card in the turn', () => {
     const plotted: ChatItem = { id: 6, kind: 'plot', version: 1 };
     const items: ChatItem[] = [

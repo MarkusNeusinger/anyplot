@@ -17,8 +17,11 @@
  *
  * The list is one keyed row of the thread, so when a newer chapter takes the decisions over the
  * row moves with them, and its own state (the entry being removed, a failure line) and a focus
- * inside it stay. The thread holds the open state, which the count shows, and a focus on the count
- * follows it to the new line (`handoffRef`). The list itself is no live region of its own: the
+ * inside it stay: a browser drops the focus of an element whose node moves, and React gives it back
+ * after the commit to the element that had it, which is still in the page. The thread holds the
+ * open state, which the count shows. The count itself is a new element on the new line, which
+ * React cannot give the focus back to, so a focus on it follows it there (`handoffRef`). The list
+ * itself is no live region of its own: the
  * thread's log does not read it out when it unfolds or gains an entry (`aria-live="off"`), and a
  * removal is announced by the page's status region outside the log (`onAnnounce`), which stays
  * mounted while the list comes and goes.
@@ -31,15 +34,7 @@
  * failure line.
  */
 
-import {
-  Component,
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -158,32 +153,6 @@ export interface RememberedProps {
 
 /** The pending marker of `.forget_all()`, which no entry id matches (`m` and digits). */
 const ALL = '*';
-
-/**
- * Keeps a focus inside the list when the thread moves the list's row under a newer chapter's
- * line: React moves the row's node, and a browser drops the focus of an element whose node moves
- * (it lands on the page's body). Just before the commit it notes the element inside the list that
- * has the focus, the way React's `getSnapshotBeforeUpdate` is meant for (`HoldReadingPosition`
- * does the same for the scroll), and after it gives that element the focus back, where it now
- * stands, when the commit dropped it. A focus the user moved elsewhere is never taken.
- */
-export class KeepFocus extends Component<{ rootId: string; children: ReactNode }> {
-  getSnapshotBeforeUpdate(): HTMLElement | null {
-    const root = document.getElementById(this.props.rootId);
-    const active = document.activeElement;
-    return root && active instanceof HTMLElement && root.contains(active) ? active : null;
-  }
-
-  componentDidUpdate(_previous: unknown, _state: unknown, focused: HTMLElement | null) {
-    if (!focused || !focused.isConnected || document.activeElement === focused) return;
-    if (document.activeElement && document.activeElement !== document.body) return;
-    focused.focus({ preventScroll: true });
-  }
-
-  render() {
-    return this.props.children;
-  }
-}
 
 /** The remembered decisions under their chapter line, each with `.forget()`, then `.forget_all()`. */
 export function Remembered({

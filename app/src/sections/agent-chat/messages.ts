@@ -312,10 +312,13 @@ export const REMEMBERED_FULL = 'full: forget one before a new decision fits';
 
 /**
  * The label a question's reply starts with (the v4 mock): the turn changed nothing, by the
- * server's word and by what the page saw. Its `?` stands before it, hidden from a screen reader
- * like the `#` of a chapter line, and the question's bubble starts with `QUESTION_WORD`.
+ * server's word and by what the page saw. On screen with its `?` before it; a screen reader reads
+ * `ANSWER_LABEL_SPOKEN` instead, and the question's bubble starts with `QUESTION_WORD`.
  */
 export const ANSWER_LABEL = 'answer · nothing changed';
+
+/** The same in words, which a screen reader reads in its place: it reads `·` badly. */
+export const ANSWER_LABEL_SPOKEN = 'answer, nothing changed';
 
 /** What a question's bubble starts with for a screen reader, in place of its `?` mark. */
 export const QUESTION_WORD = 'Question:';

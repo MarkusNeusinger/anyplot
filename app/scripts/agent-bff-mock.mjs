@@ -1215,9 +1215,10 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       if (asked) {
         session.language = asked.code;
         session.languageSource = 'chosen';
+        // The root's `set_language`; a data change or a plot of the same turn names the turn first.
+        turn = 'language';
         if (session.versions.length === 0) {
           await sleep(STEP_MS);
-          turn = 'language';
           send('message', {
             text: `From now on the plot text and my replies are in ${asked.name}; the next plot uses it.`,
           });
@@ -1252,7 +1253,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
               ? keepWish(session, text)
               : `Noted: ${text.trim()}`;
         session.summaryPending = false;
-        turn = session.changed ? 'data' : wish ? 'kept' : 'answer';
+        turn = session.changed ? 'data' : asked ? 'language' : wish ? 'kept' : 'answer';
         send('message', { text: `${summary} ${acted}` });
         return;
       }
@@ -1369,13 +1370,14 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
           typeof body.text === 'string' &&
           !libraryHasPlot(session)
         ) {
-          turn = 'kept';
+          // A language the same message chose comes first in the service's order.
+          if (turn !== 'language') turn = 'kept';
           send('message', { text: keepWish(session, text) });
           return;
         }
         // A run stopped for missing data or roles shows a failed card; one refused for unconfirmed
         // data shows none and changes nothing.
-        turn = reason === 'data_unconfirmed' ? 'answer' : 'plot';
+        if (reason !== 'data_unconfirmed') turn = 'plot';
         send('plot', {
           status: 'not_ready',
           reason,

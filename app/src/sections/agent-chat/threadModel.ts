@@ -33,8 +33,9 @@
  * what the stream showed. It is a question once the memory read after it no longer waits
  * (`memoryTurn`, which the caller passes as `waiting`), so a turn the read moves to `kept` never
  * counts. The note sent with an attachment is never one: its reply summarizes the data that just
- * arrived. The chapter counts its questions, and the reply that answers each (the first reply of
- * its turn) is in `answers`. Nothing is read from the text: a trailing `?` makes no question.
+ * arrived. Nor is a turn that shows an error or a refusal, which a cut stream's later read can
+ * still mark. The chapter counts its questions, and the reply that answers each (the first reply
+ * of its turn) is in `answers`. Nothing is read from the text: a trailing `?` makes no question.
  *
  * The remembered decisions stand on one chapter's line (`decisionsAt`): the latest plot chapter's,
  * where the next plot takes them over, and before the first plot the latest chapter's.
@@ -91,9 +92,10 @@ export interface ThreadModel {
 export const questionDomId = (itemId: number) => `agent-turn-${itemId}`;
 
 /**
- * Whether a thread item is a question (see the module notes): a typed turn that changed nothing,
- * not the note sent with an attachment, and not the turn whose memory read still waits
- * (`waiting`, the session's `memoryTurn`).
+ * Whether a thread item can be a question (see the module notes): a typed turn that changed
+ * nothing, not the note sent with an attachment, and not the turn whose memory read still waits
+ * (`waiting`, the session's `memoryTurn`). `threadModel` also leaves out a turn that shows an
+ * error or a refusal.
  */
 export function isQuestion(item: ChatItem, waiting: number | null = null): boolean {
   return item.kind === 'user' && item.outcome === 'answer' && !item.note && item.id !== waiting;
@@ -214,7 +216,11 @@ export function threadModel(
   const answers = new Set<number>();
   const latest = latestPlot(items);
   for (const turn of turnsOf(items)) {
-    if (isQuestion(turn[0], waiting)) {
+    // A turn that shows an error or a refusal is no question, also when a later read of a cut
+    // stream brought its `done`: "nothing changed" never stands beside "the request failed".
+    const failed = turn.some(item => item.kind === 'error' || item.kind === 'refusal');
+    const asked = !failed && isQuestion(turn[0], waiting);
+    if (asked) {
       const reply = turn.find(item => item.kind === 'assistant');
       if (reply) answers.add(reply.id);
     }
@@ -233,8 +239,9 @@ export function threadModel(
       chapters.push(chapter);
       rows.push({ kind: 'chapter', chapter });
     }
+    // The question is the turn's own item, which opens it.
+    if (asked) chapter.questions.push(turn[0].id);
     for (const item of turn) {
-      if (isQuestion(item, waiting)) chapter.questions.push(item.id);
       if (
         (item.kind === 'data' || item.kind === 'data_stub') &&
         item.snapshot &&

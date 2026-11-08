@@ -1086,15 +1086,17 @@ describe('ChatThread: questions and remembered decisions', () => {
     expect(bubble).toHaveAttribute('id', 'agent-turn-1');
     expect(bubble).toHaveAttribute('tabindex', '-1');
     expect(bubble.textContent).toBe('Question: ❯what is on x?');
-    expect(screen.getByTestId('answer-label')).toHaveTextContent('? answer · nothing changed');
-    // What the polite log reads as it comes: the reply's label alone, once.
-    expect(announced()).toBe(heard.replace('The hours.', 'answer · nothing changedThe hours.'));
+    expect(screen.getByTestId('answer-label').firstChild).toHaveTextContent(
+      '? answer · nothing changed'
+    );
+    // What the polite log reads as it comes: the reply's label alone, once, in words.
+    expect(announced()).toBe(heard.replace('The hours.', 'answer, nothing changedThe hours.'));
     // On screen also the chapter's count, the mark and, for a screen reader on the bubble, its word.
     expect(log().textContent).toBe(
       before
         .replace('# data', '# data·1 question')
         .replace('❯what', '?Question: ❯what')
-        .replace('The hours.', '? answer · nothing changedThe hours.')
+        .replace('The hours.', '? answer · nothing changedanswer, nothing changedThe hours.')
     );
   });
 
@@ -1119,21 +1121,18 @@ describe('ChatThread: questions and remembered decisions', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-      render(
-        thread(
-          ready([
-            { id: 1, kind: 'paste', text: '▤ table' },
-            { id: 2, kind: 'data' },
-            { id: 3, kind: 'user', text: 'what is in b?', outcome: 'answer' },
-            { id: 4, kind: 'assistant', text: 'Months.' },
-            { id: 5, kind: 'user', text: 'and in c?', outcome: 'answer' },
-            { id: 6, kind: 'assistant', text: 'Regions.' },
-            { id: 7, kind: 'action', action: 'create_plot', library: 'matplotlib' },
-            { id: 8, kind: 'user', text: 'why blue?', outcome: 'answer' },
-            { id: 9, kind: 'assistant', text: 'The first colour.' },
-          ])
-        )
-      );
+      const items: ChatItem[] = [
+        { id: 1, kind: 'paste', text: '▤ table' },
+        { id: 2, kind: 'data' },
+        { id: 3, kind: 'user', text: 'what is in b?', outcome: 'answer' },
+        { id: 4, kind: 'assistant', text: 'Months.' },
+        { id: 5, kind: 'user', text: 'and in c?', outcome: 'answer' },
+        { id: 6, kind: 'assistant', text: 'Regions.' },
+        { id: 7, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+        { id: 8, kind: 'user', text: 'why blue?', outcome: 'answer' },
+        { id: 9, kind: 'assistant', text: 'The first colour.' },
+      ];
+      const view = render(thread(ready(items)));
       const lines = screen.getAllByTestId('chapter-line');
       expect(lines.map(line => line.textContent)).toEqual([
         '# data·2 questions',
@@ -1158,9 +1157,25 @@ describe('ChatThread: questions and remembered decisions', () => {
       vi.advanceTimersByTime(1600);
       expect(first).not.toHaveAttribute('data-jump');
 
-      await user.click(
-        within(lines[1]).getByRole('button', { name: '1 question in this chapter, go to it' })
+      const plot = within(lines[1]).getByRole('button', {
+        name: '1 question in this chapter, go to it',
+      });
+      await user.click(plot);
+      expect(screen.getByText('why blue?')).toHaveFocus();
+
+      // A question that comes in meanwhile: the next press goes on from the one it went to last.
+      view.rerender(
+        thread(
+          ready([
+            ...items,
+            { id: 10, kind: 'user', text: 'and the dots?', outcome: 'answer' },
+            { id: 11, kind: 'assistant', text: 'One per row.' },
+          ])
+        )
       );
+      await user.click(plot);
+      expect(screen.getByText('and the dots?')).toHaveFocus();
+      await user.click(plot);
       expect(screen.getByText('why blue?')).toHaveFocus();
     } finally {
       vi.useRealTimers();
@@ -1230,7 +1245,23 @@ describe('ChatThread: questions and remembered decisions', () => {
       { id: 6, kind: 'assistant', text: 'Kept 2024.' },
       { id: 7, kind: 'action', action: 'create_plot', library: 'matplotlib' },
     ];
-    view.rerender(thread(ready(later, { memory: MEMORY }), props));
+    // A browser drops the focus of an element whose node moves, and React gives it back after the
+    // commit: the DOM's insert drops it as a browser does, for this rerender.
+    const insert = Node.prototype.insertBefore;
+    Node.prototype.insertBefore = function <T extends Node>(
+      this: Node,
+      node: T,
+      child: Node | null
+    ) {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && node.contains(active)) active.blur();
+      return insert.call(this, node, child) as T;
+    };
+    try {
+      view.rerender(thread(ready(later, { memory: MEMORY }), props));
+    } finally {
+      Node.prototype.insertBefore = insert;
+    }
     const lines = screen.getAllByTestId('chapter-line');
     expect(lines.map(line => line.dataset.chapter)).toEqual(['data', 'plot', 'data', 'plot']);
     expect(within(lines[1]).queryByTestId('decisions-toggle')).not.toBeInTheDocument();

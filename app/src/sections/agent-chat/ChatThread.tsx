@@ -74,6 +74,7 @@ import { HoldReadingPosition, REPLY_ATTRIBUTE } from 'src/sections/agent-chat/Ho
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import {
   ANSWER_LABEL,
+  ANSWER_LABEL_SPOKEN,
   ERROR_TEXT,
   localClock,
   PLOT_FAILED_TEXT,
@@ -82,7 +83,7 @@ import {
   refusalLabel,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
-import { KeepFocus, Remembered, RememberedCount } from 'src/sections/agent-chat/Remembered';
+import { Remembered, RememberedCount } from 'src/sections/agent-chat/Remembered';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { awaitsReply, type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import {
@@ -335,10 +336,10 @@ function Item({
               data-testid="answer-label"
               sx={{ ...labelSx, display: 'block', lineHeight: 1.6, whiteSpace: 'normal' }}
             >
-              <Box component="span" aria-hidden>
-                ?{' '}
+              <span aria-hidden>{`? ${ANSWER_LABEL}`}</span>
+              <Box component="span" sx={visuallyHiddenSx}>
+                {ANSWER_LABEL_SPOKEN}
               </Box>
-              {ANSWER_LABEL}
             </Box>
           )}
           <ReplyText text={item.text} />
@@ -531,22 +532,21 @@ export function ChatThread(props: ChatThreadProps) {
             );
             if (!holds) return [line];
             // The list right after the line that holds it, as one keyed row of the same flat list:
-            // a newer chapter's line takes it over and React moves its node, with its state and a
-            // focus inside it (`KeepFocus`).
+            // a newer chapter's line takes it over and React moves its node, with its state, and
+            // gives a focus inside it back after the move.
             return [
               line,
-              <KeepFocus key="remembered" rootId={decisionsId}>
-                <Remembered
-                  memory={memory}
-                  id={decisionsId}
-                  open={decisionsOpen}
-                  disabled={decisions.disabled}
-                  onForget={decisions.onForget}
-                  onForgetAll={decisions.onForgetAll}
-                  fallbackFocusRef={decisions.fallbackFocusRef}
-                  onAnnounce={decisions.onAnnounce}
-                />
-              </KeepFocus>,
+              <Remembered
+                key="remembered"
+                memory={memory}
+                id={decisionsId}
+                open={decisionsOpen}
+                disabled={decisions.disabled}
+                onForget={decisions.onForget}
+                onForgetAll={decisions.onForgetAll}
+                fallbackFocusRef={decisions.fallbackFocusRef}
+                onAnnounce={decisions.onAnnounce}
+              />,
             ];
           }
           const { item } = row;

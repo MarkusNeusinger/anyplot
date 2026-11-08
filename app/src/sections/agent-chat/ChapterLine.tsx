@@ -25,7 +25,12 @@ import Box from '@mui/material/Box';
 
 import { countOf } from 'src/sections/agent-chat/countOf';
 import { questionJumpName } from 'src/sections/agent-chat/messages';
-import { chapterControlSx, JUMP_MS, labelSx } from 'src/sections/agent-chat/styles';
+import {
+  CHAPTER_ROW_GAP,
+  chapterControlSx,
+  JUMP_MS,
+  labelSx,
+} from 'src/sections/agent-chat/styles';
 import { type Chapter, questionDomId } from 'src/sections/agent-chat/threadModel';
 
 /** The rule on either side of the line's words. */
@@ -73,12 +78,14 @@ function Count({ children }: { children: ReactNode }) {
 
 /** The chapter's count of its questions, the button that jumps to them in turn. */
 function QuestionJump({ questions }: { questions: readonly number[] }) {
-  // The next question a press goes to; the count wraps it round after the last.
-  const next = useRef(0);
+  // The question the last press went to: the next press goes to the one after it, after the last
+  // back to the first, also when a question came in meanwhile.
+  const last = useRef<number | null>(null);
   const jump = () => {
-    const index = next.current % questions.length;
-    next.current = index + 1;
-    const target = document.getElementById(questionDomId(questions[index]));
+    const at = last.current === null ? -1 : questions.indexOf(last.current);
+    const id = questions[(at + 1) % questions.length];
+    last.current = id;
+    const target = document.getElementById(questionDomId(id));
     if (!target) return;
     target.scrollIntoView?.({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
     target.focus({ preventScroll: true });
@@ -130,6 +137,7 @@ export function ChapterLine({
           alignItems: 'center',
           justifyContent: 'center',
           columnGap: 1,
+          rowGap: CHAPTER_ROW_GAP,
           minWidth: 0,
         }}
       >
