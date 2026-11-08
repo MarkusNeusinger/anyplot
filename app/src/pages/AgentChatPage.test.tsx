@@ -3774,6 +3774,25 @@ describe('AgentChatPage attachment', () => {
         )
       );
       expect(confirmAndTurns()).toEqual(['summarize_data']);
+      // The card shows the line the stop points at: no bound column's own warning holds it.
+      expect(screen.getByTestId('binding-warning')).toHaveTextContent(
+        "x: column 'hours' holds 2 values in 3 rows"
+      );
+    });
+
+    it('plots nothing when the user opened .change() on the card while the reading ran', async () => {
+      cleanSummary();
+      await openChat();
+      pasteText(TABLE);
+      holdNextTurn = true;
+      await clickCreate();
+      await waitFor(() => expect(releaseTurn).not.toBeNull());
+      fireEvent.click(await screen.findByRole('button', { name: 'Change the bindings' }));
+      expect(step()).not.toHaveTextContent('reading your data');
+      act(() => releaseTurn?.());
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      await turnEnded();
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
     });
 
     it('asks the binding check again after the reading changed the data, then plots', async () => {

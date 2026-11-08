@@ -567,8 +567,8 @@ export function chainStopText(stop: ChainStop, action: string): string {
       return `the table is wide for this plot · check .to_long() above, then ${action}`;
     case 'binding_warning':
       return `a warning on ${stop.role} · check it above, then ${action}`;
-    case 'bindings_refused':
-      return `the bindings were refused · check them above, then ${action}`;
+    case 'bindings_failed':
+      return `the binding check failed · check the bindings above, then ${action}`;
     case 'refused':
       return `the reading ended in a refusal · see above, then ${action}`;
     case 'error':

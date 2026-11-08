@@ -56,8 +56,8 @@ describe('chainStopText', () => {
       'a warning on size · check it above, then .create_plot()',
     ],
     [
-      { reason: 'bindings_refused' as const },
-      'the bindings were refused · check them above, then .create_plot()',
+      { reason: 'bindings_failed' as const },
+      'the binding check failed · check the bindings above, then .create_plot()',
     ],
     [
       { reason: 'refused' as const },

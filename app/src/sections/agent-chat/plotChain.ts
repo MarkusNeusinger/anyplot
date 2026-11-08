@@ -45,7 +45,7 @@ export function boxData(
 
 /** Why the one click stopped at the data card: what the status line asks the user to look at. */
 export type ChainStop =
-  | { reason: 'question' | 'wide' | 'bindings_refused' | 'refused' | 'error' | 'stopped' }
+  | { reason: 'question' | 'wide' | 'bindings_failed' | 'refused' | 'error' | 'stopped' }
   | { reason: 'data_warnings' | 'tables'; count: number }
   | { reason: 'binding_warning'; role: string };
 
@@ -153,7 +153,7 @@ export function chainStep(state: AgentSessionState, read: ChainRead, page: Chain
   }
   // The fan-out's `.plot_all()` is a click of its own; a new attachment is the user's next step.
   if (page.plotAll || page.attachment || !state.dataset || state.transcription) return END;
-  if (state.bindingsError) return stopFor({ reason: 'bindings_refused' });
+  if (state.bindingsError) return stopFor({ reason: 'bindings_failed' });
   if (!state.bindingsComplete || state.missingRoles.length > 0) return END;
   const parsed = state.dataset.parsed;
   if (parsed.warnings.length > 0) {

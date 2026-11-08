@@ -1396,6 +1396,9 @@ function AgentChat({
                       cancelChain();
                       void session.toLongData();
                     }}
+                    // A look at the data (`.change()`, `.view_all()`) ends the chain too: the
+                    // plot never starts while the user checks the card.
+                    onLook={cancelChain}
                     // Not while the fan-out's panel is open: its sessions copy this session's data.
                     locked={!!fanOut}
                     onLoadData={session.fetchDataCsv}

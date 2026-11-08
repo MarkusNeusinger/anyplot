@@ -177,7 +177,7 @@ describe('chainStep', () => {
       chainStep(read({ bindingsError: { code: 'invalid', ref: null } }), chain(), page)
     ).toEqual({
       kind: 'stop',
-      stop: { reason: 'bindings_refused' },
+      stop: { reason: 'bindings_failed' },
     });
   });
 
