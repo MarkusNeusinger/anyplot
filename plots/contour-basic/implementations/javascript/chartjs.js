@@ -12,12 +12,12 @@ const TARGET_LEVELS = 14; // about this many evenly stepped isolines across the 
 const REFINE = 4; // interpolated steps per grid cell, so isolines and band edges curve between grid nodes
 
 // Columns: set these to your data's column names
-const X = "x coordinate"; // role: x
-const Y = "y coordinate"; // role: y
-const Z = "Surface height f(x, y)"; // role: z
+const X = "Easting (km)"; // role: x
+const Y = "Northing (km)"; // role: y
+const Z = "Elevation anomaly (m)"; // role: z
 
 // Data: replace this block with your own records, one object per grid point
-// The "peaks" test surface on a regular 70 x 70 grid over [-3, 3] x [-3, 3]
+// Terrain elevation anomaly over a 6 km x 6 km survey area, modeled by the "peaks" surface on a 70 x 70 grid
 const N = 70;
 const RANGE = 3;
 const data = [];
@@ -45,11 +45,14 @@ const zFinite = data.map((d) => d[Z]).filter(Number.isFinite);
 const zMin = zFinite.reduce((a, b) => Math.min(a, b));
 const zMax = zFinite.reduce((a, b) => Math.max(a, b));
 
-// Catmull-Rom refinement along each row, then along each column (linear phantom nodes at the ends)
-function refineRows(rows) {
-  return rows.map((row) => {
-    const n = row.length;
-    const at = (k) => (k < 0 ? 2 * row[0] - row[1] : k >= n ? 2 * row[n - 1] - row[n - 2] : row[k]);
+// Catmull-Rom refinement along x, then along y (linear phantom nodes at the ends); each pass refines the
+// columns of the current matrix and stores them as rows, so two passes return fine[i][j] on the refined grid
+let fine = grid;
+for (let pass = 0; pass < 2; pass++) {
+  fine = fine[0].map((_, j) => {
+    const line = fine.map((row) => row[j]);
+    const n = line.length;
+    const at = (k) => (k < 0 ? 2 * line[0] - line[1] : k >= n ? 2 * line[n - 1] - line[n - 2] : line[k]);
     const out = [];
     for (let k = 0; k < n - 1; k++) {
       const [p0, p1, p2, p3] = [at(k - 1), at(k), at(k + 1), at(k + 2)];
@@ -58,14 +61,16 @@ function refineRows(rows) {
         out.push(p1 + 0.5 * u * (p2 - p0 + u * (2 * p0 - 5 * p1 + 4 * p2 - p3 + u * (3 * (p1 - p2) + p3 - p0))));
       }
     }
-    out.push(row[n - 1]);
+    out.push(line[n - 1]);
     return out;
   });
 }
-const transpose = (m) => m[0].map((_, j) => m.map((row) => row[j]));
-const fine = transpose(refineRows(transpose(refineRows(grid))));
-const [fineXs] = refineRows([xs]);
-const [fineYs] = refineRows([ys]);
+// The refined nodes sit at even steps between neighbouring grid coordinates
+const [fineXs, fineYs] = [xs, ys].map((coords) =>
+  coords.flatMap((v, k) =>
+    k < coords.length - 1 ? Array.from({ length: REFINE }, (_, s) => v + (s / REFINE) * (coords[k + 1] - v)) : [v],
+  ),
+);
 
 // Evenly stepped levels at a round step (1, 2, 2.5 or 5 times a power of ten)
 const rawStep = (zMax - zMin) / TARGET_LEVELS;
@@ -142,17 +147,6 @@ const datasets = levels.map((level) => {
 });
 
 // Filled bands: each device pixel of the plot area takes the band of the bilinearly sampled refined field
-function fractionalIndex(coords, v) {
-  if (!(v >= coords[0] && v <= coords[coords.length - 1])) return -1;
-  let lo = 0;
-  let hi = coords.length - 1;
-  while (hi - lo > 1) {
-    const mid = (lo + hi) >> 1;
-    if (coords[mid] <= v) lo = mid;
-    else hi = mid;
-  }
-  return lo + (v - coords[lo]) / (coords[hi] - coords[lo]);
-}
 let bandImage = null;
 const bandFillPlugin = {
   id: "bandFill",
@@ -163,11 +157,23 @@ const bandFillPlugin = {
     const h = Math.round((ca.bottom - ca.top) * dpr);
     if (!bandImage || bandImage.width !== w || bandImage.height !== h) {
       bandImage = ctx.createImageData(w, h);
-      const cols = Array.from({ length: w }, (_, c) =>
-        fractionalIndex(fineXs, scales.x.getValueForPixel(ca.left + (c + 0.5) / dpr)),
-      );
-      const rows = Array.from({ length: h }, (_, r) =>
-        fractionalIndex(fineYs, scales.y.getValueForPixel(ca.top + (r + 0.5) / dpr)),
+      // Fractional refined-grid index of every pixel column and row (-1 outside the grid), by binary search
+      const [cols, rows] = [
+        [fineXs, w, scales.x, ca.left],
+        [fineYs, h, scales.y, ca.top],
+      ].map(([coords, count, scale, start]) =>
+        Array.from({ length: count }, (_, k) => {
+          const v = scale.getValueForPixel(start + (k + 0.5) / dpr);
+          if (!(v >= coords[0] && v <= coords[coords.length - 1])) return -1;
+          let lo = 0;
+          let hi = coords.length - 1;
+          while (hi - lo > 1) {
+            const mid = (lo + hi) >> 1;
+            if (coords[mid] <= v) lo = mid;
+            else hi = mid;
+          }
+          return lo + (v - coords[lo]) / (coords[hi] - coords[lo]);
+        }),
       );
       for (let r = 0; r < h; r++) {
         if (rows[r] < 0) continue;
