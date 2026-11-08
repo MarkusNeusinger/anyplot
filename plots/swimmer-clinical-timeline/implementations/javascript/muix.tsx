@@ -10,10 +10,9 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const X_PAD_SHARE = 0.2; // room right of the longest bar for its arrow and the callout
+const X_PAD_SHARE = 0.04; // room right of the longest bar for its ongoing arrow
 const MARKER_SHARE = 0.42; // event marker radius as a share of the bar band
 const MARKER_MAX = 13; // largest event marker radius (px)
-const FOCUS_COUNT = 2; // the callout brackets this many longest-running patients
 // Event symbols as unit paths around (0, 0), scaled to the marker radius
 const STAR = `${Array.from({ length: 10 }, (_, i) => {
   const r = i % 2 === 0 ? 1.15 : 0.48;
@@ -125,7 +124,6 @@ const eventPath = Object.fromEntries(eventTypes.map((type) => [type, SHAPE_PATH[
 
 const durationMax = Math.max(...patients.map((p) => p.duration));
 const timeUnit = DURATION.match(/\(([^)]+)\)/)?.[1] ?? "";
-const focusIds = patients.slice(0, FOCUS_COUNT).map((p) => p.id);
 const legendItems = [
   ...arms.map((arm) => ({ key: `arm-${arm}`, label: arm, color: armColor[arm], path: null })),
   ...eventTypes.map((type) => ({ key: `event-${type}`, label: type, color: eventColor[type], path: eventPath[type] })),
@@ -139,8 +137,6 @@ function SwimmerLayer() {
   const yScale = useYScale();
   const band = yScale.bandwidth();
   const r = Math.min(band * MARKER_SHARE, MARKER_MAX);
-  const focusRows = focusIds.map((id) => (yScale(id) ?? 0) + band / 2);
-  const focusX = xScale(Math.max(...patients.slice(0, FOCUS_COUNT).map((p) => p.duration))) + r * 2.6;
 
   return (
     <g>
@@ -157,21 +153,6 @@ function SwimmerLayer() {
           />
         )),
       )}
-      <path
-        d={`M ${focusX} ${Math.min(...focusRows)} h 6 V ${Math.max(...focusRows)} h -6`}
-        fill="none"
-        stroke={t.inkSoft}
-        strokeWidth={1.5}
-      />
-      <text
-        x={focusX + 14}
-        y={(Math.min(...focusRows) + Math.max(...focusRows)) / 2}
-        fontSize={14}
-        fill={t.inkSoft}
-        dominantBaseline="central"
-      >
-        Longest on study
-      </text>
     </g>
   );
 }
