@@ -72,19 +72,20 @@ classes.forEach((c, i) => {
 const degreesOfFreedom = (classes.length - 1) * (outcomes.length - 1);
 
 // Mosaic layout: column width = marginal share of the class (x in 0..1),
-// tile height = conditional share of the outcome within the class (y in 0..100 %)
+// tile height = conditional share of the outcome within the class (y in 0..100 %). The gaps
+// between stacked tiles come out of the column first and the shares are scaled into what is
+// left, so every tile keeps its proportion and no small share collapses to nothing
 let cursor = 0;
 const columns = classes.map((c, i) => {
   const x0 = cursor;
   cursor += classTotals[i] / grandTotal;
   const drawn = outcomes.filter((o) => counts.get(c).get(o) > 0);
+  const usable = 100 - (drawn.length - 1) * GAP_Y;
   let level = 0;
   const tiles = drawn.map((o, k) => {
-    const share = (counts.get(c).get(o) / classTotals[i]) * 100;
-    const y0 = k === 0 ? level : level + GAP_Y / 2;
-    level += share;
-    const y1 = k === drawn.length - 1 ? 100 : level - GAP_Y / 2;
-    return { outcome: o, y0, y1: Math.max(y0, y1) };
+    const y0 = level + (k > 0 ? GAP_Y : 0);
+    level = y0 + (counts.get(c).get(o) / classTotals[i]) * usable;
+    return { outcome: o, y0, y1: level };
   });
   return { label: c, total: classTotals[i], x0, x1: cursor, tiles };
 });
