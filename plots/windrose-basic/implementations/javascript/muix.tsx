@@ -16,7 +16,7 @@ const TOP_BIN_QUANTILE = 0.9; // the open-ended class starts near this quantile 
 const RING_COUNT = 4; // about this many frequency rings
 const NICE_STEPS = [1, 2, 2.5, 5, 10]; // round step multipliers for bin widths and rings
 const SECTOR_GAP_DEG = 1.4; // gap between neighbouring spokes
-const LABEL_BAND = 48; // px between the outer ring and the compass labels' edge
+const LABEL_BAND = 54; // px between the outer ring and the compass labels' edge
 const TITLE = "windrose-basic · javascript · muix · anyplot.ai";
 const TITLE_H = 80;
 const LEGEND_H = 64;
@@ -150,7 +150,7 @@ function WindRoseLayer() {
           y={cy + (level / ringMax) * R * Math.sin(ringAngle)}
           dx={4}
           dy={-4}
-          fontSize={15}
+          fontSize={18}
           fill={t.inkSoft}
           stroke={t.pageBg}
           strokeWidth={4}
@@ -171,7 +171,7 @@ function WindRoseLayer() {
             y={cy + (R + 14) * sin}
             textAnchor={cos > 0.15 ? "start" : cos < -0.15 ? "end" : "middle"}
             dominantBaseline={sin > 0.5 ? "hanging" : sin < -0.5 ? "auto" : "central"}
-            fontSize={[16, 15, 14][rank]}
+            fontSize={[20, 19, 18][rank]}
             fontWeight={[700, 600, 400][rank]}
             fill={rank < 2 ? t.ink : t.inkSoft}
           >
