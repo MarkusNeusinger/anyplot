@@ -25,32 +25,41 @@ const PRESSURE = "Pressure (Pa)"; // role: pressure
 const BOUNDARY = "Phase boundary"; // role: phase_boundary
 
 // Data: replace the two points and the records with your own, one object per row
-// Water (IAPWS triple and critical point); boundaries from Clausius-Clapeyron
-// (sublimation, vaporization through the normal boiling point) and the
-// Simon-Glatzel melting equation for ice Ih, whose negative slope is water's anomaly
+// Water (IAPWS triple and critical point). Vaporization follows the Wagner-Pruss saturation
+// equation (IAPWS 1992), smooth from the triple point and exact at the critical point;
+// sublimation follows Clausius-Clapeyron; the Simon-Glatzel melting equation for ice Ih, whose
+// negative slope is water's anomaly, runs up to 209.9 MPa, where ice Ih gives way to ice III
 const TRIPLE_POINT = { [TEMPERATURE]: 273.16, [PRESSURE]: 611.657 }; // role: triple_point
-const CRITICAL_POINT = { [TEMPERATURE]: 647.1, [PRESSURE]: 22.064e6 }; // role: critical_point
+const CRITICAL_POINT = { [TEMPERATURE]: 647.096, [PRESSURE]: 22.064e6 }; // role: critical_point
 const GAS_CONSTANT = 8.314; // J/(mol K)
+const ICE_IH_LIMIT = 209.9e6; // Pa, the ice Ih–ice III–liquid triple point
+const WAGNER_PRUSS = [
+  [-7.85951783, 1],
+  [1.84408259, 1.5],
+  [-11.7866497, 3],
+  [22.6807411, 3.5],
+  [-15.9618719, 4],
+  [1.80122502, 7.5],
+]; // [coefficient, exponent of 1 − T/Tc]
 const TT = TRIPLE_POINT[TEMPERATURE];
 const PT = TRIPLE_POINT[PRESSURE];
+const TC = CRITICAL_POINT[TEMPERATURE];
+const PC = CRITICAL_POINT[PRESSURE];
 const melting = Array.from({ length: 36 }, (_, i) => {
-  const p = 10 ** (Math.log10(PT) + (i * (Math.log10(2.4e8) - Math.log10(PT))) / 35);
+  const p = 10 ** (Math.log10(PT) + (i * (Math.log10(ICE_IH_LIMIT) - Math.log10(PT))) / 35);
   return { [BOUNDARY]: "Solid–liquid (melting)", [TEMPERATURE]: TT * (1 + (p - PT) / -395.2e6) ** (1 / 9), [PRESSURE]: p };
 });
-const vaporizationLow = Array.from({ length: 18 }, (_, i) => {
-  const temp = TT + (i * (373.15 - TT)) / 17;
-  return { [BOUNDARY]: "Liquid–gas (vaporization)", [TEMPERATURE]: temp, [PRESSURE]: PT * Math.exp((-43364 / GAS_CONSTANT) * (1 / temp - 1 / TT)) };
-});
-const vaporizationHigh = Array.from({ length: 23 }, (_, i) => {
-  const temp = 373.15 + ((i + 1) * (CRITICAL_POINT[TEMPERATURE] - 373.15)) / 23;
-  const p = i === 22 ? CRITICAL_POINT[PRESSURE] : 101325 * Math.exp((-39448 / GAS_CONSTANT) * (1 / temp - 1 / 373.15));
-  return { [BOUNDARY]: "Liquid–gas (vaporization)", [TEMPERATURE]: temp, [PRESSURE]: p };
+const vaporization = Array.from({ length: 41 }, (_, i) => {
+  const temp = TT + (i * (TC - TT)) / 40;
+  const tau = Math.max(0, 1 - temp / TC); // never below 0, where the fractional powers are undefined
+  const lnRatio = (TC / temp) * WAGNER_PRUSS.reduce((sum, [a, e]) => sum + a * tau ** e, 0);
+  return { [BOUNDARY]: "Liquid–gas (vaporization)", [TEMPERATURE]: temp, [PRESSURE]: PC * Math.exp(lnRatio) };
 });
 const sublimation = Array.from({ length: 30 }, (_, i) => {
   const temp = 200 + (i * (TT - 200)) / 29;
   return { [BOUNDARY]: "Solid–gas (sublimation)", [TEMPERATURE]: temp, [PRESSURE]: PT * Math.exp((-51000 / GAS_CONSTANT) * (1 / temp - 1 / TT)) };
 });
-const data = [...melting, ...vaporizationLow, ...vaporizationHigh, ...sublimation];
+const data = [...melting, ...vaporization, ...sublimation];
 
 // Plot: reads only data and the constants above
 const boundaryNames = [...new Set(data.map((d) => d[BOUNDARY]))];
