@@ -6,6 +6,7 @@ SQLite) lives in tests/integration/api/test_api_endpoints.py.
 """
 
 import hashlib
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -170,9 +171,12 @@ class TestFeedbackRouter:
         instance.create.assert_awaited_once()
 
     def test_plot_vote_persists_library_and_language(self, client):
-        """A 👍 from the plot overlay carries the implementation it is about."""
+        """A 👍 from the plot overlay carries the implementation it is about, and the repeat guard looks only at
+        the votes on its current version."""
+        version_start = datetime(2026, 11, 8, 4, 54, 13)
         instance = AsyncMock()
         instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.version_start = AsyncMock(return_value=version_start)
         instance.has_plot_vote = AsyncMock(return_value=False)
         instance.create = AsyncMock(return_value=None)
 
@@ -189,15 +193,35 @@ class TestFeedbackRouter:
             )
 
         assert response.status_code == 200
-        instance.has_plot_vote.assert_awaited_once_with("s1", "scatter-basic", "matplotlib", "python")
+        instance.version_start.assert_awaited_once_with("scatter-basic", "matplotlib", "python")
+        instance.has_plot_vote.assert_awaited_once_with(
+            "s1", "scatter-basic", "matplotlib", "python", since=version_start
+        )
         kwargs = instance.create.await_args.args[0]
         assert kwargs["library_id"] == "matplotlib"
         assert kwargs["language"] == "python"
+
+    def test_a_plot_without_an_update_time_guards_every_vote(self, client):
+        """An implementation without `updated` has one version: the guard looks at every vote (`since=None`)."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.version_start = AsyncMock(return_value=None)
+        instance.has_plot_vote = AsyncMock(return_value=True)
+        instance.create = AsyncMock(return_value=None)
+        vote = {"reaction": "thumbs_up", "spec_id": "scatter-basic", "library_id": "matplotlib", "session_id": "s1"}
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", json=vote)
+
+        assert response.status_code == 200
+        instance.has_plot_vote.assert_awaited_once_with("s1", "scatter-basic", "matplotlib", None, since=None)
+        instance.create.assert_not_awaited()
 
     def test_second_plot_vote_from_same_session_is_silently_dropped(self, client):
         """One 👍/👎 per image per session — a repeat returns 200 but writes nothing."""
         instance = AsyncMock()
         instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.version_start = AsyncMock(return_value=None)
         instance.has_plot_vote = AsyncMock(return_value=True)
         instance.create = AsyncMock(return_value=None)
 
@@ -230,6 +254,7 @@ class TestFeedbackRouter:
             )
 
         assert response.status_code == 200
+        instance.version_start.assert_not_awaited()
         instance.has_plot_vote.assert_not_awaited()
         instance.create.assert_awaited_once()
 

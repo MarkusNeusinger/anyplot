@@ -2,107 +2,106 @@ library: pygal
 language: python
 specification_id: acf-pacf
 created: '2026-03-14T22:18:53Z'
-updated: '2026-06-10T02:04:01Z'
-generated_by: claude-sonnet
-workflow_run: 27247413374
+updated: '2026-11-08T22:30:45Z'
+generated_by: claude-opus-5-5
+adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
+workflow_run: 42526571739
 issue: 4663
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Semantic color coding (significant=green #009E73, non-significant=gray) provides
-    immediate interpretive value without a legend'
-  - ANYPLOT_AMBER (#DDCC77) used correctly as a warning/caution anchor for 95% CI
-    threshold lines
-  - 'Both renders fully theme-adaptive: backgrounds, text, and gridlines correctly
-    flip between light (#FAF8F1) and dark (#1A1A17) themes'
-  - SVG injection via ElementTree is an elegant workaround for pygal's missing reference-line
-    API, enabling dashed CI lines
-  - Data (airline-style seasonal series, n=200) produces textbook ACF/PACF patterns
-    showcasing the plot type effectively
-  - 'Clean code: shared common_config dict reduces repetition; per-bar color dict
-    is idiomatic pygal usage'
+  - Computes ACF and PACF with statsmodels (acf with fft, pacf with method='ywm')
+    and the bound as 1.96/sqrt(N) = ±0.139, so every stem ends at its computed value
+    and the dashed bounds sit symmetrically about zero in both panels
+  - Builds two stacked panels on one pygal XY chart sharing a single lag axis, so
+    each lag lines up vertically between ACF (lag 0 to 36, lag 0 = 1.0) and PACF (lag
+    1 to 36), with the panel names ACF and PACF placed as the y labels at each zero
+    line
+  - 'Thin stems drawn as one interrupted series per color (allow_interruptions with
+    None breaks) plus small head dots, with stems outside the bounds in brand green
+    #009E73 and those inside in muted ink, a hierarchy that makes the significant
+    lags and the 12-month seasonal pattern read at a glance'
+  - 'Theme tokens threaded through Style and inline CSS: warm backgrounds, light ink
+    in dark mode, and dashed bounds readable in both renders; vertical guides and
+    the x-axis line are switched off so nothing cuts through the lag-0 stem'
+  - 'Library-native interactivity: per-point formatters show the un-offset correlation
+    value (for example +0.833) in the HTML tooltips'
   weaknesses:
-  - Filled bars (pygal.Bar) instead of vertical stem lines — spec explicitly requires
-    'vertical stem lines (not filled bars)'; consider very narrow bar widths or SVG-injected
-    vertical line segments to better approximate stems
-  - Non-uniform y-axis tick spacing (-0.4, -0.2, 0, 0.5, 1.0) — the 0→0.5 gap is 2.5×
-    the -0.2→0 gap, which can mislead scale perception; prefer uniform ticks like
-    [-0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-  - _inject_ci_lines helper function deviates from the KISS flat-structure ideal —
-    acceptable but noted
-  - 'Visual refinement could be stronger: panel spacing and whitespace utilization
-    inside each panel could be improved'
+  - 'Suggestion: the ACF and PACF panels share one y-axis track, so each panel''s
+    zero tick is replaced by its name; a small ''0'' beside the panel name would keep
+    the zero line labelled numerically.'
+  - 'Suggestion: the x-axis title carries the bound value as well as the lag unit;
+    a shorter ''Lag (months)'' with the ±0.139 note in a subtitle would leave the
+    axis title lighter.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface
-      Chrome: Title "acf-pacf · python · pygal · anyplot.ai" in dark ink at top of ACF panel — readable. Y-axis labels "ACF" and "PACF" in dark ink on left — readable. X-axis "Lag" label at bottom in dark ink — readable. Tick labels (0, 4, 8, ... for ACF; 1, 5, 9, ... for PACF) in muted dark tone — readable. "95% CI: ±0.139" amber annotation in upper-right corner — readable.
-      Data: Bars colored brand green (#009E73) for significant correlations, muted gray for non-significant. ACF panel shows clear seasonal pattern (spikes at lags 12, 24, 36). PACF shows characteristic AR(1) spike at lag 1 and rapid decay. Amber dashed CI lines at ±0.139. Muted zero baseline line. First series uses #009E73 (correct).
-      Legibility verdict: PASS — all text and data elements clearly readable on light background.
+      Background: warm off-white #FAF8F1 across the whole canvas, 3200x1800 landscape.
+      Chrome: bold dark title "acf-pacf · python · pygal · anyplot.ai" centered at top (about 42% of the width); y tick labels 1, 0.5, -0.5 for the ACF panel and 0.5, -0.5 for the PACF panel in dark ink, with "ACF" and "PACF" as the labels at each panel's zero line; x ticks 0 to 36 every 6 lags; x-axis title "Lag (months) · dashed lines: 95% confidence bounds ±0.139". Subtle horizontal guides. All text readable.
+      Data: top panel ACF lags 0-36 as thin vertical stems with head dots, lag 0 at 1.0, a sinusoidal 12-month pattern with peaks near lags 12, 24, 36 and troughs near 6, 18, 30; bottom panel PACF lags 1-36, lag 1 about 0.83, lags 2-3 near -0.48, then significant stems through lag 11 and small stems inside the bounds afterwards. Stems outside the bounds are #009E73 green, those inside muted grey. Black dashed lines at ±0.139 in each panel, a solid zero baseline per panel.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark theme surface
-      Chrome: Title in light cream color — clearly readable against dark background. Y-axis labels "ACF"/"PACF" in light text — readable. X-axis "Lag" label in light text — readable. Tick labels in light/muted-light text — readable. "95% CI: ±0.139" amber annotation visible. No dark-on-dark text failures detected.
-      Data: Bar colors identical to light render — brand green (#009E73) for significant, muted gray for non-significant. Data colors unchanged across themes (correct — only chrome flips). Amber dashed CI lines remain visible.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title, tick labels, panel names and x-axis title in light ink (#F0EFE8 / #B8B7B0) on the dark surface; dashed bounds and zero lines flip to light; guides subtle but visible. No dark-on-dark text.
+      Data: identical stems and dots, the same #009E73 green for significant lags; insignificant stems use the lighter muted token so they stay visible. Layout identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes; minor: non-uniform y-axis tick
-          spacing (-0.4, -0.2, 0, 0.5, 1.0) subtly distorts scale perception'
+        comment: Title 66, ticks and labels 44 set explicitly; readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlaps; tightly packed bars in ACF lags 4-8 are dense but
-          no collision
+        comment: No text collisions; stems and head dots well separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Significant bars (green) and non-significant (gray) clearly distinguishable;
-          CI amber lines and zero baseline visible in both renders
+        comment: 37 + 36 stems at 5 px with 9 px head dots, appropriate for sparse
+          lags; muted stems still visible in dark mode
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green / muted gray / amber are CVD-safe; no red-green as sole
-          signal
+        comment: Green vs neutral grey plus position relative to the dashed bounds;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); two-panel composition clean; no overflow
-          or clipping
+        comment: 3200x1800, balanced panels with a clear gap, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ACF/PACF y-labels, Lag x-label, correct title format
+        comment: x 'Lag (months)', y panels labelled ACF and PACF
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; non-significant uses INK_MUTED anchor; CI
-          uses ANYPLOT_AMBER anchor; backgrounds correct for both themes'
+        comment: 'Significant stems #009E73, neutral muted ink for the rest; correct
+          backgrounds in both themes'
     design_excellence:
       score: 12
       max: 20
@@ -112,53 +111,54 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: semantic color split, amber CI lines, corner annotation,
-          rounded bars show design intent'
+        comment: Bold title, panel names set at each zero line as the y label, and
+          a two-tone green/muted hierarchy chosen beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-axis-only grid, minimal chrome, subtle panel divider; whitespace
-          and spine treatment could be stronger
+        comment: Vertical guides and the x-axis line removed so nothing crosses the
+          lag-0 stem, CI lines thinner than stems, bound value folded into the axis
+          title
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green/gray semantic split immediately directs eye to significant
-          lags; seasonal pattern and AR cutoff visually prominent
+        comment: Muting stems inside the bounds makes significant lags and the 12-month
+          seasonality the focal point, a hierarchy the Notes do not prescribe
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF dual-panel concept; spec requires stem lines but
-          pygal.Bar produces filled bars — acceptable limitation
+        comment: Stacked ACF/PACF stem plots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: ACF top/PACF bottom, 95% CI dashed lines, lag 0 in ACF, PACF from
-          lag 1, 36 lags all present
+        comment: ACF top, PACF bottom, shared lag axis, thin stems, dashed ±1.96/sqrt(N)
+          bounds, ACF from lag 0, PACF from lag 1, 36 lags, labels Lag/ACF/PACF
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lag on x-axis, correlation values on y-axis, all lags correctly displayed
+        comment: Each stem at its lag and computed value; both panels' ranges include
+          negatives and the lower bound
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend omitted appropriately for semantically-colored
-          single-series
+        comment: Mandated title format; legend N/A (hidden, panel names label the
+          series)
     data_quality:
       score: 15
       max: 15
@@ -168,58 +168,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both ACF and PACF shown; CI lines; significant/non-significant coloring;
-          zero baseline; 36 lags
+        comment: Slow oscillating ACF with seasonal spikes, PACF cutting into the
+          bounds after a few lags, stems inside and outside the bounds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly airline-style passenger data with trend + 12-period seasonality;
-          neutral domain; 200 observations
+        comment: Monthly airline passenger counts with trend and 12-month seasonality,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-range [-0.5, 1.1] ACF / [-0.5, 1.0] PACF covers all values; 36
-          lags appropriate for n=200
+        comment: ACF lag 0 = 1.0 read off the axis; bound 1.96/sqrt(200) = 0.139 computed
+          in code and shown; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Two helper functions: hex_to_rgb (small utility) and _inject_ci_lines
-          (SVG injection, justified by pygal API limitation)'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Good use of common_config dict; per-bar color dict is idiomatic pygal;
-          sys.path workaround documented
+        comment: ACF/PACF from statsmodels rather than written out; panel offset logic
+          is compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
       score: 7
       max: 10
@@ -229,27 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of Style object, per-bar color dict, x_labels_major_every,
-          render() for SVG bytes
+        comment: pygal.XY with allow_interruptions for stem segments, Style tokens,
+          custom y_labels dicts for per-panel ticks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-bar color via dict syntax, HTML interactive output, SVG namespace
-          manipulation for CI injection
+        comment: Per-point color dicts, per-series formatter for tooltips, stroke_style
+          dasharray and inline CSS injection
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-08T22:28:08Z'
 impl_tags:
   dependencies:
   - statsmodels
-  - pillow
   techniques:
   - subplots
-  - annotations
+  - custom-css
+  - hover-tooltips
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  - autocorrelation
+  styling:
+  - minimal-chrome
+  - theme-adaptive
