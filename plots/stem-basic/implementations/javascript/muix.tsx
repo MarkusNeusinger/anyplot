@@ -21,7 +21,7 @@ const Y_PAD_SHARE = 0.1;
 
 // Columns: set these to your data's column names
 const SAMPLE = "Sample index (n)"; // role: x
-const AMPLITUDE = "Amplitude"; // role: y
+const AMPLITUDE = "Amplitude (normalized)"; // role: y
 
 // Data: replace this block with your own records, one object per row
 // Impulse response of a damped oscillator, sampled at 40 discrete steps
