@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-stacked-percent: 100% Stacked Area Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
