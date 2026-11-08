@@ -3,259 +3,199 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-08-26
 import { LineChart } from "@mui/x-charts/LineChart";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: quarterly revenue forecast by product line, 5 years (20 quarters) ---
-// A 90% prediction interval widens with forecast horizon — the further out a
-// quarter is, the less certain the number, the classic "fan out" behavior of
-// a real revenue forecast. Ordered largest-revenue-first so Hardware anchors
-// the stack base.
-function lcg(seed) {
-  let state = seed;
-  return () => {
+// Constants
+const TITLE = "area-stacked-confidence · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 44;
+const BAND_OPACITY = 0.32;
+const SYMMETRY_TOL = 0.05; // bounds whose offsets differ by less than this share of the band width count as symmetric
+
+// Columns: set these to your data's column names
+const QUARTER = "Quarter"; // role: x
+const PRODUCT_LINE = "Product line"; // role: category
+const REVENUE = "Revenue ($M)"; // role: y
+const LOWER = "Lower bound ($M)"; // role: y_lower
+const UPPER = "Upper bound ($M)"; // role: y_upper
+const BAND_NAME = "90% prediction interval"; // what the lower and upper bounds describe
+
+// Data: replace this block with your own records, one object per row
+// Quarterly revenue forecast by product line, Q1 2024 to Q4 2028, largest line
+// first so it anchors the stack. The interval widens with the forecast horizon,
+// the fan-out of a real forecast. Seeded LCG, since the browser has no seeded RNG.
+const data = (() => {
+  let state = 42;
+  const random = () => {
     state = (state * 1103515245 + 12345) % 2147483648;
     return state / 2147483648;
   };
-}
-const random = lcg(42);
+  const lines = [
+    { name: "Hardware", base: 42, trend: -0.35, season: 3.0, phase: 0, spread: 0.04, growth: 0.006 },
+    { name: "Software", base: 18, trend: 1.15, season: 1.6, phase: 1.4, spread: 0.05, growth: 0.009 },
+    { name: "Services", base: 10, trend: 0.55, season: 0.9, phase: 2.6, spread: 0.045, growth: 0.007 },
+  ];
+  return lines.flatMap((line) =>
+    Array.from({ length: 20 }, (_, i) => {
+      const center = Math.max(
+        1,
+        line.base + line.trend * i + line.season * Math.sin((i * Math.PI) / 2 + line.phase) + (random() - 0.5) * 1.6,
+      );
+      const fraction = line.spread + i * line.growth;
+      return {
+        [QUARTER]: new Date(2024 + Math.floor(i / 4), (i % 4) * 3, 1),
+        [PRODUCT_LINE]: line.name,
+        [REVENUE]: Number(center.toFixed(2)),
+        [LOWER]: Number((center * (1 - fraction)).toFixed(2)),
+        [UPPER]: Number((center * (1 + fraction)).toFixed(2)),
+      };
+    }),
+  );
+})();
 
-const QUARTERS = 20; // Q1 2024 .. Q4 2028
-const quarterDates = Array.from(
-  { length: QUARTERS },
-  (_, i) => new Date(2024 + Math.floor(i / 4), (i % 4) * 3, 1),
+// Plot: reads only data and the constants above
+const quarters = [...new Map(data.map((d) => [d[QUARTER].getTime(), d[QUARTER]])).values()].sort(
+  (a, b) => a.getTime() - b.getTime(),
 );
-const quarterLabel = (date) => `Q${Math.floor(date.getMonth() / 3) + 1} ${date.getFullYear()}`;
+const lines = [...new Set(data.map((d) => d[PRODUCT_LINE]))];
+const rowByKey = new Map(data.map((d) => [`${d[PRODUCT_LINE]}|${d[QUARTER].getTime()}`, d]));
+const cells = lines.map((line) => quarters.map((q) => rowByKey.get(`${line}|${q.getTime()}`) ?? null));
 
-const PRODUCT_LINES = [
-  {
-    id: "hardware",
-    label: "Hardware",
-    paletteIndex: 0,
-    base: 42,
-    trend: -0.35,
-    seasonAmp: 3.0,
-    seasonPhase: 0,
-    uncertaintyBase: 0.04,
-    uncertaintyGrowth: 0.006,
-  },
-  {
-    id: "software",
-    label: "Software",
-    paletteIndex: 1,
-    base: 18,
-    trend: 1.15,
-    seasonAmp: 1.6,
-    seasonPhase: 1.4,
-    uncertaintyBase: 0.05,
-    uncertaintyGrowth: 0.009,
-  },
-  {
-    id: "services",
-    label: "Services",
-    paletteIndex: 2,
-    base: 10,
-    trend: 0.55,
-    seasonAmp: 0.9,
-    seasonPhase: 2.6,
-    uncertaintyBase: 0.045,
-    uncertaintyGrowth: 0.007,
-  },
-];
+// Stack offset below each layer, shared by its central area and its band so both
+// keep one stack order at every quarter
+const below = lines.map((_, g) =>
+  quarters.map((_, k) => cells.slice(0, g).reduce((s, row) => s + (row[k]?.[REVENUE] ?? 0), 0)),
+);
 
-const seriesData = PRODUCT_LINES.map((line) => {
-  const center = Array.from({ length: QUARTERS }, (_, i) =>
-    Math.max(
-      1,
-      line.base +
-        line.trend * i +
-        line.seasonAmp * Math.sin((i * Math.PI) / 2 + line.seasonPhase) +
-        (random() - 0.5) * 1.6,
-    ),
-  );
-  const fraction = Array.from(
-    { length: QUARTERS },
-    (_, i) => line.uncertaintyBase + i * line.uncertaintyGrowth,
-  );
-  const lower = center.map((v, i) => v * (1 - fraction[i]));
-  const upper = center.map((v, i) => v * (1 + fraction[i]));
-  return { ...line, center, lower, upper };
-});
+// Band half-widths relative to the central value, for the symmetry note and subtitle
+const halfShares = data.map((d) => (d[UPPER] - d[LOWER]) / 2 / d[REVENUE]);
+const asymmetry = Math.max(
+  ...data.map((d) => Math.abs(d[UPPER] - d[REVENUE] - (d[REVENUE] - d[LOWER])) / (d[UPPER] - d[LOWER] || 1)),
+);
+const symmetric = asymmetry <= SYMMETRY_TOL;
+const fmtQuarter = (v: Date) => `Q${Math.floor(v.getMonth() / 3) + 1} ${v.getFullYear()}`;
 
-// Running cumulative total *below* each layer — the stack offset both the
-// central area and its band must share ("stack order consistent between
-// central values and their bands").
-let cumulativeBelow = new Array(QUARTERS).fill(0);
-seriesData.forEach((s) => {
-  s.baseBelow = cumulativeBelow;
-  cumulativeBelow = cumulativeBelow.map((v, i) => v + s.center[i]);
-});
+const SUBTITLE = `${quarters.length} quarters, ${fmtQuarter(quarters[0])} – ${fmtQuarter(quarters[quarters.length - 1])} · ${lines.length} stacked series · band half-width ${Math.round(Math.min(...halfShares) * 100)}–${Math.round(Math.max(...halfShares) * 100)}% of the value`;
+const BAND_LEGEND = `${BAND_NAME} around each layer's edge${symmetric ? "" : " (asymmetric)"}`;
 
-const mainSeries = seriesData.map((s) => ({
-  id: s.id,
-  label: s.label,
-  data: s.center,
-  stack: "revenue",
-  area: true,
-  showMark: false,
-  color: t.palette[s.paletteIndex],
-  curve: "monotoneX",
-}));
-
-// Stacked-band trick (per series): an invisible series carries the offset
-// (baseBelow + lower bound), and a second series stacked on top of it
-// supplies only the band's own width (upper - lower). The visible area then
-// spans exactly [baseBelow + lower, baseBelow + upper] — straddling that
-// series' own boundary in the stack, in the same order as the main areas.
-const bandSeries = seriesData.flatMap((s) => [
-  {
-    id: `${s.id}-band-base`,
-    data: s.baseBelow.map((v, i) => v + s.lower[i]),
-    stack: `band-${s.id}`,
-    showMark: false,
-    color: t.pageBg,
-  },
-  {
-    id: `${s.id}-band-width`,
-    data: s.upper.map((v, i) => v - s.lower[i]),
-    stack: `band-${s.id}`,
+// Each band is two stacked series: an invisible one carrying the offset (stack
+// below + lower bound) and a filled one adding the band's own width on top
+const series = [
+  ...lines.map((line, g) => ({
+    id: `line-${g}`,
+    label: line,
+    data: cells[g].map((d) => d?.[REVENUE] ?? null),
+    color: t.palette[g],
+    stack: "revenue",
     area: true,
     showMark: false,
-    color: t.palette[s.paletteIndex],
-  },
-]);
+    curve: "monotoneX" as const,
+  })),
+  ...lines.flatMap((_, g) => [
+    {
+      id: `band-base-${g}`,
+      data: cells[g].map((d, k) => (d ? below[g][k] + d[LOWER] : null)),
+      color: t.palette[g],
+      stack: `band-${g}`,
+      showMark: false,
+      curve: "monotoneX" as const,
+    },
+    {
+      id: `band-width-${g}`,
+      data: cells[g].map((d) => (d ? d[UPPER] - d[LOWER] : null)),
+      color: t.palette[g],
+      stack: `band-${g}`,
+      area: true,
+      showMark: false,
+      curve: "monotoneX" as const,
+    },
+  ]),
+];
 
-// Per-series sx overrides for the band trick: hide the invisible base line,
-// hide the band's own stroke, and set the band fill to a lighter, translucent
-// shade of that series' color.
-const bandSx = seriesData.reduce((acc, s) => {
-  acc[`& .MuiLineElement-series-${s.id}-band-base`] = { display: "none" };
-  acc[`& .MuiLineElement-series-${s.id}-band-width`] = { stroke: "none" };
-  acc[`& .MuiAreaElement-series-${s.id}-band-width`] = {
-    fill: t.palette[s.paletteIndex],
-    fillOpacity: 0.32,
-  };
-  return acc;
-}, {});
-
-const TITLE =
-  "Quarterly Revenue Forecast · area-stacked-confidence · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 22;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 42;
-const LEGEND_H = 34;
-
-function Legend() {
-  return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
-      {seriesData.map((s) => (
-        <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <span
-            style={{
-              width: "16px",
-              height: "16px",
-              backgroundColor: t.palette[s.paletteIndex],
-              display: "inline-block",
-            }}
-          />
-          <span style={{ fontSize: "14px", color: t.inkSoft }}>{s.label}</span>
-        </div>
-      ))}
-      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-        <span style={{ width: "16px", height: "16px", backgroundColor: t.ink, opacity: 0.22, display: "inline-block" }} />
-        <span style={{ fontSize: "14px", color: t.inkSoft }}>90% prediction interval (per line)</span>
-      </div>
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_H - LEGEND_H;
-
-  // MUI X's built-in y-axis `label` sits at a fixed offset derived from the
-  // deprecated `tickFontSize` prop, not the actual `tickLabelStyle.fontSize`
-  // — at this canvas size that formula places the rotated title *inside* the
-  // "$NN" tick label text. A hand-rolled label column sidesteps that offset
-  // math entirely and guarantees no overlap.
-  const Y_LABEL_W = 34;
-  const chartWidth = width - Y_LABEL_W;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", backgroundColor: t.pageBg }}>
-      <div style={{ paddingLeft: "84px" }}>
-        <div
-          style={{
-            height: `${TITLE_H}px`,
-            lineHeight: `${TITLE_H}px`,
-            fontSize: `${titleFontSize}px`,
-            fontWeight: 600,
-            color: t.ink,
-          }}
-        >
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
           {TITLE}
-        </div>
-        <Legend />
-      </div>
-      <div style={{ display: "flex", width, height: chartHeight }}>
-        <div
-          style={{
-            width: Y_LABEL_W,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              transform: "rotate(-90deg)",
-              whiteSpace: "nowrap",
-              fontSize: "16px",
-              color: t.ink,
+        </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
+        </Typography>
+      </Box>
+      <LineChart
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
+        skipAnimation
+        hideLegend
+        grid={{ horizontal: true }}
+        xAxis={[
+          {
+            data: quarters,
+            scaleType: "time",
+            valueFormatter: fmtQuarter,
+            tickInterval: quarters.filter((_, k) => k % 2 === 0), // every other quarter keeps labels apart
+            label: QUARTER,
+            height: 64,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            label: REVENUE,
+            width: 76,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        series={series}
+        margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
+        sx={{
+          '& .MuiLineChart-area[data-series^="line-"]': { fillOpacity: 0.85, filter: "none" },
+          '& .MuiLineChart-line[data-series^="line-"]': { strokeWidth: 2.5 },
+          '& .MuiLineChart-area[data-series^="band-width-"]': { fillOpacity: BAND_OPACITY, filter: "none" },
+          '& .MuiLineChart-line[data-series^="band-"]': { display: "none" },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      />
+      <Box
+        sx={{
+          height: LEGEND_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "28px",
+          pb: "8px",
+          boxSizing: "border-box",
+        }}
+      >
+        {lines.map((line, g) => (
+          <Box key={line} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Box sx={{ width: 16, height: 16, bgcolor: t.palette[g], borderRadius: "3px" }} />
+            <Typography sx={{ fontSize: 15, color: t.ink }}>{line}</Typography>
+          </Box>
+        ))}
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Box
+            sx={{
+              width: 28,
+              height: 16,
+              borderRadius: "3px",
+              background: `linear-gradient(90deg, ${lines.map((_, g) => t.palette[g]).join(", ")})`,
+              opacity: BAND_OPACITY + 0.2,
             }}
-          >
-            Revenue ($M)
-          </span>
-        </div>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          grid={{ horizontal: true }}
-          xAxis={[
-            {
-              data: quarterDates,
-              scaleType: "time",
-              valueFormatter: quarterLabel,
-              tickNumber: 10,
-              label: "Quarter",
-              labelStyle: { fontSize: 16 },
-              tickLabelStyle: { fontSize: 13 },
-            },
-          ]}
-          yAxis={[
-            {
-              min: 0,
-              tickLabelStyle: { fontSize: 14 },
-              valueFormatter: (v: number) => `$${Math.round(v)}`,
-            },
-          ]}
-          series={[...mainSeries, ...bandSeries]}
-          margin={{ top: 20, right: 40, bottom: 70, left: 65 }}
-          slotProps={{ legend: { hidden: true } }}
-          sx={{
-            "& .MuiAreaElement-root": { fillOpacity: 0.85 },
-            "& .MuiLineElement-root": { strokeWidth: 2 },
-            "& .MuiChartsAxis-tickLabel": { fill: t.inkSoft },
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
-            ...bandSx,
-          }}
-        />
-      </div>
-    </div>
+          />
+          <Typography sx={{ fontSize: 15, color: t.ink }}>{BAND_LEGEND}</Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 }
