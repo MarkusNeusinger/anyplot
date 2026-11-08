@@ -20,6 +20,7 @@ const POINT_OPACITY = 0.62; // slight transparency, so dense cores read darker
 const EXTENT_PAD_SHARE = 0.05; // room beyond the outermost points, as a share of each axis span
 const LABEL_FONT_SIZE = 15;
 const LABEL_CHAR_WIDTH = 0.56; // average glyph width of the centroid labels, as a share of the font size
+const LABEL_BOX_OPACITY = 0.35; // light enough that the cluster core shows through; a text halo keeps the label legible
 
 // Columns: set these to your data's column names
 const X = "UMAP dimension 1"; // role: x
@@ -96,7 +97,7 @@ function CentroidLabels() {
               height={28}
               rx={6}
               fill={t.elevatedBg}
-              fillOpacity={0.88}
+              fillOpacity={LABEL_BOX_OPACITY}
               stroke={g.color}
               strokeWidth={2}
             />
@@ -108,6 +109,10 @@ function CentroidLabels() {
               fontSize={LABEL_FONT_SIZE}
               fontWeight={600}
               fill={t.ink}
+              stroke={t.pageBg}
+              strokeWidth={4}
+              strokeLinejoin="round"
+              paintOrder="stroke"
             >
               {g.label}
             </text>
