@@ -1,7 +1,7 @@
 // anyplot.ai
 // ternary-basic: Basic Ternary Plot
-// Library: muix 9.17.0 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-08-04
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
