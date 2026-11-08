@@ -2,122 +2,113 @@ library: pygal
 language: python
 specification_id: audiogram-clinical
 created: '2026-06-15T00:08:11Z'
-updated: '2026-06-15T00:40:26Z'
-generated_by: claude-sonnet
-workflow_run: 27515950678
+updated: '2026-11-08T22:34:33Z'
+generated_by: claude-opus-5-5
+adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
+workflow_run: 42526731967
 issue: 8655
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/audiogram-clinical/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Stacked fill technique for severity bands is clever and idiomatic — using fill=True
-    with layered series from deepest-to-shallowest correctly exposes each band in
-    its own color range
-  - 'Dual-theme adaptation is fully implemented: PAGE_BG, INK, INK_MUTED all correctly
-    flip, and dark-variant band fill colors prevent white-on-dark issues'
-  - Negated y-axis technique is a clean workaround for pygal's lack of a native inverted-axis
-    option, and the custom y_label_items correctly display absolute dB HL values
-  - Semantic color exception for clinical convention (red right ear / blue left ear)
-    is valid and well-documented in the code
-  - Data represents a realistic bilateral 4kHz noise-induced sensorineural notch;
-    clinically plausible thresholds in both ears
-  - All 6 severity bands are present with correct dB HL boundaries and labeled in
-    the bottom legend
-  - 'Code quality is excellent: deterministic data, clean imports, no unnecessary
-    abstractions, both PNG and HTML outputs saved correctly'
+  - 'Faithful clinical audiogram: inverted dB HL axis from -10 to 120 with 10 dB grid,
+    log2 frequency axis with evenly spaced octave ticks labelled 125 … 8k in kHz shorthand,
+    square plot area at 2400×2400'
+  - 'Ear convention preserved: right ear as red (#AE3030) hollow circles with a solid
+    line, left ear as blue (#4467A3) X glyphs with a dashed line, a justified semantic
+    exception to the Imprint order; no line joins the two ears'
+  - Severity bands are discrete imprint_seq steps (green normal → blue profound) blended
+    into the page colour, with a theme-specific depth so adjacent bands stay distinguishable
+    on both the light and the dark page
+  - Grid drawn above the band fills so it stays visible, band names in each band's
+    top-left corner clear of the data, and the symbol key placed in the empty profound
+    region
+  - 'pygal-specific techniques: XY chart with inverse_y_axis, dict x_labels, print_labels
+    with value dicts for in-plot text, allow_interruptions with None breaks for multi-segment
+    glyph series, and inline CSS injection for per-series stroke and fill control;
+    HTML output keeps native tooltips'
+  - Realistic noise-induced hearing loss with a bilateral 4 kHz notch and recovery
+    at 8 kHz, tidy df with column constants, deterministic data
   weaknesses:
-  - Left ear uses circular dot markers identical to the right ear — the spec explicitly
-    requires cross (X) markers for the left ear as part of the standardized audiogram
-    convention; even if pygal's native dot is a circle, the left ear series should
-    use a different visible shape (pygal supports custom dot_size and stroke_style
-    but not native X shapes — consider rendering 'x' SVG symbols via custom value_formatter
-    or adding a separate annotation layer)
-  - 'Severity band colors in dark mode (#2A1818 through #182A22) are extremely low-contrast
-    against the #1A1A17 background — the bands are nearly invisible in the dark render,
-    making the clinical severity zones unreadable on dark theme; the dark palette
-    needs higher-contrast muted fills'
-  - 'Band fill colors use fully custom hex values (e.g. #E8C8C8, #EDD6C0) not drawn
-    from the Imprint palette or semantic anchors — this violates the ''no custom hexes''
-    palette rule; consider using alpha-blended versions of Imprint palette members
-    or the muted/neutral anchors for background zones'
-  - legend_font_size=36 is below the style-guide recommended 44 for pygal; the bottom
-    legend entries read small at thumbnail size — increase to 44
-  - Y-axis range starts at 0 dB HL but the spec recommends -10 dB HL as the top value
-    so that better-than-average hearing can be shown; extend the range to (-120, 10)
-    and add a -10 label
+  - 'VQ-03 (dark): the left-ear dashed line and X glyphs in #4467A3 at about 5 px
+    stroke sit on the mid-teal Mild and Moderate band fills with low contrast, so
+    the left ear reads noticeably weaker than the right ear in the dark render → keep
+    the colour but raise the left-ear line and cross stroke width to about 7 px (+2
+    px) so it holds against the band tints. Likely cause: stroke_width=5 shared by
+    all series, with no override for the left-ear series (.serie-10, .serie-11).'
+  - 'Suggestion: the band names in INK_SOFT could be slightly larger or bolder so
+    they read as a secondary layer in the 400 px thumbnail.'
+  - 'Suggestion: the in-plot key could carry a thin frame or a short title to separate
+    it more clearly from the band names.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct; matches spec
-      Chrome: Title "audiogram-clinical · python · pygal · anyplot.ai" in dark ink, clearly readable; y-axis title "Hearing Level (dB HL)" and x-axis title "Frequency (Hz)" in dark ink, both readable; y-axis tick labels (0, 10, 20 ... 120) and x-axis tick labels (125, 250, 500, 1k, 2k, 4k, 8k) in muted ink, clearly legible
-      Data: Six horizontal severity bands visible — green/teal at top (Normal), warming through mild/moderate tones to pink/red at bottom (Profound); red line (Right Ear) starts at ~10 dB HL and shows a characteristic 4kHz notch reaching ~65 dB HL; blue line (Left Ear) mirrors the pattern shifted slightly lower (~55 dB HL at 4kHz); both lines have small circular dot markers; bottom legend shows all 6 bands and two ear series with color swatches
-      Legibility verdict: PASS — all text is clearly readable against warm off-white background; no light-on-light issues
+      Background: warm off-white #FAF8F1 around a square plot box.
+      Chrome: bold title "audiogram-clinical · python · pygal · anyplot.ai" at about 80% width, dark ink; y-axis title "Hearing Level (dB HL)" rotated, ticks -10 … 120 every 10 with 0 near the top (inverted); x-axis title "Frequency (Hz)", octave ticks 125, 250, 500, 1k, 2k, 4k, 8k evenly spaced. Grey grid lines every octave and 10 dB visible above the band fills. All text readable.
+      Data: six horizontal severity bands from pale green (Normal) through teal to pale blue (Profound), each labelled in its top-left corner in soft ink. Right ear: red #AE3030 hollow circles with a solid red line (10,15,20,20,25,65,55 dB). Left ear: blue #4467A3 X glyphs with a dashed blue line (15,20,25,25,35,55,50 dB). Lines cross near 3 kHz. In-plot key bottom right: "Right ear (O)" with a red circle, "Left ear (X)" with a blue cross.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct; matches spec
-      Chrome: Title in light/cream ink, clearly readable; axis labels and tick labels in light muted ink, readable; legend text at bottom readable but small
-      Data: Ear line colors (red for right, blue for left) are IDENTICAL to light render — correct; the 4kHz notch pattern is still clearly visible in both lines; HOWEVER the severity band fills in dark mode are extremely low-contrast (#2A1818 through #182A22 against #1A1A17 background) — the band transitions are barely distinguishable from the near-black background, making the clinical severity zones effectively invisible in dark theme
-      Legibility verdict: PASS for chrome text (no dark-on-dark failures); PARTIAL FAIL for severity bands — they are nearly invisible in dark mode, undermining the clinical interpretability of the chart in dark theme
+      Background: warm near-black #1A1A17 page.
+      Chrome: title, axis titles and tick labels in light ink, clearly readable; grid lines light and subtle; no dark-on-dark text.
+      Data: identical red and blue ear colours, circles now filled with the dark page colour; band fills are deeper dark green → teal → slate blue steps, distinguishable from each other; band labels in light soft ink readable. The blue dashed left-ear line and crosses have lower contrast against the mid-teal bands than in light but remain visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Legend
-          font (36) slightly below recommended 44 — small but legible at full resolution.
+        comment: Explicit font sizes (title 66, labels 44, band names 40); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text collisions; band names and key sit clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Ear lines and dots clearly visible in both themes. Severity bands
-          clearly visible in light render but nearly invisible in dark render due
-          to extremely low-contrast dark fill colors.
+        comment: Left-ear line and crosses low-contrast on mid-teal bands in the dark
+          render (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue ear distinction is CVD-safe (deuteranopia affects red-green,
-          not red-blue). Legend provides redundant text encoding.
+        comment: Ears separated by colour, marker shape and line dash, not colour
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas correct. Proportions good, no clipping, legend
-          at bottom well-organized.
+        comment: 2400x2400 square, square-ish plot box, title ~80% width (expected),
+          balanced axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x='Frequency (Hz)', y='Hearing Level (dB HL)', title correct per
-          spec.
+        comment: Frequency (Hz) and Hearing Level (dB HL) as the spec asks
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1 / #1A1A17). Semantic exception for
-          ear colors (red/blue) is justified by clinical convention. However, severity
-          band fills use custom hex values (e.g. #E8C8C8) not drawn from the Imprint
-          palette or semantic anchors — violates no-custom-hex rule.'
+        passed: true
+        comment: Semantic red/blue ear convention from Imprint; bands as imprint_seq
+          steps; correct backgrounds in both themes
     design_excellence:
       score: 11
       max: 20
@@ -127,87 +118,75 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: stacked fill technique is elegant, domain-appropriate
-          color choices, and dual-theme adaptation shows design care. Below higher
-          scores: lacks typography refinement, marker differentiation limited by pygal.'
+        comment: Theme-specific band tint depth (stronger first tint and sqrt steps
+          on dark) and bold title beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid is present and functional. Whitespace reasonable. Pygal chart
-          frame is present (no spine control). Legend at bottom columns is a good
-          layout choice.
+        comment: Grid redrawn above the fills, band names placed in band corners where
+          audiogram data rarely sits, key placed in the empty profound region
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 'Severity bands contextualise the audiogram reading clinically. The
-          4kHz notch pattern is the focal point, clearly visible. Visual hierarchy
-          works: data lines above bands.'
+        passed: false
+        comment: Data displayed as the spec describes; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type with inverted y-axis and log-spaced frequencies
-          (categorical workaround is valid since octave frequencies are log-spaced).
-          Missing: X (cross) markers for left ear — spec says this is a defining feature.
-          Circles used for both ears.'
+        comment: Clinical audiogram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All 6 severity bands present with correct dB HL boundaries. Y-axis
-          inverted. Legend present. Missing: X marker shape for left ear.'
+        comment: Inverted y, log x with octave ticks, O/X symbols, per-ear lines,
+          labelled full-width bands, legend, axis titles all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct frequencies 125-8000 Hz, correct dB HL range 0-120, bilateral
-          4kHz notch correctly shown.
+        comment: Every threshold at its frequency and dB value; y -10 to 120 covers
+          all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title correct: ''audiogram-clinical · python · pygal · anyplot.ai''.
-          Legend labels ''Right Ear (O)'' and ''Left Ear (X)'' reference the convention
-          even if marker shapes aren''t differentiated.'
+        comment: Mandated title; key maps O/red and X/blue to the ears
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Both ears shown, all 6 severity bands, high-frequency notch pattern,
-          inverted y-axis, legend. Minor gap: X marker shape missing.'
+        comment: Sloping loss, 4 kHz notch, inter-ear crossing, several bands crossed
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bilateral 4kHz noise-induced sensorineural notch is a classic, clinically
-          realistic pattern. Threshold values are plausible (normal low frequencies,
-          notch at 4k, partial recovery at 8k).
+        comment: Plausible noise-induced sensorineural loss, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '0-120 dB HL range covers the relevant clinical range. 7 standard
-          audiometric octave frequencies. Minor: spec suggests -10 dB HL as starting
-          point (not implemented, but 0 is common in practice).'
+        comment: Thresholds 10-65 dB HL at standard octave frequencies; band edges
+          25/40/55/70/90 read off the axis correctly
     code_quality:
       score: 10
       max: 10
@@ -217,33 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Clean linear script.
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal, Style, os, sys imported. sys used legitimately to prevent
-          path shadowing.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Stacked fill technique is well-commented and elegant. Band specs
-          in a clean data structure. Title font scaling formula present.
+        comment: Workarounds (grid series, X glyph strokes, band tints) have no available-call
+          replacement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: plot-{THEME}.png and .html, pygal 3 API
     library_mastery:
       score: 7
       max: 10
@@ -253,26 +231,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Style object, fill=True for bands, custom y_label_items
-          with label/value dicts, legend_at_bottom_columns. The negated-value approach
-          for inverted axis is the correct pygal workaround.
+        comment: pygal.XY with inverse_y_axis, xrange/range, dict x_labels, Style
+          tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Stacked fill layer composition for severity bands is a distinctive
-          pygal technique. Custom y_label_items dict format is pygal-specific. legend_at_bottom_columns
-          for organized multi-entry legend.
+        comment: print_labels value dicts for in-plot text, allow_interruptions with
+          None breaks, inline CSS injection per series, interactive HTML tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-08T22:31:48Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
+  - custom-legend
   - html-export
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+  - columns-config
+  dataprep:
+  - log-transform
+  styling:
+  - custom-colormap
+  - theme-adaptive

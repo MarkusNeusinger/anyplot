@@ -3256,17 +3256,18 @@ describe('AgentChatPage attachment', () => {
     expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
 
     // A table: no text in the box, a chip with its size, Enter (or the `↵` on a touch screen)
-    // to read it; example data waits, since the table is data at hand.
+    // to read it, the plot button to read and plot it; example data waits, since the table is
+    // data at hand.
     expect(pasteText(TABLE)).toBe(false);
     expect(message()).toHaveValue('');
     expect(chip()).toHaveAccessibleName('Attached table, 4 lines, 33 B');
     expect(chip()).toHaveTextContent('▤ table · 4 lines · 33 B');
     expect(screen.getByTestId('composer-status')).toHaveTextContent('Attached table, 4 lines');
-    expect(composerButtons()).toEqual(['.example_data() (inert)', '×', '.create_plot() → (inert)']);
+    expect(composerButtons()).toEqual(['.example_data() (inert)', '×', '.create_plot() →']);
     expect(screen.getByTestId('send-return')).not.toHaveAttribute('aria-disabled');
     expect(message()).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      'step 1 of 2 · the attached table is read when you press Enter ↵, with a note if you like'
+      'step 1 of 2 · .create_plot() reads the attached table and plots it · Enter ↵ only reads it'
     );
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
       as: 'data',
@@ -3563,7 +3564,7 @@ describe('AgentChatPage attachment', () => {
     expect(routed()).toHaveLength(4);
   });
 
-  it('holds the plot button back while a chip waits, and asks before a reload drops it', async () => {
+  it('lets the plot button take a chip along, and asks before a reload drops it', async () => {
     await openChat();
     const unload = () => {
       const event = new Event('beforeunload', { cancelable: true });
@@ -3580,11 +3581,357 @@ describe('AgentChatPage attachment', () => {
     pasteText(TABLE);
     expect(unload()).toBe(true);
     const create = screen.getByRole('button', { name: 'Create plot' });
-    expect(create).toHaveAttribute('aria-disabled', 'true');
+    expect(create).not.toHaveAttribute('aria-disabled');
     // The session holds data: the line says that the table replaces it, for good.
     expect(create).toHaveAccessibleDescription(
-      'step 1 of 2 · the attached table replaces your data (2 rows, no .undo()) when you press Enter ↵, with a note if you like'
+      'step 1 of 2 · the attached table replaces your data (2 rows, no .undo()) · .create_plot() reads and plots it, Enter ↵ only reads it'
     );
+  });
+
+  it('keeps the plot button inert while a chip is too large to send, as Enter is', async () => {
+    await openChat();
+    pasteText(`x,y\n${'1,2\n'.repeat(20_100)}`);
+    expect(chip()).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      'step 1 of 2 · the attached table is read when you press Enter ↵, with a note if you like'
+    );
+  });
+
+  describe('one click on the plot button', () => {
+    /** A summary that asks nothing: the reading is clean. */
+    const CLEAN = 'Read 3 rows: hours on x, score on y.';
+    /** Answers the turns `answer` names before the rest of the stub, held back as the stub holds one. */
+    function routeTurns(
+      answer: (body: { text?: string; action?: string }) => [string, unknown][] | undefined
+    ) {
+      const base = fetchMock.getMockImplementation() as (
+        input: string,
+        init?: RequestInit
+      ) => Promise<Response>;
+      fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+        if (pathOf(input).endsWith('/sessions/S1/messages') && init.method === 'POST') {
+          const events = answer(JSON.parse(String(init.body)));
+          if (events) {
+            const response = sse(events);
+            if (!holdNextTurn) return response;
+            holdNextTurn = false;
+            return new Promise<Response>(resolve => {
+              releaseTurn = () => resolve(response);
+            });
+          }
+        }
+        return base(input, init);
+      });
+    }
+    const cleanSummary = () =>
+      routeTurns(body =>
+        body.action === 'summarize_data'
+          ? [
+              ['message', { text: CLEAN }],
+              ['done', { llm_calls: 1 }],
+            ]
+          : undefined
+      );
+    const bindingPuts = () =>
+      agentCalls().filter(
+        ([input, init]) =>
+          pathOf(input).endsWith('/bindings') && (init as RequestInit | undefined)?.method === 'PUT'
+      );
+    const step = () => screen.getByTestId('data-step');
+    const clickCreate = async () => {
+      const create = screen.getByRole('button', { name: 'Create plot' });
+      await untilActive(create);
+      fireEvent.click(create);
+    };
+
+    it('reads the chip with its note, then confirms and plots, once', async () => {
+      routeTurns(body =>
+        body.text === 'make the bars blue'
+          ? [
+              ['message', { text: `${CLEAN} The blue bars are kept for the first plot.` }],
+              ['done', { llm_calls: 1, turn: 'kept' }],
+            ]
+          : undefined
+      );
+      await openChat();
+      pasteText(TABLE);
+      fireEvent.change(message(), { target: { value: 'make the bars blue' } });
+      await clickCreate();
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      await turnEnded();
+      // The note went with the table as its first turn; the page went on by itself, once.
+      expect(confirmAndTurns()).toEqual(['text: make the bars blue', 'confirm', 'create_plot']);
+      expect(datasetPosts()).toHaveLength(1);
+      expect(message()).toHaveValue('');
+      expect(lastAction()).toHaveTextContent(/^❯\.create_plot\(\)# matplotlib$/);
+      expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    });
+
+    it('says that it reads while the reading runs, and plots after it', async () => {
+      cleanSummary();
+      await openChat();
+      pasteText(TABLE);
+      holdNextTurn = true;
+      await clickCreate();
+      await waitFor(() => expect(releaseTurn).not.toBeNull());
+      expect(step()).toHaveTextContent(
+        'step 1 of 2 · reading your data · the plot follows by itself unless something needs a look'
+      );
+      expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute(
+        'aria-disabled',
+        'true'
+      );
+      act(() => releaseTurn?.());
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
+    });
+
+    it('reads a table typed into the box and plots it in the same click', async () => {
+      cleanSummary();
+      await openChat();
+      fireEvent.change(message(), { target: { value: TABLE } });
+      await clickCreate();
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
+      expect(String((datasetPosts()[0][1] as RequestInit).body)).toContain('hours,score');
+    });
+
+    it('stops at the card on a warning of the data, and the next click plots', async () => {
+      cleanSummary();
+      routeDataset((path, init) =>
+        path.endsWith('/dataset') && init.method === 'POST'
+          ? json(200, { ...pasted(), warnings: ["score: 1 cell read as missing ('n/a')"] })
+          : undefined
+      );
+      await openChat();
+      pasteText(TABLE);
+      await clickCreate();
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      await turnEnded();
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · 1 warning on the data · check above, then .create_plot()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
+      await clickCreate();
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
+    });
+
+    it("stops at the card on the assistant's question", async () => {
+      await openChat();
+      pasteText(TABLE);
+      await clickCreate();
+      expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+      await turnEnded();
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · the assistant asked a question · answer it in the box, or .create_plot()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
+      // A message is a change: the stop's words go, the step's own line is back.
+      sendFromComposer('what is the mean');
+      expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+      await turnEnded();
+      expect(step()).toHaveTextContent(
+        'step 1 of 2 · check the data and the bindings above, then .create_plot()'
+      );
+    });
+
+    it("stops at the card on a warning of the server's binding check", async () => {
+      cleanSummary();
+      const base = fetchMock.getMockImplementation() as (
+        input: string,
+        init?: RequestInit
+      ) => Promise<Response>;
+      fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+        if (pathOf(input).endsWith('/bindings') && init.method === 'PUT') {
+          return json(200, {
+            bindings: JSON.parse(String(init.body)),
+            complete: true,
+            missing_roles: [],
+            warnings: [
+              "x: column 'hours' holds 2 values in 3 rows; the plot draws one value per x, so rows with the same x need an aggregate first",
+            ],
+          });
+        }
+        return base(input, init);
+      });
+      await openChat();
+      pasteText(TABLE);
+      await clickCreate();
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      await turnEnded();
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · a warning on x · check it above, then .create_plot()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
+      // The card shows the line the stop points at: no bound column's own warning holds it.
+      expect(screen.getByTestId('binding-warning')).toHaveTextContent(
+        "x: column 'hours' holds 2 values in 3 rows"
+      );
+    });
+
+    it('plots nothing when the user opened .change() on the card while the reading ran', async () => {
+      cleanSummary();
+      await openChat();
+      pasteText(TABLE);
+      holdNextTurn = true;
+      await clickCreate();
+      await waitFor(() => expect(releaseTurn).not.toBeNull());
+      fireEvent.click(await screen.findByRole('button', { name: 'Change the bindings' }));
+      expect(step()).not.toHaveTextContent('reading your data');
+      act(() => releaseTurn?.());
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      await turnEnded();
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
+    });
+
+    it('asks the binding check again after the reading changed the data, then plots', async () => {
+      routeTurns(body =>
+        body.text === 'score in prozent'
+          ? [
+              ['message', { text: 'I read score as numbers.' }],
+              [
+                'done',
+                {
+                  llm_calls: 2,
+                  bindings: PREPARED.bindings,
+                  data_confirmed: false,
+                  dataset: changedVersion(PREPARED),
+                },
+              ],
+            ]
+          : undefined
+      );
+      await openChat();
+      pasteText(TABLE);
+      fireEvent.change(message(), { target: { value: 'score in prozent' } });
+      await clickCreate();
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      // The parse's own check, then one for the version the turn made.
+      expect(bindingPuts()).toHaveLength(2);
+      expect(confirmAndTurns()).toEqual(['text: score in prozent', 'confirm', 'create_plot']);
+    });
+
+    it('stops at the card when the reading ends in a refusal or an error', async () => {
+      routeTurns(body =>
+        body.text === 'write me a poem'
+          ? [
+              ['refusal', { code: 'out_of_scope', text: 'I only work on this plot.' }],
+              ['done', { llm_calls: 1 }],
+            ]
+          : body.text === 'break it'
+            ? [
+                ['error', { code: 'internal', ref: 'r-1' }],
+                ['done', { llm_calls: 1 }],
+              ]
+            : body.action === 'summarize_data'
+              ? [
+                  ['message', { text: CLEAN }],
+                  ['done', { llm_calls: 1 }],
+                ]
+              : undefined
+      );
+      await openChat();
+      pasteText(TABLE);
+      fireEvent.change(message(), { target: { value: 'write me a poem' } });
+      await clickCreate();
+      // The refused note's data still gets its summary, and the chain stops after it.
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      await turnEnded();
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · the reading ended in a refusal · see above, then .create_plot()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual(['text: write me a poem', 'summarize_data']);
+
+      pasteText(TABLE);
+      fireEvent.change(message(), { target: { value: 'break it' } });
+      await clickCreate();
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · the reading ended in an error · see above, then .create_plot()'
+        )
+      );
+      expect(confirmAndTurns()).not.toContain('confirm');
+    });
+
+    it('plots nothing when the user typed while the reading ran', async () => {
+      cleanSummary();
+      await openChat();
+      pasteText(TABLE);
+      holdNextTurn = true;
+      await clickCreate();
+      await waitFor(() => expect(releaseTurn).not.toBeNull());
+      fireEvent.change(message(), { target: { value: 'log scale' } });
+      expect(step()).not.toHaveTextContent('reading your data');
+      act(() => releaseTurn?.());
+      await turnEnded();
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
+      expect(message()).toHaveValue('log scale');
+      // The next click is the user's, with the text as the plot's request.
+      await clickCreate();
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'text: log scale']);
+    });
+
+    it('names new data after a plot, and plots the new data in one click', async () => {
+      await openChat();
+      await parseAndPlot();
+      cleanSummary();
+      pasteText(TABLE);
+      const button = screen.getByRole('button', { name: 'Plot the new data' });
+      expect(button).not.toHaveAttribute('aria-disabled');
+      fireEvent.click(button);
+      await waitFor(() =>
+        expect(lastAction()).toHaveTextContent(/^❯plot the new data# matplotlib$/)
+      );
+      await turnEnded();
+      expect(confirmAndTurns()).toEqual([
+        'summarize_data',
+        'confirm',
+        'create_plot',
+        'summarize_data',
+        'confirm',
+        'create_plot',
+      ]);
+    });
+
+    it('ends at a table read from text, which stores nothing, with its decision on the line', async () => {
+      await openChat();
+      pasteText(FREE_TEXT);
+      await clickCreate();
+      await screen.findByTestId('transcription-card');
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · decide on the table first: .use() or .discard()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual([]);
+    });
+
+    it('leaves Enter as it was: it reads the chip and plots nothing', async () => {
+      cleanSummary();
+      await openChat();
+      pasteText(TABLE);
+      fireEvent.keyDown(message(), { key: 'Enter' });
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      await turnEnded();
+      expect(confirmAndTurns()).toEqual(['summarize_data']);
+      expect(step()).toHaveTextContent(
+        'step 1 of 2 · check the data and the bindings above, then .create_plot()'
+      );
+    });
   });
 
   it('keeps the attached table out of the browser storage', async () => {
