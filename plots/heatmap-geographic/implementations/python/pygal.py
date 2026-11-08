@@ -4,450 +4,226 @@ Library: pygal 3.1.0 | Python 3.13.13
 Quality: 73/100 | Updated: 2026-05-19
 """
 
-import sys
+import os
 
 import numpy as np
+import pandas as pd
+import pygal
+from pygal.style import Style
+from scipy.stats import gaussian_kde
 
 
-# Remove current directory from path to avoid shadowing the pygal package
-_cwd = sys.path[0] if sys.path and sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-from pygal.graph.graph import Graph  # noqa: E402
-from pygal.style import Style  # noqa: E402
+# imprint_seq, the sequential Imprint colormap: brand green (low) to blue (high)
+SEQ_LOW, SEQ_HIGH = "#009E73", "#4467A3"
 
+# Constants: the basemap, California's outline as (longitude, latitude), offline and simplified;
+# clockwise from the Oregon border at the coast, down the coast, then the Mexican, Arizona and Nevada borders
+CALIFORNIA = [
+    (-124.21, 42.00), (-124.20, 41.75), (-124.08, 41.20), (-124.17, 40.80), (-124.41, 40.44),
+    (-124.05, 40.00), (-123.82, 39.60), (-123.74, 38.95), (-123.40, 38.55), (-123.02, 38.00),
+    (-122.51, 37.78), (-122.50, 37.50), (-122.36, 37.15), (-122.02, 36.96), (-121.89, 36.60),
+    (-121.92, 36.31), (-121.50, 35.90), (-121.28, 35.66), (-120.87, 35.37), (-120.64, 34.90),
+    (-120.47, 34.45), (-119.70, 34.41), (-119.23, 34.15), (-118.80, 34.03), (-118.50, 34.02),
+    (-118.40, 33.74), (-118.10, 33.74), (-117.78, 33.54), (-117.38, 33.20), (-117.27, 32.85),
+    (-117.12, 32.53), (-114.72, 32.72), (-114.47, 33.00), (-114.72, 33.40), (-114.52, 33.95),
+    (-114.13, 34.30), (-114.63, 35.00), (-120.00, 39.00), (-120.00, 42.00),
+]  # fmt: skip
+LEVELS = np.linspace(0.08, 0.9, 14)  # density levels as shares of the peak, outermost first
 
-sys.path.insert(0, _cwd)
+# Columns: set these to your table's column names
+LATITUDE = "Latitude (°N)"  # role: latitude
+LONGITUDE = "Longitude (°E)"  # role: longitude
+PM25 = "PM2.5 (µg/m³)"  # role: value
 
-
-class GeoHeatmap(Graph):
-    """Custom Geographic Heatmap for pygal - displays spatial density as colored grid."""
-
-    def __init__(self, *args, **kwargs):
-        self.heatmap_data = kwargs.pop("heatmap_data", None)
-        self.lat_range = kwargs.pop("lat_range", (-90, 90))
-        self.lon_range = kwargs.pop("lon_range", (-180, 180))
-        self.colormap = kwargs.pop("colormap", ["#ffffb2", "#fecc5c", "#fd8d3c", "#f03b20", "#bd0026"])
-        self.coastlines = kwargs.pop("coastlines", [])
-        self.point_data = kwargs.pop("point_data", None)
-        super().__init__(*args, **kwargs)
-
-    def _interpolate_color(self, value, min_val, max_val):
-        """Interpolate color for smooth gradient."""
-        if max_val == min_val:
-            return self.colormap[-1]
-
-        normalized = (value - min_val) / (max_val - min_val)
-        normalized = max(0, min(1, normalized))
-
-        pos = normalized * (len(self.colormap) - 1)
-        idx1 = int(pos)
-        idx2 = min(idx1 + 1, len(self.colormap) - 1)
-        frac = pos - idx1
-
-        c1 = self.colormap[idx1]
-        c2 = self.colormap[idx2]
-
-        r1, g1, b1 = int(c1[1:3], 16), int(c1[3:5], 16), int(c1[5:7], 16)
-        r2, g2, b2 = int(c2[1:3], 16), int(c2[3:5], 16), int(c2[5:7], 16)
-
-        r = int(r1 + (r2 - r1) * frac)
-        g = int(g1 + (g2 - g1) * frac)
-        b = int(b1 + (b2 - b1) * frac)
-
-        return f"#{r:02x}{g:02x}{b:02x}"
-
-    def _plot(self):
-        """Draw the geographic heatmap."""
-        if self.heatmap_data is None:
-            return
-
-        heatmap = self.heatmap_data
-        n_rows, n_cols = heatmap.shape
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        # Layout margins
-        label_margin_left = 180
-        label_margin_right = 280
-        label_margin_top = 60
-        label_margin_bottom = 180
-
-        available_width = plot_width - label_margin_left - label_margin_right
-        available_height = plot_height - label_margin_top - label_margin_bottom
-
-        # Calculate cell size
-        cell_width = available_width / n_cols
-        cell_height = available_height / n_rows
-
-        x_offset = self.view.x(0) + label_margin_left
-        y_offset = self.view.y(n_rows) + label_margin_top
-
-        # Create group for the heatmap
-        plot_node = self.nodes["plot"]
-        heatmap_group = self.svg.node(plot_node, class_="geo-heatmap")
-
-        # Draw background rectangle for plot area
-        bg_rect = self.svg.node(
-            heatmap_group, "rect", x=x_offset, y=y_offset, width=available_width, height=available_height
-        )
-        bg_rect.set("fill", "#e8f4f8")
-        bg_rect.set("stroke", "#333333")
-        bg_rect.set("stroke-width", "2")
-
-        # Draw grid lines
-        lat_min, lat_max = self.lat_range
-        lon_min, lon_max = self.lon_range
-
-        def lon_to_x(lon):
-            return x_offset + (lon - lon_min) / (lon_max - lon_min) * available_width
-
-        def lat_to_y(lat):
-            return y_offset + (1 - (lat - lat_min) / (lat_max - lat_min)) * available_height
-
-        # Vertical grid lines (longitude)
-        n_lon_lines = 7
-        for i in range(n_lon_lines):
-            lon = lon_min + (lon_max - lon_min) * i / (n_lon_lines - 1)
-            x = lon_to_x(lon)
-            line = self.svg.node(heatmap_group, "line", x1=x, y1=y_offset, x2=x, y2=y_offset + available_height)
-            line.set("stroke", "#cccccc")
-            line.set("stroke-width", "1")
-            line.set("stroke-opacity", "0.5")
-
-        # Horizontal grid lines (latitude)
-        n_lat_lines = 7
-        for i in range(n_lat_lines):
-            lat = lat_min + (lat_max - lat_min) * i / (n_lat_lines - 1)
-            y = lat_to_y(lat)
-            line = self.svg.node(heatmap_group, "line", x1=x_offset, y1=y, x2=x_offset + available_width, y2=y)
-            line.set("stroke", "#cccccc")
-            line.set("stroke-width", "1")
-            line.set("stroke-opacity", "0.5")
-
-        # Draw heatmap cells
-        all_values = heatmap.flatten()
-        positive_values = all_values[all_values > 0]
-        if len(positive_values) > 0:
-            min_val = positive_values.min()
-            max_val = positive_values.max()
-        else:
-            min_val, max_val = 0, 1
-
-        for i in range(n_rows):
-            for j in range(n_cols):
-                value = heatmap[i, j]
-                if value <= 0:
-                    continue
-
-                color = self._interpolate_color(value, min_val, max_val)
-                # Variable opacity based on value intensity for basemap visibility
-                opacity = 0.4 + 0.45 * (value - min_val) / (max_val - min_val) if max_val > min_val else 0.65
-
-                x = x_offset + j * cell_width
-                y = y_offset + (n_rows - 1 - i) * cell_height
-
-                rect = self.svg.node(heatmap_group, "rect", x=x, y=y, width=cell_width + 0.5, height=cell_height + 0.5)
-                rect.set("fill", color)
-                rect.set("fill-opacity", str(opacity))
-                rect.set("stroke", "none")
-
-        # Draw coastlines
-        for coastline in self.coastlines:
-            if len(coastline) < 2:
-                continue
-            points = " ".join([f"{lon_to_x(lon)},{lat_to_y(lat)}" for lon, lat in coastline])
-            polyline = self.svg.node(heatmap_group, "polyline", points=points)
-            polyline.set("fill", "none")
-            polyline.set("stroke", "#333333")
-            polyline.set("stroke-width", "3")
-            polyline.set("stroke-opacity", "0.7")
-
-        # Draw scatter points with improved visibility (larger radius for better visibility)
-        if self.point_data is not None:
-            for lon, lat in self.point_data:
-                cx = lon_to_x(lon)
-                cy = lat_to_y(lat)
-                circle = self.svg.node(heatmap_group, "circle", cx=cx, cy=cy, r=12)
-                circle.set("fill", "#306998")
-                circle.set("fill-opacity", "0.7")
-                circle.set("stroke", "#1a3a5c")
-                circle.set("stroke-width", "1.5")
-                circle.set("stroke-opacity", "0.9")
-
-        # Draw axis labels
-        axis_font_size = 48
-        tick_font_size = 36
-
-        # X-axis label
-        text_node = self.svg.node(
-            heatmap_group, "text", x=x_offset + available_width / 2, y=y_offset + available_height + 130
-        )
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{axis_font_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Longitude (°)"
-
-        # Y-axis label
-        text_node = self.svg.node(heatmap_group, "text", x=x_offset - 100, y=y_offset + available_height / 2)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{axis_font_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.set("transform", f"rotate(-90, {x_offset - 100}, {y_offset + available_height / 2})")
-        text_node.text = "Latitude (°)"
-
-        # X-axis ticks
-        n_x_ticks = 6
-        for i in range(n_x_ticks):
-            lon = lon_min + (lon_max - lon_min) * i / (n_x_ticks - 1)
-            x = lon_to_x(lon)
-            text_node = self.svg.node(heatmap_group, "text", x=x, y=y_offset + available_height + 50)
-            text_node.set("text-anchor", "middle")
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
-            text_node.text = f"{lon:.0f}"
-
-        # Y-axis ticks
-        n_y_ticks = 6
-        for i in range(n_y_ticks):
-            lat = lat_min + (lat_max - lat_min) * i / (n_y_ticks - 1)
-            y = lat_to_y(lat)
-            text_node = self.svg.node(heatmap_group, "text", x=x_offset - 20, y=y + tick_font_size * 0.35)
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{tick_font_size}px;font-family:sans-serif")
-            text_node.text = f"{lat:.0f}"
-
-        # Draw colorbar on the right
-        colorbar_width = 50
-        colorbar_height = available_height * 0.7
-        colorbar_x = x_offset + available_width + 60
-        colorbar_y = y_offset + (available_height - colorbar_height) / 2
-
-        # Draw gradient colorbar
-        n_segments = 50
-        segment_height = colorbar_height / n_segments
-        for i in range(n_segments):
-            seg_value = min_val + (max_val - min_val) * (n_segments - 1 - i) / (n_segments - 1)
-            seg_color = self._interpolate_color(seg_value, min_val, max_val)
-            seg_y = colorbar_y + i * segment_height
-
-            self.svg.node(
-                heatmap_group,
-                "rect",
-                x=colorbar_x,
-                y=seg_y,
-                width=colorbar_width,
-                height=segment_height + 1,
-                fill=seg_color,
-            )
-
-        # Colorbar border
-        self.svg.node(
-            heatmap_group,
-            "rect",
-            x=colorbar_x,
-            y=colorbar_y,
-            width=colorbar_width,
-            height=colorbar_height,
-            fill="none",
-            stroke="#333333",
-        )
-
-        # Colorbar labels with 5 tick values
-        cb_label_size = 36
-        n_cb_ticks = 5
-        for i in range(n_cb_ticks):
-            tick_value = max_val - (max_val - min_val) * i / (n_cb_ticks - 1)
-            tick_y = colorbar_y + colorbar_height * i / (n_cb_ticks - 1)
-            text_node = self.svg.node(
-                heatmap_group, "text", x=colorbar_x + colorbar_width + 15, y=tick_y + cb_label_size * 0.35
-            )
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-            text_node.text = f"{tick_value:.1f}"
-
-        # Colorbar title
-        cb_title_size = 38
-        cb_title_x = colorbar_x + colorbar_width / 2
-        cb_title_y = colorbar_y - 30
-        text_node = self.svg.node(heatmap_group, "text", x=cb_title_x, y=cb_title_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{cb_title_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Density"
-
-        # Legend for scatter points (below colorbar)
-        legend_y = colorbar_y + colorbar_height + 60
-        legend_x = colorbar_x
-
-        # Legend marker (circle matching scatter points)
-        legend_circle = self.svg.node(heatmap_group, "circle", cx=legend_x + 12, cy=legend_y, r=12)
-        legend_circle.set("fill", "#306998")
-        legend_circle.set("fill-opacity", "0.7")
-        legend_circle.set("stroke", "#1a3a5c")
-        legend_circle.set("stroke-width", "1.5")
-
-        # Legend text
-        legend_text = self.svg.node(heatmap_group, "text", x=legend_x + 35, y=legend_y + 10)
-        legend_text.set("fill", "#333333")
-        legend_text.set("style", f"font-size:{cb_label_size}px;font-family:sans-serif")
-        legend_text.text = "Station"
-
-    def _compute(self):
-        """Compute the box for rendering."""
-        n_rows = self.heatmap_data.shape[0] if self.heatmap_data is not None else 1
-        n_cols = self.heatmap_data.shape[1] if self.heatmap_data is not None else 1
-        self._box.xmin = 0
-        self._box.xmax = n_cols
-        self._box.ymin = 0
-        self._box.ymax = n_rows
-
-
-# Data: Simulated environmental monitoring stations across California
+# Data: replace this block with your own table, for example df = pd.read_csv("stations.csv")
+# Air-quality monitoring stations around Sacramento, the San Joaquin Valley and Los Angeles, plus
+# scattered rural sites; draws outside the state outline are rejected, so every station is on land
 np.random.seed(42)
+lon = np.concatenate([
+    np.random.normal(-121.4, 0.45, 220), np.random.normal(-119.8, 0.5, 220),
+    np.random.normal(-118.0, 0.55, 220), np.random.uniform(-124.2, -114.2, 240),
+])  # fmt: skip
+lat = np.concatenate([
+    np.random.normal(38.6, 0.35, 220), np.random.normal(36.6, 0.45, 220),
+    np.random.normal(34.1, 0.25, 220), np.random.uniform(32.6, 41.9, 240),
+])  # fmt: skip
+pm25 = np.concatenate([
+    np.random.lognormal(2.4, 0.35, 220), np.random.lognormal(2.8, 0.35, 220),
+    np.random.lognormal(2.7, 0.35, 220), np.random.lognormal(1.9, 0.4, 240),
+])  # fmt: skip
+on_land = np.zeros(len(lon), dtype=bool)
+for (x1, y1), (x2, y2) in zip(CALIFORNIA, CALIFORNIA[1:] + CALIFORNIA[:1], strict=True):  # ray casting
+    on_land ^= ((y1 > lat) != (y2 > lat)) & (lon < x1 + (lat - y1) * (x2 - x1) / (y2 - y1 + 1e-12))
+df = pd.DataFrame({LATITUDE: lat[on_land], LONGITUDE: lon[on_land], PM25: pm25[on_land].round(1)})
 
-n_points = 500
-
-# Create clusters representing different monitoring regions
-# Central California coast cluster
-coast_lat = np.random.normal(36.5, 0.8, n_points // 3)
-coast_lon = np.random.normal(-121.5, 0.5, n_points // 3)
-
-# Southern California cluster
-socal_lat = np.random.normal(34.0, 0.6, n_points // 3)
-socal_lon = np.random.normal(-118.0, 0.7, n_points // 3)
-
-# Northern California cluster
-norcal_lat = np.random.normal(38.5, 0.5, n_points // 3 + n_points % 3)
-norcal_lon = np.random.normal(-122.5, 0.4, n_points // 3 + n_points % 3)
-
-# Combine all clusters
-latitudes = np.concatenate([coast_lat, socal_lat, norcal_lat])
-longitudes = np.concatenate([coast_lon, socal_lon, norcal_lon])
-
-# Measurement values (air quality index readings)
-values = np.random.exponential(scale=50, size=len(latitudes)) + 20
-
-# Map boundaries for California
-lat_min, lat_max = 32.5, 42.0
-lon_min, lon_max = -125.0, -114.0
-
-# Create 2D histogram for density estimation
-grid_resolution = 80
-lat_bins = np.linspace(lat_min, lat_max, grid_resolution)
-lon_bins = np.linspace(lon_min, lon_max, grid_resolution)
-
-heatmap, lat_edges, lon_edges = np.histogram2d(
-    latitudes, longitudes, bins=[lat_bins, lon_bins], weights=values, density=False
+# Plot: a PM2.5-weighted kernel density on a grid over the map frame
+stations = df[[LONGITUDE, LATITUDE, PM25]].dropna().astype(float)
+lat_lo, lat_hi = min(y for _, y in CALIFORNIA) - 0.5, max(y for _, y in CALIFORNIA) + 0.5
+shrink = np.cos(np.radians((lat_lo + lat_hi) / 2))  # a degree of longitude is this much shorter than one of latitude
+# equal distances at equal lengths: the plot area on this square canvas is about as wide as it is tall
+lon_span = (lat_hi - lat_lo) * 0.98 / shrink
+lon_mid = (min(x for x, _ in CALIFORNIA) + max(x for x, _ in CALIFORNIA)) / 2 - 0.6  # room for the colour bar
+lon_lo, lon_hi = lon_mid - lon_span / 2, lon_mid + lon_span / 2
+gx = np.linspace(lon_lo, lon_hi, 170)
+gy = np.linspace(lat_lo, lat_hi, 170)
+kde = gaussian_kde(
+    np.vstack([stations[LONGITUDE] * shrink, stations[LATITUDE]]), weights=stations[PM25], bw_method=0.19
 )
+grid_x, grid_y = np.meshgrid(gx * shrink, gy)
+# density[row, col] is the estimate at (gx[col], gy[row])
+density = kde(np.vstack([grid_x.ravel(), grid_y.ravel()])).reshape(grid_x.shape)
+peak = density.max()
 
-# Apply Gaussian smoothing for continuous appearance
-sigma = 2
-kernel_size = int(6 * sigma + 1)
-if kernel_size % 2 == 0:
-    kernel_size += 1
-kernel_x = np.arange(kernel_size) - kernel_size // 2
-kernel_1d = np.exp(-(kernel_x**2) / (2 * sigma**2))
-kernel_1d = kernel_1d / kernel_1d.sum()
+# Marching squares: each level's crossings sit on grid edges; chaining them gives closed rings
+rings_by_level = []
+for share in LEVELS:
+    level = share * peak
+    above = density >= level
+    points, neighbors = {}, {}
+    for r in range(len(gy) - 1):
+        for c in range(len(gx) - 1):
+            corners = [above[r, c], above[r, c + 1], above[r + 1, c + 1], above[r + 1, c]]  # BL, BR, TR, TL
+            if all(corners) or not any(corners):
+                continue
+            # cell edges in order bottom, right, top, left: (key, end-a value, end-b value, end-a xy, end-b xy)
+            edges = [
+                (("h", r, c), density[r, c], density[r, c + 1], (gx[c], gy[r]), (gx[c + 1], gy[r])),
+                (("v", r, c + 1), density[r, c + 1], density[r + 1, c + 1], (gx[c + 1], gy[r]), (gx[c + 1], gy[r + 1])),
+                (("h", r + 1, c), density[r + 1, c], density[r + 1, c + 1], (gx[c], gy[r + 1]), (gx[c + 1], gy[r + 1])),
+                (("v", r, c), density[r, c], density[r + 1, c], (gx[c], gy[r]), (gx[c], gy[r + 1])),
+            ]
+            crossed = []
+            for key, za, zb, (xa, ya), (xb, yb) in edges:
+                if (za >= level) != (zb >= level):
+                    t = (level - za) / (zb - za)
+                    points[key] = (xa + t * (xb - xa), ya + t * (yb - ya))
+                    crossed.append(key)
+            if len(crossed) == 2:
+                pairs = [(crossed[0], crossed[1])]
+            else:  # saddle: the cell centre decides which corners stay connected
+                centre_above = density[r : r + 2, c : c + 2].mean() >= level
+                if corners[1] != centre_above:
+                    pairs = [(crossed[0], crossed[1]), (crossed[2], crossed[3])]
+                else:
+                    pairs = [(crossed[3], crossed[0]), (crossed[1], crossed[2])]
+            for a, b in pairs:
+                neighbors.setdefault(a, []).append(b)
+                neighbors.setdefault(b, []).append(a)
+    rings, seen = [], set()
+    for start in neighbors:
+        if start in seen:
+            continue
+        ring, previous, current = [], None, start
+        while current is not None:
+            seen.add(current)
+            ring.append(points[current])
+            following = [key for key in neighbors[current] if key != previous and key not in seen]
+            previous, current = current, (following[0] if following else None)
+        if start in neighbors[previous]:
+            ring.append(points[start])
+        rings.append(ring)
+    rings_by_level.append(rings)
 
-heatmap_smooth = np.apply_along_axis(lambda row: np.convolve(row, kernel_1d, mode="same"), axis=0, arr=heatmap)
-heatmap_smooth = np.apply_along_axis(lambda col: np.convolve(col, kernel_1d, mode="same"), axis=1, arr=heatmap_smooth)
+# Colour bar in the open Pacific: band k is covered by k translucent layers, exactly like the map
+bar_x0, bar_x1 = lon_lo + 0.35, lon_lo + 0.75
+bar_y0, bar_y1 = lat_lo + 0.9, lat_lo + 4.4
+bar_step = (bar_y1 - bar_y0) / len(LEVELS)
+level_colors = []
+for t in np.linspace(0, 1, len(LEVELS)):
+    rgb = [round(int(SEQ_LOW[k : k + 2], 16) * (1 - t) + int(SEQ_HIGH[k : k + 2], 16) * t) for k in (1, 3, 5)]
+    level_colors.append(f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}")
 
-# California coastline approximation
-coast_lons = [
-    -124.4,
-    -124.2,
-    -123.8,
-    -122.4,
-    -122.0,
-    -121.5,
-    -121.0,
-    -120.5,
-    -120.0,
-    -119.5,
-    -119.0,
-    -118.5,
-    -118.0,
-    -117.5,
-    -117.2,
-    -117.0,
-    -117.1,
-    -117.3,
-]
-coast_lats = [
-    42.0,
-    40.5,
-    39.0,
-    37.8,
-    37.5,
-    36.8,
-    36.5,
-    35.5,
-    35.0,
-    34.5,
-    34.2,
-    34.0,
-    33.8,
-    33.2,
-    33.0,
-    32.7,
-    32.5,
-    32.5,
-]
-coastline_west = list(zip(coast_lons, coast_lats, strict=True))
-
-east_lons = [-117.3, -117.0, -116.5, -115.5, -114.6, -114.6, -120.0, -120.0, -121.0, -122.0, -123.0, -124.2, -124.4]
-east_lats = [32.5, 33.0, 33.5, 34.0, 34.8, 36.0, 39.0, 40.0, 41.0, 41.5, 42.0, 42.0, 42.0]
-coastline_east = list(zip(east_lons, east_lats, strict=True))
-
-coastlines = [coastline_west, coastline_east]
-
-# Point data for scatter overlay
-point_data = list(zip(longitudes, latitudes, strict=True))
-
-# YlOrRd colormap
-colormap = ["#ffffb2", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]
-
-# Custom style
 custom_style = Style(
-    background="white",
-    plot_background="#e8f4f8",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),
-    title_font_size=64,
-    legend_font_size=40,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    # series order: the heat levels, the state outline, the stations, the colour-bar captions
+    colors=(*level_colors, INK, INK_SOFT, INK),
+    value_colors=(INK,) * (len(LEVELS) + 3),
+    guide_stroke_color=RULE,
+    major_guide_stroke_color=RULE,
+    guide_stroke_dasharray="none",
+    major_guide_stroke_dasharray="none",
+    title_font_size=60,
     label_font_size=42,
-    value_font_size=36,
-    font_family="sans-serif",
+    major_label_font_size=42,
+    legend_font_size=42,
+    value_font_size=0,
+    value_label_font_size=38,
+    opacity=0.17,
+    opacity_hover=0.25,
+    stroke_opacity=1,
+    stroke_opacity_hover=1,
+    stroke_width=4,
 )
+level_outlines = ", ".join(f".serie-{i} .line" for i in range(len(LEVELS)))  # the heat fills draw no outline
 
-# Create heatmap chart
-chart = GeoHeatmap(
-    width=4800,
-    height=2700,
+chart = pygal.XY(
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="heatmap-geographic · pygal · pyplots.ai",
-    heatmap_data=heatmap_smooth,
-    lat_range=(lat_min, lat_max),
-    lon_range=(lon_min, lon_max),
-    colormap=colormap,
-    coastlines=coastlines,
-    point_data=point_data,
+    title="heatmap-geographic · python · pygal · anyplot.ai",
+    x_title="Longitude",
+    y_title="Latitude",
+    xrange=(lon_lo, lon_hi),
+    range=(lat_lo, lat_hi),
+    zero=lat_lo,
+    x_labels=list(range(int(np.ceil(lon_lo / 2) * 2), int(lon_hi) + 1, 2)),
+    y_labels=list(range(int(np.ceil(lat_lo / 2) * 2), int(lat_hi) + 1, 2)),
+    x_value_formatter=lambda degrees: f"{abs(degrees):g}°W" if degrees < 0 else f"{degrees:g}°E",
+    value_formatter=lambda degrees: f"{degrees:g}°N" if degrees >= 0 else f"{abs(degrees):g}°S",
+    show_x_guides=True,
+    show_y_guides=True,
+    show_dots=False,
+    allow_interruptions=True,
+    print_labels=True,
     show_legend=False,
-    margin=100,
-    margin_top=160,
-    margin_bottom=80,
-    show_x_labels=False,
-    show_y_labels=False,
+    spacing=24,
+    margin=40,
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        f"inline:{level_outlines} {{ stroke-opacity: 0 !important; }}",
+        f"inline:.serie-{len(LEVELS) + 1} .dot {{ fill-opacity: 0.55 !important; }}",
+    ],
 )
 
-# Add a dummy series to trigger _plot
-chart.add("", [0])
+# The heat layer: one translucent fill per level, deepening towards each hot spot; the fill path
+# starts and ends on pygal's zero line, so the series are anchored at the frame's bottom-left corner
+corner = (lon_lo, lat_lo)
+for k, rings in enumerate(rings_by_level):
+    bar = [(bar_x0, bar_y0 + k * bar_step), (bar_x1, bar_y0 + k * bar_step), (bar_x1, bar_y1), (bar_x0, bar_y1)]
+    values = [corner, (None, None), *bar, bar[0], (None, None)]
+    for ring in rings:
+        values += [*ring, (None, None)]
+    values.append(corner)
+    chart.add(None, values, fill=True)
+chart.add("California coastline and borders", [*CALIFORNIA, CALIFORNIA[0]])
+chart.add(
+    "Monitoring station",
+    list(zip(stations[LONGITUDE], stations[LATITUDE], strict=True)),
+    stroke=False,
+    show_dots=True,
+    dots_size=4,
+)
+captions = [
+    {"value": (bar_x0, bar_y1 + 0.8), "label": "PM2.5-weighted"},
+    {"value": (bar_x0, bar_y1 + 0.5), "label": "density of the"},
+    {"value": (bar_x0, bar_y1 + 0.2), "label": "stations (dots)"},
+    {"value": (bar_x1 + 0.12, bar_y1 - 0.12), "label": "high"},
+    {"value": (bar_x1 + 0.12, bar_y0), "label": "low"},
+]
+chart.add(None, captions, stroke=False, show_dots=True, dots_size=0)
 
-# Save PNG output only
-chart.render_to_png("plot.png")
+# Save
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
