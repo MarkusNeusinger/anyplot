@@ -2,148 +2,134 @@ library: muix
 language: javascript
 specification_id: spc-xbar-r
 created: '2026-06-20T13:23:21Z'
-updated: '2026-06-20T13:31:10Z'
-generated_by: claude-sonnet
-workflow_run: 27872128551
+updated: '2026-11-08T05:43:10Z'
+generated_by: claude-opus-5-5
+adopted_from: d3b1927eea890e19103748cedc88b117ed795ac1 (d3b1927eea890e19103748cedc88b117ed795ac1)
+workflow_run: 42451584556
 issue: 4551
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: X-bar and R panels stacked vertically, all required elements
-    present (UCL/LCL dashed, center line solid, ±2σ warning limits, OOC highlighting
-    with larger markers and stroke)'
-  - 'Semantic Imprint palette use: brand green #009E73 for in-control data, matte
-    red #AE3030 for out-of-control events, amber #DDCC77 for warning limits — each
-    role matches the palette''s intended semantics'
-  - 'Advanced MUI X composition: uses ChartContainer + LinePlot + ChartsReferenceLine
-    + useDrawingArea hook for custom SVG OOC marker overlay — idiomatic and distinctive
-    library patterns'
-  - 'Correct SPC domain: standard constants A2=0.577, D3=0, D4=2.115 for n=5 subgroups;
-    realistic CNC shaft diameter values (25mm nominal, ±0.07mm UCL); 4 OOC points
-    across both charts'
-  - 'Perfect theme adaptation: light (#FAF8F1) and dark (#1A1A17) backgrounds correct;
-    axis chrome handled by MUI X ThemeProvider; data colors identical in both renders'
-  - 'Distinct reference line styles: solid for center (X̄, R̄), heavy dashed for UCL/LCL,
-    lighter dashed for warning limits — clear visual hierarchy among SPC lines'
+  - 'Composed ChartsContainer pair: X-bar panel on top with its x axis hidden (position:
+    "none") and the R panel below on the same linear sample domain, so every sample
+    lines up vertically across both panels'
+  - 'Control limits computed from the data with the standard constants (A2 = 0.577,
+    D4 = 2.114, D3 = 0 for n = 5): CL 25.000 / UCL 25.070 / LCL 24.930 and R-bar 0.122
+    / UCL 0.257 / LCL 0.000 match an independent recomputation'
+  - 'Clear limit hierarchy: control limits dashed in full ink with bold right-gutter
+    labels, warning limits thinner short-dash in inkSoft at reduced opacity, center
+    line solid — all readable in both themes'
+  - Out-of-control points (samples 8, 16, 22 on X-bar; 12 on R) are drawn larger and
+    in the Imprint red with a page-colored ring, so the signal does not rely on hue
+    alone
+  - Custom ControlLayer uses the library's useXScale/useYScale/useDrawingArea hooks
+    to place markers and gutter labels exactly on the chart's scales; ChartsReferenceLine
+    draws the limits natively
+  - Theme tokens threaded through every element (pageBg, ink, inkSoft, grid); data
+    colors identical between light and dark
   weaknesses:
-  - Warning limit labels (+2σ, -2σ) use amber (#DDCC77) at 12px CSS — contrast against
-    cream background (#FAF8F1) is approximately 1.8:1, below accessible thresholds;
-    at mobile scale (~400px width) these labels may become illegible
-  - Design excellence is functional but utilitarian — no OOC event callouts/annotations
-    to aid interpretation, default MUI X grid lines retained without explicit opacity
-    control, no inter-panel divider to visually anchor the shared axis region
+  - 'Suggestion: the shared sample axis could carry a faint tick row under the X-bar
+    panel too, so readers of the top panel need not look down to the bottom axis to
+    read sample numbers.'
+  - 'Suggestion: the in-header legend markers could carry the same page-colored ring
+    as the plotted markers so the swatches match the marks exactly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) fills the full canvas — correct light surface.
-      Chrome: Title "CNC Shaft Diameter · spc-xbar-r · javascript · muix · anyplot.ai" in dark ink, centered, well-proportioned (~65% width). Y-axis labels "Sample Mean (mm)" and "Range (mm)" in dark ink; tick labels in muted dark color; "Sample Number" x-axis label at bottom.
-      Data (X-bar panel): Brand green (#009E73) line connecting 25 sample means. Small green filled circles for in-control points. Three larger red (#AE3030) filled circles with pageBg stroke at samples 8 (above UCL), 16 (below LCL), and 22 (above UCL). UCL/LCL shown as red dashed lines with right-aligned bold labels. Center line (X̄) as solid gray/inkSoft line. Warning limits (±2σ) as lighter amber dashed lines with small amber labels.
-      Data (R panel): Same green line and marker scheme for 25 ranges. One OOC red marker at sample 12 (above R_UCL). R_UCL dashed red, R̄ solid gray, +2σ amber dashed.
-      Amber warning labels are faint but visible at full resolution. All other text clearly readable.
-      Legibility verdict: PASS (amber warning labels marginally low contrast on light bg, all else readable)
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: bold dark title "spc-xbar-r · javascript · muix · anyplot.ai" centered at top; a soft-ink subtitle line "25 subgroups of n = 5 · A2 = 0.577, D3 = 0, D4 = 2.114 · points beyond the limits: X̄ 3, R 1" followed by an HTML legend (green dot "In control", larger red dot "Beyond control limits"). Two stacked panels: top "Mean diameter (mm)" (ticks 24.95–25.05), bottom "Diameter range (mm)" (ticks 0.00–0.30), shared bottom x axis "Sample number" with ticks 1–25. Subtle vertical grid at each sample. Right gutter labels: bold "UCL 25.070", "LCL 24.930", "UCL 0.257", "LCL 0.000"; regular "+2σ 25.047", "CL 25.000", "−2σ 24.953", "+2σ 0.212", "CL 0.122", "−2σ 0.031". All text dark and readable.
+      Data: brand green #009E73 line with green markers (thin page-colored outline); dashed black control limits, light dotted warning limits, solid gray center line. Red enlarged markers at samples 8 (25.082), 16 (24.918), 22 (25.075) on X-bar and 12 (0.278) on R.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) fills the full canvas — correct dark surface.
-      Chrome: Title in light cream text on dark background, clearly readable. Axis labels and tick labels in light-muted tones (handled by MUI X ThemeProvider). Reference line labels adapt correctly: UCL/LCL in red, X̄/R̄ in light gray/inkSoft, +2σ in amber.
-      Data: Colors identical to light render — green line (#009E73) with green dots, red OOC markers (#AE3030) with dark pageBg stroke. The brand green and matte red read well on the dark surface. Amber (+2σ) warning lines are more visible on dark than on light (improved contrast).
-      No dark-on-dark failures detected: all text elements use theme-adaptive tokens that resolve to light colors on the dark surface.
-      Legibility verdict: PASS — all text readable, no chrome failures, data colors unchanged from light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, axis titles, tick labels and gutter labels all render in light ink; control-limit lines flip to light dashed, center line light gray, grid subtle dark gray. No dark-on-dark text anywhere.
+      Data: identical green line/markers and identical red out-of-control markers as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 15px, tick
-          labels 13px, ref-line labels 12-14px). Amber warning labels at 12px CSS
-          have low contrast on light cream background (~1.8:1), faint but readable
-          at full resolution; may struggle at mobile scale.
+        comment: Explicit sizes (title 22, ticks 15, axis titles 16, gutter labels
+          14 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Reference line labels right-aligned (labelAlign='end')
-          keep them separate from y-axis ticks. Two panels clearly separated.
+        comment: Gutter labels, legend and ticks are all clear of each other and of
+          the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 25 data points with r=5px in-control markers and r=8px OOC markers.
-          OOC circles have pageBg stroke border for clear standout. Line and markers
-          all clearly visible.
+        comment: 25 sparse points with prominent 5 px markers, 8 px signal markers;
+          legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red distinction reinforced by size (r=5 vs r=8) and stroke
-          on OOC markers — redundant encoding beyond hue alone. CVD users can identify
-          OOC events via size difference.
+        comment: Signals differ by size as well as hue, so red/green is not the sole
+          cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Two-panel layout 55%/45% height split. Left margin
-          112px, right 90px for label room. Title well-centered. Both panels fill
-          canvas effectively.
+        comment: 3200x1800; panels balanced, gutter sized for labels, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample Mean (mm), Range (mm), Sample Number — all descriptive with
-          units. Title follows mandated format with descriptive prefix.
+        comment: Mean diameter (mm), Diameter range (mm), Sample number
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Main data #009E73 (brand green). OOC: #AE3030 (matte red, semantic
-          error role). Warning: #DDCC77 amber (semantic warning role). Chrome via
-          ThemeProvider. Light #FAF8F1, dark #1A1A17 backgrounds confirmed. Data colors
-          identical in both themes.'
+        comment: 'Series in #009E73, signals in Imprint red, theme backgrounds correct'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Clear design intent: semantic color assignments, distinct line weights
-          (solid center, heavy dashed UCL/LCL, lighter dashed warnings), right-side
-          labeling to reduce clutter, custom SVG OOC marker layer. Clearly above configured
-          defaults but not FiveThirtyEight publication level.'
+        comment: 'Typographic hierarchy for the limits: bold full-ink control-limit
+          labels vs regular soft-ink warning/center labels; parameter subtitle set
+          in soft ink under the title'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Deliberately tuned margins (left 112, right 90) for two-panel alignment.
-          Reference lines styled with distinct stroke weights/dash patterns. Default
-          MUI X grid retained without explicit opacity control. No inter-panel divider.
+        comment: Right-gutter direct labels aligned to each limit replace a legend;
+          vertical grid chosen at every sample to tie the panels together; page-colored
+          marker rings
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: OOC events immediately draw attention via size+color+stroke hierarchy.
-          Two-panel canonical SPC layout directly tells the process stability story.
-          Color hierarchy (green→amber→red) guides viewer through control limits.
-          No OOC annotations with context, but visual hierarchy is effective.
+        comment: Subtitle states the signal count per panel (X̄ 3, R 1), directing
+          the reader to the highlighted points
     spec_compliance:
       score: 15
       max: 15
@@ -153,30 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SPC X-bar/R chart with vertically stacked pair sharing x-axis.
+        comment: Stacked X-bar/R control chart pair
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: UCL/LCL dashed lines present, center lines solid and distinct, ±2σ
-          warning limits shown, OOC points highlighted (larger + different color +
-          stroke), 4 OOC points (>2-3 minimum), correct constants A2/D3/D4 for n=5.
+        comment: Shared x axis, dashed labeled UCL/LCL, solid distinct CL, highlighted
+          signals, lighter dashed warning limits, 4 out-of-control points, A2/D3/D4
+          used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: sample numbers 1-25. Y top: sample mean (mm). Y bottom: range
-          (mm). All data visible.'
+        comment: Every point at its sample and value; linear joins, no overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''CNC Shaft Diameter · spc-xbar-r · javascript · muix · anyplot.ai''
-          — correct format. Reference lines directly labeled (UCL, LCL, X̄, R̄, +2σ,
-          -2σ) serve as integrated legend.'
+        comment: Correct title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -186,23 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows both X-bar AND R charts with all SPC elements: center lines,
-          control limits, warning limits, and OOC highlighting in both panels.'
+        comment: Signals above UCL and below LCL on X-bar, one R signal, warning-zone
+          points, R LCL at zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter monitoring — realistic manufacturing quality control.
-          Neutral industrial topic.
+        comment: CNC shaft diameters, 25 subgroups of 5
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: A2=0.577, D3=0, D4=2.115 are correct SPC constants for n=5. Process
-          mean 25.000mm, R_bar 0.120mm realistic for precision CNC machining. UCL-LCL
-          spread ~0.138mm physically consistent with 0.12mm mean range.
+        comment: 'Checked: X̄̄ 25.0002, R̄ 0.1217, UCL 25.0704, LCL 24.9299, R UCL
+          0.2573 recomputed independently, match the gutter labels'
     code_quality:
       score: 10
       max: 10
@@ -212,67 +193,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: React component decomposition (XBarPanel, RPanel, OOCMarkers) is
-          idiomatic MUI X pattern — necessary for the library's architecture, not
-          over-engineering.
+        comment: Module-level data/compute; one small component needed for scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded. No runtime random number generation.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 8 imports used: ChartContainer, LinePlot, ChartsXAxis, ChartsYAxis,
-          ChartsReferenceLine, useDrawingArea, Box, Typography.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean React structure. No over-engineering, no fake interactivity.
-          Custom SVG OOCMarkers is appropriately scoped.
+        comment: Limits derived in one panel map; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export component. Current MUI X community API only. No Pro/Premium
-          imports.
+        comment: Default export, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses ChartContainer composition API with LinePlot, ChartsXAxis, ChartsYAxis,
-          ChartsReferenceLine. Uses useDrawingArea hook for custom SVG coordinate
-          mapping — advanced and idiomatic MUI X pattern. ThemeProvider relied on
-          for chrome; only data colors supplied via ANYPLOT_TOKENS.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine (distinct MUI X feature), useDrawingArea coordinate
-          mapping hook (advanced composition pattern), ChartContainer multi-component
-          layout (vs. simpler all-in-one LineChart). Multiple distinctive MUI X features
-          used effectively.
+        comment: 'Composition API (ChartsContainer + LinePlot + ChartsXAxis/YAxis
+          + ChartsGrid), axis position: none for the shared axis'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine for limits and a custom SVG layer driven by useXScale/useYScale/useDrawingArea
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:40:17Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - layer-composition
   - annotations
-  patterns:
-  - data-generation
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns: []
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - grid-styling
