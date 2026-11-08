@@ -32,7 +32,7 @@ def mods():
     try:
         yield {
             name: importlib.import_module(name)
-            for name in ("catalogue", "select_candidates", "check_fix", "build_page")
+            for name in ("catalogue", "select_candidates", "check_fix", "build_page", "verify_merged")
         }
     finally:
         sys.path.remove(str(SKILL_DIR))
@@ -175,8 +175,11 @@ def test_score_reasons(mods) -> None:
     )
     assert _codes(shortfalls) == ["plot_type_below_max", "spec_compliance_below_max", "technical_below_max"]
     assert shortfalls[0].detail == "SC-01 3/5"
-    kept = sc.score_reasons(_metadata(score=17, weaknesses=["DQ-01 (code): r is 0.84", "Suggestion: x"]), below=10)
-    assert _codes(kept) == ["residual_defects"] and "1 defect line" in kept[0].detail
+    weaknesses = ["DE-01 (both): a flat hierarchy", "VQ-01 (dark): fine at full marks", "Suggestion: DE-01 again"]
+    kept = sc.score_reasons(_metadata(score=17, weaknesses=weaknesses), below=10)
+    assert _codes(kept) == ["residual_defects"] and "1 defect line" in kept[0].detail and "DE-01" in kept[0].detail
+    # a defect line on no item that lost points is the usual case, and no reason
+    assert sc.score_reasons(_metadata(score=17, weaknesses=["DQ-01 (code): r is 0.84"]), below=10) == []
 
 
 def test_library_behind_compares_api_levels(mods) -> None:
@@ -226,9 +229,23 @@ def test_votes_split_at_the_last_update(mods) -> None:
     assert list(counts) == [pair]
     assert counts[pair] == sc.VoteCounts(up=1, down=3, up_since_update=0, down_since_update=2)
     assert _codes(sc.vote_reasons(counts[pair], min_down=1)) == ["thumbs_down"]
-    assert _codes(sc.vote_reasons(counts[pair], min_down=3)) == ["thumbs_down_old_version"]
+    # two of the three thumbs down are on this version: no split side reaches three
+    assert sc.vote_reasons(counts[pair], min_down=3) == []
     assert sc.vote_reasons(sc.VoteCounts(up=2, down=2), min_down=1) == []
     assert sc.vote_reasons(None, min_down=1) == []
+
+
+def test_old_version_votes_count_only_while_this_version_draws_no_net_thumbs_up(mods) -> None:
+    sc = mods["select_candidates"]
+
+    old = sc.vote_reasons(sc.VoteCounts(up=0, down=2), min_down=1)
+    assert _codes(old) == ["thumbs_down_old_version"]
+    assert old[0].detail.startswith("2 down, 0 up before the last update") and "0 down, 0 up since" in old[0].detail
+    # three thumbs down before the update, one thumbs up after it: the update may have fixed it
+    assert sc.vote_reasons(sc.VoteCounts(up=1, down=3, up_since_update=1, down_since_update=0), min_down=1) == []
+    # one thumbs down since the update is below the threshold, so the three before it still count
+    mixed = sc.VoteCounts(up=0, down=4, up_since_update=0, down_since_update=1)
+    assert _codes(sc.vote_reasons(mixed, min_down=2)) == ["thumbs_down_old_version"]
 
 
 async def test_the_vote_query_counts_as_the_repository_does(mods, test_session) -> None:
@@ -383,6 +400,19 @@ def test_validator_problems(mods) -> None:
     assert cf.validator_problems(None, ("error", ["SyntaxError: x"], []))[0]
 
 
+def test_a_render_inherits_no_secret_of_the_shell(mods, monkeypatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://x")
+    monkeypatch.setenv("GH_TOKEN", "t")
+    monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", "/base/.venv")
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", "/pw")
+
+    env = mods["check_fix"].render_env("dark", "python")
+    assert "DATABASE_URL" not in env and "GH_TOKEN" not in env
+    assert env["UV_PROJECT_ENVIRONMENT"] == "/base/.venv" and env["PLAYWRIGHT_BROWSERS_PATH"] == "/pw"
+    assert (env["ANYPLOT_THEME"], env["MPLBACKEND"], env["PYTHON_DOTENV_DISABLED"]) == ("dark", "Agg", "1")
+    assert "MPLBACKEND" not in mods["check_fix"].render_env("light", "javascript")
+
+
 def test_a_fix_is_read_against_where_it_was_cut(mods, repo: Path) -> None:
     """A fix passes against its own start; once main changes the same file, adopting it would revert that."""
     cf, catalogue = mods["check_fix"], mods["catalogue"]
@@ -469,13 +499,14 @@ def test_findings_get_ids_in_page_order(mods) -> None:
     assert order == [
         ("F01", "a-spec", "confirmed"),
         ("F02", "b-spec", "confirmed"),
-        ("F03", "d-spec", "low"),
+        ("F03", "d-spec", "unverified"),
         ("F04", "e-spec", "low"),
         ("F05", "c-spec", "refuted"),
     ]
     first = model["findings"][0]
     assert (first["cause"], first["quality_score"], first["reasons"]) == ("rubric", 84, ["plot_type_below_max"])
-    assert model["findings"][2]["skeptic"].startswith("no skeptic verdict")
+    lost = model["findings"][2]
+    assert lost["skeptic"].startswith("no skeptic verdict") and lost["severity"] == "high"
     assert model["clean"] == ["f-spec/javascript/muix"] and model["unchecked"] == ["g-spec/javascript/muix: no render"]
 
 
@@ -497,6 +528,10 @@ def test_the_page_is_self_contained_and_escaped(mods) -> None:
     hosts = {part.split("/")[2] for part in page.split('"') if part.startswith("https://")}
     assert hosts <= {"fonts.googleapis.com", "anyplot.ai", "github.com", "storage.googleapis.com"}
     assert "prefers-color-scheme: dark" in page and ':root[data-theme="dark"]' in page
+    # the unverified high finding is a card of its own section, between the confirmed ones and the low notes
+    confirmed, unverified, low = (page.index(h) for h in ("<h2>confirmed", "<h2>unverified", "<h2>low notes"))
+    assert confirmed < page.index('id="F03"') and unverified < page.index('id="F03"') < low
+    assert page.index('id="F02"') < unverified
 
 
 def test_build_page_refuses_a_round_inside_a_checkout(mods, tmp_path: Path) -> None:
@@ -519,7 +554,203 @@ def test_the_shell_scripts_parse(script: str) -> None:
     subprocess.run(["bash", "-n", str(SKILL_DIR / script)], check=True)
 
 
+def _run(script: str, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["bash", str(SKILL_DIR / script), *args], capture_output=True, text=True, check=False)
+
+
 def test_the_dispatcher_refuses_without_a_queue(tmp_path: Path) -> None:
-    result = subprocess.run(["bash", str(SKILL_DIR / "dispatch.sh"), str(tmp_path)], capture_output=True, text=True)
+    result = _run("dispatch.sh", str(tmp_path))
 
     assert result.returncode == 2 and "no " in result.stderr
+
+
+def test_the_dispatcher_executes_only_the_approved_plan(tmp_path: Path) -> None:
+    """The OK is bound to the dry run's token: no token, no plan, or a queue changed since, and nothing goes out."""
+    (tmp_path / "queue.txt").write_text("regen ggplot2 a-spec Use the periods the spec names.\n", encoding="utf-8")
+
+    assert "--approved" in _run("dispatch.sh", str(tmp_path), "--execute").stderr
+    assert "dry run first" in _run("dispatch.sh", str(tmp_path), "--execute", "--approved", "abc").stderr
+    (tmp_path / "queue.plan").write_text("# dispatch.sh plan: <line key> <the adopt line's SHA>\n", encoding="utf-8")
+    token = subprocess.run(
+        f"cat {tmp_path}/queue.txt {tmp_path}/queue.plan | sha1sum | cut -c1-12",
+        shell=True,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    with (tmp_path / "queue.txt").open("a", encoding="utf-8") as queue:
+        queue.write("regen makie b-spec A line added after the OK.\n")
+    result = _run("dispatch.sh", str(tmp_path), "--execute", "--approved", token)
+    assert result.returncode == 2 and "changed since the approved dry run" in result.stderr
+    assert not (tmp_path / "dispatch.state").exists()
+
+
+def test_resuming_needs_this_rounds_dispatches_or_all_open(tmp_path: Path) -> None:
+    result = _run("resume_paused.sh", str(tmp_path), "--repairs")
+
+    assert result.returncode == 2 and "--all-open" in result.stderr
+
+
+# --- verify_merged.py -------------------------------------------------------------------------------------------
+
+
+def test_line_keys_match_the_dispatchers(mods) -> None:
+    vm = mods["verify_merged"]
+    line = "adopt  muix\tclaude/audit-2026-11-08-muix-1 claude-opus-5-5 a-spec b-spec  # the first package"
+    bash = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'line=${1%%#*}; read -r -a f <<< "$line"; printf %s "${f[*]}" | sha1sum | cut -c1-12',
+            "-",
+            line,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+    assert vm.line_key(vm.line_fields(line)) == bash
+    models = vm.queue_models(f"{line}\nrerender d3 gemini-4-argon c-spec\nregen ggplot2 d-spec A hint.\n# a note\n")
+    assert sorted(models.values()) == ["claude-opus-5-5", "gemini-4-argon"]
+
+
+def test_the_state_yields_what_went_out(mods) -> None:
+    vm = mods["verify_merged"]
+    state = "\n".join(
+        [
+            "k1 adopt muix " + "a" * 40 + " 2026-11-08T10:00:00Z 2 a-spec b-spec",
+            "k2 refused - - 2026-11-08T10:01:00Z 0",
+            "k3 failed - - 2026-11-08T10:02:00Z 0",
+            "k4 regen ggplot2 - 2026-11-08T10:03:00Z 1 d-spec",
+        ]
+    )
+
+    sent = vm.read_state(state, {"k1": "claude-opus-5-5"})
+    assert [(e.key, e.kind, e.specs, e.model) for e in sent] == [
+        ("k1", "adopt", ("a-spec", "b-spec"), "claude-opus-5-5"),
+        ("k4", "regen", ("d-spec",), None),
+    ]
+    assert sent[0].sha == "a" * 40 and sent[1].sha is None and sent[0].when == datetime(2026, 11, 8, 10, tzinfo=UTC)
+
+
+def test_the_code_check_ignores_the_header_and_keeps_a_repair_that_kept_the_fix(mods) -> None:
+    vm = mods["verify_merged"]
+    head = "// anyplot.ai\n// Library: muix 7.29.1\n// Quality: 92/100 | Created: 2026-09-02\n"
+    start = head + "axis({\n  label: X,\n});\n"
+    fix = head.replace("92/100", "84/100") + "axis({\n  label: X,\n  height: 64,\n});\n"
+    merged = fix.replace("7.29.1", "9.17.0").replace("84/100", "88/100")
+
+    assert vm.code_check(merged, fix, start) == ([], [])
+    # impl-repair added a line on top of the fix: every line the fix added is still in
+    repaired = merged.replace("  height: 64,\n", "  height: 64,\n  disableTicks: true,\n")
+    problems, notes = vm.code_check(repaired, fix, start)
+    assert problems == [] and notes[0].startswith("code: changed after the fix") and "all 1 line(s)" in notes[0]
+    # a later change dropped the fix's line
+    problems, _ = vm.code_check(merged.replace("  height: 64,\n", ""), fix, start)
+    assert (
+        problems[0].startswith("code: 1 of the 1 line(s) the fix added are not on main") and "height: 64" in problems[0]
+    )
+    assert vm.code_check(None, fix, start)[0] and vm.code_check(merged, None, start)[0]
+
+
+def _merged_meta() -> dict:
+    return {"quality_score": 91, "updated": "2026-11-08T12:00:00Z", "generated_by": "claude-opus-5-5"}
+
+
+def test_stored_copies_must_match_the_metadata(mods) -> None:
+    vm = mods["verify_merged"]
+    meta = _merged_meta()
+
+    row = {"quality_score": 91.0, "updated": datetime(2026, 11, 8, 12, 0, 0), "generated_by": "claude-opus-5-5"}
+    assert vm.stored_problems("database", row, meta) == []
+    api = {"quality_score": 91.0, "updated": "2026-11-08T12:00:00", "generated_by": "claude-opus-5-5"}
+    assert vm.stored_problems("api", api, meta) == []
+    stale = {**row, "quality_score": 84.0, "updated": datetime(2026, 11, 1)}
+    assert [p.split(":")[1].split()[0] for p in vm.stored_problems("database", stale, meta)] == [
+        "quality_score",
+        "updated",
+    ]
+    assert vm.stored_problems("api", None, meta) == ["api: no entry for the pair"]
+    assert vm.metadata_problems(meta, model="gemini-4-argon")[0].startswith("metadata: generated_by")
+    assert vm.metadata_problems({"updated": "x"}, model=None) == [
+        "metadata: no quality_score",
+        "metadata: no generated_by",
+    ]
+
+
+def test_a_pair_is_pending_until_merged_and_then_checked_end_to_end(mods) -> None:
+    vm, Pair = mods["verify_merged"], mods["catalogue"].Pair
+    when = datetime(2026, 11, 8, 10, tzinfo=UTC)
+    entry = vm.Dispatched("k1", "adopt", "muix", "a" * 40, when, ("a-spec",), "claude-opus-5-5")
+    pair = Pair.parse("a-spec/muix")
+    meta = _merged_meta()
+    fresh = datetime(2026, 11, 8, 12, 5, tzinfo=UTC)
+    good = {
+        "metadata": meta,
+        "on_main": "x();\n",
+        "fix": "x();\n",
+        "start": "w();\n",
+        "row": {**meta, "updated": datetime(2026, 11, 8, 12)},
+        "api_entry": {**meta, "updated": "2026-11-08T12:00:00"},
+        "heads": {"light": (200, fresh), "dark": (200, fresh)},
+        "check_db": True,
+    }
+
+    assert vm.evaluate(entry, pair, **good).status == "ok"
+    pending = vm.evaluate(entry, pair, **{**good, "metadata": {**meta, "updated": "2026-11-07T00:00:00Z"}})
+    assert pending.status == "pending" and not pending.route
+    stale = vm.evaluate(
+        entry, pair, **{**good, "heads": {"light": (200, datetime(2026, 8, 1, tzinfo=UTC)), "dark": (404, None)}}
+    )
+    assert stale.status == "failed" and stale.route == "queue line: rerender muix claude-opus-5-5 a-spec"
+    r_entry = vm.Dispatched("k4", "regen", "ggplot2", None, when, ("a-spec",))
+    one_stale = {"light": (200, fresh), "dark": (200, datetime(2026, 8, 1, tzinfo=UTC))}
+    r_stale = vm.evaluate(r_entry, Pair.parse("a-spec/ggplot2"), **{**good, "heads": one_stale})
+    assert r_stale.route.startswith("queue line: regen ggplot2 a-spec ")
+    unsynced = vm.evaluate(entry, pair, **{**good, "row": None})
+    assert unsynced.problems == ["database: no entry for the pair"] and "sync" in unsynced.route
+    assert vm.evaluate(entry, pair, **{**good, "row": None, "check_db": False}).status == "ok"
+    silent = vm.evaluate(entry, pair, **{**good, "api_entry": None, "api_answered": False})
+    assert silent.problems == ["api: no answer"] and "again" in silent.route
+    undone = vm.evaluate(entry, pair, **{**good, "on_main": "y();\n"})
+    assert undone.status == "failed" and undone.route.startswith("read the merged PR")
+    kept = vm.evaluate(entry, pair, **{**good, "on_main": "x();\nrepaired();\n"})
+    assert kept.status == "ok" and kept.notes and not kept.problems
+
+
+async def test_the_impl_rows_come_from_the_impls_table(mods, test_session) -> None:
+    from core.database import Impl
+
+    test_session.add_all(
+        [
+            Impl(
+                spec_id="a-spec",
+                library_id="muix",
+                language_id="javascript",
+                quality_score=91.0,
+                updated=datetime(2026, 11, 8, 12),
+                generated_by="claude-opus-5-5",
+            ),
+            Impl(spec_id="b-spec", library_id="muix", language_id="javascript", quality_score=70.0),
+        ]
+    )
+    await test_session.commit()
+
+    rows = await mods["verify_merged"].impl_rows(test_session, {"a-spec"})
+    assert rows == {
+        ("a-spec", "javascript", "muix"): {
+            "quality_score": 91.0,
+            "updated": datetime(2026, 11, 8, 12),
+            "generated_by": "claude-opus-5-5",
+        }
+    }
+
+
+def test_the_verifier_refuses_before_reading_anything(mods, tmp_path: Path, capsys) -> None:
+    main = mods["verify_merged"].main
+    (tmp_path / "co" / ".git").mkdir(parents=True)
+
+    assert main(["--round", str(tmp_path / "co" / "r"), "--no-db"]) == 2  # inside a checkout
+    assert main(["--round", str(tmp_path / "r"), "--no-db"]) == 2  # nothing dispatched
+    assert "nothing was dispatched" in capsys.readouterr().err

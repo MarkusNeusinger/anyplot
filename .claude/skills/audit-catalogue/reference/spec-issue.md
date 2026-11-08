@@ -2,8 +2,8 @@
 
 Use this page when an audit finds that the spec itself causes a defect: it
 asks for the defect, contradicts itself, or several libraries fail the same
-bullet. The channel was found by backend-b1b on 2026-11-08 and has **never run
-end to end**. File the first issue of a round alone and follow it to
+bullet. The channel was found on 2026-11-08 and has **never run end to
+end**. File the first issue of a round alone and follow it to
 `spec-ready` before you file more.
 
 ## The channel

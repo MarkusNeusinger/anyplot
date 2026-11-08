@@ -159,10 +159,11 @@ class GitTree:
             check=True,
         )
         raw = parse_batch(result.stdout, names)
-        return {
-            path: (None if raw[name] is None else raw[name].decode("utf-8"))
-            for path, name in zip(paths, names, strict=True)
-        }
+        out: dict[str, str | None] = {}
+        for path, name in zip(paths, names, strict=True):
+            blob = raw[name]
+            out[path] = None if blob is None else blob.decode("utf-8")
+        return out
 
     def read(self, path: str) -> str | None:
         return self.read_many([path])[path]

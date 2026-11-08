@@ -6,10 +6,11 @@ Run it from the repository root after the audit workflow's results are saved in 
         --audit "$ROUND/audit-run1.json" [--audit "$ROUND/audit-run2.json"] [--no-images]
 
 It reads `candidates.json` from the round for the stored scores, ids every finding (`F01`, `F02`, … in the order
-the page shows them: confirmed high, confirmed medium, low notes, refuted last) and writes:
+the page shows them: confirmed high, confirmed medium, unverified, low notes, refuted last) and writes:
 
-- `findings.json`: every finding with its id, status (`confirmed`, `low`, `refuted`), severity after the skeptic,
-  cause and fix, plus the clean and unchecked pairs. The owner's picks name these ids.
+- `findings.json`: every finding with its id, status (`confirmed`, `unverified`, `low`, `refuted`), severity after
+  the skeptic, cause and fix, plus the clean and unchecked pairs. The owner's picks name these ids. `unverified` is a
+  high or medium finding whose skeptic returned nothing: re-run its skeptic before anyone picks it.
 - `page/audit.html`: the page to publish as a private Artifact. It embeds each finding's two `_800.webp` renders
   as data URIs (the Artifact CSP blocks other hosts' images), fetched with a cache-buster; `--no-images` leaves
   them out. No script, no external resource but the JetBrains Mono stylesheet from Google Fonts.
@@ -37,14 +38,16 @@ from catalogue import Pair
 
 
 SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
+CARDS = ("confirmed", "unverified")
+"""The statuses the page shows as cards with both renders; the others are one-line lists."""
 
 
 def collect(audits: list[list[dict[str, Any]]], candidates: dict[str, Any]) -> dict[str, Any]:
     """Merge the workflow's group results into one list of findings with ids, and the clean and unchecked pairs.
 
     A high or medium finding the skeptic kept is `confirmed` at the skeptic's severity and cause; one it refuted is
-    `refuted`; a low finding was never verified and stays `low`. A finding without a verdict (its skeptic died)
-    counts as `low` with a note, never as confirmed."""
+    `refuted`; a low finding was never verified and stays `low`. A high or medium finding without a verdict (its
+    skeptic died twice) is `unverified` at the auditor's severity: shown apart, never as confirmed."""
     scores = {c["pair"]: c for c in candidates.get("candidates", [])}
     entries: list[dict[str, Any]] = []
     clean: list[str] = []
@@ -63,7 +66,7 @@ def collect(audits: list[list[dict[str, Any]]], candidates: dict[str, Any]) -> d
                 if finding.get("severity") == "low":
                     entry["status"] = "low"
                 elif not verdict:
-                    entry.update(status="low", skeptic="no skeptic verdict came back; treat as unverified")
+                    entry.update(status="unverified", skeptic="no skeptic verdict came back; re-run the skeptic")
                 elif verdict.get("refuted"):
                     entry.update(status="refuted", skeptic=verdict.get("reason", ""))
                 else:
@@ -84,7 +87,7 @@ def collect(audits: list[list[dict[str, Any]]], candidates: dict[str, Any]) -> d
                     clean.append(row["pair"])
                 elif row.get("verdict") == "unchecked":
                     unchecked.append(f"{row['pair']}: {row.get('note', '')}")
-    rank = {"confirmed": 0, "low": 1, "refuted": 2}
+    rank = {"confirmed": 0, "unverified": 1, "low": 2, "refuted": 3}
     entries.sort(key=lambda e: (rank[e["status"]], SEVERITY_ORDER.get(e["severity"], 3), e["pair"]))
     for index, entry in enumerate(entries, start=1):
         entry["id"] = f"F{index:02d}"
@@ -95,7 +98,8 @@ def fetch_image(url: str) -> bytes | None:
     for attempt in range(3):
         try:
             with urllib.request.urlopen(url, timeout=30) as response:
-                return response.read()
+                data: bytes = response.read()
+                return data
         except urllib.error.HTTPError:
             return None
         except urllib.error.URLError, TimeoutError, OSError:
@@ -104,9 +108,10 @@ def fetch_image(url: str) -> bytes | None:
 
 
 def thumbnails(findings: list[dict[str, Any]], cache_buster: int) -> dict[str, dict[str, str]]:
-    """The `_800.webp` render of each theme per pair as a data URI (missing when the bucket has none)."""
+    """The `_800.webp` render of each theme per pair the page shows a card for, as a data URI (missing when the bucket
+    has none)."""
     out: dict[str, dict[str, str]] = {}
-    for key in sorted({f["pair"] for f in findings if f["status"] != "refuted"}):
+    for key in sorted({f["pair"] for f in findings if f["status"] in CARDS}):
         pair = Pair.parse(key)
         for theme in catalogue.THEMES:
             data = fetch_image(pair.render_url(theme, size=800, ext="webp", cache_buster=cache_buster))
@@ -223,6 +228,7 @@ def render_html(model: dict[str, Any], images: dict[str, dict[str, str]], *, rou
     status = Counter(f["status"] for f in findings)
     severity = Counter(f["severity"] for f in findings if f["status"] == "confirmed")
     confirmed = [f for f in findings if f["status"] == "confirmed"]
+    unverified = [f for f in findings if f["status"] == "unverified"]
     lows = [f for f in findings if f["status"] == "low"]
     refuted = [f for f in findings if f["status"] == "refuted"]
     audited = len(model["clean"]) + len({f["pair"] for f in findings}) + len(model["unchecked"])
@@ -239,6 +245,15 @@ def render_html(model: dict[str, Any], images: dict[str, dict[str, str]], *, rou
         "".join(_card(entry, images, cache_buster) for entry in confirmed)
         or "<p>No high or medium finding survived the skeptics.</p>"
     )
+    unverified_section = (
+        '<section class="section"><h2>unverified, no skeptic verdict</h2>'
+        '<p class="meta">A high or medium claim whose skeptic returned nothing, twice. Not confirmed: its skeptic runs'
+        " again before it can be picked.</p>"
+        + "".join(_card(entry, images, cache_buster) for entry in unverified)
+        + "</section>"
+        if unverified
+        else ""
+    )
     return f"""<title>Catalogue audit {_e(round_name)}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -251,10 +266,11 @@ def render_html(model: dict[str, Any], images: dict[str, dict[str, str]], *, rou
     the ids, or a rule such as "all high and medium". Nothing is fixed or dispatched before that.</p>
     <div class="stats"><span><b>{audited}</b> pairs audited</span><span><b>{len(model["clean"])}</b> clean</span>
       <span><b>{severity["high"]}</b> high</span><span><b>{severity["medium"]}</b> medium</span>
-      <span><b>{status["low"]}</b> low notes</span><span><b>{status["refuted"]}</b> refuted</span>
+      <span><b>{status["unverified"]}</b> unverified</span><span><b>{status["low"]}</b> low notes</span><span><b>{status["refuted"]}</b> refuted</span>
       <span><b>{len(model["unchecked"])}</b> unchecked</span></div>
   </header>
   <section class="section"><h2>confirmed</h2>{cards}</section>
+  {unverified_section}
   <section class="section"><h2>low notes, not verified</h2>
     {f'<details><summary>{len(lows)} note(s)</summary><ul class="plain">{listing(lows)}</ul></details>' if lows else '<p class="meta">none</p>'}</section>
   <section class="section"><h2>refuted</h2>

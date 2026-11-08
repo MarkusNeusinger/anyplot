@@ -11,10 +11,10 @@ Sources, any combination, each adding reasons to a pair:
 
 - `--votes`: the 👍/👎 per image from the production `feedback` table, one vote per visitor session (the rule of
   `FeedbackRepository.reaction_counts`), split at the metadata's `updated`: votes before it were cast on an older
-  version. The query runs in a transaction PostgreSQL holds read-only and returns counts only; no message,
+  version, and count only while this version has drawn no more thumbs up than down. The query runs in a transaction PostgreSQL holds read-only and returns counts only; no message,
   contact or session id leaves it.
 - `--scores`: the stored review in `metadata/*.yaml`: no score, a score below `--below`, a total lowered by a score
-  cap, spec-compliance or other technical items below their maximum, and defect lines the merge kept.
+  cap, spec-compliance or other technical items below their maximum, and defect lines the merge kept on such an item.
 - `--stale`: a stored `library_version` an API level behind the pinned one (`core.library_versions`), and with
   `--older-than DAYS` an `updated` older than that.
 - `--gcs`: a HEAD on both production renders with a cache-busting query; a render that is missing, or older than
@@ -36,6 +36,7 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -62,6 +63,8 @@ SOURCES = ("votes", "scores", "stale", "gcs", "readiness", "sweep")
 THUMBS = ("thumbs_up", "thumbs_down")
 GCS_SLACK = timedelta(seconds=60)
 """Clock slack between the runner that stamps `updated` and the bucket's `Last-Modified`."""
+ITEM_ID = re.compile(r"\b[A-Z]{2}-\d{2}\b")
+"""A checklist item id (`VQ-02`, `SC-01`) anywhere in a stored defect line."""
 WEIGHTS = {
     "thumbs_down": 3,
     "thumbs_down_old_version": 1,
@@ -167,9 +170,12 @@ def score_reasons(metadata: dict[str, Any], *, below: float) -> list[Reason]:
         reasons.append(Reason("scores", "spec_compliance_below_max", _items(spec)))
     if other:
         reasons.append(Reason("scores", "technical_below_max", _items(other)))
-    defects = catalogue.defect_lines(metadata)
-    if defects:
-        reasons.append(Reason("scores", "residual_defects", f"{len(defects)} defect line(s) kept: {defects[0][:120]}"))
+    # Nearly every stored review has defect lines, so only a line on an item that also lost points counts.
+    lost = {item["id"] for item in short}
+    kept = [line for line in catalogue.defect_lines(metadata) if lost & set(ITEM_ID.findall(line))]
+    if kept:
+        detail = f"{len(kept)} defect line(s) on an item below its maximum: {kept[0][:120]}"
+        reasons.append(Reason("scores", "residual_defects", detail))
     return reasons
 
 
@@ -363,14 +369,20 @@ def aggregate_votes(
 
 
 def vote_reasons(count: VoteCounts | None, *, min_down: int) -> list[Reason]:
-    """Thumbs down that outweigh the thumbs up: on this version first, else on the versions before it."""
+    """Thumbs down that outweigh the thumbs up: on this version first, else on the versions before it, as long as
+    this version has drawn no more thumbs up than down (then the update may have fixed what the votes saw)."""
     if count is None:
         return []
-    if count.down_since_update >= min_down and count.down_since_update > count.up_since_update:
-        detail = f"{count.down_since_update} down, {count.up_since_update} up since the last update ({count.down}/{count.up} in all)"
+    down_now, up_now = count.down_since_update, count.up_since_update
+    if down_now >= min_down and down_now > up_now:
+        detail = f"{down_now} down, {up_now} up since the last update ({count.down} down, {count.up} up in all)"
         return [Reason("votes", "thumbs_down", detail)]
-    if count.down >= min_down and count.down > count.up:
-        detail = f"{count.down} down, {count.up} up, all before the last update (an older version)"
+    down_before, up_before = count.down - down_now, count.up - up_now
+    if down_before >= min_down and down_before > up_before and up_now <= down_now:
+        detail = (
+            f"{down_before} down, {up_before} up before the last update (an older version); "
+            f"{down_now} down, {up_now} up since"
+        )
         return [Reason("votes", "thumbs_down_old_version", detail)]
     return []
 

@@ -20,9 +20,12 @@ Every file is read from `--ref` in `--repo`'s git store, never from a working tr
   `deprecated-api` hint fails too. A clean file that turns coupled is a warning.
 - `render` (`--render`): Python and JavaScript render both themes the way adopt mode does, from a temporary copy
   (Python: `MPLBACKEND=Agg python -P` in the project venv with the library's extra; JavaScript:
-  `automation/js-render/render.mjs`, which needs `node_modules` in `--repo`), then the canvas gate and the blank
-  check of `core.canvas`. The PNGs go to `--out/<spec>/<library>/`. R and Julia are not rendered: adopt mode has
-  no R or Julia render, so their fix goes through a `regen_gate=false` generation (SKILL.md, step 6).
+  `automation/js-render/render.mjs`, which needs `node_modules` in `--repo` and Playwright's Chromium), then the
+  canvas gate and the blank check of `core.canvas`. The PNGs go to `--out/<spec>/<library>/`. The render gets a
+  scrubbed environment (`RENDER_ENV`), so no token or database URL of the shell reaches the code it runs. Set
+  `UV_PROJECT_ENVIRONMENT` to one shared venv (SKILL.md, step 6), or `uv` builds a full venv in every fix worktree.
+  R and Julia are not rendered: adopt mode has no R or Julia render, so their fix goes through a `regen_gate=false`
+  generation.
 
 Exit codes: 0 every pair passes, 1 a check failed, 2 bad arguments.
 """
@@ -48,6 +51,18 @@ RENDER_NAME = re.compile(r"(^|/)plot-[^/]*\.(png|html|webp)$")
 HEADER_SCAN = 12
 """Lines from the top in which the header block and its `Quality:` line must lie."""
 RENDER_TIMEOUT = 300
+RENDER_ENV = ("PATH", "HOME", "USER", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "TERM", "NVM_DIR", "NVM_BIN", "DISPLAY")
+RENDER_ENV_PREFIXES = ("UV_", "XDG_", "PLAYWRIGHT_", "FONTCONFIG_")
+"""What a render inherits from the shell: enough for `uv`, `node`, Chromium and the fonts, nothing else."""
+
+
+def render_env(theme: str, language: str) -> dict[str, str]:
+    """The environment of one render: the allowed shell variables, the theme, and the pipeline's own switches."""
+    env = {key: value for key, value in os.environ.items() if key in RENDER_ENV or key.startswith(RENDER_ENV_PREFIXES)}
+    env.update(ANYPLOT_THEME=theme, PYTHON_DOTENV_DISABLED="1")
+    if language == "python":
+        env["MPLBACKEND"] = "Agg"
+    return env
 
 
 @dataclass
@@ -158,9 +173,8 @@ def render_pair(pair: Pair, code: str, *, repo: Path, out: Path) -> tuple[dict[s
         source = work / Path(pair.impl_path).name
         source.write_text(code, encoding="utf-8")
         for theme in catalogue.THEMES:
-            env = {**os.environ, "ANYPLOT_THEME": theme, "PYTHON_DOTENV_DISABLED": "1"}
+            env = render_env(theme, pair.language)
             if pair.language == "python":
-                env["MPLBACKEND"] = "Agg"
                 command = ["uv", "run", "--project", str(repo), "--frozen", "-q", "--extra", f"lib-{pair.library}"]
                 command += ["python", "-P", str(source)]
             else:
