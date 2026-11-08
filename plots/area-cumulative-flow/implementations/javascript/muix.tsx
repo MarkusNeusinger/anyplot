@@ -123,6 +123,7 @@ export default function Chart() {
           stackOrder: "reverse" as const,
           area: true,
           showMark: false,
+          labelMarkType: "square" as const,
         }))}
         margin={{ top: 12, right: 40, bottom: 8, left: 24 }}
         slotProps={{
@@ -132,7 +133,7 @@ export default function Chart() {
           },
         }}
         sx={{
-          "& .MuiLineChart-area": { fillOpacity: 0.85 },
+          "& .MuiLineChart-area": { fillOpacity: 0.85, filter: "none" },
           "& .MuiLineChart-line": { strokeWidth: 2.5 },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
