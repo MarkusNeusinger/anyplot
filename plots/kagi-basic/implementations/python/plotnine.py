@@ -45,40 +45,41 @@ df_prices = pd.DataFrame(
     {"date": pd.date_range("2024-01-01", periods=n_days, freq="B"), "close": 100 * np.exp(np.cumsum(returns))}
 )
 
-# Kagi construction: each reversal adds a vertical line and the shoulder or waist that joins it to the next column
+# Kagi construction: the line extends while the price keeps its direction and turns at a shoulder (top) or a
+# waist (bottom) once the price moves against the running extreme by the reversal amount
 prices = df_prices["close"].to_numpy()
 direction = 1 if prices[1] > prices[0] else -1
-high = low = segment_start = prices[0]
-is_yang = direction == 1
-column = 0
-segments = []
+turns = [prices[0]]
+extreme = prices[0]
 for price in prices[1:]:
-    if direction == 1:
-        if price > high:
-            high = price
-            is_yang = True
-        elif price < high * (1 - REVERSAL):
-            trend = "yang" if is_yang else "yin"
-            segments += [(column, column, segment_start, high, trend), (column, column + 1, high, high, trend)]
-            column += 1
-            direction = -1
-            segment_start = high
-            high = low = price
-    else:
-        if price < low:
-            low = price
-            is_yang = False
-        elif price > low * (1 + REVERSAL):
-            trend = "yang" if is_yang else "yin"
-            segments += [(column, column, segment_start, low, trend), (column, column + 1, low, low, trend)]
-            column += 1
-            direction = 1
-            segment_start = low
-            high = low = price
+    if (price - extreme) * direction > 0:
+        extreme = price
+    elif abs(price - extreme) > extreme * REVERSAL:
+        turns.append(extreme)
+        extreme = price
+        direction = -direction
+turns.append(extreme)  # the last vertical line stays open at the latest extreme
 
-# The last vertical line stays open at the latest extreme
-last_end = max(high, prices[-1]) if direction == 1 else min(low, prices[-1])
-segments.append((column, column, segment_start, last_end, "yang" if is_yang else "yin"))
+# Thickness: the line turns thick (yang) where it rises above the previous shoulder and thin (yin) where it
+# falls below the previous waist, so a vertical line that crosses that level is split at it. The first price
+# stands in for the shoulder or waist the first line has not formed yet
+is_yang = turns[1] > turns[0]
+shoulder = waist = turns[0]
+segments = []
+for column, (start, end) in enumerate(zip(turns[:-1], turns[1:], strict=True)):
+    rising = end > start
+    level = shoulder if rising else waist
+    if is_yang != rising and min(start, end) < level < max(start, end):
+        segments.append((column, column, start, level, "yang" if is_yang else "yin"))
+        start, is_yang = level, rising
+    trend = "yang" if is_yang else "yin"
+    segments.append((column, column, start, end, trend))
+    if column < len(turns) - 2:
+        segments.append((column, column + 1, end, end, trend))
+    if rising:
+        shoulder = end
+    else:
+        waist = end
 kagi_df = pd.DataFrame(segments, columns=["x", "x_end", "y", "y_end", "trend"])
 
 # Plot: plotnine draws the groups in category order, so yang comes last and its thick line covers the
