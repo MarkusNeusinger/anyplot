@@ -234,14 +234,19 @@ export default function Chart() {
 
         <Box>
           <Typography sx={titleSx}>{PANEL_TITLES[3]}</Typography>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: chartH, gap: "40px" }}>
-            <Box sx={{ width: chartH, height: chartH, flexShrink: 0 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", height: chartH }}>
             <PieChart
               width={chartH}
               height={chartH}
               skipAnimation
-              hideLegend
               margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+              slotProps={{
+                legend: {
+                  direction: "vertical",
+                  position: { vertical: "middle", horizontal: "end" },
+                  sx: { fontSize: 15, color: t.ink, gap: "12px", ml: "40px" },
+                },
+              }}
               series={[
                 {
                   data: slices,
@@ -259,15 +264,6 @@ export default function Chart() {
                 ]),
               )}
             />
-            </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {slices.map((s) => (
-                <Box key={s.id} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Box sx={{ width: 16, height: 16, borderRadius: "3px", bgcolor: s.color }} />
-                  <Typography sx={{ fontSize: 15, color: t.ink }}>{s.label}</Typography>
-                </Box>
-              ))}
-            </Box>
           </Box>
         </Box>
       </Box>
