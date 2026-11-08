@@ -10,7 +10,7 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 // The muted anchor (confidence-band fill), theme-adaptive like the chrome
@@ -32,6 +32,7 @@ const GRID_POINTS = 60; // samples along the fitted line and its band
 const X_PAD_SHARE = 0.04; // room beyond the outermost observations, as a share of the x span
 const Y_PAD_SHARE = 0.08;
 const POINT_OPACITY = 0.65;
+const NOTE_INSET = 28; // px from the plot corner to the fit statistics
 
 // Columns: set these to your data's column names
 const AD_SPEND = "Advertising spend ($k)"; // role: x
@@ -84,8 +85,10 @@ const yAll = [...ys, ...upperY, ...lowerY];
 const yPad = (Math.max(...yAll) - Math.min(...yAll)) * Y_PAD_SHARE;
 
 const TITLE = "scatter-regression-linear · javascript · muix · anyplot.ai";
-const STATS = `Least-squares fit: y = ${slope.toFixed(2)}x ${intercept < 0 ? "−" : "+"} ${Math.abs(intercept).toFixed(1)}   ·   R² = ${rSquared.toFixed(3)}   ·   r = ${correlation.toFixed(3)}   ·   n = ${n}`;
+const STATS = `Least-squares fit to n = ${n} observations   ·   r = ${correlation.toFixed(3).replace("-", "−")}`;
 const BAND_NOTE = `Shaded band: ${CONFIDENCE_LEVEL}% confidence interval for the mean response`;
+const R_SQUARED_NOTE = `R² = ${rSquared.toFixed(3)}`;
+const EQUATION_NOTE = `y = ${slope.toFixed(2).replace("-", "−")}x ${intercept < 0 ? "−" : "+"} ${Math.abs(intercept).toFixed(1)}`;
 const HEADER_HEIGHT = 104;
 
 function ConfidenceBand() {
@@ -94,6 +97,25 @@ function ConfidenceBand() {
   const upper = gridX.map((x, i) => `${xScale(x)},${yScale(upperY[i])}`).join(" L ");
   const lower = [...gridX.keys()].reverse().map((i) => `${xScale(gridX[i])},${yScale(lowerY[i])}`).join(" L ");
   return <path d={`M ${upper} L ${lower} Z`} fill={MUTED} fillOpacity={0.24} stroke="none" />;
+}
+
+// The fit statistics go into the top corner the line leaves empty: top left for a rising fit,
+// top right for a falling one
+function FitNote() {
+  const { left, top, width } = useDrawingArea();
+  const rising = slope >= 0;
+  const x = rising ? left + NOTE_INSET : left + width - NOTE_INSET;
+  const anchor = rising ? "start" : "end";
+  return (
+    <g>
+      <text x={x} y={top + NOTE_INSET + 18} textAnchor={anchor} fontSize={22} fontWeight={600} fill={t.ink}>
+        {R_SQUARED_NOTE}
+      </text>
+      <text x={x} y={top + NOTE_INSET + 44} textAnchor={anchor} fontSize={16} fill={t.inkSoft}>
+        {EQUATION_NOTE}
+      </text>
+    </g>
+  );
 }
 
 export default function Chart() {
@@ -175,10 +197,11 @@ export default function Chart() {
               "& .MuiLineChart-line": { strokeWidth: 3 },
             }}
           >
-            <ChartsGrid horizontal />
+            <ChartsGrid horizontal vertical />
             <ConfidenceBand />
             <ScatterPlot />
             <LinePlot skipAnimation />
+            <FitNote />
             <ChartsXAxis />
             <ChartsYAxis />
           </ChartsSurface>
