@@ -22,7 +22,7 @@ const TITLE_H = 80;
 // Columns: set these to your data's column names
 const X = "x"; // role: x
 const Y = "y"; // role: y
-const Z = "z"; // role: z
+const Z = "z = sin(x) · cos(y)"; // role: z
 
 // Data: replace this block with your own records, one object per grid point
 // The wave surface z = sin(x) · cos(y) on an evenly spaced 24 × 24 grid.
@@ -153,6 +153,11 @@ function WireframeLayer() {
         const flip = ((x1 + x2) / 2 - cx) * -(y2 - y1) + ((y1 + y2) / 2 - cy) * (x2 - x1) < 0 ? -1 : 1;
         const nx = (flip * -(y2 - y1)) / len;
         const ny = (flip * (x2 - x1)) / len;
+        // the arm title runs along its arm and reads toward the right or upward
+        const readSign = x2 - x1 - (y2 - y1) >= 0 ? 1 : -1;
+        const titleDeg = (Math.atan2(readSign * (y2 - y1), readSign * (x2 - x1)) * 180) / Math.PI;
+        const titleX = (x1 + x2) / 2 + nx * TICK_PX * 7.5;
+        const titleY = (y1 + y2) / 2 + ny * TICK_PX * 7.5;
         return (
           <g key={arms[a].name}>
             <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={t.inkSoft} strokeWidth={2} />
@@ -170,8 +175,9 @@ function WireframeLayer() {
               );
             })}
             <text
-              x={(x1 + x2) / 2 + nx * TICK_PX * 7.5}
-              y={(y1 + y2) / 2 + ny * TICK_PX * 7.5}
+              x={titleX}
+              y={titleY}
+              transform={`rotate(${titleDeg} ${titleX} ${titleY})`}
               dy="0.35em"
               textAnchor="middle"
               fontSize={16}
