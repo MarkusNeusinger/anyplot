@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: ecg-twelve-lead
 created: '2026-06-17T03:35:58Z'
-updated: '2026-11-08T02:14:09Z'
+updated: '2026-11-08T06:38:50Z'
 generated_by: claude-opus-5-5
 adopted_from: eee08c18394550bb10b728a987147e600a9b2908 (eee08c18394550bb10b728a987147e600a9b2908)
 workflow_run: 42437335757
@@ -13,49 +13,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Faithful clinical 3x4 layout (I, aVR, V1, V4 / II, aVL, V2, V5 / III, aVF, V3,
-    V6) with each column as a consecutive 2.5 s window, plus a full-width 10 s Lead
-    II rhythm strip on the same grid and scale
-  - One px-per-mm factor for every strip (computed from the canvas) keeps 1 mm cells
-    square and the 25 mm/s / 10 mm/mV scale exact, so the 1 mV calibration step spans
-    exactly two bold squares in every row
-  - Voltage window snapped to whole 5 mm squares so every strip starts and ends on
-    a bold ruling line
-  - 'ECG paper ruling in the Imprint matte red with theme-dependent opacity: pink-red
-    paper on light, a deepened red ruling on dark that stays visible yet subordinate
-    to the green traces'
-  - 'Idiomatic MUI X v9 composition: ChartsContainer with LinePlot plus custom SVG
-    layers driven by useXScale/useYScale/useDrawingArea, null-gapped per-lead series,
-    skipAnimation and hidden axes'
-  - Lead labels carry a page-coloured halo (paintOrder stroke) so they stay legible
-    over the ruling in both themes
-  - 'Morphology varies plausibly by lead: inverted aVR, rS in V1 with inverted T,
-    tall R in V4-V5'
+  - 'Uses the MUI X v9 composition API: ChartsContainer + LinePlot with custom SVG
+    layers that read useXScale/useYScale/useDrawingArea, so ruling, calibration pulse
+    and labels sit on the chart''s own scales'
+  - One px-per-mm scale for every strip keeps the 1 mm cells square and makes 25 mm/s
+    and 10 mm/mV measurable; the voltage window snaps to whole bold squares
+  - 'Physiologically consistent data: limb leads III, aVR, aVL, aVF derived from I
+    and II by Einthoven''s and Goldberger''s equations, giving an inverted aVR and
+    a plausible V1-V6 R-wave progression'
+  - 'Theme-tuned ruling: Imprint matte red at higher alpha on dark stays visible yet
+    subordinate to the green trace; halo-stroked lead labels readable on both surfaces'
+  - Standard 3x4 layout with consecutive 2.5 s windows per column plus a full-width
+    labeled Lead II rhythm strip, each with a rectangular 1 mV pulse
   weaknesses:
-  - 'DQ-03 (code): the per-lead gains break Einthoven''s law — lead III''s R wave
-    is 0.55 x 1.0 mV while II − I gives 1.05 − 0.75 = 0.30 mV (+0.25 mV too tall),
-    and aVR/aVF are not derived from I and II either, so the limb leads are not mutually
-    consistent → derive III = II − I, aVR = −(I + II)/2, aVL = I − II/2, aVF = II
-    − I/2 from the generated I and II. Likely cause: independent hand-picked gains
-    in the `profile` table for III, aVR, aVL and aVF.'
-  - 'Suggestion: a short vertical tick at each column boundary, as on clinical printouts,
-    would mark where one lead''s window ends and the next begins.'
-  - 'Suggestion: the subtitle''s ''10 s II rhythm strip'' would read more clearly
-    as ''10 s Lead II rhythm strip''.'
+  - 'Suggestion: align the title block''s left edge with the strips'' left edge (title
+    at ~25 px, strips at ~88 px in the display scale) for a cleaner vertical alignment.'
+  - 'Suggestion: short vertical separator ticks at the column boundaries, as on clinical
+    printouts, would mark where one lead''s window ends and the next begins.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; each of the four strips sits on a faint pink-tinted panel.
-      Chrome: bold title "ecg-twelve-lead · javascript · muix · anyplot.ai" top left (~31 % of the width), a grey subtitle with the scale metadata (12 leads, 2.5 s each, 10 s rhythm strip, 1000 Hz, 25 mm/s, 10 mm/mV, 1 mV calibration pulse); dark bold lead labels I, aVR, V1, V4 / II, aVL, V2, V5 / III, aVF, V3, V6 / II at the top-left of each window, all readable. No numeric axes, as permitted.
-      Data: green #009E73 traces with P-QRS-T complexes at 75 bpm; 1 mV rectangular calibration pulse at the left of every strip spanning two bold squares; light red 1 mm and bolder red 5 mm ruling, square cells; aVR inverted, V1 rS with inverted T, tall R in V4-V5; full-width Lead II rhythm strip at the bottom.
+      Background: warm off-white page (#FAF8F1); the four strips carry a faint red paper tint.
+      Chrome: bold dark title "ecg-twelve-lead · javascript · muix · anyplot.ai" top-left, grey subtitle "12 leads, 2.5 s each, and a 10 s II rhythm strip · 1000 Hz · 25 mm/s · 10 mm/mV · 1 mV calibration pulse"; bold dark lead labels I/aVR/V1/V4, II/aVL/V2/V5, III/aVF/V3/V6 and II on the rhythm strip, all readable. No numeric axes (permitted).
+      Data: green #009E73 traces over light-red 1 mm ruling and stronger 5 mm ruling with square cells; a rectangular 1 mV calibration pulse (two bold squares tall, one wide) at the left of every strip; P-QRS-T complexes with inverted aVR, rS in V1, tall R in V4-V6; full-width Lead II rhythm strip with 13 beats.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page with a faint red-tinted panel behind each strip.
-      Chrome: title, subtitle and lead labels flip to light ink and are fully readable; no dark-on-dark text.
-      Data: identical green traces and calibration pulses; the red ruling is deepened and stronger in opacity, visible but subordinate to the traces.
+      Background: warm near-black page (#1A1A17) with a faintly red-tinted panel per strip.
+      Chrome: title, subtitle and lead labels in light ink, all readable; no dark-on-dark text.
+      Data: identical green #009E73 traces and identical layout; the matte-red ruling is deepened/more opaque, visible yet subordinate to the traces.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,72 +55,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, subtitle 15 px, lead labels 16 px bold with page-coloured
-          halo; readable in both themes
+        comment: Title 22 px, subtitle 15 px, bold 16 px lead labels with a page-colored
+          halo; all readable on both surfaces
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lead labels sit above the traces; no text collisions
+        comment: Lead labels sit above the traces in the strip headroom; no text collides
+          with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1.8 px traces stand out from the ruling in both themes
+        comment: 1.8 px traces stand clearly above the 0.8/1.3 px ruling in both themes;
+          calibration pulse at 2 px
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green trace on red ruling; leads identified by label and position,
-          not colour
+        comment: Single green trace over red ruling differs strongly in lightness;
+          no information carried by red-green contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Strips fill the width, balanced margins, nothing cut off; canvas
-          gate passed (3200x1800)
+        comment: Canvas gate passed; four strips fill the height evenly, centered
+          with balanced side margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design (permitted); subtitle states paper speed, gain
-          and calibration
+        comment: No numeric axes by design (permitted); subtitle states 25 mm/s, 10
+          mm/mV, 1 mV pulse and duration
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Trace in #009E73, ruling from the Imprint matte red, correct theme
-          backgrounds'
+        comment: 'Trace #009E73 (first Imprint slot); ruling in the Imprint matte
+          red #AE3030 as the spec asks for red paper; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clinical-paper look decided for this chart: theme-specific ruling/tint
-          opacities, title + metadata subtitle hierarchy, haloed lead labels'
+        comment: Title/subtitle hierarchy, halo-stroked bold lead labels, per-theme
+          ruling alphas and a faint paper tint that reads like real ECG paper on both
+          surfaces
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Computed px/mm keeps cells square, voltage window snapped to bold
-          squares, centred strips with even gaps
+        comment: Voltage window snapped to whole bold squares so every strip starts
+          and ends on a bold line; single px-per-mm scale keeps cells square; labels
+          placed at each window start
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed faithfully; no hierarchy chosen beyond the Notes
+        passed: true
+        comment: Displays the standard layout the Notes prescribe; no hierarchy chosen
+          beyond it
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 12-lead ECG in 3x4 clinical layout
+        comment: 12-lead ECG in clinical 3x4 format with optional Lead II rhythm strip
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Layout, labels, 1/5 mm ruling, 1 mV pulse, 25 mm/s and 10 mm/mV,
-          Lead II rhythm strip all present
+        comment: Rows (I,aVR,V1,V4)/(II,aVL,V2,V5)/(III,aVF,V3,V6), labels on every
+          lead, 1 mm/5 mm ruling, 1 mV rectangular calibration pulse on every strip,
+          25 mm/s and 10 mm/mV, full-width labeled II rhythm strip
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Traces at sampled voltages, consecutive time windows per column
+        comment: Traces at their sampled voltages; each column a consecutive 2.5 s
+          window; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend N/A (leads labeled in place)
+        comment: Title ecg-twelve-lead · javascript · muix · anyplot.ai; legend N/A
+          (leads labeled in place)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,21 +167,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: P, Q, R, S, T in every lead, polarity and R/S progression vary by
-          lead
+        comment: P, Q, R, S, T visible; inverted aVR, rS in V1, R progression V1-V6,
+          small III/aVL complexes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic normal sinus rhythm at 75 bpm, neutral
+        comment: Normal sinus rhythm at 75 bpm; limb leads derived by Einthoven/Goldberger
+          relations
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Checked P 0.08-0.16 mV, QRS up to ~1.45 mV, T 0.15-0.33 mV: in range;
-          limb leads violate Einthoven''s law (III != II - I) (defect line)'
+        comment: 'Checked against the Notes ranges (no Check values: line): P 0.13-0.16
+          mV, R up to ~1.45 mV (V4), T ~0.27-0.33 mV, read off the code and the 1
+          mV pulse'
     code_quality:
       score: 10
       max: 10
@@ -195,34 +193,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module; the two small components are required to use MUI X
-          hooks
+        comment: Linear module; the two small layer components are required by MUI
+          X hooks inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic Gaussian model, no randomness
+        comment: Fully deterministic Gaussian-sum model, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: ChartsContainer, LinePlot, useXScale, useYScale, useDrawingArea all
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity; ruling built as two path strings; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
+        comment: Default-exported component, sized from ANYPLOT_SIZE, skipAnimation
+          on container and LinePlot, current v9 composition API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -230,32 +231,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with LinePlot, null-gapped series per
-          lead, hidden axes via position none
+        comment: 'Composition API (ChartsContainer + LinePlot) with axes hidden via
+          position: none and null-gapped series per lead window'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom SVG layers inside the chart via useXScale/useYScale/useDrawingArea
-          hooks
-  verdict: REJECTED
+        comment: Custom SVG layers driven by useXScale/useYScale/useDrawingArea so
+          ruling, pulse and labels share the chart's own scales
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T02:11:13Z'
+  rendered_at: '2026-11-08T02:16:10Z'
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
   - layer-composition
+  - subplots
   - annotations
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - grid-styling
+  - minimal-chrome
   - alpha-blending
