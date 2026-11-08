@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-basic: Basic Line Plot
-// Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-24
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
