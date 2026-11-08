@@ -2,57 +2,50 @@ library: muix
 language: javascript
 specification_id: scatter-lag
 created: '2026-06-24T23:18:19Z'
-updated: '2026-06-24T23:41:10Z'
-generated_by: claude-sonnet
-workflow_run: 28135458464
+updated: '2026-11-08T05:09:00Z'
+generated_by: claude-opus-5-5
+adopted_from: d59d708e6a73813ee2975d28f683fe28ea3d3eb6 (d59d708e6a73813ee2975d28f683fe28ea3d3eb6)
+workflow_run: 42448982471
 issue: 5251
-language_version: 22.23.0
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Excellent use of useXScale/useYScale hooks to place the diagonal reference line
-    precisely in chart coordinate space — highly idiomatic MUI X pattern not available
-    in other libraries.
-  - Temporal quartile coloring (earliest to latest time periods) reveals temporal
-    autocorrelation structure within the lag scatter, adding genuine informational
-    depth beyond a basic lag plot.
-  - Fully deterministic LCG (seed=42) satisfies the browser harness reproducibility
-    requirement; AR(1) data generation with rho=0.82 produces a realistic and visually
-    clear autocorrelation pattern.
-  - 'Perfect spec compliance: diagonal y=x reference line, temporal color encoding,
-    Pearson r annotation, and descriptive axis labels with units all present.'
-  - Both themes render correctly — text is fully readable in light and dark renders
-    with no dark-on-dark failures.
+  - Both axes share one padded range and the same tick step, so the dashed y = x line
+    runs exactly along the plot diagonal, drawn lighter than the points
+  - Time index mapped through MUI X's zAxis continuous colorMap on the Imprint sequential
+    ramp, with a native ContinuousColorLegend titled 'Hour of record'
+  - Custom SVG layer (diagonal and r annotation) drawn with useXScale/useYScale/useDrawingArea;
+    the annotation is placed in the corner the correlation sign leaves empty, with
+    a page-colored halo
+  - Lag order is a single LAG constant that drives the pairing, axis titles, subtitle
+    and annotation
+  - Theme tokens threaded through every chrome element; both renders fully legible
   weaknesses:
-  - 'No alpha blending on scatter markers (markerSize=7, 199 points) — the central
-    cluster is slightly crowded; adding opacity: 0.8 or similar on each series would
-    reduce visual noise without losing the elliptical pattern.'
-  - Spine masking via background-colored SVG overlay lines (stroke={t.pageBg}) is
-    a workaround that depends on the background color matching exactly; a CSS or SVG
-    visibility approach on the spine elements would be more robust.
-  - The diagonal reference line has no text label — a small 'y = x' label near the
-    line end would make its purpose immediately obvious to readers unfamiliar with
-    lag plots.
+  - 'Suggestion: a few intermediate ticks on the color bar (e.g. every 50 hours) would
+    make the time index easier to read off individual points.'
+  - 'Suggestion: the color bar could be taller to match the plot height, giving the
+    time gradient more resolution.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — confirmed, not pure white
-      Chrome: Title "scatter-lag · javascript · muix · anyplot.ai" at 22px bold in dark ink (#1A1A17), clearly readable. Subtitle at 14px in softer ink. Axis labels "y(t) — hourly temperature (°C)" and "y(t+1) — next-hour temperature (°C)" at 16px, clearly readable. Tick labels at 14px, clearly readable. Legend labels at 14px, clearly readable. Pearson r annotation at 16px bold in top-left corner, clearly readable.
-      Data: Four scatter series using Imprint palette positions 1-4: green (#009E73 t=0-49), lavender (#C475FD t=50-99), blue (#4467A3 t=100-149), ochre (#BD8233 t=150-198). Diagonal dashed reference line in muted ink. 199 scatter points form an elliptical cloud along the diagonal, clearly demonstrating positive autocorrelation.
-      Legibility verdict: PASS — all text elements are clearly readable against the light background
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "scatter-lag · javascript · muix · anyplot.ai" centered at the top with a soft-ink subtitle "Lag k = 1 · 199 pairs from 200 observations · dashed line: y = x"; x axis "Temperature (°C) at t", y axis "Temperature (°C) at t + 1", ticks 15–30 at 1 °C steps on both axes; subtle grid; color bar "Hour of record" (0 to 198) on the right. All readable.
+      Data: 199 circular markers at 0.85 opacity forming a tight band along the dashed grey y = x diagonal; colors run from brand green #009E73 (early hours) to blue (late hours); "r(lag 1) = 0.934" in the empty top-left corner.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — confirmed, not pure black
-      Chrome: Title, subtitle, axis labels, tick labels, legend labels, and Pearson r annotation all appear in light cream (#F0EFE8 range) text, clearly readable against the dark background. No dark-on-dark text failures detected. MUI X ThemeProvider correctly handles chrome token inversion.
-      Data: Same four Imprint colors as light render (green, lavender, blue, ochre) — identical in both themes as required. Diagonal dashed reference line remains visible. Elliptical autocorrelation pattern unchanged.
-      Legibility verdict: PASS — all text elements readable in dark theme, no dark-on-dark issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, tick labels and color-bar labels in light ink; grid subtle but visible; dashed diagonal in light grey. No dark-on-dark text.
+      Data: identical marker positions and green-to-blue colors as the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,53 +53,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, tick
-          labels 14px, legend 14px, r-annotation 16px bold). Both themes fully readable.
+        comment: Explicit sizes (title 22 px, subtitle 15, axis titles 17, ticks 15,
+          r annotation 18) readable in both themes; ink tokens on both surfaces
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend, annotations and axes are clean; minor expected point-to-point
-          overlap in the dense central cluster for 199 scatter points.
+        comment: r annotation sits in the empty top-left corner with a page-colored
+          halo; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: markerSize=7 appropriate for 199 points; no alpha blending applied,
-          leaving the central cluster slightly crowded.
+        comment: '199 points at markerSize 6 with 0.85 opacity: prominent and still
+          separable in the dense center; color-bar gradient visible in both themes'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette (green/lavender/blue/ochre) is CVD-safe with high
-          ΔE across all 4 slots.
+        comment: Green-to-blue sequential ramp, CVD-safe, position carries the main
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (landscape 3200x1800). Generous margins, plot
-          fills canvas well with balanced whitespace.
+        comment: 3200x1800, canvas gate passed; balanced axis titles, plot fills the
+          canvas, color bar on the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''y(t) — hourly temperature (°C)'', Y: ''y(t+1) — next-hour temperature
-          (°C)'' — descriptive with units.'
+        comment: '''Temperature (°C) at t'' / ''at t + 1'' with units and lag order'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (brand green). Positions 2-4 follow Imprint
-          canonical order. Light bg #FAF8F1, dark bg #1A1A17 — chrome is theme-correct
-          in both renders.'
+        comment: 'Time index on imprint_seq (t.seq[0] to t.seq[1]); backgrounds #FAF8F1
+          / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -114,24 +105,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Temporal quartile coloring, Pearson r annotation, and subtitle are
-          intentional design choices that elevate above defaults; not quite publication-ready.
+        comment: Title/subtitle hierarchy with a subtitle stating lag, pair count
+          and the dashed-line meaning; semibold haloed r annotation
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spine masking via background-colored SVG overlay lines is functional
-          and visually effective; subtle grid; generous margins. Workaround approach
-          rather than clean removal.
+        comment: Shared padded range and matching 1 °C tick step on both axes so the
+          diagonal is the plot diagonal; r label placed in the corner the correlation
+          sign leaves empty
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Time-quartile color encoding reveals whether early or late observations
-          drive autocorrelation — genuine visual hierarchy. Diagonal reference line
-          and Pearson r give immediate orientation.
+        comment: Data displayed with the Notes' r annotation and time coloring; no
+          further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag scatter plot: y(t) vs y(t+1) at lag=1.'
+        comment: Lag scatter y(t) vs y(t+1); time coloring and r annotation are options
+          the Notes offer
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line (y=x), temporal coloring, Pearson r annotation,
-          lag=1 default — all present.
+        comment: Configurable LAG constant, y = x reference drawn lighter and dashed,
+          equal axis ranges, lag stated in axis titles and subtitle, unconnected points,
+          sequential color bar labeled 'Hour of record', r clear of points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = y(t), Y = y(t+1), axes symmetric and fully display the AR(1)
-          temperature data.
+        comment: Earlier value on x, later on y; no jitter; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: '''scatter-lag · javascript · muix · anyplot.ai'' is correct. Legend
-          labels ''t = 0-49'' through ''t = 150-198'' are meaningful.'
+        comment: Title 'scatter-lag · javascript · muix · anyplot.ai'; color bar titled
+          for a reader
     data_quality:
       score: 15
       max: 15
@@ -172,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all lag plot aspects: elliptical cloud along diagonal,
-          diagonal reference line, temporal structure overlay, correlation annotation.'
+        comment: Strong AR(1) band along the diagonal plus a few outliers; time coloring
+          shows the series drifting
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly temperature readings with AR(1) process (rho=0.82) is physically
-          realistic and domain-appropriate. Neutral content.
+        comment: Hourly station temperature, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations (within 100-5000 spec range), temperature range
-          8-33°C is realistic, rho=0.82 is plausible for atmospheric temperature.
+        comment: 15–30 °C with hour-to-hour changes of a few degrees; r = 0.934 computed
+          from the pairs, consistent with rho 0.97 on 199 pairs; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -197,63 +188,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data generation → chart component → export. DiagonalLine helper justified
-          for hook usage.
+        comment: Linear module; the one helper component is needed for the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG seeded at 42 — fully deterministic; no Math.random().
+        comment: Fixed-seed LCG with Box-Muller
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 8 imports are actively used in the implementation.
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured; AR(1) generation, Pearson r calculation,
-          and quartile segmentation are appropriately inline.
+        comment: Short written-out Pearson r, allowed by the library prompt's Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set on ScatterPlot; community @mui/x-charts only; harness
-          handles file output.
+        comment: Default-exported component, skipAnimation, v9 composition API, sized
+          to ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses ChartContainer + ScatterPlot composition; correctly uses slotProps.legend,
-          skipAnimation, and theme tokens from window.ANYPLOT_TOKENS.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks to render custom SVG diagonal line in chart
-          coordinate space is distinctively MUI X. ChartContainer composition pattern
-          also MUI X-specific.
+        comment: ChartsDataProvider/ChartsWrapper/ChartsSurface composition with per-axis
+          tickNumber and sized axis bands
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: zAxis continuous colorMap feeding ContinuousColorLegend; custom SVG
+          layer drawn through useXScale/useYScale/useDrawingArea
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T05:06:05Z'
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
-  - custom-legend
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
-  - regression
   - time-series
-  styling: []
+  styling:
+  - custom-colormap
+  - alpha-blending
