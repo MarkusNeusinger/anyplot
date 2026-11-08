@@ -1,6 +1,6 @@
 // anyplot.ai
 // swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.17.0 | JavaScript 22.23.2
 // Quality: 94/100 | Created: 2026-08-24
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
@@ -9,200 +9,192 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic): simulated Phase II oncology trial -----
-// 20 patients across two treatment arms, ordered longest-duration-first so
-// the plot reads top-to-bottom like a published clinical swimmer plot.
-const ARM_A = "Chemotherapy";
-const ARM_B = "Targeted Therapy";
+// Constants
+const X_PAD_SHARE = 0.2; // room right of the longest bar for its arrow and the callout
+const MARKER_SHARE = 0.42; // event marker radius as a share of the bar band
+const MARKER_MAX = 13; // largest event marker radius (px)
+const FOCUS_COUNT = 2; // the callout brackets this many longest-running patients
+// Event symbols as unit paths around (0, 0), scaled to the marker radius
+const STAR = `${Array.from({ length: 10 }, (_, i) => {
+  const r = i % 2 === 0 ? 1.15 : 0.48;
+  const a = (Math.PI / 5) * i - Math.PI / 2;
+  return `${i === 0 ? "M" : "L"} ${(r * Math.cos(a)).toFixed(3)} ${(r * Math.sin(a)).toFixed(3)}`;
+}).join(" ")} Z`;
+const SHAPE_PATH = {
+  triangle: "M 0 -1 L 1 0.85 L -1 0.85 Z",
+  star: STAR,
+  diamond: "M 0 -1 L 1 0 L 0 1 L -1 0 Z",
+  circle: "M -0.72 0 A 0.72 0.72 0 1 0 0.72 0 A 0.72 0.72 0 1 0 -0.72 0 Z",
+  arrow: "M 0 -1.05 L 1.8 0 L 0 1.05 Z",
+  square: "M -0.75 -0.75 H 0.75 V 0.75 H -0.75 Z",
+};
+// Clinical event vocabulary: a symbol per type, and the colours fixed by meaning
+// (progression in the matte-red loss anchor, adverse events in the warning amber,
+// the ongoing arrow in ink); other types take the palette positions left over
+const EVENT_SHAPE = {
+  "Partial response": "triangle",
+  "Complete response": "star",
+  "Progressive disease": "diamond",
+  "Adverse event": "circle",
+  Ongoing: "arrow",
+};
+const EVENT_COLOR = { "Progressive disease": t.palette[4], "Adverse event": t.amber, Ongoing: t.ink };
+const ONGOING = "Ongoing"; // the event type that marks a patient still on treatment at data cutoff
+const HEADER_H = 128;
 
-const patients = [
-  { id: "PT-011", group: ARM_B, duration: 58, ongoing: true, events: [{ time: 9, type: "partial_response" }, { time: 27, type: "complete_response" }] },
-  { id: "PT-004", group: ARM_B, duration: 54, ongoing: true, events: [{ time: 12, type: "partial_response" }, { time: 34, type: "complete_response" }] },
-  { id: "PT-017", group: ARM_A, duration: 50, ongoing: true, events: [{ time: 14, type: "partial_response" }, { time: 40, type: "adverse_event" }] },
-  { id: "PT-002", group: ARM_B, duration: 47, ongoing: false, events: [{ time: 11, type: "partial_response" }, { time: 25, type: "complete_response" }, { time: 47, type: "progressive_disease" }] },
-  { id: "PT-019", group: ARM_A, duration: 44, ongoing: true, events: [{ time: 16, type: "partial_response" }] },
-  { id: "PT-008", group: ARM_B, duration: 41, ongoing: false, events: [{ time: 10, type: "partial_response" }, { time: 41, type: "progressive_disease" }] },
-  { id: "PT-013", group: ARM_A, duration: 39, ongoing: true, events: [{ time: 20, type: "adverse_event" }, { time: 22, type: "partial_response" }] },
-  { id: "PT-005", group: ARM_B, duration: 36, ongoing: false, events: [{ time: 36, type: "progressive_disease" }] },
-  { id: "PT-016", group: ARM_A, duration: 34, ongoing: true, events: [{ time: 18, type: "partial_response" }] },
-  { id: "PT-001", group: ARM_B, duration: 32, ongoing: false, events: [{ time: 9, type: "partial_response" }, { time: 32, type: "progressive_disease" }] },
-  { id: "PT-020", group: ARM_A, duration: 30, ongoing: false, events: [{ time: 12, type: "adverse_event" }, { time: 30, type: "progressive_disease" }] },
-  { id: "PT-009", group: ARM_B, duration: 28, ongoing: true, events: [{ time: 14, type: "partial_response" }] },
-  { id: "PT-003", group: ARM_A, duration: 26, ongoing: false, events: [{ time: 26, type: "progressive_disease" }] },
-  { id: "PT-018", group: ARM_B, duration: 24, ongoing: false, events: [{ time: 8, type: "partial_response" }, { time: 24, type: "progressive_disease" }] },
-  { id: "PT-006", group: ARM_A, duration: 22, ongoing: false, events: [{ time: 10, type: "adverse_event" }, { time: 22, type: "progressive_disease" }] },
-  { id: "PT-015", group: ARM_B, duration: 20, ongoing: false, events: [{ time: 20, type: "progressive_disease" }] },
-  { id: "PT-010", group: ARM_A, duration: 18, ongoing: false, events: [{ time: 18, type: "progressive_disease" }] },
-  { id: "PT-012", group: ARM_B, duration: 16, ongoing: false, events: [{ time: 8, type: "adverse_event" }, { time: 16, type: "progressive_disease" }] },
-  { id: "PT-007", group: ARM_A, duration: 14, ongoing: false, events: [{ time: 14, type: "progressive_disease" }] },
-  { id: "PT-014", group: ARM_B, duration: 12, ongoing: false, events: [{ time: 12, type: "progressive_disease" }] },
+// Columns: set these to your data's column names
+const PATIENT = "Patient"; // role: patient_id
+const ARM = "Treatment arm"; // role: group
+const DURATION = "Time on study (weeks)"; // role: duration
+const EVENT_TIME = "Event time (weeks)"; // role: events
+const EVENT_TYPE = "Event"; // role: events
+
+// Data: replace this block with your own records, one object per row
+// Simulated Phase II oncology trial: one row per clinical event of each patient
+const data = [
+  { [PATIENT]: "PT-001", [ARM]: "Targeted Therapy", [DURATION]: 32, [EVENT_TIME]: 9, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-001", [ARM]: "Targeted Therapy", [DURATION]: 32, [EVENT_TIME]: 32, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-002", [ARM]: "Targeted Therapy", [DURATION]: 47, [EVENT_TIME]: 11, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-002", [ARM]: "Targeted Therapy", [DURATION]: 47, [EVENT_TIME]: 25, [EVENT_TYPE]: "Complete response" },
+  { [PATIENT]: "PT-002", [ARM]: "Targeted Therapy", [DURATION]: 47, [EVENT_TIME]: 47, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-003", [ARM]: "Chemotherapy", [DURATION]: 26, [EVENT_TIME]: 26, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-004", [ARM]: "Targeted Therapy", [DURATION]: 54, [EVENT_TIME]: 12, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-004", [ARM]: "Targeted Therapy", [DURATION]: 54, [EVENT_TIME]: 34, [EVENT_TYPE]: "Complete response" },
+  { [PATIENT]: "PT-004", [ARM]: "Targeted Therapy", [DURATION]: 54, [EVENT_TIME]: 54, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-005", [ARM]: "Targeted Therapy", [DURATION]: 36, [EVENT_TIME]: 36, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-006", [ARM]: "Chemotherapy", [DURATION]: 22, [EVENT_TIME]: 10, [EVENT_TYPE]: "Adverse event" },
+  { [PATIENT]: "PT-006", [ARM]: "Chemotherapy", [DURATION]: 22, [EVENT_TIME]: 22, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-007", [ARM]: "Chemotherapy", [DURATION]: 14, [EVENT_TIME]: 14, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-008", [ARM]: "Targeted Therapy", [DURATION]: 41, [EVENT_TIME]: 10, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-008", [ARM]: "Targeted Therapy", [DURATION]: 41, [EVENT_TIME]: 41, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-009", [ARM]: "Targeted Therapy", [DURATION]: 28, [EVENT_TIME]: 14, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-009", [ARM]: "Targeted Therapy", [DURATION]: 28, [EVENT_TIME]: 28, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-010", [ARM]: "Chemotherapy", [DURATION]: 18, [EVENT_TIME]: 18, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-011", [ARM]: "Targeted Therapy", [DURATION]: 58, [EVENT_TIME]: 9, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-011", [ARM]: "Targeted Therapy", [DURATION]: 58, [EVENT_TIME]: 27, [EVENT_TYPE]: "Complete response" },
+  { [PATIENT]: "PT-011", [ARM]: "Targeted Therapy", [DURATION]: 58, [EVENT_TIME]: 58, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-012", [ARM]: "Targeted Therapy", [DURATION]: 16, [EVENT_TIME]: 8, [EVENT_TYPE]: "Adverse event" },
+  { [PATIENT]: "PT-012", [ARM]: "Targeted Therapy", [DURATION]: 16, [EVENT_TIME]: 16, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-013", [ARM]: "Chemotherapy", [DURATION]: 39, [EVENT_TIME]: 20, [EVENT_TYPE]: "Adverse event" },
+  { [PATIENT]: "PT-013", [ARM]: "Chemotherapy", [DURATION]: 39, [EVENT_TIME]: 22, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-013", [ARM]: "Chemotherapy", [DURATION]: 39, [EVENT_TIME]: 39, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-014", [ARM]: "Targeted Therapy", [DURATION]: 12, [EVENT_TIME]: 12, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-015", [ARM]: "Targeted Therapy", [DURATION]: 20, [EVENT_TIME]: 20, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-016", [ARM]: "Chemotherapy", [DURATION]: 34, [EVENT_TIME]: 18, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-016", [ARM]: "Chemotherapy", [DURATION]: 34, [EVENT_TIME]: 34, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-017", [ARM]: "Chemotherapy", [DURATION]: 50, [EVENT_TIME]: 14, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-017", [ARM]: "Chemotherapy", [DURATION]: 50, [EVENT_TIME]: 40, [EVENT_TYPE]: "Adverse event" },
+  { [PATIENT]: "PT-017", [ARM]: "Chemotherapy", [DURATION]: 50, [EVENT_TIME]: 50, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-018", [ARM]: "Targeted Therapy", [DURATION]: 24, [EVENT_TIME]: 8, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-018", [ARM]: "Targeted Therapy", [DURATION]: 24, [EVENT_TIME]: 24, [EVENT_TYPE]: "Progressive disease" },
+  { [PATIENT]: "PT-019", [ARM]: "Chemotherapy", [DURATION]: 44, [EVENT_TIME]: 16, [EVENT_TYPE]: "Partial response" },
+  { [PATIENT]: "PT-019", [ARM]: "Chemotherapy", [DURATION]: 44, [EVENT_TIME]: 44, [EVENT_TYPE]: "Ongoing" },
+  { [PATIENT]: "PT-020", [ARM]: "Chemotherapy", [DURATION]: 30, [EVENT_TIME]: 12, [EVENT_TYPE]: "Adverse event" },
+  { [PATIENT]: "PT-020", [ARM]: "Chemotherapy", [DURATION]: 30, [EVENT_TIME]: 30, [EVENT_TYPE]: "Progressive disease" },
 ];
 
-const ids = patients.map((p) => p.id);
-const durations = patients.map((p) => p.duration);
-const barColors = patients.map((p) => (p.group === ARM_A ? t.palette[0] : t.palette[1]));
+// Plot: reads only data and the constants above
+// One bar per patient, longest time on study at the top
+const patients = [...new Set(data.map((d) => d[PATIENT]))]
+  .map((id) => {
+    const rows = data.filter((d) => d[PATIENT] === id);
+    return {
+      id,
+      arm: rows[0][ARM],
+      duration: Math.max(...rows.map((d) => d[DURATION])),
+      events: rows.filter((d) => d[EVENT_TYPE] != null && Number.isFinite(d[EVENT_TIME])),
+    };
+  })
+  .sort((a, b) => b.duration - a.duration);
+const arms = [...new Set(data.map((d) => d[ARM]))];
+const armColor = Object.fromEntries(arms.map((arm, i) => [arm, t.palette[i]]));
 
-// Event-type encoding: shape carries the primary meaning (colorblind-safe,
-// works even if two hues get confused); color reinforces clinical semantics
-// — progression uses the matte-red "bad" anchor, adverse event uses the
-// amber "warning" anchor, response events use two cool, uncommitted hues.
-const EVENT_COLOR = {
-  partial_response: t.palette[5],
-  complete_response: t.palette[7],
-  progressive_disease: t.palette[4],
-  adverse_event: t.amber,
-};
-const EVENT_LABEL = {
-  partial_response: "Partial response",
-  complete_response: "Complete response",
-  progressive_disease: "Progressive disease",
-  adverse_event: "Adverse event",
-};
+// Event types: the known vocabulary in clinical order, then any other type in order of appearance
+const presentTypes = [...new Set(data.map((d) => d[EVENT_TYPE]).filter((v) => v != null))];
+const eventTypes = [
+  ...Object.keys(EVENT_SHAPE).filter((type) => presentTypes.includes(type)),
+  ...presentTypes.filter((type) => !(type in EVENT_SHAPE)),
+];
+const takenColors = [...Object.values(armColor), ...Object.values(EVENT_COLOR)];
+const freeColors = t.palette.filter((c) => !takenColors.includes(c));
+const freeTypes = eventTypes.filter((type) => !(type in EVENT_COLOR));
+const eventColor = Object.fromEntries(
+  eventTypes.map((type) => [type, EVENT_COLOR[type] ?? freeColors[freeTypes.indexOf(type)]]),
+);
+const eventPath = Object.fromEntries(eventTypes.map((type) => [type, SHAPE_PATH[EVENT_SHAPE[type] ?? "square"]]));
 
-function trianglePath(cx, cy, r) {
-  return `M ${cx} ${cy - r} L ${cx + r} ${cy + r * 0.85} L ${cx - r} ${cy + r * 0.85} Z`;
-}
-function diamondPath(cx, cy, r) {
-  return `M ${cx} ${cy - r} L ${cx + r} ${cy} L ${cx} ${cy + r} L ${cx - r} ${cy} Z`;
-}
-function starPath(cx, cy, rOuter, rInner) {
-  const pts = [];
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? rOuter : rInner;
-    const angle = (Math.PI / 5) * i - Math.PI / 2;
-    pts.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
-  }
-  return `M ${pts.join(" L ")} Z`;
-}
-function arrowPath(x, y, r) {
-  return `M ${x} ${y - r} L ${x + r * 1.7} ${y} L ${x} ${y + r} Z`;
-}
+const durationMax = Math.max(...patients.map((p) => p.duration));
+const timeUnit = DURATION.match(/\(([^)]+)\)/)?.[1] ?? "";
+const focusIds = patients.slice(0, FOCUS_COUNT).map((p) => p.id);
+const legendItems = [
+  ...arms.map((arm) => ({ key: `arm-${arm}`, label: arm, color: armColor[arm], path: null })),
+  ...eventTypes.map((type) => ({ key: `event-${type}`, label: type, color: eventColor[type], path: eventPath[type] })),
+];
 
-function EventMarker({ type, cx, cy, size }) {
-  const color = EVENT_COLOR[type];
-  switch (type) {
-    case "partial_response":
-      return <path d={trianglePath(cx, cy, size)} fill={color} stroke={t.pageBg} strokeWidth={1.5} />;
-    case "complete_response":
-      return <path d={starPath(cx, cy, size * 1.15, size * 0.48)} fill={color} stroke={t.pageBg} strokeWidth={1.2} />;
-    case "progressive_disease":
-      return <path d={diamondPath(cx, cy, size)} fill={color} stroke={t.pageBg} strokeWidth={1.5} />;
-    case "adverse_event":
-      return <circle cx={cx} cy={cy} r={size * 0.72} fill={color} stroke={t.pageBg} strokeWidth={1.2} />;
-    default:
-      return null;
-  }
-}
+const TITLE = "swimmer-clinical-timeline · javascript · muix · anyplot.ai";
+const SUBTITLE = `${patients.length} patients across ${arms.length} ${ARM.toLowerCase()}s · sorted by ${DURATION.toLowerCase()} · arrow = ${ONGOING.toLowerCase()} at data cutoff`;
 
-// The two longest-surviving patients (both Targeted Therapy) are the chart's
-// clearest insight; called out with a bracket + caption rather than a heavier
-// annotation so sorting/color still do most of the storytelling work.
-const LONGEST_IDS = new Set([...patients].sort((a, b) => b.duration - a.duration).slice(0, 2).map((p) => p.id));
-
-// Must render inside BarChart's ChartContainer to read its live scales.
-function SwimmerOverlay() {
+function SwimmerLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale || typeof yScale.bandwidth !== "function") return null;
-  const bw = yScale.bandwidth();
-  const markerSize = Math.min(bw * 0.42, 13);
-
-  const longestRows = patients
-    .filter((p) => LONGEST_IDS.has(p.id))
-    .map((p) => ({ cy: +yScale(p.id) + bw / 2, xEnd: xScale(p.duration) }))
-    .sort((a, b) => a.cy - b.cy);
+  const band = yScale.bandwidth();
+  const r = Math.min(band * MARKER_SHARE, MARKER_MAX);
+  const focusRows = focusIds.map((id) => (yScale(id) ?? 0) + band / 2);
+  const focusX = xScale(Math.max(...patients.slice(0, FOCUS_COUNT).map((p) => p.duration))) + r * 2.6;
 
   return (
     <g>
-      {patients.map((p) => {
-        const bandTop = yScale(p.id);
-        if (bandTop == null) return null;
-        const cy = +bandTop + bw / 2;
-        return (
-          <g key={p.id}>
-            {p.events.map((e, i) => (
-              <EventMarker key={i} type={e.type} cx={xScale(e.time)} cy={cy} size={markerSize} />
-            ))}
-            {p.ongoing && <path d={arrowPath(xScale(p.duration), cy, markerSize * 1.05)} fill={t.ink} />}
-          </g>
-        );
-      })}
-      {longestRows.length === 2 && (
-        <g>
+      {patients.map((p) =>
+        p.events.map((e, i) => (
           <path
-            d={`M ${Math.max(longestRows[0].xEnd, longestRows[1].xEnd) + 14} ${longestRows[0].cy} h 5 V ${longestRows[1].cy} h -5`}
-            fill="none"
-            stroke={t.inkSoft}
-            strokeWidth={1.25}
-            opacity={0.6}
+            key={`${p.id}-${i}`}
+            d={eventPath[e[EVENT_TYPE]]}
+            transform={`translate(${xScale(e[EVENT_TIME])} ${(yScale(p.id) ?? 0) + band / 2}) scale(${r})`}
+            fill={eventColor[e[EVENT_TYPE]]}
+            stroke={e[EVENT_TYPE] === ONGOING ? "none" : t.pageBg}
+            strokeWidth={1.5}
+            vectorEffect="non-scaling-stroke"
           />
-          <text
-            x={Math.max(longestRows[0].xEnd, longestRows[1].xEnd) + 24}
-            y={(longestRows[0].cy + longestRows[1].cy) / 2}
-            fontSize={11}
-            fontStyle="italic"
-            fill={t.inkSoft}
-            dominantBaseline="middle"
-          >
-            Longest on study
-          </text>
-        </g>
+        )),
       )}
+      <path
+        d={`M ${focusX} ${Math.min(...focusRows)} h 6 V ${Math.max(...focusRows)} h -6`}
+        fill="none"
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+      />
+      <text
+        x={focusX + 14}
+        y={(Math.min(...focusRows) + Math.max(...focusRows)) / 2}
+        fontSize={14}
+        fill={t.inkSoft}
+        dominantBaseline="central"
+      >
+        Longest on study
+      </text>
     </g>
   );
 }
 
-function LegendSwatch({ color }) {
-  return (
-    <svg width={18} height={18}>
-      <rect x={1} y={4} width={16} height={10} rx={2} fill={color} />
-    </svg>
-  );
-}
-function LegendMarker({ type }) {
-  return (
-    <svg width={18} height={18}>
-      <EventMarker type={type} cx={9} cy={9} size={7} />
-    </svg>
-  );
-}
-function LegendArrow() {
-  return (
-    <svg width={18} height={18}>
-      <path d={arrowPath(2, 9, 7.5)} fill={t.ink} />
-    </svg>
-  );
-}
-
-const LEGEND_ITEMS = [
-  { key: "arm-a", render: <LegendSwatch color={t.palette[0]} />, label: ARM_A },
-  { key: "arm-b", render: <LegendSwatch color={t.palette[1]} />, label: ARM_B },
-  { key: "pr", render: <LegendMarker type="partial_response" />, label: EVENT_LABEL.partial_response },
-  { key: "cr", render: <LegendMarker type="complete_response" />, label: EVENT_LABEL.complete_response },
-  { key: "pd", render: <LegendMarker type="progressive_disease" />, label: EVENT_LABEL.progressive_disease },
-  { key: "ae", render: <LegendMarker type="adverse_event" />, label: EVENT_LABEL.adverse_event },
-  { key: "ongoing", render: <LegendArrow />, label: "Ongoing (censored)" },
-];
-
-const TITLE = "swimmer-clinical-timeline · javascript · muix · anyplot.ai";
-const HEADER_HEIGHT = 160;
-
 export default function Chart() {
   const { width: W, height: H } = window.ANYPLOT_SIZE;
-  const chartHeight = H - HEADER_HEIGHT;
 
   return (
     <Box sx={{ width: W, height: H, bgcolor: t.pageBg }}>
-      <Box sx={{ height: HEADER_HEIGHT, pt: "20px", pl: "56px", pr: "56px", boxSizing: "border-box" }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>{TITLE}</Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 14, mt: "4px" }}>
-          Phase II oncology trial · 20 patients across two treatment arms, sorted by time on study
-        </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "20px", mt: "14px", alignItems: "center" }}>
-          {LEGEND_ITEMS.map((item) => (
-            <Box key={item.key} sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              {item.render}
-              <Typography sx={{ color: t.inkSoft, fontSize: 13 }}>{item.label}</Typography>
+      <Box sx={{ height: HEADER_H, pt: "18px", px: "56px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600, lineHeight: 1.25 }}>{TITLE}</Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: 15, mt: "4px" }}>{SUBTITLE}</Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "22px", mt: "14px", alignItems: "center" }}>
+          {legendItems.map((item) => (
+            <Box key={item.key} sx={{ display: "flex", alignItems: "center", gap: "7px" }}>
+              <svg width={22} height={20} viewBox="-11 -10 22 20">
+                {item.path ? (
+                  <path d={item.path} transform="scale(7.5)" fill={item.color} />
+                ) : (
+                  <rect x={-10} y={-6} width={20} height={12} rx={2} fill={item.color} />
+                )}
+              </svg>
+              <Typography sx={{ color: t.inkSoft, fontSize: 15 }}>{item.label}</Typography>
             </Box>
           ))}
         </Box>
@@ -210,49 +202,53 @@ export default function Chart() {
 
       <BarChart
         width={W}
-        height={chartHeight}
+        height={H - HEADER_H}
         layout="horizontal"
         skipAnimation
+        hideLegend
         borderRadius={3}
+        grid={{ vertical: true }}
+        margin={{ top: 16, right: 40, bottom: 12, left: 24 }}
         series={[
           {
             id: "duration",
-            label: "Time on study",
-            data: durations,
-            valueFormatter: (v) => `${v} wk`,
+            label: DURATION,
+            data: patients.map((p) => p.duration),
+            valueFormatter: (v) => `${v} ${timeUnit}`,
           },
         ]}
         xAxis={[
           {
             scaleType: "linear",
             min: 0,
-            max: 64,
-            label: "Time on Study (weeks)",
+            max: durationMax * (1 + X_PAD_SHARE),
+            label: DURATION,
+            height: 60,
+            tickNumber: 8,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            disableTicks: true,
-            tickNumber: 5,
           },
         ]}
         yAxis={[
           {
             scaleType: "band",
-            data: ids,
-            colorMap: { type: "ordinal", values: ids, colors: barColors },
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-            disableTicks: true,
+            data: patients.map((p) => p.id),
+            colorMap: { type: "ordinal", values: patients.map((p) => p.id), colors: patients.map((p) => armColor[p.arm]) },
+            label: PATIENT,
+            width: 96,
             categoryGapRatio: 0.32,
+            disableTicks: true,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
-        grid={{ vertical: true }}
-        margin={{ top: 30, right: 70, bottom: 66, left: 92 }}
-        slotProps={{ legend: { hidden: true } }}
         sx={{
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-          "& .MuiChartsGrid-line": { stroke: t.grid, opacity: 0.7 },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       >
-        <SwimmerOverlay />
+        <SwimmerLayer />
       </BarChart>
     </Box>
   );
