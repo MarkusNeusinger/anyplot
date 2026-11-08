@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-pca-variance-cumulative
 created: '2026-08-26T07:25:15Z'
-updated: '2026-11-08T08:12:42Z'
+updated: '2026-11-08T08:18:29Z'
 generated_by: claude-opus-5-5
 adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
 workflow_run: 42442811961
@@ -13,50 +13,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Threshold lines use native ChartsReferenceLine children whose labels state the
-    component count at which 90 % (9) and 95 % (11) are reached, computed from the
-    data
-  - The elbow is detected with a max-distance-to-chord rule and ringed on the curve's
-    own marker at 6 components via a useXScale/useYScale composition child
-  - Monotone interpolation keeps the cumulative curve non-decreasing with no overshoot;
-    prominent markers at all 16 whole-number component counts
-  - 'Theme tokens threaded through every chrome element: both renders are fully readable,
-    data colours identical'
-  - Legend glyphs restyled with data-series selectors to match the filled cumulative
-    marker and the dashed secondary line
-  - 'Library-native interactivity: per-series valueFormatter gives percentage tooltips
-    in the HTML view'
+  - Composes the chart from MUI X v9 building blocks (ChartsDataProvider, ChartsWrapper,
+    ChartsSurface, BarPlot, LinePlot, MarkPlot) so the optional per-component bars
+    sit behind the cumulative curve and share one band x axis that starts at 1 with
+    whole-number ticks
+  - Threshold lines use the native ChartsReferenceLine with computed labels ('90.0%
+    reached at 9 components', '95.0% reached at 11 components') that fall out of the
+    data, dashed and readable in both themes
+  - The elbow is detected by the chord-distance method and ringed on its own marker
+    at 6 components with a value label, using the useXScale/useYScale hooks for exact
+    placement
+  - Bars are lavender at 0.55 opacity, clearly subordinate to the 3.5 px Imprint-green
+    curve, and both are named in a legend whose glyphs (square, line+mark) match the
+    marks
+  - Library-native axis tooltip and ChartsAxisHighlight add per-component inspection
+    in the HTML output; skipAnimation is set on every plot
   weaknesses:
-  - 'SC-01 (both): the optional individual-variance overlay is drawn as a dashed lavender
-    line with markers, not as the secondary bar overlay the Notes allow → draw the
-    per-component ratios as subordinate bars behind the cumulative curve, or leave
-    the overlay out. Likely cause: the second LineChart series `individual` instead
-    of a bar series in a ChartContainer composition.'
-  - 'VQ-06 (both): the only y-axis title reads ''Cumulative explained variance (%)''
-    while the per-component series, which is not cumulative, is plotted on the same
-    axis → an axis title that covers both series (e.g. ''Explained variance (%)'')
-    or the per-component series on its own named axis. Likely cause: yAxis label built
-    as `Cumulative ${RATIO}` for a shared axis.'
-  - 'Suggestion: the mandated title at 22 px fills only about 45 % of the width; 24–26
-    px would give the header more presence.'
+  - 'Suggestion: the subtitle could state the selection result (for example the components
+    needed for 95 %) instead of the largest and smallest single shares, so the header
+    carries the chart''s conclusion.'
+  - 'Suggestion: the elbow ring and its label could use the curve''s green or a heavier
+    weight to tie the annotation to the series it marks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: bold near-black title "line-pca-variance-cumulative · javascript · muix · anyplot.ai" top-left with a soft-ink subtitle "16 components · largest single share 28.8% · smallest 0.5%"; legend top-right; y-axis "Cumulative explained variance (%)" with 0%–100% ticks, x-axis "Number of principal components" with ticks 1–16; subtle horizontal grid. All readable.
-      Data: thick #009E73 cumulative curve with filled markers rising from 28.8 % to 100 %; dashed lavender #C475FD per-component line with hollow markers decaying from 17 % toward 0.5 %; two dashed ink reference lines at 90 % and 95 % labelled "90.0% reached at 9 components" and "95.0% reached at 11 components"; black ring with bold label "Elbow at 6 components, 82.3%" on the 6-component marker.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "line-pca-variance-cumulative · javascript · muix · anyplot.ai" top left with a soft-ink subtitle "16 components · largest single share 28.8% · smallest 0.5%"; horizontal legend top right ("Explained variance per component" lavender square, "Cumulative explained variance" green line+mark); y axis "Explained variance (%)" with ticks 0%–100% in steps of 20; x axis "Number of principal components" with ticks 1–16; subtle horizontal grid. All text dark and readable.
+      Data: Imprint-green #009E73 cumulative curve with white-outlined circle markers at all 16 counts, rising from 28.8% to 100% without falling; translucent lavender bars per component behind it, decaying from 28.8%; dashed reference lines at 90% and 95% labelled "90.0% reached at 9 components" and "95.0% reached at 11 components"; dark ring around the marker at 6 with "Elbow at 6 components, 82.3%".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend, axis titles and tick labels all in light ink; grid subtle dark grey; reference lines and elbow ring flip to light ink. No dark-on-dark text.
-      Data: green and lavender series identical to the light render; brand green clearly visible.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend text, axis titles, tick labels and reference-line labels all in light ink; grid lines subtle but visible; no dark-on-dark text.
+      Data: identical green curve and markers; bars the same lavender hue (darker-looking at 0.55 opacity on the dark page); dashed reference lines light grey and visible; elbow ring and label in light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -64,105 +59,107 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis titles 16 px, ticks 14 px, legend 16 px; all readable
-          in both themes
+        comment: Title 22 px, axis titles 16 px, ticks 14 px, reference labels 15
+          px in CSS space; readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Threshold labels sit left of the curve, elbow label clear of marks
-          and lines
+        comment: Reference labels sit above their lines at the left, clear of the
+          curve; elbow label below-right of its ring, clear of curve and lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 16 sparse points with prominent markers; legend glyphs match the
-          series in both themes
+        comment: 16 sparse points with r=6 markers and a 3.5 px line; bars translucent
+          but visible; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender plus solid vs dashed; CVD-safe
+        comment: Green vs lavender plus line vs bar shape; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off
+        comment: 3200x1800, canvas gate passed; balanced axis labels, title ~45% width,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis title reads 'Cumulative explained variance (%)' but also carries
-          the per-component series (defect line)
+        passed: true
+        comment: '''Explained variance (%)'' and ''Number of principal components''
+          are reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second Imprint #C475FD; #FAF8F1 / #1A1A17
-          backgrounds, chrome flips correctly'
+        comment: 'First series #009E73, bars Imprint position 2 #C475FD; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Title/subtitle hierarchy with inkSoft subtitle, weighted cumulative
-          line (3.5) over a thinner dashed secondary
+        passed: true
+        comment: A title/subtitle header hierarchy and page-colored marker outlines
+          that separate markers from the line, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Half-component x padding, threshold labels placed left clear of the
-          curve, legend glyphs restyled to match the dashed/filled marks
+        passed: true
+        comment: Reference labels placed inline at the line starts, legend aligned
+          to the plot's right edge, bars at 0.55 opacity with a wide band gap so they
+          recede
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Threshold labels state the component count at which each is reached,
-          beyond the Notes' plain lines
+        passed: true
+        comment: Threshold labels state the component count needed ('reached at 9/11
+          components'), turning the reference lines into the selection answer — beyond
+          the Notes' plain lines
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Cumulative line plot correct; the optional per-component overlay
-          is drawn as a dashed line rather than the bar overlay the Notes allow (defect
-          line)
+        passed: true
+        comment: Cumulative line with markers; optional bar overlay the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative curve, markers at every count, 90/95 % dashed lines labelled,
-          elbow ringed on its own marker, x starts at 1 with whole-number ticks
+        comment: Cumulative values, markers at every count, x from 1 with whole ticks,
+          dashed 90/95% lines, elbow on its own marker, bars behind the curve named
+          in the legend — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Monotone interpolation never falls or overshoots; marks at their
-          values
+        comment: monotoneX curve does not overshoot; marks at their values; axes show
+          0–105%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend entries readable
+        comment: Mandated title format; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -172,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Steep rise, flattening tail, both thresholds crossed, detectable
-          elbow
+        comment: Steep rise, diminishing returns, detectable elbow, thresholds crossed
+          at different counts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Geometric eigenvalue decay of a 16-sensor pump array; neutral
+        comment: PCA on 16 standardised pump sensors — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: cumulative at 8 = 87.4/97.2 = 89.9 % so 90 % reached at
-          9 (92.4 %); 10 = 94.3 %, 11 = 95.9 % so 95 % at 11; elbow 6 = 82.3 %; last
-          = 100 %'
+        comment: 'Checked: ratios sum to 1 (cumulative ends at 100%); cumulative at
+          8 = 89.9% so 90% is first reached at 9, at 10 = 94.4% and 11 = 95.9% so
+          95% at 11; elbow value 82.3% matches the marker; computed, not placed'
     code_quality:
       score: 10
       max: 10
@@ -197,8 +194,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Constants → data → plot; ElbowMark is the MUI X composition child
-          needed for scale hooks
+        comment: Linear data → plot flow; the one sub-component (ElbowMark) is required
+          to call MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,55 +207,55 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE
+        comment: Default-exported component sized from ANYPLOT_SIZE, v9 composition
+          API, skipAnimation
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: ChartsReferenceLine children, data-series sx selectors, showMark
-          callback, tickInterval for whole-number ticks
+        passed: true
+        comment: v9 composition pattern (ChartsDataProvider + ChartsWrapper + ChartsSurface)
+          with native ChartsReferenceLine and series-scoped sx selectors
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Custom overlay via useXScale/useYScale composition, ChartsReferenceLine
-          labels, labelMarkType line+mark legend
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks for a custom SVG overlay, labelMarkType
+          line+mark legend glyphs, mixed bar+line series on one band axis, axis-triggered
+          tooltip with ChartsAxisHighlight
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T03:29:22Z'
+  rendered_at: '2026-11-08T08:15:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
-  - patches
-  - layer-composition
+  - reference-lines
+  - combo-chart
+  - custom-legend
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  - normalization
   styling:
-  - edge-highlighting
-  - grid-styling
+  - alpha-blending
+  - publication-ready
