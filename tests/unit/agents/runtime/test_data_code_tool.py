@@ -14,6 +14,8 @@ from typing import Any
 import httpx
 import pytest
 
+from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.dataset_versions import push_version
 from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.plugins.ledger import RequestLedger, ledger_for
 from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CALLS, MAX_DATA_CODE_CHARS, ToolSafetyPlugin, result_limit
@@ -21,7 +23,7 @@ from agents.anyplot.render.backends.fake import FIXTURE_CSV, FakeBackend
 from agents.anyplot.render.contract import DataJob, DataOutput, DataRunUnsupported, RendererUnavailable
 from agents.anyplot.render.harness import DATA_EXIT
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import BINDINGS, DATASET_HISTORY, DATASET_ID, DATASET_VERSION
+from agents.anyplot.session_state import BINDINGS, DATASET_HISTORY, DATASET_ID, DATASET_VERSION, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.tools.session import DATA_CODE_CHANGE, run_data_code
 from agents.main import Runtime, app, get_runtime
@@ -120,6 +122,31 @@ class TestSuccess:
         assert context.state[BINDINGS] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
         paste = services.datasets.get(pasted, sid)
         assert paste is not None and paste.code is None
+
+    async def test_a_version_stored_while_the_code_ran_stays_and_the_table_numbers_after_it(
+        self, client: httpx.AsyncClient, services: Services, backend: FakeBackend
+    ) -> None:
+        """Another data call of the same turn may store a version while the sandbox runs (ADK runs a step's calls
+        side by side): the computed table goes on top of it under the next number, so no version is lost from the
+        history and no number is given twice."""
+        sid = await open_session(client)
+        context = await context_for(client, sid, "inv-code-meanwhile")
+        pasted = context.state[DATASET_ID]
+
+        def run(job: DataJob) -> DataOutput:
+            view = read_session(context.state)
+            assert view is not None
+            meanwhile = push_version(services.datasets, sid, view, parse_dataset("a,b\n1,2\n"), view.snapshot)
+            for key, value in meanwhile.delta.items():
+                context.state[key] = value
+            return DataOutput(exit_code=0, csv_text=FIXTURE_CSV, wall_s=0.1)
+
+        backend.data_script = run
+        done = await run_data_code(SNIPPET, "python", context)
+
+        assert done["status"] == "ok" and done["version"] == 3
+        assert context.state[DATASET_VERSION] == 3 and len(context.state[DATASET_HISTORY]) == 2
+        assert context.state[DATASET_HISTORY][0] == pasted
 
     async def test_the_main_guard_is_stripped_before_the_run(
         self, client: httpx.AsyncClient, services: Services, backend: FakeBackend

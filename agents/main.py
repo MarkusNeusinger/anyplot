@@ -16,16 +16,16 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/sessions/{sid}/memory` | | `{entries, max_entries, written}`: the plot memory, oldest first, each `{id, kind, target, text, expect, turn}` (`memory.py`); `written` once it ever held an entry, from then on its entries alone travel | |
 | `DELETE /v1/sessions/{sid}/memory` | | the GET's shape with no entries: forget all, a blank start | `409 run_active` |
 | `DELETE /v1/sessions/{sid}/memory/{entry_id}` | | the GET's shape after the removal | `404 not_found`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as the first version of new data under the session's next number (`version`, also `original_version`; `can_undo` false: the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget), `429 service_paused`, `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
-| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
+| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (the target's first version, numbered 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `GET /v1/sessions/{sid}/turn` | header `Last-Event-ID: <run_id>.<n>` | SSE `anyplot/1`: the session's latest turn from its event `n + 1` on, as the turn's stream sent it, live until that stream ends; for a page that lost the stream (`agents/turn_log.py`); a read, which never holds or stops the run | `404 not_found` (another turn is the latest, or none), `422` (an id of another form) |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -194,7 +194,7 @@ from agents.anyplot.data.transcribe import (
 )
 from agents.anyplot.dataset_context import FILE_NAME_WITHHELD
 from agents.anyplot.dataset_guard import DataRefused, GuardUnavailable, check_dataset
-from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
+from agents.anyplot.dataset_versions import dataset_payload, original_number, push_version, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.language import (
     DEFAULT_LANGUAGE,
@@ -1597,6 +1597,7 @@ async def _ingest_paste(
             file_name=file_name,
             # Data that replaces data keeps what its columns meant: the plot keeps its axes (`carry_by_name`).
             carried=view.bindings if view.dataset_id else (),
+            number=view.next_version,  # the session's numbering goes on: no number of the old data names this one
         )
     except StoreFull:
         raise AgentsError(503, "capacity") from None
@@ -1637,7 +1638,10 @@ async def _ingest_paste(
             "roles": _page_roles(view.snapshot.roles()),
             # In the language the paste leaves: `.to_long()`'s new column names are generated text.
             "suggestion": _suggestion(view, parsed.profile, language),
-            "version": 1,
+            # A paste is the first version of its data: nothing before it to undo (`dataset_payload`).
+            "version": ingested.number,
+            "can_undo": False,
+            "original_version": ingested.number,
             "language": {"language": language, "source": language_source},
             **({"file_name": file_name} if file_name is not None else {}),
             **({"tables": parsed.tables, "table": parsed.table} if parsed.tables else {}),
@@ -1995,7 +1999,7 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     the bindings are carried over like after a `prepare_data`, and the restored version
     is unconfirmed, because the user confirms every version they see. `422
     nothing_to_undo` for a paste that was never prepared (or whose history is spent),
-    and for data that `generate_data` made in a session without data (its version 1).
+    and for data that `generate_data` made in a session without data (its first version).
     """
     services = get_services()
     session = await runtime.session(user, sid)
@@ -2093,8 +2097,9 @@ async def copy_dataset(
     notes, file name, source and code, nothing parsed or judged again, so it costs no model call and counts as no
     paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store, except for an
     admin, whose fan-outs in several windows copy more at once and whom only the store's byte cap bounds. The bindings,
-    their confirmation, the session language and the plot language come along. The copy is the target's version 1
-    with no undo history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
+    their confirmation, the session language and the plot language come along. The copy is the target's first version
+    under its next number (1, since the target has no data) with no undo history, and `DATASET_COPIED_FROM` records the
+    source's version number. The answer is the paste route's
     dataset shape plus `confirmed`, `complete`, `missing_roles` and `copied_from`. The `dataset_copy` attribution
     line carries the counts, the version number and the source session's salted hash, never data; a copy writes
     no `data_input` telemetry line, because no input reached the dataset route.
@@ -2131,7 +2136,7 @@ async def copy_dataset(
         attribution("dataset_copy", ledger, outcome=limit)
         raise AgentsError(429, limit)
     try:
-        dataset_id = services.datasets.copy(stored.dataset_id, body.from_session, sid)
+        dataset_id = services.datasets.copy(stored.dataset_id, body.from_session, sid, number=view.next_version)
     except StoreFull:
         attribution("dataset_copy", ledger, outcome="capacity")
         raise AgentsError(503, "capacity") from None
@@ -2168,9 +2173,9 @@ async def copy_dataset(
             DATASET_ID: copied.dataset_id,
             BINDINGS: [binding.model_dump() for binding in bindings],
             DATASET_HISTORY: [],
-            DATASET_VERSION: 1,
+            DATASET_VERSION: copied.number,
             DATASET_ORIGINAL: copied.dataset_id,  # the copy is the original of the versions made from it here
-            DATASET_TOP: 1,
+            DATASET_TOP: copied.number,
             DATASET_COPIED_FROM: origin.dataset_version,
             CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
             **language_delta(origin.language, origin.language_source),
@@ -2189,7 +2194,7 @@ async def copy_dataset(
     )
     return JSONResponse(
         {
-            **dataset_payload(copied, bindings, 1),
+            **dataset_payload(copied, bindings, can_undo=False, original_version=copied.number),
             "roles": _page_roles(roles),
             "suggestion": _suggestion(view, copied.profile, origin.language),
             "language": {"language": origin.language, "source": origin.language_source},
@@ -2279,8 +2284,9 @@ async def _session_sync(
         payload["suggestion"] = _suggestion(view, stored.profile)
         if view.dataset_id != dataset_before:
             changes = list(ledger.dataset_changes) if ledger is not None else []
+            original_version = original_number(get_services().datasets, sid, view)
             payload["dataset"] = {
-                **dataset_payload(stored, view.bindings, view.dataset_version),
+                **dataset_payload(stored, view.bindings, can_undo=view.can_undo, original_version=original_version),
                 "roles": _page_roles(view.snapshot.roles())[:MAX_DONE_ROLES],
                 "suggestion": payload["suggestion"],
                 "changes": changes,

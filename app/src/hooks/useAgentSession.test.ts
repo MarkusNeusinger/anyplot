@@ -165,6 +165,8 @@ const DATASET = {
   warnings: [],
   roles: [role('x'), role('y')],
   version: 1,
+  can_undo: false,
+  original_version: 1,
 };
 
 /** `done.dataset` after the assistant read `Study Hours` in minutes: the next version. */
@@ -188,6 +190,8 @@ const PREPARED = {
   warnings: [],
   changes: ["renamed 'Study Hours' to 'Minutes'", 'Minutes: 2 cells multiplied by 60'],
   version: 2,
+  can_undo: true,
+  original_version: 1,
 };
 
 /** The step-1 summary the page asks for after every stored parse. */
@@ -1608,7 +1612,8 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
     let version = 3;
     routes['POST /sessions/S1/dataset/undo'] = () => {
       version -= 1;
-      return json(200, { ...DATASET, version });
+      // Two changes on the paste, no undo between them: the history holds v1 until v2 is back.
+      return json(200, { ...DATASET, version, can_undo: version > 1 });
     };
     const { result } = await withPreparedTurn(routes, {
       dataset: { ...PREPARED, version: 3 },
@@ -1621,6 +1626,28 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
     await act(() => result.current.undoData());
     expect(result.current.state.dataset?.parsed.version).toBe(1);
     expect(undoCalls()).toHaveLength(2);
+  });
+
+  it('counts an undo from the data it went back in: back at a later paste is 1', async () => {
+    // The session's numbers go on across pastes: the second paste is v4, its change v5, and the
+    // undo restores v4, which the bucket counts from that paste (`original_version`).
+    const routes = baseRoutes();
+    const later = { ...DATASET, version: 4, can_undo: false, original_version: 4 };
+    routes['POST /sessions/S1/dataset'] = () => json(200, later);
+    routes['POST /sessions/S1/dataset/undo'] = () => json(200, later);
+    const { result } = await withPreparedTurn(routes, {
+      dataset: { ...PREPARED, version: 5, original_version: 4 },
+    });
+    expect(result.current.state.dataset?.parsed.version).toBe(4);
+    await act(() => result.current.sendMessage('in Minuten'));
+
+    await act(() => result.current.undoData());
+
+    expect(result.current.state.dataset?.parsed.version).toBe(4);
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_undo', { version: '1' });
+    // The version before the data's first one is gone with the earlier paste: no undo goes on.
+    await act(() => result.current.undoData());
+    expect(undoCalls()).toHaveLength(1);
   });
 
   it('stops offering .undo() after nothing_to_undo and keeps a 409 retryable', async () => {
@@ -1703,6 +1730,8 @@ describe('useAgentSession: formulas', () => {
     roles: [role('x'), role('y')],
     changes: ['generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)'],
     version: 1,
+    can_undo: false,
+    original_version: 1,
   };
 
   const generatedStream = () =>
@@ -2067,7 +2096,7 @@ describe('useAgentSession: formulas', () => {
     routes['POST /sessions/S1/messages'] = () =>
       sse([
         ['message', { text: 'I generated 200 rows.' }],
-        ['done', { data_confirmed: false, dataset: { ...GENERATED, version: 2 } }],
+        ['done', { data_confirmed: false, dataset: { ...GENERATED, version: 2, can_undo: true } }],
       ]);
     await act(() => result.current.sendMessage('zeichne cos(x) von 0 bis 2*pi'));
     expect(result.current.state.dataset?.parsed.version).toBe(2);
@@ -2102,6 +2131,7 @@ describe('useAgentSession: .to_long()', () => {
     suggestion: null,
     changes: ['pivoted 2 columns into category/value: 4 rows'],
     version: 2,
+    can_undo: true,
   };
   const toLongCalls = () => calls.filter(call => call.path.endsWith('/dataset/to_long'));
 
@@ -4077,12 +4107,13 @@ describe('agentReducer: the card in the thread', () => {
 
     const second = agentReducer(first, {
       type: 'parse_done',
-      parsed: { ...parsed, profile: { ...profile, rows: 7 }, file_name: 'sales.csv' },
+      parsed: { ...parsed, profile: { ...profile, rows: 7 }, file_name: 'sales.csv', version: 2 },
       bytes: 20,
       chip: '▤ sales.csv · 8 lines · 120 B',
     });
     // The card turns into the stub of the data it showed, under its id: the paste before this
-    // one. The new paste numbers on (`data v2`), though the server's version is 1 again.
+    // one. The new paste carries the server's next number (`data v2`), which the session gives
+    // every version once.
     expect(second.items).toEqual([
       { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
       {
@@ -4100,8 +4131,7 @@ describe('agentReducer: the card in the thread', () => {
         snapshot: version(2, 'paste', 'sales.csv', { rows: 7, fileName: 'sales.csv' }),
       },
     ]);
-    expect(second.dataset?.parsed.version).toBe(1);
-    expect(second.nextDataVersion).toBe(3);
+    expect(second.dataset?.parsed.version).toBe(2);
   });
 
   it('keeps what a version held in its snapshot: the rows, the profile, the file and the change lines', () => {
@@ -4190,20 +4220,30 @@ describe('agentReducer: the card in the thread', () => {
     });
     const summarized = talk(pasted, 'what is in it?');
     // The pickers parse without the attachment's line: another sheet, another table. Each is
-    // followed by its own summary, as the page asks for one after every stored parse.
+    // followed by its own summary, as the page asks for one after every stored parse. Each
+    // answer carries the server's number: a pick is a new paste there (v2, then v4), `.to_long()`
+    // v3, and `.undo()` brings the sheet's v2 back.
     const sheet = talk(
-      agentReducer(summarized, { type: 'parse_done', parsed, bytes: 10, file: workbook('2026') }),
+      agentReducer(summarized, {
+        type: 'parse_done',
+        parsed: { ...parsed, version: 2, original_version: 2 },
+        bytes: 10,
+        file: workbook('2026'),
+      }),
       'and this one?'
     );
     const long = agentReducer(sheet, {
       type: 'data_prepared',
-      dataset: PREPARED as DatasetChanged,
+      dataset: { ...(PREPARED as DatasetChanged), version: 3, original_version: 2 },
       toLong: true,
     });
-    const undone = agentReducer(long, { type: 'undo_done', parsed });
+    const undone = agentReducer(long, {
+      type: 'undo_done',
+      parsed: { ...parsed, version: 2, original_version: 2 },
+    });
     const table = agentReducer(undone, {
       type: 'parse_done',
-      parsed: { ...parsed, tables: ['a', 'b'], table: 2 },
+      parsed: { ...parsed, tables: ['a', 'b'], table: 2, version: 4, original_version: 4 },
       bytes: 10,
     });
     // Before any plot, the same rule as after one: the earlier version stays where the card
@@ -4220,15 +4260,19 @@ describe('agentReducer: the card in the thread', () => {
       'data_stub',
       'data',
     ]);
-    expect(table.items[9]).toMatchObject({ id: 2, snapshot: version(5, 'table', 'table 2') });
+    expect(table.items[9]).toMatchObject({ id: 2, snapshot: version(4, 'table', 'table 2') });
+    // The undo's stub names the version it went back to under that version's own number.
     expect(
       table.items.filter(item => item.kind === 'data_stub').map(item => item.snapshot)
     ).toEqual([
       version(1, 'paste', 'pasted', { sheet: '2025' }),
       version(2, 'sheet', 'sheet "2026"', { sheet: '2026' }),
       version(3, 'to_long', 'made long'),
-      version(4, 'undo', 'undone'),
+      version(2, 'undo', 'back to v2'),
     ]);
+    // Two stubs share the number 2, each under an id of its own.
+    const ids = table.items.map(item => item.id);
+    expect(new Set(ids).size).toBe(ids.length);
     expect(table.items.every(item => item.kind !== 'data_stub' || item.card === 2)).toBe(true);
   });
 
@@ -4258,17 +4302,37 @@ describe('agentReducer: the card in the thread', () => {
       type: 'item',
       item: { kind: 'plot_failed', result: failed },
     });
-    const controls: [string, Action][] = [
-      ['.undo()', { type: 'undo_done', parsed }],
-      ['.to_long()', { type: 'data_prepared', dataset: PREPARED as DatasetChanged, toLong: true }],
-      ['the sheet picker', { type: 'parse_done', parsed, bytes: 10, file: workbook('2026') }],
+    // Each control's answer under the server's number for it; this thread is built by hand, so its
+    // undo answers the paste's own 1 again, as an undo back to it would.
+    const controls: [string, Action, number][] = [
+      ['.undo()', { type: 'undo_done', parsed }, 1],
+      [
+        '.to_long()',
+        { type: 'data_prepared', dataset: PREPARED as DatasetChanged, toLong: true },
+        2,
+      ],
+      [
+        'the sheet picker',
+        {
+          type: 'parse_done',
+          parsed: { ...parsed, version: 2 },
+          bytes: 10,
+          file: workbook('2026'),
+        },
+        2,
+      ],
       [
         'the table picker',
-        { type: 'parse_done', parsed: { ...parsed, tables: ['a', 'b'], table: 2 }, bytes: 10 },
+        {
+          type: 'parse_done',
+          parsed: { ...parsed, tables: ['a', 'b'], table: 2, version: 2 },
+          bytes: 10,
+        },
+        2,
       ],
     ];
     for (const before of [plotted, failedBelow]) {
-      for (const [name, control] of controls) {
+      for (const [name, control, n] of controls) {
         const next = agentReducer(before, control);
         // The stub of the version before stays where the card stood, the card goes on below the
         // plot under its id, so the current data stays in the latest chapter.
@@ -4280,22 +4344,21 @@ describe('agentReducer: the card in the thread', () => {
           'data',
         ]);
         expect(next.items[1], name).toMatchObject({ id: 5, card: 2, snapshot: { n: 1 } });
-        expect(next.items[4], name).toMatchObject({ id: 2, snapshot: { n: 2 } });
+        expect(next.items[4], name).toMatchObject({ id: 2, snapshot: { n } });
       }
     }
   });
 
   it('adds the card after its turn for data that had none: example data, a formula, code', () => {
+    // The session's first data: the server's version 1, with nothing to undo.
+    const first = { ...(PREPARED as DatasetChanged), version: 1, can_undo: false };
     const turn = appendTurn(ready);
-    const generated = agentReducer(turn, {
-      type: 'data_prepared',
-      dataset: PREPARED as DatasetChanged,
-    });
+    const generated = agentReducer(turn, { type: 'data_prepared', dataset: first });
     expect(kinds(generated)).toEqual(['user', 'data']);
     // With the reply in already, the card stands before it, after the turn's message.
     const replied = agentReducer(
       agentReducer(turn, { type: 'item', item: { kind: 'assistant', text: 'Computed.' } }),
-      { type: 'data_prepared', dataset: PREPARED as DatasetChanged }
+      { type: 'data_prepared', dataset: first }
     );
     expect(kinds(replied)).toEqual(['user', 'data', 'assistant']);
     expect(lastItem(generated.items)).toMatchObject({ snapshot: version(1, 'turn', 'generated') });
@@ -4303,7 +4366,7 @@ describe('agentReducer: the card in the thread', () => {
     // `.example_data()` names its own: the version arrives while its turn still runs.
     const example = agentReducer(agentReducer(ready, { type: 'run_start', kind: 'example_data' }), {
       type: 'data_prepared',
-      dataset: PREPARED as DatasetChanged,
+      dataset: first,
     });
     expect(lastItem(example.items)).toMatchObject({
       kind: 'data',
@@ -4327,7 +4390,7 @@ describe('agentReducer: the card in the thread', () => {
     expect(starting.transcription).toBeNull();
     const used = agentReducer(starting, {
       type: 'parse_done',
-      parsed: { ...parsed, profile: { ...profile, rows: 2 } },
+      parsed: { ...parsed, profile: { ...profile, rows: 2 }, version: 2 },
       bytes: 26,
       fromTranscription: true,
     });
@@ -4664,7 +4727,6 @@ describe('useAgentSession: a cut stream', () => {
     expect(turnReads()).toHaveLength(2);
     expect(resumed.items).toEqual(whole.items);
     expect(resumed.nextItemId).toBe(whole.nextItemId);
-    expect(resumed.nextDataVersion).toBe(whole.nextDataVersion);
     expect(kindsOf(resumed.items)).toEqual([
       'paste',
       'data_stub',

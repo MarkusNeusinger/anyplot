@@ -66,7 +66,7 @@ from core.spec_roles import DataRole, RoleKind
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
 from .bounds import bound_pairs, inverted, inverted_line, ordered
-from .computed import match_score, window_line, window_rank
+from .computed import binds_by_name, match_score, window_line, window_rank
 from .parse import value_like
 from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
@@ -266,7 +266,9 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        first weak one. A role the plot can compute (`DataRole.computed`, `data/computed.py`) is
        bound only to a column whose name clearly holds it (`computed.match_score`, the most specific first, before any other
        role picks); otherwise it stays open and the plot computes it (owner decision of
-       2026-10-15, "both allowed").
+       2026-10-15, "both allowed"). A name-only role (`DataRole.name_only`: `macd`, `rsi`, a
+       control limit) is bound the same way, also to a constant column, and otherwise stays open
+       and, when required, missing: no other number column holds a MACD line or a sample mean.
        A single role never falls back to a tier-2 column that a variadic family of
        the spec takes at tier 0 or 1: in wide data such as `month, Shoes, Hats`
        for `x`, `y1, y2, ...` and `category`, an integer series column stays a
@@ -332,7 +334,8 @@ def _row_number_on_axis(
 ) -> list[Binding]:
     """`bindings` with a row number that fell on a measure swapped with the column on the axis, which the spec's
     order put first (`weight, X` for x and y): a row number is where a value sits, never the value. Only when each
-    role takes the other's column: `date, X` keeps its dates on x."""
+    role takes the other's column: `date, X` keeps its dates on x. A role bound by its name only (`binds_by_name`)
+    keeps its column: the axis's column is not named for it."""
     dtypes = {column.name: column.dtype for column in profile.columns}
     for axis in bindings:
         axis_role = resolve_role(axis.role, roles)
@@ -344,6 +347,7 @@ def _row_number_on_axis(
                 role is not None
                 and measure.column in row_numbers
                 and not is_axis(role)
+                and not binds_by_name(role)
                 and is_measure(role)
                 and accepts(role, dtypes[axis.column])
                 and accepts(axis_role, dtypes[measure.column])
@@ -384,7 +388,8 @@ def _default_bindings(
         and column.name not in per_group  # the `id` of each curve may be the series
     }
 
-    # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant.
+    # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant,
+    # and so is a control limit, which is the same on every row.
     constants = {column.name for column in columns if profile.rows >= MIN_CONSTANT_ROWS and column.unique <= 1}
     for role in roles:
         if not role.kinds:
@@ -392,7 +397,8 @@ def _default_bindings(
         named = [
             column
             for column in columns
-            if not (is_measure(role) and column.name in constants) and column.name not in row_numbers
+            if not (is_measure(role) and column.name in constants and not role.name_only)
+            and column.name not in row_numbers
         ]
         if role.variadic:
             for column in named:
@@ -414,29 +420,32 @@ def _default_bindings(
                     break
 
     # A role the plot can compute takes a column only on a clear name match (`SMA 20` for `sma`, `data/computed.py`);
-    # otherwise it stays open and the plot computes it. Its matches are `claims`: the required roles pick first and
-    # rank a claimed column last, so a match never takes the one column `close` or `tss` needs (review of
-    # 2026-10-15), and the computed roles pick before the optional ones.
-    computed = [role for role in roles if role.computed and role.kinds and not role.variadic]
+    # otherwise it stays open and the plot computes it. So does a name-only role (`MACD` for `macd`), which then
+    # stays open and missing. Their matches are `claims`: the other required roles pick first and rank a claimed
+    # column last, so a match never takes the one column `close` or `tss` needs (review of 2026-10-15), and these
+    # roles pick before the optional ones. A computed role never takes a weak measure; a name-only one does, since
+    # the name says what it holds: a control limit is the same on every row.
+    named_roles = [role for role in roles if binds_by_name(role) and role.kinds]
+
+    def fits(role: DataRole, column: ColumnProfile) -> bool:
+        return (role.name_only or column.name not in weak) and _tier(role, column) is not None
+
     claims = {
         column.name
-        for role in computed
+        for role in named_roles
         for column in columns
-        if column.name not in weak and _tier(role, column) is not None and match_score(role, column.name)
+        if fits(role, column) and match_score(role, column.name)
     }
 
     def bind_computed() -> None:
         # The most specific match first (`SMA Upper Band` is the upper band, not the average), then the column
-        # that names the spec's window (`SMA 20` before `SMA 50`), then spec and column order. Never a weak measure.
+        # that names the spec's window (`SMA 20` before `SMA 50`), then spec and column order.
         matches = sorted(
             (-score, window_rank(role, column.name), role_position, position, role.name, column.name)
-            for role_position, role in enumerate(computed)
+            for role_position, role in enumerate(named_roles)
             if role.name not in single
             for position, column in enumerate(columns)
-            if column.name not in used
-            and column.name not in weak
-            and _tier(role, column) is not None
-            and (score := match_score(role, column.name))
+            if column.name not in used and fits(role, column) and (score := match_score(role, column.name))
         )
         for *_, role_name, column_name in matches:
             if role_name not in single and column_name not in used:
@@ -444,7 +453,7 @@ def _default_bindings(
                 used.add(column_name)
 
     order = sorted(
-        (role for role in roles if role.kinds and not role.computed),
+        (role for role in roles if role.kinds and not role.computed and not role.name_only),
         key=lambda role: (not role.required, role.variadic),  # stable: spec order inside each group
     )
     computed_bound = False
@@ -664,8 +673,8 @@ def axis_slot(bindings: list[Binding], roles: list[DataRole], profile: DatasetPr
     axes = [role for role in roles if role.required and is_axis(role) and not role.variadic and not role.computed]
     if opened in axes:
         return AxisSlot(opened)
-    if "numeric" not in opened.kinds or opened.computed:
-        return None
+    if "numeric" not in opened.kinds or opened.computed or opened.name_only:
+        return None  # the axis's numbers are no MACD line: a name-only role takes no column it is not named for
     columns = {column.name: column for column in profile.columns}
     staying = weak_measures(profile) | row_number_columns(profile)
     for role in axes:
@@ -797,7 +806,8 @@ def _new_numbers(
     lower bound, whatever order the spec lists the two roles in (`high` before `low`), and only when the first
     neither starts nor ends above the second (`bounds.ordered`); otherwise the pair stays open. Two other columns
     of one source (two `extract`s of it) never fill a pair together. A required family without a member takes
-    the column as its first member (`y1`).
+    the column as its first member (`y1`). A name-only role (`DataRole.name_only`) takes only a column whose name
+    holds it (`RSI (Zahl)` for `rsi`), the first in column order, and a pair of them never takes a split's parts.
     """
     used = {binding.column for binding in kept}
     fresh = [
@@ -834,14 +844,24 @@ def _new_numbers(
     for role in roles:
         if not fresh or not role.required or role.computed or role.name in bound or "numeric" not in role.kinds:
             continue
-        column = fresh.pop(0)
+        column = next((column for column in fresh if not role.name_only or match_score(role, column.name)), None)
+        if column is None:
+            continue
+        fresh.remove(column)
         added.append(Binding(role=role.member(1) if role.variadic else role.name, column=column.name))
     return added
 
 
 def _open_measure(role: DataRole, bound: Collection[str]) -> bool:
-    """A required role that takes numbers, that the plot cannot compute and that no binding holds."""
-    return role.required and not role.computed and role.name not in bound and "numeric" in role.kinds
+    """A required role that takes numbers, that the plot cannot compute, that is not name-only (the parts
+    `Limits min` and `Limits max` of a split are no control limits by their names) and that no binding holds."""
+    return (
+        role.required
+        and not role.computed
+        and not role.name_only
+        and role.name not in bound
+        and "numeric" in role.kinds
+    )
 
 
 def _in_spec_order(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:

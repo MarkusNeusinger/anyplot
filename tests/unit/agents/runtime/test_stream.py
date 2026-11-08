@@ -148,6 +148,8 @@ class TestTranslator:
             context_lines=['"' * MAX_CONTEXT_CHARS],
             # The Python a `run_data_code` version keeps, at the tool's cap, control characters at their worst.
             code="\x01" * MAX_DATA_CODE_CHARS,
+            # The session numbers its versions without a cap; no session's day of pastes and changes comes near this.
+            number=10**6,
         )
         bindings = [Binding(role=f"{'R' * 30}{index:02d}", column=name) for index, name in enumerate(names)]
         # A `generate_data` call answers a change line and a warning per series; two data calls in one turn.
@@ -172,7 +174,7 @@ class TestTranslator:
             "siblings": names,
         }
         dataset = {
-            **dataset_payload(stored, bindings, 999),
+            **dataset_payload(stored, bindings, can_undo=False, original_version=10**6),
             "roles": roles,
             "suggestion": suggestion,
             "changes": ["\x01" * MAX_NOTE_CHARS] * lines,

@@ -25,7 +25,7 @@ import sys
 import tokenize
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Literal
 
@@ -136,8 +136,12 @@ class DataRole:
     """Whether the role needs values of 0 or more: set per spec by `signs.mark_non_negative`, never parsed."""
     computed: bool = False
     """Whether the plot can compute the role from the data (`rolling_avg`: "Computed rolling average ...", by
-    `COMPUTED`, or listed in `computed.COMPUTED_ROLES`): optional, bound when a column holds it, else the adapter
+    `COMPUTED`, or listed in `COMPUTED_ROLES`): optional, bound when a column holds it, else the adapter
     computes it (owner decision of 2026-10-15, "both allowed")."""
+    name_only: bool = False
+    """Whether the agent's default bindings give the role only a column whose name clearly holds it, as they do a
+    computed role, while it stays required (`agents/anyplot/data/computed.py`, `NAME_ONLY_ROLES`): a MACD line,
+    an RSI or a control limit that no role of the spec can compute. Set per spec by the agent, never parsed."""
 
     def member(self, index: int) -> str:
         """The binding role name of the `index`-th (1-based) column of a variadic family."""
@@ -303,6 +307,49 @@ def data_bullets(spec_markdown: str) -> list[str]:
     return bullets
 
 
+# --- roles the plot computes -----------------------------------------------------------------
+
+COMPUTED_ROLES: dict[str, frozenset[str]] = {
+    "burndown-sprint": frozenset({"ideal"}),
+    "climograph-walter-lieth": frozenset({"temp_annual_mean", "precip_annual_total"}),
+    "curve-bias-variance-tradeoff": frozenset({"total_error"}),
+    "heatmap-loss-triangle": frozenset({"development_factor"}),
+    "indicator-bollinger": frozenset({"sma", "upper_band", "lower_band"}),
+    "indicator-ema": frozenset({"ema_short", "ema_long"}),
+    "indicator-ichimoku": frozenset({"tenkan_sen", "kijun_sen", "senkou_span_a", "senkou_span_b", "chikou_span"}),
+    "indicator-macd": frozenset({"signal", "histogram"}),
+    "indicator-sma": frozenset({"sma_short", "sma_medium", "sma_long"}),
+    "line-training-load-pmc": frozenset({"ctl", "atl", "tsb"}),
+    "probability-weibull": frozenset({"cumulative_probability"}),
+    "shap-waterfall": frozenset({"final_value"}),
+    "tree-decision": frozenset({"emv", "pruned"}),
+}
+"""Per spec, the roles the plot computes when no column holds them, beyond the bullets that say so (`COMPUTED`).
+
+A role belongs here when its value follows from the spec's other roles by a fixed formula: the
+one its bullet or the spec's notes give, or the standard definition of the indicator it names.
+Moving averages and EMAs of `close`, the Ichimoku lines from `high`, `low` and `close`, the
+MACD signal line and histogram from `macd`, the ideal burndown line from the first day's
+scope, the annual mean and total of a climograph's months, a sum of error terms, chain-ladder
+age-to-age factors, median-rank plotting positions, a SHAP prediction as base plus
+contributions, and a decision tree's rollback. Not here: a value that needs a model fit
+(`logistic-regression`'s probability, a forecast), an input no role carries (the MACD line
+without prices, control limits without the subgroup size), or a stated value such as a target.
+
+The list lives in code, not in the spec files, which only the spec pipeline writes, and here
+rather than in the agent, so that the agent's bindings and the adaptability checker (through
+`core/adaptability.py`'s `spec_context`, which `core/smoke_run.py` reads too) agree on which
+roles need no column. `tests/unit/agents/data/test_computed.py` checks every listed role
+against its spec and audits the wording of every spec's roles.
+"""
+
+
+def mark_computed(roles: Iterable[DataRole], spec_id: str) -> list[DataRole]:
+    """The roles with `computed` set for the ones `COMPUTED_ROLES` lists for `spec_id`; a bullet's own mark stays."""
+    listed = COMPUTED_ROLES.get(spec_id, frozenset())
+    return [replace(role, computed=True) if role.name in listed else role for role in roles]
+
+
 # --- data shape ------------------------------------------------------------------------------
 
 Shape = Literal["table", "matrix", "network", "generated", "excluded"]
@@ -425,7 +472,9 @@ def color_role(roles: Sequence[DataRole]) -> DataRole | None:
 
 # --- core/adaptability.py --------------------------------------------------------------------------------
 
-CHECKER_VERSION = 1
+CHECKER_VERSION = 2
+"""Goes up when the same source can get another record: version 2 reads the roles `COMPUTED_ROLES` lists as
+computed (`spec_context`), so their missing column constants are no `columns` finding any more."""
 DEFECT_ID = "CQ-01"
 CODE_RENDER = "code"
 DEFECT_ARROW = "→"
@@ -2644,9 +2693,10 @@ def library_of(path: Path) -> str | None:
 
 
 def spec_context(spec_path: Path, spec_id: str | None = None) -> tuple[str, list[DataRole], Shape]:
-    """The spec id, parsed roles and shape of a `specification.md`."""
+    """The spec id, parsed roles and shape of a `specification.md`, with the roles the plot computes marked
+    (`mark_computed`), as the agent reads them: a computed role needs no column constant."""
     spec_id = spec_id or spec_path.parent.name
-    roles = parse_roles(data_bullets(spec_path.read_text(encoding="utf-8")))
+    roles = mark_computed(parse_roles(data_bullets(spec_path.read_text(encoding="utf-8"))), spec_id)
     return spec_id, roles, spec_shape(spec_id, roles)
 
 
