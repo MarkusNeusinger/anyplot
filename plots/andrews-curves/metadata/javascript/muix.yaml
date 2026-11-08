@@ -2,45 +2,50 @@ library: muix
 language: javascript
 specification_id: andrews-curves
 created: '2026-09-02T11:25:27Z'
-updated: '2026-09-02T11:40:24Z'
-generated_by: claude-sonnet
-workflow_run: 33624064108
+updated: '2026-11-08T00:46:50Z'
+generated_by: claude-opus-5-5
+adopted_from: a44329be1c76851a25bafe03deda13ed2b95f662 (a44329be1c76851a25bafe03deda13ed2b95f662)
+workflow_run: 42430590077
 issue: 2859
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 88
 review:
   strengths:
-  - Mathematically correct Andrews-curve implementation with accurate Fourier coefficients
-    and t-range
-  - Individual-curve-cloud + bold-mean-curve layering keeps the legend readable (3
-    entries instead of 60) while still surfacing per-observation density
-  - Iris species means/std-devs are close to the real dataset's statistics
-  - 'Both renders pass every edge check: no clipped title, axis labels, tick labels,
-    or legend entries at any canvas edge'
-  - Palette and theme chrome are fully compliant in both light and dark renders
+  - Correct Andrews transform f(t) = x1/√2 + x2·sin t + x3·cos t + … over z-scored
+    variables, sampled at 121 points on [−π, π] so every curve is smooth and at its
+    computed values
+  - Per-series styling through v9 CSS selectors on data-series ids ('obs-' prefix
+    at strokeOpacity 0.4, 'mean-' prefix at 3.5 px) keeps 63 series configurable without
+    63 style blocks
+  - 'x axis uses tickInterval with a location-aware valueFormatter: π-fraction tick
+    labels in the static render, exact ''t = 0.52'' values in the HTML tooltip'
+  - Imprint palette in canonical order (green, lavender, blue) identical in both renders;
+    chrome threaded through ink/inkSoft/grid tokens so both themes read cleanly
+  - Iris-like data generated deterministically with a seeded LCG and Box-Muller, 60
+    observations × 4 variables inside the spec's recommended range
   weaknesses:
-  - No deliberate outlier observation is included; the spec calls out outlier detection
-    as a use case, and the current data doesn't demonstrate an anomalous curve visually
-    diverging from its cluster
-  - Data storytelling could go one step further with a light annotation or subtitle
-    noting the clearest cluster separation, to earn 'excellent' rather than 'good'
-    on DE-03
+  - 'Suggestion: y tick labels use an ASCII hyphen (-1.5) while the x ticks use a
+    true minus (−π); a valueFormatter emitting U+2212 would make both axes typographically
+    consistent.'
+  - 'Suggestion: the gap of about 50 px between the x tick labels and the ''Fourier
+    parameter t'' title could shrink (x axis height 64 → about 48) to tighten the
+    lower band.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1
-      Chrome: title, axis labels ("t (Fourier Parameter)", "f(t)"), tick labels, and legend ("Setosa", "Versicolor", "Virginica") are all dark ink on the cream background and clearly readable; subtle horizontal gridlines only
-      Data: 60 alpha-blended (0.4) individual Andrews curves in three Imprint hues plus 3 bold, fully-opaque per-species mean curves; first series (Setosa) confirmed #009E73
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "andrews-curves · javascript · muix · anyplot.ai" top-left with a grey subtitle "60 observations · 4 variables, z-scored · bold line: mean curve per species"; y axis "Andrews function f(t)" with ticks -4.0 … 4.5; x axis "Fourier parameter t" with ticks −π, −π/2, 0, π/2, π; subtle horizontal grid; legend Setosa / Versicolor / Virginica centered at the bottom. All text dark and readable.
+      Data: 60 translucent smooth curves (Setosa #009E73, Versicolor #C475FD, Virginica #4467A3) plus a bold mean curve per species. Setosa clearly separates (low around −π/2 and 0, high near 3π/4); Versicolor stays near zero; Virginica peaks near π/4. Curves cross and merge near ±π as the spec permits.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17
-      Chrome: title, axis labels, tick labels, and legend all render in light ink and are clearly legible against the near-black surface; no dark-on-dark failures found
-      Data: colors are identical to the light render (same green/lavender/blue hues and alpha values) — only chrome flipped
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, tick labels, axis titles and legend text all flip to light ink; grid lines subtle grey; x axis line light. No dark-on-dark text.
+      Data: identical colors and curves to the light render; translucent bundles read as denser bands, bold mean curves stand out; brand green clearly visible, Virginica blue dimmer but distinguishable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,70 +57,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes for title/axis/tick/legend; readable in both
-          themes, no overflow at any canvas edge
+        comment: Explicit sizes (22/15/16 px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text, data, or legend
+        comment: No text collisions; curve overlap is permitted by the spec and handled
+          with alpha 0.4
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Alpha-blended individual curves recede while bold mean curves read
-          as focal points
+        comment: 1.75 px translucent curves form readable bundles; legend line glyphs
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three well-separated hues, no red-green-only encoding
+        comment: Green/lavender/blue are CVD-distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, nothing cut off, legend anchored below plot
+        comment: 3200x1800, plot fills canvas, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels for the mathematical transform
+        comment: Descriptive axis titles; unitless y permitted by spec
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
-          in both renders'
+        comment: 'Imprint canonical order, first series #009E73, correct backgrounds'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Deliberate two-layer hierarchy above a plain default, uses standard
-          Imprint palette
+        comment: Title/subtitle hierarchy with a context subtitle and π-fraction ticks
+          with a true minus, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, theme-adaptive axis colors, generous margins
+        comment: Y axis line and all ticks removed with the grid carrying the scale;
+          custom π tick placement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold mean curves create a clear focal point and visible species separation,
-          but no direct annotation
+        comment: Bold per-species mean curve over translucent bundles gives a focal
+          point the Notes do not prescribe
     spec_compliance:
       score: 15
       max: 15
@@ -125,48 +130,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews-curve Fourier expansion, t in [-pi, pi]
+        comment: Andrews curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization, alpha<0.5 transparency, color-by-category all present
+        comment: Normalized variables, alpha < 0.5, color by category with legend,
+          t over [−π, π], dense sampling
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=t, y=f(t), full range visible
+        comment: Curves at computed values over the full period; no visible spline
+          overshoot at 121 samples
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match, legend labels match species
+        comment: Mandated title format; legend names the species
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Distinct species clustering shown, but no deliberate outlier despite
-          spec calling out outlier detection
+        comment: Shows cluster separation, merging ranges and straying curves
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic Iris measurement scenario, neutral
+        comment: Iris-like botanical measurements, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Species means/std-devs closely track real Iris statistics
+        comment: Species means/spreads follow classic Iris; z-scored f(t) within about
+          ±4 as expected for 4 variables
     code_quality:
       score: 10
       max: 10
@@ -176,58 +183,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, minimal necessary helper functions
+        comment: Flat module-level pipeline; only the required component and an inline
+          LCG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake functionality
+        comment: Compact transform; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount contract, skipAnimation set
+        comment: Default export, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper LineChart composition, axisHighlight, slotProps.legend
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses MUI X per-series DOM class selectors to selectively style mean-curve
-          lines
+        comment: v9 data-series CSS selectors, tickInterval, axis width/height bands
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Location-aware valueFormatter (tick vs tooltip) and axisHighlight
+          crosshair for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T00:44:17Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - layer-composition
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - publication-ready
+  - grid-styling
