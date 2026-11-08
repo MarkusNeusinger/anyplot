@@ -21,10 +21,23 @@ describe('normalizeSearchQuery', () => {
     expect(normalizeSearchQuery('Sankey Diagramm')).toBe('sankey');
     expect(normalizeSearchQuery('scatter und regression')).toBe('scatter regression');
     expect(normalizeSearchQuery('graphique radar')).toBe('radar');
-    expect(normalizeSearchQuery('gráfico de violin')).toBe('de violin');
-    expect(normalizeSearchQuery('diagramma treemap')).toBe('treemap');
-    expect(normalizeSearchQuery('grafiek heatmap')).toBe('heatmap');
-    expect(normalizeSearchQuery('wykres pie')).toBe('pie');
+    expect(normalizeSearchQuery('gráfico de violin')).toBe('violin');
+    expect(normalizeSearchQuery('diagrammes de dispersion')).toBe('dispersion');
+    expect(normalizeSearchQuery('diagramma di treemap')).toBe('treemap');
+    expect(normalizeSearchQuery('grafiek van heatmap')).toBe('heatmap');
+    expect(normalizeSearchQuery('wykresów pie')).toBe('pie');
+    expect(normalizeSearchQuery('distribution of income')).toBe('distribution income');
+  });
+
+  it('drops a generic word with sentence punctuation after it', () => {
+    expect(normalizeSearchQuery('scatter plot, line')).toBe('scatter line');
+    expect(normalizeSearchQuery('bar chart.')).toBe('bar');
+  });
+
+  it('leaves Fuse operators and the words they carry alone', () => {
+    expect(normalizeSearchQuery('bar !chart')).toBe('bar !chart');
+    expect(normalizeSearchQuery("'plot =chart ^graph")).toBe("'plot =chart ^graph");
+    expect(normalizeSearchQuery('chart.js')).toBe('chart.js');
   });
 
   it('compares generic words without diacritics but keeps the other words as typed', () => {

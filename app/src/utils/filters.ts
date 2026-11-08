@@ -9,16 +9,18 @@ import { FILTER_CATEGORIES } from 'src/types';
 import { createFuzzySearcher, getMatchType, type MatchType } from 'src/utils/fuzzySearch';
 
 /**
- * Words that name "a chart" or join two terms, in English and in the
- * languages the agent chat answers in (agents/anyplot/prompts/refusals.yaml:
- * de, fr, es, it, pt, nl, pl). Stored folded: lowercase, without diacritics.
+ * Words that name "a chart" or only join two terms ("and", "with", "of"), in
+ * English and in the languages the agent chat answers in
+ * (agents/anyplot/prompts/refusals.yaml: de, fr, es, it, pt, nl, pl). Stored
+ * folded: lowercase, without diacritics.
  *
  * They carry no meaning for the search but break it: Fuse's extended search
  * treats a space as AND and needs every word inside ONE field, so "line chart"
- * misses the spec titled "Basic Line Plot", and "bar chart" ranks the title
- * that starts with "Bar Chart" above `plot:bar`. One-letter joiners (Spanish
- * "y", Polish "i" and "z", Italian and Portuguese "e") are left out because
- * axis names and "z score" use them.
+ * misses the spec titled "Basic Line Plot", "bar chart" ranks the title that
+ * starts with "Bar Chart" above `plot:bar`, and the "de" of "gráfico de violin"
+ * matches no field at all. One-letter joiners (Spanish "y", Polish "i" and "z",
+ * Italian and Portuguese "e") are left out because axis names and "z score"
+ * use them.
  */
 const GENERIC_QUERY_WORDS: ReadonlySet<string> = new Set([
   // en
@@ -32,6 +34,7 @@ const GENERIC_QUERY_WORDS: ReadonlySet<string> = new Set([
   'diagrams',
   'and',
   'with',
+  'of',
   // de
   'diagramm',
   'diagramme',
@@ -39,13 +42,18 @@ const GENERIC_QUERY_WORDS: ReadonlySet<string> = new Set([
   'grafiken',
   'und',
   'mit',
+  'von',
   // fr
   'graphique',
   'graphiques',
   'graphe',
   'graphes',
+  'diagrammes',
   'et',
   'avec',
+  'de',
+  'du',
+  'des',
   // es, pt
   'grafico',
   'graficos',
@@ -55,25 +63,41 @@ const GENERIC_QUERY_WORDS: ReadonlySet<string> = new Set([
   'diagramas',
   'con',
   'com',
+  'del',
+  'da',
+  'do',
   // it
   'grafici',
   'diagramma',
   'diagrammi',
+  'di',
   // nl
   'grafiek',
   'grafieken',
   'diagrammen',
   'en',
   'met',
+  'van',
   // pl
   'wykres',
   'wykresy',
   'wykresu',
+  'wykresow',
 ]);
 
-/** Lowercase and drop diacritics, the way Fuse's `ignoreDiacritics` compares. */
+/**
+ * Lowercase, drop diacritics the way Fuse's `ignoreDiacritics` compares, and
+ * drop sentence punctuation at the end ("plot," in "scatter plot, line").
+ * Leading characters stay: `!`, `^`, `=` and `'` are Fuse operators, and
+ * "!chart" must keep meaning "without chart".
+ */
 function foldWord(word: string): string {
-  return word.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/ß/g, 'ss');
+  return word
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/ß/g, 'ss')
+    .replace(/[,;:.?]+$/, '');
 }
 
 /**

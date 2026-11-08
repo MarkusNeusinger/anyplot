@@ -1,9 +1,11 @@
+import { useState } from 'react';
+
 import { fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FilterSearch } from 'src/sections/plots-gallery/FilterBar/FilterSearch';
 import { render, screen, waitFor } from 'src/test-utils';
-import type { FilterCounts } from 'src/types';
+import type { ActiveFilters, FilterCounts } from 'src/types';
 
 // Uses the real src/utils (fuse.js included) so keyboard navigation walks real results.
 const filterCounts: FilterCounts = {
@@ -41,6 +43,23 @@ const seabornCounts: FilterCounts = {
 
 function getSearchInput() {
   return screen.getByLabelText('Search filters');
+}
+
+/**
+ * The page around the search: it owns the chips, and its contextual counts
+ * stay those of the filtered response until a refetch, as on /plots.
+ */
+function SearchWithChips({ onAddFilter }: { onAddFilter: (c: string, v: string) => void }) {
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(seabornFilters);
+  return (
+    <FilterSearch
+      {...defaultProps}
+      activeFilters={activeFilters}
+      filterCounts={seabornCounts}
+      onAddFilter={onAddFilter}
+      onClearFilters={() => setActiveFilters([])}
+    />
+  );
 }
 
 describe('FilterSearch', () => {
@@ -186,6 +205,28 @@ describe('FilterSearch', () => {
 
     expect(await screen.findByLabelText('No matches')).toBeInTheDocument();
     expect(screen.queryByText('.search_all()')).not.toBeInTheDocument();
+  });
+
+  it('shows the hits in all plots after a click on .search_all()', async () => {
+    const onAddFilter = vi.fn();
+    render(<SearchWithChips onAddFilter={onAddFilter} />);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Open filter search' }), {
+      key: 'Enter',
+    });
+    fireEvent.change(getSearchInput(), { target: { value: 'bar' } });
+
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: 'Search all plots: 1 match without the filters',
+      })
+    );
+
+    // The chip is gone, the query stays, and the dropdown lists the global hit
+    const hit = await screen.findByText('bar');
+    expect(getSearchInput()).toHaveValue('bar');
+    expect(screen.queryByLabelText('No matches')).not.toBeInTheDocument();
+    fireEvent.click(hit);
+    expect(onAddFilter).toHaveBeenCalledWith('plot', 'bar');
   });
 
   it('searches the global counts as soon as no filter is left', async () => {

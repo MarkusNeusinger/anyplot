@@ -1,9 +1,9 @@
 ### Changed
 
 - **The gallery search ignores generic words and accents.** On `/plots`, the search drops words that
-  only say "a chart" or join two terms (chart, plot, graph, diagram, and, with, and their German,
-  French, Spanish, Italian, Portuguese, Dutch and Polish forms, such as Diagramm, graphique or
-  wykres) before it matches. A query of nothing but such words still searches as typed. `bar chart`
+  only say "a chart" or join two terms (chart, plot, graph, diagram, and, with, of, and their
+  German, French, Spanish, Italian, Portuguese, Dutch and Polish forms, such as Diagramm, graphique,
+  de or wykres) before it matches. A query of nothing but such words still searches as typed. `bar chart`
   now ranks `type:bar` first where it ranked the spec "Bar Chart with Error Bars" first, and `line
   chart` finds the line specs where it found three bar and indicator specs. Fuse folds accents and ß
   on both sides, so `scätter` finds `scatter`. The rule works in any language and needs no word list
