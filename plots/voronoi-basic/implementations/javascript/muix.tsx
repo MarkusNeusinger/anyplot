@@ -3,228 +3,187 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-02
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
+const BOX_PAD = 0.125; // share of the seed extent added on each side of the clipping box
+const CELL_OPACITY = 0.62; // cell fill opacity, so the page shows through as a soft tint
+const SEED_R = 7; // seed marker radius, px
+// Imprint hues the cells may take, in canonical order; the matte red slot (4)
+// stays out because the style guide reserves it for bad or loss roles.
+const FILL_SLOTS = [0, 1, 2, 3, 5, 6, 7];
 const TITLE = "voronoi-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
+const X_AXIS_H = 72;
+const Y_AXIS_W = 80;
+const MARGIN = { top: 16, bottom: 16, left: 32 };
 
-// --- Data: retail store locations across a city grid (in-memory, deterministic) ---
-// Small fixed-seed LCG — the browser has no seeded RNG.
-let seed = 42;
-function nextRandom() {
-  seed = (seed * 1103515245 + 12345) % 2147483648;
-  return seed / 2147483648;
-}
+// Columns: set these to your data's column names
+const X = "X coordinate (km)"; // role: x
+const Y = "Y coordinate (km)"; // role: y
 
-const STORE_COUNT = 18;
-const DOMAIN_MIN = 0;
-const DOMAIN_MAX = 100;
-const MARGIN_DATA = 10; // keep sites off the very edge so every cell stays visible
-
-const stores = Array.from({ length: STORE_COUNT }, (_, i) => ({
-  id: `S${i + 1}`,
-  x: DOMAIN_MIN + MARGIN_DATA + nextRandom() * (DOMAIN_MAX - DOMAIN_MIN - 2 * MARGIN_DATA),
-  y: DOMAIN_MIN + MARGIN_DATA + nextRandom() * (DOMAIN_MAX - DOMAIN_MIN - 2 * MARGIN_DATA),
-  monthlyRevenueK: Math.round(40 + nextRandom() * 160), // $k / month
-}));
-
-const revenues = stores.map((s) => s.monthlyRevenueK);
-const minRevenue = Math.min(...revenues);
-const maxRevenue = Math.max(...revenues);
-
-function hexToRgb(hex) {
-  const clean = hex.replace("#", "");
-  return {
-    r: parseInt(clean.substring(0, 2), 16),
-    g: parseInt(clean.substring(2, 4), 16),
-    b: parseInt(clean.substring(4, 6), 16),
+// Data: replace this block with your own records, one object per row
+// Eighteen retail store locations scattered across a city grid.
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
   };
-}
+  return Array.from({ length: 18 }, () => ({
+    [X]: Math.round((10 + rand() * 80) * 100) / 100,
+    [Y]: Math.round((10 + rand() * 80) * 100) / 100,
+  }));
+})();
 
-function revenueColor(value) {
-  const ratio = (value - minRevenue) / (maxRevenue - minRevenue || 1);
-  const a = hexToRgb(t.seq[0]);
-  const b = hexToRgb(t.seq[1]);
-  const r = Math.round(a.r + (b.r - a.r) * ratio);
-  const g = Math.round(a.g + (b.g - a.g) * ratio);
-  const bl = Math.round(a.b + (b.b - a.b) * ratio);
-  return `rgb(${r}, ${g}, ${bl})`;
-}
-
-// --- Voronoi geometry: half-plane intersection via Sutherland-Hodgman clip --
-// Each cell starts as the bounding box, then gets clipped by the perpendicular
-// bisector half-plane against every other seed (the region strictly closer to
-// this site than to that one). No external geometry library — this is plain
-// polygon math, not a charting engine.
-const BBOX = [
-  [DOMAIN_MIN, DOMAIN_MIN],
-  [DOMAIN_MAX, DOMAIN_MIN],
-  [DOMAIN_MAX, DOMAIN_MAX],
-  [DOMAIN_MIN, DOMAIN_MAX],
+// Plot: reads only data and the constants above
+const sites = data.filter((d) => d[X] != null && d[Y] != null).map((d) => [d[X], d[Y]]);
+const xs = sites.map((s) => s[0]);
+const ys = sites.map((s) => s[1]);
+// A square box in data units, centred on the seeds, so with a square drawing
+// area one km spans the same number of pixels on both axes.
+const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * (1 + 2 * BOX_PAD);
+const xLo = (Math.min(...xs) + Math.max(...xs) - span) / 2;
+const yLo = (Math.min(...ys) + Math.max(...ys) - span) / 2;
+const box = [
+  [xLo, yLo],
+  [xLo + span, yLo],
+  [xLo + span, yLo + span],
+  [xLo, yLo + span],
 ];
 
-function clipHalfPlane(polygon, site, other) {
-  const midX = (site.x + other.x) / 2;
-  const midY = (site.y + other.y) / 2;
-  const dirX = other.x - site.x;
-  const dirY = other.y - site.y;
-  const side = ([px, py]) => (px - midX) * dirX + (py - midY) * dirY;
-
-  const output = [];
-  for (let i = 0; i < polygon.length; i++) {
-    const curr = polygon[i];
-    const prev = polygon[(i - 1 + polygon.length) % polygon.length];
-    const sCurr = side(curr);
-    const sPrev = side(prev);
-    const currInside = sCurr <= 0;
-    const prevInside = sPrev <= 0;
-
-    if (currInside !== prevInside) {
-      const ratio = sPrev / (sPrev - sCurr);
-      output.push([prev[0] + ratio * (curr[0] - prev[0]), prev[1] + ratio * (curr[1] - prev[1])]);
-    }
-    if (currInside) output.push(curr);
-  }
-  return output;
-}
-
-function voronoiCell(site, sites) {
-  let polygon = BBOX;
-  for (const other of sites) {
-    if (other.id === site.id || polygon.length === 0) continue;
-    polygon = clipHalfPlane(polygon, site, other);
-  }
+// Each cell starts as the box and is clipped (Sutherland-Hodgman) by the
+// bisector half-plane towards every other seed: what is left is the region
+// closer to its own seed than to any other.
+const cells = sites.map(([sx, sy], i) => {
+  let polygon = box;
+  sites.forEach(([ox, oy], j) => {
+    if (j === i || polygon.length === 0) return;
+    const mx = (sx + ox) / 2;
+    const my = (sy + oy) / 2;
+    const side = polygon.map(([px, py]) => (px - mx) * (ox - sx) + (py - my) * (oy - sy));
+    const next = [];
+    polygon.forEach((curr, k) => {
+      const p = (k - 1 + polygon.length) % polygon.length;
+      const prev = polygon[p];
+      if ((side[k] <= 0) !== (side[p] <= 0)) {
+        const r = side[p] / (side[p] - side[k]);
+        next.push([prev[0] + r * (curr[0] - prev[0]), prev[1] + r * (curr[1] - prev[1])]);
+      }
+      if (side[k] <= 0) next.push(curr);
+    });
+    polygon = next;
+  });
   return polygon;
-}
+});
 
-const cells = stores.map((site) => ({ site, polygon: voronoiCell(site, stores) }));
+// Two cells share an edge when two vertices of one lie on the bisector of
+// their seeds. Each cell, in data order, takes the first fill slot that no
+// neighbour already holds, so adjacent cells always differ in color.
+const tolerance = span * 1e-6;
+const adjacent = cells.map((polygon, i) =>
+  sites.map(
+    (other, j) =>
+      j !== i &&
+      polygon.filter(
+        ([px, py]) =>
+          Math.abs(Math.hypot(px - sites[i][0], py - sites[i][1]) - Math.hypot(px - other[0], py - other[1])) < tolerance,
+      ).length >= 2,
+  ),
+);
+const colorIndex = [];
+cells.forEach((_, i) => {
+  const taken = new Set(colorIndex.filter((_, j) => adjacent[i][j]));
+  let k = 0;
+  while (taken.has(k)) k += 1;
+  colorIndex.push(k);
+});
+const SUBTITLE = `${sites.length} seed points · cells clipped at a box ${BOX_PAD * 100} % beyond the outermost seeds · neighbouring cells differ in color`;
 
-// --- Overlay: Voronoi cells, fill encodes store revenue -----------------------
-function VoronoiCells() {
+// The community package has no Voronoi component: a custom layer draws the
+// cells and seeds through the chart's linear scales.
+function VoronoiLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
 
   return (
     <g>
-      {cells.map(({ site, polygon }) => {
-        if (polygon.length < 3) return null;
-        const points = polygon.map(([px, py]) => `${xScale(px)},${yScale(py)}`).join(" ");
-        return (
+      {cells.map((polygon, i) =>
+        polygon.length < 3 ? null : (
           <polygon
-            key={site.id}
-            points={points}
-            fill={revenueColor(site.monthlyRevenueK)}
-            fillOpacity={0.82}
+            key={`cell-${i}`}
+            points={polygon.map(([px, py]) => `${xScale(px)},${yScale(py)}`).join(" ")}
+            fill={t.palette[FILL_SLOTS[colorIndex[i]]]}
+            fillOpacity={CELL_OPACITY}
             stroke={t.pageBg}
-            strokeWidth={4.5}
+            strokeWidth={3}
+            strokeLinejoin="round"
           />
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Overlay: seed markers (store locations, brand green) --------------------
-function SeedMarkers() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-
-  return (
-    <g>
-      {stores.map((s) => (
-        <circle key={s.id} cx={xScale(s.x)} cy={yScale(s.y)} r={9} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
+        ),
+      )}
+      {sites.map(([sx, sy], i) => (
+        <circle key={`seed-${i}`} cx={xScale(sx)} cy={yScale(sy)} r={SEED_R} fill={t.ink} stroke={t.pageBg} strokeWidth={2.5} />
       ))}
     </g>
   );
 }
 
-// --- Overlay: title drawn in the reserved top margin --------------------------
-function DiagramTitle() {
-  const { width } = window.ANYPLOT_SIZE;
-  return (
-    <text x={width / 2} y={40} textAnchor="middle" dominantBaseline="hanging" fontSize={22} fontWeight={500} fill={t.ink}>
-      {TITLE}
-    </text>
-  );
-}
-
-// --- Overlay: sequential color-scale legend for the cell fill -----------------
-function RevenueLegend() {
-  const drawingArea = useDrawingArea();
-  const legendWidth = 240;
-  const legendX = drawingArea.left + drawingArea.width - legendWidth;
-  const legendY = drawingArea.top - 40;
-  return (
-    <g>
-      <defs>
-        <linearGradient id="revenueGradient" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={t.seq[0]} />
-          <stop offset="100%" stopColor={t.seq[1]} />
-        </linearGradient>
-      </defs>
-      <text x={legendX} y={legendY - 18} fontSize={14} fill={t.inkSoft}>
-        Store monthly revenue ($k)
-      </text>
-      <rect
-        x={legendX}
-        y={legendY}
-        width={legendWidth}
-        height={14}
-        fill="url(#revenueGradient)"
-        rx={7}
-        stroke={t.grid}
-        strokeWidth={1}
-      />
-      <text x={legendX} y={legendY + 30} fontSize={13} fill={t.inkSoft}>
-        {`$${minRevenue}k`}
-      </text>
-      <text x={legendX + legendWidth} y={legendY + 30} textAnchor="end" fontSize={13} fill={t.inkSoft}>
-        {`$${maxRevenue}k`}
-      </text>
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) --------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  // Square drawing area: the right margin absorbs what the plot side leaves over.
+  const side = height - TITLE_H - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+  const right = width - side - MARGIN.left - Y_AXIS_W;
+
   return (
-    <ChartContainer
-      width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
-      margin={{ top: 150, right: 90, bottom: 100, left: 100 }}
-      series={[]}
-      skipAnimation
-      disableAxisListener
-      xAxis={[
-        {
-          scaleType: "linear",
-          min: DOMAIN_MIN,
-          max: DOMAIN_MAX,
-          label: "X coordinate (km)",
-          labelStyle: { fontSize: 16, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: DOMAIN_MIN,
-          max: DOMAIN_MAX,
-          label: "Y coordinate (km)",
-          labelStyle: { fontSize: 16, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-    >
-      <VoronoiCells />
-      <SeedMarkers />
-      <ChartsXAxis />
-      <ChartsYAxis />
-      <DiagramTitle />
-      <RevenueLegend />
-    </ChartContainer>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box", textAlign: "center" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H}
+        series={[]}
+        skipAnimation
+        margin={{ ...MARGIN, right }}
+        xAxis={[
+          {
+            id: "x",
+            scaleType: "linear",
+            min: xLo,
+            max: xLo + span,
+            height: X_AXIS_H,
+            label: X,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "y",
+            scaleType: "linear",
+            min: yLo,
+            max: yLo + span,
+            width: Y_AXIS_W,
+            label: Y,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      >
+        <VoronoiLayer />
+        <ChartsXAxis axisId="x" />
+        <ChartsYAxis axisId="y" />
+      </ChartsContainer>
+    </div>
   );
 }
