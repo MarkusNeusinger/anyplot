@@ -1,7 +1,7 @@
 // anyplot.ai
 // eye-diagram-basic: Signal Integrity Eye Diagram
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-18
+// Quality: pending | Created: 2026-06-18
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
