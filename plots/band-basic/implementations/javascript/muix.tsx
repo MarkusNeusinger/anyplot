@@ -14,7 +14,7 @@ const TITLE_H = 84;
 const LEGEND_H = 44;
 const BAND_OPACITY = 0.28;
 const BAND_COLOR = t.palette[0];
-const CENTER_COLOR = t.palette[2]; // a second hue, so the central line contrasts with the band fill
+const CENTER_COLOR = t.palette[1];
 
 // Columns: set these to your data's column names
 const DAY = "Forecast day"; // role: x
