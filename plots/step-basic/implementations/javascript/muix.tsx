@@ -1,7 +1,7 @@
 // anyplot.ai
 // step-basic: Basic Step Plot
 // Library: muix 9.17.0 | JavaScript 22.23.1
-// Quality: 93/100 | Created: 2026-07-25
+// Quality: pending | Created: 2026-07-25
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
