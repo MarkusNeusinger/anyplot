@@ -88,6 +88,18 @@ def status_line_components() -> list[Path]:
     return components_from("ChatFrame.tsx")
 
 
+def remembered_components() -> list[Path]:
+    """`Remembered.tsx`: the remembered decisions' count on a chapter line and their list under it."""
+    return components_from("Remembered.tsx")
+
+
+def bullet_of(part: str) -> str:
+    """The text of one bullet of "The page's controls", which stands on one line."""
+    section = controls_section()
+    start = section.index(f"\n- {part}:")
+    return section[start : section.find("\n", start + 1)]
+
+
 def buttons_of(components: list[Path]) -> set[str]:
     """The labels of the buttons of these components, read from the code without its comments."""
     labels: set[str] = set()
@@ -180,6 +192,41 @@ def test_the_status_line_bullet_names_exactly_the_buttons_at_its_end() -> None:
 
     assert buttons == {".stop()", ".start_over()", ".feedback()"}
     assert sorted(bullet ^ buttons) == []
+
+
+def test_the_remembered_bullet_names_exactly_the_buttons_of_the_decisions_list() -> None:
+    """Since the v4 chapters the remembered decisions stand on the latest `# plot` line as a count that unfolds
+    their list under it; the list above the composer, its heading and the `.hide()` and `.show()` that folded it
+    went. The bullet names each button of the list's component and none it lost, and no sentence of the section
+    sends the user to a list above the composer."""
+    buttons = buttons_of(remembered_components())
+    bullet = controls_of("The remembered decisions")
+
+    assert {".forget()", ".forget_all()"} <= buttons
+    assert not {".hide()", ".show()"} & buttons
+    assert sorted(buttons - bullet) == []
+    assert sorted(bullet - buttons) == []
+    assert "on the latest `# plot` line" in bullet_of("The remembered decisions")
+    assert "above the composer" not in controls_section()
+
+
+def test_the_prompt_says_what_the_page_shows_of_questions_and_kept_decisions() -> None:
+    """The page marks a message that changed nothing as a question and starts the reply with a label of its own,
+    and a plot card counts the remembered decisions it kept: the root knows both, so it never writes the label
+    into its reply, and it can point the user to what a version kept. The words are the page's own."""
+    messages = (AGENT_CHAT / "messages.ts").read_text(encoding="utf-8")
+    labels = (AGENT_CHAT / "cardLabels.ts").read_text(encoding="utf-8")
+    chapters = bullet_of("The data panel")
+    card = bullet_of("Each result card")
+
+    assert "`? answer · nothing changed`" in chapters
+    assert "which the page adds by itself" in chapters
+    assert "`· 2 questions`" in chapters
+    assert "ANSWER_LABEL = 'answer · nothing changed'" in messages
+    assert "`plot v4 · seaborn · kept 3`" in card
+    assert "`kept: y = 7 line · x label · new: log scale on y`" in card
+    assert "`kept ${kept}`" in labels
+    assert "`${part}: " in labels
 
 
 def test_the_result_card_bullet_says_where_each_download_sits() -> None:

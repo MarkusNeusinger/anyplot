@@ -63,9 +63,14 @@
  * switch's carry (the theme asked for before), and text typed into the box goes
  * as a normal turn, which the server also gives the decisions. The offer ends
  * once a plot in that library ships, or with a switch whose answer has none. The
- * decisions themselves stand above the composer as the remembered list
- * (`Remembered`), each with `.forget()`, and `.forget_all()` for a blank start:
- * nothing else clears them.
+ * decisions themselves stand on the latest `# plot` chapter line, `3 decisions ▾`
+ * (before the first plot on the latest chapter line), which unfolds their list under
+ * the line (`Remembered`), each with `.forget()`, and `.forget_all()` for a blank
+ * start: nothing else clears them. A plot card says how many it kept (`plot v4 ·
+ * seaborn · kept 3`) and, open, which (`kept: … · new: …`). A typed turn that
+ * changed nothing, by the server's word and by what the page saw, reads as a question:
+ * a `?` beside its bubble, `? answer · nothing changed` over its reply, and a count on
+ * its chapter line that jumps to the chapter's questions in turn.
  *
  * The composer is one row in two fixed places (`Composer.tsx`, since the v4
  * composer row), the message box and the plot button, under one quiet line of
@@ -194,7 +199,6 @@ import {
 } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
-import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StartItem } from 'src/sections/agent-chat/StartItem';
 import {
@@ -206,7 +210,13 @@ import {
   showsTimeline,
   statusLine,
 } from 'src/sections/agent-chat/steps';
-import { bodyTextSx, labelSx, MASTHEAD_CLEARANCE, smallText } from 'src/sections/agent-chat/styles';
+import {
+  bodyTextSx,
+  labelSx,
+  MASTHEAD_CLEARANCE,
+  smallText,
+  visuallyHiddenSx,
+} from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/adminAuth';
@@ -498,6 +508,8 @@ function AgentChat({
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const plotRef = useRef<HTMLButtonElement>(null);
+  // What the last removal from the remembered decisions did, which the footer's status region says.
+  const [memoryNote, setMemoryNote] = useState('');
   // `.feedback()` at the status line's end opened the chat's own feedback form above it; the
   // form takes the focus once, as it opens from that click.
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -1189,6 +1201,13 @@ function AgentChat({
                   />
                 )}
                 followReply={followReply}
+                decisions={{
+                  disabled: busy || state.phase !== 'ready',
+                  onForget: session.forgetMemory,
+                  onForgetAll: session.forgetAllMemory,
+                  fallbackFocusRef: messageRef,
+                  onAnnounce: setMemoryNote,
+                }}
               />
 
               <Box
@@ -1233,15 +1252,12 @@ function AgentChat({
                     is never empty, since the start item stands first in it. */}
                 <FrameRule />
 
-                {/* The decisions every next plot takes over, right above the composer that asks for
-                it and whose offer after a switch counts them; nothing while there are none. */}
-                <Remembered
-                  memory={state.memory}
-                  disabled={busy || state.phase !== 'ready'}
-                  onForget={session.forgetMemory}
-                  onForgetAll={session.forgetAllMemory}
-                  fallbackFocusRef={messageRef}
-                />
+                {/* What a removal from the remembered decisions did, for a screen reader: the list
+                    stands on a chapter line inside the thread's log, which would not read a
+                    removal out, and comes and goes with the memory; this region stays. */}
+                <Box role="status" data-testid="memory-status" sx={visuallyHiddenSx}>
+                  {memoryNote}
+                </Box>
 
                 <Composer
                   draft={draft}

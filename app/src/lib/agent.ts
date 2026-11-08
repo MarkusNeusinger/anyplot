@@ -221,6 +221,38 @@ export interface PlotMemory {
 
 /** An entry id as the BFF takes it in the DELETE path (`MEMORY_ENTRY_ID_PATTERN`). */
 export const MEMORY_ENTRY_ID = /^m[0-9]{1,6}$/;
+
+/**
+ * The plot memory a stored version stands on, by entry id (`plot.memory`): `kept`, the decisions
+ * from before the run that it kept, and `added`, the ones the run added, each in the memory's
+ * order. A decision the run replaced is in neither list. The server settles them with the version,
+ * so they hold also when the turn fails later. Ids are numbered once per session and never reused:
+ * an id names one decision for the session's life.
+ */
+export interface VersionMemory {
+  kept: string[];
+  added: string[];
+}
+
+/**
+ * What a turn changed (`done.turn`, the agents service's `stream.turn_outcome`, read from its own
+ * record of the assistant's tool calls, never from the reply): the data or its bindings (`data`),
+ * the plot pipeline ran, shipped or not (`plot`), the library (`switch`), the language the user
+ * asked for (`language`), a wish kept for the first plot or a decision the memory read after the
+ * turn found added (`kept`), a decision removed from the plot memory (`memory`), or nothing
+ * (`answer`: the turn answered a question). A turn that changed several things names the first of
+ * them in this order.
+ */
+export const TURN_OUTCOMES = [
+  'data',
+  'plot',
+  'switch',
+  'language',
+  'kept',
+  'memory',
+  'answer',
+] as const;
+export type TurnOutcome = (typeof TURN_OUTCOMES)[number];
 /** The service's cap of entries (`memory.MAX_ENTRIES`), for an answer that names none. */
 const DEFAULT_MAX_MEMORY_ENTRIES = 30;
 /** The service's cap of an entry's text (`memory.MAX_TEXT_CHARS`); a longer one is cut, never shown whole. */
@@ -557,6 +589,12 @@ export interface PlotResult {
   version: number | null;
   /** How each attempt ended, in order; absent from an older server or a saved session. */
   rounds?: Round[];
+  /**
+   * The decisions the stored version kept and added (`VersionMemory`). Absent when the server
+   * named none, for a plot without a stored version or from an older server: the version's memory
+   * is unknown then, never empty. A session without memory sends two empty lists.
+   */
+  memory?: VersionMemory;
 }
 
 export interface ThemeRendered {
@@ -1667,6 +1705,12 @@ export type AgentEvent =
        * switch route and, with `plot`, the carry run; `null` without one.
        */
       switch: ChatSwitch | null;
+      /**
+       * What the turn changed, in the server's word (`TurnOutcome`). Absent when the server sent
+       * none: a refused, failed or stopped turn, or an older server. `unknown` for a value this
+       * page does not know (a newer server), which the page reads as a change, never as a question.
+       */
+      turn?: TurnOutcome | 'unknown';
     };
 
 /** Where a switch came from, for the server's telemetry only: the library menu, or the chat (`done.switch`). */
@@ -1923,6 +1967,23 @@ export function longSuggestion(value: unknown): LongSuggestion | null {
   };
 }
 
+/**
+ * A version's `memory` as the server sends it: both lists, each id in the memory's pattern (an
+ * entry that is no id is dropped, never the list); `null` for anything else, which reads as no
+ * field, so a malformed value never shows as an empty memory.
+ */
+function versionMemory(value: unknown): VersionMemory | null {
+  if (!isRecord(value) || !Array.isArray(value.kept) || !Array.isArray(value.added)) return null;
+  const ids = (items: unknown[]) =>
+    items.filter((id): id is string => typeof id === 'string' && MEMORY_ENTRY_ID.test(id));
+  return { kept: ids(value.kept), added: ids(value.added) };
+}
+
+/** `done.turn` as the page reads it: a known outcome, or `unknown` for any other value. */
+function turnOf(value: unknown): TurnOutcome | 'unknown' {
+  return TURN_OUTCOMES.includes(value as TurnOutcome) ? (value as TurnOutcome) : 'unknown';
+}
+
 const ARTIFACT_NAMES = new Set<string>([
   'plot-light.png',
   'plot-dark.png',
@@ -1974,8 +2035,9 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
       };
     case 'message':
       return typeof d.text === 'string' ? { type: 'message', text: d.text } : null;
-    case 'plot':
+    case 'plot': {
       if (typeof d.status !== 'string' || !PLOT_STATUSES.has(d.status)) return null;
+      const memory = versionMemory(d.memory);
       return {
         type: 'plot',
         result: {
@@ -1991,8 +2053,10 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
           rounds: Array.isArray(d.rounds)
             ? d.rounds.map(toRound).filter((round): round is Round => round !== null)
             : [],
+          ...(memory ? { memory } : {}),
         },
       };
+    }
     case 'refusal':
       return {
         type: 'refusal',
@@ -2018,6 +2082,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         language: plotLanguage(d.language),
         ...('suggestion' in d ? { suggestion: longSuggestion(d.suggestion) } : {}),
         switch: chatSwitch(d.switch),
+        ...(d.turn !== undefined && d.turn !== null ? { turn: turnOf(d.turn) } : {}),
       };
     default:
       return null;

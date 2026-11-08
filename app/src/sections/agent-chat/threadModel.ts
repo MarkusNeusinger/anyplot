@@ -24,6 +24,21 @@
  * data starts a plot chapter, and a data turn after a plot starts a data chapter again.
  * A library switch stays inside its chapter as a line of its own.
  *
+ * A typed turn's outcome (`TurnOutcome`, the server's word checked against the stream) opens a
+ * chapter as its items do: `data` a data chapter also without a card (a binding change), `plot` a
+ * plot chapter also without a card (a run whose result the page did not show). Every other outcome
+ * stays in the chapter it falls in.
+ *
+ * Questions: a typed turn whose outcome is `answer` changed nothing, by the server's word and by
+ * what the stream showed. It is a question once the memory read after it no longer waits
+ * (`memoryTurn`, which the caller passes as `waiting`), so a turn the read moves to `kept` never
+ * counts. The note sent with an attachment is never one: its reply summarizes the data that just
+ * arrived. The chapter counts its questions, and the reply that answers each (the first reply of
+ * its turn) is in `answers`. Nothing is read from the text: a trailing `?` makes no question.
+ *
+ * The remembered decisions stand on one chapter's line (`decisionsAt`): the latest plot chapter's,
+ * where the next plot takes them over, and before the first plot the latest chapter's.
+ *
  * Folds: an older data version (a `data_stub`, `FoldedData.tsx`) and every plot card but the
  * latest version's fold to one line; the live data card stays open. A data version's number is
  * the server's, so after an undo a stub and the live card can carry the same one: rows and
@@ -43,8 +58,8 @@ export interface Chapter {
   /** The id of the chapter's first item: where its line stands, and where a jump to it lands. */
   start: number;
   /**
-   * The questions asked in it, in order: the typed turns that changed nothing (`outcome`
-   * `answer`). The chapter line counts them, and its count jumps to them.
+   * The questions asked in it, in order, by item id: the typed turns that changed nothing
+   * (`isQuestion`). The chapter line counts them, and its count jumps to them.
    */
   questions: number[];
   /**
@@ -66,6 +81,22 @@ export type ThreadRow =
 export interface ThreadModel {
   rows: ThreadRow[];
   chapters: Chapter[];
+  /** The ids of the replies that answer a question: the first reply of each question's turn. */
+  answers: ReadonlySet<number>;
+  /** The chapter whose line holds the remembered decisions (`Chapter.index`); 0 without one. */
+  decisionsAt: number;
+}
+
+/** The DOM id of a typed turn's bubble, the target of a jump to it (`ChapterLine.tsx`). */
+export const questionDomId = (itemId: number) => `agent-turn-${itemId}`;
+
+/**
+ * Whether a thread item is a question (see the module notes): a typed turn that changed nothing,
+ * not the note sent with an attachment, and not the turn whose memory read still waits
+ * (`waiting`, the session's `memoryTurn`).
+ */
+export function isQuestion(item: ChatItem, waiting: number | null = null): boolean {
+  return item.kind === 'user' && item.outcome === 'answer' && !item.note && item.id !== waiting;
 }
 
 /** Whether an item opens a turn: the user's message, a page action, or a paste. */
@@ -170,12 +201,23 @@ function latestPlot(items: readonly ChatItem[]): number {
   return latest;
 }
 
-/** The thread's rows and chapters (see the module notes). */
-export function threadModel(items: readonly ChatItem[]): ThreadModel {
+/**
+ * The thread's rows and chapters (see the module notes). `waiting`: the typed turn whose memory
+ * read after its `done` is still to come (the session's `memoryTurn`), no question yet.
+ */
+export function threadModel(
+  items: readonly ChatItem[],
+  waiting: number | null = null
+): ThreadModel {
   const chapters: Chapter[] = [];
   const rows: ThreadRow[] = [];
+  const answers = new Set<number>();
   const latest = latestPlot(items);
   for (const turn of turnsOf(items)) {
+    if (isQuestion(turn[0], waiting)) {
+      const reply = turn.find(item => item.kind === 'assistant');
+      if (reply) answers.add(reply.id);
+    }
     const kind = turnKind(turn);
     let chapter: Chapter | undefined = chapters[chapters.length - 1];
     if (!chapter || (kind !== null && kind !== chapter.kind)) {
@@ -192,7 +234,7 @@ export function threadModel(items: readonly ChatItem[]): ThreadModel {
       rows.push({ kind: 'chapter', chapter });
     }
     for (const item of turn) {
-      if (item.kind === 'user' && item.outcome === 'answer') chapter.questions.push(item.id);
+      if (isQuestion(item, waiting)) chapter.questions.push(item.id);
       if (
         (item.kind === 'data' || item.kind === 'data_stub') &&
         item.snapshot &&
@@ -209,5 +251,6 @@ export function threadModel(items: readonly ChatItem[]): ThreadModel {
   // Oldest first, whatever order their items stand in: a card a turn moved to the end can land
   // below a newer card, when a table read from text waited meanwhile and `.use()` took it.
   for (const chapter of chapters) chapter.dataVersions.sort((a, b) => a - b);
-  return { rows, chapters };
+  const plotAt = [...chapters].reverse().find(chapter => chapter.kind === 'plot')?.index;
+  return { rows, chapters, answers, decisionsAt: plotAt ?? chapters.length };
 }

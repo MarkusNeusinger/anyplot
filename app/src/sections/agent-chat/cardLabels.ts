@@ -3,8 +3,9 @@
  * words for a screen reader, which reads `·` and `×` badly.
  */
 
-import type { DataSnapshot } from 'src/hooks/useAgentSession';
+import type { DataSnapshot, VersionDecision } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { cutRequest } from 'src/sections/agent-chat/threadModel';
 
 /** A card's label on its border, and the same in words. */
 export interface CardLabel {
@@ -66,18 +67,45 @@ export function fileSource(name: string): string {
 
 /**
  * A plot card's label on its border and its folded line: `plot v2 · matplotlib · title in German`,
- * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`). It names
+ * the version, its library and what it answered (`plotSummaries` in `threadModel.ts`). A version
+ * that kept remembered decisions says how many in that place instead (`plot v4 · seaborn · kept
+ * 3`, `kept` of 1 or more), since what it took over is what sets it apart; a version without them,
+ * or whose memory the server did not name, keeps its summary, and never reads `kept 0`. It names
  * the button the label is, so its name keeps the words on screen in their order, `Plot v2,
- * matplotlib, title in German`, and a voice command that says them finds it (WCAG 2.5.3); only the
- * `·` give way to commas.
+ * matplotlib, title in German`, `Plot v4, seaborn, kept 3 decisions`, and a voice command that says
+ * them finds it (WCAG 2.5.3); only the `·` give way to commas.
  */
 export function plotCardLabel(
   number: number,
   library: string,
-  summary: string | null | undefined
+  summary: string | null | undefined,
+  kept = 0
 ): CardLabel {
+  const tail = kept > 0 ? `kept ${kept}` : summary;
+  const spoken = kept > 0 ? `kept ${countOf(kept, 'decision')}` : summary;
   return {
-    text: `plot v${number} · ${library}${summary ? ` · ${summary}` : ''}`,
-    spoken: `Plot v${number}, ${library}${summary ? `, ${summary}` : ''}`,
+    text: `plot v${number} · ${library}${tail ? ` · ${tail}` : ''}`,
+    spoken: `Plot v${number}, ${library}${spoken ? `, ${spoken}` : ''}`,
+  };
+}
+
+/**
+ * One part of a plot card's decisions line: `kept: y = 7 line · x label` or `new: log scale on
+ * y`, each text cut as a label quotes a request (`cutRequest`), and in words with the full texts;
+ * `null` for an empty list. A decision whose text no list named counts all the same, as `1 more`
+ * after the texts (`kept: 3 decisions` when none has one), so the line names as many as the
+ * label's `kept N` counts.
+ */
+export function decisionsText(part: 'kept' | 'new', list: VersionDecision[]): CardLabel | null {
+  if (list.length === 0) return null;
+  const texts = list.flatMap(item => (item.text === null ? [] : [item.text]));
+  const unnamed = list.length - texts.length;
+  if (texts.length === 0) {
+    const count = countOf(unnamed, 'decision');
+    return { text: `${part}: ${count}`, spoken: `${part}: ${count}` };
+  }
+  return {
+    text: `${part}: ${[...texts.map(cutRequest), ...(unnamed ? [`${unnamed} more`] : [])].join(' · ')}`,
+    spoken: `${part}: ${texts.join(', ')}${unnamed ? `, and ${countOf(unnamed, 'more decision')}` : ''}`,
   };
 }

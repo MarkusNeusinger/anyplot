@@ -7,10 +7,16 @@
  *
  * - The card's frame carries its label on the border (`CardFrame.tsx`, v4
  *   design): `plot v2 · matplotlib · title in German`, the version, its library
- *   and what it answered. The label is the card's toggle: a click folds the
+ *   and what it answered, or `plot v4 · seaborn · kept 3` for a version that
+ *   kept remembered decisions. The label is the card's toggle: a click folds the
  *   card to that one line (`▸ plot v2 · …`), and a newer version folds the one
  *   before it. The version's status (`ok`, `needs attention`) stands in the
  *   theme row, before the run's line.
+ * - What the version kept and added (`PlotVersion.decisions`): from `sm` up the
+ *   open card's first line, `kept: y = 7 line · x label · new: log scale on y`,
+ *   each decision cut to 40 characters, in full for a screen reader; on a phone
+ *   only `new: …`, under the image, above the card's action line. No line when
+ *   both are empty or the server named none.
  * - Folded by default since 2026-11-02 (owner: less text, the details behind
  *   a toggle rather than removed): the image, its toolbar and the theme switch
  *   show; the run's rounds and its "what changed" list sit behind one status
@@ -89,7 +95,7 @@ import {
   type Theme,
 } from 'src/lib/agent';
 import { CardFrame } from 'src/sections/agent-chat/CardFrame';
-import { plotCardLabel } from 'src/sections/agent-chat/cardLabels';
+import { decisionsText, plotCardLabel } from 'src/sections/agent-chat/cardLabels';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
@@ -150,6 +156,7 @@ export interface ResultCardProps {
   /**
    * What the version answered, for its label: the request before it, cut to 40 characters, or
    * `first plot` or `.start_over()` (`plotSummaries` in `threadModel.ts`); none without either.
+   * A version that kept remembered decisions shows `kept N` in its place.
    */
   summary?: string | null;
   /**
@@ -556,7 +563,32 @@ export function ResultCard({
     ? `${attempts} · ${plural(result.changes.length, 'change')}`
     : attempts;
   const hasDetails = rounds.length > 0 || result.changes.length > 0;
-  const label = plotCardLabel(number, library, request);
+  // The remembered decisions the version kept and the ones it added, as the server named them;
+  // a version whose memory is unknown has neither, and a label without `kept`.
+  const decisions = version.decisions;
+  const kept = decisions ? decisionsText('kept', decisions.kept) : null;
+  const added = decisions ? decisionsText('new', decisions.added) : null;
+  const label = plotCardLabel(number, library, request, decisions?.kept.length ?? 0);
+  // From `sm` up both on the card's first line; on a phone the label counts what it kept, and
+  // only what is new stands under the image (the v4 phone mock).
+  const shown = narrow ? (added ? [added] : []) : [kept, added].filter(part => part !== null);
+  const decisionsLine = shown.length ? (
+    <Box
+      data-testid="result-decisions"
+      sx={{
+        ...labelSx,
+        color: 'var(--ink-soft)',
+        lineHeight: 1.6,
+        overflowWrap: 'anywhere',
+        mt: narrow ? -1 : 0,
+      }}
+    >
+      <span aria-hidden>{shown.map(part => part.text).join(' · ')}</span>
+      <Box component="span" sx={visuallyHiddenSx}>
+        {shown.map(part => part.spoken).join('; ')}
+      </Box>
+    </Box>
+  ) : null;
 
   return (
     <CardFrame
@@ -573,6 +605,9 @@ export function ResultCard({
     >
       {expanded && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          {/* What the version kept and added, the card's first line from `sm` up (the v4 mock),
+              its actions over the image's corner beside it. */}
+          {!narrow && decisionsLine}
           {/* Image with the overlay actions of the plot page. */}
           <Box
             sx={{
@@ -707,6 +742,9 @@ export function ResultCard({
               </Box>
             )}
           </Box>
+
+          {/* On a phone what is new stands under the image, above the card's action line. */}
+          {narrow && decisionsLine}
 
           {narrow && (
             <Box

@@ -301,14 +301,31 @@ export function describeLibraryFailure(code: string, ref: string | null): string
  */
 export const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 
-/** What the remembered list does, behind the ⓘ of its one-line heading (`Remembered`). */
+/** What the remembered decisions do, behind the ⓘ at the end of their list (`Remembered`). */
 export const REMEMBERED_DETAILS = [
   'every next plot keeps these decisions, also in another library',
   '.start_over() keeps them too; only .forget() and .forget_all() remove them',
 ] as const;
 
-/** The first line behind that ⓘ once the memory has no room; the heading itself says `full`. */
+/** The first line behind that ⓘ once the memory has no room; the chapter line itself says `full`. */
 export const REMEMBERED_FULL = 'full: forget one before a new decision fits';
+
+/**
+ * The label a question's reply starts with (the v4 mock): the turn changed nothing, by the
+ * server's word and by what the page saw. Its `?` stands before it, hidden from a screen reader
+ * like the `#` of a chapter line, and the question's bubble starts with `QUESTION_WORD`.
+ */
+export const ANSWER_LABEL = 'answer · nothing changed';
+
+/** What a question's bubble starts with for a screen reader, in place of its `?` mark. */
+export const QUESTION_WORD = 'Question:';
+
+/** The name of a chapter's count of its questions, which jumps to them in turn (PLAN §4). */
+export function questionJumpName(count: number): string {
+  return count === 1
+    ? '1 question in this chapter, go to it'
+    : `${count} questions in this chapter, go to the next`;
+}
 
 /** Failures of a removal from the remembered list; any other code reads as the page's turn errors do. */
 export const MEMORY_FAILURE: Record<string, string> = {

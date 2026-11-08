@@ -154,11 +154,15 @@
  * decisions (`.create_plot()`, `.start_over()`). The plot memory is the
  * server's list of the decisions a plot takes over (`memory`): the hook reads
  * it after every turn's `done` (a shipped run adds entries, the assistant's
- * `forget` removes them, a shipped fresh plot empties it), after a switch, and
+ * `forget` removes them; nothing else empties it), after a switch, and
  * takes the list a removal answers (`forgetMemory`, `.forget()`). A read that
  * fails, or a server without the route, leaves the list as it was; a read
  * overtaken by a newer one or by a removal's answer is dropped. The admin
- * fan-out's sessions read none.
+ * fan-out's sessions read none. A shipped version names the decisions it kept
+ * and added by id (`plot.memory`); the version keeps their texts
+ * (`PlotVersion.decisions`), the kept ones from the list it arrives on, the
+ * added ones from the read after its turn, so its card says what it kept also
+ * after a later `.forget()`.
  *
  * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
  * the conversation, code, images and config the agents service assembles,
@@ -253,7 +257,9 @@ import {
   type Theme,
   type TurnAction,
   type TurnBody,
+  type TurnOutcome,
   utf8Bytes,
+  type VersionMemory,
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
@@ -332,6 +338,71 @@ export interface PlotVersion {
   code: CodeText;
   /** The last feedback case stored for this version; absent until one is sent. */
   feedback?: FeedbackRecord;
+  /**
+   * The decisions the version kept and added (`result.memory`), with their texts as the plot
+   * memory listed them; absent when the server named none (`VersionMemory`), which shows no kept
+   * label and no kept line.
+   */
+  decisions?: VersionDecisions;
+}
+
+/**
+ * A decision of a version's memory: its entry id and its text, `null` while no list read so far
+ * named the id (the read failed, or the decision was forgotten before any read). A text once known
+ * stays: a later `.forget()` never rewrites an older card.
+ */
+export interface VersionDecision {
+  id: string;
+  text: string | null;
+}
+
+/** A version's decisions, from before the run (`kept`) and from the run itself (`added`). */
+export interface VersionDecisions {
+  kept: VersionDecision[];
+  added: VersionDecision[];
+}
+
+/**
+ * A version's decisions with the texts `memory` names: the kept ones resolve against the list read
+ * before the run, the added ones once the read after the turn's `done` lists them
+ * (`resolveDecisions`).
+ */
+function versionDecisions(ids: VersionMemory, memory: PlotMemory | null): VersionDecisions {
+  const texts = new Map((memory?.entries ?? []).map(entry => [entry.id, entry.text]));
+  const named = (id: string): VersionDecision => ({ id, text: texts.get(id) ?? null });
+  return { kept: ids.kept.map(named), added: ids.added.map(named) };
+}
+
+/**
+ * The versions with every text still unknown filled in from `memory`, which names it: an id names
+ * one decision for the session's life, so any list that holds it gives its text. A known text
+ * never changes, and a version whose texts are all known is the same object.
+ */
+function resolveDecisions(
+  versions: Record<number, PlotVersion>,
+  memory: PlotMemory
+): Record<number, PlotVersion> {
+  const texts = new Map(memory.entries.map(entry => [entry.id, entry.text]));
+  const fill = (list: VersionDecision[]) =>
+    list.some(item => item.text === null && texts.has(item.id))
+      ? list.map(item =>
+          item.text === null ? { ...item, text: texts.get(item.id) ?? null } : item
+        )
+      : list;
+  let changed = false;
+  const next: Record<number, PlotVersion> = {};
+  for (const [key, version] of Object.entries(versions)) {
+    const decisions = version.decisions;
+    const kept = decisions ? fill(decisions.kept) : null;
+    const added = decisions ? fill(decisions.added) : null;
+    if (decisions && kept && added && (kept !== decisions.kept || added !== decisions.added)) {
+      changed = true;
+      next[Number(key)] = { ...version, decisions: { kept, added } };
+    } else {
+      next[Number(key)] = version;
+    }
+  }
+  return changed ? next : versions;
 }
 
 /**
@@ -374,19 +445,21 @@ export interface DataSnapshot {
 }
 
 /**
- * What a typed turn changed, from its `done`: the data (`data`: a new version, or the bindings),
- * the plot (`plot`: the turn ran the plot pipeline, shipped or not), the library (`switch`), the
- * session language the user asked for (`language`), the plot memory (`kept` when the turn added a
- * decision, `memory` when it only removed some), or nothing (`answer`: it answered a question).
- * The server's own word (`done.turn`) names `kept` and `memory` too; until it sends one, the page
- * reads what the stream shows (`TurnRead`), and the memory read after the turn corrects an
- * `answer` whose turn changed the memory (`memory_sync`).
+ * What a typed turn changed (`TurnOutcome` in `agent.ts`), on its item once its `done` arrived:
+ * the server's own word (`done.turn`), which sees a wish kept for the first plot that the stream
+ * shows nothing of, checked against what the stream showed (`turnOutcome`); the memory read after
+ * the turn still moves an `answer` whose turn changed the memory (`memory_sync`).
  */
-export type TurnOutcome = 'answer' | 'data' | 'plot' | 'kept' | 'switch' | 'language' | 'memory';
+export type { TurnOutcome };
 
 export type ChatItem =
-  /** `outcome`: what the turn changed, set once its `done` arrived; a turn that ended otherwise has none. */
-  | { id: number; kind: 'user'; text: string; outcome?: TurnOutcome }
+  /**
+   * `outcome`: what the turn changed, set once its `done` arrived; a turn that ended otherwise, or
+   * whose server named an outcome this page does not know while its stream showed no change, has
+   * none. `note`: the text typed with an attachment, the first turn on new data, whose reply
+   * summarizes that data: never a question, whatever it changed.
+   */
+  | { id: number; kind: 'user'; text: string; outcome?: TurnOutcome; note?: true }
   /** `label`: the button as it read when the user pressed it, which the thread shows for the action. */
   | { id: number; kind: 'action'; action: TurnAction; library: string; label?: string }
   | { id: number; kind: 'assistant'; text: string }
@@ -545,10 +618,12 @@ interface TurnChanges {
   /** The `done` carried a language the user chose, other than the page's. */
   languageChosen: boolean;
   /**
-   * The server's own word on what the turn changed (`done.turn`, not sent yet): once it arrives
-   * it wins over what the stream showed, which cannot see a plot wish kept for the first plot.
+   * The server's own word on what the turn changed (`done.turn`): it wins over what the stream
+   * showed, which cannot see a plot wish kept for the first plot, except that `answer` holds only
+   * while the stream showed no change either. `null` until a `done` names one (an older server);
+   * `unknown` for a value the page does not know.
    */
-  serverOutcome: TurnOutcome | null;
+  serverOutcome: TurnOutcome | 'unknown' | null;
 }
 
 /** What one turn's events said, gathered while the page reads them (`runTurn`). */
@@ -578,27 +653,43 @@ const freshRead = (): TurnRead => ({
   serverOutcome: null,
 });
 
-/** What a turn that reached its `done` changed, from what its events showed (`TurnChanges`). */
-function turnOutcome(changes: TurnChanges): TurnOutcome {
-  if (changes.serverOutcome) return changes.serverOutcome;
+/** The change a turn's stream showed, in the server's order (`TURN_OUTCOMES`); `null` for none. */
+function shownOutcome(changes: TurnChanges): TurnOutcome | null {
   if (changes.dataChanged) return 'data';
   if (changes.plotted) return 'plot';
   if (changes.switched) return 'switch';
   if (changes.languageChosen) return 'language';
-  return 'answer';
+  return null;
+}
+
+/**
+ * What a turn that reached its `done` changed (`TurnChanges`), or `null` for no mark. The server's
+ * word wins, but "nothing changed" must hold by both sources: an `answer` whose stream showed a
+ * plot, a data version, a switch or a chosen language is that change. A value the page does not
+ * know is a change, never a question: the stream's, or no mark when the stream showed none.
+ * Without the server's word (an older server) the stream alone decides, an `answer` when it
+ * showed nothing.
+ */
+function turnOutcome(changes: TurnChanges): TurnOutcome | null {
+  const shown = shownOutcome(changes);
+  const server = changes.serverOutcome;
+  if (server === 'unknown') return shown;
+  if (server === null || server === 'answer') return shown ?? 'answer';
+  return server;
 }
 
 /**
  * What a turn's `done` shows it changed, against the page's state before it (`before`): a data
  * version, bindings other than the page's (the root's `set_bindings`), a switch the user asked
  * for, or a language the user chose (`set_language`). A language the first typed message
- * detected is no change the user asked for.
+ * detected is no change the user asked for. And the server's own word on it (`done.turn`).
  */
 function noteDone(
   read: TurnRead,
   done: Extract<AgentEvent, { type: 'done' }>,
   before: AgentSessionState
 ): void {
+  read.serverOutcome = done.turn ?? null;
   const bindings = done.bindings && toMap(done.bindings);
   if (done.dataset || (bindings && before.dataset && !sameBindings(bindings, before.bindings))) {
     read.dataChanged = true;
@@ -832,9 +923,11 @@ export interface AgentSessionState {
   nextItemId: number;
   /**
    * The typed turn read as an answer whose memory read after its `done` is still to come: that
-   * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait,
-   * and so does the end of every later turn but the summary and example data, which cannot change
-   * the memory: a read that failed or was overtaken never lands on an older question.
+   * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait, so
+   * does that read's failure (`memory_unread`), and so does the end of every later turn but the
+   * summary and example data, which cannot change the memory: a read that failed or was overtaken
+   * never lands on an older question. While it waits, the thread shows the turn as no question yet
+   * (`threadModel`): a turn the read moves never shows "nothing changed".
    */
   memoryTurn: number | null;
   versions: Record<number, PlotVersion>;
@@ -905,6 +998,11 @@ type Action =
    * follows a turn's `done`, so a change of the list is that turn's.
    */
   | { type: 'memory_sync'; memory: PlotMemory; afterTurn?: boolean }
+  /**
+   * The read after a turn's `done` brought no list (it failed, or the server has no memory route):
+   * the turn it would speak for waits no longer, and keeps the mark its `done` gave it.
+   */
+  | { type: 'memory_unread' }
   | { type: 'memory_busy'; busy: boolean }
   | { type: 'sheet_busy'; busy: boolean }
   /** A turn's `done` asked for a switch (`chatSwitch`), or the page took it (`null`). */
@@ -936,7 +1034,8 @@ type Action =
   | { type: 'run_reconnecting'; on: boolean }
   /**
    * A turn ended: what it changed goes on its item when the user typed it; `null` for a turn that
-   * did not reach its `done` (refused, failed, stopped), which gets no mark.
+   * did not reach its `done` (refused, failed, stopped), and for one whose server named an outcome
+   * the page does not know while its stream showed no change: no mark, and no memory read waited for.
    */
   | { type: 'turn_outcome'; outcome: TurnOutcome | null }
   | { type: 'run_end' }
@@ -1703,8 +1802,17 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       const items = action.afterTurn
         ? memoryOutcome(state.items, state.memoryTurn, state.memory, action.memory)
         : state.items;
-      return { ...next, items: switchDecisions(items, next), memoryTurn: null };
+      // A version's added decisions get their texts from the read after its turn, and any text a
+      // read before missed from the first list that names it.
+      return {
+        ...next,
+        items: switchDecisions(items, next),
+        memoryTurn: null,
+        versions: resolveDecisions(state.versions, action.memory),
+      };
     }
+    case 'memory_unread':
+      return state.memoryTurn === null ? state : { ...state, memoryTurn: null };
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
     case 'sheet_busy':
@@ -1829,16 +1937,23 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     }
     case 'run_end':
       return { ...state, run: null };
-    case 'version_add':
+    case 'version_add': {
+      // The version's decisions, by the server's ids: the kept ones from before the run are in the
+      // list the page holds; the added ones come with the read after the turn (`memory_sync`).
+      const memory = action.version.result.memory;
+      const version = memory
+        ? { ...action.version, decisions: versionDecisions(memory, state.memory) }
+        : action.version;
       // A shipped plot in the offer's library ends the offer, whichever turn shipped it (the carry
       // run, a fresh `.create_plot()`, a typed change): the server's carry is spent then too.
       // Versions carry their library, not their spec; the spec cannot change yet.
       return {
         ...state,
-        versions: { ...state.versions, [action.version.number]: action.version },
+        versions: { ...state.versions, [version.number]: version },
         carryOffer:
           state.carryOffer?.target.library === action.version.library ? null : state.carryOffer,
       };
+    }
     case 'version_image':
       return patchVersion(state, action.number, version => ({
         ...version,
@@ -2510,12 +2625,17 @@ export function useAgentSession({
    * server without the route, leaves the list as it was, and an answer that a
    * newer read or a removal overtook is dropped. The fan-out's sessions show no
    * list, so they read none. `afterTurn`: the read after a turn's `done`, whose
-   * change of the list is that turn's (`memory_sync`).
+   * change of the list is that turn's (`memory_sync`); when it brings no list, the
+   * turn waits for it no longer (`memory_unread`) and keeps the mark its `done`
+   * gave it, a question then on the server's word and the stream's alone.
    */
   const refreshMemory = useCallback(
     async (afterTurn = false) => {
       const sid = stateRef.current.sessionId;
-      if (!sid || openedForFanOut.current) return;
+      if (!sid || openedForFanOut.current) {
+        if (afterTurn) safeDispatch({ type: 'memory_unread' });
+        return;
+      }
       memorySeq.current += 1;
       const seq = memorySeq.current;
       try {
@@ -2524,7 +2644,9 @@ export function useAgentSession({
           safeDispatch({ type: 'memory_sync', memory, ...(afterTurn ? { afterTurn } : {}) });
         }
       } catch {
-        /* best effort: the list stays as it was */
+        // Best effort: the list stays as it was. A newer read or a removal overtook a read that
+        // fails late, and its own list ends the wait.
+        if (afterTurn && seq === memorySeq.current) safeDispatch({ type: 'memory_unread' });
       }
     },
     [token, safeDispatch]
@@ -2869,18 +2991,19 @@ export function useAgentSession({
         // After `done`: a data change of the turn has named the loss already, and this changes nothing then.
         if (unconfirmedRef.current) safeDispatch({ type: 'confirm_lost' });
         unconfirmedRef.current = false;
-        // Every turn's end says what it changed, `null` for one that did not reach its `done`
-        // (refused, failed, stopped, which the thread names already); that also ends the wait of
-        // an earlier question's memory read (`memoryTurn`).
+        // Every turn's end says what it changed (`turnOutcome`), `null` for one that did not reach
+        // its `done` (refused, failed, stopped, which the thread names already); that also ends
+        // the wait of an earlier question's memory read (`memoryTurn`).
         safeDispatch({
           type: 'turn_outcome',
           outcome: turnEndRef.current === 'done' ? turnOutcome(read) : null,
         });
         safeDispatch({ type: 'run_end' });
       }
-      // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
-      // empties the list: after every `done` the list follows the server. Only the read after a
-      // turn that ended with its `done` speaks for that turn.
+      // A shipped run adds decisions and the assistant's `forget` removes some; nothing else
+      // changes the list, `.start_over()` included: after every `done` the list follows the
+      // server, and it names the decisions a version added. Only the read after a turn that ended
+      // with its `done` speaks for that turn.
       if (read.finished) void refreshMemory(turnEndRef.current === 'done');
       return read;
     },
@@ -2891,9 +3014,10 @@ export function useAgentSession({
    * `turnErrorRef`, null when it ended without one or never started (`plotTurn`), and how it ended in
    * `turnEndRef` (`TurnEnd`), null when it never started. A turn whose stream was cut is read again
    * (`reattach`) before any error shows; one that could not be read stays pending, and the next turn
-   * reads it first. `label` is the button an action came from, as it read, for the thread. */
+   * reads it first. `label` is the button an action came from, as it read, for the thread; `note`
+   * marks a typed text as the note sent with an attachment (`ChatItem`), never a question. */
   const runTurn = useCallback(
-    async (body: TurnBody, label?: string) => {
+    async (body: TurnBody, label?: string, note = false) => {
       const current = stateRef.current;
       const sid = current.sessionId;
       turnErrorRef.current = null;
@@ -2932,7 +3056,7 @@ export function useAgentSession({
       await driveTurn('text' in body ? 'message' : body.action, async (controller, read) => {
         addItem(
           'text' in body
-            ? { kind: 'user', text: body.text }
+            ? { kind: 'user', text: body.text, ...(note ? { note: true as const } : {}) }
             : {
                 kind: 'action',
                 action: body.action,
@@ -3143,7 +3267,9 @@ export function useAgentSession({
           await runTurn({ action: 'summarize_data' });
           return { outcome, turnEnd: turnEndRef.current };
         }
-        await runTurn({ text: note });
+        // Its reply summarizes the data that just arrived, so "nothing changed" would be false: the
+        // note's item is never a question. A forwarded text above is the user's message as typed.
+        await runTurn({ text: note }, undefined, true);
         const end = turnEndRef.current;
         // The note's turn was refused before the assistant read the data, or the scope judge
         // was out: the data still gets its summary. The note stays in the thread above it.
