@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-map-geographic: Scatter Map with Geographic Points
 // Library: muix 9.17.0 | JavaScript 22.23.4
-// Quality: 88/100 | Updated: 2026-11-08
+// Quality: 90/100 | Updated: 2026-11-08
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
@@ -31,8 +31,8 @@ const ZONE = "Seismic zone"; // role: label
 
 // Data: replace this block with your own records, one object per row
 // Simplified land outlines ([lon, lat] rings) for the basemap, and simulated
-// M5.0+ earthquake epicentres clustered along major subduction and collision
-// zones (Ring of Fire, Alpide belt).
+// M5.0+ earthquake epicentres along the plate boundaries of major subduction,
+// transform and collision zones (Ring of Fire, Alpide belt).
 const LAND_OUTLINES = [
   // North and Central America
   [
@@ -245,22 +245,97 @@ const data = (() => {
     seed = (seed * 1103515245 + 12345) % 2147483648;
     return seed / 2147483648;
   };
+  // Each zone follows its plate boundary as a [lon, lat] line through the forearc, traced so that
+  // the overriding plate lies on the left of the direction of travel. Epicentres are spread along
+  // the whole line (one per equal stretch), scattered `width` ground degrees across it, and in a
+  // subduction zone the deeper ones lie up to `slab` degrees landward, above the dipping plate.
+  // Depth and magnitude lean towards their low ends, as real catalogues do.
   const zones = [
-    { name: "Japan-Kuril arc", lon: 142, lat: 38, spreadLon: 6, spreadLat: 6, count: 12, mag: [5.0, 7.2], depth: [10, 300] },
-    { name: "Aleutian-Alaska arc", lon: -160, lat: 55, spreadLon: 10, spreadLat: 4, count: 8, mag: [5.0, 7.5], depth: [10, 150] },
-    { name: "Cascadia-Mexico coast", lon: -112, lat: 24, spreadLon: 9, spreadLat: 15, count: 10, mag: [5.0, 6.9], depth: [5, 60] },
-    { name: "Andes subduction", lon: -72, lat: -20, spreadLon: 3, spreadLat: 16, count: 12, mag: [5.0, 7.8], depth: [10, 600] },
-    { name: "Indonesia-Philippines arc", lon: 115, lat: 2, spreadLon: 18, spreadLat: 10, count: 14, mag: [5.0, 7.6], depth: [10, 400] },
-    { name: "Tonga-Kermadec trench", lon: 178, lat: -20, spreadLon: 4, spreadLat: 8, count: 8, mag: [5.0, 7.4], depth: [10, 600] },
-    { name: "Anatolia-Aegean", lon: 30, lat: 37, spreadLon: 12, spreadLat: 5, count: 8, mag: [5.0, 6.8], depth: [5, 40] },
-    { name: "Himalayan front", lon: 84, lat: 29, spreadLon: 10, spreadLat: 4, count: 8, mag: [5.0, 7.2], depth: [5, 40] },
+    {
+      name: "Japan-Kuril arc",
+      path: [[141.2, 35], [142.3, 37.5], [142.8, 39.5], [144.5, 41.8], [147.5, 43.2], [151, 45.5], [154.5, 48], [157.5, 51], [160.5, 54]],
+      count: 12, mag: [5.0, 7.2], depth: [10, 300], width: 0.7, slab: 3.5,
+    },
+    {
+      name: "Aleutian-Alaska arc",
+      path: [[-178.5, 51], [-173, 51.6], [-168, 52.8], [-163.5, 54], [-158.5, 55.3], [-154.5, 57], [-150.5, 59.3]],
+      count: 8, mag: [5.0, 7.5], depth: [10, 150], width: 0.5, slab: 1.5,
+    },
+    {
+      // Cascadia subduction, the San Andreas transform, the Gulf of California rift and the Middle America trench
+      name: "Cascadia-Mexico coast",
+      path: [
+        [-127.5, 49.8], [-125.8, 47.5], [-125.2, 45], [-125, 42.5], [-124.6, 40.4], [-123.3, 38.6], [-122, 37],
+        [-120.5, 35.7], [-118.6, 34.6], [-116.8, 33.9], [-115.6, 32.8], [-114.6, 31.5], [-113, 29], [-111, 26.8],
+        [-109, 24.2], [-106.8, 21.7], [-105.4, 19.6], [-103.2, 18], [-100.5, 16.8], [-98, 15.9], [-95.5, 15.4],
+        [-93, 14.6], [-91, 13.5], [-88.5, 12.5], [-86.5, 11.2],
+      ],
+      count: 12, mag: [5.0, 6.9], depth: [5, 60], width: 0.4, slab: 0.8,
+    },
+    {
+      name: "Andes subduction",
+      path: [
+        [-80.6, -1], [-81.2, -5], [-79.8, -8], [-77.8, -11.5], [-76.2, -14], [-73.5, -16.4], [-71.2, -18.5],
+        [-70.6, -21.5], [-70.8, -25], [-71.6, -30], [-72.4, -33.5], [-73.4, -36.8], [-73.9, -40],
+      ],
+      count: 12, mag: [5.0, 7.8], depth: [10, 600], width: 0.6, slab: 7,
+    },
+    {
+      // Sunda trench, Banda arc, Molucca Sea and Philippine trench
+      name: "Indonesia-Philippines arc",
+      path: [
+        [95, 5], [96.8, 2], [99.5, -1.8], [102.5, -4.8], [105.8, -7.2], [110, -8.6], [114, -9.3], [118, -9.6],
+        [122, -9.7], [125.5, -8.8], [129, -7.8], [131.2, -6.3], [130.6, -4.2], [128, -3.4], [126.6, -1.6],
+        [126.6, 1.2], [126.9, 4.5], [126.6, 8], [125.9, 11.2], [124.8, 13.8],
+      ],
+      count: 14, mag: [5.0, 7.6], depth: [10, 400], width: 0.6, slab: 3,
+    },
+    {
+      name: "Tonga-Kermadec trench",
+      path: [[-178.2, -35], [-177.2, -31], [-176, -27.5], [-174.6, -23.5], [-173.6, -20], [-173.2, -17], [-173.9, -15.6]],
+      count: 8, mag: [5.0, 7.4], depth: [10, 600], width: 0.5, slab: 6,
+    },
+    {
+      // Ionian islands, the Hellenic arc south of Crete, the eastern Aegean and the North Anatolian fault
+      name: "Anatolia-Aegean",
+      path: [
+        [20.4, 39.3], [21.2, 37.4], [22.6, 36], [24.6, 35], [26.6, 35.2], [27.9, 36.6], [27, 38.4], [25.6, 39.6],
+        [26.6, 40.5], [29.4, 40.75], [31.5, 40.85], [34, 40.95], [36.5, 40.4], [39.4, 39.75], [41.5, 39.3],
+      ],
+      count: 8, mag: [5.0, 6.8], depth: [5, 40], width: 0.45, slab: 0,
+    },
+    {
+      name: "Himalayan front",
+      path: [[73.6, 34.4], [75.6, 32.8], [77.8, 31], [80.2, 29.6], [82.6, 28.6], [85, 27.9], [87.6, 27.5], [90.5, 27.3], [93.2, 27.6], [95.4, 28.3]],
+      count: 8, mag: [5.0, 7.2], depth: [5, 40], width: 0.4, slab: 0.8,
+    },
   ];
-  return zones.flatMap((zone) =>
-    Array.from({ length: zone.count }, () => {
-      const lon = zone.lon + (rand() - 0.5) * 2 * zone.spreadLon;
-      const lat = zone.lat + (rand() - 0.5) * 2 * zone.spreadLat;
-      const magnitude = zone.mag[0] + rand() * (zone.mag[1] - zone.mag[0]);
-      const depth = zone.depth[0] + rand() * (zone.depth[1] - zone.depth[0]);
+  return zones.flatMap((zone) => {
+    // Legs in ground degrees: longitude shrinks by the cosine of the leg's mean latitude
+    const legs = zone.path.slice(1).map((b, i) => {
+      const a = zone.path[i];
+      const kx = Math.cos((((a[1] + b[1]) / 2) * Math.PI) / 180);
+      const dx = (b[0] - a[0]) * kx;
+      const dy = b[1] - a[1];
+      return { a, b, kx, dx, dy, len: Math.hypot(dx, dy) };
+    });
+    const total = legs.reduce((sum, leg) => sum + leg.len, 0);
+    return Array.from({ length: zone.count }, (_, k) => {
+      let along = ((k + rand()) / zone.count) * total;
+      let j = 0;
+      while (j < legs.length - 1 && along > legs[j].len) {
+        along -= legs[j].len;
+        j += 1;
+      }
+      const leg = legs[j];
+      const f = Math.min(1, along / leg.len);
+      const depthShare = rand() ** 2;
+      const depth = zone.depth[0] + depthShare * (zone.depth[1] - zone.depth[0]);
+      const magnitude = zone.mag[0] + rand() ** 2 * (zone.mag[1] - zone.mag[0]);
+      const across = zone.slab * depthShare + (rand() - 0.5) * 2 * zone.width;
+      // The left-hand normal of the leg, (-dy, dx), points landward
+      const lat = leg.a[1] + f * (leg.b[1] - leg.a[1]) + (leg.dx / leg.len) * across;
+      const lon = leg.a[0] + f * (leg.b[0] - leg.a[0]) - ((leg.dy / leg.len) * across) / leg.kx;
       return {
         [LATITUDE]: Number(lat.toFixed(2)),
         [LONGITUDE]: Number((((lon + 540) % 360) - 180).toFixed(2)), // wrapped across the antimeridian
@@ -268,8 +343,8 @@ const data = (() => {
         [MAGNITUDE]: Number(magnitude.toFixed(1)),
         [ZONE]: zone.name,
       };
-    }),
-  );
+    });
+  });
 })();
 
 // Plot: reads only data and the constants above
