@@ -18,8 +18,8 @@ const PERIOD_LABEL = "Half time";
 const MINUTE = "Match time (min)"; // role: game_time
 const WIN_PROB = "Home win probability"; // role: win_probability
 const EVENT = "Event"; // role: event
-const HOME = "Forest Green FC"; // role: extra
-const AWAY = "City Blue FC"; // role: extra
+const HOME = "Harwick Town"; // role: extra
+const AWAY = "Millbrook Rovers"; // role: extra
 
 // Data: replace this block with your own records, one object per row
 // Minute-by-minute model probability of a home win in a 90-minute match, with the running score
@@ -30,24 +30,34 @@ const data = (() => {
     s = (Math.imul(1664525, s) + 1013904223) | 0;
     return (s >>> 0) / 0x100000000;
   };
+  const fullTime = 90;
   const goals = {
     19: { side: "away", wp: 0.26, scorer: "Lindqvist" },
     58: { side: "home", wp: 0.54, scorer: "Okafor" },
     84: { side: "home", wp: 0.88, scorer: "Mensah" },
   };
+  // The range the model moves in at each score (home-away)
   const bands = { "0-0": [0.05, 0.95], "0-1": [0.11, 0.5], "1-1": [0.42, 0.67], "2-1": [0.81, 0.97] };
   let wp = 0.5;
   let home = 0;
   let away = 0;
-  return Array.from({ length: 91 }, (_, minute) => {
+  return Array.from({ length: fullTime + 1 }, (_, minute) => {
     const goal = goals[minute];
+    const left = fullTime - minute;
     if (goal) {
       if (goal.side === "home") home += 1;
       else away += 1;
       wp = goal.wp;
+    } else if (left === 0) {
+      wp = home > away ? 1 : 0; // the final whistle settles it: a draw is not a home win
     } else if (minute > 0) {
+      // Swings and the pull towards even odds shrink with the time left, and a lead firms up towards its result
       const [lo, hi] = bands[`${home}-${away}`];
-      wp = Math.max(lo, Math.min(hi, wp + (rand() - 0.5) * 0.055 + (0.5 - wp) * 0.018));
+      const share = left / fullTime;
+      const lead = Math.sign(home - away);
+      const firming = lead === 0 ? 0 : ((lead > 0 ? 1 : 0) - wp) / (left + 1);
+      const next = wp + (rand() - 0.5) * 0.055 * Math.sqrt(share) + (0.5 - wp) * 0.018 * share + firming;
+      wp = Math.max(lead < 0 ? 0 : lo, Math.min(lead > 0 ? 1 : hi, next));
     }
     return {
       [MINUTE]: minute,
