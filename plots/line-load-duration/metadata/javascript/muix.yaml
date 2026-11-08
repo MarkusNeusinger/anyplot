@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-load-duration
 created: '2026-06-10T05:01:55Z'
-updated: '2026-11-08T08:02:25Z'
+updated: '2026-11-08T08:07:28Z'
 generated_by: claude-opus-5-5
 adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
 workflow_run: 42442231138
@@ -13,42 +13,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-load
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-load-duration/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Native stacked area series (stack + area) build the three regions so their combined
-    top edge is exactly the load duration curve, with base capacity at the minimum
-    load and the intermediate tier at the 10 %-exceedance level
-  - ChartsReferenceLine draws all three dashed capacity tiers with labelAlign/spacing
-    placement, each label clear of the curve and region labels
-  - useXScale/useYScale/useDrawingArea hooks place the region labels and the energy
-    annotation in data coordinates; label ink is picked per fill from its luminance,
-    so every label stays readable in both themes
-  - Energy (7.75 million MWh) and load factor (73.7 %) are computed from the data,
-    not hard-coded, and are consistent with the area under the curve
-  - Ordered tiers in steps of imprint_seq with base in brand green, identical across
-    themes; chrome flips correctly
+  - 'Native stacked area series (`stack: "load"`, `area: true`) split the ranked load
+    into base, intermediate and peak bands whose shared top edge is the monotone load
+    duration curve, on a zero-based load axis spanning all 8,760 hours.'
+  - Capacity tiers are drawn with native `ChartsReferenceLine` components (dashed,
+    each with its own label carrying the MW value), and the labels are aligned so
+    that none of them touches the curve or a region label.
+  - Tier colours are ordered steps of imprint_seq (#009E73 base to blue peak), and
+    the ink of each region label is chosen from the luminance of the blended fill,
+    so 'Base load' stays dark on the bright green while 'Intermediate load' flips
+    to light ink in the dark render.
+  - Region names and the energy total are placed in data coordinates through a child
+    component built on `useXScale`, `useYScale` and `useDrawingArea`, which composes
+    them into the chart's own SVG instead of overlaying them.
+  - 'Every figure is computed from the data, not hard-coded: the 6.46 million MWh
+    total, the 953 MW intermediate tier at the 10 % exceedance point, and the 61.4
+    % load factor in the subtitle (mean 737 MW over a 1,200 MW peak), which agree
+    with each other.'
   weaknesses:
-  - 'DQ-01 (both): the load profile 400 + 800·(1−h/8759)^0.65 is concave from the
-    first hour, so the left end falls gently (about 1,200 → 1,147 MW over the first
-    876 hours) instead of the steep, narrow peak spike the characteristic bullet names
-    → a profile whose top few percent of hours drop steeply before the long gently
-    sloping middle (e.g. sort a synthetic hourly series with daily/seasonal swings
-    plus rare spikes, or add a steep convex term over the first ~5 % of hours). Likely
-    cause: the single power-law expression in the data block.'
-  - 'Suggestion: the title occupies about a third of the width; a slightly larger
-    title size would give the header more presence.'
+  - 'Suggestion: the curve exists only as the top edge of the stacked fills (the line
+    stroke is set to 0); a thin ink stroke along it would make the duration curve
+    read as a line in its own right.'
+  - 'Suggestion: the empty headroom band between 1,200 and about 1,320 MW could be
+    trimmed a little, so that the Peak capacity label sits closer to the top of the
+    frame.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 3200x1800 landscape.
-      Chrome: title "line-load-duration · javascript · muix · anyplot.ai" in dark ink top-left with a muted subtitle (8,760 hourly loads · peak 1,200 MW · minimum 400 MW · load factor 73.7 %); y axis "Power demand (MW)" 0-1,200+, x axis "Duration (hours, ranked by load)" 0-8,000; ticks dark grey, subtle horizontal gridlines drawn over the fills. All readable.
-      Data: a monotonically decreasing curve from 1,200 MW to 400 MW, filled as three stacked regions: base load (brand green, 0-400 MW across the whole year), intermediate load (teal), peak load (a thin blue sliver above 1,147 MW over the first ~880 hours). Dashed lines with labels: "Peak capacity 1,200 MW" and "Intermediate capacity 1,147 MW" at the right, "Base capacity 400 MW" at the left. Bold region labels "Base load", "Intermediate load" (dark ink on fills) and "Peak load" beside the sliver; "Total energy 7.75 million MWh / area under the curve" in the empty upper right.
+      Background: warm off-white #FAF8F1 across the canvas and plot area.
+      Chrome: bold dark title "line-load-duration · javascript · muix · anyplot.ai" at the top left, with a soft-ink subtitle (8,760 hourly loads, peak 1,200 MW, minimum 400 MW, load factor 61.4 %). The y-axis title reads "Power demand (MW)" with ticks 0–1,200 and the x-axis title reads "Duration (hours, ranked by load)" with ticks 0–8,000. Subtle horizontal gridlines show faintly through the fills. All text is readable.
+      Data: three stacked fills under a monotone decreasing curve: bright green base (#009E73 step) below 400 MW, teal intermediate band from 400 MW up to the curve (capped at 953 MW), and a blue peak sliver at the left where the curve spikes from about 950 to 1,200 MW. Dashed reference lines at 1,200, 953 and 400 MW carry the labels "Peak capacity 1,200 MW", "Intermediate capacity 953 MW" (right) and "Base capacity 400 MW" (left, on the teal fill). Bold region labels "Base load", "Intermediate load" (dark ink on the fills) and "Peak load" (beside the sliver, on the page). "Total energy 6.46 million MWh / area under the curve" sits at the right, above the curve. No overlaps and no clipping.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles and ticks in light ink; gridlines subtle; dashed capacity lines light grey. No dark-on-dark text.
-      Data: the same three fills in the same ramp steps (green, teal, blue), slightly deeper because the 0.85 fill opacity blends with the dark page; "Intermediate load" and "Peak load" switch to light ink, "Base load" stays dark ink on the green. Brand green clearly visible.
+      Chrome: title, subtitle, axis titles and ticks in light ink, all clearly readable, with no dark-on-dark text. Gridlines are subtle but visible.
+      Data: the same three-step imprint_seq ramp as in the light render; the fills look slightly deeper because the 0.85 opacity blends with the dark page, and the hues are unchanged. The dashed capacity lines turn light grey. "Intermediate load" and "Peak load" turn light ink, and "Base load" keeps dark ink on the bright green, which is readable. The capacity labels and the energy annotation are in light ink and readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,54 +62,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22 px, axis titles 16 px, ticks 14 px, region
-          labels 16 px bold); all readable in both themes, and the ink on each fill
-          is chosen from its luminance
+        comment: Fonts set explicitly (title 22 px, axis titles 16 px, ticks 14 px,
+          region labels 16 px bold); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Capacity labels, region labels and the energy annotation all sit
-          clear of each other and of the curve; 'Peak load' fits the gap between the
-          two upper dashed lines
+        comment: Capacity labels, region labels and the energy note are all clear
+          of the curve and of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8,760 points drawn as filled areas; the fill edge reads clearly as
-          the curve; dashed lines at 1.75 px are visible on page and fills
+        comment: All three bands are visible, including the narrow peak sliver; the
+          dashed lines are clear in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Ordered steps of one ramp differ in lightness as well as hue; regions
-          are also labelled directly
+        comment: The ramp steps differ in luminance, every region is labelled directly,
+          and there is no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axis bands, nothing cut off; the smaller title
-          is permitted
+        comment: Balanced proportions; no gate file was written; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Power demand (MW)'' and ''Duration (hours, ranked by load)'':
-          descriptive with units'
+        comment: Power demand (MW) and Duration (hours, ranked by load), both with
+          units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ordered tiers in steps of imprint_seq (base #009E73 end to peak
-          blue), identical in both themes; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'Ordered tiers take steps of imprint_seq starting at #009E73; backgrounds
+          are theme-correct'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -115,23 +114,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: A title/subtitle hierarchy in an HTML header with a muted stats line,
-          and region-label ink chosen per fill by computed luminance
+        comment: 'Typographic hierarchy goes beyond the baseline: bold region labels,
+          a soft-ink secondary line under the energy total, and a stats subtitle'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Gridlines deliberately drawn over the fills; the base-capacity label
-          placed at the left on the intermediate fill, where the curve is far from
-          the line, with matching ink
+        comment: Region-label ink is computed from fill luminance; gridlines are drawn
+          over the fills; the base-capacity label is moved left onto the fill so it
+          avoids the curve's end
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: The subtitle adds peak, minimum and a derived 73.7 % load factor,
-          which the spec does not ask for and which frames the curve for planners
+        comment: The load-factor and peak/minimum subtitle adds a planning metric
+          beyond what the Notes require
     spec_compliance:
       score: 15
       max: 15
@@ -141,56 +140,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Monotonically decreasing load duration curve with stacked region
-          fills
+        comment: Load duration curve with filled regions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Three filled regions, three labelled dashed capacity lines, direct
-          region labels, total energy annotation with unit, zero-based load axis over
-          the full year
+        comment: Monotone curve, three shaded regions, labelled dashed capacity lines,
+          direct region labels, energy annotation with its unit, zero-based y axis
+          and a full-year x axis are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = ranked hour 0-8759, y = MW from 0; linear curve, no overshoot
+        comment: Marks sit at their data values; the axes cover 0–8,759 h and 0 MW
+          to the peak
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-load-duration · javascript · muix · anyplot.ai'; legend
-          hidden in favour of direct labels, which the spec asks for
+        comment: Title format is correct; the legend is hidden and replaced by direct
+          region labels (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: The generated curve is a concave power law with no steep spike at
-          the left, so the peak region does not show the spike the characteristic
-          bullet describes (defect line)
+        comment: Shows the steep peak spike, the long gently sloping middle and the
+          always-on base
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mid-sized utility, 1,200 MW peak and 400 MW base, as the spec suggests;
-          neutral
+        comment: Synthetic mid-sized utility, as the spec specifies; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: mean load 400 + 800/1.65 = 884.8 MW, x 8,760 h = 7.75 million
-          MWh as annotated; load factor 884.8/1,200 = 73.7 % as in the subtitle; both
-          computed, not placed'
+        comment: 'Checked: peak 1,200 MW and base 400 MW match the spec; total 6.46
+          million MWh is consistent with a mean of 737 MW over 8,760 h and the 61.4
+          % load factor'
     code_quality:
       score: 10
       max: 10
@@ -200,35 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-level data prep; the Annotations child component is required
-          to use the scale hooks
+        comment: Linear script; the only component besides Chart is Annotations, which
+          the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic formula, no randomness
+        comment: Deterministic formula
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: LineChart, ChartsReferenceLine, ChartsGrid and the three hooks are
-          all used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Stacked bands and the energy sum are short and needed; no available
-          call replaces them
+        comment: Complexity fits the task; the colour interpolation and luminance
+          are written out only because MUI has no helper for them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports a component sized to ANYPLOT_SIZE, skipAnimation
-          set, community @mui/x-charts only
+        comment: Default export into the harness mount, skipAnimation set, v9 API
+          (hideLegend, tickLabelStyle, axis height/width)
     library_mastery:
       score: 7
       max: 10
@@ -238,31 +234,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Composition API: stacked area series via stack + area, ChartsGrid
-          and ChartsReferenceLine as children, sx targeting MuiLineChart classes'
+        comment: Stacked area series, ChartsReferenceLine and ChartsGrid composed
+          as LineChart children
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale/useDrawingArea hooks draw a custom SVG annotation
-          layer in data coordinates; ChartsReferenceLine labelAlign/spacing for the
-          tier labels
-  verdict: REJECTED
+        comment: A custom SVG layer built on the useXScale/useYScale/useDrawingArea
+          hooks, inside the chart's composition model
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T03:20:45Z'
+  rendered_at: '2026-11-08T08:04:32Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - minimal-chrome
