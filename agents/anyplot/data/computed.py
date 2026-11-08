@@ -326,9 +326,9 @@ def match_score(role: DataRole, column_name: str) -> int:
     `SMA Upper Band` holds `sma` (one word) and `upper band` (two): the more specific role takes
     the column, so the upper band is never read as the middle average (`bindings.default_bindings`).
     A word the role's own phrases hold rules nothing out: `macd` excludes a MACD column from
-    every other role, not from the MACD's signal line (`MACD Signal`). A word a phrase repeats
-    must be repeated in the name: `X-bar` holds `x bar` (the sample mean) but not `x bar bar`
-    (the grand mean), which `X-bar-bar` holds.
+    every other role, not from the MACD's signal line (`MACD Signal`). The name holds each word
+    of a phrase as often as the phrase does: `X-bar` holds `x bar` (the sample mean) and
+    `X-bar-bar` holds `x bar bar` (the grand mean), never the other way round.
     """
     words = Counter(_words(column_name))
     phrases = [
@@ -337,7 +337,12 @@ def match_score(role: DataRole, column_name: str) -> int:
     own = {word for wanted in phrases for word in wanted}
     if words.keys() & ((EXCLUDES_ALL | EXCLUDES.get(role.name, frozenset())) - own):
         return 0
-    return max((len(wanted) for wanted in phrases if not Counter(wanted) - words), default=0)
+    return max((len(wanted) for wanted in phrases if _holds(words, wanted)), default=0)
+
+
+def _holds(words: Counter[str], phrase: list[str]) -> bool:
+    """Whether a name's `words` hold every word of `phrase` exactly as often as the phrase does."""
+    return all(words[word] == count for word, count in Counter(phrase).items())
 
 
 def windows(column_name: str) -> list[int]:

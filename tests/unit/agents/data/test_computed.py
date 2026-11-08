@@ -464,6 +464,7 @@ def test_a_name_that_holds_a_name_only_value_matches(role_name: str, column: str
         ("sample_mean", "Mean Range"),
         ("sample_mean", "Average Range"),
         ("sample_mean", "Grand Mean"),
+        ("sample_mean", "X-bar-bar"),
         ("sample_mean", "X-bar UCL"),
         ("sample_mean", "Moving Average"),
         ("sample_range", "Moving Range"),

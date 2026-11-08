@@ -334,7 +334,8 @@ def _row_number_on_axis(
 ) -> list[Binding]:
     """`bindings` with a row number that fell on a measure swapped with the column on the axis, which the spec's
     order put first (`weight, X` for x and y): a row number is where a value sits, never the value. Only when each
-    role takes the other's column: `date, X` keeps its dates on x."""
+    role takes the other's column: `date, X` keeps its dates on x. A role bound by its name only (`binds_by_name`)
+    keeps its column: the axis's column is not named for it."""
     dtypes = {column.name: column.dtype for column in profile.columns}
     for axis in bindings:
         axis_role = resolve_role(axis.role, roles)
@@ -346,6 +347,7 @@ def _row_number_on_axis(
                 role is not None
                 and measure.column in row_numbers
                 and not is_axis(role)
+                and not binds_by_name(role)
                 and is_measure(role)
                 and accepts(role, dtypes[axis.column])
                 and accepts(axis_role, dtypes[measure.column])
