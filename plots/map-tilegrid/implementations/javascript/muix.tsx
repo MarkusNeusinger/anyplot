@@ -5,6 +5,7 @@
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { getLuminance } from "@mui/material/styles";
 import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -64,13 +65,7 @@ function Tiles() {
         const y = yScale(d[ROW]) + gap / 2;
         const fill = d[SHARE] == null ? t.elevatedBg : colorScale(d[SHARE]);
         // Fixed ink by the tile's relative luminance, so the label stays legible in both themes
-        const channels = fill.startsWith("#")
-          ? [1, 3, 5].map((i) => parseInt(fill.slice(i, i + 2), 16))
-          : fill.match(/\d+/g).slice(0, 3).map(Number);
-        const luminance = channels
-          .map((c) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4))
-          .reduce((sum, v, k) => sum + v * [0.2126, 0.7152, 0.0722][k], 0);
-        const ink = d[SHARE] == null ? t.inkSoft : luminance > INK_SWITCH ? DARK_INK : LIGHT_INK;
+        const ink = d[SHARE] == null ? t.inkSoft : getLuminance(fill) > INK_SWITCH ? DARK_INK : LIGHT_INK;
         return (
           <g key={d[COUNTRY]}>
             <rect x={x} y={y} width={size} height={size} rx={size * 0.1} fill={fill} />
