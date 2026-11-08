@@ -5,145 +5,145 @@
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Website redesign project: 11 tasks across 4 phases, day-offsets from the
-// project kickoff (Jan 5, 2026 = day 0) so the x-axis is a plain linear scale
-// that a valueFormatter renders back as calendar dates.
+// Constants
 const DAY_MS = 86400000;
-const toDay = (year, month, date) => Date.UTC(year, month, date) / DAY_MS;
-const PROJECT_START = toDay(2026, 0, 5);
+const TICK_DAYS = 14; // one date tick every two weeks from the first start
+const X_PAD_SHARE = 0.02; // time padding on both sides, as a share of the schedule span
+const DATE_LABEL = "Date";
+const TITLE = "gantt-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 44;
 
-const CATEGORIES = ["Design", "Development", "Testing", "Launch"];
-const CATEGORY_COLOR = Object.fromEntries(CATEGORIES.map((category, i) => [category, t.palette[i]]));
+// Columns: set these to your data's column names
+const TASK = "Task"; // role: task
+const START = "Start"; // role: start
+const END = "End"; // role: end
+const PHASE = "Phase"; // role: category
 
-const TASKS = [
-  { task: "Requirements Gathering", category: "Design", start: [2026, 0, 5], end: [2026, 0, 12] },
-  { task: "Wireframing", category: "Design", start: [2026, 0, 10], end: [2026, 0, 20] },
-  { task: "Visual Design", category: "Design", start: [2026, 0, 18], end: [2026, 0, 30] },
-  { task: "Backend Development", category: "Development", start: [2026, 0, 26], end: [2026, 1, 20] },
-  { task: "Frontend Development", category: "Development", start: [2026, 0, 29], end: [2026, 1, 24] },
-  { task: "API Integration", category: "Development", start: [2026, 1, 16], end: [2026, 1, 27] },
-  { task: "Unit Testing", category: "Testing", start: [2026, 1, 21], end: [2026, 2, 1] },
-  { task: "QA & Bug Fixes", category: "Testing", start: [2026, 1, 27], end: [2026, 2, 10] },
-  { task: "User Acceptance Testing", category: "Testing", start: [2026, 2, 6], end: [2026, 2, 14] },
-  { task: "Deployment", category: "Launch", start: [2026, 2, 12], end: [2026, 2, 16] },
-  { task: "Post-Launch Monitoring", category: "Launch", start: [2026, 2, 14], end: [2026, 2, 25] },
-].map((row) => ({
-  task: row.task,
-  category: row.category,
-  start: toDay(...row.start) - PROJECT_START,
-  end: toDay(...row.end) - PROJECT_START,
-}));
+// Data: replace this block with your own records, one object per row, and the status date of the schedule
+// Website redesign project: 11 tasks across 4 phases, reported as of 20 February 2026
+const AS_OF = "2026-02-20";
+const data = [
+  { [TASK]: "Requirements gathering", [PHASE]: "Design", [START]: "2026-01-05", [END]: "2026-01-12" },
+  { [TASK]: "Wireframing", [PHASE]: "Design", [START]: "2026-01-10", [END]: "2026-01-20" },
+  { [TASK]: "Visual design", [PHASE]: "Design", [START]: "2026-01-18", [END]: "2026-01-30" },
+  { [TASK]: "Backend development", [PHASE]: "Development", [START]: "2026-01-26", [END]: "2026-02-20" },
+  { [TASK]: "Frontend development", [PHASE]: "Development", [START]: "2026-01-29", [END]: "2026-02-24" },
+  { [TASK]: "API integration", [PHASE]: "Development", [START]: "2026-02-16", [END]: "2026-02-27" },
+  { [TASK]: "Unit testing", [PHASE]: "Testing", [START]: "2026-02-21", [END]: "2026-03-01" },
+  { [TASK]: "QA and bug fixes", [PHASE]: "Testing", [START]: "2026-02-27", [END]: "2026-03-10" },
+  { [TASK]: "User acceptance testing", [PHASE]: "Testing", [START]: "2026-03-06", [END]: "2026-03-14" },
+  { [TASK]: "Deployment", [PHASE]: "Launch", [START]: "2026-03-12", [END]: "2026-03-16" },
+  { [TASK]: "Post-launch monitoring", [PHASE]: "Launch", [START]: "2026-03-14", [END]: "2026-03-25" },
+];
 
-const TASK_NAMES = TASKS.map((row) => row.task);
-const MAX_DAY = Math.max(...TASKS.map((row) => row.end));
-const STATUS_DAY = toDay(2026, 1, 20) - PROJECT_START;
+// Plot: reads only data and the constants above
+const tasks = data
+  .map((d) => ({ name: d[TASK], phase: d[PHASE], start: Date.parse(d[START]), end: Date.parse(d[END]) }))
+  .filter((d) => Number.isFinite(d.start) && Number.isFinite(d.end))
+  .sort((a, b) => a.start - b.start);
+const phases = [...new Set(tasks.map((d) => d.phase))];
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-const formatDay = (offsetDays) => dateFormatter.format(new Date((PROJECT_START + offsetDays) * DAY_MS));
+const firstStart = Math.min(...tasks.map((d) => d.start));
+const lastEnd = Math.max(...tasks.map((d) => d.end));
+const xPad = (lastEnd - firstStart) * X_PAD_SHARE;
+const ticks = Array.from(
+  { length: Math.floor((lastEnd - firstStart) / (TICK_DAYS * DAY_MS)) + 1 },
+  (_, i) => firstStart + i * TICK_DAYS * DAY_MS,
+);
+const asOf = Date.parse(AS_OF);
+const showAsOf = asOf >= firstStart && asOf <= lastEnd;
 
-const TICKS = [];
-for (let d = 0; d <= MAX_DAY; d += 14) TICKS.push(d);
+const dayFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const fullDateFormat = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+const subtitle = `${tasks.length} tasks colored by ${PHASE} · ${fullDateFormat.format(firstStart)} – ${fullDateFormat.format(lastEnd)} (${Math.round((lastEnd - firstStart) / DAY_MS)} days)`;
 
-// --- Series: an invisible "offset" segment (start of timeline -> task start)
-// stacked with, per category, a solid "duration" segment — null everywhere
-// except the row that belongs to it — so each task lands as a floating bar
-// at its correct start/end day offsets. --------------------------------------
-const OFFSET_SERIES = {
-  id: "offset",
-  stack: "timeline",
-  color: "transparent",
-  data: TASKS.map((row) => row.start),
-  valueFormatter: () => null,
-};
+// Each task is a floating bar: a transparent segment up to its start, stacked with its phase's duration segment
+const series = [
+  {
+    id: "offset",
+    stack: "schedule",
+    color: "transparent",
+    data: tasks.map((d) => d.start),
+    valueFormatter: () => null,
+  },
+  ...phases.map((phase, i) => ({
+    id: `phase-${i}`,
+    label: phase,
+    stack: "schedule",
+    color: t.palette[i],
+    data: tasks.map((d) => (d.phase === phase ? d.end - d.start : null)),
+    valueFormatter: (value: number | null, { dataIndex }: { dataIndex: number }) =>
+      value === null ? null : `${dayFormat.format(tasks[dataIndex].start)} – ${dayFormat.format(tasks[dataIndex].end)}`,
+  })),
+];
 
-const CATEGORY_SERIES = CATEGORIES.map((category) => ({
-  id: category,
-  label: category,
-  stack: "timeline",
-  color: CATEGORY_COLOR[category],
-  data: TASKS.map((row) => (row.category === category ? row.end - row.start : null)),
-  valueFormatter: (value, { dataIndex }) =>
-    value == null ? null : `${formatDay(TASKS[dataIndex].start)} – ${formatDay(TASKS[dataIndex].end)}`,
-}));
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-  const TITLE_TOP = 28;
-  const LEGEND_TOP = 76;
-  const CHART_TOP = 104;
-
-  const title = "Website Redesign Timeline · gantt-basic · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round((26 * 67) / title.length) : 26;
-
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      <Box sx={{ position: "absolute", top: TITLE_TOP, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>{title}</Typography>
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, pt: "20px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, mt: "6px" }}>{subtitle}</Typography>
       </Box>
-
-      <Stack direction="row" spacing={3} sx={{ position: "absolute", top: LEGEND_TOP, left: 56, right: 56 }}>
-        {CATEGORIES.map((category) => (
-          <Stack key={category} direction="row" spacing={1} alignItems="center">
-            <Box sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: CATEGORY_COLOR[category] }} />
-            <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>{category}</Typography>
-          </Stack>
-        ))}
-      </Stack>
-
-      <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          layout="horizontal"
-          skipAnimation
-          borderRadius={3}
-          series={[OFFSET_SERIES, ...CATEGORY_SERIES]}
-          grid={{ vertical: true }}
-          xAxis={[
-            {
-              min: 0,
-              max: MAX_DAY + 4,
-              tickInterval: TICKS,
-              valueFormatter: (value) => formatDay(value),
-              label: "Project Timeline",
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-              disableTicks: true,
-            },
-          ]}
-          yAxis={[
-            {
-              scaleType: "band",
-              data: TASK_NAMES,
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              disableTicks: true,
-              categoryGapRatio: 0.35,
-            },
-          ]}
-          margin={{ top: 16, right: 60, bottom: 56, left: 232 }}
-          slotProps={{ legend: { hidden: true } }}
-          sx={{
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        >
+      <BarChart
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
+        layout="horizontal"
+        skipAnimation
+        borderRadius={3}
+        series={series}
+        grid={{ vertical: true }}
+        margin={{ top: 16, right: 56, bottom: 16, left: 24 }}
+        xAxis={[
+          {
+            min: firstStart - xPad,
+            max: lastEnd + xPad,
+            tickInterval: ticks,
+            valueFormatter: (v: number) => dayFormat.format(v),
+            label: DATE_LABEL,
+            height: 68,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: tasks.map((d) => d.name),
+            width: 220,
+            categoryGapRatio: 0.35,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.inkSoft, mb: "8px" },
+          },
+        }}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      >
+        {showAsOf && (
           <ChartsReferenceLine
-            x={STATUS_DAY}
-            label={`Status: ${formatDay(STATUS_DAY)}`}
-            labelAlign="end"
+            x={asOf}
+            label={`As of ${dayFormat.format(asOf)}`}
+            labelAlign="start"
             lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeWidth: 2 }}
-            labelStyle={{ fontSize: 13, fill: t.ink, fontWeight: 600 }}
+            labelStyle={{ fontSize: 14, fill: t.ink, fontWeight: 600 }}
           />
-        </BarChart>
-      </Box>
+        )}
+      </BarChart>
     </Box>
   );
 }
