@@ -18,7 +18,6 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const BAND_LABEL = "95 % prediction interval"; // what the band between the two bound columns represents
 const BAND_OPACITY = 0.24;
 const Y_PAD_SHARE = 0.06; // share of the value range added above the upper and below the lower bound
 
@@ -27,6 +26,7 @@ const DATE = "Date"; // role: x
 const USERS = "Daily active users (forecast mean)"; // role: y
 const LOWER = "Lower bound (users)"; // role: y_lower
 const UPPER = "Upper bound (users)"; // role: y_upper
+const BAND_LABEL = "95 % prediction interval"; // what the two bound columns describe: change it with them
 
 // Data: replace this block with your own records, one object per x value
 // A 60-day forecast of daily active users from 1 Jan 2024: a rising trend with a two-week
