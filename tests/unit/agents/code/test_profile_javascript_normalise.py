@@ -1,6 +1,6 @@
 """Tests for agents/anyplot/code/profiles/javascript/normalise.py: header, one orientation directive, the title."""
 
-from collections import Counter
+import re
 
 import pytest
 
@@ -152,27 +152,41 @@ def test_the_normaliser_never_raises(body: str) -> None:
         assert normalise(once, library=library) == once
 
 
+HARNESS_ORIENTATION = re.compile(
+    r"^\s*//#?\s*anyplot-orientation:\s*(square|landscape)\b", re.IGNORECASE | re.MULTILINE
+)
+"""The harness's own reading of the directive (`orientationFromSource` in `automation/js-render/render.mjs`)."""
+DEFAULT_ORIENTATION = "wrote the harness's default orientation out as //# anyplot-orientation: landscape on line 1"
+CATALOGUE_CHANGES = frozenset(
+    {
+        "removed the catalogue header",
+        "emptied the catalogue title",
+        DEFAULT_ORIENTATION,
+        "moved the orientation directive (landscape)",
+        "moved the orientation directive (square)",
+    }
+)
+"""Every rewrite the normaliser makes on a catalogue file; anything else is a change the adapter would inherit."""
+TEMPLATE_TITLE = re.compile(r"`[^`]*(?:\$\{[^`]*anyplot\.ai|anyplot\.ai[^`]*\$\{)[^`]*`")
+
+
 def test_catalogue_corpus() -> None:
-    """All 1,617 files: every result parses, is idempotent and starts with its directive; 3 titles in a template with
-    a substitution stay (indicator-bollinger and indicator-sma in MUI X, map-marker-clustered in D3)."""
-    changes: Counter[str] = Counter()
-    kept_titles: list[str] = []
+    """Every catalogue file: the result parses, is idempotent, starts with its directive and carries no note; the
+    header always goes, the harness's default orientation is written out exactly where the file had no directive,
+    and a title stays only in a template with a substitution (three on 2026-10-30: indicator-bollinger and
+    indicator-sma in MUI X, map-marker-clustered in D3). The counts of a day (893 directives written out of 1,617)
+    move with every regeneration, so the test holds these rules instead."""
     for path in JS_CATALOGUE_FILES:
         library = js_library(path)
-        report = normalise_report(path.read_text(encoding="utf-8"), library=library)
+        text = path.read_text(encoding="utf-8")
+        report = normalise_report(text, library=library)
         grammar = "tsx" if library == "muix" else "javascript"
         assert not syntax_problems(Source(report.code, grammar).tree), path
         assert normalise(report.code, library=library) == report.code, path
         assert report.code.startswith("//# anyplot-orientation: "), path
         assert report.notes == (), path
-        changes.update(change.split(" at ")[0].split(" from ")[0] for change in report.changes)
-        if not any(change.startswith("emptied the catalogue title") for change in report.changes):
-            kept_titles.append(f"{path.parts[-4]}/{library}")
-
-    assert changes == {
-        "removed the catalogue header": 1617,
-        "emptied the catalogue title": 1614,
-        "wrote the harness's default orientation out as //# anyplot-orientation: landscape on line 1": 893,
-        "moved the orientation directive (landscape)": 1,
-    }
-    assert sorted(kept_titles) == ["indicator-bollinger/muix", "indicator-sma/muix", "map-marker-clustered/d3"]
+        changes = {change.split(" at ")[0].split(" from ")[0] for change in report.changes}
+        assert changes <= CATALOGUE_CHANGES, (path, changes - CATALOGUE_CHANGES)
+        assert ("removed the catalogue header" in changes) == text.startswith("// anyplot.ai"), path
+        assert (DEFAULT_ORIENTATION in changes) == (HARNESS_ORIENTATION.search(text) is None), path
+        assert "emptied the catalogue title" in changes or TEMPLATE_TITLE.search(text), path
