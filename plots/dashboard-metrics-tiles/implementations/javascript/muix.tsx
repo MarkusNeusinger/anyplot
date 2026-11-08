@@ -19,7 +19,7 @@ const UNFAVORABLE = t.palette[4];
 // amber warning hue is never needed as a thin line on the light page
 const SPARK_COLOR = t.inkSoft;
 const SPARK_PAD = 0.25; // share of a history's range left free above and below its sparkline
-const SPARK_H = 130;
+const SPARK_MIN_H = 130;
 const TITLE = "dashboard-metrics-tiles · javascript · muix · anyplot.ai";
 
 // Columns: set these to your data's column names
@@ -141,7 +141,6 @@ export default function Chart() {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
                 minWidth: 0,
                 minHeight: 0,
                 boxSizing: "border-box",
@@ -171,7 +170,8 @@ export default function Chart() {
                 </Box>
               </Box>
 
-              <Box sx={{ height: SPARK_H, marginTop: "16px" }}>
+              {/* The sparkline takes all the height the label and value leave free, so no dead band opens up */}
+              <Box sx={{ flex: 1, minHeight: SPARK_MIN_H, marginTop: "16px" }}>
                 <SparkLineChart
                   data={tile.values}
                   xAxis={{ data: tile.times, scaleType: "time" }}
@@ -181,7 +181,6 @@ export default function Chart() {
                   baseline="min"
                   curve="monotoneX"
                   skipAnimation
-                  height={SPARK_H}
                   margin={{ top: 8, bottom: 4, left: 4, right: 4 }}
                   sx={{
                     "& .MuiLineChart-area": { fill: `url(#spark-fill-${i})` },
