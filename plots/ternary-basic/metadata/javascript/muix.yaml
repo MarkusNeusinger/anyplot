@@ -2,63 +2,59 @@ library: muix
 language: javascript
 specification_id: ternary-basic
 created: '2026-08-04T15:22:32Z'
-updated: '2026-08-04T15:39:48Z'
-generated_by: claude-sonnet
-workflow_run: 30923272668
+updated: '2026-11-08T06:27:45Z'
+generated_by: claude-opus-5-5
+adopted_from: 15621eb45ad257e4dbb2370553f484cc1588efea (15621eb45ad257e4dbb2370553f484cc1588efea)
+workflow_run: 42454575423
 issue: 1001
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Genuinely custom-engineered ternary plot built on MUI X's composable ChartContainer
-    plus useXScale/useYScale hooks — a technically sophisticated solution to a chart
-    type MUI X does not natively support.
-  - Correct equilateral-triangle projection math, grid lines at 20% intervals on all
-    three axes, and edge tick marks (0-100 by 20) on all three edges with clearly
-    labeled vertices.
-  - 'Theme-adaptive chrome via window.ANYPLOT_TOKENS is threaded through every custom
-    SVG layer (grid, ticks, vertex labels, title) — both renders are fully legible
-    with the #009E73 data color preserved identically.'
-  - Deterministic seeded LCG plus gamma-shape sampling produces a compositionally
-    plausible point cloud that naturally clusters toward the Copper apex without needing
-    an explicit annotation.
-  - Responsive title font-sizing formula keeps the long mandated title string from
-    overflowing or clipping in either theme.
+  - 'Correct barycentric mapping: Sand at the apex, Silt bottom-left, Clay bottom-right,
+    with x = clay + sand/2 and y = √3/2 · sand normalised by each row''s total; every
+    point sits at its true ternary position and the triangle is kept equilateral by
+    equal px-per-unit on both axes (k = min(drawW/…, drawH/…)).'
+  - Grid at 20 % steps for all three components, each set parallel to the side opposite
+    its vertex, dashed in the grid token and clearly lighter than the solid INK_SOFT
+    triangle frame and the points.
+  - Edge ticks are oriented along each component's own iso-lines (horizontal for Sand,
+    slanted for Silt and Clay), so each edge's scale reads unambiguously in its direction
+    of increase.
+  - Composes the chart from MUI X primitives (ChartsDataProvider + ChartsSurface +
+    ScatterPlot) and draws the ternary frame as a custom layer through useXScale/useYScale,
+    the library's intended extension point.
+  - Native ChartsTooltip with a valueFormatter that reports all three component shares
+    per sample in the HTML output.
+  - 'Theme tokens threaded through every element: both renders are fully legible,
+    data color #009E73 identical across themes.'
   weaknesses:
-  - 'Data realism: the ''Bronze Alloy'' framing implies a copper-dominant alloy (real
-    bronze/gunmetal is typically ~85-98% Cu), but the sampled cloud spreads broadly
-    across the simplex with many points at Cu 10-30% — not representative of actual
-    bronze compositions. Either relabel as a generic Cu-Sn-Zn ternary system, or bias
-    the gamma-shape parameters (e.g. raise the Cu shape parameter further, shrink
-    Sn/Zn shapes) so most samples sit in the realistic 80-98% Cu band with only minor
-    Sn/Zn variation.'
-  - Beyond the natural clustering toward the Copper apex, there is no explicit visual
-    emphasis (e.g. a reference marker for a canonical bronze composition, or color/size
-    encoding of a secondary attribute) to guide the viewer to an insight — DE-03 storytelling
-    is present but implicit only.
-  - Markers in the densest mid-triangle region touch/overlap slightly (natural at
-    N=65 with this spread) — a slightly smaller radius or lower alpha would keep clusters
-    fully separable at a glance.
+  - 'Suggestion: each vertex carries two tick labels (for example "100" for Sand and
+    "0" for Clay at the apex); omitting the 0 labels at the corners would leave one
+    number per vertex.'
+  - 'Suggestion: the band between the subtitle and the "Sand (%)" label is about 200
+    px tall; shifting the triangle up a little would balance it against the bottom
+    margin.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Bronze Alloy Composition · ternary-basic · javascript · muix · anyplot.ai" in bold dark ink at top, fully visible with generous margin above and below. Equilateral triangle outlined in dark ink. Bold vertex labels "Copper (%)" (top), "Tin (%)" (bottom-left), "Zinc (%)" (bottom-right). Dashed light-gray grid lines at 20/40/60/80 parallel to each edge. Gray tick numerals (0,20,40,60,80,100) along all three edges, clearly legible and not clipped at the canvas border.
-      Data: Green (#009E73-family, alpha ~0.85) circular markers, ~65 points, clustering toward the Copper apex while spreading across the simplex — no other categorical colors present (single series).
-      Legibility verdict: PASS — all text reads cleanly against the light background, no light-on-light issues.
+      Background: warm off-white, #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold dark title "Topsoil Texture · ternary-basic · javascript · muix · anyplot.ai" (~53% width) with a soft subtitle "65 compositions · grid and ticks every 20 %"; equilateral triangle outlined in dark ink-soft; bold vertex names "Sand (%)" (top), "Silt (%)" (bottom-left), "Clay (%)" (bottom-right); tick marks and 0–100 labels every 20 on all three edges, oriented along each component's iso-lines. All text readable.
+      Data: 65 points in #009E73 (slightly translucent), cloud concentrated toward the Sand apex and centre, a few points toward the Clay and Silt corners; light dashed grid lines at 20 % steps for all three components, lighter than the points.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/cream text, fully legible. Triangle outline in light gray. Vertex labels in bold white/cream. Grid dashed lines and tick numerals in muted gray, both clearly visible against the dark background — no dark-on-dark failures observed anywhere (title, vertex labels, tick numbers all confirmed legible).
-      Data: Markers are the identical green as the light render — only the chrome (background, ink, grid) flipped, confirming Imprint palette compliance.
-      Legibility verdict: PASS — all text reads cleanly against the dark background, no dark-on-dark issues.
+      Background: warm near-black, #1A1A17.
+      Chrome: title, subtitle, vertex names and tick labels in light ink; triangle frame light grey; dashed grid in a subtle dark grey, still visible. No dark-on-dark text.
+      Data: identical point positions and the same #009E73 green as in the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -66,78 +62,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (responsive title sizing, 14px ticks,
-          22px vertex labels); readable in both themes at full size and clearly legible.
+        comment: Explicit sizes (title 22, subtitle 15, vertex names 20 bold, ticks
+          14 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap; tick labels sit clear of
-          the triangle edges.
+        comment: No text collisions; tick labels clear of the frame and of the vertex
+          names
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers (radius 8, alpha 0.85) clearly visible; slight touching/overlap
-          in the densest mid-triangle cluster, but no data is hidden.
+        comment: markerSize 8 at fillOpacity 0.85 suits 65 points; N/A legend (single
+          series)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue series with good contrast against both backgrounds; no
-          red-green reliance.
+        comment: Single series, high contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Triangle fills most of the square canvas with balanced margins; title/vertex
-          labels/tick text all fully within canvas bounds, no clipping.
+        comment: Square 2400x2400, equilateral triangle fills the width, no overflow;
+          title ~53% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels are descriptive with units (Copper (%), Tin (%), Zinc
-          (%)).
+        comment: Vertex names with units, 'Sand (%)' etc.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series uses #009E73, identical across themes; backgrounds
-          match #FAF8F1 / #1A1A17; chrome is theme-correct in both renders.'
+        comment: '#009E73 first series, correct backgrounds in both renders'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: The entire ternary visual system (grid, ticks, vertex labels) was
-          custom-engineered since MUI X has no native ternary type — clearly above
-          a configured default, though not fully publication-polished.
+        comment: 'Clear typographic hierarchy beyond baseline: bold ink vertex names
+          vs soft 14 px ticks, explanatory subtitle stating the grid step'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No extraneous chart chrome (no axis spines from the underlying linear
-          scale, no legend clutter), subtle dashed grid; could be a touch more restrained
-          in the densest cluster.
+        comment: Dashed grid in the grid token against a solid rounded-join frame;
+          tick marks drawn along each component's own iso-line direction
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Natural clustering toward the Copper apex reads as a story about
-          copper-dominant alloys, but there is no explicit emphasis (reference point,
-          secondary encoding) beyond that implicit pattern.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes (default)
     spec_compliance:
       score: 15
       max: 15
@@ -147,56 +136,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary/simplex plot with triangular grid and three-component
-          projection.
+        comment: Ternary scatter, single series, no extra encodings or layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 20% grid lines, labeled vertices, edge tick marks at 0/20/40/60/80/100,
-          visually distinct markers — all present.
+        comment: Grid at 20% for all three components, vertex labels, edge ticks in
+          grid steps, equilateral triangle — all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All three components correctly projected; full dataset visible inside
-          the triangle.
+        comment: Barycentric mapping verified in code (lines 65-69); no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · ternary-basic · javascript ·
-          muix · anyplot.ai'; single series needs no legend, tooltip provides per-point
-          labels.
+        comment: Descriptive prefix + mandated title; legend N/A for single series
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points span most of the simplex with visible density variation, though
-          few samples sit very close to the Tin/Zinc-heavy corners.
+        comment: Points spread across the triangle interior with a sand-rich cluster;
+          shows the compositional constraint
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible materials-science scenario (alloy composition);
-          domain precision is only partially accurate (see DQ-03).
+        comment: Topsoil sand/silt/clay texture survey — neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Real bronze/gunmetal alloys are copper-dominant (~85-98% Cu); this
-          sample cloud spreads down to ~10-20% Cu, which does not match real bronze
-          compositions.
+        passed: true
+        comment: 'Checked: Gamma(5,2,2) shares normalised to 100 % per row (lines
+          43-50), tick labels 0–100 match'
     code_quality:
       score: 10
       max: 10
@@ -206,65 +189,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom structure (data → projection → grid/tick/label
-          components → Chart); functions are required by the React/MUI X component
-          contract, not incidental complexity.
+        comment: Only the React components the muix contract requires (Chart + a hook-using
+          layer)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed = 20260804).
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, ScatterPlot, ChartsTooltip, useXScale, useYScale
-          imported — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a from-scratch ternary projection; no fake
-          UI or simulated interactivity.
+        comment: Iso-line geometry derived once and reused for grid, frame, ticks
+          and vertex labels
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the harness contract (default-exported component, ANYPLOT_SIZE,
-          skipAnimation); current MUI X community API only.
+        comment: Renders into the mount, skipAnimation set, current v9 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses ChartContainer's composable-children architecture with useXScale/useYScale
-          hooks — the sanctioned MUI X pattern for custom overlay elements.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The scale-sharing hook composition used to build a non-native chart
-          type (ternary) is genuinely distinctive to MUI X's architecture, not easily
-          replicated as cleanly in imperative-canvas libraries.
+        comment: Composition API (ChartsDataProvider/ChartsSurface/ScatterPlot) with
+          a custom layer via useXScale/useYScale
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Native ChartsTooltip with per-point valueFormatter listing all three
+          shares
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T06:25:03Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - layer-composition
+  - manual-ticks
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending

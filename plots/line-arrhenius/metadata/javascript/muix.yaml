@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: line-arrhenius
 created: '2026-06-24T10:03:28Z'
-updated: '2026-06-24T10:19:20Z'
-generated_by: claude-sonnet
-workflow_run: 28090138253
+updated: '2026-11-08T07:46:53Z'
+generated_by: claude-opus-5-5
+adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
+workflow_run: 42441344317
 issue: 4408
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/muix/plot-light.html
@@ -15,103 +16,92 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 quality_score: 88
 review:
   strengths:
-  - 'All spec requirements met: Arrhenius axes (1/T vs ln(k)), linear regression line,
-    R² annotation, and secondary temperature axis all present'
-  - 'Perfect theme adaptation: warm off-white (#FAF8F1) light surface, near-black
-    (#1A1A17) dark surface, no dark-on-dark failures in either render'
-  - 'Correct Imprint palette usage: #009E73 brand green for experimental data (first
-    series), #C475FD lavender for regression line (second series)'
-  - Elegant stats annotation box (elevated background, monospace font, theme-adaptive
-    colors) showing R², Ea/R, and Ea values
-  - Deterministic synthetic data using LCG seeded at 42, realistic NO₂ decomposition
-    chemistry with literature-accurate Ea ≈ 111 kJ/mol
-  - 'Dual x-axis implementation: bottom axis 1000/T (K⁻¹) and top axis Temperature
-    (K) — idiomatic MUI X multi-axis composition'
+  - Composes the chart from MUI X v9 building blocks (ChartsDataProvider, ChartsWrapper,
+    LinePlot, ScatterPlot, two ChartsXAxis) so the scatter markers draw on top of
+    the fit line, as the spec asks
+  - 'The secondary Temperature (K) axis shares the bottom axis''s scale and uses tickInterval:
+    invT with tickLabelInterval, so each measured temperature (338…278 K) sits exactly
+    at its 1000/T position and runs opposite to the inverse-temperature axis'
+  - The slope note is a small component that reads useXScale/useYScale, so it is anchored
+    to the fitted line in data space; it states slope = −Ea/R = −12,694 K, Ea = 105.5
+    kJ/mol and R² = 0.9991, all computed from the least-squares fit
+  - 'Realistic, neutral scenario: N2O5 first-order decomposition at 11 temperatures
+    from 278 to 338 K with Ea = 103 kJ/mol and ln A = 31.53; the recovered 105.5 kJ/mol
+    is consistent with the seeded scatter'
+  - 'Theme tokens are threaded through every chrome element (ink, inkSoft, grid, pageBg):
+    both renders read cleanly and the data colors are identical'
+  - Item tooltip with a valueFormatter that reports T in K and ln k for each measurement
+    in the HTML view
   weaknesses:
-  - Y-axis label uses fontSize 18 while x-axis labels use fontSize 16 — minor imbalance;
-    align both at 16px for visual consistency
-  - Duplicate header block in the file (quality header lines 1-4 + //# directive line
-    5 + original skeleton header lines 6-10) — the //# anyplot-orientation directive
-    should be at the very top of the file per library guide, not embedded mid-header
-  - 'DE-01 room: the annotation box adds polish but overall visual sophistication
-    stays at a functional level — consider adding custom mark shapes or visual emphasis
-    to the experimental data points to create more visual hierarchy'
-  - Top axis tick positions (667, 500, 400, 333, 286) are computed at 1000/T values
-    of ~1.5, 2.0, 2.5, 3.0, 3.5 — the leftmost tick (667 K at 1000/T=1.5) falls outside
-    the data extent (min 1000/T≈1.96) and may appear at an unintuitive position; consider
-    using explicit tickValues or a constrained tickNumber to keep ticks within the
-    data range
+  - 'Suggestion: the slope note could carry a thin leader or sit slightly closer to
+    the fit line so its tie to the line reads at a glance in the thumbnail.'
+  - 'Suggestion: the 1000/T bottom-axis ticks (3.00…3.60) could use 3 decimals or
+    fewer ticks for a finer match to the top temperature ticks.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) — correct, not pure white.
-      Chrome: Title "line-arrhenius · javascript · muix · anyplot.ai" bold centered at top, dark text — fully readable. Bottom x-axis label "1000 / T (K⁻¹)" and y-axis label "ln(k)" are clearly visible in dark ink. Top secondary x-axis label "Temperature (K)" readable. All tick labels dark on light background — no legibility issues.
-      Data: Two line series — #009E73 brand green for "Experimental ln(k)" (with hollow circle markers at 11 data points), #C475FD lavender for "Linear regression" (smooth line, no markers). Stats annotation box in upper-right with elevated cream background, monospace text showing R²=0.9998, Ea/R=13498 K, Ea=112.2 kJ mol⁻¹. Horizontal grid lines subtle. Legend at bottom with two labeled series.
-      Legibility verdict: PASS — all text clearly readable on the warm off-white background.
+      Background: warm off-white #FAF8F1 over the whole canvas, no white plot panel.
+      Chrome: bold title "line-arrhenius · javascript · muix · anyplot.ai" at the top center, a secondary-ink subtitle "11 measurements, 278–338 K · least-squares fit of ln k against 1/T", a top axis titled "Temperature (K)" with ticks 338, 332, …, 278 at each measured point, a bottom axis "1000 / T (K⁻¹)" from 3.00 to 3.60, and a y axis "ln(k / s⁻¹)" from −5 to −13. Subtle horizontal grid lines. Two-line slope note right of center: "slope = −Ea/R = −12,694 K" (bold) and "Ea = 105.5 kJ/mol · R² = 0.9991". Legend at the bottom center: "Measured rate constants" (green circle) and "Linear fit" (purple line). All text is dark and readable.
+      Data: 11 green #009E73 markers falling from upper left to lower right, drawn on top of a straight lavender #C475FD regression line; the points scatter slightly around the line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) — correct, not pure black.
-      Chrome: Title in light text on dark background — fully readable. All axis labels, tick labels in light/cream colors — no dark-on-dark failures detected. Top "Temperature (K)" and bottom "1000 / T (K⁻¹)" axis labels both readable. Y-axis "ln(k)" label readable. Annotation box has a darker elevated background with light-colored monospace text — readable.
-      Data: Colors are identical to light render — #009E73 brand green experimental data with hollow circle markers, #C475FD lavender regression line. Legend at bottom with same labels, readable in light text. Horizontal grid lines subtle on dark background.
-      Legibility verdict: PASS — all text clearly readable against the near-black background; no dark-on-dark failures observed.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, tick labels, slope note and legend all render in light ink and are clearly readable; grid lines are dim but visible; no dark-on-dark text.
+      Data: same green #009E73 markers and lavender #C475FD fit line as the light render; only the chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title (22px), axis labels (16px bottom/top, 18px y), tick labels
-          (14px) all readable in both themes. Minor: y-axis label uses 18px vs 16px
-          for x-axis labels — slight imbalance.'
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14, note 16 CSS px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Annotation box positioned top-right, well clear of data. No text-on-text
-          or text-on-data overlaps.
+        comment: Slope note sits clear of the line and markers; top ticks don't collide
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 data points with clear hollow circle markers. Both series (green
-          + lavender) clearly distinguishable against both backgrounds.
+        comment: 11 sparse points at a prominent marker size on a 3 px line; legend
+          glyphs match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1 and 2 — CVD-safe. Green/purple hue combination
-          passes colorblind discrimination.
+        comment: Green markers vs lavender line, differing in mark type too
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed (3200x1800). Margins generous at 110px. Minor:
-          y-axis label fontsize imbalance (18 vs 16px for x-axis labels) is a small
-          proportional inconsistency.'
+        comment: 3200x1800, plot fills the canvas, balanced axis titles, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Bottom x-axis: ''1000 / T (K⁻¹)'' with units. Y-axis: ''ln(k)''.
-          Top secondary: ''Temperature (K)''. Title follows correct format.'
+        comment: 1000 / T (K⁻¹), ln(k / s⁻¹), Temperature (K) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 brand green (t.palette[0]), second series #C475FD
-          lavender (t.palette[1]). Backgrounds #FAF8F1 / #1A1A17 correct. Data colors
-          identical between renders.'
+        comment: 'Measured points #009E73, fit #C475FD (Imprint 1-2), correct backgrounds
+          in both themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -119,27 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette over MUI defaults. Elegant stats annotation
-          box with elevated background, monospace typography, and semi-transparent
-          border. Dual x-axis adds scientific polish. Not exceptional but above generic
-          defaults.
+        comment: Title/subtitle/note hierarchy with the bold slope line over a regular
+          Ea line; consistent type scale
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid (subtle), rightAxis=null removes right axis
-          line, generous 110px margins, bottom legend with proper spacing. Clean L+top
-          frame appropriate for dual-axis.
+        comment: Top ticks placed exactly at the measured temperatures; x/y padding
+          shares keep the end markers off the frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Annotation box creates a clear focal point for key Arrhenius findings.
-          The tight clustering of experimental points around the regression line visually
-          communicates the high R². Left-to-right direction (high T to low T) matches
-          chemical convention.
+        comment: Subtitle summarises the experiment (n, temperature span, fit method)
+          beyond what the Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -149,29 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius line plot: ln(k) vs 1/T with linear scale.'
+        comment: 'Arrhenius plot: ln k vs 1/T with fit line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: Arrhenius axes, linear regression line,
-          R² display, Ea/R annotation, secondary temperature K axis, visible data
-          markers.'
+        comment: 'Regression line with R², −Ea/R slope annotation with Ea, secondary
+          K ticks, markers on top of line: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = 1000/T (K⁻¹), Y = ln(k). All 11 data points visible across full
-          axis range.
+        comment: Each point at its own 1000/T and ln k; temperature ticks at matching
+          positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-arrhenius · javascript · muix · anyplot.ai' correct.
-          Legend labels 'Experimental ln(k)' and 'Linear regression' match the data.
+        comment: Mandated title format; legend labels for a reader
     data_quality:
       score: 15
       max: 15
@@ -181,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full Arrhenius coverage: experimental scatter, regression line,
-          secondary T axis, R²/Ea stats box.'
+        comment: Linear trend, slight scatter, extracted Ea and R²
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NO₂ thermal decomposition with literature Ea ≈ 111 kJ/mol, temperatures
-          310-510 K — physically plausible and neutral scientific context.
+        comment: N2O5 decomposition, a classic first-order kinetics case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 11 data points, temperature range 310-510 K, rate constants physically
-          meaningful. R²=0.9998 consistent with tight Arrhenius data.
+        comment: 'Checked: ln k(338 K) = 31.53 − 103000/(8.314·338) ≈ −5.12 and ln
+          k(278 K) ≈ −13.03, matching the render''s −5.0 and −13.1; the Ea of 105.5
+          kJ/mol comes from the fit slope × R, not placed by hand'
     code_quality:
       score: 10
       max: 10
@@ -206,34 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level structure. LCG helper function is minimal and justified.
-          No classes, no unnecessary abstractions.
+        comment: Chart is the harness contract; SlopeNote exists only because scale
+          hooks need a component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with seed=42, fully deterministic. No Math.random().
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography imported — all used.
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean readable code. Regression computed inline with minimal helper
-          variables. No fake interactivity.
+        comment: Short written-out least-squares fit, allowed by the muix Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness saves plot-{THEME}.png and plot-{THEME}.html. Community @mui/x-charts
-          API only.
+        comment: Default-export Chart into the harness mount, v9 API, skipAnimation
     library_mastery:
       score: 7
       max: 10
@@ -243,22 +224,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: skipAnimation, window.ANYPLOT_SIZE/TOKENS, slotProps.legend, rightAxis=null,
-          topAxis/bottomAxis/leftAxis explicit assignments — all idiomatic MUI X patterns.
+        comment: Composition API with ChartsDataProvider/ChartsWrapper and per-axis
+          ids rather than a monolithic chart
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Dual x-axis (linear top + bottom with different value formatters)
-          leverages MUI X's multi-axis composition. Box+Typography overlay over LineChart
-          demonstrates MUI Material integration. Good but not deeply distinctive.
+        comment: useXScale/useYScale for a data-anchored SVG note; tickInterval array
+          + tickLabelInterval on a second linear axis
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:08:33Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
+  - manual-ticks
   - annotations
+  - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
