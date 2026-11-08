@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 cartogram-area-distortion: Cartogram with Area Distortion by Data Value
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-08
