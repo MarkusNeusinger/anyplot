@@ -510,7 +510,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if args.votes:
-        counts = aggregate_votes(asyncio.run(read_votes()), updated)
+        # The version boundary is `updated` alone, as `impls.updated` is for the API: without one, the pair has a
+        # single version and every vote is on it. `created` stays the fallback of the render and age checks only.
+        version_start = {pair: catalogue.parse_time(c.metadata.get("updated")) for pair, c in candidates.items()}
+        counts = aggregate_votes(asyncio.run(read_votes()), version_start)
         for pair, count in counts.items():
             candidates[pair].votes = count
             candidates[pair].reasons += vote_reasons(count, min_down=args.min_down)

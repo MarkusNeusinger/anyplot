@@ -332,6 +332,25 @@ def test_a_session_counts_once_on_each_side_of_the_update(mods) -> None:
     )
 
 
+def test_a_pair_without_updated_has_one_version_for_the_votes(mods, repo: Path, tmp_path: Path, monkeypatch) -> None:
+    """The vote boundary is `updated` alone, as the API's `impls.updated`: `created` is no version start, so a vote
+    on a pair without `updated` is on its one version."""
+    sc = mods["select_candidates"]
+    _commit(repo, {"plots/a-spec/metadata/javascript/muix.yaml": "created: '2026-11-01T00:00:00Z'\n"}, "pair")
+
+    async def votes():
+        return [("a-spec", "muix", "javascript", "thumbs_down", datetime(2026, 10, 1), None)]
+
+    monkeypatch.setattr(sc, "use_database_url", lambda env: True)
+    monkeypatch.setattr(sc, "read_votes", votes)
+    out = tmp_path / "round" / "candidates.json"
+
+    assert sc.main(["--out", str(out), "--votes", "--repo", str(repo), "--ref", "HEAD"]) == 0
+    (candidate,) = json.loads(out.read_text(encoding="utf-8"))["candidates"]
+    assert candidate["votes"] == {"up": 0, "down": 1, "up_since_update": 0, "down_since_update": 1}
+    assert [reason["code"] for reason in candidate["reasons"]] == ["thumbs_down"]
+
+
 def test_old_version_votes_count_only_while_this_version_draws_no_net_thumbs_up(mods) -> None:
     sc = mods["select_candidates"]
 
