@@ -1,7 +1,7 @@
 // anyplot.ai
 // density-basic: Basic Density Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-24
+// Quality: pending | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;
