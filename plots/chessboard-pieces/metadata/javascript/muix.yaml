@@ -2,64 +2,57 @@ library: muix
 language: javascript
 specification_id: chessboard-pieces
 created: '2026-09-01T23:26:42Z'
-updated: '2026-09-01T23:43:03Z'
-generated_by: claude-sonnet
-workflow_run: 33570438462
+updated: '2026-11-08T01:44:05Z'
+generated_by: claude-opus-5-5
+adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
+workflow_run: 42434857373
 issue: 3350
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 89
 review:
   strengths:
-  - 'Correct chess conventions: h1 is a light square, a1 is a dark square, white sits
-    on ranks 1-2 — all verified against the code''s band-scale logic and confirmed
-    visually'
-  - 'The final position is a factually accurate rendering of the real ''Scholar''s
-    Mate'' trace (1.e4 e5 2.Qh5 Nc6 3.Bc4 Nf6?? 4.Qxf7#): f7 pawn correctly missing
-    (captured), unmoved pieces (e1 king, a1/h1 rooks, g1 knight) correctly still on
-    their home squares'
-  - 'Clever theme-stable piece encoding: white army renders as a hollow/outlined glyph
-    (elevatedBg fill + ink stroke) and black army as a solid ink-filled glyph, so
-    the solid-vs-outline distinction — not raw hue — carries the identity, and it
-    survives the light/dark theme flip'
-  - Genuinely idiomatic use of MUI X's `slots.scatter` custom-mark API to repurpose
-    ScatterChart's band scales into a full checkerboard + Unicode piece renderer —
-    a distinctive, hard-to-replicate-elsewhere technique
-  - Mate squares (e8 king, f7 queen) are highlighted with the amber semantic anchor,
-    giving the diagram a clear focal point that tells the 'Scholar's Mate' story at
-    a glance
-  - 'Clean chrome: spines disabled on both axes, no grid, deterministic in-memory
-    data, explicit font sizing throughout, both renders theme-correct with no dark-on-dark
-    or light-on-light failures'
+  - Correct Scholar's Mate position (16 white, 15 black pieces) with white at the
+    bottom and a light h1 corner
+  - Board grid built from MUI X band axes (categoryGapRatio 0) with custom SVG layers
+    that read useXScale/useYScale/useDrawingArea, so squares and pieces follow the
+    library's own scales
+  - White pieces drawn as outline glyph over a light-filled solid glyph with a halo,
+    so they read clearly on both light and dark squares in both themes
+  - Glyphs derived from Unicode code points (U+2654/U+265A + piece index) with the
+    text-style variation selector, avoiding emoji rendering
+  - 'Theme-adaptive chrome: title, subtitle, coordinates and board frame flip with
+    the theme while board and piece colors stay identical'
   weaknesses:
-  - The board squares use muted gray tones (elevatedBg + ink@22%) rather than a higher-contrast
-    classic checkerboard look — a valid stylistic choice but slightly less crisp than
-    it could be
-  - Amber is normally reserved for the 'warning/caution' semantic role; using it to
-    flag the checkmate squares is a defensible but borderline stretch of that anchor's
-    intended meaning — consider a one-line caption near the title so a first-time
-    viewer immediately understands why those two squares are highlighted
-  - LM-01 could go one step further by exposing the move context (e.g. via the interactive
-    HTML's tooltip data) rather than relying solely on the title text for the narrative
+  - 'VQ-07 (both): the light squares are filled with t.amber (#DDCC77), the warning/caution
+    semantic anchor, used here outside its role → a light wood tone that is not a
+    semantic anchor, for example a lighter step of the ochre family or the theme''s
+    elevated surface, while the dark squares keep ochre (palette[3]). Likely cause:
+    SQUARE_COLOR.light = t.amber.'
+  - 'Suggestion: the white queen on f7 shows small specks of the light-square color
+    between its crown spokes where the solid fill glyph does not fully cover the outline
+    glyph; a slightly wider halo stroke would close them.'
+  - 'Suggestion: rank labels could sit a little closer to the board edge to match
+    the tight spacing of the file letters.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Scholar's Mate · chessboard-pieces · javascript · muix · anyplot.ai" is centered at the top in dark ink, fully visible, not clipped. File labels (a-h) run along the bottom, rank labels (8-1, top to bottom) run along the left — both in a slightly softer ink tone, clearly legible.
-      Data: 8x8 checkerboard alternates cream (light squares) and medium gray (dark squares, via a semi-transparent ink overlay). a1 is correctly a dark square and h1 is correctly a light square, matching real chess board orientation. The e8 (black king) and f7 (white queen) squares are highlighted with a soft amber fill and border, marking the checkmating move. White pieces render as hollow glyphs (cream fill, dark outline); black pieces render as solid dark glyphs. All 32 starting pieces minus the captured f7 black pawn are present and centered within their squares, not touching square edges.
-      Legibility verdict: PASS — all text and pieces are clearly readable against the light background.
+      Background: warm off-white #FAF8F1 page around the board.
+      Chrome: bold dark title "Scholar's Mate · chessboard-pieces · javascript · muix · anyplot.ai" (~57% of width), grey subtitle "16 white and 15 black pieces · framed: Qxf7#: the white queen on f7 checkmates the black king on e8"; rank numbers 1-8 on the left (1 at bottom), file letters a-h below (a at left); dark ink frame around the board. All readable.
+      Data: 8x8 board of pale yellow (amber) light squares and ochre dark squares, h1 light. Black pieces are solid near-black glyphs; white pieces are cream-filled with a dark outline and halo. Position matches Scholar's Mate; f7 (white queen) and e8 (black king) framed in matte red.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/cream ink, fully visible and not clipped. File and rank labels are in a light gray tone, clearly legible against the dark background — no dark-on-dark failures observed anywhere.
-      Data: The checkerboard pattern is preserved (near-black dark squares, medium-gray light squares); the mate-square highlight is still amber, matching the light render. Piece colors are identical in structure but chrome-flipped: white army pieces render hollow (dark fill, light outline) and black army pieces render solid light-colored — this is a deliberate design choice, since the solid-vs-outline shape distinction (not raw hue) is what encodes white vs. black armies, and that distinction survives the theme flip. Board geometry, piece positions, and the amber highlight are identical to the light render.
-      Legibility verdict: PASS — all text and pieces remain clearly readable against the dark background; no dark-on-dark or light-on-light failures found.
+      Background: warm near-black #1A1A17 page.
+      Chrome: title in light ink, subtitle and coordinates in light grey, board frame flips to light ink. No dark-on-dark text.
+      Data: board squares, piece colors and red frames identical to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,77 +60,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24px, tick labels 19px, glyphs
-          scaled to cell width); readable and well-proportioned in both themes
+        comment: Title 22 px, subtitle 15 px, file/rank labels 16 px bold, all explicitly
+          set; readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or piece overlap anywhere on the board
+        comment: No text collisions; pieces stay inside their squares
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Piece glyphs sized to 0.68x cell width, clearly visible without touching
-          square edges
+        comment: Pieces at 80% of the square are large and recognizable; white pieces
+          carry a dark outline and a light halo, black pieces are solid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinguishing white vs black army uses a solid-vs-outline shape
-          encoding rather than hue alone; amber highlight has both fill and stroke
-          for redundancy
+        comment: White vs black pieces differ by lightness and fill, not hue; strong
+          contrast on both square colors
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Board fills the vast majority of the square canvas with balanced
-          ~72px left/right margins; nothing cut off
+        comment: 2400x2400 square canvas, board centered with equal side margins,
+          title ~57% of the width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: File (a-h) and rank (1-8) labels are the correct, domain-appropriate
-          coordinate system for a chessboard
+        comment: N/A for data axes; file letters a-h and rank numbers 1-8 at the rim,
+          descriptive subtitle
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Backgrounds match #FAF8F1/#1A1A17, amber semantic anchor used for
-          the highlight, no forbidden or custom hexes, chrome theme-correct in both
-          renders'
+        passed: false
+        comment: Backgrounds correct in both themes and ochre for wood is a valid
+          semantic exception, but the light squares use the amber warning anchor outside
+          its role (defect line)
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful custom rendering (checkerboard, hollow/solid piece encoding,
-          amber highlight) clearly above a configured default, short of full publication-level
-          polish
+        comment: Warm wood-toned board with a theme-adaptive frame, title/subtitle
+          hierarchy, and a two-layer halo treatment that keeps white pieces crisp
+          on both square colors
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines and grid removed, generous balanced margins; minor asymmetric
-          top/bottom margin is justified by the bottom file labels
+        comment: Board centered by a mirrored right margin offsetting the rank band,
+          no ticks or axis lines, coordinates sit tight at the rim, consistent glyph
+          inset
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Highlighting the mate squares gives the diagram a clear focal point
-          tied to the title's narrative; a short caption would push this further
+        comment: Frames the mating queen on f7 and the mated king on e8 and explains
+          Qxf7# in the subtitle, giving the position a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -147,27 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chessboard-with-pieces diagram
+        comment: Chess position diagram with Unicode pieces
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Unicode glyphs, white-at-bottom orientation, light-square-at-h1,
-          centered pieces with edge clearance, contrasting color scheme — all present
+        comment: Unicode U+2654-265F glyphs, white at bottom, light h1 corner, centered
+          pieces with inset, contrasting colors, a-h left to right and 1-8 bottom
+          to top at the rim
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: File -> x, rank -> y, all 64 squares and all pieces shown
+        comment: Every piece on its named square via band scales; no other pieces
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format with a descriptive prefix; no legend
-          needed for a single board diagram
+        comment: Scholar's Mate · chessboard-pieces · javascript · muix · anyplot.ai;
+          legend N/A
     data_quality:
       score: 15
       max: 15
@@ -177,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All six piece types shown for both colors, plus a captured-piece
-          scenario (missing f7 black pawn)
+        comment: All six piece types in both colors, on light and dark squares
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, well-known chess opening trap, entirely neutral subject matter
+        comment: Scholar's Mate, a well-known neutral teaching position
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Position is a factually accurate reconstruction of the real Scholar's
-          Mate final position, verified move-by-move
+        comment: 'Checked the position against 1.e4 e5 2.Qh5 Nc6 3.Bc4 Nf6 4.Qxf7#:
+          white 16 pieces (e-pawn on e4, queen on f7, bishop on c4), black 15 (f7
+          pawn gone, e5, Nc6, Nf6); the subtitle counts are computed from the dict'
     code_quality:
       score: 10
       max: 10
@@ -201,35 +195,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data -> custom mark component -> Chart component
-          structure, appropriate for the React/MUI X idiom
+        comment: Two small layer components, the idiomatic way to draw custom SVG
+          inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data
+        comment: Hard-coded position
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only Box, Typography, ScatterChart imported, all used
+        comment: All six imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering; appropriate complexity for a custom
-          board renderer
+        comment: Glyphs derived from code points by piece order; square color from
+          file+rank parity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly relies on the harness for output; skipAnimation set
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer and
+          hooks, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -237,25 +232,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Strong idiomatic use of the slots/slotProps customization API with
-          direct scale access
+        comment: 'Composition API: band x/y axes with categoryGapRatio 0 define the
+          grid, ChartsXAxis/ChartsYAxis supply coordinates'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Custom scatter mark rendering a full checkerboard + glyphs is a distinctive
-          MUI X capability, hard to replicate as cleanly elsewhere
+        comment: Custom SVG layers read useXScale/useYScale/useDrawingArea, so the
+          board is laid out by MUI X's own scales rather than hand-computed pixels
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:41:22Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-svg-layers
   - annotations
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
-  - matrix-construction
+  - dictionary-data
+  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - custom-colors
+  - theme-adaptive
+  - minimal-chrome
