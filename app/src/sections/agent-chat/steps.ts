@@ -46,12 +46,19 @@ export function hasPlotHere(state: AgentSessionState): boolean {
  * `create` (`.create_plot() →`) until the library has a plot, `update` (`.update_plot() →`) once
  * it has one, `new_data` (`plot the new data`) after a change to data the user had confirmed or a
  * paste after the plot, and `all` (`.plot_all()`) while the admin's fan-out is on. A switch keeps
- * the name: the line at the frame's foot names the decisions a carry keeps.
+ * the name: the line at the frame's foot names the decisions a carry keeps. `boxData`: new data
+ * waits in the message box, which the click reads and plots (`plotChain.ts`), so the button names
+ * what the click makes of it: the first plot, or once the library has one the new data's.
  */
 export type PlotButtonKind = 'create' | 'update' | 'new_data' | 'all';
 
-export function plotButtonKind(state: AgentSessionState, plotAll = false): PlotButtonKind {
+export function plotButtonKind(
+  state: AgentSessionState,
+  plotAll = false,
+  boxData = false
+): PlotButtonKind {
   if (plotAll) return 'all';
+  if (boxData) return hasPlotHere(state) ? 'new_data' : 'create';
   if (dataChanged(state)) return 'new_data';
   if (!hasPlotHere(state)) return 'create';
   // A paste after the plot clears what dropped the confirmation, and is new data all the same.
@@ -63,10 +70,10 @@ export function plotButtonKind(state: AgentSessionState, plotAll = false): PlotB
  * The plot button's name as the lines that lead to it say it, without the arrow the button
  * carries: `.create_plot()`, `.update_plot()` once the library has a plot, and `plot the new
  * data` after a change to data the user had confirmed, which the click confirms and plots like
- * any other. The thread names a plot turn the same.
+ * any other. The thread names a plot turn the same. `boxData` as for `plotButtonKind`.
  */
-export function plotButtonLabel(state: AgentSessionState): string {
-  const kind = plotButtonKind(state);
+export function plotButtonLabel(state: AgentSessionState, boxData = false): string {
+  const kind = plotButtonKind(state, false, boxData);
   return kind === 'new_data'
     ? NEW_DATA_PLOT
     : kind === 'update'
@@ -127,6 +134,16 @@ export interface StatusLineOptions {
   /** The line of a table or a file waiting in the message box (`attachmentWaitLine`), else null. */
   attachmentLine: string | null;
   /**
+   * While the plot button's one click reads the box's data before it plots (`plotChain.ts`), its
+   * line (`CHAIN_READING_TEXT`), in place of everything else; null otherwise.
+   */
+  readingLine?: string | null;
+  /**
+   * After that click stopped at the data card, what to look at (`chainStopText`), in place of
+   * step 1's own line; null otherwise, and once anything changed since the stop.
+   */
+  stopLine?: string | null;
+  /**
    * A switch's offer to plot with the remembered decisions (`carryDecisions`): the library and
    * how many decisions the plot button's next plot keeps there; null without an offer.
    */
@@ -148,16 +165,19 @@ export interface StatusLineText {
  * The status line at the chat frame's foot, `step 1 of 2 · …` (`back to step 1 of 2 · …` after a
  * lost confirmation), which took the step header's place and the step lines above the message
  * box in the v4 frame (2026-11-06), and since the v4 composer row is the plot button's
- * description. After the step it names, in this order: the attachment that waits for Enter, the
- * plot that runs, step 1's line, while `all` holds the box what `.plot_all()` does, before the
- * library's first plot in step 2 what the plot button does, else the confirmed data's shape.
+ * description. After the step it names, in this order: the plot button's one click reading the
+ * box's data, the attachment that waits, the plot that runs, where that click stopped, step 1's
+ * line, while `all` holds the box what `.plot_all()` does, before the library's first plot in
+ * step 2 what the plot button does, else the confirmed data's shape.
  */
 export function statusLine(state: AgentSessionState, options: StatusLineOptions): StatusLineText {
   const step: AgentStep = inStep2(state) ? 2 : 1;
   const head = step === 1 && state.confirmLoss ? 'back to step 1 of 2' : `step ${step} of 2`;
   const detail =
+    options.readingLine ??
     options.attachmentLine ??
     runLine(state) ??
+    (step === 1 ? options.stopLine : null) ??
     stepOneLine(state, options.action) ??
     stepTwoLine(state, options);
   return { step, text: `${head} · ${detail}` };

@@ -407,7 +407,7 @@ describe('DebugPage', () => {
               ]),
           });
         }
-        if (url.includes('/debug/feedback/top')) {
+        if (url.includes('/debug/feedback/votes')) {
           return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
         }
         return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
@@ -839,7 +839,10 @@ describe('DebugPage spec matrix and feedback triage', () => {
     }
   }
 
-  function stubPageFetch(options?: { patchStatus?: () => number }) {
+  function stubPageFetch(options?: {
+    patchStatus?: () => number;
+    votes?: (url: string) => unknown;
+  }) {
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {
       if (url.includes('/debug/ping')) {
         return Promise.resolve({
@@ -888,8 +891,11 @@ describe('DebugPage spec matrix and feedback triage', () => {
           json: () => Promise.resolve(status === 'open' ? TRIAGE_MESSAGES : []),
         });
       }
-      if (url.includes('/debug/feedback/top')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      if (url.includes('/debug/feedback/votes')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(options?.votes?.(url) ?? []),
+        });
       }
       if (init?.method === 'PATCH') {
         const status = options?.patchStatus?.() ?? 200;
@@ -1028,5 +1034,50 @@ describe('DebugPage spec matrix and feedback triage', () => {
         expect.stringMatching(/\/debug\/feedback\/messages\?status=done&limit=50$/)
       );
     });
+  });
+
+  it('lists the votes per plot by thumbs down and sorts them anew from the headers', async () => {
+    const row = (library: string, up: number, down: number) => ({
+      spec_id: 'scatter-basic',
+      language: 'python',
+      library_id: library,
+      path: `/scatter-basic/python/${library}`,
+      thumbs_up: up,
+      thumbs_down: down,
+      earlier_thumbs_up: 0,
+      earlier_thumbs_down: 0,
+      last_vote: null,
+    });
+    const fetchMock = stubPageFetch({
+      votes: url =>
+        url.includes('sort=thumbs_up')
+          ? [row('seaborn', 5, 0), row('matplotlib', 1, 3)]
+          : [row('matplotlib', 1, 3), row('seaborn', 5, 0)],
+    });
+    render(<DebugPage />);
+
+    const first = await screen.findByRole('link', { name: '/scatter-basic/python/matplotlib' });
+    expect(screen.getAllByTestId('vote-row')[0]).toContainElement(first);
+    const voteUrls = () =>
+      fetchMock.mock.calls
+        .map(call => call[0])
+        .filter(url => url.includes('/debug/feedback/votes'));
+    expect(voteUrls()[0]).toMatch(/\/debug\/feedback\/votes\?sort=thumbs_down&limit=25$/);
+
+    fireEvent.click(screen.getByRole('button', { name: /sort by thumbs up/i }));
+    await waitFor(() =>
+      expect(voteUrls()).toContainEqual(expect.stringMatching(/sort=thumbs_up&limit=25$/))
+    );
+    await waitFor(() =>
+      expect(
+        within(screen.getAllByTestId('vote-row')[0]).getByRole('link', {
+          name: '/scatter-basic/python/seaborn',
+        })
+      ).toBeInTheDocument()
+    );
+    expect(screen.getByRole('button', { name: /sort by thumbs up/i })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
   });
 });

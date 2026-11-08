@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ATTACHMENT_LINE,
   attachmentWaitLine,
+  chainStopText,
   describeConvertFailure,
   describeDataFailure,
   describeLibraryFailure,
@@ -20,6 +21,58 @@ describe('attachmentWaitLine', () => {
       'the attached table replaces your data (22 rows, no .undo()) when you press Enter ↵, with a note if you like'
     );
     expect(attachmentWaitLine(1)).toContain('(1 row, no .undo())');
+  });
+
+  it('names the plot button that reads and plots it, and Enter that only reads it', () => {
+    expect(attachmentWaitLine(null, '.create_plot()')).toBe(
+      '.create_plot() reads the attached table and plots it · Enter ↵ only reads it'
+    );
+    expect(attachmentWaitLine(22, 'plot the new data')).toBe(
+      'the attached table replaces your data (22 rows, no .undo()) · plot the new data reads and plots it, Enter ↵ only reads it'
+    );
+  });
+});
+
+describe('chainStopText', () => {
+  it.each([
+    [
+      { reason: 'question' as const },
+      'the assistant asked a question · answer it in the box, or .create_plot()',
+    ],
+    [
+      { reason: 'data_warnings' as const, count: 2 },
+      '2 warnings on the data · check above, then .create_plot()',
+    ],
+    [
+      { reason: 'tables' as const, count: 3 },
+      'the paste held 3 tables · check the one read above, then .create_plot()',
+    ],
+    [
+      { reason: 'wide' as const },
+      'the table is wide for this plot · check .to_long() above, then .create_plot()',
+    ],
+    [
+      { reason: 'binding_warning' as const, role: 'size' },
+      'a warning on size · check it above, then .create_plot()',
+    ],
+    [
+      { reason: 'bindings_failed' as const },
+      'the binding check failed · check the bindings above, then .create_plot()',
+    ],
+    [
+      { reason: 'refused' as const },
+      'the reading ended in a refusal · see above, then .create_plot()',
+    ],
+    [
+      { reason: 'error' as const },
+      'the reading ended in an error · see above, then .create_plot()',
+    ],
+    [
+      { reason: 'stopped' as const },
+      'the reading was stopped · check the data above, then .create_plot()',
+    ],
+  ])('says what to look at for %o', (stop, text) => {
+    expect(chainStopText(stop, '.create_plot()')).toBe(text);
   });
 });
 
