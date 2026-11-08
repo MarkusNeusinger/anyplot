@@ -180,7 +180,17 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 16, color: t.ink, height: LEGEND_HEIGHT, alignItems: "center" }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 16,
+              color: t.ink,
+              height: LEGEND_HEIGHT,
+              alignItems: "center",
+              // Legend glyphs repeat the markers' opacity and outline, so each reads as the mark it explains
+              '& [data-series="received"] .MuiChartsLabelMark-fill': { fillOpacity: RECEIVED_OPACITY },
+              '& [data-series="ideal"] .MuiChartsLabelMark-fill': { stroke: t.pageBg, strokeWidth: 2.5 },
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiChartsAxis-line": { stroke: t.inkSoft },
