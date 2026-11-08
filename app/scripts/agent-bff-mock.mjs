@@ -69,7 +69,7 @@
  * `POST /sessions` answers the spec's `roles` with the session, as the service
  * does for the page header's columns ⓘ. The action `{action: "example_data"}`
  * (`.example_data()`) answers after a few seconds with a made-up table that
- * fits the spec (version 1 without data, the next version otherwise) and a
+ * fits the spec (new data without data, the next version otherwise) and a
  * reply naming it, as the root's `run_data_code` with `source_language`
  * `example` does.
  *
@@ -90,8 +90,11 @@
  * "umbenenn" or "rename" a `rename` of the second column. Each stores the result as the next dataset version (the previous one
  * kept, at most five, the bindings carried over, the confirmation dropped) and
  * the turn's `done.dataset` carries `{preview, profile, bindings, warnings,
- * roles, changes, version}` like the service; `POST .../dataset/undo` restores
- * the previous version (`422 nothing_to_undo` at the paste).
+ * roles, changes, version, can_undo, original_version}` like the service;
+ * `POST .../dataset/undo` restores the previous version under its own number
+ * (`422 nothing_to_undo` at the paste). The versions are numbered once per
+ * session, as the service numbers them: a paste, a change, an undo and a change
+ * are 1, 2, 1 and 3, and a second paste is 4.
  *
  * The service's `generate_data` tool (a table computed from a formula) in
  * miniature: a message that contains "sin(" or "cos(" or "x**2", or "= " together
@@ -99,7 +102,7 @@
  * `sin(x)`, `cos(x)` or `x**2` over 200 evenly spaced points (or the "N points"
  * the message names) of the range it names ("from -pi to pi", "von -3 bis 3"; by
  * default -pi to pi, -3 to 3 for the parabola), and the turn's `done.dataset`
- * carries the result: version 1 in a session without data (the roles included,
+ * carries the result: new data in a session without data (the roles included,
  * since the page has none yet), the next version otherwise, unconfirmed either
  * way. Pasted text that looks like a formula ("zeichne sin(x) von -pi bis pi",
  * "y = x**2") answers `422 formula` instead of the transcription, as the
@@ -1724,17 +1727,36 @@ function carryBindings(session, bindings, profile) {
 
 /** Store `parsed` as the session's next dataset version; the previous one joins the history (at most five). */
 function storeVersion(session, parsed, changes) {
-  session.history.push({ dataset: session.dataset, bindings: session.bindings });
+  session.history.push({
+    dataset: session.dataset,
+    bindings: session.bindings,
+    number: session.version,
+  });
   session.history = session.history.slice(-MAX_DATASET_HISTORY);
   session.dataset = parsed;
   session.bindings = carryBindings(session, session.bindings, parsed.profile);
   session.complete = checkBindings(session, session.bindings).complete;
   session.confirmed = false; // the user confirms every version they see
-  session.version += 1;
+  session.top += 1;
+  session.version = session.top;
   session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
 }
 
-/** `{preview, profile, bindings, warnings, version}`: a dataset as the routes and `done.dataset` answer it. */
+/**
+ * New data (a paste, a copy, a table computed without data): its first version, under the
+ * session's next number, with no history to undo.
+ */
+function newData(session) {
+  session.history = [];
+  session.top += 1;
+  session.version = session.top;
+  session.first = session.top;
+}
+
+/**
+ * `{preview, profile, bindings, warnings, version, can_undo, original_version}`: a dataset as
+ * the routes and `done.dataset` answer it.
+ */
 function datasetPayload(session) {
   return {
     preview: session.dataset.preview,
@@ -1743,6 +1765,8 @@ function datasetPayload(session) {
     warnings: session.dataset.warnings,
     suggestion: longSuggestion(session, session.dataset),
     version: session.version,
+    can_undo: session.history.length > 0,
+    original_version: session.first,
   };
 }
 
@@ -2065,7 +2089,7 @@ function pyFloat(value) {
 
 /**
  * `generate_data` in miniature: `sin(x)`, `cos(x)` or `x**2` over the range the message
- * names, stored as version 1 in a session without data (default bindings, no history) or
+ * names, stored as new data in a session without data (default bindings, no history) or
  * as the next version (`storeVersion`), unconfirmed either way, like the service.
  */
 function generateData(session, lower) {
@@ -2098,8 +2122,7 @@ function generateData(session, lower) {
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false;
-    session.history = [];
-    session.version = 1;
+    newData(session);
     session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
   } else {
     storeVersion(session, parsed, changes);
@@ -2156,8 +2179,7 @@ function generateWideTable(session, size) {
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false;
-    session.history = [];
-    session.version = 1;
+    newData(session);
     session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
   } else {
     storeVersion(session, parsed, changes);
@@ -2211,8 +2233,7 @@ function exampleData(session, fromCode = false) {
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false;
-    session.history = [];
-    session.version = 1;
+    newData(session);
     session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
   } else {
     storeVersion(session, parsed, changes);
@@ -2456,9 +2477,13 @@ async function route(req, res) {
       complete: false,
       // Step 1's confirmation of the dataset and its bindings.
       confirmed: false,
-      // The dataset versions: the paste is 1, each data change one more, undo one less.
+      // The dataset versions, numbered once per session as the service numbers them: every
+      // stored version takes the next number (`top`), never one twice, and an undo makes the
+      // version it restores current under its own; `first` is the current data's first number.
       history: [],
       version: 1,
+      top: 0,
+      first: 1,
       changed: null,
       versions: [],
       // `{role, text}` per user message or action and per assistant reply, for the bundle.
@@ -2613,8 +2638,7 @@ async function route(req, res) {
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // a new dataset is unchecked
-    session.history = []; // a paste starts over at version 1
-    session.version = 1;
+    newData(session); // the session's next number, no history
     session.summaryPending = true; // the first turn on it summarizes it: the action, or the note
     pastedLanguage(session, text);
     return json(
@@ -2678,8 +2702,7 @@ async function route(req, res) {
     const checked = checkBindings(session, session.bindings);
     session.complete = checked.complete;
     session.confirmed = true; // the source's confirmation comes along
-    session.history = [];
-    session.version = 1;
+    newData(session); // the fan-out session's first version, 1
     session.language = origin.language;
     session.languageSource = origin.languageSource;
     return json(
@@ -2717,7 +2740,7 @@ async function route(req, res) {
     session.bindings = carryBindings(session, session.bindings, previous.dataset.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // restored, but confirmed again by the user
-    session.version -= 1;
+    session.version = previous.number; // its own number again; the undone one is never given again
     return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
   }
   if (method === 'PUT' && rest === '/bindings') {

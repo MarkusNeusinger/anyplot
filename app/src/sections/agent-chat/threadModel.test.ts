@@ -29,9 +29,16 @@ const PARSED = {
   bindings: [{ role: 'x', column: 'a' }],
   warnings: [],
   version: 1,
+  can_undo: false,
+  original_version: 1,
 } as unknown as DatasetParsed;
 
-const CHANGED = { ...PARSED, changes: ['made long'], version: 2 } as unknown as DatasetChanged;
+const CHANGED = {
+  ...PARSED,
+  changes: ['made long'],
+  version: 2,
+  can_undo: true,
+} as unknown as DatasetChanged;
 
 const PLOT: PlotResult = {
   status: 'ok',
@@ -265,8 +272,8 @@ describe('threadModel', () => {
       paste('▤ table'),
       summary('12 rows.'),
       plot(1),
-      item({ type: 'undo_done', parsed: PARSED }),
       item({ type: 'data_prepared', dataset: CHANGED, toLong: true }),
+      item({ type: 'undo_done', parsed: PARSED }),
       plot(2)
     );
     // The second control finds no plot below the moved card: its stub goes above the card, and
@@ -295,8 +302,41 @@ describe('threadModel', () => {
     expect(chapters[2]).toMatchObject({
       kind: 'data',
       start: state.items[7].id,
-      dataVersions: [2, 3],
+      dataVersions: [1, 2],
     });
+  });
+
+  it('keeps a version shown twice apart: its own ids, the stub folded, the card open, counted once', () => {
+    // Paste, `.to_long()`, `.undo()`: the server's v1, v2 and v1 again, back at the paste.
+    const state = run(
+      paste('▤ table'),
+      summary('12 rows.'),
+      item({ type: 'data_prepared', dataset: CHANGED, toLong: true }),
+      item({ type: 'undo_done', parsed: PARSED })
+    );
+    const { rows, chapters } = threadModel(state.items);
+    const ones = rows.flatMap(row =>
+      row.kind === 'item' &&
+      (row.item.kind === 'data' || row.item.kind === 'data_stub') &&
+      row.item.snapshot?.n === 1
+        ? [
+            {
+              id: row.item.id,
+              kind: row.item.kind,
+              folded: row.folded,
+              label: row.item.snapshot.label,
+            },
+          ]
+        : []
+    );
+
+    expect(ones).toEqual([
+      { id: expect.any(Number), kind: 'data_stub', folded: true, label: 'data v1 · pasted' },
+      { id: expect.any(Number), kind: 'data', folded: false, label: 'data v1 · back to v1' },
+    ]);
+    expect(new Set(state.items.map(entry => entry.id)).size).toBe(state.items.length);
+    expect(ones[0].id).not.toBe(ones[1].id);
+    expect(chapters.map(chapter => chapter.dataVersions)).toEqual([[1, 2]]);
   });
 
   it('leaves a paste whose table read from text was discarded in the chapter it falls in', () => {

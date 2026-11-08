@@ -65,10 +65,12 @@
  * The reducer numbers the thread items itself (`nextItemId`).
  *
  * Thread items beyond the talk: every data version gets an item with a
- * snapshot of what it held (`DataSnapshot`), numbered per session
- * (`nextDataVersion`, `data v3`), since the server's `version` starts over
- * with every paste. The live card is the one `data` item; a version it no
- * longer shows stays as a `data_stub` (`placeData` says where each goes). A
+ * snapshot of what it held (`DataSnapshot`), under the server's number for it
+ * (`data v3`), which the session gives every version once and the assistant's
+ * session block lists too. An undo brings a number back (`data v1 · back to
+ * v1`), so two items can carry the same one, each under its own item id. The
+ * live card is the one `data` item; a version it no longer shows stays as a
+ * `data_stub` (`placeData` says where each goes). A
  * library switch adds a `switch` item with the decisions the plot in the new
  * library takes over, and a typed turn that reached its `done` carries what it
  * changed (`TurnOutcome`). `threadModel.ts` reads chapters, folds and counts
@@ -84,8 +86,8 @@
  * version (`dataset`), which replaces the preview, the profile and the
  * bindings, drops the confirmation and fills `dataChange` with the change
  * lines. `undoData` (`.undo()`, `POST .../dataset/undo`) restores the version
- * before the last change, unconfirmed as well; the data's `version` says
- * whether there is one (a paste is 1, the service keeps the last five).
+ * before the last change, unconfirmed as well; the data's `can_undo` says
+ * whether there is one (the service keeps the last five), never its number.
  *
  * Formulas: the assistant's `generate_data` computes a table from a formula
  * the user asks for in the chat ("y = sin(x), x from -pi to pi"). Its `done`
@@ -348,8 +350,9 @@ export type DataVersionChange =
  */
 export interface DataSnapshot {
   /**
-   * The version's number in this session (`data v3`), counted by the reducer
-   * (`nextDataVersion`): the server's `version` starts over at 1 with every paste.
+   * The version's number in this session (`data v3`): the server's `version`, which numbers
+   * every stored version once and which the assistant's session block lists too. After an
+   * undo the restored version carries its own number again, so it is no item's id.
    */
   n: number;
   change: DataVersionChange;
@@ -828,11 +831,6 @@ export interface AgentSessionState {
   /** The id the next thread item gets; the reducer numbers the items. */
   nextItemId: number;
   /**
-   * The number the next data version gets in this session (`DataSnapshot.n`): every paste, pick,
-   * change and undo counts one up, while the server's `version` starts over with every paste.
-   */
-  nextDataVersion: number;
-  /**
    * The typed turn read as an answer whose memory read after its `done` is still to come: that
    * read moves its mark when the list changed (`memoryOutcome`). Any memory list ends the wait,
    * and so does the end of every later turn but the summary and example data, which cannot change
@@ -988,7 +986,6 @@ export function initialAgentState(library: string): AgentSessionState {
     languageBusy: false,
     items: [],
     nextItemId: 1,
-    nextDataVersion: 1,
     memoryTurn: null,
     versions: {},
     chatFeedback: null,
@@ -1233,22 +1230,35 @@ function versionSummary(
     case 'to_long':
       return 'made long';
     case 'undo':
-      return 'undone';
+      // The version it went back to, under its own number: `data v1 · back to v1`.
+      return `back to v${dataVersionNumber(dataset)}`;
     case 'copy':
       return 'copied';
   }
 }
 
 /**
- * The number a new data version carries on the page (`DataSnapshot.n`, the `3` of `data v3`): the
+ * The number a data version carries on the page (`DataSnapshot.n`, the `3` of `data v3`): the
  * one place it comes from. Every label, the status line and the full view read it through the
- * snapshot. Until the server numbers versions once per session (backend PR B4c, owner decision
- * of 2026-11-07), the reducer counts them itself (`nextDataVersion`), since the server's `version`
- * starts over with every paste and goes back on `.undo()`; B4c switches this function to the
- * server's number.
+ * snapshot. It is the server's own (owner decision of 2026-11-07): the session numbers every
+ * version it stores once, never twice, and an undo brings the restored version's number back, so
+ * "v2" on the card is the v2 the assistant's session block lists.
  */
-function dataVersionNumber(state: AgentSessionState): number {
-  return state.nextDataVersion;
+function dataVersionNumber(dataset: DatasetState): number {
+  return versionOf(dataset.parsed.version);
+}
+
+/**
+ * How far an undo went back, for the `agent_data_undo` bucket: the restored version's place in
+ * its data, the data's first version (its paste) being 1, counted from the server's
+ * `original_version`. An older server names none, and its `version` is that place already.
+ */
+function undoDepth(parsed: DatasetParsed): number {
+  const version = versionOf(parsed.version);
+  const first = parsed.original_version;
+  const valid =
+    typeof first === 'number' && Number.isInteger(first) && first >= 1 && first <= version;
+  return valid ? version - first + 1 : version;
 }
 
 /** The snapshot of the data version `next` holds, numbered `n` in the session. */
@@ -1259,7 +1269,7 @@ function snapshotOf(
   state: AgentSessionState
 ): DataSnapshot {
   const { parsed } = dataset;
-  const n = dataVersionNumber(state);
+  const n = dataVersionNumber(dataset);
   const summary = versionSummary(change, dataset, state);
   return {
     n,
@@ -1298,7 +1308,8 @@ function snapshotOf(
  * - Data without a card yet: after the turn that made it (example data, a formula, code), else at
  *   the end (a copy).
  *
- * The card moves under its id, so it keeps its own state (notes, code) as it moves.
+ * The card moves under its id, so it keeps its own state (notes, code) as it moves. Every item
+ * has an id of its own (`nextItemId`), also where an undo gives a stub and the card one number.
  */
 function placeData(
   state: AgentSessionState,
@@ -1308,8 +1319,7 @@ function placeData(
 ): AgentSessionState {
   if (!next.dataset) return next;
   const snapshot = snapshotOf(next, next.dataset, change, state);
-  const numbered = { ...next, nextDataVersion: state.nextDataVersion + 1 };
-  const items = numbered.items;
+  const items = next.items;
   const live = lastIndexOf(items, 'data');
   const card = live >= 0 ? (items[live] as Extract<ChatItem, { kind: 'data' }>) : null;
   const waiting = change === 'transcription' ? lastIndexOf(items, 'transcription') : -1;
@@ -1317,32 +1327,32 @@ function placeData(
     const frozen = card ? replaceAt(items, live, stubOf(card, card.id, state.dataset)) : items;
     if (chip === undefined) {
       const used: ChatItem = { id: frozen[waiting].id, kind: 'data', snapshot };
-      return { ...numbered, items: replaceAt(frozen, waiting, used) };
+      return { ...next, items: replaceAt(frozen, waiting, used) };
     }
-    const pasted = appendItem({ ...numbered, items: frozen }, { kind: 'paste', text: chip });
+    const pasted = appendItem({ ...next, items: frozen }, { kind: 'paste', text: chip });
     return appendItem(pasted, { kind: 'data', snapshot });
   }
   // A turn's version goes directly after the turn's own item; any other at the end.
   const turn = change === 'turn' ? latestTurn(items) : null;
   if (!card) {
-    if (!turn) return appendItem(numbered, { kind: 'data', snapshot });
-    const added: ChatItem = { id: numbered.nextItemId, kind: 'data', snapshot };
+    if (!turn) return appendItem(next, { kind: 'data', snapshot });
+    const added: ChatItem = { id: next.nextItemId, kind: 'data', snapshot };
     return {
-      ...numbered,
+      ...next,
       items: [...items.slice(0, turn.index + 1), added, ...items.slice(turn.index + 1)],
-      nextItemId: numbered.nextItemId + 1,
+      nextItemId: next.nextItemId + 1,
     };
   }
-  const stub = stubOf(card, numbered.nextItemId, state.dataset);
+  const stub = stubOf(card, next.nextItemId, state.dataset);
   const moved = { ...card, snapshot };
   // The stub where the card stood; the card after the turn's item when the turn came after the
   // card, after its own stub when the card already stands in that turn, else at the end.
   const rest = replaceAt(items, live, stub);
   const at = !turn ? rest.length : turn.index > live ? turn.index + 1 : live + 1;
   return {
-    ...numbered,
+    ...next,
     items: [...rest.slice(0, at), moved, ...rest.slice(at)],
-    nextItemId: numbered.nextItemId + 1,
+    nextItemId: next.nextItemId + 1,
   };
 }
 
@@ -2173,21 +2183,22 @@ export function useAgentSession({
   /**
    * `.undo()`: the version before the assistant's last change to the data is
    * the current dataset again, unconfirmed (`POST .../dataset/undo`). Nothing
-   * starts at the paste (version 1), after the server said there is nothing
-   * left to undo, or while anything else is in flight.
+   * starts while the server's answer says there is nothing to undo (`can_undo`,
+   * false at a paste), after it refused an undo for that, or while anything
+   * else is in flight.
    */
   const undoData = useCallback(async () => {
     const current = stateRef.current;
     const sid = current.sessionId;
-    const version = current.dataset?.parsed.version ?? 1;
-    if (!sid || version <= 1 || current.undoError?.code === 'nothing_to_undo') return;
+    const undoable = current.dataset?.parsed.can_undo === true;
+    if (!sid || !undoable || current.undoError?.code === 'nothing_to_undo') return;
     if (current.run || busy()) return;
     undoRef.current = true;
     safeDispatch({ type: 'undo_start' });
     try {
       const parsed = await agentApi.undoDataset(token, sid);
       safeDispatch({ type: 'undo_done', parsed });
-      trackEvent('agent_data_undo', { version: countBucket(versionOf(parsed.version)) });
+      trackEvent('agent_data_undo', { version: countBucket(undoDepth(parsed)) });
     } catch (err) {
       safeDispatch({ type: 'undo_failed', failure: handleFailure(err) });
     } finally {

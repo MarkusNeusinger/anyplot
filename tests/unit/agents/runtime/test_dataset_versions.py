@@ -56,8 +56,11 @@ def test_push_keeps_the_previous_version_and_carries_the_bindings() -> None:
     assert store.get(first, SID) is not None and store.get(version.dataset_id, SID) is not None
     assert version.delta[BINDINGS] == [{"role": "x", "column": "hours"}, {"role": "y", "column": "b"}]  # x carried over
     assert not view_of(state).data_confirmed  # the fingerprint names the old dataset id
-    assert version.payload() == dataset_payload(version.stored, version.bindings, 2)
-    assert set(version.payload()) == {"preview", "profile", "bindings", "warnings", "context_lines", "version"}
+    assert version.payload() == dataset_payload(version.stored, version.bindings, can_undo=True, original_version=1)
+    assert set(version.payload()) == {
+        *("preview", "profile", "bindings", "warnings", "context_lines", "version", "can_undo", "original_version")
+    }
+    assert (version.payload()["version"], version.payload()["can_undo"]) == (2, True)
     assert version.payload()["profile"]["columns"][0]["name"] == "hours"
 
 
@@ -185,10 +188,19 @@ def test_a_new_paste_forgets_the_history() -> None:
     state.update(pushed.delta)
     view = view_of(state)
 
-    ingested = store_dataset(store, SID, parse_dataset("c,d\n1,2\n"), SNAPSHOT, view.dataset_id, view.dataset_history)
+    ingested = store_dataset(
+        store,
+        SID,
+        parse_dataset("c,d\n1,2\n"),
+        SNAPSHOT,
+        view.dataset_id,
+        view.dataset_history,
+        number=view.next_version,
+    )
     state.update(ingested.state_delta())
 
-    assert state[DATASET_HISTORY] == [] and state[DATASET_VERSION] == 1
+    assert state[DATASET_HISTORY] == [] and state[DATASET_VERSION] == 3  # the session's count goes on
+    assert not view_of(state).can_undo
     assert store.get(first, SID) is None and store.get(pushed.dataset_id, SID) is None and len(store) == 1
 
 
