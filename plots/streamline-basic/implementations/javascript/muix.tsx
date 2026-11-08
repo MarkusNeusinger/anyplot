@@ -16,7 +16,7 @@ const t = window.ANYPLOT_TOKENS;
 const MASK_CELLS_X = 26; // streamline spacing: one line per mask cell across the x range
 const STEP_SHARE = 0.2; // integration step as a share of a grid cell
 const MAX_STEPS = 1500; // steps per direction from a seed
-const MIN_POINTS = 12; // shorter traces are dropped
+const MIN_POINTS = 22; // shorter traces are dropped, so no isolated dashes stay behind
 const SEGMENT_POINTS = 6; // points per coloured piece of a line
 const COHERENT_COS = 0.7; // a cell whose corner directions spread wider than ~45° holds a source, sink or singular point
 const COLOR_QUANTITY = "log₁₀ magnitude"; // what the colour of a line encodes, for any (u, v) field
@@ -180,7 +180,9 @@ const speedMin = Math.min(...logSpeeds);
 const speedMax = Math.max(...logSpeeds);
 
 const TITLE = "streamline-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${lines.length} streamlines traced through a ${nx} × ${ny} grid of (${U}, ${V})`;
+const [uName, vName] = [U, V].map((name) => name.replace(/\s*\([^)]*\)/, ""));
+const fieldUnit = U.match(/\(([^)]+)\)/)?.[1];
+const SUBTITLE = `${lines.length} streamlines traced through a ${nx} × ${ny} grid of (${uName}, ${vName})${fieldUnit ? `, ${fieldUnit}` : ""}`;
 const HEADER_H = 76;
 const LEGEND_H = 44;
 const X_BAND = 64;
