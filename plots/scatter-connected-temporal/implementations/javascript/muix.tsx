@@ -10,7 +10,7 @@ import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
+import { LinePlot, MarkElement, MarkPlot } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -30,6 +30,7 @@ const PATH_ROOM = 9; // px a label box keeps from every segment, arrowheads incl
 const MARKER_ROOM = 26; // px a label box keeps from any other point's marker centre
 const ARROW_LENGTH = 22; // px
 const ARROW_HEAD = 17; // px, large enough to stand out from the 2.5 px line
+const MARK_SCALE = 1.6; // the default mark symbol is too small a bead for a few dozen sparse points
 
 // Columns: set these to your data's column names
 const YEAR = "Year"; // role: time
@@ -116,6 +117,16 @@ const TITLE = "scatter-connected-temporal · javascript · muix · anyplot.ai";
 const SUBTITLE = `${INFLATION} against ${UNEMPLOYMENT}, ${rows[0][YEAR]}–${rows[rows.length - 1][YEAR]}, joined in time order`;
 const HEADER_HEIGHT = 84;
 const LEGEND_HEIGHT = 40;
+
+// MarkElement takes no size and positions itself by its transform, so the mark slot draws it at the
+// origin of a group that is moved to the point and scaled there
+function LargeMark({ x, y, ...props }) {
+  return (
+    <g transform={`translate(${x},${y}) scale(${MARK_SCALE})`}>
+      <MarkElement {...props} x={0} y={0} />
+    </g>
+  );
+}
 
 function TemporalLayer() {
   const xScale = useXScale();
@@ -295,7 +306,7 @@ export default function Chart() {
           <ChartsSurface
             sx={{
               "& .MuiLineChart-line": { strokeWidth: 2.5 },
-              "& .MuiLineChart-mark": { stroke: t.pageBg, strokeWidth: 1.5 },
+              "& .MuiLineChart-mark": { stroke: t.pageBg, strokeWidth: 1 },
               ...markFills,
               "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
               "& .MuiChartsAxis-line": { stroke: t.inkSoft },
@@ -304,7 +315,7 @@ export default function Chart() {
           >
             <ChartsGrid horizontal vertical />
             <LinePlot skipAnimation />
-            <MarkPlot skipAnimation />
+            <MarkPlot skipAnimation slots={{ mark: LargeMark }} />
             <TemporalLayer />
             <ChartsXAxis axisId="unemployment" />
             <ChartsYAxis axisId="inflation" />
