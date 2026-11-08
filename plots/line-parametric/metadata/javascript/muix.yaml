@@ -2,97 +2,105 @@ library: muix
 language: javascript
 specification_id: line-parametric
 created: '2026-06-20T23:11:39Z'
-updated: '2026-06-20T23:30:47Z'
-generated_by: claude-sonnet
-workflow_run: 27886500095
+updated: '2026-11-08T08:09:53Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42442668617
 issue: 4424
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Imprint sequential gradient correctly starts with brand green and communicates
-    parameter traversal direction elegantly
-  - Both required curve types (Lissajous and Archimedean spiral) rendered correctly
-    with equal aspect ratios enforced programmatically
-  - 'Both light and dark renders pass theme checks — correct backgrounds (#FAF8F1
-    / #1A1A17), theme-adaptive chrome, identical data colors'
-  - Full point density (800 pts/curve x 20 segments) produces smooth parametric curves
-    with smooth color transitions
-  - Creative segmented-series gradient technique works cleanly within MUI X community
-    constraints — no Pro/Premium features used
+  - Equal aspect ratio computed per panel from one units-per-pixel scale for both
+    axes (lines 61-75), so the spiral's turns are round and the Lissajous figure keeps
+    its true 3:2 proportions
+  - Colour gradient along each curve interpolated per segment from the Imprint sequential
+    ramp (t.seq, green at t start to blue at t end), identical in both themes, with
+    a footer gradient key that names t
+  - Start dot and arrowhead sit on each curve's true first and last sample, labelled
+    with their t values; page-coloured outlines keep the closed Lissajous curve's
+    coinciding start and end both visible
+  - Composes ChartsContainer, ChartsGrid and ChartsXAxis/ChartsYAxis with a custom
+    SVG layer that reads useXScale/useYScale/useDrawingArea, the MUI X composition
+    API for marks the stock series do not offer
+  - 800 samples per curve render the Lissajous self-intersections and the spiral centre
+    without visible polygon corners
+  - 'Clear typographic hierarchy: title, subtitle, per-panel formula titles and sample/t-range
+    captions, all theme tokens'
   weaknesses:
-  - Sub-panel captions with mathematical formulas at 14px CSS are borderline small
-    for mobile readability — consider 15-16px CSS for the formula sub-panel captions
+  - 'Suggestion: the Lissajous start and end labels both sit on the y = 0 line beside
+    the centre; placing one above and one below would make the shared point read less
+    crowded.'
+  - 'Suggestion: a few small direction ticks along the Lissajous figure would make
+    the traversal through its self-intersections easier to follow beyond the colour
+    gradient.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface
-      Chrome: Title "line-parametric · javascript · muix · anyplot.ai" centered in dark ink (#1A1A17); sub-panel captions in secondary ink with mathematical formulas; axis labels "x(t)" and "y(t)" in dark ink; tick labels in secondary ink; footer caption in secondary ink
-      Data: Color gradient from #009E73 (brand green) at t=start to #4467A3 (blue) at t=end via 20 gradient segments; left panel shows Lissajous figure cross/figure-8 pattern; right panel shows expanding Archimedean spiral
-      Legibility verdict: PASS — all text readable against light background; sub-panel captions are small (14px CSS) but readable at full resolution
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: title "line-parametric · javascript · muix · anyplot.ai" top left, subtitle "2 curves · 1,600 samples · equal aspect ratio in each panel"; two panels titled "Lissajous figure: x = sin 3t, y = sin 2t" and "Archimedean spiral: x = t cos t, y = t sin t", each with a caption of sample count and t range; axis titles x(t)/y(t), tick labels in dark soft ink; subtle grey grid; footer gradient key "Colour along each curve: t at the start → t at the end". All text readable.
+      Data: Lissajous figure (3 lobes wide, 2 tall) and a two-turn Archimedean spiral, each a 3.5 px line coloured from brand green #009E73 at t start to blue #4467A3 at t end; green start dot and blue arrowhead with labels "start, t = 0.00", "end, t = 6.28" (coinciding at the Lissajous centre) and "end, t = 12.57" at (12.57, 0) on the spiral, with thin leader lines. Equal aspect ratio in both panels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface
-      Chrome: Same two-panel layout with theme-adaptive light text; title, axis labels, tick labels, sub-captions, and footer all appear in off-white / secondary light ink — no dark-on-dark failures
-      Data: Color gradient identical to light render (#009E73 to #4467A3) — data colors unchanged between themes as required
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title, subtitles, panel titles, axis titles, tick labels and footer key all in light ink; grid subtle dark grey; no dark-on-dark text.
+      Data: curve gradient, start dot and arrowheads identical to the light render; only chrome flipped. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title and axis labels readable in both themes; sub-panel captions
-          with mathematical formulas at 14px CSS are borderline small for mobile scaling
+        comment: Title 22 px, axis titles 16 px, ticks 14 px; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean two-panel layout, no text or data collisions
+        comment: Start/end labels placed clear of the curves with halos; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 800-point density per curve produces smooth visible parametric lines;
-          gradient clearly distinguishable
+        comment: 3.5 px lines, start dot and arrowheads clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential gradient is CVD-safe
+        comment: Green-to-blue ramp, no red-green signal; strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; equal-aspect-ratio enforced programmatically;
-          balanced two-panel layout
+        comment: Canvas gate passed; balanced two-panel layout, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x(t) and y(t) descriptive; title follows required format
+        comment: x(t)/y(t) are the natural dimensionless labels; panels carry formulas
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq endpoints used (brand green start, blue end); backgrounds
-          #FAF8F1 / #1A1A17 correct'
+        comment: Imprint sequential ramp (t.seq) for t; correct backgrounds in both
+          themes
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -100,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Gradient direction-encoding elevates above default; two-panel layout
-          intentional; clean composition
+        comment: Four-level typographic hierarchy (title, subtitle, formula panel
+          titles, t-range captions) beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Grid deliberately disabled; legend hidden and replaced with footer
-          caption
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green-to-blue gradient effectively communicates traversal direction;
-          footer provides explicit key
+        comment: Halo-stroked labels with leaders placed in free space, page-coloured
+          outlines on the start dot and arrowhead, gradient key in the footer
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed with the required direction markers; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -125,52 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve rendering using dense scatter segments
+        comment: Parametric curves traced in order of t
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equal aspect ratios, color gradient for direction, both required
-          curves, sufficient point density
+        comment: Equal aspect, t gradient with key naming t, Lissajous + spiral, start/end
+          labelled, 800 samples each
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) / y(t) axes correctly mapped; full parameter ranges covered
+        comment: Marks at their computed values; full ranges shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend hidden replaced by informative
-          footer
+        comment: Mandated title; curves identified by panel titles; gradient key names
+          t
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Both curve types, gradient direction, equal aspect ratio present;
-          no explicit start/end point dot annotations
+        comment: Self-intersecting closed curve and an open spiral show loops, crossings
+          and direction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lissajous figures and Archimedean spirals are real mathematical/physics
-          curves; deterministic data
+        comment: The spec's classical mathematical curves; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous +/-1.25, spiral +/-14; both match the parametric ranges
-          used
+        comment: 'Checked: Lissajous spans ±1 on both axes; spiral t ends at 4π =
+          12.57 and its end point sits at (12.57, 0) on the axes; captions computed
+          from the data'
     code_quality:
       score: 10
       max: 10
@@ -180,34 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: lerpColor and buildGradientSeries are minimal, purposeful helpers;
-          no classes
+        comment: CurveLayer is a component required to use the MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic trigonometric data generation
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ScatterChart, Box, Typography — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Gradient segmentation approach is clean and reusable
+        comment: Label placement search is longer than fixed offsets but has no native
+          replacement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export; harness handles output files
+        comment: Default-exported component, sized to ANYPLOT_SIZE, skipAnimation
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -215,23 +223,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE, skipAnimation,
-          slotProps.legend usage; Box/Typography for layout
+        comment: ChartsContainer composition with axis/grid subcomponents and axis
+          config (domainLimit, height/width bands)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Creative use of ScatterChart with 20 gradient-colored segment series
-          to achieve parametric line rendering within MUI X community constraints
+        passed: false
+        comment: Custom mark layer driven by useXScale/useYScale/useDrawingArea inside
+          the composition API
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:27:01Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - annotations
+  - custom-legend
+  - layer-composition
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
+  - publication-ready

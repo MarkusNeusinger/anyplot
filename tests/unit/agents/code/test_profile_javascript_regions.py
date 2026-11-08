@@ -1,5 +1,6 @@
 """Tests for agents/anyplot/code/profiles/javascript/regions.py: the conventions of the JavaScript catalogue."""
 
+import re
 from collections import Counter
 
 import pytest
@@ -148,28 +149,44 @@ def test_grammar_for_each_library() -> None:
         grammar_for("plotly")
 
 
-def test_catalogue_corpus() -> None:
-    """The conventions over the 1,617 catalogue files on 2026-10-30 (module docstring)."""
-    counts: Counter[str] = Counter()
-    for path in JS_CATALOGUE_FILES:
-        regions = find_regions(path.read_text(encoding="utf-8"), library=js_library(path))
-        names = [region.name for region in regions.theme_tokens]
-        counts["t"] += names.count("t")
-        counts["directive"] += len(regions.directives)
-        counts["comment directive"] += sum(directive.comment for directive in regions.directives)
-        counts["data marker"] += regions.data_marker is not None
-        counts["plot marker"] += regions.plot_marker is not None
-        counts["columns"] += bool(regions.columns)
-        counts["reads theme"] += regions.reads_theme
-        counts["imprint"] += regions.imprint is not None
+HARNESS_ORIENTATION = re.compile(
+    r"^\s*//#?\s*anyplot-orientation:\s*(square|landscape)\b", re.IGNORECASE | re.MULTILINE
+)
+"""The harness's own reading of the directive (`orientationFromSource` in `automation/js-render/render.mjs`)."""
+TOKEN_LINE = re.compile(r"^const t = window\.ANYPLOT_TOKENS;", re.MULTILINE)
+DATA_LINE = re.compile(r"^// Data\b", re.MULTILINE)
+PLOT_LINE = re.compile(r"^// Plot\b", re.MULTILINE)
+COLUMN_LINE = re.compile(r'^const ([A-Z][A-Z0-9_]*)(?::\s*string)? = "[^"\n]*";\s*// role: \w+\s*$', re.MULTILINE)
+IMPRINT_LINE = re.compile(r"^(?:const|let|var) (?:IMPRINT|IMPRINT_PALETTE)\b", re.MULTILINE)
 
-    assert counts == {
-        "t": 1602,
-        "directive": 724,
-        "comment directive": 724,
-        "data marker": 1344,
-        "plot marker": 134,
-        "columns": 121,
-        "reads theme": 1617,
-        "imprint": 0,
-    }
+
+def test_catalogue_corpus() -> None:
+    """The conventions of every catalogue file (module docstring), each found where the file's text has it and only
+    there. The counts of a day (1,617 files on 2026-10-30: the `t` token in 1,602, a directive in 724, the markers in
+    1,344 and 134, column constants in 121, no palette written out) move with every regeneration, so each detection
+    is held to a plain reading of the text instead, and to the harness's own pattern for the directive."""
+    found: Counter[str] = Counter()
+    for path in JS_CATALOGUE_FILES:
+        text = path.read_text(encoding="utf-8")
+        regions = find_regions(text, library=js_library(path))
+        lines = text.splitlines()
+        name = path.parts[-4] + "/" + js_library(path)
+        assert regions.reads_theme, name  # the harness themes every file through its globals
+        assert ("t" in [region.name for region in regions.theme_tokens]) == bool(TOKEN_LINE.search(text)), name
+        assert len(regions.directives) == len(HARNESS_ORIENTATION.findall(text)) <= 1, name
+        assert all(directive.comment for directive in regions.directives), name
+        for marker, word, canonical in (
+            (regions.data_marker, "Data", DATA_LINE),
+            (regions.plot_marker, "Plot", PLOT_LINE),
+        ):
+            assert marker is not None or not canonical.search(text), (name, word)
+            assert marker is None or re.match(rf"//.*\b{word}\b", lines[marker.line - 1]), (name, word)
+            found[word] += marker is not None
+        assert set(COLUMN_LINE.findall(text)) <= {column.name for column in regions.columns}, name
+        for column in regions.columns:
+            statement = "\n".join(lines[column.span.first_line - 1 : column.span.last_line])
+            assert f"// role: {column.role}" in statement and column.name in statement, (name, column.name)
+        found["columns"] += bool(regions.columns)
+        assert (regions.imprint is not None) == bool(IMPRINT_LINE.search(text)), name
+
+    assert all(found[kind] for kind in ("Data", "Plot", "columns")), found  # the conventions are in use at all

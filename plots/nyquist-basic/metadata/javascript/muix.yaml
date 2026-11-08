@@ -2,119 +2,111 @@ library: muix
 language: javascript
 specification_id: nyquist-basic
 created: '2026-06-17T22:44:07Z'
-updated: '2026-06-17T23:17:13Z'
-generated_by: claude-sonnet
-workflow_run: 27724016014
+updated: '2026-11-08T03:58:56Z'
+generated_by: claude-opus-5-5
+adopted_from: 6b5073baaef8e87bed5be05919eceb82436a7fde (6b5073baaef8e87bed5be05919eceb82436a7fde)
+workflow_run: 42444620015
 issue: 4412
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Complete spec compliance: all required features implemented — critical point
-    marker, unit circle reference, direction arrows, key frequency annotations, 1:1
-    aspect ratio, and correct axis labels'
-  - Realistic third-order transfer function G(jω)=1/(jω(1+jω)(1+0.5jω)) with physically
-    meaningful frequency range and proper logarithmic spacing
-  - SVG overlay with tangent-computed arrowheads showing direction of increasing frequency
-    demonstrates library mastery beyond basic MUI X API
-  - 'Perfect color usage: Nyquist curve in brand green (palette[0]), semantic red
-    (#AE3030) for critical point, theme-adaptive unit circle in inkSoft, lavender
-    (palette[1]) for key frequency markers'
-  - Both renders theme-correct with warm-cream/warm-near-black backgrounds, and all
-    chrome (title, labels, annotations) theme-adaptive via t.ink
-  - 'Perfect code quality: deterministic data, clean imports, no functions/classes
-    wrapping, skipAnimation set, square orientation directive correct'
+  - Composes the chart from ChartsDataProvider, ChartsWrapper and ChartsSurface, and
+    draws the direction arrows in a custom SVG layer positioned with the useXScale/useYScale
+    hooks, so every arrowhead sits on the curve and is rotated to the local tangent
+    in screen space
+  - 'Gain and phase crossovers are found from the data (interpolated between the straddling
+    rows, frequency on its log scale) rather than typed in; the values check out against
+    G(s)=1/(s(1+s)(1+0.5s)): phase crossover at omega = sqrt(2) = 1.41 rad/s on Re
+    = -1/3 (gain margin 9.5 dB), gain crossover at 0.75 rad/s'
+  - The unit circle is drawn as a parametric line on a hidden second x axis that shares
+    the visible scale, and the square window uses one span on both axes, so the circle
+    is a true circle at 1:1
+  - 'Clear visual hierarchy: a 3 px brand-green response curve over a thin dashed
+    theme-ink unit circle, the critical point in the Imprint matte-red anchor and
+    the crossovers in lavender, all distinct in both themes'
+  - The legend glyph of the unit circle is styled dashed to match its line, and the
+    computed phase and gain margins are read out in the subtitle
+  - Theme tokens threaded through title, subtitle, axis labels, ticks, grid, origin
+    axes and annotation text; both renders fully legible
   weaknesses:
-  - ScatterChart with markerSize=3 renders the Nyquist locus as 600 discrete dots
-    rather than a continuous line — the curve reads as a dotted/dashed path rather
-    than a smooth trajectory; consider a LineChart if MUI X supports x-y line plotting,
-    or increase markerSize slightly for better visual continuity
-  - Frequency labels for ω=√2 rad/s and ω=5 rad/s are placed very close together near
-    the origin (both at approximately y≈0, x≈-0.5 to 0.3) and slightly overlap in
-    the rendered output — adjust label offsets to avoid collision (e.g. dy=-20 for
-    ω=√2 vs dy=+15 for ω=5)
-  - 'Design refinement is moderate: the chart relies on ThemeProvider defaults for
-    spine/axis styling with minimal explicit visual polish beyond the grid opacity
-    override — removing top/right axis spines explicitly or adjusting legend frame
-    styling would improve DE-02'
+  - 'Suggestion: the legend lists the entries alphabetically rather than in drawing
+    order; ordering them curve, unit circle, critical point, crossovers would read
+    more naturally.'
+  - 'Suggestion: the faint negative-frequency mirror the spec permits would show the
+    closed Nyquist contour around the critical point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — confirmed cream surface, not pure white.
-      Chrome: Title "nyquist-basic · javascript · muix · anyplot.ai" at 22px clearly visible in dark ink. Axis labels "Real" (X) and "Imaginary" (Y) clearly visible. Tick labels on both axes readable at -2.0 to 1.4 range. Legend at top with four labeled series all readable.
-      Data: Nyquist locus in brand green (#009E73) sweeps from lower-left (high magnitude at low ω) toward the origin (high ω). Three direction-of-increasing-frequency arrows visible on the curve. Unit circle drawn in inkSoft (gray ring visible). Three key frequency markers in lavender (#C475FD) at ω=0.75, ω=√2, ω=5. Critical point at (-1, 0) marked with prominent red (#AE3030) filled circle (size 10). Dashed red reference line at x=-1. SVG frequency annotation labels visible but ω=√2 and ω=5 labels appear very close/slightly overlapping near the real axis crossing.
-      Legibility verdict: PASS — all chrome readable, minor label crowding near origin but text distinguishable.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold title "nyquist-basic · javascript · muix · anyplot.ai" centered at top, softer subtitle "600 frequencies from 0.40 to 25.0 rad/s · phase margin 32.6° · gain margin 9.5 dB", horizontal legend (Crossover frequencies, Critical point (-1, 0), Open-loop response G(jω), Unit circle). Axis titles "Real" and "Imaginary", ticks -1.6..1.4 and -2.0..1.0 in steps of 0.2, subtle grid on both axes, thin axes through the origin. All dark text, all readable.
+      Data: thick brand-green #009E73 Nyquist curve rising from (-1.25, -1.9) toward the origin, crossing the dashed unit circle at the lavender gain-crossover dot (-0.84, -0.54, labeled ω = 0.75 rad/s) and the negative real axis at the lavender phase-crossover dot (-0.33, 0, labeled ω = 1.41 rad/s), then curling just above the axis into the origin. Three green arrowheads along the curve point toward increasing frequency. Matte-red filled circle at (-1, 0) on the unit circle. Dashed unit circle in ink-soft, round at 1:1.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — confirmed dark surface, not pure black.
-      Chrome: Title visible in light ink (#F0EFE8-range) against dark background. Axis labels and tick labels clearly readable in light text. Legend labels readable. SVG annotation text rendered in t.ink (light in dark mode) — all readable against dark background. No dark-on-dark failures observed.
-      Data: Nyquist curve brand green (#009E73) — identical to light render. Unit circle now rendered in lighter inkSoft (#B8B7B0-range) against dark background, clearly visible as a white/light gray ring. Key frequency markers lavender (#C475FD) identical. Critical point red (#AE3030) clearly visible. Direction arrows green with arrowheads visible. Reference line dashed red visible.
-      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render, only chrome flipped.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, axis titles, tick labels and annotation text flip to light ink; grid and origin axes light and subtle; the dashed unit circle is light grey. No dark-on-dark text anywhere.
+      Data: green curve, green arrowheads, lavender crossover dots and matte-red critical point identical to the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels, legend, and SVG annotation labels
-          all readable in both themes. Minor: ω=√2 and ω=5 labels crowded near origin.'
+        comment: Explicit sizes (title 22, ticks 14, labels 16, annotations 15 CSS
+          px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor overlap between ω=√2 rad/s and ω=5 rad/s frequency labels near
-          the real axis crossing.
+        comment: Crossover labels sit clear of the curve, the unit circle and the
+          axes
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nyquist curve visible as 600 densely-packed dots approximating a
-          continuous line; 3px marker size makes curve appear dotted at high frequency
-          end near origin. All other elements (unit circle, critical point, arrows,
-          key markers) clearly visible.
+        comment: 3 px curve, visible arrowheads and markers; legend glyphs match their
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colors with distinct hue families. Critical point
-          in semantic red not paired with green as sole distinction — it is the only
-          red element.
+        comment: Green, lavender and matte red are distinct by hue and lightness;
+          marker roles also differ by size and legend
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format correct for 1:1 Nyquist aspect ratio. Canvas gate passed.
-          chartSize computed from window.ANYPLOT_SIZE ensuring correct output dimensions.
-          Nothing clipped.
+        comment: Square canvas, square plotting area, balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled 'Real' and 'Imaginary' as specified. Title follows correct
-          format.
+        comment: Real / Imaginary as the spec asks; frequency unit in subtitle and
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Nyquist locus) = t.palette[0] = #009E73. Critical
-          point = #AE3030 (semantic anchor). Key markers = t.palette[1]. Unit circle
-          = t.inkSoft (reference element, not categorical). Backgrounds theme-correct.'
+        comment: 'Curve #009E73, crossovers Imprint lavender, critical point the matte-red
+          semantic anchor; correct backgrounds in both themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -122,25 +114,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4) due to SVG overlay with tangent-computed direction
-          arrowheads, semantic color choices, and intentional multi-element layout.
-          Scatter-dot rendering slightly reduces polish.
+        comment: Typographic hierarchy of title, soft subtitle and legend; dashed
+          legend glyph matched to the circle
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): grid opacity explicitly reduced, explicit margins,
-          font sizes set via sx prop. No explicit spine removal; relies on ThemeProvider
-          defaults.'
+        comment: Tangent-rotated arrowheads, crossover labels placed per point with
+          chosen anchors, origin axes at reduced opacity
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: direction arrows guide frequency progression,
-          semantic red critical point commands attention, reference line reinforces
-          stability boundary, frequency annotations provide engineering context.'
+        comment: Computed margins read out in the subtitle make the stability reading
+          explicit
     spec_compliance:
       score: 15
       max: 15
@@ -150,29 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Nyquist plot: imaginary vs real part of open-loop frequency
-          response G(jω) in the complex plane.'
+        comment: Single Nyquist curve; only the elements the Notes ask for plus permitted
+          origin axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: critical point marker, unit circle, frequency
-          annotations, direction arrows, 1:1 aspect ratio, Real/Imaginary axis labels.'
+        comment: Critical point, unit circle, crossover frequency labels with margins,
+          direction arrows, 1:1 aspect, Real/Imaginary labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on X-axis, imaginary part on Y-axis. 600 log-spaced points
-          (within 200-1000 spec). Frequency range 0.4-25 rad/s physically meaningful.
+        comment: Linear segments through computed points; window shows how the curve
+          passes (-1, 0)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'nyquist-basic · javascript · muix · anyplot.ai' matches required
-          format. Legend labels descriptive and accurate.
+        comment: Mandated title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -182,23 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all Nyquist plot aspects: locus, unit circle, critical point,
-          stability margin indicators via key frequency annotations, direction of
-          traverse.'
+        comment: Curve passes inside the unit circle near the critical point with
+          both crossovers, bunches into the origin at high frequency
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Third-order transfer function 1/(jω(1+jω)(1+0.5jω)) is physically
-          realistic (DC motor with two RC lag elements). Neutral engineering context.
+        comment: Classic type-1 third-order plant 1/(s(1+s)(1+0.5s)), 600 log-spaced
+          frequencies
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis range [-2.0, 1.5] contains curve well. Log frequency spacing
-          covers meaningful range. Data fills the plot area appropriately.
+        comment: 'Checked: phase crossover at sqrt(2) rad/s on Re = -1/3 (GM 20log3
+          = 9.5 dB), gain crossover 0.75 rad/s, PM 32.6° all fall out of the computation'
     code_quality:
       score: 10
       max: 10
@@ -208,35 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level data generation and computation, single Chart component
-          export. No unnecessary abstraction layers.
+        comment: Data/plot zones; the one helper component is needed for the scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: mathematical formula with fixed parameters,
-          no randomness.'
+        comment: Deterministic analytic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart and ChartsReferenceLine imported, both used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Coordinate transform and arrow computation are justified by the SVG
-          overlay requirement. No fake UI or unnecessary complexity.
+        comment: Short crossover interpolation and arc-length loop; no library helper
+          exists for them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles plot-{THEME}.png output. Current MUI X community
-          API throughout.
+        comment: Default-export component, skipAnimation, v9 composition API, square
+          directive
     library_mastery:
       score: 7
       max: 10
@@ -246,29 +232,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ScatterChart is the correct MUI X choice for x-y complex plane data.
-          ChartsReferenceLine used idiomatically. sx prop with MUI class selectors.
-          SVG overlay required due to MUI X lacking native arrowhead support — a legitimate
-          hybrid approach.
+        comment: Composition with ChartsDataProvider/ChartsWrapper/ChartsSurface,
+          multiple axis ids, data-series CSS selectors
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ChartsReferenceLine (MUI X specific), sx prop with MUI class
-          selectors (.MuiChartsAxis-tickLabel, .MuiChartsGrid-line), multiple series
-          with per-series markerSize. ThemeProvider-driven chrome adaptation leveraged.
+        comment: useXScale/useYScale hooks drive a custom SVG annotation layer; ChartsReferenceLine
+          for origin axes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:55:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
-  - alpha-blending
-  - grid-styling
+  - publication-ready

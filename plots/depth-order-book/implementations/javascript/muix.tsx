@@ -1,166 +1,160 @@
 // anyplot.ai
 // depth-order-book: Order Book Depth Chart
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-15
-//# anyplot-orientation: landscape
-
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) -----------------------------------------
-const MID_PRICE = 60000;
-const BEST_BID = 59995;
-const BEST_ASK = 60005;
-const N = 50;
-const TICK = 5;
+// Constants
+const BID = "bid"; // side values the spec defines
+const ASK = "ask";
+const SIDE_COLOR = { [BID]: t.palette[0], [ASK]: t.palette[4] }; // green bids, red asks, as the Notes ask
+const SIDE_LABEL = { [BID]: "Bids (buy orders)", [ASK]: "Asks (sell orders)" };
+const X_PAD = 0.02; // share of the half-range added on both sides of the outermost levels
+const TITLE_H = 84;
+const LEGEND_H = 44;
 
-// Minimal LCG for reproducible pseudo-random data (seed = 42)
-let _s = 42;
-const rng = () => {
-  _s = (Math.imul(1664525, _s) + 1013904223) >>> 0;
-  return _s / 4294967296;
-};
+// Columns: set these to your data's column names
+const PRICE = "Price (USD)"; // role: price
+const QUANTITY = "Quantity (BTC)"; // role: quantity
+const SIDE = "Side"; // role: side
+const SYMBOL = "Symbol"; // role: extra
 
-// Bid quantities: index 0 = best bid (nearest mid), index N-1 = worst bid
-const bidQtys = Array.from({ length: N }, (_, i) => {
-  const base = 0.4 + rng() * 2.0;
-  const wall = i === 14 || i === 31 ? rng() * 35 + 18 : 0;
-  return +(base + wall).toFixed(3);
-});
+// Data: replace this block with your own records, one object per row
+// One BTC/USD order-book snapshot: 50 bid levels below and 50 ask levels above the spread, 5 USD apart,
+// with two large resting "walls" per side
+const data = (() => {
+  let s = 42;
+  const rng = () => {
+    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  const levels = 50;
+  const rows = [];
+  for (let i = 0; i < levels; i += 1) {
+    const base = 0.4 + rng() * 2.0;
+    const wall = i === 14 || i === 31 ? rng() * 35 + 18 : 0;
+    rows.push({ [PRICE]: 59995 - i * 5, [QUANTITY]: +(base + wall).toFixed(3), [SIDE]: "bid", [SYMBOL]: "BTC/USD" });
+  }
+  for (let i = 0; i < levels; i += 1) {
+    const base = 0.4 + rng() * 2.0;
+    const wall = i === 11 || i === 37 ? rng() * 35 + 18 : 0;
+    rows.push({ [PRICE]: 60005 + i * 5, [QUANTITY]: +(base + wall).toFixed(3), [SIDE]: "ask", [SYMBOL]: "BTC/USD" });
+  }
+  return rows;
+})();
 
-// Ask quantities: index 0 = best ask (nearest mid), index N-1 = worst ask
-const askQtys = Array.from({ length: N }, (_, i) => {
-  const base = 0.4 + rng() * 2.0;
-  const wall = i === 11 || i === 37 ? rng() * 35 + 18 : 0;
-  return +(base + wall).toFixed(3);
-});
+// Plot: reads only data and the constants above
+// Cumulative quantity per side, accumulated from the best price outward
+const bids = data.filter((d) => d[SIDE] === BID).sort((a, b) => b[PRICE] - a[PRICE]);
+const asks = data.filter((d) => d[SIDE] === ASK).sort((a, b) => a[PRICE] - b[PRICE]);
+let bidRun = 0;
+const bidDepth = new Map(bids.map((d) => [d[PRICE], (bidRun += d[QUANTITY])]));
+let askRun = 0;
+const askDepth = new Map(asks.map((d) => [d[PRICE], (askRun += d[QUANTITY])]));
 
-// Cumulative sums from best price outward
-const accumulate = (arr) =>
-  arr.map((_, i) =>
-    +arr
-      .slice(0, i + 1)
-      .reduce((a, b) => a + b, 0)
-      .toFixed(3)
-  );
+const prices = [...bids, ...asks].map((d) => d[PRICE]).sort((a, b) => a - b);
+const bidSeries = prices.map((p) => bidDepth.get(p) ?? null);
+const askSeries = prices.map((p) => askDepth.get(p) ?? null);
 
-const bidCum = accumulate(bidQtys); // [cum_at_best_bid, ..., cum_at_worst_bid]
-const askCum = accumulate(askQtys); // [cum_at_best_ask, ..., cum_at_worst_ask]
+const bestBid = bids[0][PRICE];
+const bestAsk = asks[0][PRICE];
+const mid = (bestBid + bestAsk) / 2;
+const spread = bestAsk - bestBid;
+// x axis centred on the mid price so the two areas mirror each other
+const halfRange = Math.max(mid - prices[0], prices[prices.length - 1] - mid) * (1 + X_PAD);
 
-// Bid prices sorted ascending: worst bid (leftmost) → best bid (rightmost)
-const bidPricesAsc = Array.from(
-  { length: N },
-  (_, i) => BEST_BID - (N - 1 - i) * TICK
-);
-// Reverse cumulative so max cum is at left (worst bid), min cum at right (best bid)
-const bidCumAsc = [...bidCum].reverse();
+const priceUnit = PRICE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const quantityUnit = QUANTITY.match(/\(([^)]+)\)/)?.[1] ?? "";
+const fmtPrice = (v) => v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+const title = `${data[0][SYMBOL]} Order Book · depth-order-book · javascript · muix · anyplot.ai`;
+const subtitle = `${bids.length} bid and ${asks.length} ask levels · bid depth ${bidRun.toFixed(1)} ${quantityUnit} · ask depth ${askRun.toFixed(1)} ${quantityUnit}`;
+const midLabel = `Mid ${fmtPrice(mid)} ${priceUnit} · spread ${fmtPrice(spread)} ${priceUnit}`;
 
-// Ask prices sorted ascending: best ask (leftmost) → worst ask (rightmost)
-const askPricesAsc = Array.from({ length: N }, (_, i) => BEST_ASK + i * TICK);
-
-// Combined x-axis (all prices, ascending); bid and ask regions separated by spread gap
-const xData = [...bidPricesAsc, ...askPricesAsc];
-const bidData = [...bidCumAsc, ...Array(N).fill(null)]; // null at ask positions → gap
-const askData = [...Array(N).fill(null), ...askCum]; // null at bid positions → gap
-
-const SPREAD = BEST_ASK - BEST_BID;
-
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
-const TITLE_H = 60;
-
-// --- Chart -------------------------------------------------------------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <div style={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
-      <div
-        style={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          letterSpacing: 0.3,
-        }}
-      >
-        BTC/USD Order Book · depth-order-book · javascript · muix · anyplot.ai
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "22px 40px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{title}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{subtitle}</div>
       </div>
       <LineChart
-        width={W}
-        height={H - TITLE_H}
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
+        grid={{ horizontal: true }}
+        margin={{ top: 16, right: 48, bottom: 8, left: 24 }}
         xAxis={[
           {
-            data: xData,
+            data: prices,
             scaleType: "linear",
-            label: "Price (USD)",
-            valueFormatter: (v) => `$${v.toLocaleString("en-US")}`,
-            labelStyle: { fill: t.ink, fontSize: 14 },
-            tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
+            min: mid - halfRange,
+            max: mid + halfRange,
+            label: PRICE,
+            height: 68,
             tickNumber: 10,
+            valueFormatter: fmtPrice,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            label: "Cumulative Volume (BTC)",
-            labelStyle: { fill: t.ink, fontSize: 14 },
-            tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
             min: 0,
+            label: `${QUANTITY}, cumulative from the mid price`,
+            width: 84,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         series={[
           {
             id: "bids",
-            data: bidData,
-            label: "Bids",
-            color: t.palette[0],
+            data: bidSeries,
+            label: SIDE_LABEL[BID] ?? BID,
+            color: SIDE_COLOR[BID],
             area: true,
-            curve: "stepAfter",
+            // depth at a price between two bid levels is the depth of the higher level
+            curve: "stepBefore",
             connectNulls: false,
             showMark: false,
           },
           {
             id: "asks",
-            data: askData,
-            label: "Asks",
-            color: t.palette[4],
+            data: askSeries,
+            label: SIDE_LABEL[ASK] ?? ASK,
+            color: SIDE_COLOR[ASK],
             area: true,
+            // depth at a price between two ask levels is the depth of the lower level
             curve: "stepAfter",
             connectNulls: false,
             showMark: false,
           },
         ]}
-        grid={{ horizontal: true }}
-        sx={{
-          "& .MuiAreaElement-series-bids": { fillOpacity: 0.35 },
-          "& .MuiAreaElement-series-asks": { fillOpacity: 0.35 },
-          "& .MuiLineElement-series-bids": { strokeWidth: 2 },
-          "& .MuiLineElement-series-asks": { strokeWidth: 2 },
-          "& .MuiChartsAxis-directionX .MuiChartsAxis-line": { strokeOpacity: 0.4 },
-          "& .MuiChartsAxis-directionY .MuiChartsAxis-line": { strokeOpacity: 0.4 },
-          "& .MuiChartsGrid-line": { strokeOpacity: 0.5 },
-        }}
         slotProps={{
           legend: {
-            labelStyle: { fill: t.inkSoft, fontSize: 14 },
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.inkSoft },
           },
         }}
-        margin={{ top: 20, right: 60, bottom: 70, left: 95 }}
+        sx={{
+          "& .MuiLineChart-area": { fillOpacity: 0.3 },
+          "& .MuiLineChart-line": { strokeWidth: 2.5 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
       >
         <ChartsReferenceLine
-          x={MID_PRICE}
-          label={`Mid: $${MID_PRICE.toLocaleString("en-US")} · Spread: $${SPREAD}`}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
-          lineStyle={{
-            stroke: t.inkSoft,
-            strokeDasharray: "6 4",
-            strokeWidth: 1.5,
-          }}
-          labelAlign="end"
+          x={mid}
+          label={midLabel}
+          labelAlign="start"
+          labelStyle={{ fontSize: 15, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
         />
       </LineChart>
     </div>

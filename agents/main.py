@@ -318,7 +318,7 @@ from agents.renderer.wire import (
     MAX_CONVERT_INPUT_BYTES,
     MAX_SHEET_NAME_CHARS,
 )
-from agents.stream import MAX_DONE_ROLES, Translator
+from agents.stream import MAX_DONE_ROLES, Translator, turn_outcome
 from agents.turn_log import EVENT_ID_PATTERN, PING, TurnLog, logged, parse_event_id
 from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.spec_roles import MAP_SPECS, DataRole
@@ -2450,6 +2450,14 @@ async def _produce(
         outbox.put_nowait(("end", None))
 
 
+def ended_well(ledger: RequestLedger, run: ActiveRun, failure: str | None) -> bool:
+    """Whether a turn ended without an error, a refusal or the user's stop: only such a turn's `done` says what it
+    changed (`turn`), since the page marks no refused, failed or stopped turn. A run the deadline cut after its plot
+    shipped ended well; the user's `.stop()` (`POST .../cancel`) aborts it without the deadline."""
+    stopped = run.abort.is_set() and not run.deadline_hit
+    return failure is None and ledger.refusal is None and not stopped
+
+
 def _error_code(exc: BaseException) -> str:
     if model_busy(exc):  # a model quota or overload after the SDK's retries: busy, like a full queue
         return "capacity"
@@ -2665,7 +2673,8 @@ async def post_message(
         # A switch the root asked for goes to the page only with a turn that ended well: after a failure the page
         # shows the error and the user asks again.
         switch = ledger.switch_request if failure is None else None
-        yield translator.done(**sync, switch=switch)
+        turn = turn_outcome(ledger) if ended_well(ledger, run, failure) else None
+        yield translator.done(**sync, switch=switch, turn=turn)
 
     return _turn_stream(stream(), log, BackgroundTask(runtime.finish, sid, run))
 

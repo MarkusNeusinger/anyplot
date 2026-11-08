@@ -1,28 +1,46 @@
 // anyplot.ai
 // hexbin-map-geographic: Hexagonal Binning Map
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-08-25
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 86/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { ContinuousColorLegend, continuousColorLegendClasses } from "@mui/x-charts/ChartsLegend";
+import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
-const INK_MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-// --- Geographic domain: Southern California coast, Point Conception to San
-// Diego. The community @mui/x-charts surface has no polygon/basemap
-// primitive, so lon/lat are plotted directly as linear axes (a simple
-// equirectangular projection) and the coastline is hand-traced from ~14
-// approximate real vertices via the chart's own xScale/yScale hooks — the
-// same technique used to place any custom SVG overlay on a MUI X chart. ----
-const LON_MIN = -120.6;
-const LON_MAX = -117.0;
-const LAT_MIN = 32.45;
-const LAT_MAX = 34.55;
+// Constants
+const HEX_RADIUS_SHARE = 0.032; // hexagon radius as a share of the projected map width
+const AGGREGATION: "count" | "sum" | "mean" = "count"; // statistic per cell; sum and mean read the VALUE column
+const PAD_SHARE = 0.06; // map padding around the points, as a share of their extent
+const HEX_OPACITY = 0.62; // translucent cells let the base map show through
+const KM_PER_DEG_LAT = 111.2; // length of one degree of latitude
 
-// North -> south, approximate real coastline vertices (degrees).
+// Columns: set these to your data's column names
+const LON = "Longitude"; // role: lon
+const LAT = "Latitude"; // role: lat
+const VALUE = "Group size"; // role: value (animals per sighting, optional for count)
+
+// Data: replace this block with your own records, one object per point
+// Synthetic gray-whale and common-dolphin sighting reports off Southern
+// California: clusters offshore of three whale-watching launch points (Santa
+// Barbara Channel, Dana Point, La Jolla) plus sparse sightings up and down the
+// coast, every report at least 15 km from the mainland shore and 4 km from the
+// islands.
+// Base map geometry: approximate real coastline vertices, north to south, the
+// land polygon east of it, and the larger offshore islands.
 const COASTLINE = [
+  [-120.64, 35.14], // Pismo Beach
+  [-120.64, 34.9], // Point Sal
+  [-120.65, 34.58], // Point Arguello
   [-120.47, 34.45], // Point Conception
   [-119.84, 34.41], // Santa Barbara
   [-119.3, 34.28], // Ventura
@@ -37,264 +55,339 @@ const COASTLINE = [
   [-117.27, 32.85], // La Jolla
   [-117.17, 32.72], // San Diego Bay
   [-117.13, 32.55], // Point Loma
+  [-117.12, 32.53], // Tijuana
+  [-117.06, 32.35], // Rosarito
+  [-116.62, 31.87], // Ensenada
+];
+const LAND = [...COASTLINE, [-114.0, 31.87], [-114.0, 35.14]];
+const ISLANDS = [
+  // San Miguel
+  [[-120.45, 34.04], [-120.36, 34.08], [-120.31, 34.04], [-120.36, 34.01], [-120.43, 34.02]],
+  // Santa Rosa
+  [[-120.24, 34.0], [-120.12, 34.03], [-119.98, 33.98], [-120.04, 33.9], [-120.17, 33.92]],
+  // Santa Cruz
+  [[-119.92, 34.07], [-119.75, 34.06], [-119.54, 34.04], [-119.55, 33.99], [-119.72, 33.96], [-119.88, 33.99]],
+  // Anacapa
+  [[-119.44, 34.02], [-119.36, 34.02], [-119.36, 34.0], [-119.44, 34.0]],
+  // San Nicolas
+  [[-119.58, 33.27], [-119.45, 33.25], [-119.42, 33.22], [-119.55, 33.21]],
+  // Santa Catalina
+  [[-118.61, 33.48], [-118.5, 33.44], [-118.31, 33.33], [-118.33, 33.3], [-118.46, 33.34], [-118.6, 33.43]],
+  // San Clemente
+  [[-118.6, 33.03], [-118.54, 33.02], [-118.35, 32.82], [-118.42, 32.81]],
 ];
 
-// --- Deterministic PRNG (mulberry32) — the browser has no seeded RNG ------
-let seed = 42;
-function rand() {
-  seed |= 0;
-  seed = (seed + 0x6d2b79f5) | 0;
-  let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
-  return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-}
-function gaussian() {
-  const u = Math.max(rand(), 1e-9);
-  const v = rand();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
+const data = (() => {
+  let seed = 42;
+  const rand = () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+  const gaussian = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+  const minShoreKm = 15; // no report closer to the mainland shore than this
+  const minIslandKm = 4; // nor closer to an island shore than this
+  const cosRef = Math.cos((33.5 * Math.PI) / 180);
+  // Distance from a point to a closed polygon outline in km; -1 for a point inside it
+  const islandKm = (lon: number, lat: number, ring: number[][]) => {
+    let inside = false;
+    let nearest = Infinity;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+      const [lonA, latA] = ring[j];
+      const [lonB, latB] = ring[i];
+      if (latA > lat !== latB > lat && lon < lonA + ((lat - latA) / (latB - latA)) * (lonB - lonA)) inside = !inside;
+      const dx = (lonB - lonA) * cosRef;
+      const dy = latB - latA;
+      const u = Math.min(1, Math.max(0, ((lon - lonA) * cosRef * dx + (lat - latA) * dy) / (dx * dx + dy * dy)));
+      nearest = Math.min(nearest, Math.hypot((lon - lonA) * cosRef - u * dx, lat - latA - u * dy));
+    }
+    return inside ? -1 : nearest * KM_PER_DEG_LAT;
+  };
+  const clearOfIslands = (lon: number, lat: number) => ISLANDS.every((ring) => islandKm(lon, lat, ring) >= minIslandKm);
+  const groupSize = () => Math.max(1, Math.round(Math.exp(0.9 + 0.7 * gaussian())));
+  // Distance from a point at sea to the mainland coastline in km; -1 for a point on land
+  const offshoreKm = (lon: number, lat: number) => {
+    let coastLon = -Infinity;
+    for (let i = 0; i < COASTLINE.length - 1; i += 1) {
+      const [lonA, latA] = COASTLINE[i];
+      const [lonB, latB] = COASTLINE[i + 1];
+      if ((lat - latA) * (lat - latB) <= 0) {
+        coastLon = lonA + ((lat - latA) / (latB - latA)) * (lonB - lonA);
+        break;
+      }
+    }
+    if (lon >= coastLon) return -1;
+    let nearest = Infinity;
+    for (let i = 0; i < COASTLINE.length - 1; i += 1) {
+      const ax = COASTLINE[i][0] * cosRef;
+      const ay = COASTLINE[i][1];
+      const dx = COASTLINE[i + 1][0] * cosRef - ax;
+      const dy = COASTLINE[i + 1][1] - ay;
+      const u = Math.min(1, Math.max(0, ((lon * cosRef - ax) * dx + (lat - ay) * dy) / (dx * dx + dy * dy)));
+      nearest = Math.min(nearest, Math.hypot(lon * cosRef - ax - u * dx, lat - ay - u * dy));
+    }
+    return nearest * KM_PER_DEG_LAT;
+  };
+  const inView = (lon: number, lat: number) => lon > -120.6 && lon < -117.05 && lat > 32.45 && lat < 34.55;
 
-// Coastline longitude at a given latitude, by linear interpolation between
-// the traced vertices — used to keep synthetic sightings offshore.
-function coastLonAt(lat) {
-  for (let i = 0; i < COASTLINE.length - 1; i += 1) {
-    const [lonA, latA] = COASTLINE[i];
-    const [lonB, latB] = COASTLINE[i + 1];
-    if ((lat <= latA && lat >= latB) || (lat >= latA && lat <= latB)) {
-      const f = (lat - latA) / (latB - latA);
-      return lonA + f * (lonB - lonA);
+  const hotspots = [
+    { lon: -119.72, lat: 34.16, sdLon: 0.3, sdLat: 0.09, n: 520 }, // Santa Barbara Channel
+    { lon: -117.9, lat: 33.3, sdLon: 0.13, sdLat: 0.1, n: 380 }, // off Dana Point
+    { lon: -117.47, lat: 32.8, sdLon: 0.1, sdLat: 0.1, n: 340 }, // off La Jolla
+  ];
+  const rows: { [LON]: number; [LAT]: number; [VALUE]: number }[] = [];
+  for (const spot of hotspots) {
+    let kept = 0;
+    while (kept < spot.n) {
+      const lon = spot.lon + gaussian() * spot.sdLon;
+      const lat = spot.lat + gaussian() * spot.sdLat;
+      if (inView(lon, lat) && offshoreKm(lon, lat) >= minShoreKm && clearOfIslands(lon, lat)) {
+        rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)), [VALUE]: groupSize() });
+        kept += 1;
+      }
     }
   }
-  // Outside the traced range: snap to whichever end (north/Point Conception
-  // or south/Point Loma) is actually closest, not always the last vertex.
-  return lat > COASTLINE[0][1] ? COASTLINE[0][0] : COASTLINE[COASTLINE.length - 1][0];
-}
-
-// --- Data: synthetic gray-whale & common-dolphin sighting reports, clustered
-// around three real Southern California whale-watching launch points and
-// offset west of the coast into open water, plus sparse background sightings
-// along the rest of the coastline. -------------------------------------------
-const HOTSPOTS = [
-  { lat: 34.15, lonOffset: 0.55, sigma: 0.28, n: 260 }, // Santa Barbara Channel / Channel Islands
-  { lat: 33.47, lonOffset: 0.22, sigma: 0.16, n: 190 }, // Dana Point
-  { lat: 32.78, lonOffset: 0.18, sigma: 0.14, n: 170 }, // La Jolla / San Diego
-];
-
-const points = [];
-HOTSPOTS.forEach(({ lat: centerLat, lonOffset, sigma, n }) => {
-  for (let i = 0; i < n; i += 1) {
-    const lat = centerLat + gaussian() * sigma * 0.6;
-    const coastLon = coastLonAt(lat);
-    const lon = coastLon - Math.abs(lonOffset + gaussian() * sigma);
-    if (lon > LON_MIN && lon < LON_MAX - 0.05 && lat > LAT_MIN && lat < LAT_MAX) {
-      points.push([lon, lat]);
+  let sparse = 0;
+  while (sparse < 280) {
+    const lon = -120.6 + rand() * 3.55;
+    const lat = 32.45 + rand() * 2.1;
+    const km = offshoreKm(lon, lat);
+    if (km >= minShoreKm && km <= minShoreKm + 40 && clearOfIslands(lon, lat)) {
+      rows.push({ [LON]: Number(lon.toFixed(4)), [LAT]: Number(lat.toFixed(4)), [VALUE]: groupSize() });
+      sparse += 1;
     }
   }
-});
-for (let i = 0; i < 140; i += 1) {
-  const lat = LAT_MIN + rand() * (LAT_MAX - LAT_MIN);
-  const coastLon = coastLonAt(lat);
-  const lon = coastLon - 0.05 - rand() * 0.5;
-  if (lon > LON_MIN) points.push([lon, lat]);
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const HEADER_H = 84;
+const LEGEND_H = 76;
+const MARGIN = { top: 16, right: 32, bottom: 12, left: 20 };
+const X_AXIS_H = 60;
+const Y_AXIS_W = 84;
+const DRAW_W = W - MARGIN.left - MARGIN.right - Y_AXIS_W;
+const DRAW_H = H - HEADER_H - LEGEND_H - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+
+// Equirectangular projection scaled at the mid latitude: one projected unit is
+// one degree of latitude, so px per degree of latitude = px per degree of
+// longitude / cos(mid latitude).
+const lons = data.map((d) => d[LON]);
+const lats = data.map((d) => d[LAT]);
+const lonLo = Math.min(...lons);
+const lonHi = Math.max(...lons);
+const latLo = Math.min(...lats);
+const latHi = Math.max(...lats);
+const lonMid = (lonLo + lonHi) / 2;
+const latMid = (latLo + latHi) / 2;
+const cosLat = Math.cos((latMid * Math.PI) / 180);
+// Padded extent in projected units, the shorter side widened to the drawing area's aspect
+const paddedX = (lonHi - lonLo) * cosLat * (1 + 2 * PAD_SHARE);
+const paddedY = (latHi - latLo) * (1 + 2 * PAD_SHARE);
+const spanX = Math.max(paddedX, paddedY * (DRAW_W / DRAW_H));
+const spanY = spanX / (DRAW_W / DRAW_H);
+const xMin = lonMid - spanX / cosLat / 2;
+const xMax = lonMid + spanX / cosLat / 2;
+const yMin = latMid - spanY / 2;
+const yMax = latMid + spanY / 2;
+
+// Flat-top hexagonal binning in projected units (axial coordinates, cube rounding)
+const R = spanX * HEX_RADIUS_SHARE;
+const binCounts = new Map<string, { q: number; r: number; count: number; sum: number }>();
+for (const d of data) {
+  const px = d[LON] * cosLat;
+  const py = d[LAT];
+  const qf = ((2 / 3) * px) / R;
+  const rf = ((-1 / 3) * px + (Math.sqrt(3) / 3) * py) / R;
+  const sf = -qf - rf;
+  let q = Math.round(qf);
+  let r = Math.round(rf);
+  const s = Math.round(sf);
+  const dq = Math.abs(q - qf);
+  const dr = Math.abs(r - rf);
+  const ds = Math.abs(s - sf);
+  if (dq > dr && dq > ds) q = -r - s;
+  else if (dr > ds) r = -q - s;
+  const key = `${q},${r}`;
+  const bin = binCounts.get(key) ?? { q, r, count: 0, sum: 0 };
+  bin.count += 1;
+  bin.sum += d[VALUE] ?? 0;
+  binCounts.set(key, bin);
 }
+const bins = [...binCounts.entries()].map(([key, { q, r, count, sum }]) => ({
+  id: key,
+  lon: (R * 1.5 * q) / cosLat,
+  lat: R * Math.sqrt(3) * (r + q / 2),
+  count,
+  sum,
+  mean: sum / count,
+  stat: { count, sum, mean: sum / count }[AGGREGATION],
+}));
+const statMin = Math.min(...bins.map((b) => b.stat));
+const statMax = Math.max(...bins.map((b) => b.stat));
+// Hexagon corners as offsets in degrees of longitude and latitude
+const HEX_CORNERS = Array.from({ length: 6 }, (_, k) => [(R * Math.cos((k * Math.PI) / 3)) / cosLat, R * Math.sin((k * Math.PI) / 3)]);
 
-// --- Hexagonal binning, done in PIXEL space (after projection) so the drawn
-// cells are always regular hexagons and bin adjacency is isotropic — equal
-// screen distance to every neighbor, the property that makes hex grids
-// superior to square grids for spatial aggregation. --------------------------
-const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 165, right: 40, bottom: 180, left: 82 };
-const innerWidth = width - margin.left - margin.right;
-const innerHeight = height - margin.top - margin.bottom;
+const STAT_LABEL = {
+  count: "Sightings per hex cell (count)",
+  sum: `${VALUE} per hex cell (sum)`,
+  mean: `${VALUE} per hex cell (mean)`,
+}[AGGREGATION];
+const formatStat = (v: number) => (AGGREGATION === "mean" ? v.toFixed(1) : String(Math.round(v)));
+const CLIP_ID = "hexbin-map-clip";
+const formatLon = (v: number) => `${Math.abs(v).toFixed(1)}°${v < 0 ? "W" : "E"}`;
+const formatLat = (v: number) => `${Math.abs(v).toFixed(1)}°${v < 0 ? "S" : "N"}`;
+const TITLE = "Gray Whale & Dolphin Sightings · hexbin-map-geographic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${data.length.toLocaleString("en-US")} points binned into ${bins.length} hexagons of ${(R * KM_PER_DEG_LAT).toFixed(0)} km radius · equirectangular map scaled at ${formatLat(latMid)}`;
 
-const lonToPx = (lon) => margin.left + ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * innerWidth;
-const latToPy = (lat) => margin.top + (1 - (lat - LAT_MIN) / (LAT_MAX - LAT_MIN)) * innerHeight;
-const pxToLon = (px) => LON_MIN + ((px - margin.left) / innerWidth) * (LON_MAX - LON_MIN);
-const pyToLat = (py) => LAT_MIN + (1 - (py - margin.top) / innerHeight) * (LAT_MAX - LAT_MIN);
-
-const HEX_R = 34; // center-to-vertex radius, in CSS px
-
-// Cube-round a fractional axial coordinate to its nearest hex (redblobgames).
-function axialRound(q, r) {
-  const x = q;
-  const z = r;
-  const y = -x - z;
-  let rx = Math.round(x);
-  let ry = Math.round(y);
-  let rz = Math.round(z);
-  const xDiff = Math.abs(rx - x);
-  const yDiff = Math.abs(ry - y);
-  const zDiff = Math.abs(rz - z);
-  if (xDiff > yDiff && xDiff > zDiff) rx = -ry - rz;
-  else if (yDiff > zDiff) ry = -rx - rz;
-  else rz = -rx - ry;
-  return [rx, rz];
-}
-
-const binMap = new Map();
-points.forEach(([lon, lat]) => {
-  const px = lonToPx(lon) - margin.left;
-  const py = latToPy(lat) - margin.top;
-  const q = (2 / 3) * (px / HEX_R);
-  const r = (-1 / 3) * (px / HEX_R) + (Math.sqrt(3) / 3) * (py / HEX_R);
-  const [rq, rr] = axialRound(q, r);
-  const key = `${rq},${rr}`;
-  binMap.set(key, (binMap.get(key) || 0) + 1);
-});
-
-const bins = Array.from(binMap.entries()).map(([key, count]) => {
-  const [q, r] = key.split(",").map(Number);
-  const cx = margin.left + HEX_R * 1.5 * q;
-  const cy = margin.top + HEX_R * Math.sqrt(3) * (r + q / 2);
-  return { count, cx, cy, lon: pxToLon(cx), lat: pyToLat(cy) };
-});
-const maxCount = Math.max(2, ...bins.map((b) => b.count));
-
-const series = [
-  {
-    id: "hex-bins",
-    label: "Sighting density",
-    data: bins.map((b, i) => ({ x: b.lon, y: b.lat, id: `hex-${i}` })),
-    markerSize: HEX_R,
-    color: t.palette[0],
-    valueFormatter: (_value, context) => {
-      const b = bins[context.dataIndex];
-      const lonLabel = `${Math.abs(b.lon).toFixed(2)}°W`;
-      const latLabel = `${b.lat.toFixed(2)}°N`;
-      return `${b.count} sighting${b.count === 1 ? "" : "s"} · ${lonLabel}, ${latLabel}`;
-    },
-  },
-];
-
-// --- Custom scatter-marker slot: renders each bin as a flat-top hexagon
-// (instead of MUI X's default circle), fill color driven by the zAxis
-// colorMap below. Hover/tooltip still work — they key off the underlying
-// data point positions, independent of how the marker is drawn. ------------
-function HexMarks({ series: s, xScale, yScale, markerSize, color, colorGetter }) {
-  return (
-    <g>
-      {s.data.map((d, i) => {
-        if (d === null) return null;
-        const cx = xScale(d.x);
-        const cy = yScale(d.y);
-        const fill = colorGetter ? colorGetter(i) : color;
-        const hexPoints = Array.from({ length: 6 }, (_, k) => {
-          const angle = (Math.PI / 180) * (60 * k);
-          return `${cx + markerSize * Math.cos(angle)},${cy + markerSize * Math.sin(angle)}`;
-        }).join(" ");
-        return <polygon key={d.id ?? i} points={hexPoints} fill={fill} fillOpacity={0.85} stroke={t.pageBg} strokeWidth={2} />;
-      })}
-    </g>
-  );
-}
-
-// Simplified coastline + land tint, positioned via the chart's real scales.
-function CoastlineLayer() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const coastPx = COASTLINE.map(([lon, lat]) => [xScale(lon), yScale(lat)]);
-  const top = coastPx[0];
-  const bottom = coastPx[coastPx.length - 1];
-  const landPolygon = [[xScale(LON_MAX), top[1]], ...coastPx, [xScale(LON_MAX), bottom[1]]].map((p) => p.join(",")).join(" ");
-  const coastPath = coastPx.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${p[1]}`).join(" ");
-  return (
-    <g>
-      <polygon points={landPolygon} fill={t.grid} />
-      <path d={coastPath} fill="none" stroke={INK_MUTED} strokeWidth={1.5} strokeOpacity={0.6} />
-    </g>
-  );
-}
-
-const title = "hexbin-map-geographic · javascript · muix · anyplot.ai";
-const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
-
-// Continuous density legend — @mui/x-charts has no built-in colorbar for a
-// zAxis colorMap, so it's drawn with plain SVG using the same imprint_seq
-// stops passed to the chart.
-function DensityLegend() {
-  const legendX = margin.left;
-  const legendY = height - 66;
-  const legendWidth = innerWidth * 0.5;
+// Base map in data coordinates: land tint and coastline, clipped to the drawing area
+function BaseMap() {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  const { left, top, width, height } = useDrawingArea();
   return (
     <g>
       <defs>
-        <linearGradient id="densityGradient" x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" stopColor={t.seq[0]} />
-          <stop offset="1" stopColor={t.seq[1]} />
-        </linearGradient>
+        <clipPath id={CLIP_ID}>
+          <rect x={left} y={top} width={width} height={height} />
+        </clipPath>
       </defs>
-      <text x={legendX} y={legendY - 10} fontSize={13} fill={t.inkSoft}>
-        Sightings per hex cell
-      </text>
-      <rect x={legendX} y={legendY} width={legendWidth} height={14} fill="url(#densityGradient)" />
-      <text x={legendX} y={legendY + 30} fontSize={13} fill={t.inkSoft}>
-        1
-      </text>
-      <text x={legendX + legendWidth} y={legendY + 30} textAnchor="end" fontSize={13} fill={t.inkSoft}>
-        {maxCount}
-      </text>
+      <g clipPath={`url(#${CLIP_ID})`}>
+        <polygon points={LAND.map(([lon, lat]) => `${xScale(lon)},${yScale(lat)}`).join(" ")} fill={t.grid} />
+        <polyline
+          points={COASTLINE.map(([lon, lat]) => `${xScale(lon)},${yScale(lat)}`).join(" ")}
+          fill="none"
+          stroke={t.inkSoft}
+          strokeWidth={1.5}
+        />
+        {ISLANDS.map((ring, i) => (
+          <polygon
+            key={i}
+            points={ring.map(([lon, lat]) => `${xScale(lon)},${yScale(lat)}`).join(" ")}
+            fill={t.grid}
+            stroke={t.inkSoft}
+            strokeWidth={1.5}
+          />
+        ))}
+      </g>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -----------
+// Hexagons in data coordinates, coloured by the z axis colour map
+function HexCells() {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  const colorScale = useZColorScale() as (v: number) => string;
+  return (
+    <g clipPath={`url(#${CLIP_ID})`}>
+      {bins.map((b) => (
+        <polygon
+          key={b.id}
+          points={HEX_CORNERS.map(([dx, dy]) => `${xScale(b.lon + dx)},${yScale(b.lat + dy)}`).join(" ")}
+          fill={colorScale(b.stat)}
+          fillOpacity={HEX_OPACITY}
+          stroke={t.pageBg}
+          strokeWidth={1.5}
+        />
+      ))}
+    </g>
+  );
+}
+
 export default function Chart() {
   return (
-    <ScatterChart
-      width={width}
-      height={height}
-      series={series}
-      zAxis={[
-        { data: bins.map((b) => b.count), colorMap: { type: "continuous", min: 1, max: maxCount, color: [t.seq[0], t.seq[1]] } },
-      ]}
-      margin={margin}
-      xAxis={[
-        {
-          scaleType: "linear",
-          min: LON_MIN,
-          max: LON_MAX,
-          tickNumber: 5,
-          valueFormatter: (v) => `${Math.abs(v).toFixed(1)}°W`,
-          tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: LAT_MIN,
-          max: LAT_MAX,
-          tickNumber: 5,
-          valueFormatter: (v) => `${v.toFixed(1)}°N`,
-          tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-        },
-      ]}
-      grid={{ vertical: true, horizontal: true }}
-      slots={{ scatter: HexMarks }}
-      tooltip={{ trigger: "item" }}
-      legend={{ hidden: true }}
-      skipAnimation
-    >
-      <CoastlineLayer />
-      <text x={width / 2} y={48} textAnchor="middle" fontSize={titleFontSize} fontWeight={600} fill={t.ink}>
-        {title}
-      </text>
-      <text x={width / 2} y={78} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
-        Southern California coast · gray whale &amp; dolphin sighting reports, hex-binned by count
-      </text>
-      <text x={margin.left + innerWidth / 2} y={height - margin.bottom + 46} textAnchor="middle" fontSize={13} fill={t.inkSoft}>
-        Longitude
-      </text>
-      <text
-        x={20}
-        y={margin.top + innerHeight / 2}
-        textAnchor="middle"
-        fontSize={13}
-        fill={t.inkSoft}
-        transform={`rotate(-90 20 ${margin.top + innerHeight / 2})`}
+    <Box sx={{ width: W, height: H, bgcolor: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <Box sx={{ height: HEADER_H, pt: "16px", px: "20px", textAlign: "center", boxSizing: "border-box" }}>
+        <Typography sx={{ fontSize: 21, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.6 }}>{SUBTITLE}</Typography>
+      </Box>
+      <ChartsDataProvider
+        width={W}
+        height={H - HEADER_H - LEGEND_H}
+        skipAnimation
+        margin={MARGIN}
+        // The cell centres as a scatter series: hover shows each cell's statistics
+        series={[
+          {
+            type: "scatter",
+            id: "hex-cells",
+            label: STAT_LABEL,
+            data: bins.map((b) => ({ id: b.id, x: b.lon, y: b.lat })),
+            valueFormatter: (_v, { dataIndex }) => {
+              const b = bins[dataIndex];
+              return `count ${b.count} · sum ${b.sum} · mean ${b.mean.toFixed(1)} · ${formatLat(b.lat)}, ${formatLon(b.lon)}`;
+            },
+          },
+        ]}
+        xAxis={[
+          {
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            height: X_AXIS_H,
+            label: LON,
+            tickLabelMinGap: 24,
+            valueFormatter: formatLon,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: yMin,
+            max: yMax,
+            width: Y_AXIS_W,
+            label: LAT,
+            valueFormatter: formatLat,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        zAxis={[{ colorMap: { type: "continuous", min: statMin, max: statMax, color: [t.seq[0], t.seq[1]] } }]}
       >
-        Latitude
-      </text>
-      <DensityLegend />
-    </ScatterChart>
+        <ChartsWrapper
+          legendPosition={{ vertical: "bottom", horizontal: "center" }}
+          legendDirection="horizontal"
+          sx={{ width: W, height: H - HEADER_H }}
+        >
+          <Box
+            sx={{
+              gridArea: "legend",
+              height: LEGEND_H,
+              width: W * 0.45,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              pt: "6px",
+              boxSizing: "border-box",
+            }}
+          >
+            <Typography sx={{ color: t.ink, fontSize: 15, textAlign: "center", mb: "4px" }}>{STAT_LABEL}</Typography>
+            <ContinuousColorLegend
+              direction="horizontal"
+              thickness={16}
+              labelPosition="end"
+              minLabel={({ value }) => formatStat(Number(value))}
+              maxLabel={({ value }) => formatStat(Number(value))}
+              // Same opacity as the cells, so the bar shows the colours as drawn
+              sx={{ color: t.inkSoft, fontSize: 14, [`& .${continuousColorLegendClasses.gradient}`]: { opacity: HEX_OPACITY } }}
+            />
+          </Box>
+          <ChartsSurface>
+            <ChartsGrid vertical horizontal sx={{ "& line": { stroke: t.grid } }} />
+            <BaseMap />
+            <HexCells />
+            <ChartsXAxis />
+            <ChartsYAxis />
+          </ChartsSurface>
+          <ChartsTooltip trigger="item" />
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </Box>
   );
 }

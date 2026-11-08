@@ -1,325 +1,205 @@
 // anyplot.ai
 // contour-density: Density Contour Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-09-04
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
-
-// MUI X community has no native contour/isoline chart. We compose one on top
-// of ScatterChart: a raw sample overlay (native ScatterPlot) plus a custom
-// child that draws real marching-squares contour paths from a real 2D KDE,
-// using the chart's own useXScale/useYScale — the documented composition
-// API, not a workaround.
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-// ANYPLOT_TOKENS has no tertiary "muted" anchor — derive it the same way the
-// style guide defines it (theme-adaptive, used for context/behind-the-data marks).
-const INK_MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-// --- Data: bearing QC measurements from two production batches ------------
-// Batch A sits on-spec; batch B drifted high on both dimensions — a common
-// quality-control pattern where a density contour reveals two overlapping
-// process clusters that a plain scatter would bury in overplotting.
-function createRng(seed: number) {
-  let state = seed >>> 0;
-  return () => {
+// Constants
+const LEVEL_FRACTIONS = [0.12, 0.28, 0.46, 0.65, 0.85]; // contour levels as shares of the peak density
+const GRID_STEPS = 70; // density grid nodes per axis
+const PAD_SHARE = 0.12; // plot extent beyond the points, as a share of each variable's range
+const SILVERMAN = 1.06; // Silverman's rule of thumb: h = 1.06 · sd · n^(-1/5) per axis
+
+// Columns: set these to your data's column names
+const DIAMETER = "Outer diameter (mm)"; // role: x
+const WEIGHT = "Weight (g)"; // role: y
+
+// Data: replace this block with your own records, one object per part
+// Bearing quality control: 900 parts from an on-spec batch and 500 from a batch that drifted high on
+// both dimensions, diameter and weight correlated within each batch
+const data = (() => {
+  let state = 42;
+  const rand = () => {
     state = (1664525 * state + 1013904223) >>> 0;
     return state / 4294967296;
   };
-}
-const rand = createRng(42);
+  const normal = () => Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
+  const batches = [
+    { n: 900, meanDiameter: 23.92, sdDiameter: 0.13, meanWeight: 45.6, sdWeight: 0.7, rho: 0.5 },
+    { n: 500, meanDiameter: 24.58, sdDiameter: 0.12, meanWeight: 48.4, sdWeight: 0.65, rho: 0.45 },
+  ];
+  return batches.flatMap((b) =>
+    Array.from({ length: b.n }, () => {
+      const z1 = normal();
+      const z2 = normal();
+      return {
+        [DIAMETER]: b.meanDiameter + b.sdDiameter * z1,
+        [WEIGHT]: b.meanWeight + b.sdWeight * (b.rho * z1 + Math.sqrt(1 - b.rho * b.rho) * z2),
+      };
+    }),
+  );
+})();
 
-function randNormal() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Plot: reads only data and the constants above
+const points = data
+  .filter((d) => Number.isFinite(d[DIAMETER]) && Number.isFinite(d[WEIGHT]))
+  .map((d, i) => ({ id: i, x: d[DIAMETER], y: d[WEIGHT] }));
+const n = points.length;
 
-function correlatedPoint(meanX: number, sdX: number, meanY: number, sdY: number, rho: number) {
-  const z1 = randNormal();
-  const z2 = randNormal();
-  return {
-    x: meanX + sdX * z1,
-    y: meanY + sdY * (rho * z1 + Math.sqrt(1 - rho * rho) * z2),
-  };
-}
+// Per axis: padded extent and the Silverman bandwidth of a Gaussian kernel
+const [xAxisStats, yAxisStats] = [points.map((p) => p.x), points.map((p) => p.y)].map((values) => {
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const sd = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / (values.length - 1));
+  const pad = (high - low) * PAD_SHARE;
+  return { min: low - pad, max: high + pad, bandwidth: SILVERMAN * sd * values.length ** (-1 / 5) };
+});
 
-const points: { id: number; x: number; y: number }[] = [];
-for (let i = 0; i < 900; i += 1) {
-  const p = correlatedPoint(23.92, 0.13, 45.6, 0.7, 0.5);
-  points.push({ id: points.length, x: p.x, y: p.y });
-}
-for (let i = 0; i < 500; i += 1) {
-  const p = correlatedPoint(24.58, 0.12, 48.4, 0.65, 0.45);
-  points.push({ id: points.length, x: p.x, y: p.y });
-}
-
-const diameters = points.map((p) => p.x);
-const weights = points.map((p) => p.y);
-const diameterMin = Math.min(...diameters);
-const diameterMax = Math.max(...diameters);
-const weightMin = Math.min(...weights);
-const weightMax = Math.max(...weights);
-const padX = (diameterMax - diameterMin) * 0.12;
-const padY = (weightMax - weightMin) * 0.12;
-const domainXMin = diameterMin - padX;
-const domainXMax = diameterMax + padX;
-const domainYMin = weightMin - padY;
-const domainYMax = weightMax + padY;
-
-// --- 2D kernel density estimate on a grid ----------------------------------
-function silvermanBandwidth(values: number[]) {
-  const n = values.length;
-  const mean = values.reduce((a, b) => a + b, 0) / n;
-  const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
-  return 1.06 * Math.sqrt(variance) * n ** (-1 / 5);
-}
-
-const GRID_N = 70;
-const gridX = Array.from(
-  { length: GRID_N },
-  (_, i) => domainXMin + (i * (domainXMax - domainXMin)) / (GRID_N - 1),
-);
-const gridY = Array.from(
-  { length: GRID_N },
-  (_, i) => domainYMin + (i * (domainYMax - domainYMin)) / (GRID_N - 1),
-);
-const bandwidthX = silvermanBandwidth(diameters);
-const bandwidthY = silvermanBandwidth(weights);
-
-const densityGrid = gridY.map((yv) =>
-  gridX.map((xv) => {
+// Kernel density estimate on a regular grid, density[j][i] at (gridX[i], gridY[j])
+const gridX = Array.from({ length: GRID_STEPS }, (_, i) => xAxisStats.min + (i / (GRID_STEPS - 1)) * (xAxisStats.max - xAxisStats.min));
+const gridY = Array.from({ length: GRID_STEPS }, (_, j) => yAxisStats.min + (j / (GRID_STEPS - 1)) * (yAxisStats.max - yAxisStats.min));
+const density = gridY.map((gy) =>
+  gridX.map((gx) => {
     let sum = 0;
-    for (let k = 0; k < points.length; k += 1) {
-      const dx = (xv - points[k].x) / bandwidthX;
-      const dy = (yv - points[k].y) / bandwidthY;
+    points.forEach((p) => {
+      const dx = (gx - p.x) / xAxisStats.bandwidth;
+      const dy = (gy - p.y) / yAxisStats.bandwidth;
       sum += Math.exp(-0.5 * (dx * dx + dy * dy));
-    }
-    return sum / (points.length * bandwidthX * bandwidthY);
+    });
+    return sum / (2 * Math.PI * n * xAxisStats.bandwidth * yAxisStats.bandwidth);
   }),
 );
-const maxDensity = Math.max(...densityGrid.map((row) => Math.max(...row)));
+const peakDensity = Math.max(...density.flat());
 
-// --- Marching squares: extract iso-density line segments -------------------
-function lerp(a: number, b: number, va: number, vb: number, threshold: number) {
-  if (vb === va) return a;
-  return a + ((b - a) * (threshold - va)) / (vb - va);
-}
-
-const CASE_EDGES: Record<number, [string, string][]> = {
-  1: [["L", "B"]],
-  2: [["B", "R"]],
-  3: [["L", "R"]],
-  4: [["T", "R"]],
-  6: [["T", "B"]],
-  7: [["T", "L"]],
-  8: [["T", "L"]],
-  9: [["T", "B"]],
-  11: [["T", "R"]],
-  12: [["L", "R"]],
-  13: [["B", "R"]],
-  14: [["L", "B"]],
-};
-
-function marchingSquares(xs: number[], ys: number[], grid: number[][], threshold: number) {
-  const segments: [number, number, number, number][] = [];
-  for (let i = 0; i < ys.length - 1; i += 1) {
-    for (let j = 0; j < xs.length - 1; j += 1) {
-      const x0 = xs[j];
-      const x1 = xs[j + 1];
-      const y0 = ys[i];
-      const y1 = ys[i + 1];
-      const v00 = grid[i][j];
-      const v10 = grid[i][j + 1];
-      const v01 = grid[i + 1][j];
-      const v11 = grid[i + 1][j + 1];
-
-      const idx =
-        (v00 >= threshold ? 8 : 0) |
-        (v10 >= threshold ? 4 : 0) |
-        (v11 >= threshold ? 2 : 0) |
-        (v01 >= threshold ? 1 : 0);
-      if (idx === 0 || idx === 15) continue;
-
-      const edgePoint = (edge: string): [number, number] => {
-        if (edge === "T") return [lerp(x0, x1, v00, v10, threshold), y0];
-        if (edge === "R") return [x1, lerp(y0, y1, v10, v11, threshold)];
-        if (edge === "B") return [lerp(x0, x1, v01, v11, threshold), y1];
-        return [x0, lerp(y0, y1, v00, v01, threshold)];
-      };
-
-      // Saddle cases (5, 10): resolve via the cell's average value so the
-      // contour topology stays consistent with the smooth underlying KDE.
-      const avg = (v00 + v10 + v01 + v11) / 4;
-      let pairs: [string, string][];
-      if (idx === 5) pairs = avg >= threshold ? [["T", "L"], ["B", "R"]] : [["T", "R"], ["L", "B"]];
-      else if (idx === 10) pairs = avg >= threshold ? [["T", "R"], ["L", "B"]] : [["T", "L"], ["B", "R"]];
-      else pairs = CASE_EDGES[idx];
-
-      pairs.forEach(([e1, e2]) => {
-        const [ax, ay] = edgePoint(e1);
-        const [bx, by] = edgePoint(e2);
-        segments.push([ax, ay, bx, by]);
-      });
-    }
+// Marching triangles: each grid cell splits into four triangles around its centre, which resolves
+// saddles; per level, the segment where the density crosses it inside every triangle
+const triangles: { x: number; y: number; z: number }[][] = [];
+for (let j = 0; j < GRID_STEPS - 1; j += 1) {
+  for (let i = 0; i < GRID_STEPS - 1; i += 1) {
+    const [sw, se, ne, nw] = [
+      [i, j],
+      [i + 1, j],
+      [i + 1, j + 1],
+      [i, j + 1],
+    ].map(([ii, jj]) => ({ x: gridX[ii], y: gridY[jj], z: density[jj][ii] }));
+    const centre = { x: (sw.x + se.x) / 2, y: (sw.y + nw.y) / 2, z: (sw.z + se.z + ne.z + nw.z) / 4 };
+    triangles.push([sw, se, centre], [se, ne, centre], [ne, nw, centre], [nw, sw, centre]);
   }
-  return segments;
 }
+const contours = LEVEL_FRACTIONS.map((fraction, k) => {
+  const level = fraction * peakDensity;
+  const segments: { x: number; y: number }[][] = [];
+  triangles.forEach((tri) => {
+    const inside = tri.map((p) => p.z >= level);
+    if (inside.every(Boolean) || !inside.some(Boolean)) return;
+    const segment: { x: number; y: number }[] = [];
+    tri.forEach((p, m) => {
+      const q = tri[(m + 1) % 3];
+      if (inside[m] !== inside[(m + 1) % 3]) {
+        const r = (level - p.z) / (q.z - p.z);
+        segment.push({ x: p.x + r * (q.x - p.x), y: p.y + r * (q.y - p.y) });
+      }
+    });
+    segments.push(segment);
+  });
+  // Sequential Imprint ramp t.seq[0] -> t.seq[1]: the strongest colour marks the highest density
+  const share = k / (LEVEL_FRACTIONS.length - 1);
+  const [low, high] = t.seq.map((hex: string) => [16, 8, 0].map((shift) => (parseInt(hex.slice(1), 16) >> shift) & 255));
+  const color = `rgb(${low.map((c: number, ch: number) => Math.round(c + (high[ch] - c) * share)).join(", ")})`;
+  return { fraction, segments, color, strokeWidth: 2.5 + k * 0.7 };
+});
 
-const LEVEL_FRACTIONS = [0.12, 0.28, 0.46, 0.65, 0.85];
-const CONTOURS = LEVEL_FRACTIONS.map((fraction) => ({
-  fraction,
-  segments: marchingSquares(gridX, gridY, densityGrid, fraction * maxDensity),
-}));
+const TITLE = "Bearing QC · contour-density · javascript · muix · anyplot.ai";
+const subtitle = `n = ${n.toLocaleString("en-US")} · Gaussian KDE, Silverman bandwidths ${xAxisStats.bandwidth.toFixed(3)} and ${yAxisStats.bandwidth.toFixed(2)} · ${GRID_STEPS} × ${GRID_STEPS} grid`;
+const HEADER_H = 92;
+const LEGEND_W = 190;
 
-// --- Imprint sequential ramp (brand green → blue) --------------------------
-function mixHex(hexA: string, hexB: string, ratio: number) {
-  const a = parseInt(hexA.slice(1), 16);
-  const b = parseInt(hexB.slice(1), 16);
-  const channel = (shift: number) => {
-    const av = (a >> shift) & 255;
-    const bv = (b >> shift) & 255;
-    return Math.round(av + (bv - av) * ratio).toString(16).padStart(2, "0");
-  };
-  return `#${[16, 8, 0].map(channel).join("")}`;
-}
-
-function hexToRgba(hex: string, alpha: number) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-}
-
-// Custom mark: draws the precomputed iso-density paths in the chart's own
-// pixel space via its native scale hooks — this is MUI X's documented
-// composition pattern for chart types the community surface lacks natively.
 function ContourLines() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale) return null;
-
   return (
     <g>
-      {CONTOURS.map(({ fraction, segments }, level) => {
-        if (segments.length === 0) return null;
-        const d = segments
-          .map(([x1, y1, x2, y2]) => `M ${xScale(x1)} ${yScale(y1)} L ${xScale(x2)} ${yScale(y2)}`)
-          .join(" ");
-        const color = mixHex(t.seq[0], t.seq[1], level / (LEVEL_FRACTIONS.length - 1));
-        return (
-          <path
-            key={fraction}
-            d={d}
-            fill="none"
-            stroke={color}
-            strokeWidth={2.5 + level * 0.7}
-            strokeOpacity={0.92}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        );
-      })}
-    </g>
-  );
-}
-
-function DensityLegend({ height }: { height: number }) {
-  const rows = LEVEL_FRACTIONS.map((fraction, level) => ({
-    fraction,
-    color: mixHex(t.seq[0], t.seq[1], level / (LEVEL_FRACTIONS.length - 1)),
-  })).reverse();
-  return (
-    <Box sx={{ width: 168, height, display: "flex", flexDirection: "column", justifyContent: "center", pl: "18px" }}>
-      <Typography sx={{ color: t.inkSoft, fontSize: 14, fontWeight: 600, mb: "10px", fontFamily: "inherit" }}>
-        KDE density
-      </Typography>
-      {rows.map(({ fraction, color }, i) => (
-        <Box key={color} sx={{ display: "flex", alignItems: "center", mb: "8px" }}>
-          <Box sx={{ width: 22, height: 6, borderRadius: "3px", bgcolor: color, mr: "10px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 13, fontFamily: "inherit" }}>
-            {i === 0 ? "Highest" : i === rows.length - 1 ? "Lowest" : `~${Math.round(fraction * 100)}%`}
-          </Typography>
-        </Box>
+      {contours.map((c) => (
+        <path
+          key={c.fraction}
+          d={c.segments.map(([a, b]) => `M${xScale(a.x)!.toFixed(1)},${yScale(a.y)!.toFixed(1)}L${xScale(b.x)!.toFixed(1)},${yScale(b.y)!.toFixed(1)}`).join("")}
+          fill="none"
+          stroke={c.color}
+          strokeWidth={c.strokeWidth}
+          strokeOpacity={0.92}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       ))}
-    </Box>
+    </g>
   );
 }
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_H = 100;
-  const LEGEND_W = 168;
-  const chartWidth = width - LEGEND_W;
-  const chartHeight = height - TITLE_H;
-
-  const title = "Bearing QC: Diameter vs. Weight · contour-density · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
-  const contextColor = hexToRgba(INK_MUTED, 0.55);
-
   return (
     <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
-      <Box sx={{ height: TITLE_H, display: "flex", flexDirection: "column", justifyContent: "center", px: "40px" }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600, lineHeight: 1.25, fontFamily: "inherit" }}>
-          {title}
-        </Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 16, fontStyle: "italic", lineHeight: 1.3, fontFamily: "inherit", mt: "4px" }}>
-          Contours trace KDE density across two production batches (n = 1,400 parts)
-        </Typography>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", gap: "6px", px: "40px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.3 }}>{subtitle}</Typography>
       </Box>
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "row" }}>
+      <Box sx={{ display: "flex", flexDirection: "row" }}>
         <ScatterChart
-          width={chartWidth}
-          height={chartHeight}
+          width={width - LEGEND_W}
+          height={height - HEADER_H}
           skipAnimation
+          hideLegend
           disableVoronoi
-          series={[
-            {
-              id: "sample",
-              type: "scatter",
-              data: points,
-              color: contextColor,
-              markerSize: 3.5,
-              label: "Sampled parts",
-            },
-          ]}
+          grid={{ horizontal: true, vertical: true }}
+          margin={{ top: 20, right: 24, bottom: 24, left: 24 }}
+          series={[{ id: "parts", type: "scatter", data: points, color: t.inkSoft, markerSize: 3 }]}
           xAxis={[
             {
               scaleType: "linear",
-              min: domainXMin,
-              max: domainXMax,
-              label: "Outer Diameter (mm)",
-              labelStyle: { fontSize: 16, fill: t.inkSoft },
+              min: xAxisStats.min,
+              max: xAxisStats.max,
+              label: DIAMETER,
+              height: 60,
+              labelStyle: { fontSize: 16, fill: t.ink },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             },
           ]}
           yAxis={[
             {
               scaleType: "linear",
-              min: domainYMin,
-              max: domainYMax,
-              label: "Weight (g)",
-              labelStyle: { fontSize: 16, fill: t.inkSoft },
+              min: yAxisStats.min,
+              max: yAxisStats.max,
+              label: WEIGHT,
+              width: 72,
+              labelStyle: { fontSize: 16, fill: t.ink },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              // MUI X positions the rotated axis label at a fixed offset of
-              // `tickFontSize + tickSize + 10` from the axis line — that offset
-              // uses this deprecated prop, NOT `tickLabelStyle.fontSize` above,
-              // so it must be set wide enough on its own to clear the actual
-              // (wider) rendered tick-label text at every tick position.
-              tickFontSize: 46,
             },
           ]}
-          grid={{ horizontal: true, vertical: true }}
-          margin={{ top: 20, right: 40, bottom: 90, left: 150 }}
           sx={{
+            "& .MuiScatterChart-marker": { fillOpacity: 0.3 },
             "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
           }}
-          slotProps={{ legend: { hidden: true } }}
         >
           <ContourLines />
         </ScatterChart>
-        <DensityLegend height={chartHeight} />
+        <Box sx={{ width: LEGEND_W, display: "flex", flexDirection: "column", justifyContent: "center", gap: "10px", pl: "12px" }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}>Density contours</Typography>
+          {[...contours].reverse().map((c) => (
+            <Box key={c.fraction} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Box sx={{ width: 26, height: `${c.strokeWidth}px`, borderRadius: "3px", bgcolor: c.color, flexShrink: 0 }} />
+              <Typography sx={{ fontSize: 14, color: t.inkSoft }}>{`${Math.round(c.fraction * 100)} % of peak`}</Typography>
+            </Box>
+          ))}
+        </Box>
       </Box>
     </Box>
   );

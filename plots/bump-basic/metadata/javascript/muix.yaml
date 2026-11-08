@@ -2,55 +2,56 @@ library: muix
 language: javascript
 specification_id: bump-basic
 created: '2026-08-24T19:33:12Z'
-updated: '2026-08-24T19:38:25Z'
-generated_by: claude-sonnet
-workflow_run: 32768302887
+updated: '2026-11-08T01:37:09Z'
+generated_by: claude-opus-5-5
+adopted_from: ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77 (ba5a50aef6e4cdfabd183d5e2f24c8d39e347b77)
+workflow_run: 42434416843
 issue: 982
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Direct end-of-line entity labels (via useXScale/useYScale hooks) replace the legend
-    entirely — a genuinely idiomatic MUI X compositional pattern, and a stronger identity
-    cue than a corner legend with 6 close hues
-  - Smooth monotoneX curve interpolation gives the bump chart a polished, professional
-    look without overshooting rank bounds
-  - Y-axis correctly inverted (rank 1 at top) with integer-only ticks formatted as
-    '#1'..'#6', reinforcing the ordinal nature of the data
-  - 'Data shows genuinely varied rank-change patterns: gradual crossovers (Python/JavaScript),
-    non-monotonic dips and recoveries (Go, Rust), and stable plateaus — good feature
-    coverage for a bump chart'
-  - All font sizes explicitly set (title, axis labels, tick labels, end labels) and
-    legible in both themes; data colors identical between light/dark renders with
-    only chrome flipping
-  - Clean, minimal code — data as flat arrays, no unnecessary abstractions beyond
-    the one helper needed to consume chart-context hooks
+  - Direct end labels are drawn by a child component that reads the chart's own scales
+    through useXScale/useYScale. This MUI X composition idiom places each language
+    name exactly at its final rank and makes a legend unnecessary.
+  - 'The rank axis is inverted (reverse: true) with whole-number ticks from tickInterval
+    and a ''#n'' valueFormatter. The padding is derived from the rank span, so the
+    #1 and #6 markers sit fully inside the plot.'
+  - The monotoneX curve gives gentle transitions between years that never swing past
+    a rank, so every line passes exactly through its rank at all 8 periods.
+  - Theme tokens are applied to all chrome (title, subtitle, axis lines, ticks, grid,
+    end labels), so both renders read cleanly and the Imprint data colors are identical
+    in both.
+  - The data shows several overtakes (Python over JavaScript, TypeScript over Java,
+    Rust over Go) next to long stable stretches. Each year is a valid 1..6 permutation.
+  - Library-native tooltips stay in the HTML output; skipAnimation guarantees a final-frame
+    PNG.
   weaknesses:
-  - Rank trajectories are plausible but not tied to a specific real-world ranking
-    source (e.g. TIOBE, Stack Overflow survey) — the general shape (Python overtaking
-    JavaScript, TypeScript overtaking Java) is directionally reasonable but not verifiable
-    against a named index
-  - Data storytelling is good but not exceptional — all six entities receive equal
-    visual weight with no single emphasized focal point or callout for the most dramatic
-    change
-  - Vertical y-axis line and horizontal x-axis line remain visible (not fully spine-free);
-    a fully chromeless axis treatment would push Visual Refinement further
+  - 'DQ-02 (both): real language names (JavaScript, Python, Java, TypeScript, Go,
+    Rust) carry ranks for 2018-2025 that no named ranking source backs, so the chart
+    reads as fact but the numbers are invented → either cite the ranking the values
+    follow (for example a named survey) in the subtitle and match it, or use fictional
+    entities. Likely cause: the hand-typed ranks arrays in the data block.'
+  - 'Suggestion: labels at the 2018 end as well would let readers see the starting
+    order without tracing the lines back from the right.'
+  - 'Suggestion: tick labels at 14 px get small in the 400 px thumbnail; 15-16 px
+    would match the end labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "Language Popularity Rankings · bump-basic · javascript · muix · anyplot.ai" in dark ink at top-left, fully visible, not clipped. Y-axis shows rank ticks "#1" through "#6" (inverted, #1 at top) in dark ink; "Rank" axis label rotated at left. X-axis shows years 2018-2025 with "Year" label below, all in dark ink. Subtle horizontal grid lines at each rank level. All text clearly readable against the light background.
-      Data: Six smooth curved lines (JavaScript, Python, Java, TypeScript, Go, Rust) each in a distinct Imprint palette color, with small circular markers at each year. First series (JavaScript) renders in #009E73 brand green. Direct end-of-line labels at the right edge (color-matched to each line) replace a traditional legend, sitting fully within the canvas margin, not clipped.
+      Background: warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: bold dark title "Language Popularity Rankings · bump-basic · javascript · muix · anyplot.ai" centered at the top, a soft-gray subtitle "Popularity rank of 6 languages per year, 2018–2025 · 1 = top" below it, a y-axis title "Popularity rank" with ticks #1..#6 (rank 1 at top), an x-axis title "Year" with ticks 2018..2025, and subtle horizontal grid lines at each whole rank. The left and bottom axis lines are in soft ink. All text is dark and readable.
+      Data: six smooth (monotone) lines with hollow ring markers at each year. JavaScript is brand green #009E73 (first series), followed by Python purple, Java blue, TypeScript ochre, Go dark red and Rust cyan. The direct labels at the 2025 end read Python, JavaScript, TypeScript, Java, Rust, Go, in final-rank order. Crossings appear between 2018-19 (Python/Java), 2019-20 (TypeScript/Go), 2020-21 (Python/JavaScript), 2022-23 (TypeScript/Java) and 2023-24 (Rust/Go). Nothing overlaps and nothing is clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, now in light/white text, fully visible. Y-axis "#1"-"#6" ticks and "Rank" label in light ink, X-axis years and "Year" label in light ink. Grid lines subtle but visible against the dark surface.
-      Data: Same six curves, same colors as light render (JavaScript #009E73 confirmed identical) — only the chrome (background, text, grid) flipped to the dark scheme. End-of-line labels remain color-matched and readable, including the muted slate-blue "Java" label, which retains adequate contrast against the near-black background. No dark-on-dark text found.
+      Background: warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: the title, subtitle, axis titles, tick labels and end labels flip to light ink and are clearly readable. The grid lines are subtle dark gray and still visible, and the axis lines are light. No text renders dark on dark.
+      Data: line and marker colors are identical to the light render, and brand green remains clearly visible. The marker rings are filled with the dark page color, so they read as hollow rings exactly as in light.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,73 +63,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title, axis labels, ticks, end labels);
-          readable in both themes without clipping
+        comment: 'Explicit sizes: title 22, subtitle 15, axis titles 16, ticks 14,
+          end labels 16 CSS px. All readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: End labels evenly spaced by rank, no collisions with data or each
-          other
+        comment: No text collisions; end labels sit one rank apart; line crossings
+          are the expected overtakes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3px lines and r=5 markers well-suited to 6 series / 8 periods
+        comment: Lines 3.5 px with 6.5 px ring markers suit 48 points; N/A legend
+          (direct labels)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct Imprint hues, no red-green-only signal
+        comment: Six Imprint hues told apart in both themes, and direct labels back
+          up the color, so color is never the only cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the canvas with balanced margins; right margin
-          used purposefully for end labels
+        comment: 3200x1800, balanced margins, right margin reserved for end labels,
+          title ~74% width (expected for the mandated title)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive ''Year'' and ''Rank'' axis labels; rank ticks formatted
-          as #1..#6'
+        comment: '''Popularity rank'' and ''Year'' are reader-facing; the subtitle
+          states that 1 = top'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series follow canonical Imprint
-          order, backgrounds theme-correct in both renders'
+        comment: 'First series #009E73, Imprint in canonical order via t.palette[i],
+          correct backgrounds in both themes'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Direct end-labeling and smooth curves clearly above library defaults,
-          though the technique is a known bump-chart pattern rather than a novel one
+        passed: false
+        comment: 'Beyond baseline: title/subtitle hierarchy with a data-derived subtitle,
+          ''#n'' rank formatter, hollow ring markers, medium-weight end labels in
+          ink'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Subtle single-direction grid and generous whitespace, but the y-axis
-          and x-axis lines remain visible (not fully spine-free)
+        passed: false
+        comment: 'Beyond baseline: a legend replaced by direct end labels with a 16
+          px gap, a grid only at whole ranks, rank padding derived from the span so
+          the end markers stay inside'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Visual hierarchy via color and end labels guides the reader through
-          crossovers, but no single emphasized focal point
+        passed: false
+        comment: End labels stacked in final-rank order give the 2025 standings at
+          a glance; no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +143,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bump chart: ranks over time, connected lines, inverted y-axis'
+        comment: 'Basic bump chart: one line per entity with markers and direct labels;
+          no reference lines, highlights or callouts'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted y-axis, distinct entity colors/labels, dot markers at each
-          period all present
+        comment: Inverted rank axis, whole-number ticks, distinct colors plus labels,
+          dot markers on ranks, every line passing all 8 periods (all C bullets met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=year, Y=rank correctly assigned, all data visible
+        comment: monotoneX does not overshoot; markers sit exactly on rank values;
+          axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; end labels correctly identify each entity in
-          lieu of a legend
+        comment: Title has a descriptive prefix plus the mandated format; direct labels
+          match the series; N/A legend
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -168,22 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows gradual crossovers, non-monotonic dips/recoveries, and stable
-          plateaus
+        comment: Several overtakes, flat holds, and entities rising and falling
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real, neutral tech-industry scenario (programming language popularity
-          rankings)
+        passed: false
+        comment: A plausible tech-ranking scenario, but real language names carry
+          invented ranks with no named source (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Trends are directionally plausible but not tied to a specific named
-          real-world ranking source
+        comment: 'Checked: each year is a permutation of 1..6 (lines 18-23); the axis
+          spans #1..#6 with padding; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -193,58 +199,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data arrays; the one helper component is required by MUI X's
-          hook-based composition, not over-engineering
+        comment: Columns, data, plot, then the default-exported component; the EndLabels
+          sub-component is required to call MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, useXScale, useYScale imported and used
+        comment: LineChart and useXScale/useYScale all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the composition needed, no fake functionality
+        comment: Lean; lookup map and derived ticks; nothing a shorter form replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set
+        comment: v9 API (hideLegend, tickInterval, axis width/height, per-chart CSS
+          classes), skipAnimation, default export
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: LineChart with axis config, grid, sx overrides, and chart-context
-          hooks — the recommended MUI X composition pattern
+        passed: false
+        comment: High-level LineChart with series config, reverse axis, tickInterval,
+          valueFormatter, sx on v9 per-chart classes
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: useXScale/useYScale hook composition for custom chart children is
-          MUI X-specific, though the end-labeling result itself could be replicated
-          with manual work in other libraries
+        passed: false
+        comment: A composed SVG child inside LineChart that uses the useXScale/useYScale
+          hooks for scale-aware direct labels, a MUI X composition feature
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T01:34:27Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - publication-ready

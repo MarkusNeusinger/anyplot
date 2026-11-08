@@ -1,181 +1,230 @@
 // anyplot.ai
 // contour-basic: Basic Contour Plot
-// Library: muix 7.29.1 | JavaScript 22.23.0
-// Quality: 84/100 | Created: 2026-06-25
-//# anyplot-orientation: landscape
-
-import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-08
+//# anyplot-orientation: square
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { PiecewiseColorLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Grid setup ------------------------------------------------------------
-const GRID = 60;
-const X_MIN = -3, X_MAX = 3, Y_MIN = -3, Y_MAX = 3;
+// Constants
+const LEVEL_COUNT = 9; // filled bands between the field's minimum and maximum, evenly stepped
+const ISOLINE_INK = "#1A1A17"; // fixed ink: the bands keep their colours in both themes
 
-const xs = Array.from({ length: GRID }, (_, i) => X_MIN + (i / (GRID - 1)) * (X_MAX - X_MIN));
-const ys = Array.from({ length: GRID }, (_, j) => Y_MIN + (j / (GRID - 1)) * (Y_MAX - Y_MIN));
+// Columns: set these to your data's column names
+const EASTING = "Easting (km)"; // role: x
+const NORTHING = "Northing (km)"; // role: y
+const ELEVATION = "Elevation (km)"; // role: z
 
-// --- Elevation: two Gaussian peaks + ridge ---------------------------------
-function elevation(x, y) {
-  const peak1 = Math.exp(-((x - 1) * (x - 1) + (y - 0.5) * (y - 0.5)) * 1.5);
-  const peak2 = 0.75 * Math.exp(-((x + 1) * (x + 1) + (y + 1) * (y + 1)) * 2.0);
-  const ridge = 0.175 * Math.exp(-(x - y) * (x - y) * 0.8);
-  return peak1 + peak2 + ridge;
-}
-
-// zGrid[j][i] = z at (xs[i], ys[j])
-const zGrid = ys.map(y => xs.map(x => elevation(x, y)));
-const allZ = zGrid.flat();
-const zMin = Math.min(...allZ);
-const zMax = Math.max(...allZ);
-
-// --- Imprint sequential colormap: t.seq[0] → t.seq[1] --------------------
-function seqColor(frac) {
-  const h1 = t.seq[0], h2 = t.seq[1];
-  const chan = (s, o) => parseInt(s.slice(o, o + 2), 16);
-  const lerp = (a, b) => Math.round(a + frac * (b - a));
-  const hex = n => n.toString(16).padStart(2, "0");
-  return `#${hex(lerp(chan(h1, 1), chan(h2, 1)))}${hex(lerp(chan(h1, 3), chan(h2, 3)))}${hex(lerp(chan(h1, 5), chan(h2, 5)))}`;
-}
-
-// --- Filled contour bands via scatter proxy --------------------------------
-const NUM_BANDS = 6;
-const bandW = (zMax - zMin) / NUM_BANDS;
-
-const allPoints = xs.flatMap((x, i) => ys.map((y, j) => ({ x, y, z: zGrid[j][i] })));
-
-const scatterSeries = Array.from({ length: NUM_BANDS }, (_, b) => {
-  const lo = zMin + b * bandW;
-  const hi = lo + bandW;
-  const isLast = b === NUM_BANDS - 1;
-  return {
-    data: allPoints
-      .filter(p => isLast ? p.z >= lo && p.z <= hi : p.z >= lo && p.z < hi)
-      .map((p, k) => ({ x: p.x, y: p.y, id: `${b}_${k}` })),
-    label: `${lo.toFixed(2)} – ${hi.toFixed(2)}`,
-    color: seqColor(b / (NUM_BANDS - 1)),
-    markerSize: 17,
-  };
-});
-
-// --- Contour isolines via marching squares ---------------------------------
-function marchingSquares(level) {
-  const lerpVal = (a, b, za, zb) => a + (b - a) * (level - za) / (zb - za);
-  const segs = [];
-  for (let j = 0; j < GRID - 1; j++) {
-    for (let i = 0; i < GRID - 1; i++) {
-      const sw = zGrid[j][i],     se = zGrid[j][i + 1];
-      const ne = zGrid[j + 1][i + 1], nw = zGrid[j + 1][i];
-      const swA = sw > level, seA = se > level, neA = ne > level, nwA = nw > level;
-
-      // Interpolated crossing point on each cell edge (null if not crossed)
-      const edgeS = swA !== seA ? [lerpVal(xs[i], xs[i + 1], sw, se), ys[j]]           : null;
-      const edgeE = seA !== neA ? [xs[i + 1], lerpVal(ys[j], ys[j + 1], se, ne)]       : null;
-      const edgeN = nwA !== neA ? [lerpVal(xs[i], xs[i + 1], nw, ne), ys[j + 1]]       : null;
-      const edgeW = swA !== nwA ? [xs[i],     lerpVal(ys[j], ys[j + 1], sw, nw)]       : null;
-
-      const pts = [edgeS, edgeE, edgeN, edgeW].filter(Boolean);
-      if (pts.length === 2) {
-        segs.push([pts[0], pts[1]]);
-      } else if (pts.length === 4) {
-        // Saddle point: use cell center value to resolve ambiguity
-        const mid = (sw + se + ne + nw) / 4;
-        if (mid > level) {
-          segs.push([edgeS, edgeE]); segs.push([edgeN, edgeW]);
-        } else {
-          segs.push([edgeS, edgeW]); segs.push([edgeN, edgeE]);
-        }
-      }
+// Data: replace this block with your own records, one object per grid point
+// Terrain of a 6 × 6 km survey square: two summits joined by a low diagonal ridge, sampled on a 100 × 100 grid
+const data = (() => {
+  const gridSize = 100;
+  const halfSpan = 3;
+  const rows: Record<string, number>[] = [];
+  for (let j = 0; j < gridSize; j += 1) {
+    const y = -halfSpan + (2 * halfSpan * j) / (gridSize - 1);
+    for (let i = 0; i < gridSize; i += 1) {
+      const x = -halfSpan + (2 * halfSpan * i) / (gridSize - 1);
+      const northSummit = Math.exp(-((x - 1) ** 2 + (y - 0.5) ** 2) * 1.5);
+      const southSummit = 0.75 * Math.exp(-((x + 1) ** 2 + (y + 1) ** 2) * 2.0);
+      const ridge = 0.175 * Math.exp(-((x - y) ** 2) * 0.8);
+      rows.push({ [EASTING]: x, [NORTHING]: y, [ELEVATION]: northSummit + southSummit + ridge });
     }
   }
-  return segs;
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+// Regular grid rebuilt from the records: sorted coordinates, z indexed as zGrid[row][column]
+const xs = [...new Set(data.map((d) => d[EASTING]))].sort((a, b) => a - b);
+const ys = [...new Set(data.map((d) => d[NORTHING]))].sort((a, b) => a - b);
+const xIndex = new Map(xs.map((v, i) => [v, i]));
+const yIndex = new Map(ys.map((v, j) => [v, j]));
+const zGrid = ys.map(() => xs.map(() => NaN));
+data.forEach((d) => {
+  zGrid[yIndex.get(d[NORTHING])!][xIndex.get(d[EASTING])!] = d[ELEVATION];
+});
+const zValues = data.map((d) => d[ELEVATION]).filter((v) => Number.isFinite(v));
+const zMin = Math.min(...zValues);
+const zMax = Math.max(...zValues);
+const levelStep = (zMax - zMin) / LEVEL_COUNT;
+const levels = Array.from({ length: LEVEL_COUNT }, (_, k) => zMin + k * levelStep);
+const thresholds = levels.slice(1);
+
+// Sequential Imprint ramp t.seq[0] -> t.seq[1], one step per band
+const [seqLow, seqHigh] = t.seq.map((hex: string) => [16, 8, 0].map((shift) => (parseInt(hex.slice(1), 16) >> shift) & 255));
+const bandColors = levels.map(
+  (_, k) => `rgb(${seqLow.map((c: number, ch: number) => Math.round(c + ((seqHigh[ch] - c) * k) / (LEVEL_COUNT - 1))).join(", ")})`,
+);
+
+// Marching triangles: each grid cell splits into four triangles around its centre, which resolves
+// saddles; per level, the part of every triangle at or above the level and the cut along the level
+type Pt = { x: number; y: number; z: number };
+const triangles: Pt[][] = [];
+for (let j = 0; j < ys.length - 1; j += 1) {
+  for (let i = 0; i < xs.length - 1; i += 1) {
+    const sw = { x: xs[i], y: ys[j], z: zGrid[j][i] };
+    const se = { x: xs[i + 1], y: ys[j], z: zGrid[j][i + 1] };
+    const ne = { x: xs[i + 1], y: ys[j + 1], z: zGrid[j + 1][i + 1] };
+    const nw = { x: xs[i], y: ys[j + 1], z: zGrid[j + 1][i] };
+    const centre = { x: (sw.x + se.x) / 2, y: (sw.y + nw.y) / 2, z: (sw.z + se.z + ne.z + nw.z) / 4 };
+    [[sw, se], [se, ne], [ne, nw], [nw, sw]].forEach(([a, b]) => {
+      if ([a.z, b.z, centre.z].every((z) => Number.isFinite(z))) triangles.push([a, b, centre]);
+    });
+  }
 }
+const bandPolygons: { x: number; y: number }[][][] = [];
+const isolines: { x: number; y: number }[][][] = [];
+levels.forEach((level) => {
+  const polys: { x: number; y: number }[][] = [];
+  const cuts: { x: number; y: number }[][] = [];
+  triangles.forEach((tri) => {
+    const inside = tri.map((p) => p.z >= level);
+    const count = inside.filter(Boolean).length;
+    if (count === 0) return;
+    if (count === 3) {
+      polys.push(tri);
+      return;
+    }
+    // Walk the three edges; keep inside vertices and the level crossing on every edge that changes side
+    const ring: { x: number; y: number }[] = [];
+    const cut: { x: number; y: number }[] = [];
+    tri.forEach((p, k) => {
+      const q = tri[(k + 1) % 3];
+      if (inside[k]) ring.push(p);
+      if (inside[k] !== inside[(k + 1) % 3]) {
+        const r = (level - p.z) / (q.z - p.z);
+        const crossing = { x: p.x + r * (q.x - p.x), y: p.y + r * (q.y - p.y) };
+        ring.push(crossing);
+        cut.push(crossing);
+      }
+    });
+    polys.push(ring);
+    cuts.push(cut);
+  });
+  bandPolygons.push(polys);
+  isolines.push(cuts);
+});
 
-// Isolines at the 5 band boundaries
-const isolineData = Array.from({ length: NUM_BANDS - 1 }, (_, i) => ({
-  segments: marchingSquares(zMin + (i + 1) * bandW),
-}));
+// Layout: equal px per km on both axes, the map centred with its colour bar beside it
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const HEADER_H = 84;
+const X_AXIS_H = 60;
+const Y_AXIS_W = 72;
+const MARGIN = { top: 16, bottom: 20, left: 24, right: 28 };
+const LEGEND_W = 140;
+const xSpan = xs[xs.length - 1] - xs[0];
+const ySpan = ys[ys.length - 1] - ys[0];
+const plotH = Math.min(H - HEADER_H - X_AXIS_H - MARGIN.top - MARGIN.bottom, ((W - LEGEND_W - Y_AXIS_W - MARGIN.left - MARGIN.right) * ySpan) / xSpan);
+const plotW = (plotH * xSpan) / ySpan;
+const surfaceW = MARGIN.left + Y_AXIS_W + plotW + MARGIN.right;
+const surfaceH = MARGIN.top + plotH + X_AXIS_H + MARGIN.bottom;
 
-// --- SVG isoline overlay (rendered as a ScatterChart child) ----------------
-function IsolineOverlay() {
-  const { left, top, width, height } = useDrawingArea();
+const TITLE = "Survey Terrain · contour-basic · javascript · muix · anyplot.ai";
+const subtitle = `${xs.length} × ${ys.length} grid points · ${LEVEL_COUNT} levels evenly stepped by ${levelStep.toFixed(2)}`;
 
-  // Map data coords → SVG pixel coords (y axis is inverted in SVG)
-  const toSVG = (dx, dy) => [
-    left + (dx - X_MIN) / (X_MAX - X_MIN) * width,
-    top  + (1 - (dy - Y_MIN) / (Y_MAX - Y_MIN)) * height,
-  ];
-
+function ContourLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  // Band fills come from the zAxis piecewise colorMap, the same scale the colour bar reads
+  const colorScale = useZColorScale()!;
+  const toPath = (shapes: { x: number; y: number }[][], close: boolean) =>
+    shapes
+      .map((shape) => shape.map((p, k) => `${k === 0 ? "M" : "L"}${xScale(p.x)!.toFixed(1)},${yScale(p.y)!.toFixed(1)}`).join("") + (close ? "Z" : ""))
+      .join("");
   return (
-    <>
-      {isolineData.map(({ segments }, li) => {
-        const d = segments
-          .map(([p0, p1]) => {
-            const [x0, y0] = toSVG(p0[0], p0[1]);
-            const [x1, y1] = toSVG(p1[0], p1[1]);
-            return `M ${x0.toFixed(1)},${y0.toFixed(1)} L ${x1.toFixed(1)},${y1.toFixed(1)}`;
-          })
-          .join(" ");
-        return d
-          ? <path key={li} d={d} stroke={t.ink} strokeWidth={1.5} strokeOpacity={0.5} fill="none" />
-          : null;
+    <g>
+      {bandPolygons.map((polys, k) => {
+        const fill = String(colorScale(levels[k] + levelStep / 2));
+        return <path key={`band-${k}`} d={toPath(polys, true)} fill={fill} stroke={fill} strokeWidth={0.75} />;
       })}
-    </>
+      {isolines.map((cuts, k) => (
+        <path key={`iso-${k}`} d={toPath(cuts, false)} fill="none" stroke={ISOLINE_INK} strokeOpacity={0.6} strokeWidth={1.5} />
+      ))}
+    </g>
   );
 }
 
-// --- Chart -----------------------------------------------------------------
-const TITLE = "contour-basic · javascript · muix · anyplot.ai";
-
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
   return (
-    <Box sx={{ width: W, height: H, display: "flex", flexDirection: "column",
-               bgcolor: t.pageBg, boxSizing: "border-box", pt: "28px", px: "32px", pb: "8px" }}>
-      <Typography component="div"
-        sx={{ fontSize: 22, fontWeight: 500, color: t.ink, textAlign: "center",
-              lineHeight: 1.3, mb: "6px", flexShrink: 0 }}>
-        {TITLE}
-      </Typography>
-      <ScatterChart
-        width={W - 64}
-        height={H - 28 - 36 - 8}
-        skipAnimation
-        tooltip={{ trigger: "none" }}
-        series={scatterSeries}
-        xAxis={[{
-          min: X_MIN, max: X_MAX,
-          label: "X",
-          tickMinStep: 1,
-          disableLine: true,
-          labelStyle: { fontSize: 15, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        }]}
-        yAxis={[{
-          min: Y_MIN, max: Y_MAX,
-          label: "Y",
-          tickMinStep: 1,
-          disableLine: true,
-          labelStyle: { fontSize: 15, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        }]}
-        margin={{ left: 65, right: 200, top: 12, bottom: 58 }}
-        slotProps={{
-          legend: {
-            direction: "column",
-            position: { vertical: "middle", horizontal: "right" },
-            itemMarkWidth: 14,
-            itemMarkHeight: 14,
-            labelStyle: { fontSize: 13, fill: t.inkSoft },
-          },
-        }}
-      >
-        <IsolineOverlay />
-      </ScatterChart>
+    <Box sx={{ width: W, height: H, bgcolor: t.pageBg, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Box sx={{ height: HEADER_H, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "6px", pt: "8px" }}>
+        <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</Typography>
+        <Typography sx={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2 }}>{subtitle}</Typography>
+      </Box>
+      {/* The spare height below the header is split evenly above and below the map */}
+      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <ChartsDataProvider
+          width={surfaceW}
+          height={surfaceH}
+          series={[]}
+          skipAnimation
+          margin={MARGIN}
+          xAxis={[
+            {
+              id: "x",
+              scaleType: "linear",
+              min: xs[0],
+              max: xs[xs.length - 1],
+              label: EASTING,
+              height: X_AXIS_H,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            },
+          ]}
+          yAxis={[
+            {
+              id: "y",
+              scaleType: "linear",
+              min: ys[0],
+              max: ys[ys.length - 1],
+              label: NORTHING,
+              width: Y_AXIS_W,
+              labelStyle: { fontSize: 16, fill: t.ink },
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            },
+          ]}
+          zAxis={[{ id: "z", colorMap: { type: "piecewise", thresholds, colors: bandColors } }]}
+        >
+          <ChartsWrapper
+            legendPosition={{ vertical: "middle", horizontal: "end" }}
+            legendDirection="vertical"
+            sx={{ width: surfaceW + LEGEND_W, height: surfaceH }}
+          >
+            <Box sx={{ gridArea: "legend", width: LEGEND_W, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+              <Typography sx={{ fontSize: 16, fontWeight: 500, color: t.ink }}>{ELEVATION}</Typography>
+              <PiecewiseColorLegend
+                axisDirection="z"
+                axisId="z"
+                direction="vertical"
+                labelPosition="inline-end"
+                markType="square"
+                labelFormatter={({ min, max }) => `${Number(min ?? zMin).toFixed(2)} – ${Number(max ?? zMax).toFixed(2)}`}
+                sx={{ fontSize: 14, color: t.inkSoft, gap: "6px" }}
+              />
+            </Box>
+            <ChartsSurface
+              sx={{
+                "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+                "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              }}
+            >
+              <ContourLayer />
+              <ChartsXAxis axisId="x" />
+              <ChartsYAxis axisId="y" />
+            </ChartsSurface>
+          </ChartsWrapper>
+        </ChartsDataProvider>
+      </Box>
     </Box>
   );
 }

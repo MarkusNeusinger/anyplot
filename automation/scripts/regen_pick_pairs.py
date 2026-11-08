@@ -28,6 +28,15 @@ libraries. Pair mode spends the night's N on two kinds of work:
   a generation Claude stopped (its own pause comment, ``impl-paused-claude``)
   are not attempts: the pair stays in the queue and comes back on a later
   night.
+- A returning keep holds the pair out for the window but does not age it: a
+  ``regen:kept`` PR whose gate record (the workflow's own
+  ``<!-- regen-gate-record:v1 … -->`` comment) has a code in
+  ``RETURN_CODES``, a regression or a technical failure. Once the window has
+  passed, the pair returns at its age from before the keep instead of
+  queueing behind the whole catalogue. Every other keep code ages the pair
+  like any other attempt. The second returning keep in a row ages the pair
+  like a plain keep, so a pair returns at most once per streak; a merge, a
+  failed generation or another keep in between ends the streak.
 - A pair with an open implementation PR is skipped: its attempt is still
   running, stuck or paused, and the watchdog or the resume owns it.
 - Every pair of a spec whose issue saw activity within ``--min-age-hours`` is
@@ -40,10 +49,11 @@ libraries. Pair mode spends the night's N on two kinds of work:
   ``bulk-generate.yml``.
 
 The implementation-PR listing is the loop guard: when it fails, the run stops
-with an error instead of picking without it. The kept-regeneration and issue
-listings are best effort (one ``gh`` call each, at most 1000 entries, most
-recent first; kept regenerations reach much further back than the PR
-listing). The failed-generation comments are read per spec issue, only for
+with an error instead of picking without it. The kept-regeneration, gate-record
+and issue listings are best effort (one ``gh`` call each, at most 1000 entries,
+most recent first; kept regenerations reach much further back than the PR
+listing). Without the gate records every keep ages its pair, as before the
+return existed. The failed-generation comments are read per spec issue, only for
 the specs at the front of the queue, at most ``--max-issue-reads`` issues per
 run; a spec whose comments cannot be read is left out of the night.
 
@@ -56,6 +66,8 @@ The library list comes from the caller (``core.constants.SUPPORTED_LIBRARIES``),
 so this file carries no copy that could drift. Writes ``resume_json``,
 ``resume_count``, ``pairs_json``, ``specs``, ``specs_json`` and ``count`` (new
 pairs) to ``$GITHUB_OUTPUT`` and a table of both to ``$GITHUB_STEP_SUMMARY``.
+PyYAML plus ``regen_gate`` (stdlib only), imported from this file's own
+directory when it runs as a script, for the gate-record grammar.
 """
 
 from __future__ import annotations
@@ -67,13 +79,21 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
+
+
+# TYPE_CHECKING shows the type checker one import; at runtime it is False.
+if TYPE_CHECKING or __package__:  # imported as automation.scripts.regen_pick_pairs (tests, local tools)
+    from automation.scripts import regen_gate
+else:  # run as a script: the regen_gate.py next to this file
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import regen_gate
 
 
 ANCIENT = datetime.min.replace(tzinfo=timezone.utc)
@@ -86,6 +106,33 @@ FAIL_MARKER_RE = re.compile(r"<!-- impl-fail:(?P<spec>[a-z0-9][a-z0-9-]*):(?P<li
 INFRA_TAG = "<!-- impl-fail-cause:infra -->"
 # impl-review.yml and impl-repair.yml set these when Claude stopped the session.
 PAUSED_LABELS = {"ai-repair-paused": "repair", "ai-review-paused": "review"}
+KEPT_LABEL = "regen:kept"
+# The gate keep codes (regen_gate.REASON_CODES) after which a pair returns at
+# its age from before the keep once the attempt window has passed, so a second
+# try comes within a window, not after the whole catalogue. `regression`: the
+# regeneration beat the live implementation except for a regression. The rest
+# are technical: the gate kept because something failed (the canvas gate, the
+# score, the predecessor's renders, the gate's context, review_regen.json, the
+# gate script), not because it judged the new render worse. `adapt_regression`
+# is not one of them: the adaptability check ran and the new code failed it.
+RETURN_CODES = frozenset(
+    {
+        "regression",
+        "canvas_failed",
+        "no_score",
+        "prev_renders_missing",
+        "context_failed",
+        "regen_json_missing",
+        "regen_json_unreadable",
+        "regen_json_invalid",
+        "script_crashed",
+    }
+)
+# The returning keep that ages its pair: the second in a row returns no more.
+STREAK_CAP = 2
+# Who posts the gate record: impl-review's verdict step. GraphQL (`gh pr list`)
+# names the bot without the suffix that REST adds.
+GATE_AUTHORS = frozenset({"github-actions", "github-actions[bot]"})
 
 Pair = tuple[str, str]
 
@@ -121,12 +168,19 @@ class Resume:
 
 @dataclass
 class Records:
-    """What GitHub says about past attempts, per pair and per spec issue."""
+    """What GitHub says about past attempts, per pair and per spec issue.
+
+    ``attempts`` is each pair's newest attempt that ages it; ``held`` its
+    returning keeps (``RETURN_CODES``) by PR number, which hold the pair out
+    of the attempt window and, from the second in a row on, age it
+    (``_standing``).
+    """
 
     attempts: dict[Pair, tuple[datetime, str]]
     open_pairs: set[Pair]
     issue_activity: dict[int, datetime]
     paused: list[Resume] = field(default_factory=list)
+    held: dict[Pair, dict[int, tuple[datetime, str]]] = field(default_factory=dict)
 
 
 def parse_ts(raw: str) -> datetime | None:
@@ -176,8 +230,60 @@ def _newer(records: dict[Pair, tuple[datetime, str]], pair: Pair, when: datetime
         records[pair] = (when, basis)
 
 
-def fold_pulls(pulls: Iterable[dict[str, Any]], records: Records) -> None:
-    """An open PR blocks its pair (and is a resume when paused); a merged or closed one is an attempt."""
+def gate_record(comments: Iterable[dict[str, Any]]) -> dict[str, Any] | None:
+    """The first valid gate record the workflow posted among a PR's comments (``gh pr list`` shape).
+
+    Only the workflow's own comments count: anyone can paste a marker. The
+    verdict step runs once per PR; the first record wins, as in
+    ``review_retest.gh_gate_records``.
+    """
+    ordered = sorted((c for c in comments if isinstance(c, dict)), key=lambda c: str(c.get("createdAt") or ""))
+    for comment in ordered:
+        author = comment.get("author")
+        if not isinstance(author, dict) or author.get("login") not in GATE_AUTHORS:
+            continue
+        records = regen_gate.parse_record_markers(str(comment.get("body") or ""))
+        if records:
+            return records[0]
+    return None
+
+
+def returning_keeps(pulls: Iterable[dict[str, Any]]) -> dict[int, str]:
+    """The kept PRs whose gate record is a keep with a code in ``RETURN_CODES``, with that code.
+
+    The record must name the PR and its pair, so a record copied from another
+    PR never counts. A PR whose ``comments`` is not a list of comments has no
+    record: the listing is best effort, so an unexpected shape costs the
+    return, never the night.
+    """
+    codes: dict[int, str] = {}
+    for pull in pulls:
+        if not isinstance(pull, dict):
+            continue
+        match = BRANCH_RE.match(str(pull.get("headRefName") or ""))
+        number = pull.get("number")
+        comments = pull.get("comments")
+        if not match or not isinstance(number, int) or not isinstance(comments, list):
+            continue
+        record = gate_record(comments)
+        if (
+            record is not None
+            and record.get("pr") == number
+            and (record.get("spec"), record.get("lib")) == (match["spec"], match["lib"])
+            and record.get("verdict") == regen_gate.KEEP
+            and record.get("code") in RETURN_CODES
+        ):
+            codes[number] = str(record["code"])
+    return codes
+
+
+def fold_pulls(pulls: Iterable[dict[str, Any]], records: Records, returning: Mapping[int, str] | None = None) -> None:
+    """An open PR blocks its pair (and is a resume when paused); a merged or closed one is an attempt.
+
+    A kept PR in ``returning`` (``returning_keeps``) goes to ``held`` instead,
+    whose keeps hold the pair out for the attempt window (``_standing``).
+    """
+    returning = returning or {}
     for pull in pulls:
         match = BRANCH_RE.match(str(pull.get("headRefName") or ""))
         if not match:
@@ -196,8 +302,14 @@ def fold_pulls(pulls: Iterable[dict[str, Any]], records: Records) -> None:
             continue
         if state not in ("MERGED", "CLOSED"):
             continue
-        basis = "merged PR" if state == "MERGED" else "kept PR" if "regen:kept" in labels else "closed PR"
         when = parse_ts(str(pull.get("closedAt") or pull.get("updatedAt") or ""))
+        number = pull.get("number")
+        if state == "CLOSED" and KEPT_LABEL in labels and isinstance(number, int) and number in returning:
+            # Keyed by PR, so the same PR in two listings is one keep.
+            if when is not None:
+                records.held.setdefault(pair, {})[number] = (when, f"keep #{number} ({returning[number]})")
+            continue
+        basis = "merged PR" if state == "MERGED" else "kept PR" if KEPT_LABEL in labels else "closed PR"
         _newer(records.attempts, pair, when, basis)
 
 
@@ -222,12 +334,41 @@ def failed_generations(comments: Iterable[dict[str, Any]], spec: str) -> dict[st
     return newest
 
 
-def _touched(pair: Pair, metadata: datetime | None, records: Records) -> tuple[datetime | None, str]:
-    touched, basis = (metadata, "metadata") if metadata else (None, "none")
+def _standing(
+    pair: Pair, metadata: datetime | None, records: Records
+) -> tuple[datetime | None, str, tuple[datetime, str] | None]:
+    """The pair's age (its queue position), what it counts from, and the keep that holds it, if any.
+
+    The age is the newer of the metadata and the newest attempt that ages the
+    pair. Then the returning keeps newer than that age, oldest first, form a
+    streak: each one holds the pair for the window, except the
+    ``STREAK_CAP``-th in a row, which ages it like a plain keep and ends the
+    streak. The window counts from the hold when there is one, else the age.
+    """
+    age, basis = (metadata, "metadata") if metadata else (None, "none")
     attempt = records.attempts.get(pair)
-    if attempt and (touched is None or attempt[0] > touched):
-        touched, basis = attempt
-    return touched, basis
+    if attempt and (age is None or attempt[0] > age):
+        age, basis = attempt
+    hold: tuple[datetime, str] | None = None
+    streak = 0
+    for when, label in sorted(records.held.get(pair, {}).values()):
+        if age is not None and when <= age:
+            continue  # an attempt after it ended its streak
+        streak += 1
+        if streak < STREAK_CAP:
+            hold = (when, label)
+            continue
+        age, basis, hold, streak = when, f"{label}, {STREAK_CAP} in a row", None, 0
+    return age, basis, hold
+
+
+def _inside_window(age: datetime | None, hold: tuple[datetime, str] | None, now: datetime, window: timedelta) -> bool:
+    last = hold[0] if hold else age
+    return last is not None and now - last < window
+
+
+def _pick_basis(basis: str, hold: tuple[datetime, str] | None) -> str:
+    return f"{basis}, back after {hold[1]} of {hold[0]:%Y-%m-%d}" if hold else basis
 
 
 def resumes(records: Records, count: int) -> list[Resume]:
@@ -254,6 +395,10 @@ def pick(
     newer than its age goes back into the queue, or out of it while the
     failure is within the window. A spec whose failures cannot be read is
     left out of the night (fail closed: its pairs may have failed last night).
+
+    The queue orders by age; the window counts from the keep that holds the
+    pair when there is one (``_standing``), so a returning keep holds the pair
+    out for the window and then lets it return at its age.
     """
     metadata: dict[Pair, datetime | None] = {}
     queue: list[tuple[datetime, str, str, str]] = []
@@ -264,11 +409,11 @@ def pick(
         issue_ts = records.issue_activity.get(spec_issues.get(cand.spec, -1))
         if issue_ts is not None and now - issue_ts < min_age:
             continue
-        touched, basis = _touched(pair, cand.metadata, records)
-        if touched is not None and now - touched < window:
+        age, basis, hold = _standing(pair, cand.metadata, records)
+        if _inside_window(age, hold, now, window):
             continue  # touched within the window: not yet
         metadata[pair] = cand.metadata
-        queue.append((touched or ANCIENT, cand.spec, cand.library, basis))
+        queue.append((age or ANCIENT, cand.spec, cand.library, basis))
     heapq.heapify(queue)
     eligible = len(queue)
 
@@ -292,14 +437,16 @@ def pick(
         if spec in unreadable:
             eligible -= 1
             continue
-        touched, new_basis = _touched((spec, lib), metadata[(spec, lib)], records)
-        if (touched or ANCIENT) != key:
-            if touched is not None and now - touched < window:
+        age, new_basis, hold = _standing((spec, lib), metadata[(spec, lib)], records)
+        if (age or ANCIENT) != key:
+            if _inside_window(age, hold, now, window):
                 eligible -= 1
                 continue
-            heapq.heappush(queue, (touched or ANCIENT, spec, lib, new_basis))
+            # Usually later. Earlier only when the failure broke a streak of
+            # returning keeps; then the pair pops right back out.
+            heapq.heappush(queue, (age or ANCIENT, spec, lib, new_basis))
             continue
-        picks.append(Pick(spec, lib, key, basis))
+        picks.append(Pick(spec, lib, key, _pick_basis(basis, hold)))
     return picks, eligible
 
 
@@ -324,13 +471,20 @@ def read_records(repo: str) -> Records:
         # The loop guard: without it a kept, closed or paused pair would be
         # picked again tonight.
         raise ListingError("the implementation PRs could not be listed")
-    fold_pulls(pulls, records)
     # Kept regenerations again on their own: they are the attempts that leave
     # `updated` alone, and this listing reaches much further back.
-    kept = _gh_json(
-        [*pr_list, "--state", "closed", "--label", "regen:kept", "--search", "sort:updated-desc"], "kept regenerations"
+    kept_filter = ["--state", "closed", "--label", KEPT_LABEL, "--search", "sort:updated-desc"]
+    kept = _gh_json([*pr_list, *kept_filter], "kept regenerations")
+    # Their gate records, in a listing of their own so that a failure here
+    # loses only the returns, never the kept attempts: without the records
+    # every keep ages its pair.
+    gates = _gh_json(
+        ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", "number,headRefName,state,comments", *kept_filter],
+        "kept regenerations' gate records",
     )
-    fold_pulls(kept or [], records)
+    returning = returning_keeps(gates or [])
+    fold_pulls(pulls, records, returning)
+    fold_pulls(kept or [], records, returning)
     issues = _gh_json(
         ["issue", "list", "--repo", repo, "--state", "all", "--search", "sort:updated-desc", "--limit", LIMIT]
         + ["--json", "number,updatedAt"],
@@ -339,7 +493,8 @@ def read_records(repo: str) -> Records:
     fold_issues(issues or [], records)
     print(
         f"::notice::Attempt records for {len(records.attempts)} pair(s), {len(records.open_pairs)} open PR(s) "
-        f"({len(records.paused)} paused), activity for {len(records.issue_activity)} issue(s)"
+        f"({len(records.paused)} paused), returning keeps for {len(records.held)} pair(s), "
+        f"activity for {len(records.issue_activity)} issue(s)"
     )
     return records
 
@@ -374,7 +529,7 @@ def summary_table(resumed: list[Resume], picks: list[Pick], eligible: int, count
         lines += ["| Resume | PR | Spec | Library |", "|--------|----|------|---------|"]
         lines += [f"| {r.kind} | #{r.pr} | `{r.spec}` | `{r.library}` |" for r in resumed]
         lines.append("")
-    lines += ["| # | Spec | Library | Last touched | From |", "|---|------|---------|--------------|------|"]
+    lines += ["| # | Spec | Library | Age from | From |", "|---|------|---------|----------|------|"]
     for i, p in enumerate(picks, 1):
         touched = "never" if p.touched == ANCIENT else p.touched.strftime("%Y-%m-%dT%H:%M:%SZ")
         lines.append(f"| {i} | `{p.spec}` | `{p.library}` | {touched} | {p.basis} |")
@@ -422,7 +577,7 @@ def main(argv: list[str] | None = None) -> int:
         f"picked: {[f'{p.spec}/{p.library}' for p in picks]}"
     )
     for p in picks:
-        print(f"  - {p.spec + '/' + p.library:52s}  last_touched={p.touched.isoformat()}  ({p.basis})")
+        print(f"  - {p.spec + '/' + p.library:52s}  age_from={p.touched.isoformat()}  ({p.basis})")
 
     specs = list(dict.fromkeys(p.spec for p in picks))
     pairs = [{"spec": p.spec, "library": p.library} for p in picks]

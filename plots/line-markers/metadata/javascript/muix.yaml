@@ -2,128 +2,145 @@ library: muix
 language: javascript
 specification_id: line-markers
 created: '2026-09-05T07:53:12Z'
-updated: '2026-09-05T07:57:10Z'
-generated_by: claude-sonnet
-workflow_run: 33953379410
+updated: '2026-11-08T08:05:07Z'
+generated_by: claude-opus-5-5
+adopted_from: fc51d220103abdb2fe14536e59cf982a7706e73a (fc51d220103abdb2fe14536e59cf982a7706e73a)
+workflow_run: 42442380012
 issue: 2599
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.4
+library_version: 9.17.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - First series matches brand green (#009E73), second series lavender (#C475FD) —
-    correct Imprint canonical order, identical between light and dark renders.
-  - Distinct marker shapes (filled circle for Station A, hollow diamond for Station
-    B) plus solid vs dashed line styling gives triple redundant encoding for series
-    differentiation.
-  - Custom marker overlay via useXScale/useYScale/getValueToPositionMapper hooks demonstrates
-    real library mastery beyond the basic showMark API, since community MUI X only
-    natively draws circular marks.
-  - ChartsReferenceLine with a clear 'Target 42.5 N·m' label adds meaningful data-storytelling
-    context for a QC chart.
-  - Clean L-shaped axis frame, subtle horizontal grid, and generous margins give good
-    visual refinement in both themes.
+  - 'Every reading carries a marker centred on its (x, y) value: a filled green circle
+    for Station A and a hollow purple diamond for Station B. Shape, fill and line
+    dash (solid against dashed) each tell the two series apart without relying on
+    colour.'
+  - The markers (radius 9 px, about 3.5 line widths) stand out against the 2.5 px
+    lines without swamping them. Page-coloured outlines on the filled markers and
+    page-coloured fills on the hollow ones keep every symbol separate where it sits
+    on its line.
+  - 'Theme tokens reach every element: ink and inkSoft for the title, subtitle, axis
+    titles and ticks, t.grid for the horizontal grid, and t.pageBg for the marker
+    outlines and hollow fills. Both renders read cleanly, and the data colours are
+    identical in light and dark.'
+  - The x-axis gets X_PAD_SHARE padding and one tick per checkpoint (tickNumber equals
+    the checkpoint count, tickMinStep 1), so the outer markers stay whole and every
+    reading lines up with an integer checkpoint.
+  - 'Idiomatic MUI X v9 configuration: skipAnimation, hideLegend, numeric axis bands
+    (height 64 on x, width 76 on y) so no tick label is truncated, per-series dash
+    styling through the .MuiLineChart-line[data-series] selector, and a series valueFormatter
+    that adds the unit to the interactive tooltip in the HTML output.'
+  - 'Realistic, neutral QC scenario: torque-wrench readings around a 42.5 N·m target
+    at 14 sequential checkpoints on two assembly stations. The 0.1 N·m resolution
+    and the ±0.3 N·m spread are plausible for production fastening.'
   weaknesses:
-  - Reference-line label 'Target 42.5 N·m' is set at 12px, the smallest text on the
-    chart — bump to ~13-14px so it stays legible when the mobile 400px srcset variant
-    is generated.
-  - Title comfortably occupies only ~40-45% of plot width at the current 22px size
-    — well within readable range and not a violation, but a touch more presence (e.g.
-    24-26px) would strengthen the visual hierarchy since this title is short (~66
-    chars, under the 67-char scaling threshold).
+  - 'Suggestion: the hand-built MarkerLayer (useXScale/useYScale plus SVG paths) and
+    the HTML legend reproduce what MUI X draws natively: series showMark: true with
+    shape: "circle" / "diamond", mark fill and stroke through ''& .MuiLineChart-mark[data-series=...]'',
+    and the built-in legend. Using the native marks would make the code more idiomatic,
+    as long as the marker size stays proportional to the line.'
+  - 'Suggestion: the target-torque reference line and its right-margin label go beyond
+    what the spec asks for. They cost nothing on a non-basic spec, but they earn no
+    storytelling or library credit. The line-plus-marker form carries the chart on
+    its own.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), not pure white, not dark.
-      Chrome: Title "Fastener Torque QC · line-markers · javascript · muix · anyplot.ai" in bold dark ink, centered above the plot. X-axis label "QC Checkpoint (sequential reading)" and Y-axis label "Torque (N·m)" (rotated) both in dark ink. Tick labels for both axes are dark gray and clearly legible. Horizontal gridlines are subtle (low opacity). L-shaped axis frame (left + bottom only). A dashed gray "Target 42.5 N·m" reference line runs horizontally near the top of the data band. Legend at the bottom center reads "Station A" (solid green line) and "Station B" (dashed lavender line).
-      Data: Station A is a solid brand-green (#009E73) line with filled green circle markers, ringed with a thin page-background stroke for definition. Station B is a dashed lavender (#C475FD) line with hollow diamond markers (lavender stroke, page-background fill). 14 sequential checkpoints per series, torque values clustered between ~41.5 and ~42.8 N·m.
-      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, reference-line label) reads clearly against the light background; no light-on-light issues.
+      Background: warm off-white, matches #FAF8F1 (not pure white).
+      Chrome: the bold title "Fastener Torque QC · line-markers · javascript · muix · anyplot.ai" sits top-left at about 42 % of the width, with the grey subtitle "28 readings at 14 checkpoints from 2 stations · range 41.5–42.8 N·m" below it. The header legend at the top right shows a line sample with a marker for "Station A" and "Station B". The y-axis "Torque (N·m)" has ticks from 41.4 to 42.9 at a 0.1 step; the x-axis "QC checkpoint (sequential reading)" has ticks 1–14. Horizontal grid lines are subtle and light grey, and the left and bottom axis lines are dark. A dashed ink reference line at 42.5 is labelled "Target torque / 42.5 N·m" in the right margin. All text is dark on light and clearly readable.
+      Data: Station A is a solid #009E73 green line with filled green circles that have page-coloured outlines, on 14 points between 42.2 and 42.8. Station B is a dashed purple line with hollow purple diamonds on 14 points between 41.5 and 42.1. Every marker sits on its own value and none overlap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), not pure black, not light.
-      Chrome: Same title, axis labels, and legend text now rendered in light/off-white ink, clearly visible against the dark background. Tick labels are a lighter gray, still legible. Gridlines remain subtle. The "Target 42.5 N·m" reference-line label is light gray and readable against the dark surface.
-      Data: Station A (brand green #009E73) and Station B (lavender #C475FD) use identical hex values to the light render — only the chrome (background, text, grid, axis lines) flipped polarity, as required.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, both axis labels, tick labels, legend, reference-line label) is clearly visible against the near-black background.
+      Background: warm near-black, matches #1A1A17 (not pure black).
+      Chrome: the title, subtitle, legend text, axis titles and tick labels flip to light ink and are all clearly readable. There is no dark-on-dark text anywhere. The grid lines are subtle dark grey and still visible, and the target reference line and its label render in light grey.
+      Data: the green circles and line and the purple diamonds and dashed line are identical to the light render. The filled markers' outlines and the hollow diamonds' fills switch to the dark page colour, as intended. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All fonts explicit and readable in both themes; reference-line label
-          at 12px is the smallest element on the chart
+        comment: 'Explicit sizes: title 22 px, subtitle 15, axis titles 16, ticks
+          14, legend 16 CSS px. Readable in both themes and at thumbnail scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/marker/legend collisions in either render
+        comment: No text collisions. The legend and target label sit clear of the
+          data, and the markers never overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 14-point series get large, prominent markers (r=10-11) with
-          thick lines, matching the data-density heuristic
+        comment: 28 sparse points with prominent 9 px markers on 2.5 px lines. Legend
+          glyphs match the marks, with fill, hollowness and dash shown in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender plus redundant shape (circle/diamond) and line-style
-          (solid/dashed) encoding
+        comment: Green against purple, backed by shape, fill and dash, so the series
+          stay distinguishable without colour.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Generous margins, no overflow or clipping; title comfortably sized,
-          no squeeze
+        comment: 3200×1800 (the canvas gate passed). Balanced margins, nothing cut
+          off, and the title at about 42 % of the width without crowding.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units (Torque (N·m), QC Checkpoint)
+        comment: '''Torque (N·m)'' and ''QC checkpoint (sequential reading)'' are
+          descriptive and carry units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Series 1 = #009E73 (brand green), series 2 = #C475FD (canonical
-          position 2); backgrounds theme-correct'
+        comment: 'The first series is #009E73 and the second is the next Imprint position.
+          Both backgrounds are theme-correct, and the data colours are identical across
+          themes.'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom SVG marker overlay (filled circle / hollow diamond), dashed
-          secondary line, hand-rolled reference line — clearly above generic defaults
+        comment: 'Typographic hierarchy beyond the baseline: a 600-weight title over
+          an inkSoft subtitle computed from the data (count and range), and a header-integrated
+          legend whose samples combine dash and marker.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: L-shaped frame, subtle low-opacity grid and axis lines, generous
-          whitespace
+        comment: x padding chosen so the outer markers stay whole, one tick per checkpoint,
+          and page-coloured marker outlines that separate the symbols from the line.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Target reference line plus triple-redundant series encoding (color/shape/linestyle)
-          gives a clear focal comparison, though no per-point callouts
+        passed: false
+        comment: Data displayed clearly. The only focal device is the unrequested
+          target line, which earns no credit.
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +150,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line plot with visible markers at every point
+        comment: Line plot with a marker on every point. Not a -basic spec, so the
+          target line is not variant creep.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers clearly visible, different shapes per series, marker size
-          proportional to line thickness, filled vs hollow distinction
+        comment: 'All four Notes bullets are met: markers visible against the line,
+          different shapes per series, marker size proportional to the line, filled
+          against unfilled. The ''A good version shows:'' bullets all hold: x-ordered
+          lines, centred markers, separate symbols.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=checkpoint, y=torque; both axes show the full data range
+        comment: Markers are placed at the exact xScale/yScale of each reading with
+          no displacement, and the axes cover all the data with padding.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'; legend labels match series
+        comment: The title follows the descriptive-prefix format, and the legend labels
+          'Station A' and 'Station B' match the series.
     data_quality:
       score: 15
       max: 15
@@ -163,22 +184,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows line + markers + multiple series + distinct shapes, covering
-          every facet of the spec
+        comment: Sparse multi-series data where each point matters, which shows the
+          line-with-markers form fully. The dense-marker bullet is conditional and
+          does not apply.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Torque-wrench QC readings — plausible, neutral, non-controversial
-          industrial context
+        comment: 'Torque-wrench QC readings on assembly stations: realistic and neutral.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 41-43 N·m range is realistic for a fastener torque spec; 14 sparse
-          points matches the spec's 'sparse data' emphasis
+        comment: Readings of 41.5–42.8 N·m around a 42.5 target are plausible. The
+          render matches the data (A at checkpoint 5 = 42.8, B at checkpoint 8 = 41.5),
+          and the subtitle range is computed, not typed. The spec has no 'Check values:'.
     code_quality:
       score: 10
       max: 10
@@ -188,62 +210,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small functional components are the idiomatic React way to express
-          custom marks; no unnecessary abstraction
+        comment: Module-level data and plot zones. The two child components exist
+          because MUI X's scale hooks must run inside the chart.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data arrays
+        comment: Hard-coded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only @mui/x-charts, @mui/x-charts/hooks, and @mui/material imports,
-          all used
+        comment: LineChart, ChartsReferenceLine, useDrawingArea, useXScale and useYScale
+          are all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; appropriate complexity for
-          the custom-marker technique
+        comment: Appropriate complexity and no fake UI. The native-mark alternative
+          is only a suggestion, because its default sizing would not reproduce the
+          output.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, current community
-          MUI X API
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          current v9 API (hideLegend, axis height/width, per-chart CSS classes).
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Multi-axis IDs, valueFormatter, tickLabelStyle, slotProps.legend
-          all used correctly
+        comment: High-level LineChart with idiomatic v9 config, but marks and legend
+          are hand-built instead of the native showMark/shape and the built-in legend.
+          Stays at the default.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Low-level useXScale/useYScale/getValueToPositionMapper hooks for
-          custom marker shapes and a hand-rolled ChartsText y-axis title — goes well
-          beyond basic API usage
+        passed: false
+        comment: Its hook-based layers stand in for native marks, and the reference
+          line is an unrequested addition, so nothing beyond the mandate earns credit.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-11-08T03:22:56Z'
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
+  - layer-composition
   - annotations
-  - patches
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
