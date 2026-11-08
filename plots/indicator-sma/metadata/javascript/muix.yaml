@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: indicator-sma
 created: '2026-09-02T01:59:51Z'
-updated: '2026-11-08T07:34:17Z'
+updated: '2026-11-08T07:39:24Z'
 generated_by: claude-opus-5-5
 adopted_from: cc3528470f3c5309f8a939ae8839fc29328fafe6 (cc3528470f3c5309f8a939ae8839fc29328fafe6)
 workflow_run: 42440628354
@@ -16,43 +16,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator
 quality_score: 88
 review:
   strengths:
-  - 'Clear line hierarchy: the 3 px solid close is drawn on top, and the three SMAs
-    are told apart by hue (Imprint 2–4) and by dash pattern, which keeps them distinguishable
-    under CVD'
-  - SMAs are computed from running sums and left null until their windows fill, so
-    SMA 50 and SMA 200 start visibly later and are never back-filled
-  - The pullback-and-recovery scenario produces both upward and downward SMA 20/50
-    crossovers, marked with theme-adaptive triangles drawn through the useXScale/useYScale
-    hooks and counted in the subtitle
-  - Uses the v9 composition API (ChartsDataProvider, ChartsWrapper, ChartsSurface)
-    with a time axis whose valueFormatter shows months on ticks and full dates in
-    the axis tooltip (HTML output)
-  - The legend order is reversed to read close first, then SMAs by ascending period,
-    while the draw order keeps the close on top
+  - 'The close is the dominant series in both renders: 3 px solid brand green #009E73
+    drawn last, on top of the three SMAs, which use Imprint positions 2-4 with distinct
+    dash patterns (dashed, dotted, solid) so they stay apart even without color.'
+  - 'Each SMA is computed from running sums over the last 20, 50 and 200 closes and
+    stays null until its window is full: SMA 20 starts late Jun 2023, SMA 50 mid Aug
+    2023, SMA 200 only in Mar 2024, never back-filled or drawn from zero; the short
+    SMA hugs the price while SMA 200 is the flattest line.'
+  - Legend samples carry each series' own dash pattern through labelMarkType, so the
+    legend glyphs match the plotted lines exactly in both themes; the legend reads
+    close, then SMA 20/50/200 by ascending period.
+  - 'Composed MUI X API used idiomatically: ChartsDataProvider + ChartsSurface with
+    LinePlot, ChartsGrid horizontal, axis-trigger ChartsTooltip and ChartsAxisHighlight
+    for the HTML view, and a valueFormatter that switches between month ticks and
+    full dates via context.location.'
+  - 'All chrome is threaded from ANYPLOT_TOKENS (pageBg, ink, inkSoft, grid): both
+    renders are theme-correct with identical data colors, animations are skipped,
+    and the data is deterministic via a seeded LCG.'
   weaknesses:
-  - 'VQ-03 (both): the legend shows solid swatches for SMA 20 and SMA 50, while the
-    plotted lines are dashed (8 5) and dotted (2 4), so the legend glyphs do not match
-    the marks they explain → legend samples carrying the same dash pattern as each
-    line. Likely cause: labelMarkType "line" renders a plain bar; the strokeDasharray
-    rules only target .MuiLineChart-line inside ChartsSurface, not the legend mark.'
-  - 'Suggestion: the dotted SMA 50 (#4467A3, 2–4 px dots) reads dimmest of the four
-    lines on the dark background; a slightly denser dot pattern would give it more
-    presence.'
+  - 'Suggestion: the y-axis title repeats the close column (''AURA close (USD)'')
+    although the axis also carries the three SMAs; a shared title such as ''AURA price
+    (USD)'' would describe all four lines.'
+  - 'Suggestion: the dotted SMA 50 in Imprint blue is the quietest line on the dark
+    background; a slightly longer dot pattern would give it more presence next to
+    the dashed SMA 20.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold dark title "indicator-sma · javascript · muix · anyplot.ai", grey subtitle with period range and crossover counts (▲ 2×, ▼ 2×), centred horizontal legend, y axis "AURA close (USD)" 64–78, x axis "Trading date" with month ticks Jun 2023 – Jul 2024, subtle horizontal grid. All text is readable.
-      Data: close in brand green #009E73 (3 px solid, top layer); SMA 20 lavender dashed from late Jun 2023; SMA 50 blue dotted from Aug 2023; SMA 200 ochre solid from Mar 2024. Four black triangles with page-coloured outlines mark the SMA 20/50 crossovers (Sep 2023 ▼, Mar 2024 ▲, May 2024 ▼, Jun 2024 ▲). Legend swatches are solid bars, not dashed or dotted.
+      Background: warm off-white #FAF8F1 page and plot area, not pure white.
+      Chrome: bold title "indicator-sma · javascript · muix · anyplot.ai" centered at top, a soft-ink subtitle with the date range and crossover counts, a horizontal legend (AURA close, SMA 20, SMA 50, SMA 200 in USD) with dash-matched line samples, y-axis "AURA close (USD)" 64-78, x-axis "Trading date" with monthly ticks Jun 2023 - Jul 2024, subtle horizontal grid lines. All text dark and readable.
+      Data: close as a thick solid brand-green #009E73 line; SMA 20 dashed purple, SMA 50 dotted blue, SMA 200 solid ochre. SMA 20 starts late Jun 2023, SMA 50 mid Aug 2023, SMA 200 in Mar 2024. Price peaks ~77 in Aug, falls to ~64.5 in Feb 2024 and recovers to ~75. Four small ink triangles mark SMA 20/50 crossovers.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend text, axis titles and ticks flip to light ink; grid lines subtle but visible. No dark-on-dark text.
-      Data: identical colours to the light render (green, lavender, blue, ochre); crossover triangles flip to light fill. The dotted blue SMA 50 is the dimmest line but still traceable.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend, axis titles and tick labels in light ink, all clearly readable; grid lines subtle but visible; no dark-on-dark text.
+      Data: identical colors to the light render (green close, purple/blue/ochre SMAs); the crossover triangles flip to light ink with a page-colored outline and remain visible. Dotted SMA 50 is the quietest line but clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,50 +62,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, subtitle/legend 15, ticks 14, axis titles
-          16 CSS px); all text readable in both themes, no dark-on-dark
+        comment: Title 22 px, ticks 14 px, axis titles 16 px, legend 15 px; all readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; SMAs running close together in the sideways stretch
-          is permitted by the spec
+        comment: No text collisions; crossover triangles sit on the lines without
+          hiding them
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines well sized for 300 points, but the legend swatches are solid
-          bars while SMA 20 is dashed and SMA 50 dotted (defect line)
+        comment: Close at 3 px dominant, SMAs 2-2.75 px, legend samples match dash
+          patterns in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct hue families plus dash patterns as redundant encoding;
-          CVD-safe
+        comment: Dash patterns give a second channel beyond color; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, title ~29% of width, nothing overflows
+        comment: 3200x1800, plot fills the canvas, balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Trading date'' and ''AURA close (USD)'' with units'
+        comment: '''AURA close (USD)'' and ''Trading date'' are reader text with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Close in #009E73, SMAs in Imprint positions 2-4 in canonical order;
-          #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
+        comment: 'Close in #009E73, SMAs in Imprint positions 2-4, backgrounds #FAF8F1/#1A1A17,
+          chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,25 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Deliberate stroke hierarchy: 3 px solid close on top, SMAs differentiated
-          by width and dash pattern (dashed / dotted / solid) as well as hue; subtitle
-          typeset in inkSoft under the title'
+        comment: 'Beyond baseline: per-series stroke widths and dash patterns form
+          a deliberate weight hierarchy; title/subtitle typographic hierarchy with
+          a computed date-range subtitle'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Legend order reversed to read close then SMAs by ascending period
-          while draw order keeps the close on top; strict x domain; crossover triangles
-          outlined in the page colour
+        comment: 'Beyond baseline: strict x-domain with no dead margin, a 6 % y padding
+          computed from all drawn lines, legend reordered to close-then-ascending
+          period'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Chose SMA 20/50 crossovers as focal points, marked with up/down triangles
-          and counted in the subtitle; the pullback-and-recovery scenario makes golden/death
-          crosses appear naturally
+        comment: The line-weight ordering makes the close the focal series and the
+          SMAs read from fast to slow; crossover layer itself not credited
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Price line with 20/50/200 SMA overlays on one axis; crossover signals
-          are named in the spec description (not a -basic spec)
+        comment: Price line with SMA overlays on one axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Prominent close, distinct SMA colours, legend with periods, late
-          starts for longer SMAs, y grid lines; all 'A good version shows' bullets
-          met
+        comment: 'Prominent close, distinct SMA colors, period legend, late-starting
+          SMAs, y-grid: all Notes and good-version bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Linear curves, no smoothing overshoot; nulls draw as gaps so SMA
-          50 starts in Aug 2023 and SMA 200 in Mar 2024; marks at their values
+        comment: Dates on x, prices on y, linear curves, every SMA at its computed
+          value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'indicator-sma · javascript · muix · anyplot.ai'; legend entries
-          'SMA 20/50/200 (USD)' readable
+        comment: Title format correct; legend names each SMA period
     data_quality:
       score: 15
       max: 15
@@ -172,23 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows lag, warm-up gaps, uptrend, pullback, recovery and both crossover
-          directions
+        comment: Uptrend, pullback and recovery show lag, warm-up gaps, smoothing
+          by period and crossovers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fictional ticker AURA, daily weekday closes over 300 trading days;
-          neutral
+        comment: Fictional stock AURA, 300 weekday trading days, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices 64-78 USD; checked in code that SMA 20/50/200 begin at index
-          19/49/199 from running sums over the last N closes; SMA 200 is smoothest,
-          SMA 20 tracks price
+        comment: Daily moves ~1 %, price 64-77 USD; checked SMA start indices 19/49/199
+          and the running-sum averages in code
     code_quality:
       score: 10
       max: 10
@@ -198,14 +193,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module; the only extra function is the CrossoverMarks component,
-          needed for the scale hooks
+        comment: Linear script; CrossoverMarks component is needed for the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42)
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -217,14 +211,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Running-sum SMAs and a compact crossover pass; no fake UI
+        comment: Running sums compute the SMAs in one pass; no hand-rolled replacement
+          for an available call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 composition API, sized
-          to ANYPLOT_SIZE
+        comment: Renders into the harness mount, skipAnimation set, current v9 composition
+          API
     library_mastery:
       score: 7
       max: 10
@@ -234,32 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API (ChartsDataProvider + ChartsWrapper + ChartsSurface)
-          with time axis and per-series data-series CSS selectors
+        comment: Composed ChartsDataProvider/ChartsWrapper/ChartsSurface with LinePlot,
+          ChartsGrid, ChartsXAxis/YAxis per the v9 API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG layer positioned with useXScale/useYScale hooks; axis
-          tooltip with context-aware valueFormatter (month ticks, full date in tooltip);
-          ChartsAxisHighlight
-  verdict: REJECTED
+        comment: Custom legend marks via labelMarkType, context-aware valueFormatter
+          (tick vs tooltip), axis-trigger tooltip with ChartsAxisHighlight
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T02:58:19Z'
+  rendered_at: '2026-11-08T07:36:45Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - patches
+  - custom-legend
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - rolling-window
   - time-series
   styling:
-  - edge-highlighting
+  - publication-ready
   - grid-styling
