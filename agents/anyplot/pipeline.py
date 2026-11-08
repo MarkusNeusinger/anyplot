@@ -519,6 +519,9 @@ class Run:
     """The plot memory as the run leaves it once it ships (`plan_memory`): its `decisions` are these entries."""
     memory_seq: int = 1
     """The session's id counter before the run: a plan whose counter moved on stores new entries."""
+    max_attempts: int | None = None
+    """The rounds this run may make (`AGENT_MAX_ATTEMPTS`), set when its attempts start: every step's status carries
+    it, so the page can say "try 2 of 3" from the server's number."""
     changes: list[str] = field(default_factory=list)
     """The `changes` notes of every adapter call so far whose plan changed the code, in order (`note_changes`)."""
     expected_texts: list[str] = field(default_factory=list)
@@ -658,6 +661,8 @@ def _status(run: Run, step: RoundStep, attempt: int, previous: Round | None = No
     """A progress event, noted as the run's current step; a repair round's first one says how the round before ended."""
     run.step = step
     status: dict[str, Any] = {"step": step, "attempt": round_number(run, attempt)}
+    if run.max_attempts is not None:
+        status["max_attempts"] = run.max_attempts
     if previous is not None:
         status.update(outcome=previous.outcome, findings=previous.findings, defects=list(previous.defects))
     return Event(custom_metadata={STATUS_KEY: status})
@@ -1011,6 +1016,22 @@ def settle_memory(state: Any, run: Run, shipped: bool) -> None:
     if planned is not None and planned.seq != run.memory_seq:
         for key, value in memory_delta(planned.entries, planned.seq).items():
             state[key] = value
+
+
+def memory_ids(run: Run) -> dict[str, list[str]] | None:
+    """The plot memory a shipped run left, by entry id: `kept`, the entries from before the run that still stand, and
+    `added`, the ones its own `remember` items made, each in the memory's order; None for a run without a plan.
+
+    Ids are numbered on from the session's counter and never reused (`memory.next_seq`), so an entry numbered below
+    the counter the run started from was there before it; a decision the run replaced is in neither list."""
+    planned = run.memory_plan
+    if planned is None:
+        return None
+    ids = [entry.id for entry in planned.entries]
+    return {
+        "kept": [entry_id for entry_id in ids if int(entry_id[1:]) < run.memory_seq],
+        "added": [entry_id for entry_id in ids if int(entry_id[1:]) >= run.memory_seq],
+    }
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
@@ -1808,6 +1829,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     result = result.model_copy(update={"bindings": list(view.bindings), "kept_request": kept_request})
     settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
     settle_memory(ctx.state, run, ledger.plot_shipped)
+    # The memory the stored version stands on, for its `plot` event: known only once settled with the version.
+    ledger.shipped_memory = memory_ids(run) if ledger.plot_shipped and result.version is not None else None
     record_last_run(ctx.state, result, turn=ledger.turn)
     _attribute_result(ledger, run, result)
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
@@ -2029,6 +2052,7 @@ async def _attempts(
     # neither is a repair or a round of its own (owner, 2026-10-13), so a run has at most
     # `AGENT_MAX_ATTEMPTS` rounds and up to three adapter calls per round.
     rounds = settings.max_attempts
+    run.max_attempts = rounds
     calls = rounds * (1 + int(settings.self_review) + int(settings.check_retry))
     # Ship the best-scored version (`AGENT_SHIP_BEST`, catalogue reviews only): every round is reviewed.
     max_reviews = rounds if ship_best(settings) else MAX_REVIEWS

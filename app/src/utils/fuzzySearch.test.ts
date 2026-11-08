@@ -90,5 +90,23 @@ describe('fuzzySearch', () => {
       expect(results[0].score).toBeDefined();
       expect(typeof results[0].score).toBe('number');
     });
+
+    it('ignores diacritics in the query', () => {
+      const searcher = createFuzzySearcher([{ value: 'saulen-basic' }, { value: 'scatter-basic' }]);
+      const results = searcher.search('säulen');
+
+      expect(results[0]?.item.value).toBe('saulen-basic');
+      expect(results[0]?.score).toBeLessThan(0.1);
+    });
+
+    it('ignores diacritics in the indexed values and folds ß to ss', () => {
+      const searcher = createFuzzySearcher([
+        { value: 'gross', title: 'Größe' },
+        { value: 'cafe-chart', title: 'Café Chart' },
+      ]);
+
+      expect(searcher.search('grosse')[0]?.item.value).toBe('gross');
+      expect(searcher.search('cafe chart')[0]?.item.value).toBe('cafe-chart');
+    });
   });
 });

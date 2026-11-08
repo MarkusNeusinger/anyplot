@@ -4,9 +4,125 @@
  * Pure functions extracted for reusability and testing.
  */
 
-import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
+import type { ActiveFilters, FilterCategory, FilterCounts, PlotImage } from 'src/types';
 import { FILTER_CATEGORIES } from 'src/types';
 import { createFuzzySearcher, getMatchType, type MatchType } from 'src/utils/fuzzySearch';
+
+/**
+ * Words that name "a chart" or only join two terms ("and", "with", "of"), in
+ * English and in the languages the agent chat answers in
+ * (agents/anyplot/prompts/refusals.yaml: de, fr, es, it, pt, nl, pl). Stored
+ * folded: lowercase, without diacritics.
+ *
+ * They carry no meaning for the search but break it: Fuse's extended search
+ * treats a space as AND and needs every word inside ONE field, so "line chart"
+ * misses the spec titled "Basic Line Plot", "bar chart" ranks the title that
+ * starts with "Bar Chart" above `plot:bar`, and the "de" of "gráfico de violin"
+ * matches no field at all. One-letter joiners (Spanish "y", Polish "i" and "z",
+ * Italian and Portuguese "e") are left out because axis names and "z score"
+ * use them.
+ */
+const GENERIC_QUERY_WORDS: ReadonlySet<string> = new Set([
+  // en
+  'chart',
+  'charts',
+  'plot',
+  'plots',
+  'graph',
+  'graphs',
+  'diagram',
+  'diagrams',
+  'and',
+  'with',
+  'of',
+  // de
+  'diagramm',
+  'diagramme',
+  'grafik',
+  'grafiken',
+  'und',
+  'mit',
+  'von',
+  // fr
+  'graphique',
+  'graphiques',
+  'graphe',
+  'graphes',
+  'diagrammes',
+  'et',
+  'avec',
+  'de',
+  'du',
+  'des',
+  // es, pt
+  'grafico',
+  'graficos',
+  'grafica',
+  'graficas',
+  'diagrama',
+  'diagramas',
+  'con',
+  'com',
+  'del',
+  'da',
+  'do',
+  // it
+  'grafici',
+  'diagramma',
+  'diagrammi',
+  'di',
+  // nl
+  'grafiek',
+  'grafieken',
+  'diagrammen',
+  'en',
+  'met',
+  'van',
+  // pl
+  'wykres',
+  'wykresy',
+  'wykresu',
+  'wykresow',
+]);
+
+/**
+ * Lowercase, drop diacritics the way Fuse's `ignoreDiacritics` compares, and
+ * drop sentence punctuation at the end ("plot," in "scatter plot, line").
+ * Leading characters stay: `!`, `^`, `=` and `'` are Fuse operators, and
+ * "!chart" must keep meaning "without chart".
+ */
+function foldWord(word: string): string {
+  return word
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/ß/g, 'ss')
+    .replace(/[,;:.?!]+$/, '');
+}
+
+/**
+ * Prepare a raw search box query for the fuzzy search: lowercase, trim,
+ * collapse whitespace, and drop the generic words above. When the query holds
+ * nothing but generic words ("plot", "chart and graph"), the raw query is kept,
+ * so those words still find what they name (`lib:plotly`, `lib:chartjs`).
+ */
+export function normalizeSearchQuery(searchQuery: string): string {
+  const words = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const meaningful = words.filter(word => !GENERIC_QUERY_WORDS.has(foldWord(word)));
+  return (meaningful.length > 0 ? meaningful : words).join(' ');
+}
+
+/** Number of distinct specs among the gallery's images (one image is one spec in one library). */
+export function countDistinctSpecs(images: readonly PlotImage[]): number {
+  return new Set(images.map(image => image.spec_id).filter(Boolean)).size;
+}
+
+/** The gallery counter's totals with their units, for example "8 specs · 120 plots". */
+export function formatGalleryTotals(specCount: number, plotCount: number): string {
+  const specs = `${specCount} ${specCount === 1 ? 'spec' : 'specs'}`;
+  const plots = `${plotCount} ${plotCount === 1 ? 'plot' : 'plots'}`;
+  return `${specs} · ${plots}`;
+}
 
 /**
  * Get counts for a specific filter category.
@@ -87,7 +203,8 @@ export interface SearchResult {
  * - 'exact': Very close matches (score < 0.1)
  * - 'fuzzy': Looser matches with typo tolerance (score >= 0.1)
  *
- * For the "spec" category, also searches through spec titles.
+ * For the "spec" category, also searches through spec titles. The query goes
+ * through `normalizeSearchQuery` first.
  *
  * @param filterCounts - Available filter counts
  * @param activeFilters - Current active filters
@@ -110,7 +227,7 @@ export function getSearchResults(
 ): SearchResult[] {
   if (!filterCounts || !searchQuery.trim()) return [];
 
-  const query = searchQuery.toLowerCase().trim();
+  const query = normalizeSearchQuery(searchQuery);
   const results: Array<SearchResult & { score: number }> = [];
 
   const categoriesToSearch = selectedCategory ? [selectedCategory] : FILTER_CATEGORIES;

@@ -119,8 +119,8 @@ CURRENT_VERSION = "current"
 ORIGINAL_VERSION = "original"
 FromVersion = Literal["current", "original"] | Annotated[int, Field(ge=1)]
 """The data version `prepare_data` and `query_data` start from (`dataset_versions.resolve_version`): the current one,
-the original (version 1 of the current data) or a version number the session block lists. The tools declare it as a
-string, so a number may come as `"2"`; the validation reads it as 2."""
+the original (the first version of the current data) or a version number the session block lists. The tools declare
+it as a string, so a number may come as `"2"`; the validation reads it as 2."""
 MAX_EXPECTED_TEXTS = 5
 MAX_EXPECTED_TEXT_CHARS = 120
 

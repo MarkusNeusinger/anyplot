@@ -2,10 +2,10 @@ library: muix
 language: javascript
 specification_id: scatter-map-geographic
 created: '2026-09-02T06:08:50Z'
-updated: '2026-11-08T07:32:30Z'
+updated: '2026-11-08T09:00:53Z'
 generated_by: claude-opus-5-5
-adopted_from: 7cbdd955f8a3f4ceb6f8a09193457c1c8740f96f (7cbdd955f8a3f4ceb6f8a09193457c1c8740f96f)
-workflow_run: 42458924566
+adopted_from: 5a0b0597e4a560c34a2ea8f1318aef7bf8ff39f7 (5a0b0597e4a560c34a2ea8f1318aef7bf8ff39f7)
+workflow_run: 42464967743
 issue: 3617
 language_version: 22.23.4
 library_version: 9.17.0
@@ -13,57 +13,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - 'The basemap is built inside MUI X''s composition API: a custom <Basemap> component
-    reads useXScale/useYScale and draws the land rings in data coordinates under ChartsSurface,
-    so the coastlines and the epicentres share one scale.'
-  - 'Two encodings come from the zAxis config: a continuous colorMap from the Imprint
-    sequential stops (t.seq) for depth and a linear sizeMap for magnitude. ContinuousColorLegend
-    renders the depth color bar natively, and a size legend with three glyphs (5.0
-    / 6.3 / 7.5) uses the markers'' own fill, alpha and outline.'
-  - The plot area is sized to the true 2:1 equirectangular aspect and centered. The
-    graticule (60° meridians, 30° parallels) doubles as the grid, with degree-formatted
-    ticks such as 120°W and 30°S.
-  - The basemap uses the grid token with a soft outline and stays quieter than the
-    points in both themes. The points (alpha 0.82, page-colored outline) stand out
-    on land and on ocean, and stacked points in the Banda and Japan clusters remain
-    distinguishable.
-  - The data is a realistic simulated M5+ catalog along real plate boundaries. In
-    the subduction zones the deeper events sit landward of the trench (the Andes,
-    Tonga and the Banda arc turn blue inland), which is what real slab seismicity
-    looks like.
-  - The tooltip valueFormatter names the zone, magnitude and depth of each epicentre
-    in the interactive HTML, and skipAnimation is set.
+  - 'Native MUI X encodings: depth through a zAxis continuous colorMap on the imprint_seq
+    tokens and magnitude through a sizeAxisId sizeMap, with ContinuousColorLegend
+    bound to the same z axis'
+  - Custom basemap layer composed into ChartsSurface via useXScale/useYScale, so land
+    outlines share the chart's scales; muted grid-token fill keeps it quieter than
+    the points in both themes
+  - Size legend glyphs reuse the markers' fill, alpha and page-coloured edge, at the
+    radii the linear size map assigns
+  - Aspect-correct equirectangular sizing and a padded extent keep antimeridian and
+    polar points clear of the axes
+  - 'Realistic, neutral earthquake scenario: epicentres follow real plate boundaries,
+    with deep events landward of the trenches'
+  - Library-native tooltip (valueFormatter) names zone, magnitude and depth in the
+    HTML view
   weaknesses:
-  - 'VQ-02 (both): the Tonga-Kermadec epicentre near 180°W / 30°S (~7 px radius) sits
-    on the ''30°S'' y tick label and covers its final ''S'' → the tick label should
-    stay readable. Likely cause: the map''s left edge is at the axis line and the
-    point is drawn over the tick label; a smaller MARKER_RADIUS upper bound or slightly
-    more left padding between the y-axis band and the plot area (Y_AXIS_WIDTH / marginX)
-    would clear it.'
-  - 'Suggestion: the Notes name Natural Earth or Robinson for world maps; projecting
-    the lon/lat with a pseudo-cylindrical formula before plotting would shrink the
-    oversized Antarctica and polar regions of the equirectangular frame.'
-  - 'Suggestion: the depth color bar shows only its endpoints (5, 545); one or two
-    intermediate ticks (e.g. 100, 300 km) would make the shallow/intermediate/deep
-    split readable.'
+  - 'Suggestion: an equal-area-looking world projection such as Natural Earth or Robinson,
+    which the Notes name for world maps, would reduce the high-latitude stretching
+    of the plate carrée (would need projecting lon/lat before plotting, since MUI
+    X has no geo projection).'
+  - 'Suggestion: highlighting the deepest subduction events (Tonga, Andes) would give
+    the map a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, landscape 3200x1800.
-      Chrome: bold dark title "scatter-map-geographic · javascript · muix · anyplot.ai" with a softer subtitle "82 epicentres · colour: Depth (km) · size: Magnitude (Mw) · equirectangular projection". Axes "Longitude" (180°W–180°E every 60°) and "Latitude" (90°S–90°N every 30°) in dark ink. The graticule grid is subtle. Dashed Equator and Prime meridian lines carry small labels. A bottom band holds the "Depth (km)" color bar (5–545) and the "Magnitude (Mw)" size legend (5.0 / 6.3 / 7.5). All text is readable, except that the '30°S' tick label is partly covered by a Tonga epicentre at the left edge.
-      Data: the land polygons are light grey (grid token) with soft outlines. 82 circles sit along the Aleutians, the Cascadia–Mexico coast, the Andes, Tonga, Indonesia, Japan, the Himalaya and the Aegean, colored on the Imprint sequential ramp from brand green #009E73 (shallow) to blue (deep), with radius scaled by magnitude, alpha 0.82 and a page-colored outline.
-      Legibility verdict: PASS (minor tick/marker collision at 30°S)
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title "scatter-map-geographic · javascript · muix · anyplot.ai" with a grey subtitle (82 epicentres, encodings, projection); Latitude/Longitude axis titles; degree ticks 90°S–90°N and 180°W–180°E; subtle graticule; dashed Equator and Prime meridian lines with small labels. All readable.
+      Data: world basemap in light grey with soft outlines; 82 circles along the Ring of Fire, Alpide belt and Himalaya, coloured on the green (#009E73, shallow) to blue (deep) imprint_seq ramp, sized by magnitude, alpha 0.82 with light outlines. Bottom legend: Depth (km) colour bar 5–545 and Magnitude (Mw) glyphs 5.0 / 6.3 / 7.5.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles, tick labels and legend labels all render in light ink and are clearly readable, with no dark-on-dark text. The grid and the dashed reference lines are light and subtle.
-      Data: the land is dark grey and stays quieter than the points. The point colors and the ramp are identical to the light render (green → blue), with dark outlines. The brand green reads well.
-      Legibility verdict: PASS (same 30°S tick/marker collision)
+      Chrome: light title, subtitle, axis titles and ticks; subtle grid; light dashed reference lines; no dark-on-dark text.
+      Data: basemap flips to a dark-grey fill; point and colour-bar colours identical to the light render, outlines now dark page colour; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -71,52 +59,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, ticks 14, labels 16, legend 15-16
-          px CSS); all text readable in both themes
+        comment: Title 22 px, subtitle 15 px, ticks 14 px, axis titles 16 px, legend
+          14-16 px (CSS); all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Tonga epicentre at 180°W covers the '30°S' tick label (defect line);
-          otherwise no text collisions
+        comment: No text collisions; overlapping bubbles in the Banda and Andes clusters
+          stay distinguishable by their page-coloured outline, which the spec permits
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Radii 4-16 px suit 82 points; alpha + outline keep clusters readable;
-          size-legend glyphs match the markers in both themes
+        comment: 82 points at 4-16 px radius with alpha 0.82 and outline; size-legend
+          glyphs share the markers' fill, alpha and edge and are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp differs in lightness and hue; no red-green
-          reliance
+        comment: Green-to-blue sequential ramp is lightness- and hue-separated, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; map centered at true 2:1 aspect; legend band balanced;
-          nothing clipped
+        comment: 3200x1800; map fills the canvas with aspect-correct equirectangular
+          sizing; balanced axis titles; nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude with degree-formatted ticks; legends name Depth
-          (km) and Magnitude (Mw)
+        comment: Latitude/Longitude with degree-formatted N/S/E/W ticks; legend titles
+          carry units (km, Mw)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous depth uses imprint_seq (t.seq); backgrounds #FAF8F1/#1A1A17;
-          data colors identical across themes'
+        comment: 'Depth uses the imprint_seq tokens t.seq; backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -124,25 +111,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: An encoding subtitle under the title and a single composed legend
-          row (color bar + size glyphs) give a clear typographic hierarchy beyond
-          the baseline
+        comment: 'Beyond baseline: a subtitle that spells out the encodings and projection,
+          hemisphere-lettered degree ticks, one coordinated legend band with colour
+          bar and size glyphs side by side'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: The graticule is chosen as the grid at 60°/30°, the plot area is
-          sized to the projection aspect and centered, and the quiet land fill with
-          a soft outline sits below the points
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Depth placed landward of the trenches makes subducting slabs read
-          as blue inland bands (Andes, Tonga, Banda); the Equator/meridian lines are
-          unrequested and earn nothing
+        comment: 'Beyond baseline: the extent padded 2.5 % so antimeridian and polar
+          markers clear the axes, a 60°/30° graticule chosen for a world map, basemap
+          in the grid token with a half-opacity coastline so it stays quieter than
+          the points'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly; no hierarchy or focal point chosen beyond
+          the encodings
     spec_compliance:
       score: 15
       max: 15
@@ -152,27 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Geographic scatter on a basemap
+        comment: Geographic scatter on a world basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Basemap with coastlines, projection, color bar and size legend naming
-          their variables, transparency, contrast in both themes; zoom/pan is Pro-only
-          in MUI X, so N/A
+        comment: Basemap with coastlines, projection, colour bar and size legend naming
+          their variables, transparency; zoom/pan is MUI X Pro-only and forbidden,
+          so N/A
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every point at its lon/lat; full globe extent; no displacement
+        comment: Every point at its lon/lat; no jitter or displacement; full globe
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend titles are reader text
+        comment: Title in the mandated format; legend titles 'Depth (km)' and 'Magnitude
+          (Mw)' for a reader
     data_quality:
       score: 15
       max: 15
@@ -182,20 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering, empty regions, and color and size encodings
+        comment: Shows clustering along belts, large empty stretches, size and colour
+          encodings, overlap in dense arcs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated M5+ earthquakes along real plate boundaries; neutral
+        comment: M5.0+ epicentres along real plate boundaries (Japan-Kuril, Andes,
+          Tonga, Himalaya), neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: magnitudes 5.0-7.5 Mw, depths 5-545 km, deep events only
-          in the subduction zones; plausible'
+        comment: Magnitudes 5.0-7.5 Mw and depths 5-545 km are plausible; deep events
+          lie landward of the trench as in real slabs. Spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -205,14 +196,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module; the only component besides Chart is Basemap, which the
-          scale hooks require
+        comment: Columns / data / plot blocks; the Basemap child component is required
+          to call the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -224,36 +215,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Complexity matches the task; no fake UI
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE;
-          MUI X v9 API
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          MUI X 9 composition API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ChartsDataProvider + ChartsWrapper + ChartsSurface composition with
-          axis configs, tickInterval and valueFormatter
+        comment: 'Beyond the defaults: the v9 composition API (ChartsDataProvider
+          + ChartsWrapper + ChartsSurface) with the legend placed in the wrapper''s
+          grid area'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: zAxis colorMap + sizeMap, ContinuousColorLegend, and a custom layer
-          through useXScale/useYScale hooks
+        comment: zAxis colorMap plus sizeAxisId sizeMap driving marker size natively,
+          ContinuousColorLegend bound to the z axis, and a custom SVG basemap layer
+          drawn through useXScale/useYScale
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-11-08T07:29:41Z'
+  rendered_at: '2026-11-08T08:56:45Z'
 impl_tags:
   dependencies: []
   techniques:

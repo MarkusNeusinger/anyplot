@@ -65,6 +65,10 @@ Unix time or a decimal year), so the line is neither `certain` nor a question: t
 statement and makes it only on request. Its operations carry `days`, the plain reading of a request for "a
 number" without a unit (`root.md`), and no name, which the server gives in the session language.
 
+A name-only role (`DataRole.name_only`: a MACD line, an RSI, a control limit) takes the conversion of a
+column only when the column's name holds it (`computed.match_score`: `RSI` as text), and never a split of
+ranges, the row numbers or a date offer: by its cells alone, no column is a MACD line.
+
 The new column is named after its source with the type in the session language
 (`Month (date)`, `Monat (Datum)`, `TYPE_WORDS`): the root takes the operations as given, so
 the conversion is the same in every run. Each dry run is made once per dataset version
@@ -91,6 +95,7 @@ from .bindings import (
     row_slot,
 )
 from .bounds import BoundPair, bound_pairs
+from .computed import match_score
 from .parse import ParsedDataset, id_like, span_like
 from .prepare import ROW_NUMBER_NAME, DryRun, RangeRun, dry_run, range_run, read_frame, suffixed_name, year_run
 from .temporal import year_score
@@ -396,8 +401,9 @@ def candidates(
     taken: set[str] = set()
     names = {column.name for column in profile.columns}
     found: list[Candidate | RangeSplit | RowNumbers] = []
+    name_only = {role.name for role in roles if role.name_only}
     for pair in bound_pairs(roles):
-        if pair.lower not in missing or pair.upper not in missing:
+        if pair.lower not in missing or pair.upper not in missing or {pair.lower, pair.upper} & name_only:
             continue
         column = next((column for column in free if column not in taken and ranges(column) is not None), None)
         ranged = ranges(column) if column is not None else None
@@ -414,7 +420,7 @@ def candidates(
         if role.name in missing and found and moved is not None:
             continue  # the dates that take the axis leave this role the axis's column
         for column in [*free, *(years if "datetime" in role.kinds else [])]:
-            if column in taken:
+            if column in taken or (role.name_only and not match_score(role, column)):
                 continue
             dates = run(column, "datetime")
             dry = dates if "datetime" in role.kinds else None
@@ -456,7 +462,9 @@ def _date_numbers(
     ]
     offers: list[Candidate | RangeSplit | RowNumbers | DateNumbers] = []
     for role in roles:
-        if not dates or role.name not in missing or role.name in covered or role.computed or not is_measure(role):
+        if not dates or role.name not in missing or role.name in covered or role.computed or role.name_only:
+            continue
+        if not is_measure(role):
             continue
         column = dates.pop(0)
         offers.append(DateNumbers(role.name, column.name, profile.rows - column.missing))

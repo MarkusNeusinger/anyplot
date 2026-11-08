@@ -369,6 +369,26 @@ describe('parseAgentEvent', () => {
     expect(JSON.stringify(dataset)).not.toMatch(/ds_secret|sample|internal/);
   });
 
+  it("reads the undo field and the original's number only as the server types them", () => {
+    const dataset = (value: Record<string, unknown>) => {
+      const event = parseAgentEvent(raw('done', { dataset: { ...DATASET, ...value } }));
+      return event?.type === 'done' ? event.dataset : null;
+    };
+    // The session's numbering: a change of a second paste numbered 4, with the paste to undo.
+    expect(dataset({ version: 5, can_undo: true, original_version: 4 })).toMatchObject({
+      version: 5,
+      can_undo: true,
+      original_version: 4,
+    });
+    expect(dataset({ can_undo: false })).toMatchObject({ can_undo: false });
+    // Anything else, and an older server's answer without them, leaves them out: no undo.
+    const odd = dataset({ can_undo: 'yes', original_version: 0 });
+    expect(odd).not.toBeNull();
+    expect(odd).not.toHaveProperty('can_undo');
+    expect(odd).not.toHaveProperty('original_version');
+    expect(dataset({})).not.toHaveProperty('can_undo');
+  });
+
   it('reads a wide-table offer strictly and drops a malformed one', () => {
     const offer = {
       kind: 'to_long',

@@ -76,9 +76,9 @@ export function plotButtonLabel(state: AgentSessionState): string {
 
 /**
  * The live data card's version in the session (`DataSnapshot.n`, the `3` of `data v3` on its
- * label), the number every line of the page names the data by; null for a thread built by hand,
- * whose card carries no snapshot. The server's own `version` starts over with every paste and
- * goes back on `.undo()`, so the page never shows it.
+ * label), the number every line of the page names the data by: the server's, which the
+ * assistant's session block lists too; null for a thread built by hand, whose card carries no
+ * snapshot.
  */
 export function liveDataVersion(state: AgentSessionState): number | null {
   for (let index = state.items.length - 1; index >= 0; index -= 1) {
