@@ -59,38 +59,56 @@ df = pd.DataFrame(data_records)
 # Order facets by descending volatility so the most erratic server leads the grid
 series_order = df.groupby("series")["value"].std().sort_values(ascending=False).index.tolist()
 
-# Horizon chart parameters - fold values into bands
+# Horizon chart parameters - fold values into bands of equal range
 n_bands = 3
 max_val = df["value"].abs().max()
 band_size = max_val / n_bands
+# Band edges on both sides of the zero baseline
+levels = band_size * np.arange(-(n_bands - 1), n_bands)
 
-# Create horizon-folded data for visualization
-# Each band clips values to its range and overlays them
-horizon_records = []
+# Legend label per sign and band, with the band's value range
+signs = {"pos": (1, "+"), "neg": (-1, "−")}
+band_labels = {}
+for key, (_, mark) in signs.items():
+    for band in range(n_bands):
+        low = f"{mark}{band * band_size:.0f}" if band else "0"
+        band_labels[f"{key}{band}"] = f"{low} to {mark}{(band + 1) * band_size:.0f}"
 
-# Band labels for legend
-band_labels = {"pos0": "+Low", "pos1": "+Medium", "pos2": "+High", "neg0": "-Low", "neg1": "-Medium", "neg2": "-High"}
-
+# Fold every series: each band covers the whole week, zero where the band is not
+# reached, so no polygon bridges a gap. The exact points where a series crosses
+# the baseline or a band edge are added first, so each band starts and ends on its
+# edge and every hour shows one sign only.
+horizon_frames = []
 for series in series_order:
-    series_data = df[df["series"] == series]
-    values = series_data["value"].values
-    hours_arr = series_data["hour"].values
+    series_data = df[df["series"] == series].sort_values("hour")
+    t = series_data["hour"].to_numpy(dtype=float)
+    v = series_data["value"].to_numpy()
+    crossings = [t]
+    for level in levels:
+        s = v - level
+        k = np.flatnonzero(s[:-1] * s[1:] < 0)
+        crossings.append(t[k] + s[k] / (s[k] - s[k + 1]) * (t[k + 1] - t[k]))
+    tt = np.unique(np.concatenate(crossings))
+    vv = np.interp(tt, t, v)
 
     for band in range(n_bands):
-        low = band * band_size
+        for key, (sign, _) in signs.items():
+            # Values below the baseline are mirrored upward and drawn in the second hue
+            folded = np.clip(np.maximum(sign * vv, 0) - band * band_size, 0, band_size)
+            horizon_frames.append(
+                pd.DataFrame(
+                    {
+                        "hour": tt,
+                        "value": folded,
+                        "deviation": vv,
+                        "series": series,
+                        "level": band,
+                        "band": band_labels[f"{key}{band}"],
+                    }
+                )
+            )
 
-        # Process positive values
-        pos = np.clip(np.maximum(values, 0) - low, 0, band_size)
-        # Process negative values (mirror to positive for display)
-        neg = np.clip(np.maximum(-values, 0) - low, 0, band_size)
-
-        for h, pv, nv in zip(hours_arr, pos, neg, strict=True):
-            if pv > 0.01:
-                horizon_records.append({"hour": h, "value": pv, "series": series, "band": f"pos{band}"})
-            if nv > 0.01:
-                horizon_records.append({"hour": h, "value": nv, "series": series, "band": f"neg{band}"})
-
-horizon_df = pd.DataFrame(horizon_records)
+horizon_df = pd.concat(horizon_frames, ignore_index=True)
 horizon_df["series"] = pd.Categorical(horizon_df["series"], categories=series_order, ordered=True)
 
 # Band intensity colors: tints interpolated from the Imprint semantic anchors
@@ -106,17 +124,35 @@ for band_idx in range(n_bands):
     frac = (band_idx + 1) / n_bands
     pos_rgb = tuple(round(255 + (brand_rgb[c] - 255) * frac) for c in range(3))
     neg_rgb = tuple(round(255 + (loss_rgb[c] - 255) * frac) for c in range(3))
-    colors[f"pos{band_idx}"] = "#{:02X}{:02X}{:02X}".format(*pos_rgb)
-    colors[f"neg{band_idx}"] = "#{:02X}{:02X}{:02X}".format(*neg_rgb)
+    colors[band_labels[f"pos{band_idx}"]] = "#{:02X}{:02X}{:02X}".format(*pos_rgb)
+    colors[band_labels[f"neg{band_idx}"]] = "#{:02X}{:02X}{:02X}".format(*neg_rgb)
+
+# Legend from the strongest positive band down to the strongest negative one
+legend_order = [band_labels[f"pos{b}"] for b in reversed(range(n_bands))] + [
+    band_labels[f"neg{b}"] for b in range(n_bands)
+]
 
 # Distinctive lets-plot feature: custom tooltip content (unavailable in plotnine)
-horizon_tooltips = layer_tooltips().title("@series").format("@value", ".1f").line("Band|@band").line("Deviation|@value")
+horizon_tooltips = (
+    layer_tooltips()
+    .title("@series")
+    .format("@deviation", ".1f")
+    .line("Band (%)|@band")
+    .line("Deviation (%)|@deviation")
+)
 
-# Create the horizon chart
+# Create the horizon chart: one opaque layer per band, the lowest band first, so
+# a higher band is always drawn over the lower ones in its more intense color
+plot = ggplot(horizon_df, aes(x="hour", y="value", fill="band", color="band"))
+for band in range(n_bands):
+    plot += geom_area(
+        data=horizon_df[horizon_df["level"] == band], position="identity", size=0, tooltips=horizon_tooltips
+    )
 plot = (
-    ggplot(horizon_df, aes(x="hour", y="value", fill="band"))
-    + geom_area(position="identity", alpha=0.85, color=PAGE_BG, size=0.1, tooltips=horizon_tooltips)
-    + scale_fill_manual(values=colors, labels=band_labels)
+    plot
+    + scale_fill_manual(values=colors, breaks=legend_order)
+    # Outline in the fill color, so the legend keys match the borderless bands
+    + scale_color_manual(values=colors, breaks=legend_order)
     # Stack every series as a single, full-width, thin horizontal strip
     # (one row per series) rather than a large multi-column grid — this is
     # the defining "minimize vertical space" trait of a horizon chart.
@@ -124,18 +160,19 @@ plot = (
     # Only the meaningful zero baseline is labeled per row — with six thin
     # stacked strips, a top+bottom tick on every row would collide with the
     # neighboring row's ticks.
-    + scale_y_continuous(breaks=[0], labels=["0"])
+    + scale_y_continuous(breaks=[0], labels=["0"], limits=[0, band_size])
     + scale_x_continuous(breaks=[0, 24, 48, 72, 96, 120, 144], labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     + labs(
         title="horizon-basic · python · letsplot · anyplot.ai",
         x="Day of Week",
-        y="Folded Value (stacked bands)",
-        fill="Band Intensity",
+        y="CPU deviation from baseline (%)",
+        fill="Deviation band (%)",
+        color="Deviation band (%)",
     )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_blank(),
         panel_border=element_blank(),
         panel_grid_major=element_line(color=INK_SOFT, size=0.2),
         panel_grid_minor=element_blank(),
@@ -144,8 +181,8 @@ plot = (
         plot_title=element_text(size=20, face="bold", color=INK),
         axis_title=element_text(size=14, color=INK),
         axis_text_x=element_text(size=11, color=INK_SOFT),
-        axis_text_y=element_text(size=9, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT, size=0.3),
+        axis_text_y=element_text(size=11, color=INK_SOFT),
+        axis_line=element_blank(),
         strip_text=element_text(size=10, face="bold", color=INK),
         legend_position="right",
         legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
