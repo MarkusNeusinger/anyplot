@@ -4,7 +4,6 @@
 // Quality: 84/100 | Updated: 2026-11-08
 
 import { LineChart } from "@mui/x-charts/LineChart";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -33,7 +32,7 @@ const data = Object.entries({
 );
 
 // Plot: reads only data and the constants above
-// Months keep their order of appearance and sit on an index axis, so crossings can fall between them.
+// Months keep their order of appearance and sit on an index axis, so the axis can pad past the end markers.
 const months = [...new Set(data.map((d) => d[MONTH]))];
 const cities = [...new Set(data.map((d) => d[CITY]))];
 const xs = months.map((_, i) => i);
@@ -44,20 +43,6 @@ const lines = cities.map((city, i) => ({
   values: months.map((m) => data.find((d) => d[CITY] === city && d[MONTH] === m)?.[TEMP] ?? null),
 }));
 
-// Crossovers: every sign change of the gap between two series, at the linearly interpolated position
-const crossings: { x: number; label: string }[] = [];
-lines.forEach((a, i) =>
-  lines.slice(i + 1).forEach((b) => {
-    for (let k = 0; k < xs.length - 1; k += 1) {
-      const pair = [a.values[k], b.values[k], a.values[k + 1], b.values[k + 1]];
-      if (pair.some((v) => v == null)) continue;
-      const before = pair[0] - pair[1];
-      const after = pair[2] - pair[3];
-      if (before * after < 0) crossings.push({ x: k + before / (before - after), label: `${a.label} and ${b.label} cross` });
-    }
-  }),
-);
-
 const temps = data.map((d) => d[TEMP]);
 const yLow = Math.min(...temps);
 const yHigh = Math.max(...temps);
@@ -66,7 +51,7 @@ const xPad = (xs.length - 1) * X_PAD_SHARE;
 const unit = TEMP.match(/\(([^)]+)\)/)?.[1] ?? "";
 
 const TITLE = "line-multi · javascript · muix · anyplot.ai";
-const SUBTITLE = `${cities.length} series × ${months.length} ${MONTH.toLowerCase()}s · range ${yLow} to ${yHigh} ${unit} · ${crossings.length} crossovers`;
+const SUBTITLE = `${cities.length} series × ${months.length} ${MONTH.toLowerCase()}s · range ${yLow} to ${yHigh} ${unit}`;
 const HEADER_H = 80;
 const LEGEND_H = 44;
 
@@ -133,19 +118,7 @@ export default function Chart() {
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
-      >
-        {crossings.map((c) => (
-          <ChartsReferenceLine
-            key={`${c.label}-${c.x}`}
-            x={c.x}
-            label={c.label}
-            labelAlign="start"
-            spacing={{ x: 8, y: 8 }}
-            labelStyle={{ fontSize: 14, fill: t.inkSoft }}
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-          />
-        ))}
-      </LineChart>
+      />
     </div>
   );
 }
