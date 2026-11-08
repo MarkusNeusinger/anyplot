@@ -1,7 +1,7 @@
 // anyplot.ai
 // rose-basic: Basic Rose Chart
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-25
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
