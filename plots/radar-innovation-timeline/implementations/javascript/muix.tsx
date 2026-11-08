@@ -108,9 +108,9 @@ const headers = sectors.map((sector, i) => {
   return { sector, x: cx + (radiusPx + 26) * cos, y: cy - (radiusPx + 26) * Math.sin(mid), anchor };
 });
 
-// Label placement: markers stay on their positions; each label takes, of the eight slots around its
+// Label placement: markers stay on their positions; each label takes, of the slots around its
 // marker (outer side first) that are free of markers, headers, ring names and earlier labels, the
-// first one that crosses the fewest ring arcs and sector spokes
+// first one that stays in its own sector and crosses the fewest ring arcs
 const spokeAngles = Array.from({ length: sectors.length + 1 }, (_, i) => Math.PI - i * sectorSpan);
 const obstacles = [
   ...items.map((it, i) => ({ owner: i, box: [it.px - MARKER_R - 3, it.py - MARKER_R - 3, it.px + MARKER_R + 3, it.py + MARKER_R + 3] })),
@@ -134,6 +134,9 @@ const labels = items.map((it, i) => {
     [-out * gap, 0, -out],
     [-out * gap * 0.8, -gap, -out],
     [-out * gap * 0.8, gap, -out],
+    // above and below, shifted outward by a quarter of the label so it clears a nearby spoke
+    [-out * w * 0.25, -gap - 4, out],
+    [-out * w * 0.25, gap + 4, out],
   ].map(([dx, dy, side]) => {
     const x0 = side > 0 ? it.px + dx : side < 0 ? it.px + dx - w : it.px - w / 2;
     const box = [x0, it.py + dy - LABEL_PX / 2 - 2, x0 + w, it.py + dy + LABEL_PX / 2 + 2];
@@ -153,10 +156,16 @@ const labels = items.map((it, i) => {
       const along = corners.map(([x, y]) => x * Math.cos(a) + y * Math.sin(a));
       return Math.min(...across) < 0 && Math.max(...across) > 0 && Math.max(...along) > 0 && Math.min(...along) < radiusPx;
     }).length;
-    return { dx, dy, anchor: side > 0 ? "start" : side < 0 ? "end" : "middle", box, clash, lines: arcCrossings + spokeCrossings };
+    // A label reads as part of the sector its centre lies in, which can differ from its marker's
+    const centre = Math.atan2(cy - (box[1] + box[3]) / 2, (box[0] + box[2]) / 2 - cx);
+    const ownSector = centre <= Math.PI - it.sector * sectorSpan && centre >= Math.PI - (it.sector + 1) * sectorSpan;
+    return { dx, dy, anchor: side > 0 ? "start" : side < 0 ? "end" : "middle", box, clash, ownSector, lines: arcCrossings + spokeCrossings };
   });
+  // A free slot centred in the marker's own sector always wins; among those, the fewest crossings
   const free = slots.filter((s) => s.clash === 0);
-  const best = free.length > 0 ? free.reduce((a, b) => (b.lines < a.lines ? b : a)) : slots.reduce((a, b) => (b.clash < a.clash ? b : a));
+  const inSector = free.filter((s) => s.ownSector);
+  const pool = inSector.length > 0 ? inSector : free;
+  const best = pool.length > 0 ? pool.reduce((a, b) => (b.lines < a.lines ? b : a)) : slots.reduce((a, b) => (b.clash < a.clash ? b : a));
   obstacles.push({ owner: -1, box: best.box });
   return best;
 });
