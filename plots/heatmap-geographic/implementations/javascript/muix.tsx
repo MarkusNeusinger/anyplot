@@ -17,7 +17,7 @@ const SIZE = window.ANYPLOT_SIZE;
 // Constants
 const KM_PER_DEG = 111.32; // km per degree of latitude, and of longitude at the equator
 const PAD_SHARE = 0.04; // map padding around the points, as a share of their extent
-const BANDWIDTH_SHARE = 0.0625; // Gaussian kernel bandwidth as a share of the larger point extent in km
+const BANDWIDTH_SHARE = 0.03; // Gaussian kernel bandwidth as a share of the larger point extent in km
 const KERNEL_CUTOFF = 3; // the kernel is truncated at this many bandwidths
 const RASTER_COLS = 240; // density samples across the map width
 const DENSITY_FLOOR = 0.12; // relative density below which the layer is fully transparent
@@ -75,8 +75,8 @@ const data = (() => {
   };
   const hotspots = [
     { lon: -122.42, lat: 37.775, weight: 1.0, sigmaKm: 2.6 },
-    { lon: -122.27, lat: 37.805, weight: 0.7, sigmaKm: 3.2 },
-    { lon: -122.27, lat: 37.872, weight: 0.4, sigmaKm: 2.2 },
+    { lon: -122.27, lat: 37.805, weight: 0.5, sigmaKm: 1.7 },
+    { lon: -122.27, lat: 37.872, weight: 0.4, sigmaKm: 1.5 },
     { lon: -121.885, lat: 37.335, weight: 0.85, sigmaKm: 3.4 },
     { lon: -122.16, lat: 37.445, weight: 0.55, sigmaKm: 2.4 },
     { lon: -121.99, lat: 37.548, weight: 0.3, sigmaKm: 2.0 },
