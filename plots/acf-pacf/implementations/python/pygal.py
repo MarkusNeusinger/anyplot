@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 89/100 | Updated: 2026-11-08
@@ -14,6 +14,7 @@ _this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _this_dir]
 
 import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 from statsmodels.tsa.stattools import acf, pacf  # noqa: E402
@@ -32,25 +33,37 @@ IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 SIGNIFICANT = IMPRINT_PALETTE[0]  # stems outside the 95% bounds
 INSIGNIFICANT = INK_MUTED  # stems inside the bounds (muted anchor)
 
-# Data — synthetic monthly airline-style passenger data with trend and seasonality
+# Constants
+MAX_LAGS = 36  # three seasonal cycles of monthly data
+LAG_STEP = 6  # x tick spacing in lags
+
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: timestamp
+PASSENGERS = "Passengers (thousands)"  # role: value
+
+# Data: synthetic monthly airline-style passenger counts with trend and seasonality;
+# replace this block with your own table, for example df = pd.read_csv("passengers.csv")
 np.random.seed(42)
 n_obs = 200
 t = np.arange(n_obs)
-trend = 0.05 * t
-seasonal = 10 * np.sin(2 * np.pi * t / 12)
-noise = np.random.normal(0, 2, n_obs)
-passengers = 100 + trend + seasonal + noise
-
-# ACF/PACF computation
-n_lags = 36
-acf_values = acf(passengers, nlags=n_lags, fft=True)
-pacf_values = pacf(passengers, nlags=n_lags, method="ywm")
-conf_bound = 1.96 / np.sqrt(n_obs)
+df = pd.DataFrame(
+    {
+        MONTH: pd.date_range("2008-01-01", periods=n_obs, freq="MS"),
+        PASSENGERS: 100 + 0.05 * t + 10 * np.sin(2 * np.pi * t / 12) + np.random.normal(0, 2, n_obs),
+    }
+)
 
 # Plot: one XY chart holds both panels, so they share one lag axis; the ACF panel is the PACF
-# panel's coordinates shifted up by `acf_offset`, and each panel gets its own tick labels
+# panel's coordinates shifted up by its offset, and each panel gets its own tick labels with
+# the panel name at its zero line as that panel's y-axis label
+series = df.sort_values(MONTH)[PASSENGERS].dropna().to_numpy(dtype=float)
+n_lags = min(MAX_LAGS, len(series) // 2 - 1)  # pacf needs fewer lags than half the series
+acf_values = acf(series, nlags=n_lags, fft=True)
+pacf_values = pacf(series, nlags=n_lags, method="ywm")
+conf_bound = 1.96 / np.sqrt(len(series))
+
 TICK = 0.5
-HEAD = 0.25  # room above each panel's tallest stem for the panel label
+PAD = 0.1
 GAP = 0.35
 lags = np.arange(n_lags + 1)
 panels = {
@@ -58,7 +71,7 @@ panels = {
     "ACF": (lags, acf_values),  # ACF includes lag 0 (always 1.0)
 }
 bounds = {
-    name: (min(values.min(), -conf_bound) - 0.1, max(values.max(), conf_bound) + HEAD)
+    name: (min(values.min(), -conf_bound) - PAD, max(values.max(), conf_bound) + PAD)
     for name, (_, values) in panels.items()
 }
 offsets = {"PACF": 0.0, "ACF": bounds["PACF"][1] - bounds["ACF"][0] + GAP}
@@ -66,8 +79,8 @@ offsets = {"PACF": 0.0, "ACF": bounds["PACF"][1] - bounds["ACF"][0] + GAP}
 stems = {SIGNIFICANT: [], INSIGNIFICANT: []}
 heads = {}
 ci_lines = []
+zero_lines = []
 y_labels = []
-panel_labels = []
 x_lo, x_hi = -1.0, n_lags + 1.0
 for name, (panel_lags, values) in panels.items():
     off = offsets[name]
@@ -78,10 +91,10 @@ for name, (panel_lags, values) in panels.items():
         heads[name].append({"value": (lag, off + value), "color": color})
     for level in (conf_bound, -conf_bound):
         ci_lines += [(x_lo, off + level), (x_hi, off + level), None]
+    zero_lines += [(x_lo, off), (x_hi, off), None]
     lo, hi = bounds[name]
-    ticks = np.arange(np.ceil(lo / TICK), np.floor((hi - HEAD) / TICK) + 1) * TICK
-    y_labels += [{"value": off + tick, "label": f"{tick:g}"} for tick in ticks]
-    panel_labels.append({"value": (x_hi - 0.5, off + hi), "label": name})
+    ticks = np.arange(np.ceil(lo / TICK), np.floor(hi / TICK) + 1) * TICK
+    y_labels += [{"value": off + tick, "label": f"{tick:g}" if tick else name} for tick in ticks]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -114,7 +127,6 @@ chart = pygal.XY(
     style=custom_style,
     title="acf-pacf · python · pygal · anyplot.ai",
     x_title=f"Lag (months)   ·   dashed lines: 95% confidence bounds ±{conf_bound:.3f}",
-    y_title="Correlation",
     show_legend=False,
     show_x_guides=False,
     show_y_guides=True,
@@ -122,24 +134,21 @@ chart = pygal.XY(
     range=(bounds["PACF"][0], offsets["ACF"] + bounds["ACF"][1]),
     margin=40,
     spacing=30,
-    print_labels=True,
     print_values=False,
     css=(
         "file://style.css",
         "file://graph.css",
-        "inline:.text-overlay text.label { text-anchor: end; font-weight: bold; }",
+        "inline:.serie-0 .line { stroke-width: 2px !important; }",
         "inline:.serie-5 .line { stroke-width: 2.5px !important; }",
-        # pygal draws a line at every label "0": keep both panels' zero baselines, drop the one at lag 0
-        f"inline:.axis.y .axis.line {{ stroke: {INK} !important; stroke-width: 2px; }}",
+        # the lag-0 x label would otherwise draw a vertical axis line through the ACF's lag-0 stem
         "inline:.axis.x .axis.line { stroke: none !important; }",
         "inline:.plot_title { font-weight: bold; }",
     ),
 )
-chart.x_labels = list(range(0, n_lags + 1, 6))
+chart.x_labels = list(range(0, n_lags + 1, LAG_STEP))
 chart.y_labels = y_labels
 
-# Panel names at each panel's top right; text is always drawn above the marks
-chart.add("Panels", panel_labels, stroke=False, dots_size=0)
+chart.add("Zero baselines", zero_lines, show_dots=False, allow_interruptions=True)
 chart.add("Significant", stems[SIGNIFICANT], show_dots=False, allow_interruptions=True)
 chart.add("Inside bounds", stems[INSIGNIFICANT], show_dots=False, allow_interruptions=True)
 for name in ("ACF", "PACF"):
