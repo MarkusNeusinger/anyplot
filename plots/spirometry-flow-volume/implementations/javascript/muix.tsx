@@ -31,7 +31,7 @@ const FLOW_PRED_INSP = "Predicted inspiratory flow (L/s)"; // role: flow_predict
 // (reduced PEF, descending limb scooped toward the volume axis), sampled along the
 // exhaled volume, beside the predicted-normal loop for the same patient.
 const N_SAMPLES = 140;
-const MEAS = { fvc: 5.0, pef: 9.5, vPeak: 0.35, scoop: 1.35, pif: 5.9 };
+const MEAS = { fvc: 5.0, pef: 9.5, vPeak: 0.35, scoop: 2.0, pif: 5.9 };
 const PRED = { fvc: 5.6, pef: 10.6, vPeak: 0.3, scoop: 1.0, pif: 6.6 };
 const data: Record<string, number>[] = [];
 for (let i = 0; i < N_SAMPLES; i += 1) {
@@ -143,10 +143,10 @@ function ClinicalOverlay() {
       </text>
 
       <circle cx={pefX} cy={pefY} r={9} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
-      <line x1={pefX + 6} y1={pefY - 5} x2={pefX + 40} y2={pefY - 28} stroke={t.ink} strokeWidth={1.5} />
+      <line x1={pefX + 4} y1={pefY + 9} x2={pefX + 18} y2={pefY + 62} stroke={t.ink} strokeWidth={1.5} />
       <text
-        x={pefX + 46}
-        y={pefY - 26}
+        x={pefX + 20}
+        y={pefY + 82}
         fontSize={15}
         fontWeight={600}
         fill={t.ink}
