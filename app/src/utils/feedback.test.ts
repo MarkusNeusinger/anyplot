@@ -17,10 +17,24 @@ describe('feedback constants', () => {
 });
 
 describe('voteKey', () => {
-  it('keys a vote by spec, language and library', () => {
-    expect(voteKey({ specId: 'scatter-basic', language: 'python', libraryId: 'matplotlib' })).toBe(
-      'scatter-basic/python/matplotlib'
+  const target = { specId: 'scatter-basic', language: 'python', libraryId: 'matplotlib' };
+
+  it('keys a vote by spec, language, library and version', () => {
+    expect(voteKey({ ...target, version: '2026-11-08T04:54:13' })).toBe(
+      'scatter-basic/python/matplotlib@2026-11-08T04:54:13'
     );
+  });
+
+  it('gives each version of an implementation its own key', () => {
+    expect(voteKey({ ...target, version: '2026-11-08T04:54:13' })).not.toBe(
+      voteKey({ ...target, version: '2026-11-09T02:10:00' })
+    );
+  });
+
+  it('never matches a key from before votes were kept per version', () => {
+    const legacy = 'scatter-basic/python/matplotlib';
+    expect(voteKey({ ...target, version: '2026-11-08T04:54:13' })).not.toBe(legacy);
+    expect(voteKey({ ...target, version: null })).toBe('scatter-basic/python/matplotlib@');
   });
 });
 

@@ -414,6 +414,57 @@ describe('useAgentSession: data and bindings', () => {
     });
   });
 
+  it("keeps the binding check's warnings, unknown once a turn's version came without a check", async () => {
+    const SIGN =
+      "y: column 'Exam Score' has negative values (down to -3); this role needs values of 0 or more";
+    const routes = baseRoutes();
+    routes['PUT /sessions/S1/bindings'] = call =>
+      json(200, { bindings: call.body, complete: true, missing_roles: [], warnings: [SIGN, 7] });
+    const { result } = await openSession(routes);
+    expect(result.current.state.bindingWarnings).toBeNull();
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    // Only the strings of an answer that is not typed.
+    expect(result.current.state.bindingWarnings).toEqual([SIGN]);
+
+    // A version the assistant made: no check answered for it.
+    const changed = agentReducer(result.current.state, {
+      type: 'data_prepared',
+      dataset: PREPARED as DatasetChanged,
+    });
+    expect(changed.bindingWarnings).toBeNull();
+    // The root's `set_bindings`: unknown too; the same bindings again change nothing.
+    const same = agentReducer(result.current.state, {
+      type: 'server_sync',
+      bindings: result.current.state.bindings,
+      dataConfirmed: null,
+    });
+    expect(same.bindingWarnings).toEqual([SIGN]);
+    const swapped = agentReducer(result.current.state, {
+      type: 'server_sync',
+      bindings: { x: 'Exam Score', y: 'Study Hours' },
+      dataConfirmed: false,
+    });
+    expect(swapped.bindingWarnings).toBeNull();
+  });
+
+  it('asks the binding check again on the bindings in force, which changes nothing there', async () => {
+    const routes = baseRoutes();
+    let warnings: string[] = [];
+    routes['PUT /sessions/S1/bindings'] = call =>
+      json(200, { bindings: call.body, complete: true, missing_roles: [], warnings });
+    const { result } = await openSession(routes);
+    // Without data there is nothing to check.
+    expect(await act(() => result.current.checkBindings())).toBe(false);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    warnings = ['x: a later warning'];
+    expect(await act(() => result.current.checkBindings())).toBe(true);
+    const puts = calls.filter(call => call.method === 'PUT');
+    expect(puts).toHaveLength(2);
+    expect(puts[1].body).toEqual(puts[0].body);
+    expect(result.current.state.bindingWarnings).toEqual(['x: a later warning']);
+    expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Exam Score' });
+  });
+
   it('falls back to the default bindings as roles when the server names none', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(200, { ...DATASET, roles: undefined });
