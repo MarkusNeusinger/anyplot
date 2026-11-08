@@ -1,7 +1,7 @@
 // anyplot.ai
 // spectrum-basic: Frequency Spectrum Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 91/100 | Created: 2026-09-09
+// Quality: pending | Created: 2026-09-09
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot, AreaPlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
