@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-annotated-events: Annotated Line Plot with Event Markers
 // Library: muix 9.17.0 | JavaScript 22.23.2
-// Quality: 96/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
