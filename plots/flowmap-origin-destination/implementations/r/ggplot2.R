@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' flowmap-origin-destination: Origin-Destination Flow Map
 #' Library: ggplot2 4.0.3 | R 4.6.1
-#' Quality: 81/100 | Created: 2026-05-20
+#' Quality: pending | Created: 2026-05-20
 
 library(ggplot2)
 library(dplyr)
