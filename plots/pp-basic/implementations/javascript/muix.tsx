@@ -132,7 +132,17 @@ export default function Chart() {
         ]}
       >
         <ChartsWrapper legendPosition={{ vertical: "top", horizontal: "center" }} legendDirection="horizontal">
-          <ChartsLegend sx={{ fontSize: 15, color: t.inkSoft, height: LEGEND_H, alignItems: "center" }} />
+          <ChartsLegend
+            sx={{
+              fontSize: 15,
+              color: t.inkSoft,
+              height: LEGEND_H,
+              alignItems: "center",
+              // the legend sample repeats the diagonal's dash so the key reads as the line it explains
+              "& [data-series='diagonal'] .MuiChartsLegend-mark": { width: 40 },
+              "& [data-series='diagonal'] .MuiChartsLegend-mark path": { strokeWidth: 2, strokeDasharray: "9 6", strokeLinecap: "butt" },
+            }}
+          />
           <ChartsSurface
             sx={{
               "& .MuiLineChart-line[data-series='diagonal']": { strokeWidth: 2, strokeDasharray: "9 6" },
