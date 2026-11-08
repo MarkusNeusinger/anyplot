@@ -45,20 +45,11 @@ elev <- 30 * pi / 180
 azim <- -35 * pi / 180
 z_scale <- 3 # visually amplify height relative to the x/y spatial extent
 
-# Screen coordinates of data points (x, y, z); used for the mesh and the axis box
-project <- function(x, y, z) {
-  depth <- x * sin(azim) + y * cos(azim)
-  list(
-    px = x * cos(azim) - y * sin(azim),
-    py = depth * sin(elev) + z * z_scale * cos(elev),
-    depth = depth
-  )
-}
-
-P <- project(X, Y, Z)
-X_proj <- P$px
-Y_proj <- P$py
-Y_rot <- P$depth
+# Screen coordinates: px = x cos(a) - y sin(a), depth = x sin(a) + y cos(a),
+# py = depth sin(e) + z z_scale cos(e); used for the mesh and the axis box
+X_proj <- X * cos(azim) - Y * sin(azim)
+Y_rot <- X * sin(azim) + Y * cos(azim)
+Y_proj <- Y_rot * sin(elev) + Z * z_scale * cos(elev)
 
 # One quad per grid cell: its 4 projected corners, mean height (fill) and
 # mean depth (paint order — farthest cells first so nearer ones draw on top).
@@ -98,85 +89,94 @@ tick_len <- 0.06 * (x_hi - x_lo)
 left_x <- -cos(azim)
 left_y <- sin(azim)
 
-seg3d <- function(x, y, z, xend, yend, zend) {
-  a <- project(x, y, z)
-  b <- project(xend, yend, zend)
-  tibble::tibble(x = a$px, y = a$py, xend = b$px, yend = b$py)
-}
-
-# Pane grid on the floor and the two back walls, at the tick values
-pane_grid <- bind_rows(
-  seg3d(x_ticks, y_lo, z_lo, x_ticks, y_hi, z_lo),           # floor, along y
-  seg3d(x_lo, y_ticks, z_lo, x_hi, y_ticks, z_lo),           # floor, along x
-  seg3d(x_ticks, y_hi, z_lo, x_ticks, y_hi, z_hi),           # back wall y = y_max
-  seg3d(x_lo, y_ticks, z_lo, x_lo, y_ticks, z_hi),           # back wall x = x_min
-  seg3d(x_lo, y_hi, z_ticks, x_hi, y_hi, z_ticks),           # z levels on y = y_max
-  seg3d(x_lo, y_lo, z_ticks, x_lo, y_hi, z_ticks)            # z levels on x = x_min
-)
-
-# Outer edges of the back panes
-pane_edges <- bind_rows(
-  seg3d(x_lo, y_hi, z_lo, x_hi, y_hi, z_lo),
-  seg3d(x_lo, y_lo, z_lo, x_lo, y_hi, z_lo),
-  seg3d(x_lo, y_hi, z_lo, x_lo, y_hi, z_hi),
-  seg3d(x_hi, y_hi, z_lo, x_hi, y_hi, z_hi),
-  seg3d(x_lo, y_hi, z_hi, x_hi, y_hi, z_hi),
-  seg3d(x_lo, y_lo, z_hi, x_lo, y_hi, z_hi)
-)
-
-# Front axis lines and their outward ticks
-axis_lines <- bind_rows(
-  seg3d(x_lo, y_lo, z_lo, x_hi, y_lo, z_lo),                 # x axis
-  seg3d(x_hi, y_lo, z_lo, x_hi, y_hi, z_lo),                 # y axis
-  seg3d(x_lo, y_lo, z_lo, x_lo, y_lo, z_hi)                  # z axis
-)
-axis_ticks <- bind_rows(
-  seg3d(x_ticks, y_lo, z_lo, x_ticks, y_lo - tick_len, z_lo),
-  seg3d(x_hi, y_ticks, z_lo, x_hi + tick_len, y_ticks, z_lo),
-  seg3d(x_lo, y_lo, z_ticks, x_lo + left_x * tick_len, y_lo + left_y * tick_len, z_ticks)
-)
-
-x_lab <- project(x_ticks, y_lo - 2.6 * tick_len, z_lo)
-y_lab <- project(x_hi + 2.6 * tick_len, y_ticks, z_lo)
-z_lab <- project(x_lo + left_x * 1.6 * tick_len, y_lo + left_y * 1.6 * tick_len, z_ticks)
-tick_labels <- bind_rows(
-  tibble::tibble(x = x_lab$px, y = x_lab$py, label = as.character(x_ticks), hjust = 0.5),
-  tibble::tibble(x = y_lab$px, y = y_lab$py, label = as.character(y_ticks), hjust = 0.5),
-  tibble::tibble(x = z_lab$px, y = z_lab$py, label = formatC(z_ticks, format = "f", digits = 1), hjust = 1)
-)
-
-# Axis titles sit beyond the tick labels, rotated along their edge on screen
-x_dir <- project(c(x_lo, x_hi), y_lo, z_lo)
-y_dir <- project(x_hi, c(y_lo, y_hi), z_lo)
-x_title <- project(mean(c(x_lo, x_hi)), y_lo - 5.2 * tick_len, z_lo)
-y_title <- project(x_hi + 5.2 * tick_len, mean(c(y_lo, y_hi)), z_lo)
-z_title <- project(x_lo + left_x * 4.6 * tick_len, y_lo + left_y * 4.6 * tick_len, mean(c(z_lo, z_hi)))
-axis_titles <- tibble::tibble(
-  x = c(x_title$px, y_title$px, z_title$px),
-  y = c(x_title$py, y_title$py, z_title$py),
-  label = c("X", "Y", "Z (height)"),
-  angle = c(
-    atan2(diff(x_dir$py), diff(x_dir$px)) * 180 / pi,
-    atan2(diff(y_dir$py), diff(y_dir$px)) * 180 / pi,
-    90
+# Every box segment in data units (start x0/y0/z0, end x1/y1/z1), tagged by
+# the layer it is drawn in; projected to the screen once, below.
+box_3d <- bind_rows(
+  # Pane grid on the floor and the two back walls, at the tick values
+  tibble::tibble(layer = "grid", x0 = x_ticks, y0 = y_lo, z0 = z_lo, x1 = x_ticks, y1 = y_hi, z1 = z_lo),
+  tibble::tibble(layer = "grid", x0 = x_lo, y0 = y_ticks, z0 = z_lo, x1 = x_hi, y1 = y_ticks, z1 = z_lo),
+  tibble::tibble(layer = "grid", x0 = x_ticks, y0 = y_hi, z0 = z_lo, x1 = x_ticks, y1 = y_hi, z1 = z_hi),
+  tibble::tibble(layer = "grid", x0 = x_lo, y0 = y_ticks, z0 = z_lo, x1 = x_lo, y1 = y_ticks, z1 = z_hi),
+  tibble::tibble(layer = "grid", x0 = x_lo, y0 = y_hi, z0 = z_ticks, x1 = x_hi, y1 = y_hi, z1 = z_ticks),
+  tibble::tibble(layer = "grid", x0 = x_lo, y0 = y_lo, z0 = z_ticks, x1 = x_lo, y1 = y_hi, z1 = z_ticks),
+  # Outer edges of the back panes
+  tibble::tibble(
+    layer = "edge",
+    x0 = c(x_lo, x_lo, x_lo, x_hi, x_lo, x_lo), y0 = c(y_hi, y_lo, y_hi, y_hi, y_hi, y_lo),
+    z0 = c(z_lo, z_lo, z_lo, z_lo, z_hi, z_hi), x1 = c(x_hi, x_lo, x_lo, x_hi, x_hi, x_lo),
+    y1 = y_hi, z1 = c(z_lo, z_lo, z_hi, z_hi, z_hi, z_hi)
+  ),
+  # Front x, y and z axis lines
+  tibble::tibble(
+    layer = "axis",
+    x0 = c(x_lo, x_hi, x_lo), y0 = y_lo, z0 = z_lo,
+    x1 = c(x_hi, x_hi, x_lo), y1 = c(y_lo, y_hi, y_lo), z1 = c(z_lo, z_lo, z_hi)
+  ),
+  # Outward ticks on the three axes
+  tibble::tibble(layer = "tick", x0 = x_ticks, y0 = y_lo, z0 = z_lo, x1 = x_ticks, y1 = y_lo - tick_len, z1 = z_lo),
+  tibble::tibble(layer = "tick", x0 = x_hi, y0 = y_ticks, z0 = z_lo, x1 = x_hi + tick_len, y1 = y_ticks, z1 = z_lo),
+  tibble::tibble(
+    layer = "tick", x0 = x_lo, y0 = y_lo, z0 = z_ticks,
+    x1 = x_lo + left_x * tick_len, y1 = y_lo + left_y * tick_len, z1 = z_ticks
   )
 )
+box_df <- box_3d |>
+  mutate(
+    x = x0 * cos(azim) - y0 * sin(azim),
+    y = (x0 * sin(azim) + y0 * cos(azim)) * sin(elev) + z0 * z_scale * cos(elev),
+    xend = x1 * cos(azim) - y1 * sin(azim),
+    yend = (x1 * sin(azim) + y1 * cos(azim)) * sin(elev) + z1 * z_scale * cos(elev)
+  )
+
+# Tick labels and axis titles in data units, projected the same way. Titles
+# sit beyond the tick labels, rotated along their edge on screen: a step along
+# x moves (cos a, sin a sin e) on screen, a step along y (-sin a, cos a sin e).
+text_df <- bind_rows(
+  tibble::tibble(
+    kind = "tick", x0 = x_ticks, y0 = y_lo - 2.6 * tick_len, z0 = z_lo,
+    label = as.character(x_ticks), hjust = 0.5, angle = 0
+  ),
+  tibble::tibble(
+    kind = "tick", x0 = x_hi + 2.6 * tick_len, y0 = y_ticks, z0 = z_lo,
+    label = as.character(y_ticks), hjust = 0.5, angle = 0
+  ),
+  tibble::tibble(
+    kind = "tick", x0 = x_lo + left_x * 1.6 * tick_len, y0 = y_lo + left_y * 1.6 * tick_len, z0 = z_ticks,
+    label = formatC(z_ticks, format = "f", digits = 1), hjust = 1, angle = 0
+  ),
+  tibble::tibble(
+    kind = "title",
+    x0 = c(mean(c(x_lo, x_hi)), x_hi + 5.2 * tick_len, x_lo + left_x * 4.6 * tick_len),
+    y0 = c(y_lo - 5.2 * tick_len, mean(c(y_lo, y_hi)), y_lo + left_y * 4.6 * tick_len),
+    z0 = c(z_lo, z_lo, mean(c(z_lo, z_hi))),
+    label = c("X", "Y", "Z (height)"), hjust = 0.5,
+    angle = c(
+      atan2(sin(azim) * sin(elev), cos(azim)) * 180 / pi,
+      atan2(cos(azim) * sin(elev), -sin(azim)) * 180 / pi,
+      90
+    )
+  )
+) |>
+  mutate(
+    x = x0 * cos(azim) - y0 * sin(azim),
+    y = (x0 * sin(azim) + y0 * cos(azim)) * sin(elev) + z0 * z_scale * cos(elev)
+  )
 
 # --- Plot ----------------------------------------------------------------------
 p <- ggplot() +
-  geom_segment(data = pane_grid, aes(x = x, y = y, xend = xend, yend = yend),
+  geom_segment(data = filter(box_df, layer == "grid"), aes(x = x, y = y, xend = xend, yend = yend),
                color = adjustcolor(INK, alpha.f = 0.15), linewidth = 0.2) +
-  geom_segment(data = pane_edges, aes(x = x, y = y, xend = xend, yend = yend),
+  geom_segment(data = filter(box_df, layer == "edge"), aes(x = x, y = y, xend = xend, yend = yend),
                color = adjustcolor(INK_SOFT, alpha.f = 0.6), linewidth = 0.25) +
   geom_polygon(data = mesh_df, aes(x = x, y = y, group = group, fill = z),
                color = adjustcolor(INK_SOFT, alpha.f = 0.45), linewidth = 0.07, alpha = 0.95) +
-  geom_segment(data = axis_lines, aes(x = x, y = y, xend = xend, yend = yend),
+  geom_segment(data = filter(box_df, layer == "axis"), aes(x = x, y = y, xend = xend, yend = yend),
                color = INK_SOFT, linewidth = 0.35) +
-  geom_segment(data = axis_ticks, aes(x = x, y = y, xend = xend, yend = yend),
+  geom_segment(data = filter(box_df, layer == "tick"), aes(x = x, y = y, xend = xend, yend = yend),
                color = INK_SOFT, linewidth = 0.3) +
-  geom_text(data = tick_labels, aes(x = x, y = y, label = label, hjust = hjust),
+  geom_text(data = filter(text_df, kind == "tick"), aes(x = x, y = y, label = label, hjust = hjust),
             color = INK_SOFT, size = 2.8, vjust = 0.5) +
-  geom_text(data = axis_titles, aes(x = x, y = y, label = label, angle = angle),
+  geom_text(data = filter(text_df, kind == "title"), aes(x = x, y = y, label = label, angle = angle),
             color = INK, size = 3.5) +
   scale_fill_gradient(low = "#009E73", high = "#4467A3", name = "Height (z)",
                       limits = c(z_lo, z_hi), breaks = z_ticks) +
