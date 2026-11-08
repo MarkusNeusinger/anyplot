@@ -30,16 +30,17 @@ const TEMPERATURE = "Temperature (K)"; // role: temperature_K
 const RATE = "Rate constant k (s⁻¹)"; // role: rate_constant_k
 
 // Data: replace this block with your own records, one object per measurement
-// Thermal decomposition of NO₂ (2 NO₂ → 2 NO + O₂) measured at 11 temperatures from 310 K
-// to 510 K: Ea = 111 kJ/mol, ln A = 28.55, with a little scatter on each ln k.
+// First-order thermal decomposition of N₂O₅ (2 N₂O₅ → 4 NO₂ + O₂) measured at 11
+// temperatures from 278 K to 338 K: Ea = 103 kJ/mol, A = 4.94 × 10¹³ s⁻¹ (ln A = 31.53),
+// with a little scatter on each ln k.
 const data = (() => {
   let seed = 42;
   const rand = () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  return [310, 330, 350, 370, 390, 410, 430, 450, 470, 490, 510].map((kelvin) => {
-    const lnK = 28.55 - 111000 / (8.314 * kelvin) + (rand() - 0.5) * 0.3;
+  return [278, 284, 290, 296, 302, 308, 314, 320, 326, 332, 338].map((kelvin) => {
+    const lnK = 31.53 - 103000 / (8.314 * kelvin) + (rand() - 0.5) * 0.3;
     return { [TEMPERATURE]: kelvin, [RATE]: Number(Math.exp(lnK).toPrecision(4)) };
   });
 })();
