@@ -15,7 +15,14 @@ const RESISTANCE_CIRCLES = [0.2, 0.5, 1, 2, 5]; // normalized r of the standard 
 const REACTANCE_ARCS = [0.2, 0.5, 1, 2, 5]; // normalized |x| of the standard grid
 const GAMMA_LIMIT = 1.15; // the unit disk plus room for the reactance labels
 const LABEL_COUNT = 6; // frequency labels spread evenly along the sweep
-const LABEL_OFFSET_PX = 26;
+const LABEL_FONT_PX = 15;
+const GRID_FONT_PX = 14;
+const GLYPH_EM = 0.62; // average glyph width in em, to size a label's box before it is drawn
+const LABEL_GAP_PX = 14; // nearest distance from a labelled point to its label box
+const LABEL_GAP_MAX_PX = 90; // farthest the search steps out along the normal
+const LABEL_STEP_PX = 4;
+const LABEL_CLEAR_PX = 13; // room a label box keeps from the locus, the rim and other labels
+const LABEL_SAMPLE_PX = 3; // spacing of the points the clearance is measured against
 
 // Columns: set these to your data's column names
 const FREQUENCY = "Frequency (GHz)"; // role: frequency
@@ -77,7 +84,66 @@ function SmithChart() {
   const cx = xScale(0);
   const cy = yScale(0);
   const grid = { fill: "none", stroke: t.inkSoft, strokeWidth: 1, opacity: 0.55 };
-  const locusPath = locus.map((p, i) => `${i === 0 ? "M" : "L"}${xScale(p.re)},${yScale(p.im)}`).join(" ");
+  const pts = locus.map((p) => [xScale(p.re), yScale(p.im)]);
+  const locusPath = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+  const rLabels = RESISTANCE_CIRCLES.map((r) => ({ r, x: xScale((r - 1) / (r + 1)) - 4, y: cy + 18 }));
+  const xLabels = arcs.map((a) => ({
+    x: a.x,
+    text: `${a.x > 0 ? "+" : "−"}j${Math.abs(a.x)}`,
+    px: xScale(a.endRe * 1.07),
+    py: yScale(a.endIm * 1.07),
+  }));
+
+  // The locus and the rim as points a few px apart, to measure the room a label box keeps from them
+  const rimSamples = Math.ceil((2 * Math.PI * unit) / LABEL_SAMPLE_PX);
+  const obstacles = [
+    ...pts.flatMap(([x0, y0], i) => {
+      const [x1, y1] = pts[Math.min(i + 1, pts.length - 1)];
+      const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / LABEL_SAMPLE_PX));
+      return Array.from({ length: steps }, (_, s) => [x0 + ((x1 - x0) * s) / steps, y0 + ((y1 - y0) * s) / steps]);
+    }),
+    ...Array.from({ length: rimSamples }, (_, k) => [
+      cx + unit * Math.cos((2 * Math.PI * k) / rimSamples),
+      cy + unit * Math.sin((2 * Math.PI * k) / rimSamples),
+    ]),
+  ];
+  // Text boxes already on the chart: the grid values, then each frequency label as it is placed
+  const gridHalfH = GRID_FONT_PX * 0.6;
+  const boxes = [
+    ...rLabels.map((l) => {
+      const hw = (`${l.r}`.length * GRID_FONT_PX * GLYPH_EM) / 2;
+      return { x: l.x - hw, y: l.y - GRID_FONT_PX * 0.35, hw, hh: gridHalfH };
+    }),
+    ...xLabels.map((l) => ({ x: l.px, y: l.py, hw: (l.text.length * GRID_FONT_PX * GLYPH_EM) / 2, hh: gridHalfH })),
+  ];
+  // Each frequency label sits on the locus normal at its point, on the side and at the smallest
+  // distance that keep its box clear of the curve, the rim and every other label
+  const freqLabels = labelIdx.map((i) => {
+    const [px, py] = pts[i];
+    const [ax, ay] = pts[Math.max(0, i - 1)];
+    const [bx, by] = pts[Math.min(pts.length - 1, i + 1)];
+    const len = Math.hypot(bx - ax, by - ay) || 1;
+    const text = `${locus[i].f} ${freqUnit}`;
+    const hw = (text.length * LABEL_FONT_PX * GLYPH_EM) / 2;
+    const hh = LABEL_FONT_PX * 0.6;
+    let best = { x: px, y: py, room: -Infinity };
+    for (let gap = LABEL_GAP_PX; gap <= LABEL_GAP_MAX_PX && best.room < LABEL_CLEAR_PX; gap += LABEL_STEP_PX) {
+      for (const side of [1, -1]) {
+        const nx = (-(by - ay) / len) * side;
+        const ny = ((bx - ax) / len) * side;
+        const reach = gap + Math.abs(nx) * hw + Math.abs(ny) * hh;
+        const x = px + nx * reach;
+        const y = py + ny * reach;
+        const room = Math.min(
+          ...obstacles.map(([qx, qy]) => Math.hypot(Math.max(Math.abs(qx - x) - hw, 0), Math.max(Math.abs(qy - y) - hh, 0))),
+          ...boxes.map((b) => Math.max(Math.abs(b.x - x) - b.hw - hw, Math.abs(b.y - y) - b.hh - hh)),
+        );
+        if (room > best.room) best = { x, y, room };
+      }
+    }
+    boxes.push({ x: best.x, y: best.y, hw, hh });
+    return { f: locus[i].f, px, py, text, x: best.x, y: best.y };
+  });
   return (
     <g>
       <line x1={xScale(-1)} y1={cy} x2={xScale(1)} y2={cy} stroke={t.inkSoft} strokeWidth={1.5} />
@@ -92,61 +158,46 @@ function SmithChart() {
         />
       ))}
       <circle cx={cx} cy={cy} r={unit} fill="none" stroke={t.ink} strokeWidth={2.5} />
-      {RESISTANCE_CIRCLES.map((r) => (
-        <text
-          key={`rl-${r}`}
-          x={xScale((r - 1) / (r + 1)) - 4}
-          y={cy + 18}
-          textAnchor="end"
-          fontSize={14}
-          fill={t.inkSoft}
-        >
-          {r}
+      {rLabels.map((l) => (
+        <text key={`rl-${l.r}`} x={l.x} y={l.y} textAnchor="end" fontSize={GRID_FONT_PX} fill={t.inkSoft}>
+          {l.r}
         </text>
       ))}
-      {arcs.map((a) => (
+      {xLabels.map((l) => (
         <text
-          key={`xl-${a.x}`}
-          x={xScale(a.endRe * 1.07)}
-          y={yScale(a.endIm * 1.07)}
+          key={`xl-${l.x}`}
+          x={l.px}
+          y={l.py}
           textAnchor="middle"
           dominantBaseline="central"
-          fontSize={14}
+          fontSize={GRID_FONT_PX}
           fill={t.inkSoft}
         >
-          {`${a.x > 0 ? "+" : "−"}j${Math.abs(a.x)}`}
+          {l.text}
         </text>
       ))}
       <circle cx={cx} cy={cy} r={5} fill="none" stroke={t.ink} strokeWidth={2} />
       <path d={locusPath} fill="none" stroke={t.palette[0]} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
-      {labelIdx.map((i) => {
-        const p = locus[i];
-        const px = xScale(p.re);
-        const py = yScale(p.im);
-        const dist = Math.hypot(px - cx, py - cy) || 1;
-        const ux = (px - cx) / dist;
-        const uy = (py - cy) / dist;
-        return (
-          <g key={`f-${p.f}`}>
-            <circle cx={px} cy={py} r={8} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
-            <text
-              x={px + ux * LABEL_OFFSET_PX}
-              y={py + uy * LABEL_OFFSET_PX}
-              textAnchor={ux > 0.15 ? "start" : ux < -0.15 ? "end" : "middle"}
-              dominantBaseline={uy > 0.15 ? "hanging" : uy < -0.15 ? "auto" : "central"}
-              fontSize={15}
-              fontWeight={600}
-              fill={t.ink}
-              paintOrder="stroke"
-              stroke={t.pageBg}
-              strokeWidth={4}
-              strokeLinejoin="round"
-            >
-              {`${p.f} ${freqUnit}`}
-            </text>
-          </g>
-        );
-      })}
+      {freqLabels.map((l) => (
+        <g key={`f-${l.f}`}>
+          <circle cx={l.px} cy={l.py} r={8} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
+          <text
+            x={l.x}
+            y={l.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={LABEL_FONT_PX}
+            fontWeight={600}
+            fill={t.ink}
+            paintOrder="stroke"
+            stroke={t.pageBg}
+            strokeWidth={4}
+            strokeLinejoin="round"
+          >
+            {l.text}
+          </text>
+        </g>
+      ))}
     </g>
   );
 }
