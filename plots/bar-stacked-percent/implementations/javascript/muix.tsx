@@ -8,143 +8,151 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Fixed (non-theme-flipping) text colors for in-bar percentage labels — the
-// segment fills stay the same hex in both themes, so label contrast is chosen
-// per series color rather than following t.ink/t.inkSoft.
-const LABEL_ON_LIGHT_FILL = "#1A1A17"; // dark ink — for the green/lavender/ochre segments
-const LABEL_ON_DARK_FILL = "#F0EFE8"; // light ink — for the darker blue segment
+// Constants
+const TITLE = "Electricity Generation Mix · bar-stacked-percent · javascript · muix · anyplot.ai";
+const TITLE_H = 84;
+const LEGEND_H = 44;
+const FULL = 100; // every bar spans the whole, 0 to 100 %
+const MIN_LABEL_PX = 30; // a segment shorter than this keeps no percentage label
+const DECIMALS = 1;
+// Fixed label inks: segment fills keep their hex in both themes, so the ink follows the fill
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Electricity generation mix (TWh/year, illustrative) for six grids whose
-// total output spans two orders of magnitude — China dwarfs Norway in raw
-// terawatt-hours, which is exactly why a percent-stacked view (composition)
-// tells a clearer story here than a raw stacked view (dominated by scale).
-const rawByCountry = {
-  China: { renewables: 3100, nuclear: 400, gas: 300, coal: 5200 },
-  USA: { renewables: 900, nuclear: 800, gas: 1700, coal: 700 },
-  Germany: { renewables: 270, nuclear: 0, gas: 80, coal: 150 },
-  France: { renewables: 120, nuclear: 320, gas: 30, coal: 5 },
-  Brazil: { renewables: 550, nuclear: 15, gas: 60, coal: 15 },
-  Norway: { renewables: 150, nuclear: 0, gas: 0.5, coal: 0.1 },
-};
+// Columns: set these to your data's column names
+const COUNTRY = "Country"; // role: category
+const SOURCE = "Energy source"; // role: component
+const GENERATION = "Electricity generation (TWh per year)"; // role: value
 
-// Sorted descending by renewables share so the bars themselves form a visual
-// gradient (all-renewable Norway -> coal-heavy China) that reinforces the
-// subtitle's contrast, rather than an arbitrary country ordering.
-const renewablesShare = (country) => {
-  const raw = rawByCountry[country];
-  const total = raw.renewables + raw.nuclear + raw.gas + raw.coal;
-  return raw.renewables / total;
-};
-const countries = Object.keys(rawByCountry).sort((a, b) => renewablesShare(b) - renewablesShare(a));
-
-// Renewables listed first so it lands on Imprint position 1 (brand green) —
-// a natural semantic fit (growth/nature). Order stays fixed across every bar.
-const components = [
-  { id: "renewables", label: "Renewables", labelFill: LABEL_ON_LIGHT_FILL },
-  { id: "nuclear", label: "Nuclear", labelFill: LABEL_ON_LIGHT_FILL },
-  { id: "gas", label: "Natural Gas", labelFill: LABEL_ON_DARK_FILL },
-  { id: "coal", label: "Coal", labelFill: LABEL_ON_LIGHT_FILL },
+// Data: replace this block with your own records, one object per row
+// Illustrative annual generation for six national grids of very different size
+const data = [
+  { [COUNTRY]: "China", [SOURCE]: "Renewables", [GENERATION]: 3100 },
+  { [COUNTRY]: "China", [SOURCE]: "Nuclear", [GENERATION]: 400 },
+  { [COUNTRY]: "China", [SOURCE]: "Natural gas", [GENERATION]: 300 },
+  { [COUNTRY]: "China", [SOURCE]: "Coal", [GENERATION]: 5200 },
+  { [COUNTRY]: "USA", [SOURCE]: "Renewables", [GENERATION]: 900 },
+  { [COUNTRY]: "USA", [SOURCE]: "Nuclear", [GENERATION]: 800 },
+  { [COUNTRY]: "USA", [SOURCE]: "Natural gas", [GENERATION]: 1700 },
+  { [COUNTRY]: "USA", [SOURCE]: "Coal", [GENERATION]: 700 },
+  { [COUNTRY]: "Germany", [SOURCE]: "Renewables", [GENERATION]: 270 },
+  { [COUNTRY]: "Germany", [SOURCE]: "Nuclear", [GENERATION]: 0 },
+  { [COUNTRY]: "Germany", [SOURCE]: "Natural gas", [GENERATION]: 80 },
+  { [COUNTRY]: "Germany", [SOURCE]: "Coal", [GENERATION]: 150 },
+  { [COUNTRY]: "France", [SOURCE]: "Renewables", [GENERATION]: 120 },
+  { [COUNTRY]: "France", [SOURCE]: "Nuclear", [GENERATION]: 320 },
+  { [COUNTRY]: "France", [SOURCE]: "Natural gas", [GENERATION]: 30 },
+  { [COUNTRY]: "France", [SOURCE]: "Coal", [GENERATION]: 5 },
+  { [COUNTRY]: "Brazil", [SOURCE]: "Renewables", [GENERATION]: 550 },
+  { [COUNTRY]: "Brazil", [SOURCE]: "Nuclear", [GENERATION]: 15 },
+  { [COUNTRY]: "Brazil", [SOURCE]: "Natural gas", [GENERATION]: 60 },
+  { [COUNTRY]: "Brazil", [SOURCE]: "Coal", [GENERATION]: 15 },
+  { [COUNTRY]: "Norway", [SOURCE]: "Renewables", [GENERATION]: 150 },
+  { [COUNTRY]: "Norway", [SOURCE]: "Nuclear", [GENERATION]: 0 },
+  { [COUNTRY]: "Norway", [SOURCE]: "Natural gas", [GENERATION]: 0.5 },
+  { [COUNTRY]: "Norway", [SOURCE]: "Coal", [GENERATION]: 0.1 },
 ];
-const labelFillById = Object.fromEntries(components.map((c) => [c.id, c.labelFill]));
 
-const totalsByCountry = countries.map((country) =>
-  components.reduce((sum, c) => sum + rawByCountry[country][c.id], 0),
+// Plot: reads only data and the constants above
+// Sources stack in order of first appearance and keep that palette position in every bar
+const sources = [...new Set(data.map((d) => d[SOURCE]))];
+const countryList = [...new Set(data.map((d) => d[COUNTRY]))];
+const valueOf = new Map(data.map((d) => [`${d[COUNTRY]}\u0000${d[SOURCE]}`, d[GENERATION]]));
+const countryTotals = new Map(
+  countryList.map((c) => [c, sources.reduce((a, s) => a + (valueOf.get(`${c}\u0000${s}`) ?? 0), 0)]),
 );
-const series = components.map((c) => ({
-  id: c.id,
-  label: c.label,
-  stack: "total",
-  data: countries.map((country, i) => (rawByCountry[country][c.id] / totalsByCountry[i]) * 100),
-}));
+const shareOf = new Map(
+  data.map((d) => [
+    `${d[COUNTRY]}\u0000${d[SOURCE]}`,
+    d[GENERATION] == null || !countryTotals.get(d[COUNTRY]) ? null : (d[GENERATION] / countryTotals.get(d[COUNTRY])) * FULL,
+  ]),
+);
+
+// Bars ordered by the share of the first source, highest first
+const countries = [...countryList].sort(
+  (a, b) => (shareOf.get(`${b}\u0000${sources[0]}`) ?? 0) - (shareOf.get(`${a}\u0000${sources[0]}`) ?? 0),
+);
+const shares = sources.map((s) => countries.map((c) => shareOf.get(`${c}\u0000${s}`) ?? null));
+
+// Segment label ink per source: whichever fixed ink contrasts more with the fill
+const labelInks = sources.map((_, i) => {
+  const [R, G, B] = [1, 3, 5].map((k) => {
+    const c = parseInt(t.palette[i].slice(k, k + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const lum = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  return (lum + 0.05) / 0.0603 >= 0.985 / (lum + 0.05) ? DARK_INK : LIGHT_INK;
+});
+
+const firstShares = shares[0];
+const SUBTITLE = `${countries.length} grids, each normalized to its own total · sorted by ${sources[0].toLowerCase()} share: ${countries[0]} ${firstShares[0].toFixed(DECIMALS)}% to ${countries[countries.length - 1]} ${firstShares[firstShares.length - 1].toFixed(DECIMALS)}%`;
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
-  const H = window.ANYPLOT_SIZE.height; // 900 CSS px
-  const CHART_TOP = 84;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      {/* Title + subtitle */}
-      <Box sx={{ position: "absolute", top: 24, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>
-          bar-stacked-percent · javascript · muix · anyplot.ai
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ height: TITLE_H, px: "40px", pt: "18px", boxSizing: "border-box" }}>
+        <Typography sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1.2 }}>
+          {TITLE}
         </Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 14, mt: 0.5 }}>
-          Norway's grid runs almost entirely on renewables, while China still leans on coal
+        <Typography sx={{ color: t.inkSoft, fontSize: "15px", lineHeight: 1.2, mt: "8px" }}>
+          {SUBTITLE}
         </Typography>
       </Box>
-
-      {/* Bar chart */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: CHART_TOP,
-          left: 0,
-          right: 0,
-          bottom: 0,
+      <BarChart
+        width={width}
+        height={height - TITLE_H - LEGEND_H}
+        colors={t.palette}
+        skipAnimation
+        series={sources.map((s, i) => ({
+          id: `s${i}`,
+          label: s,
+          stack: "share",
+          data: shares[i],
+          valueFormatter: (v: number | null) => (v == null ? null : `${v.toFixed(DECIMALS)}%`),
+          barLabel: (item: { value: number | null }, ctx: { bar: { height: number } }) =>
+            item.value == null || ctx.bar.height < MIN_LABEL_PX ? null : `${item.value.toFixed(DECIMALS)}%`,
+        }))}
+        xAxis={[
+          {
+            scaleType: "band",
+            data: countries,
+            label: COUNTRY,
+            height: 64,
+            categoryGapRatio: 0.35,
+            disableTicks: true,
+            tickLabelStyle: { fontSize: 16, fill: t.ink },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 0,
+            max: FULL,
+            label: `Share of ${COUNTRY.toLowerCase()} total (%)`,
+            width: 84,
+            disableTicks: true,
+            valueFormatter: (v: number) => `${v}%`,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        margin={{ top: 16, right: 40, bottom: 8, left: 24 }}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "center" },
+            sx: { fontSize: 15, color: t.ink },
+          },
         }}
-      >
-        <BarChart
-          width={W}
-          height={H - CHART_TOP}
-          colors={t.palette}
-          skipAnimation
-          xAxis={[
-            {
-              scaleType: "band",
-              data: countries,
-              label: "Country",
-              disableTicks: true,
-              labelStyle: { fontSize: 15, fill: t.ink },
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              categoryGapRatio: 0.35,
-            },
-          ]}
-          yAxis={[
-            {
-              label: "Share (%)",
-              labelStyle: { fontSize: 15, fill: t.ink },
-              // tickFontSize (unlike tickLabelStyle.fontSize) drives the axis
-              // label's offset from the tick labels — pushed wide to clear
-              // the "100%" tick text without inflating its visual size.
-              tickFontSize: 70,
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              disableTicks: true,
-              min: 0,
-              max: 100,
-              valueFormatter: (v) => `${v}%`,
-            },
-          ]}
-          series={series.map((s) => ({
-            ...s,
-            valueFormatter: (v) => `${v.toFixed(1)}%`,
-          }))}
-          barLabel={(item) => (item.value != null && item.value >= 6 ? `${item.value.toFixed(0)}%` : null)}
-          margin={{ top: 14, right: 90, bottom: 90, left: 140 }}
-          grid={{ horizontal: true }}
-          slotProps={{
-            legend: {
-              position: { vertical: "middle", horizontal: "right" },
-              direction: "column",
-              labelStyle: { fontSize: 14, fill: t.inkSoft },
-            },
-            barLabel: (ownerState) => ({
-              style: {
-                fontSize: 13,
-                fontWeight: 600,
-                fill: labelFillById[ownerState.seriesId] ?? LABEL_ON_LIGHT_FILL,
-              },
-            }),
-          }}
-          sx={{
-            // Lighter, grid-weight axis line instead of the default full-ink
-            // stroke — a more refined chrome treatment than the library default.
-            "& .MuiChartsAxis-line": { stroke: t.grid },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        />
-      </Box>
+        sx={{
+          "& .MuiBarChart-element": { stroke: t.elevatedBg, strokeWidth: 1 },
+          "& .MuiBarChart-label": { fontSize: 15, fontWeight: 600 },
+          ...Object.fromEntries(sources.map((_, i) => [`& [data-series="s${i}"] .MuiBarChart-label`, { fill: labelInks[i] }])),
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+        }}
+      />
     </Box>
   );
 }
