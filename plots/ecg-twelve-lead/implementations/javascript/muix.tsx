@@ -2,242 +2,242 @@
 // ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 93/100 | Created: 2026-06-17
-//# anyplot-orientation: landscape
-import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const isLight = window.ANYPLOT_THEME !== "dark";
+const isDark = window.ANYPLOT_THEME === "dark";
 
-// Imprint palette: the waveform trace is brand green (position 1, always first
-// series). ECG paper grid uses matte red (Imprint position 5) — the universally
-// recognised colour of clinical ECG paper — at theme-adaptive alpha.
-const TRACE = t.palette[0]; // #009E73 brand green
-// Both themes derive from the same Imprint matte-red anchor (#AE3030 = rgba(174,48,48));
-// the dark theme simply raises the alpha so the grid stays visible on the near-black
-// surface, rather than introducing an off-palette brightened red.
-const GRID_MINOR = isLight ? "rgba(174,48,48,0.16)" : "rgba(174,48,48,0.40)";
-const GRID_MAJOR = isLight ? "rgba(174,48,48,0.34)" : "rgba(174,48,48,0.66)";
-
-// --- Synthetic ECG model (in-memory, deterministic) ------------------------
-// Normal sinus rhythm at 75 bpm. Each P-QRS-T complex is a sum of Gaussian
-// deflections; per-lead profiles scale P/R/S/T amplitude and polarity to give
-// each of the 12 leads its characteristic morphology (e.g. aVR fully inverted,
-// V1 rS with inverted T, V4-V6 dominant R waves).
-const FS = 120; // chart sampling (Hz) — smooth without bloating the SVG paths
-const PERIOD = 0.8; // 75 bpm
-const CAL_DUR = 0.34; // 1 mV calibration pulse occupies the strip margin
-
-function ecgValue(tb, p) {
-  const g = (c, a, w) => a * Math.exp(-((tb - c) ** 2) / (2 * w * w));
-  return (
-    g(0.18, 0.13 * p.p, 0.022) + // P wave
-    g(0.355, -0.09, 0.011) + // Q
-    g(0.39, 1.0 * p.r, 0.011) + // R
-    g(0.42, -0.28 * p.s, 0.013) + // S
-    g(0.585, 0.3 * p.t, 0.042) // T wave
-  );
-}
-
-function buildStrip(p, seconds) {
-  const xs = [];
-  const ys = [];
-  const total = CAL_DUR + seconds;
-  const n = Math.round(total * FS);
-  for (let i = 0; i <= n; i++) {
-    const time = i / FS;
-    xs.push(time);
-    if (time < CAL_DUR) {
-      // square 1 mV calibration pulse
-      ys.push(time >= 0.07 && time < 0.24 ? 1.0 : 0.0);
-    } else {
-      const tb = (time - CAL_DUR) % PERIOD;
-      ys.push(p.flip * ecgValue(tb, p));
-    }
-  }
-  return { xs, ys };
-}
-
-// Per-lead morphology profiles (p=P-gain, r=R-gain, s=S-gain, t=T-gain, flip=polarity)
-const PROFILE = {
-  I: { p: 1.0, r: 0.75, s: 0.25, t: 0.9, flip: 1 },
-  II: { p: 1.2, r: 1.05, s: 0.3, t: 1.1, flip: 1 },
-  III: { p: 0.7, r: 0.55, s: 0.35, t: 0.55, flip: 1 },
-  aVR: { p: 1.0, r: 0.6, s: 0.2, t: 0.9, flip: -1 },
-  aVL: { p: 0.6, r: 0.5, s: 0.3, t: 0.5, flip: 1 },
-  aVF: { p: 0.9, r: 0.8, s: 0.25, t: 0.8, flip: 1 },
-  V1: { p: 0.7, r: 0.3, s: 1.0, t: -0.5, flip: 1 },
-  V2: { p: 0.8, r: 0.55, s: 1.35, t: 0.5, flip: 1 },
-  V3: { p: 0.8, r: 0.95, s: 0.95, t: 0.85, flip: 1 },
-  V4: { p: 0.85, r: 1.45, s: 0.5, t: 1.0, flip: 1 },
-  V5: { p: 0.9, r: 1.4, s: 0.25, t: 1.0, flip: 1 },
-  V6: { p: 0.9, r: 1.1, s: 0.15, t: 0.9, flip: 1 },
-};
-
-// Standard clinical 3x4 layout (read left-to-right per row)
-const GRID_LEADS = [
-  ["I", "aVR", "V1", "V4"],
-  ["II", "aVL", "V2", "V5"],
-  ["III", "aVF", "V3", "V6"],
-];
-
-// --- Layout geometry (CSS px in the mount space) ---------------------------
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
+// Constants
+const PAPER_SPEED = 25; // mm per second, the clinical standard
+const GAIN = 10; // mm per mV, the clinical standard
+const MINOR_MM = 1; // light ruling every millimetre
+const MAJOR_MM = 5; // bold ruling every 5 mm
+const CAL_MV = 1; // calibration pulse height
+const CAL_WIDTH_MM = 5; // calibration pulse width (0.2 s at 25 mm/s)
+const CAL_MARGIN_MM = 10; // paper left of the recording that holds the calibration pulse
+const V_PAD = 0.08; // share of the voltage range kept free above and below the traces
+// ECG paper ruling in the Imprint matte red, as the spec asks for red or pink paper;
+// on dark it is stronger so it stays visible yet below the traces
+const RULING = t.palette[4];
+const MINOR_ALPHA = isDark ? 0.3 : 0.16;
+const MAJOR_ALPHA = isDark ? 0.58 : 0.38;
+const PAPER_TINT = isDark ? 0.07 : 0.05;
+// One trace colour: leads are told apart by their place in the layout and their label, as on clinical paper
+const TRACE = t.palette[0];
+const TITLE = "ecg-twelve-lead · javascript · muix · anyplot.ai";
 const PAD = 16;
-const TITLE_H = 44;
-const GAP = 8;
-const RHYTHM_H = 150;
-const innerW = W - 2 * PAD;
-const gridH = H - 2 * PAD - TITLE_H - GAP - RHYTHM_H - GAP;
-const cellW = (innerW - 3 * GAP) / 4;
-const cellH = (gridH - 2 * GAP) / 3;
+const HEADER_H = 64;
+const ROW_GAP = 6;
 
-// Common voltage window so every lead shares the standard 10 mm/mV scale
-const Y_MIN = -1.7;
-const Y_MAX = 1.9;
+// Columns: set these to your data's column names
+const TIME = "Time (s)"; // role: time
+const LEAD_I = "I"; // role: lead_I
+const LEAD_II = "II"; // role: lead_II
+const LEAD_III = "III"; // role: lead_III
+const LEAD_AVR = "aVR"; // role: lead_aVR
+const LEAD_AVL = "aVL"; // role: lead_aVL
+const LEAD_AVF = "aVF"; // role: lead_aVF
+const LEAD_V1 = "V1"; // role: lead_V1
+const LEAD_V2 = "V2"; // role: lead_V2
+const LEAD_V3 = "V3"; // role: lead_V3
+const LEAD_V4 = "V4"; // role: lead_V4
+const LEAD_V5 = "V5"; // role: lead_V5
+const LEAD_V6 = "V6"; // role: lead_V6
 
-const STRIP_SECONDS = 2.5;
-const RHYTHM_SECONDS = 6.0;
+// Data: replace this block with your own records, one object per row (one row per sample, voltages in mV)
+// Synthetic normal sinus rhythm at 75 bpm, 10 s at 1000 Hz: every P-QRS-T complex is a sum of Gaussian
+// deflections, and per-lead gains and polarity give each lead its morphology (aVR inverted, V1 rS, V4-V6 tall R)
+const data = (() => {
+  const fs = 1000;
+  const seconds = 10;
+  const period = 0.8;
+  const profile = [
+    [LEAD_I, { p: 1.0, r: 0.75, s: 0.25, t: 0.9, flip: 1 }],
+    [LEAD_II, { p: 1.2, r: 1.05, s: 0.3, t: 1.1, flip: 1 }],
+    [LEAD_III, { p: 0.7, r: 0.55, s: 0.35, t: 0.55, flip: 1 }],
+    [LEAD_AVR, { p: 1.0, r: 0.6, s: 0.2, t: 0.9, flip: -1 }],
+    [LEAD_AVL, { p: 0.6, r: 0.5, s: 0.3, t: 0.5, flip: 1 }],
+    [LEAD_AVF, { p: 0.9, r: 0.8, s: 0.25, t: 0.8, flip: 1 }],
+    [LEAD_V1, { p: 0.7, r: 0.3, s: 1.0, t: -0.5, flip: 1 }],
+    [LEAD_V2, { p: 0.8, r: 0.55, s: 1.35, t: 0.5, flip: 1 }],
+    [LEAD_V3, { p: 0.8, r: 0.95, s: 0.95, t: 0.85, flip: 1 }],
+    [LEAD_V4, { p: 0.85, r: 1.45, s: 0.5, t: 1.0, flip: 1 }],
+    [LEAD_V5, { p: 0.9, r: 1.4, s: 0.25, t: 1.0, flip: 1 }],
+    [LEAD_V6, { p: 0.9, r: 1.1, s: 0.15, t: 0.9, flip: 1 }],
+  ];
+  return Array.from({ length: fs * seconds }, (_, i) => {
+    const time = i / fs;
+    const tb = time % period;
+    const wave = (c, a, w) => a * Math.exp(-((tb - c) ** 2) / (2 * w * w));
+    const row = { [TIME]: time };
+    profile.forEach(([lead, g]) => {
+      const mv =
+        wave(0.18, 0.13 * g.p, 0.022) + // P wave
+        wave(0.355, -0.09, 0.011) + // Q
+        wave(0.39, 1.0 * g.r, 0.011) + // R
+        wave(0.42, -0.28 * g.s, 0.013) + // S
+        wave(0.585, 0.3 * g.t, 0.042); // T wave
+      row[lead] = Math.round(g.flip * mv * 1000) / 1000;
+    });
+    return row;
+  });
+})();
 
-function ecgPaper() {
-  const SM = 8; // 1 mm minor square
-  const BIG = SM * 5; // 5 mm major square
-  return {
-    backgroundColor: t.pageBg,
-    backgroundImage: [
-      `repeating-linear-gradient(0deg, ${GRID_MAJOR}, ${GRID_MAJOR} 1px, transparent 1px, transparent ${BIG}px)`,
-      `repeating-linear-gradient(90deg, ${GRID_MAJOR}, ${GRID_MAJOR} 1px, transparent 1px, transparent ${BIG}px)`,
-      `repeating-linear-gradient(0deg, ${GRID_MINOR}, ${GRID_MINOR} 1px, transparent 1px, transparent ${SM}px)`,
-      `repeating-linear-gradient(90deg, ${GRID_MINOR}, ${GRID_MINOR} 1px, transparent 1px, transparent ${SM}px)`,
-    ].join(", "),
-  };
-}
+// Plot: reads only data and the constants above
+// Standard clinical 3x4 layout, each column a consecutive time window, and a Lead II rhythm strip below
+const LAYOUT = [
+  [LEAD_I, LEAD_AVR, LEAD_V1, LEAD_V4],
+  [LEAD_II, LEAD_AVL, LEAD_V2, LEAD_V5],
+  [LEAD_III, LEAD_AVF, LEAD_V3, LEAD_V6],
+];
+const RHYTHM = [LEAD_II];
 
-function LeadTrace(props) {
-  const { strip, width, height } = props;
+const rows = [...data].sort((a, b) => a[TIME] - b[TIME]);
+const times = rows.map((d) => d[TIME]);
+const tMin = times[0];
+const tMax = times[times.length - 1];
+const columns = LAYOUT[0].length;
+const stripSeconds = (tMax - tMin) / columns;
+const column = times.map((tm) => Math.min(columns - 1, Math.floor((tm - tMin) / stripSeconds)));
+const sampleRate = Math.round((times.length - 1) / (tMax - tMin));
+
+const allLeads = [...LAYOUT.flat(), ...RHYTHM];
+const voltages = rows.flatMap((d) => allLeads.map((lead) => d[lead])).filter((v) => Number.isFinite(v));
+const rawLo = voltages.reduce((lo, v) => Math.min(lo, v), 0);
+const rawHi = voltages.reduce((hi, v) => Math.max(hi, v), CAL_MV);
+const majorMv = MAJOR_MM / GAIN;
+// Voltage window from the data, widened to whole bold squares so every strip starts on a bold line
+const vMin = Math.floor((rawLo - (rawHi - rawLo) * V_PAD) / majorMv) * majorMv;
+const vMax = Math.ceil((rawHi + (rawHi - rawLo) * V_PAD) / majorMv) * majorMv;
+const xMin = tMin - CAL_MARGIN_MM / PAPER_SPEED;
+
+// One px-per-mm scale for every strip, the largest that fits the canvas, so 1 mm cells are square
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const stripMmW = CAL_MARGIN_MM + (tMax - tMin) * PAPER_SPEED;
+const stripMmH = (vMax - vMin) * GAIN;
+const stripCount = LAYOUT.length + 1;
+const pxPerMm = Math.min(
+  (W - 2 * PAD) / stripMmW,
+  (H - 2 * PAD - HEADER_H - ROW_GAP * (stripCount - 1)) / (stripCount * stripMmH),
+);
+const stripW = stripMmW * pxPerMm;
+const stripH = stripMmH * pxPerMm;
+
+// Per strip: one line series per lead, holding its own time window and null elsewhere
+const strips = [...LAYOUT, RHYTHM].map((leads, s) => ({
+  key: `strip-${s}`,
+  windows: leads.map((lead, c) => ({
+    lead,
+    from: leads.length === 1 ? tMin : tMin + c * stripSeconds,
+  })),
+  series: leads.map((lead, c) => ({
+    type: "line",
+    id: `${s}-${lead}`,
+    data: rows.map((d, i) => (leads.length === 1 || column[i] === c ? d[lead] : null)),
+    color: TRACE,
+    showMark: false,
+  })),
+}));
+
+const subtitle = `${allLeads.length - RHYTHM.length} leads, ${stripSeconds.toFixed(1)} s each, and a ${(tMax - tMin).toFixed(0)} s ${RHYTHM.join(", ")} rhythm strip · ${sampleRate} Hz · ${PAPER_SPEED} mm/s · ${GAIN} mm/mV · ${CAL_MV} mV calibration pulse`;
+
+function EcgPaper() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const { left, top, width, height } = useDrawingArea();
+  const minor = [];
+  const major = [];
+  const nx = Math.round(stripMmW / MINOR_MM);
+  const ny = Math.round(stripMmH / MINOR_MM);
+  for (let i = 0; i <= nx; i += 1) {
+    const x = xScale(xMin + (i * MINOR_MM) / PAPER_SPEED);
+    (i % (MAJOR_MM / MINOR_MM) === 0 ? major : minor).push(`M${x},${top}V${top + height}`);
+  }
+  for (let j = 0; j <= ny; j += 1) {
+    const y = yScale(vMin + (j * MINOR_MM) / GAIN);
+    (j % (MAJOR_MM / MINOR_MM) === 0 ? major : minor).push(`M${left},${y}H${left + width}`);
+  }
   return (
-    <LineChart
-      width={width}
-      height={height}
-      margin={{ top: 24, right: 8, bottom: 8, left: 8 }}
-      skipAnimation
-      leftAxis={null}
-      bottomAxis={null}
-      xAxis={[{ data: strip.xs, scaleType: "linear", min: 0, max: strip.xs[strip.xs.length - 1] }]}
-      yAxis={[{ min: Y_MIN, max: Y_MAX }]}
-      series={[{ data: strip.ys, color: TRACE, showMark: false, curve: "linear" }]}
-      sx={{
-        "& .MuiLineElement-root": { strokeWidth: 2.0, strokeLinejoin: "round" },
-      }}
-    />
+    <g>
+      <rect x={left} y={top} width={width} height={height} fill={RULING} fillOpacity={PAPER_TINT} />
+      <path d={minor.join("")} stroke={RULING} strokeOpacity={MINOR_ALPHA} strokeWidth={0.8} fill="none" />
+      <path d={major.join("")} stroke={RULING} strokeOpacity={MAJOR_ALPHA} strokeWidth={1.3} fill="none" />
+    </g>
   );
 }
 
-function LeadPanel(props) {
-  const { name, width, height } = props;
-  const strip = buildStrip(PROFILE[name], STRIP_SECONDS);
+function EcgMarks({ windows }) {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const { top } = useDrawingArea();
+  const calX0 = xScale(xMin + (CAL_MARGIN_MM - CAL_WIDTH_MM) / 2 / PAPER_SPEED);
+  const calX1 = xScale(xMin + (CAL_MARGIN_MM + CAL_WIDTH_MM) / 2 / PAPER_SPEED);
+  const y0 = yScale(0);
+  const y1 = yScale(CAL_MV);
   return (
-    <div style={{ position: "relative", width, height, ...ecgPaper() }}>
-      <span
-        style={{
-          position: "absolute",
-          top: 4,
-          left: 8,
-          zIndex: 2,
-          fontSize: 15,
-          fontWeight: 700,
-          color: t.ink,
-          background: isLight ? "rgba(250,248,241,0.7)" : "rgba(26,26,23,0.7)",
-          padding: "0 4px",
-          borderRadius: 2,
-        }}
-      >
-        {name}
-      </span>
-      <LeadTrace strip={strip} width={width} height={height} />
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
-export default function Chart() {
-  const rhythm = buildStrip(PROFILE.II, RHYTHM_SECONDS);
-  return (
-    <div
-      style={{
-        width: W,
-        height: H,
-        boxSizing: "border-box",
-        padding: PAD,
-        display: "flex",
-        flexDirection: "column",
-        gap: GAP,
-        background: t.pageBg,
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          height: TITLE_H,
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-        }}
-      >
-        <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>
-          ecg-twelve-lead · javascript · muix · anyplot.ai
-        </span>
-        <span style={{ fontSize: 17, color: t.inkSoft }}>
-          Normal sinus rhythm · 25 mm/s · 10 mm/mV · 1 mV calibration
-        </span>
-      </div>
-
-      {/* 3x4 lead grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(4, ${cellW}px)`,
-          gridTemplateRows: `repeat(3, ${cellH}px)`,
-          gap: GAP,
-        }}
-      >
-        {GRID_LEADS.flat().map((name) => (
-          <LeadPanel key={name} name={name} width={cellW} height={cellH} />
-        ))}
-      </div>
-
-      {/* Full-length Lead II rhythm strip */}
-      <div style={{ position: "relative", width: innerW, height: RHYTHM_H, ...ecgPaper() }}>
-        <span
-          style={{
-            position: "absolute",
-            top: 4,
-            left: 8,
-            zIndex: 2,
-            fontSize: 15,
-            fontWeight: 700,
-            color: t.ink,
-            background: isLight ? "rgba(250,248,241,0.7)" : "rgba(26,26,23,0.7)",
-            padding: "0 4px",
-            borderRadius: 2,
-          }}
+    <g>
+      <path
+        d={`M${xScale(xMin)},${y0}H${calX0}V${y1}H${calX1}V${y0}H${xScale(tMin)}`}
+        stroke={TRACE}
+        strokeWidth={2}
+        fill="none"
+        strokeLinejoin="miter"
+      />
+      {windows.map((w) => (
+        <text
+          key={w.lead}
+          x={xScale(w.from) + 6}
+          y={top + 20}
+          fontSize={16}
+          fontWeight={700}
+          fill={t.ink}
+          stroke={t.pageBg}
+          strokeWidth={4}
+          paintOrder="stroke"
         >
-          II · rhythm
-        </span>
-        <LineChart
-          width={innerW}
-          height={RHYTHM_H}
-          margin={{ top: 24, right: 8, bottom: 8, left: 8 }}
-          skipAnimation
-          leftAxis={null}
-          bottomAxis={null}
-          xAxis={[{ data: rhythm.xs, scaleType: "linear", min: 0, max: rhythm.xs[rhythm.xs.length - 1] }]}
-          yAxis={[{ min: Y_MIN, max: Y_MAX }]}
-          series={[{ data: rhythm.ys, color: TRACE, showMark: false, curve: "linear" }]}
-          sx={{ "& .MuiLineElement-root": { strokeWidth: 2.0, strokeLinejoin: "round" } }}
-        />
+          {w.lead}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+export default function Chart() {
+  return (
+    <div style={{ width: W, height: H, boxSizing: "border-box", padding: PAD, background: t.pageBg }}>
+      <div style={{ height: HEADER_H, padding: "6px 4px 0", boxSizing: "border-box" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 6 }}>{subtitle}</div>
+      </div>
+      <div
+        style={{
+          height: H - 2 * PAD - HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: ROW_GAP,
+        }}
+      >
+        {strips.map((strip) => (
+          <ChartsContainer
+            key={strip.key}
+            width={stripW}
+            height={stripH}
+            margin={0}
+            skipAnimation
+            series={strip.series}
+            xAxis={[{ data: times, scaleType: "linear", min: xMin, max: tMax, position: "none" }]}
+            yAxis={[{ min: vMin, max: vMax, position: "none" }]}
+            sx={{ "& .MuiLineChart-line": { strokeWidth: 1.8, strokeLinejoin: "round" } }}
+          >
+            <EcgPaper />
+            <LinePlot skipAnimation />
+            <EcgMarks windows={strip.windows} />
+          </ChartsContainer>
+        ))}
       </div>
     </div>
   );
