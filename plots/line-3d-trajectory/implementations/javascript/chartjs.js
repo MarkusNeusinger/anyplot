@@ -40,26 +40,37 @@ for (let i = 0; i < POINT_COUNT; i++) {
   });
 }
 
-const origin = { ...project(0, 0, 0), origX: 0, origY: 0, origZ: 0 };
-const axisLength = RADIUS_START + 1.2;
-const xAxisEnd = {
-  ...project(axisLength, 0, 0),
-  origX: axisLength,
-  origY: 0,
-  origZ: 0,
-};
-const yAxisEnd = {
-  ...project(0, axisLength, 0),
-  origX: 0,
-  origY: axisLength,
-  origZ: 0,
-};
-const zAxisEnd = {
-  ...project(0, 0, axisLength),
-  origX: 0,
-  origY: 0,
-  origZ: axisLength,
-};
+// --- 3D axes: drawn from the origin, each with its own scale and its name at the tip ---
+// The canvas frame would only show projected screen coordinates, so it stays hidden and the
+// drawn axes carry the scale instead.
+const TICK_STEP = 2;
+const axes = [
+  { name: "X position", unit: [1, 0, 0], length: RADIUS_START + 1.2 },
+  { name: "Y position", unit: [0, 1, 0], length: RADIUS_START + 1.2 },
+  { name: "Altitude Z", unit: [0, 0, 1], length: ALTITUDE_START + 1 },
+].map((axis) => {
+  const at = (v) => {
+    const [ux, uy, uz] = axis.unit.map((u) => u * v);
+    return { ...project(ux, uy, uz), origX: ux, origY: uy, origZ: uz };
+  };
+  const ticks = [];
+  for (let v = TICK_STEP; v < axis.length - TICK_STEP / 4; v += TICK_STEP) ticks.push({ value: v, ...at(v) });
+  return { ...axis, origin: at(0), tip: at(axis.length), ticks };
+});
+
+// Equal units on both screen directions so the projection is not stretched by the 16:9 canvas
+const LAYOUT_PADDING = 24;
+const HEADER_HEIGHT = 100; // title and legend above the plot area
+const frame = [...trajectory, ...axes.map((axis) => axis.tip)];
+const screenXs = frame.map((p) => p.x);
+const screenYs = frame.map((p) => p.y);
+const [xLow, xHigh] = [Math.min(...screenXs), Math.max(...screenXs)];
+const [yLow, yHigh] = [Math.min(...screenYs), Math.max(...screenYs)];
+const areaW = window.ANYPLOT_SIZE.width - 2 * LAYOUT_PADDING;
+const areaH = window.ANYPLOT_SIZE.height - 2 * LAYOUT_PADDING - HEADER_HEIGHT;
+const unitsPerPx = 1.06 * Math.max((xHigh - xLow) / areaW, (yHigh - yLow) / areaH);
+const halfW = (unitsPerPx * areaW) / 2;
+const halfH = (unitsPerPx * areaH) / 2;
 
 // --- Color: elapsed time mapped through the Imprint sequential scale ------
 function lerpChannel(a, b, ratio) {
@@ -74,6 +85,44 @@ function lerpColor(hexA, hexB, ratio) {
   return `rgb(${r}, ${g}, ${bl})`;
 }
 
+// --- Axis scales and names, drawn on the canvas at the projected positions ---
+const axisLabelPlugin = {
+  id: "axisLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const px = (p) => [scales.x.getPixelForValue(p.x), scales.y.getPixelForValue(p.y)];
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1.5;
+    for (const axis of axes) {
+      const [ox, oy] = px(axis.origin);
+      const [tx, ty] = px(axis.tip);
+      const len = Math.hypot(tx - ox, ty - oy);
+      const [ux, uy] = [(tx - ox) / len, (ty - oy) / len];
+      // Ticks point away from the trajectory: down from the floor axes, left of the vertical axis
+      const [dx, dy] = axis.unit[2] ? [-1, 0] : ux > 0 ? [-uy, ux] : [uy, -ux];
+      ctx.fillStyle = t.inkSoft;
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (const tick of axis.ticks) {
+        const [x, y] = px(tick);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + dx * 8, y + dy * 8);
+        ctx.stroke();
+        ctx.fillText(String(tick.value), x + dx * 20, y + dy * 20);
+      }
+      ctx.fillStyle = t.ink;
+      ctx.font = "16px sans-serif";
+      ctx.textAlign = ux < -0.3 ? "right" : ux > 0.3 ? "left" : "center";
+      ctx.textBaseline = uy < -0.3 ? "bottom" : uy > 0.3 ? "top" : "middle";
+      ctx.fillText(axis.name, tx + ux * 10, ty + uy * 10);
+    }
+    ctx.restore();
+  },
+};
+
 // --- Mount ------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -83,40 +132,24 @@ new Chart(canvas, {
   type: "line",
   data: {
     datasets: [
-      {
-        label: "X axis",
-        data: [origin, xAxisEnd],
+      ...axes.map((axis) => ({
+        label: axis.name,
+        isAxis: true,
+        data: [axis.origin, axis.tip],
         borderColor: t.inkSoft,
         borderWidth: 1.5,
-        borderDash: [6, 5],
         pointRadius: 0,
         order: 3,
-      },
-      {
-        label: "Y axis",
-        data: [origin, yAxisEnd],
-        borderColor: t.inkSoft,
-        borderWidth: 1.5,
-        borderDash: [6, 5],
-        pointRadius: 0,
-        order: 3,
-      },
-      {
-        label: "Z axis (altitude)",
-        data: [origin, zAxisEnd],
-        borderColor: t.inkSoft,
-        borderWidth: 1.5,
-        borderDash: [2, 4],
-        pointRadius: 0,
-        order: 3,
-      },
+      })),
       {
         label: "Orbit (color = elapsed time)",
         data: trajectory,
         borderColor: t.palette[0],
         borderWidth: 3,
         pointRadius: 0,
-        tension: 0,
+        // A bezier curve through the 260 points; the straight-line path would also snap the
+        // near-vertical sides of each loop to whole pixel columns
+        tension: 0.3,
         segment: {
           borderColor: (ctx) => {
             const p0 = trajectory[ctx.p0DataIndex];
@@ -156,6 +189,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: { padding: LAYOUT_PADDING },
     parsing: { xAxisKey: "x", yAxisKey: "y" },
     plugins: {
       title: {
@@ -165,7 +199,11 @@ new Chart(canvas, {
         font: { size: 22 },
       },
       legend: {
-        labels: { color: t.ink, font: { size: 15 } },
+        labels: {
+          color: t.ink,
+          font: { size: 15 },
+          filter: (item, data) => !data.datasets[item.datasetIndex].isAxis,
+        },
       },
       tooltip: {
         callbacks: {
@@ -179,38 +217,17 @@ new Chart(canvas, {
     scales: {
       x: {
         type: "linear",
-        grid: { display: false },
-        border: { color: t.grid },
-        ticks: {
-          display: true,
-          color: t.inkSoft,
-          font: { size: 11 },
-          maxTicksLimit: 5,
-        },
-        title: {
-          display: true,
-          text: "Projected X–Y plane",
-          color: t.ink,
-          font: { size: 16 },
-        },
+        display: false,
+        min: (xLow + xHigh) / 2 - halfW,
+        max: (xLow + xHigh) / 2 + halfW,
       },
       y: {
         type: "linear",
-        grid: { display: false },
-        border: { color: t.grid },
-        ticks: {
-          display: true,
-          color: t.inkSoft,
-          font: { size: 11 },
-          maxTicksLimit: 5,
-        },
-        title: {
-          display: true,
-          text: "Altitude (Z)",
-          color: t.ink,
-          font: { size: 16 },
-        },
+        display: false,
+        min: (yLow + yHigh) / 2 - halfH,
+        max: (yLow + yHigh) / 2 + halfH,
       },
     },
   },
+  plugins: [axisLabelPlugin],
 });
