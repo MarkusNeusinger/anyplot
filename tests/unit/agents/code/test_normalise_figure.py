@@ -228,7 +228,8 @@ def test_the_figure_mode_draws_every_canvas(library: str) -> None:
 @pytest.mark.parametrize("library", ["plotly", "bokeh"])
 def test_the_normalised_catalogue_ends_on_the_figure_save(library: str) -> None:
     """Measured on 2026-10-31: 318 of 325 plotly files (7 save a single-theme `"plot.png"`) and 321 of 325 bokeh files
-    (4 save no named plot at module level) end on the pinned save; every file normalises idempotently."""
+    (4 save no named plot at module level) end on the pinned save; every file normalises idempotently. Since the
+    bokeh map-marker-clustered of 2026-11-08, which saves no named plot at module level either: 320."""
     paths = sorted(REPO_ROOT.glob(f"plots/*/implementations/python/{library}.py"))
     ending = 0
     for path in paths:
@@ -238,7 +239,7 @@ def test_the_normalised_catalogue_ends_on_the_figure_save(library: str) -> None:
         if saves:
             ending += saves[-1][0] is tree.body[-1]
         assert normalise(result, library=library) == result, path
-    assert len(paths) == 325 and ending == (318 if library == "plotly" else 321)
+    assert len(paths) == 325 and ending == (318 if library == "plotly" else 320)
 
 
 class TestReadiness:
