@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-geographic: Geographic Heatmap for Spatial Density
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 //# anyplot-orientation: square
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
