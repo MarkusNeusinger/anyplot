@@ -2,235 +2,215 @@
 // wireframe-3d-basic: Basic 3D Wireframe Plot
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 82/100 | Created: 2026-08-04
-//# anyplot-orientation: landscape
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: wave surface z = sin(x) · cos(y) over a 24x24 grid ---------------
-const GRID_N = 24;
-const AXIS_MIN = -3.2;
-const AXIS_MAX = 3.2;
+// Constants
+const ELEVATION_DEG = 22; // viewing elevation above the x-y plane
+const AZIMUTH_DEG = -38; // viewing azimuth around the z axis
+const CAMERA_DISTANCE = 3.5; // camera distance from the scene centre, in scene radii
+const AXIS_TICKS = 4; // about this many ticks per axis
+const NICE_STEPS = [1, 2, 2.5, 5, 10]; // round tick step multipliers
+const VIEW_PAD = 0.1; // share of the projected extent kept free around the drawing
+const TICK_PX = 9; // tick mark half length
+const TITLE = "wireframe-3d-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 80;
 
-const grid: number[] = [];
-for (let i = 0; i < GRID_N; i++) {
-  grid.push(AXIS_MIN + ((AXIS_MAX - AXIS_MIN) * i) / (GRID_N - 1));
-}
+// Columns: set these to your data's column names
+const X = "x"; // role: x
+const Y = "y"; // role: y
+const Z = "z = sin(x) · cos(y)"; // role: z
 
-// height[i][j] at (x = grid[i], y = grid[j])
-const height: number[][] = grid.map((x) => grid.map((y) => Math.sin(x) * Math.cos(y)));
-const heightFlat = height.flat();
-const Z_MIN = Math.min(...heightFlat);
-const Z_MAX = Math.max(...heightFlat);
+// Data: replace this block with your own records, one object per grid point
+// The wave surface z = sin(x) · cos(y) on an evenly spaced 24 × 24 grid.
+const data = (() => {
+  const n = 24;
+  const lo = -3.2;
+  const hi = 3.2;
+  const axis = Array.from({ length: n }, (_, i) => lo + ((hi - lo) * i) / (n - 1));
+  return axis.flatMap((x) =>
+    axis.map((y) => ({
+      [X]: Math.round(x * 1e4) / 1e4,
+      [Y]: Math.round(y * 1e4) / 1e4,
+      [Z]: Math.round(Math.sin(x) * Math.cos(y) * 1e4) / 1e4,
+    })),
+  );
+})();
 
-// --- 3D -> 2D axonometric projection (elevation 22°, azimuth -38°) ---------
-const ELEV = (22 * Math.PI) / 180;
-const AZIM = (-38 * Math.PI) / 180;
+// Plot: reads only data and the constants above
+const rows = data.filter((d) => d[X] != null && d[Y] != null && d[Z] != null);
+const xs = [...new Set(rows.map((d) => d[X]))].sort((a, b) => a - b);
+const ys = [...new Set(rows.map((d) => d[Y]))].sort((a, b) => a - b);
+const zAt = new Map(rows.map((d) => [`${d[X]}|${d[Y]}`, d[Z]]));
+const zs = rows.map((d) => d[Z]);
+const lo = [xs[0], ys[0], Math.min(...zs)];
+const hi = [xs[xs.length - 1], ys[ys.length - 1], Math.max(...zs)];
 
-function project(x: number, y: number, z: number) {
-  const xRot = x * Math.cos(AZIM) - y * Math.sin(AZIM);
-  const yRot = x * Math.sin(AZIM) + y * Math.cos(AZIM);
-  return { sx: xRot, sy: yRot * Math.sin(ELEV) + z * Math.cos(ELEV) };
-}
+// View rotation: rows of P give the screen x, the screen y (up) and the depth
+// (away from the camera) of a 3D point relative to the scene centre.
+const az = (AZIMUTH_DEG * Math.PI) / 180;
+const el = (ELEVATION_DEG * Math.PI) / 180;
+const P = [
+  [Math.cos(az), -Math.sin(az), 0],
+  [Math.sin(az) * Math.sin(el), Math.cos(az) * Math.sin(el), Math.cos(el)],
+  [Math.sin(az) * Math.cos(el), Math.cos(az) * Math.cos(el), -Math.sin(el)],
+];
+const center = lo.map((v, c) => (v + hi[c]) / 2);
+const camera = CAMERA_DISTANCE * 0.5 * Math.hypot(...lo.map((v, c) => hi[c] - v));
 
-// Two line families satisfy "grid lines in both x and y directions": lines
-// that trace along x (each at one fixed y), and lines that trace along y
-// (each at one fixed x).
-const linesAlongX = grid.map((y, j) => grid.map((x, i) => project(x, y, height[i][j])));
-const linesAlongY = grid.map((x, i) => grid.map((y, j) => project(x, y, height[i][j])));
-
-// Schematic axis triad anchored at the grid's near corner, mirroring how
-// boxed 3D axes pin their tick arms to the bounding-box edges.
-const ORIGIN = { x: AXIS_MIN, y: AXIS_MIN, z: Z_MIN };
-const AXES = [
-  { key: "x", end: { x: AXIS_MAX, y: AXIS_MIN, z: Z_MIN }, from: AXIS_MIN, to: AXIS_MAX, label: "X" },
-  { key: "y", end: { x: AXIS_MIN, y: AXIS_MAX, z: Z_MIN }, from: AXIS_MIN, to: AXIS_MAX, label: "Y" },
-  { key: "z", end: { x: AXIS_MIN, y: AXIS_MIN, z: Z_MAX }, from: Z_MIN, to: Z_MAX, label: "Z" },
+// Axis arms: x and y along the two base edges that meet at the corner nearest
+// the viewer (lowest on screen), z upright at the leftmost base corner.
+const baseCorners = [
+  [lo[0], lo[1], lo[2]],
+  [hi[0], lo[1], lo[2]],
+  [lo[0], hi[1], lo[2]],
+  [hi[0], hi[1], lo[2]],
+];
+const baseScreen = baseCorners.map((p) => P.map((r) => r.reduce((s, w, c) => s + w * (p[c] - center[c]), 0)));
+const front = baseCorners[baseScreen.reduce((b, s, i) => (s[1] < baseScreen[b][1] ? i : b), 0)];
+const leftmost = baseCorners[baseScreen.reduce((b, s, i) => (s[0] < baseScreen[b][0] ? i : b), 0)];
+const arms = [
+  { name: X, k: 0, from: [lo[0], front[1], lo[2]], to: [hi[0], front[1], lo[2]] },
+  { name: Y, k: 1, from: [front[0], lo[1], lo[2]], to: [front[0], hi[1], lo[2]] },
+  { name: Z, k: 2, from: leftmost, to: [leftmost[0], leftmost[1], hi[2]] },
 ];
 
-// Bounding box of every projected point (mesh + axis arms), padded so labels
-// clear the SVG edges.
-const allPoints = [
-  ...linesAlongX.flat(),
-  ...linesAlongY.flat(),
-  project(ORIGIN.x, ORIGIN.y, ORIGIN.z),
-  ...AXES.map((a) => project(a.end.x, a.end.y, a.end.z)),
+// Round tick values inside each axis' extent, placed on its arm
+const ticks = arms.flatMap((arm) => {
+  const raw = (hi[arm.k] - lo[arm.k]) / AXIS_TICKS;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const step = NICE_STEPS.map((m) => m * magnitude).find((s) => s >= raw);
+  const first = Math.ceil(lo[arm.k] / step - 1e-9) * step;
+  const count = Math.floor((hi[arm.k] - first) / step + 1e-9) + 1;
+  return Array.from({ length: count }, (_, i) => {
+    const value = first + i * step;
+    return { arm: arm.k, value, p: arm.from.map((v, c) => (c === arm.k ? value : v)) };
+  });
+});
+
+// Project everything once in perspective, nearer points drawn larger: arm
+// ends, ticks, then the mesh (row-major over x, then y).
+const grid3d = xs.flatMap((x) => ys.map((y) => [x, y, zAt.get(`${x}|${y}`) ?? null]));
+const anchors = [...arms.flatMap((a) => [a.from, a.to]), ...ticks.map((tk) => tk.p), ...grid3d];
+const projected = anchors.map((p) => {
+  if (p[2] == null) return null;
+  const [sx, sy, depth] = P.map((r) => r.reduce((s, w, c) => s + w * (p[c] - center[c]), 0));
+  return [(sx * camera) / (camera + depth), (sy * camera) / (camera + depth)];
+});
+const arms2d = arms.map((_, a) => [projected[2 * a], projected[2 * a + 1]]);
+const ticks2d = projected.slice(2 * arms.length, 2 * arms.length + ticks.length);
+const grid2d = projected.slice(2 * arms.length + ticks.length);
+// Mesh lines in both directions: along x at each y, and along y at each x
+const meshLines = [
+  ...ys.map((_, j) => xs.map((_, i) => grid2d[i * ys.length + j])),
+  ...xs.map((_, i) => ys.map((_, j) => grid2d[i * ys.length + j])),
 ];
-const SX_MIN = Math.min(...allPoints.map((p) => p.sx));
-const SX_MAX = Math.max(...allPoints.map((p) => p.sx));
-const SY_MIN = Math.min(...allPoints.map((p) => p.sy));
-const SY_MAX = Math.max(...allPoints.map((p) => p.sy));
-const PAD_X = (SX_MAX - SX_MIN) * 0.2;
-const PAD_Y = (SY_MAX - SY_MIN) * 0.26;
 
-const TITLE_H = 60;
+const drawn = projected.filter((p) => p != null);
+const sxLo = Math.min(...drawn.map((p) => p[0]));
+const sxHi = Math.max(...drawn.map((p) => p[0]));
+const syLo = Math.min(...drawn.map((p) => p[1]));
+const syHi = Math.max(...drawn.map((p) => p[1]));
+const meshPts = grid2d.filter((p) => p != null);
+const meshCenter = [0, 1].map((c) => meshPts.reduce((s, p) => s + p[c], 0) / meshPts.length);
+const SUBTITLE = `${xs.length} × ${ys.length} grid · perspective view from ${ELEVATION_DEG}° elevation, ${AZIMUTH_DEG}° azimuth`;
 
-// Custom overlay: maps projected (sx, sy) into the ChartContainer's drawing
-// area and paints the mesh + axis triad as plain SVG — the composition
-// pattern MUI X documents for chart types the built-in series don't cover.
-function Wireframe() {
-  const { left, top, width, height: areaHeight } = useDrawingArea();
-  const xOf = (sx: number) => left + ((sx - (SX_MIN - PAD_X)) / (SX_MAX + PAD_X - (SX_MIN - PAD_X))) * width;
-  const yOf = (sy: number) =>
-    top + areaHeight - ((sy - (SY_MIN - PAD_Y)) / (SY_MAX + PAD_Y - (SY_MIN - PAD_Y))) * areaHeight;
-
-  const toPolyline = (pts: { sx: number; sy: number }[]) => pts.map((p) => `${xOf(p.sx)},${yOf(p.sy)}`).join(" ");
-
-  const origin2d = project(ORIGIN.x, ORIGIN.y, ORIGIN.z);
-  const originPx = { x: xOf(origin2d.sx), y: yOf(origin2d.sy) };
+// The community package has no 3D chart: a custom layer maps the projected
+// mesh onto the drawing area with one scale for both screen directions.
+function WireframeLayer() {
+  const { left, top, width, height } = useDrawingArea();
+  const k = Math.min(width / ((sxHi - sxLo) * (1 + 2 * VIEW_PAD)), height / ((syHi - syLo) * (1 + 2 * VIEW_PAD)));
+  const ox = left + width / 2 - ((sxLo + sxHi) / 2) * k;
+  const oy = top + height / 2 + ((syLo + syHi) / 2) * k;
+  const cx = ox + meshCenter[0] * k;
+  const cy = oy - meshCenter[1] * k;
 
   return (
     <g>
-      {linesAlongX.map((line, idx) => (
-        <polyline
-          key={`x-${idx}`}
-          points={toPolyline(line)}
+      {meshLines.map((line, idx) => (
+        <path
+          key={idx}
+          d={line
+            .map((p, m) => (p == null ? "" : `${m === 0 || line[m - 1] == null ? "M" : "L"}${ox + p[0] * k},${oy - p[1] * k}`))
+            .join("")}
           fill="none"
           stroke={t.palette[0]}
-          strokeWidth={1.6}
-          opacity={0.85}
+          strokeWidth={1.5}
+          strokeOpacity={0.9}
+          strokeLinejoin="round"
         />
       ))}
-      {linesAlongY.map((line, idx) => (
-        <polyline
-          key={`y-${idx}`}
-          points={toPolyline(line)}
-          fill="none"
-          stroke={t.palette[1]}
-          strokeWidth={1.6}
-          opacity={0.85}
-        />
-      ))}
-      {AXES.map((a) => {
-        const end2d = project(a.end.x, a.end.y, a.end.z);
-        const endPx = { x: xOf(end2d.sx), y: yOf(end2d.sy) };
-        const dirX = endPx.x - originPx.x;
-        const dirY = endPx.y - originPx.y;
-        const len = Math.hypot(dirX, dirY) || 1;
-        const unitX = dirX / len;
-        const unitY = dirY / len;
-        const perpX = -unitY * 11;
-        const perpY = unitX * 11;
-        // Intermediate ticks at 1/4, 1/2, 3/4 — the min end is shared by all
-        // three arms at the corner and gets one combined label below.
-        const tickFracs = [0.25, 0.5, 0.75];
+      {arms2d.map(([from, to], a) => {
+        const x1 = ox + from[0] * k;
+        const y1 = oy - from[1] * k;
+        const x2 = ox + to[0] * k;
+        const y2 = oy - to[1] * k;
+        const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+        // unit normal to the arm, turned to point away from the mesh centre
+        const flip = ((x1 + x2) / 2 - cx) * -(y2 - y1) + ((y1 + y2) / 2 - cy) * (x2 - x1) < 0 ? -1 : 1;
+        const nx = (flip * -(y2 - y1)) / len;
+        const ny = (flip * (x2 - x1)) / len;
+        // the arm title runs along its arm and reads toward the right or upward
+        const readSign = x2 - x1 - (y2 - y1) >= 0 ? 1 : -1;
+        const titleDeg = (Math.atan2(readSign * (y2 - y1), readSign * (x2 - x1)) * 180) / Math.PI;
+        const titleX = (x1 + x2) / 2 + nx * TICK_PX * 7.5;
+        const titleY = (y1 + y2) / 2 + ny * TICK_PX * 7.5;
         return (
-          <g key={a.key}>
-            <line x1={originPx.x} y1={originPx.y} x2={endPx.x} y2={endPx.y} stroke={t.inkSoft} strokeWidth={2.5} />
-            {tickFracs.map((frac) => {
-              const tickValue = a.from + (a.to - a.from) * frac;
-              const tickX = originPx.x + dirX * frac;
-              const tickY = originPx.y + dirY * frac;
+          <g key={arms[a].name}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={t.inkSoft} strokeWidth={2} />
+            {ticks.map((tick, m) => {
+              if (tick.arm !== arms[a].k) return null;
+              const tx = ox + ticks2d[m][0] * k;
+              const ty = oy - ticks2d[m][1] * k;
               return (
-                <g key={frac}>
-                  <line
-                    x1={tickX - perpX}
-                    y1={tickY - perpY}
-                    x2={tickX + perpX}
-                    y2={tickY + perpY}
-                    stroke={t.inkSoft}
-                    strokeWidth={1.5}
-                  />
-                  <text
-                    x={tickX + perpX * 2.1}
-                    y={tickY + perpY * 2.1}
-                    fill={t.inkSoft}
-                    textAnchor="middle"
-                    style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
-                  >
-                    {tickValue.toFixed(1)}
+                <g key={tick.value}>
+                  <line x1={tx} y1={ty} x2={tx + nx * TICK_PX} y2={ty + ny * TICK_PX} stroke={t.inkSoft} strokeWidth={1.5} />
+                  <text x={tx + nx * TICK_PX * 2.8} y={ty + ny * TICK_PX * 2.8} dy="0.35em" textAnchor="middle" fontSize={15} fill={t.inkSoft}>
+                    {Number(tick.value.toFixed(6))}
                   </text>
                 </g>
               );
             })}
             <text
-              x={endPx.x + unitX * 34}
-              y={endPx.y + unitY * 34}
-              fill={t.inkSoft}
+              x={titleX}
+              y={titleY}
+              transform={`rotate(${titleDeg} ${titleX} ${titleY})`}
+              dy="0.35em"
               textAnchor="middle"
-              style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
-            >
-              {a.to.toFixed(1)}
-            </text>
-            <text
-              x={endPx.x + unitX * 58}
-              y={endPx.y + unitY * 58}
+              fontSize={16}
+              fontWeight={600}
               fill={t.ink}
-              textAnchor="middle"
-              style={{ fontSize: 20, fontWeight: 700, fontFamily: "Inter, system-ui, sans-serif" }}
             >
-              {a.label}
+              {arms[a].name}
             </text>
           </g>
         );
       })}
-      <text
-        x={originPx.x - 14}
-        y={originPx.y + 26}
-        fill={t.inkSoft}
-        textAnchor="end"
-        style={{ fontSize: 12, fontFamily: "Inter, system-ui, sans-serif" }}
-      >
-        ({AXIS_MIN.toFixed(1)}, {AXIS_MIN.toFixed(1)}, {Z_MIN.toFixed(1)})
-      </text>
-      {/* Legend: explain the two mesh line colors (VQ storytelling gap). */}
-      <g transform={`translate(${left + width - 190}, ${top + 4})`}>
-        <rect x={0} y={0} width={14} height={14} fill={t.palette[0]} />
-        <text
-          x={20}
-          y={11}
-          fill={t.inkSoft}
-          style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
-        >
-          X-direction lines
-        </text>
-        <rect x={0} y={22} width={14} height={14} fill={t.palette[1]} />
-        <text
-          x={20}
-          y={33}
-          fill={t.inkSoft}
-          style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif" }}
-        >
-          Y-direction lines
-        </text>
-      </g>
     </g>
   );
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <div
-      style={{
-        width: W,
-        height: H,
-        background: t.pageBg,
-        fontFamily: "Inter, system-ui, sans-serif",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          wireframe-3d-basic · javascript · muix · anyplot.ai
-        </span>
+    <div style={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: TITLE_H, padding: "18px 36px 0", boxSizing: "border-box", textAlign: "center" }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.2 }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft, lineHeight: 1.2, marginTop: 8 }}>{SUBTITLE}</div>
       </div>
-      <ChartContainer
-        width={W}
-        height={H - TITLE_H}
-        skipAnimation
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_H}
         series={[]}
-        xAxis={[{ min: 0, max: 1 }]}
-        yAxis={[{ min: 0, max: 1 }]}
-        margin={{ top: 20, bottom: 30, left: 30, right: 30 }}
+        skipAnimation
+        margin={{ top: 16, bottom: 24, left: 32, right: 32 }}
       >
-        <Wireframe />
-      </ChartContainer>
+        <WireframeLayer />
+      </ChartsContainer>
     </div>
   );
 }
