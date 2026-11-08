@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-heart-rate-zones: Time in Heart Rate Zones Bar Chart
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: pending | Created: 2026-06-14
+// Library: muix 9.17.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-08
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
