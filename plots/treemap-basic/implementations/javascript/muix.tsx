@@ -137,8 +137,8 @@ while (tasks.length > 0) {
   }
 }
 
-const formatValue = (v) => v.toLocaleString("en-US");
-const SUBTITLE = `${rows.length} ${SUBCATEGORY.toLowerCase()} tiles in ${categories.length} ${CATEGORY.toLowerCase()} blocks · area ∝ ${VALUE}, ${formatValue(grandTotal)} in total`;
+const fmt = new Intl.NumberFormat("en-US");
+const SUBTITLE = `${rows.length} ${SUBCATEGORY.toLowerCase()} tiles in ${categories.length} ${CATEGORY.toLowerCase()} blocks · area ∝ ${VALUE}, ${fmt.format(grandTotal)} in total`;
 
 // The community package has no treemap: a custom layer draws the tiles through
 // the container's px-unit scales, labels only where the text fits its tile.
@@ -157,13 +157,13 @@ function Treemap() {
         const pct = ((tile.value / grandTotal) * 100).toFixed(1);
 
         if (tile.level === 0) {
-          const header = `${tile.name} · ${formatValue(tile.value)}`;
+          const header = `${tile.name} · ${fmt.format(tile.value)}`;
           const headerFits = w - 16 >= header.length * LABEL_FONT * CHAR_W;
           const nameFits = w - 16 >= tile.name.length * LABEL_FONT * CHAR_W && h >= LABEL_FONT + 10;
           return (
             <g key={`cat-${tile.name}`}>
               <rect x={x} y={y} width={w} height={tile.nested ? HEADER_H : h} fill={shade.head}>
-                <title>{`${tile.name}: ${formatValue(tile.value)} (${pct}%)`}</title>
+                <title>{`${tile.name}: ${fmt.format(tile.value)} (${pct}%)`}</title>
               </rect>
               {(tile.nested ? headerFits : nameFits) && (
                 <text x={x + 8} y={y + HEADER_H / 2 + 5} fontSize={LABEL_FONT} fontWeight={700} fill={shade.headInk}>
@@ -180,7 +180,7 @@ function Treemap() {
         return (
           <g key={`sub-${tile.category}-${tile.name}`}>
             <rect x={x} y={y} width={w} height={h} fill={shade.tile} stroke={t.pageBg} strokeWidth={2}>
-              <title>{`${tile.category} / ${tile.name}: ${formatValue(tile.value)} (${pct}%)`}</title>
+              <title>{`${tile.category} / ${tile.name}: ${fmt.format(tile.value)} (${pct}%)`}</title>
             </rect>
             {nameFits && (
               <text x={x + 8} y={y + LABEL_FONT + 7} fontSize={LABEL_FONT} fontWeight={500} fill={shade.tileInk}>
@@ -189,7 +189,7 @@ function Treemap() {
             )}
             {valueFits && (
               <text x={x + 8} y={y + LABEL_FONT * 2 + 12} fontSize={LABEL_FONT - 1} fill={shade.tileInk}>
-                {formatValue(tile.value)}
+                {fmt.format(tile.value)}
               </text>
             )}
           </g>
