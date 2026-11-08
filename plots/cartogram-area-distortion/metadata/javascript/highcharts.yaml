@@ -2,201 +2,209 @@ library: highcharts
 language: javascript
 specification_id: cartogram-area-distortion
 created: '2026-08-20T18:26:08Z'
-updated: '2026-08-20T18:43:42Z'
-generated_by: claude-sonnet
-workflow_run: 32402185340
+updated: '2026-11-08T23:00:09Z'
+generated_by: claude-opus-5-5
+adopted_from: 0a8ab9db5e7d36bda98987ebd21c9555562e6ed4 (0a8ab9db5e7d36bda98987ebd21c9555562e6ed4)
+workflow_run: 42528510399
 issue: 4671
-language_version: 22.23.2
-library_version: 12.6.0
+language_version: 22.23.4
+library_version: 13.1.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Adds a fixed-size, contiguous reference-tile grid (drawn via chart.renderer, synced
-    to axis pixel mapping on every render) directly behind each circle, giving the
-    reader the equal-area comparison baseline the previous review flagged as missing
-  - Radius encoding correctly implements area ∝ value via sqrt scaling — the defining
-    cartogram encoding — and is now visually legible against the fixed reference tile
-    (CA/TX clearly overflow their tile, MT/ND/SD sit tiny inside theirs)
-  - Theme-adaptive chrome is fully correct in both renders; the three imprint_seq-derived
-    GDP-per-capita tier colors are pixel-identical between light and dark
-  - Idiomatic use of Highcharts' SVG renderer (chart.renderer.g/.rect + xAxis/yAxis.toPixels(),
-    re-drawn on the render event) to extend the core scatter series with a custom
-    overlay — a genuinely Highcharts-specific technique given the core bundle has
-    no maps/colorAxis module
-  - Clean, reproducible, deterministic in-memory data with realistic, neutral US population
-    and GDP-per-capita values
-  - Title format exactly matches the mandated convention; legend and caption jointly
-    explain the size, color, and reference-tile encodings
+  - Circle radius scales with sqrt(population) and has no additive minimum, so area
+    is truly proportional to value (CA at 39M against WY at 0.6M reads correctly).
+  - Equal-area tile grid keeps every state near its true position and next to its
+    neighbours. Dorling-style circles never overlap, which the spec's Notes accept.
+  - Undistorted inset uses the same grid with square area proportional to land area,
+    placed in the empty south-east corner. AK, TX and MT read large there and tiny
+    or modest in the main grid, which makes the distortion obvious.
+  - Labels switch between inside the circle (with an ink chosen for contrast against
+    the fill) and below small circles, so every abbreviation stays legible in both
+    themes.
+  - GDP-per-capita tiers are ordered steps of imprint_seq built with Highcharts.color().tweenTo,
+    and each tier has a native legend entry. The floating legend sits in empty grid
+    space.
+  - 'Highcharts-native techniques: SVGRenderer tiles redrawn in chart.events.render
+    through axis.toPixels, per-point marker radius and dataLabels, and a tooltip built
+    from point.custom for the HTML view.'
+  - Theme tokens are used throughout, the colour scheme is pinned with palette.colorScheme,
+    and animations are disabled.
   weaknesses:
-  - The distorted regions themselves (the circles) still do not touch or share borders
-    with their neighbors — only the undistorted reference tiles are contiguous. The
-    spec's explicit requirement that 'regions should remain contiguous (sharing borders)
-    after distortion' is still not literally met by the distorted shapes; this remains
-    a Dorling-style (non-contiguous) cartogram, now paired with a contiguous baseline
-    rather than being a contiguous cartogram itself. Likely unavoidable with the core
-    Highcharts bundle (no maps/colorAxis module), but worth stating plainly in a code
-    comment if not already resolvable.
-  - Green (imprint_seq low end) is still assigned to the lowest GDP-per-capita tier
-    while blue is the highest tier; since green commonly reads as 'good/high' in a
-    business/economic context, this ordering remains a mildly counter-intuitive semantic
-    pairing (not a palette-compliance violation — VQ-07 scores full marks — just a
-    minor storytelling nit).
-  - Title occupies only ~40% of plot width at the current 22px size, well under the
-    ~70-85% the mandated title string typically fills — not a deduction (no overflow/clipping,
-    fully legible), but there is room to grow the title/subtitle typographic hierarchy
-    for more visual presence per the previous review's DE-01 suggestion.
+  - 'VQ-05 (both): the land-area inset is pushed to 16 px from the right canvas edge
+    while the main grid keeps about 346 px of left margin, so the composition is lopsided
+    and the inset looks cramped → keep a right margin of at least 40 px for the inset,
+    or shift the main grid left so both sides are balanced. Likely cause: INSET_RIGHT
+    = window.ANYPLOT_SIZE.width - 16, with marginSide centring the main grid on its
+    own.'
+  - 'VQ-01 (both): the inset title and state abbreviations are set at 13px and the
+    caption at 14px. These are the smallest text on the canvas and blur in the 400
+    px thumbnail → about 14–15px for labels and the inset title (+1 to +2 px). Likely
+    cause: dataLabels fontSize "13px" and the inset r.text fontSize "13px".'
+  - 'SC-02 (both): the legend has no key for circle area, so the reader cannot turn
+    a circle size into a population value. Only the caption text says that area ∝
+    population → add a population reference (for example legend entries or reference
+    circles for 1M / 10M / 30M at the same sqrt scale). Likely cause: the legend lists
+    only the GDP tiers and the tile swatch.'
+  - 'Suggestion: small state abbreviations in the inset (or a hover tooltip) would
+    make it easier to match inset squares to states without counting grid positions.'
+  - 'Suggestion: the data could follow the adaptable-code data block, with role constants
+    and a `const data` array read through d[...], so the ''Use with my data'' agent
+    can swap it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "cartogram-area-distortion · javascript · highcharts · anyplot.ai" at top; soft-gray subtitle below it; soft-gray caption at the bottom explaining the encoding. All clearly readable against the light background. Legend below the plot lists the three GDP-per-capita tiers plus a "Reference tile" swatch, all legible.
-      Data: 24 US-state circles positioned on an approximate geographic tile grid, each inscribed inside a thin outlined square (the contiguous, equal-size reference tile — same footprint for every state, edges touching neighboring tiles). Circle radius scales with population (CA and TX are visibly largest, ND/SD/MT smallest); fill is one of three imprint_seq-derived tier colors (green low / teal-blue mid / blue high GDP-per-capita), first tier = #009E73. Dark-ink state abbreviation labels sit centered in each circle and are legible against every fill color.
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: the title "cartogram-area-distortion · javascript · highcharts · anyplot.ai" is dark, bold and centred. The subtitle and the bottom caption are in soft ink. The legend at the top left has three GDP tiers (green, teal, blue dots) and a grey "Equal-area tile" swatch. The inset title "Undistorted: square area ∝ land area" is in soft ink. All text is readable.
+      Data: 51 light-grey equal-area tiles in a statebins layout with page-coloured hairline gaps. Each tile holds a circle sized by population: CA, TX, FL and NY are large, while VT, WY and DC are tiny dots. Circles are filled by tier: #009E73-like green (low), mid teal, blue (high). White or dark labels sit inside large circles, and ink labels sit below small ones. The bottom-right inset repeats the grid with dark squares sized by land area (AK and TX large, RI and DC near-invisible). The inset sits within about 16 px of the right edge.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title/subtitle/caption/legend layout, now rendered in light ink; all clearly readable against the dark background. Reference-tile outlines flip to a light inkSoft stroke and remain subtle but visible. No dark-on-dark failures observed anywhere (title, subtitle, caption, legend, tick-free axes, in-circle labels all pass).
-      Data: Identical circle positions and radii to the light render. The three tier fill colors are pixel-identical to the light render (green/teal-blue/blue) — confirming only chrome flipped, not data colors. In-circle labels flip to light ink and stay legible on every fill.
+      Background: warm near-black #1A1A17, correct.
+      Chrome: the title, subtitle, legend text, inset title and caption are all light ink, with no dark-on-dark text. Tiles are a dark grey (the grid token) with page-coloured gaps. Inset squares are light grey.
+      Data: circle colours are identical to the light render (green, teal, blue tiers). Labels inside circles keep their fill-contrast ink, and labels below circles flip to light ink and stay readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicit, readable in both themes; caption at 13px
-          is the smallest element but still legible
+        passed: false
+        comment: Font sizes are set explicitly and readable in both themes. The 13px
+          labels, inset title and 14px caption blur in the thumbnail (defect line).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, circles, tiles, or legend
+        comment: No text collisions. Labels sit inside or below circles within their
+          tiles.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle sizes well adapted to the 24-region grid, clearly distinguishable
-          from smallest to largest
+        comment: Circles are visible against the tiles in both themes. Tiny circles
+          and squares are the true values, which the spec permits. Legend glyphs match
+          the marks.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/teal/blue tiers are CVD-distinguishable, not red-green reliant
+        comment: Sequential green-teal-blue tiers with no red-green signal. Label
+          inks are chosen per fill for contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Grid layout fills canvas well with balanced margins; reference tiles
-          add structure without clutter
+        passed: false
+        comment: The inset is crammed 16 px from the right edge while the main grid
+          has a wide left margin (defect line).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally hidden (appropriate for a cartogram); title/subtitle/caption
-          fully descriptive
+        comment: N/A for axes. The subtitle and caption describe the encodings with
+          units (millions, 2023).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First tier = #009E73, remaining tiers interpolated from imprint_seq;
-          backgrounds theme-correct in both renders'
+        comment: 'Ordered tiers are steps of imprint_seq (seq[0], midpoint, seq[1]).
+          Backgrounds are #FAF8F1 and #1A1A17, and the chrome is theme-correct.'
+      score: 28
     design_excellence:
-      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Reference-tile grid adds a more considered, less generic bubble-chart
-          look than attempt 1, but still short of publication-level polish
+        passed: true
+        comment: Raised by a deliberate typographic hierarchy (title, subtitle, caption,
+          inset title) and fill-dependent label inks.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle 1.25px reference-tile strokes, hidden axes, generous whitespace,
-          restrained legend
+        comment: Raised by page-coloured hairline tile gaps, the inside/below label-placement
+          rule, the legend floated into empty grid tiles and the inset placed in the
+          empty corner.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Reference tile vs. circle-size comparison now visually communicates
-          the distortion magnitude at a glance, directly fixing the prior review's
-          core storytelling gap
+        passed: false
+        comment: The data is displayed. The land-area against population contrast
+          is the spec-required inset, and no further hierarchy is chosen.
+      score: 11
     spec_compliance:
-      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct cartogram family (Dorling-style, area ∝ value), but the distorted
-          circles still don't share borders — not the contiguous cartogram variant
-          the spec centers on
+        passed: true
+        comment: Non-contiguous Dorling-style circles on an equal-area tile grid,
+          near true positions, with no overlap. The Notes accept this form.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: Reference-map/original-outline comparison requirement is now satisfied
-          via the contiguous reference-tile grid; literal contiguity of the distorted
-          shapes is still not achieved
+        passed: false
+        comment: The inset, colour scale and abbreviations are present. The legend
+          does not say what circle area represents in readable units, only the caption
+          does (defect line).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Region/value/color all correctly mapped
+        comment: Radius ∝ sqrt(population) with no minimum. Grid positions are layout
+          positions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches convention exactly; legend labels match data
-    data_quality:
+        comment: The title format is correct. Legend labels are reader text.
       score: 14
+    data_quality:
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Area distortion, secondary color variable, labels, and now the reference-comparison
-          baseline are all covered
+        comment: 'Shows strong distortion: large sparse states shrink and dense ones
+          swell. The undistorted comparison is present.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral US population/GDP-per-capita scenario
+        comment: Real US state population, GDP per capita and land area. Neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population and GDP-per-capita values are factually plausible and
-          correctly ordered
+        comment: Checked the populations (CA 39.0M, TX 30.5M, FL 22.6M) and the land
+          areas (AK 571k, TX 261k sq mi). All are plausible 2023 values.
+      score: 15
     code_quality:
-      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -204,64 +212,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small top-level helper functions only, no classes; complexity is
-          proportional to the custom-overlay technique
+        comment: Flat script. The only function is the render event callback that
+          Highcharts needs.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the Highcharts global and window tokens
+        comment: No imports. Uses only the globals the harness provides.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; well-reasoned inline comments on the reference-tile
-          rationale
+        comment: Appropriate complexity. The core bundle has no tilemap, so drawing
+          tiles with the renderer is justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled everywhere
+        comment: Mount-node contract met, animation disabled, current Highcharts 13
+          API.
+      score: 10
     library_mastery:
-      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Scatter + per-point marker.radius + dataLabels + renderer overlay
-          is the correct high-level pattern given the core bundle's missing colorAxis/bubble
-          module
+        comment: Raised by per-point marker and dataLabels options, axis.toPixels
+          inside chart.events.render, and palette.colorScheme.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: chart.renderer.g/.rect synced to axis.toPixels() on the render event
-          is a genuinely Highcharts-specific technique, though the overlay concept
-          itself is replicable in other SVG-based libraries
+        passed: true
+        comment: Raised by SVGRenderer groups redrawn on render, Highcharts.color().tweenTo
+          for the middle tier, and a point.custom tooltip.
+      score: 7
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-24d0f11364
+  rendered_at: '2026-11-08T22:57:12Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - custom-legend
+  - annotations
+  - html-export
+  - hover-tooltips
   patterns:
-  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
-  - normalization
+  - binning
   styling:
   - minimal-chrome
   - custom-colormap
