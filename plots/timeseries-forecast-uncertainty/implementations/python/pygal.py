@@ -11,7 +11,6 @@ import sys
 # noqa: E402 - sys.path must be modified before imports to avoid module shadowing
 sys.path[:] = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
 
-import cairosvg  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
@@ -21,10 +20,13 @@ from pygal.style import Style  # noqa: E402
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-BRAND = "#009E73"
-FORECAST_COLOR = "#C475FD"
+BRAND = "#009E73"  # historical observations
+FORECAST_COLOR = "#C475FD"  # forecast line; its bands are translucent tints of the same lavender
+BAND_95 = "rgba(196, 117, 253, 0.20)" if THEME == "light" else "rgba(196, 117, 253, 0.22)"
+BAND_80 = "rgba(196, 117, 253, 0.45)" if THEME == "light" else "rgba(196, 117, 253, 0.42)"
 
 np.random.seed(42)
 months = 42
@@ -45,74 +47,104 @@ lower_95 = forecast_values - 150
 upper_80 = forecast_values + 100
 lower_80 = forecast_values - 100
 
-x_labels = [d.strftime("%b %y") for d in dates]
+# Plot: months numbered from 1 (no tick at 0, so pygal draws its left spine at the edge)
+x = np.arange(1, months + 1)
+x_hist, x_fc = x[:split_idx], x[split_idx:]
+origin = (float(x_hist[-1]), float(actual[-1]))  # the forecast and its bands start at the last observation
 
-CI_ALPHA = "0.25" if THEME == "dark" else "0.20"
-CI_95_FILL = f"rgba(196, 117, 253, {CI_ALPHA})"
+# Bands as polygons between their bounds (upper bound forward, lower bound back), starting at the origin:
+# the 80% band, and the two strips of the 95% band outside it, so each colour has exactly one region
+fc_x = [origin[0], *x_fc]
+band_80 = list(zip(fc_x, [origin[1], *upper_80], strict=True)) + list(zip(fc_x[::-1], [*lower_80[::-1], origin[1]], strict=True))
+band_95_upper = list(zip(fc_x, [origin[1], *upper_95], strict=True)) + list(
+    zip(fc_x[::-1], [*upper_80[::-1], origin[1]], strict=True)
+)
+band_95_lower = list(zip(fc_x, [origin[1], *lower_80], strict=True)) + list(
+    zip(fc_x[::-1], [*lower_95[::-1], origin[1]], strict=True)
+)
 
-# Series order is driven by the background-erase CI technique: upper_95 fill
-# (orange) then lower_95 fill (PAGE_BG) produces the CI band; BRAND historical
-# line must be drawn last (on top) so the erase fill doesn't cover it.
+STEP = 200
+y_lo = np.floor(min(actual.min(), lower_95.min()) / STEP) * STEP
+y_hi = np.ceil(max(actual.max(), upper_95.max()) / STEP) * STEP + STEP / 2
+forecast_start = float(x_fc[0])
+marker = [(forecast_start, y_lo), (forecast_start, y_hi)]
+
+LABEL_FS = 40
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(CI_95_FILL, PAGE_BG, INK, INK, BRAND, FORECAST_COLOR),
-    title_font_size=66,
-    label_font_size=56,
+    foreground_subtle=INK_SOFT,
+    colors=(INK, BAND_95, BAND_95, BAND_80, INK_SOFT, BRAND, FORECAST_COLOR),
+    value_colors=(INK,) * 7,
+    opacity=1,
+    opacity_hover=1,
+    stroke_opacity=1,
+    stroke_opacity_hover=1,
+    stroke_width=5,
+    guide_stroke_color=RULE,
+    guide_stroke_dasharray="none",
+    major_guide_stroke_color=RULE,
+    major_guide_stroke_dasharray="none",
+    title_font_size=60,
+    label_font_size=44,
     major_label_font_size=44,
-    legend_font_size=44,
-    value_font_size=36,
-    stroke_width=2.5,
+    legend_font_size=42,
+    # pygal prints a point's label value_font_size px right of it and 4/3 of that below it;
+    # at 0.26 x the label size the text sits vertically centred on its point
+    value_font_size=round(0.26 * LABEL_FS),
+    value_label_font_size=LABEL_FS,
+    tooltip_font_size=34,
 )
 
-chart = pygal.Line(
+chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
+    title="timeseries-forecast-uncertainty · python · pygal · anyplot.ai",
+    x_title="Month",
+    y_title="Monthly sales ($)",
     show_x_guides=False,
     show_y_guides=True,
     show_legend=True,
     legend_at_bottom=True,
-    dots_size=2,
+    legend_at_bottom_columns=5,  # one row; pygal counts the untitled series too when it reserves legend rows
+    legend_box_size=36,
+    truncate_legend=-1,
+    xrange=(float(x[0]), float(x[-1]) + 0.5),
+    range=(float(y_lo), float(y_hi)),
+    print_labels=True,
     print_values=False,
-    # pygal auto-calculates truncation from chart_width / len(x_labels) / font_size;
-    # with 42 data points this resolves to 1 char → every label collapses to "…".
-    truncate_label=-1,
+    margin=40,
+    spacing=24,
+    css=(
+        "file://style.css",
+        "file://graph.css",
+        "inline:.serie-1 .line, .serie-2 .line, .serie-3 .line { stroke-width: 0 !important; }",
+        "inline:.serie-4 .line { stroke-width: 3px !important; }",
+        "inline:.text-overlay text.label { font-weight: bold; }",
+        "inline:.plot_title { font-weight: bold; }",
+    ),
+)
+chart.x_labels = [{"value": int(xi), "label": d.strftime("%b %y")} for xi, d in zip(x, dates, strict=True) if d.month in (1, 7)]
+
+# Label first and bands next, so the lines are drawn on top of the fills
+chart.add(None, [{"value": (forecast_start + 0.15, y_hi - STEP / 4), "label": "Forecast →"}], stroke=False, dots_size=0)
+chart.add("95% interval", band_95_upper, fill=True, show_dots=False)
+chart.add(None, band_95_lower, fill=True, show_dots=False)
+chart.add("80% interval", band_80, fill=True, show_dots=False)
+chart.add("Forecast start", marker, show_dots=False, stroke_style={"dasharray": "14, 10"})
+chart.add("Observed history",list(zip(x_hist, actual, strict=True)), dots_size=5, formatter=lambda p: f"${p[1]:,.0f}")
+chart.add(
+    "Forecast",
+    [origin, *zip(x_fc, forecast_values, strict=True)],
+    dots_size=5,
+    stroke_style={"dasharray": "22, 12"},
+    formatter=lambda p: f"${p[1]:,.0f}",
 )
 
-chart.title = "timeseries-forecast-uncertainty · python · pygal · anyplot.ai"
-chart.x_title = "Month"
-chart.y_title = "Sales ($)"
-
-# Sparse labels: show every 6th month; x_labels_major marks Jan 25 as the
-# forecast boundary with a prominent guide line.
-sparse_labels = [x_labels[i] if i % 6 == 0 else "" for i in range(len(x_labels))]
-chart.x_labels = sparse_labels
-chart.x_labels_major = ["Jan 25"]
-
-# Background-erase: CI series carry actual values in the history region so the
-# erase fill covers exactly the same area as the orange fill → no net band there.
-upper_95_full = list(actual) + list(upper_95)
-lower_95_full = list(actual) + list(lower_95)
-
-chart.add("95% CI", upper_95_full, fill=True, show_legend=True, stroke_dasharray=(0,))
-chart.add(None, lower_95_full, fill=True, show_legend=False, stroke_dasharray=(0,))
-chart.add("80% CI", [None] * split_idx + list(upper_80), fill=False, show_legend=True, stroke_dasharray=(4, 4))
-chart.add(None, [None] * split_idx + list(lower_80), fill=False, show_legend=False, stroke_dasharray=(4, 4))
-chart.add("Historical (observed)", list(actual) + [None] * (months - split_idx), fill=False, stroke_dasharray=(0,))
-chart.add("Forecast (projected)", [None] * split_idx + list(forecast_values), fill=False, stroke_dasharray=(5, 5))
-
-# pygal hardcodes stroke:black for guide lines — invisible on dark backgrounds.
-svg_bytes = chart.render()
-svg_str = svg_bytes.decode("utf-8")
-svg_str = svg_str.replace(
-    "stroke-dasharray:4,4;stroke:black}", f"stroke-dasharray:4,4;stroke:{INK_MUTED};stroke-opacity:0.5}}"
-)
-svg_str = svg_str.replace("stroke-dasharray:6,6;stroke:black}", f"stroke-dasharray:8,5;stroke:{INK};stroke-width:1.5}}")
-
-cairosvg.svg2png(bytestring=svg_str.encode(), write_to=f"plot-{THEME}.png")
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(svg_str)
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
