@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -37,20 +37,20 @@ df = pd.DataFrame(
     {
         FEATURE: [
             "Income",
+            "Payment History",
             "Credit Score",
+            "Debt Ratio",
             "Age",
             "Employment Years",
-            "Debt Ratio",
-            "Num Accounts",
             "Loan Amount",
-            "Education Level",
             "Num Inquiries",
+            "Num Accounts",
+            "Education Level",
             "Home Ownership",
-            "Payment History",
             "Account Balance",
         ],
-        IMPORTANCE: [0.185, 0.162, 0.124, 0.098, 0.089, 0.076, 0.068, 0.058, 0.052, 0.041, 0.032, 0.015],
-        STD: [0.021, 0.018, 0.016, 0.012, 0.014, 0.010, 0.011, 0.009, 0.008, 0.007, 0.006, 0.005],
+        IMPORTANCE: [0.185, 0.158, 0.142, 0.112, 0.088, 0.074, 0.066, 0.054, 0.043, 0.035, 0.027, 0.016],
+        STD: [0.021, 0.019, 0.017, 0.015, 0.012, 0.011, 0.010, 0.009, 0.008, 0.007, 0.006, 0.005],
     }
 )
 
@@ -143,6 +143,7 @@ p.ygrid.grid_line_color = None
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
+p.styles = {"background-color": PAGE_BG}  # the page shows through the anti-aliased seam at the frame edge
 p.outline_line_color = None
 
 # Save: interactive HTML, then a headless-Chrome screenshot at the exact canvas size
