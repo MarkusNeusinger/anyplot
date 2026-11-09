@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -95,7 +95,7 @@ for ax in (ax_col, ax_row):
     ax.set_xticks([])
     ax.set_yticks([])
     for line in ax.collections:
-        line.set_linewidth(1.4)
+        line.set_linewidth(0.9)
     for spine in ax.spines.values():
         spine.set_visible(False)
 
