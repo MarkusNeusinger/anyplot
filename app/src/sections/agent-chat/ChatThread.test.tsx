@@ -340,6 +340,13 @@ describe('ChatThread in-progress line', () => {
     const plotPrompt: ChatItem = { id: 1, kind: 'action', action: 'create_plot', library: 'x' };
     const card: ChatItem = { id: 2, kind: 'plot', version: 1 };
     const plotRun = run({ kind: 'create_plot', steps: [{ step: 'reviewing', attempt: 1 }] });
+    // The reply's line height, resolved to pixels as a browser does, is the bar for the line.
+    const reply = renderThread(
+      inFlight([plotPrompt, card, { id: 3, kind: 'assistant', text: 'Done.' }], null)
+    );
+    const replyLineHeight = getComputedStyle(screen.getByText('Done.')).lineHeight;
+    expect(replyLineHeight).toMatch(/^\d+(\.\d+)?px$/);
+    reply.unmount();
     // The card is in, the reply is still being written: one line says so, a notice between them
     // or not.
     for (const items of [
@@ -352,7 +359,11 @@ describe('ChatThread in-progress line', () => {
       expect(screen.getByRole('log').lastElementChild).toBe(pending);
       // No timeline follows a card: the line keeps the thread's gap alone, where the reply goes,
       // one row of the reply's line height, so a one-line reply moves nothing below it.
-      expect(pending).toHaveStyle({ marginTop: '0px', flexDirection: 'row', lineHeight: '1.6' });
+      expect(pending).toHaveStyle({
+        marginTop: '0px',
+        flexDirection: 'row',
+        lineHeight: replyLineHeight,
+      });
       unmount();
     }
     // The card of a run that failed gets its reply too.

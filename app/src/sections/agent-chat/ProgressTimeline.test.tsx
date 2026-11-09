@@ -10,7 +10,7 @@ import {
   roundLabel,
   triesText,
 } from 'src/sections/agent-chat/timeline';
-import { render, screen, within } from 'src/test-utils';
+import { render, screen, styleAt, within } from 'src/test-utils';
 
 function run(steps: [TimelineStep, number | null][], extra: Partial<RunState> = {}): RunState {
   return {
@@ -196,7 +196,7 @@ describe('ProgressTimeline', () => {
       ['repairing, done', 'checking, in progress', 'rendering, next', 'reviewing, next'],
     ]);
     // A normal repair reads as the loop's course: neutral ink, no red ✗ anywhere in the grid.
-    expect(screen.getByText('3 things to fix')).toHaveStyle({ color: 'var(--ink-soft)' });
+    expect(styleAt(screen.getByText('3 things to fix')).color).toBe('var(--ink-soft)');
     expect(screen.queryByText('✗')).not.toBeInTheDocument();
     expect(screen.queryByText(/attempt/)).not.toBeInTheDocument();
   });
@@ -301,7 +301,7 @@ describe('ProgressTimeline', () => {
     );
     const grid = screen.getByRole('table', { name: 'Progress' });
     expect(grid.nextElementSibling).toHaveTextContent(/^connection lost · reconnecting…$/);
-    expect(grid.nextElementSibling).toHaveStyle({ color: 'var(--ink-muted)' });
+    expect(styleAt(grid.nextElementSibling!).color).toBe('var(--ink-muted)');
     expect(screen.getByTestId('loader-spinner')).toBeInTheDocument();
     unmount();
     render(

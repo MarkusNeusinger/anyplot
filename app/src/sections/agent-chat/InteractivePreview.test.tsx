@@ -95,9 +95,9 @@ describe('InteractivePreview', () => {
     const frame = screen.getByTitle('Interactive plot');
     expect(frame.style.width).toBe('1232px');
     expect(frame.style.height).toBe('1232px');
-    expect(frame.style.transformOrigin).toBe('0 0');
+    expect(frame.style.transformOrigin).toBe('0px 0px');
     expect(getComputedStyle(screen.getByTestId('interactive-preview')).aspectRatio).toBe(
-      '1232/1232'
+      '1232 / 1232'
     );
   });
 });
