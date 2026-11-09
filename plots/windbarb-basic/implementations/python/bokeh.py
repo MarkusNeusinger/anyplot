@@ -1,163 +1,209 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-19
+Library: bokeh 3.10.1 | Python 3.14.9
+Quality: 82/100 | Updated: 2026-11-09
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Title
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Grid of wind observations
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: single series, first position
+BRAND = "#009E73"
+
+# Constants: standard wind barb notation (knots)
+CALM_KT = 2.5
+HALF_KT = 5
+FULL_KT = 10
+PENNANT_KT = 50
+
+# Columns: set these to your table's column names
+X_POS = "X Position (grid units)"  # role: x
+Y_POS = "Y Position (grid units)"  # role: y
+U_WIND = "U Wind (kt)"  # role: u
+V_WIND = "V Wind (kt)"  # role: v
+
+# Data: replace this block with your own table, for example df = pd.read_csv("winds.csv")
 np.random.seed(42)
+x_grid, y_grid = np.meshgrid(np.linspace(0, 10, 6), np.linspace(0, 8, 5))
+u = np.random.uniform(-30, 30, x_grid.size)
+v = np.random.uniform(-30, 30, x_grid.size)
+u[[7, 26]] = [0.8, -0.5]  # two calm stations
+v[[7, 26]] = [-1.0, 1.2]
+u[[16, 22]] = [-48.0, 41.0]  # two stations in a strong jet
+v[[16, 22]] = [32.0, -38.0]
+df = pd.DataFrame({X_POS: x_grid.ravel(), Y_POS: y_grid.ravel(), U_WIND: u, V_WIND: v})
 
-# Create a 6x5 grid of observation points
-x_grid = np.linspace(0, 10, 6)
-y_grid = np.linspace(0, 8, 5)
-x, y = np.meshgrid(x_grid, y_grid)
-x = x.flatten()
-y = y.flatten()
+# Plot: reads only df and the constants above
+obs = df.dropna(subset=[X_POS, Y_POS, U_WIND, V_WIND])
+pts = obs[[X_POS, Y_POS]].to_numpy(dtype=float)
+speed = np.hypot(obs[U_WIND].to_numpy(dtype=float), obs[V_WIND].to_numpy(dtype=float))
 
-# Wind components (u=east-west, v=north-south) in knots
-# Create varied wind patterns to demonstrate different barb configurations
-u = np.random.uniform(-30, 30, len(x))
-v = np.random.uniform(-30, 30, len(x))
+# Staff length follows the station spacing so neighboring barbs stay apart
+dist = np.hypot(pts[:, None, 0] - pts[None, :, 0], pts[:, None, 1] - pts[None, :, 1])
+dist[dist == 0] = np.inf
+nearest = dist.min(axis=1) if len(pts) > 1 else np.array([np.inf])
+nearest = nearest[np.isfinite(nearest)]
+spacing = np.median(nearest) if len(nearest) else max(np.ptp(pts, axis=0).max(), 1.0)
+staff_len = 0.45 * spacing
+feather_len = 0.42 * staff_len
+feather_gap = 0.14 * staff_len
+pennant_base = 0.18 * staff_len
 
-# Barb geometry parameters
-barb_length = 0.6
-barb_spacing = 0.08
-barb_len = 0.15
-pennant_len = 0.12
-
-# Collect all barb geometry
-all_lines_x = []
-all_lines_y = []
-all_pennants_x = []
-all_pennants_y = []
-calm_x = []
-calm_y = []
-
-# Generate wind barb geometry for each observation point
-for i in range(len(x)):
-    x_pos, y_pos = x[i], y[i]
-    u_comp, v_comp = u[i], v[i]
-    spd = np.sqrt(u_comp**2 + v_comp**2)
-
-    # Calm wind - just mark for circle indicator
-    if spd < 2.5:
-        calm_x.append(x_pos)
-        calm_y.append(y_pos)
+line_xs, line_ys, pennant_xs, pennant_ys, calm_x, calm_y = [], [], [], [], [], []
+for (x0, y0), u0, v0, spd in zip(pts, obs[U_WIND], obs[V_WIND], speed, strict=True):
+    if spd < CALM_KT:
+        calm_x.append(x0)
+        calm_y.append(y0)
         continue
 
-    # Wind direction FROM which wind blows (opposite of velocity vector)
-    angle = np.arctan2(-v_comp, -u_comp)
+    # Staff points toward the direction the wind blows FROM
+    angle = np.arctan2(-v0, -u0)
+    along = np.array([np.cos(angle), np.sin(angle)])
+    # Northern Hemisphere: feathers on the left, looking downwind
+    side = np.array([np.cos(angle - np.pi / 2), np.sin(angle - np.pi / 2)])
+    tip = np.array([x0, y0]) + staff_len * along
+    line_xs.append([x0, tip[0]])
+    line_ys.append([y0, tip[1]])
 
-    # Staff endpoint
-    staff_dx = barb_length * np.cos(angle)
-    staff_dy = barb_length * np.sin(angle)
-    end_x = x_pos + staff_dx
-    end_y = y_pos + staff_dy
+    rounded = HALF_KT * int(spd / HALF_KT + 0.5)
+    pennants, rest = divmod(rounded, PENNANT_KT)
+    fulls, rest = divmod(rest, FULL_KT)
+    halves = int(rest >= HALF_KT)
 
-    # Add staff line
-    all_lines_x.append([x_pos, end_x])
-    all_lines_y.append([y_pos, end_y])
-
-    # Calculate barbs - decompose speed into pennants, long barbs, half barbs
-    remaining_speed = spd
-    pennants = int(remaining_speed // 50)
-    remaining_speed -= pennants * 50
-    long_barbs = int(remaining_speed // 10)
-    remaining_speed -= long_barbs * 10
-    half_barbs = 1 if remaining_speed >= 5 else 0
-
-    # Perpendicular direction (barbs on left side looking from origin)
-    perp_angle = angle + np.pi / 2
-
-    # Position along staff (start from outer end)
     pos = 0.0
+    for _ in range(int(pennants)):
+        base = tip - pos * along
+        back = tip - (pos + pennant_base) * along
+        flag = base + feather_len * side
+        pennant_xs.append([base[0], flag[0], back[0]])
+        pennant_ys.append([base[1], flag[1], back[1]])
+        pos += pennant_base + 0.5 * feather_gap
+    for _ in range(int(fulls)):
+        base = tip - pos * along
+        end = base + feather_len * side
+        line_xs.append([base[0], end[0]])
+        line_ys.append([base[1], end[1]])
+        pos += feather_gap
+    if halves:
+        # A lone half barb sits one step in from the tip, as in the standard notation
+        pos = max(pos, feather_gap)
+        base = tip - pos * along
+        end = base + 0.5 * feather_len * side
+        line_xs.append([base[0], end[0]])
+        line_ys.append([base[1], end[1]])
 
-    # Draw pennants (triangular flags for 50 knots)
-    for _ in range(pennants):
-        base_x = end_x - pos * np.cos(angle)
-        base_y = end_y - pos * np.sin(angle)
-        tip_x = base_x + barb_len * np.cos(perp_angle)
-        tip_y = base_y + barb_len * np.sin(perp_angle)
-        back_x = end_x - (pos + pennant_len) * np.cos(angle)
-        back_y = end_y - (pos + pennant_len) * np.sin(angle)
-        all_pennants_x.append([base_x, tip_x, back_x])
-        all_pennants_y.append([base_y, tip_y, back_y])
-        pos += pennant_len + 0.02
-
-    # Draw long barbs (10 knots each)
-    for _ in range(long_barbs):
-        base_x = end_x - pos * np.cos(angle)
-        base_y = end_y - pos * np.sin(angle)
-        tip_x = base_x + barb_len * np.cos(perp_angle)
-        tip_y = base_y + barb_len * np.sin(perp_angle)
-        all_lines_x.append([base_x, tip_x])
-        all_lines_y.append([base_y, tip_y])
-        pos += barb_spacing
-
-    # Draw half barb (5 knots) - shorter
-    if half_barbs:
-        base_x = end_x - pos * np.cos(angle)
-        base_y = end_y - pos * np.sin(angle)
-        tip_x = base_x + (barb_len * 0.5) * np.cos(perp_angle)
-        tip_y = base_y + (barb_len * 0.5) * np.sin(perp_angle)
-        all_lines_x.append([base_x, tip_x])
-        all_lines_y.append([base_y, tip_y])
-
-# Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="windbarb-basic · bokeh · pyplots.ai",
-    x_axis_label="X Position (grid units)",
-    y_axis_label="Y Position (grid units)",
-    x_range=(-1.5, 11.5),
-    y_range=(-1.5, 9.5),
+    width=2400,
+    height=2400,
+    title="windbarb-basic · python · bokeh · anyplot.ai",
+    x_axis_label=X_POS,
+    y_axis_label=Y_POS,
+    match_aspect=True,
+    toolbar_location=None,
+    min_border_bottom=200,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Style the figure
-p.title.text_font_size = "28pt"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.multi_line(xs="xs", ys="ys", source=ColumnDataSource({"xs": line_xs, "ys": line_ys}), line_width=5, line_color=BRAND)
+p.patches(
+    xs="xs",
+    ys="ys",
+    source=ColumnDataSource({"xs": pennant_xs, "ys": pennant_ys}),
+    fill_color=BRAND,
+    line_color=BRAND,
+    line_width=3,
+    line_join="miter",
+)
+p.scatter(
+    x="x",
+    y="y",
+    source=ColumnDataSource({"x": calm_x, "y": calm_y}),
+    size=34,
+    fill_color=None,
+    line_color=BRAND,
+    line_width=5,
+)
 
-# Grid styling
-p.grid.grid_line_alpha = 0.3
+# Key that decodes the notation
+p.add_layout(
+    Title(
+        text=f"Half barb = {HALF_KT} kt  ·  Full barb = {FULL_KT} kt  ·  Pennant = {PENNANT_KT} kt  ·  "
+        f"Open circle = calm (< {CALM_KT:g} kt)",
+        text_font_size="30pt",
+        text_font_style="normal",
+        text_color=INK_SOFT,
+        align="center",
+    ),
+    "below",
+)
+
+# Style
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
 p.grid.grid_line_dash = [6, 4]
 
-# Draw wind barbs using multi_line
-barb_source = ColumnDataSource(data={"xs": all_lines_x, "ys": all_lines_y})
-p.multi_line(xs="xs", ys="ys", source=barb_source, line_width=3, line_color="#306998")
-
-# Draw pennants (filled triangles)
-if all_pennants_x:
-    pennant_source = ColumnDataSource(data={"xs": all_pennants_x, "ys": all_pennants_y})
-    p.patches(xs="xs", ys="ys", source=pennant_source, fill_color="#306998", line_color="#306998", line_width=2)
-
-# Draw calm wind indicators (open circles)
-if calm_x:
-    calm_source = ColumnDataSource(data={"x": calm_x, "y": calm_y})
-    p.scatter(x="x", y="y", source=calm_source, size=20, fill_color="white", line_color="#306998", line_width=3)
-
-# Draw observation points
-obs_source = ColumnDataSource(data={"x": x, "y": y})
-p.scatter(x="x", y="y", source=obs_source, size=12, color="#FFD43B", line_color="#306998", line_width=2)
-
-# Add legend annotation
-legend_text = Label(
-    x=0.5,
-    y=-1.0,
-    text="Half barb = 5 kt  |  Full barb = 10 kt  |  Pennant (flag) = 50 kt",
-    text_font_size="18pt",
-    text_color="#444444",
-)
-p.add_layout(legend_text)
-
 # Save
-export_png(p, filename="plot.png")
+output_file(f"plot-{THEME}.html")
+save(p)
+
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
