@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 82/100 | Updated: 2026-11-09
+Quality: 83/100 | Updated: 2026-11-09
 """
 
 import os
