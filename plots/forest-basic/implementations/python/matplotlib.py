@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-11
@@ -9,120 +9,139 @@ import os
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
-# Theme configuration
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette
-OKABE_ITO_1 = "#009E73"  # Primary data color (brand green)
-OKABE_ITO_2 = "#C475FD"  # Secondary
+# Imprint palette: position 1 for the studies, position 2 sets the pooled diamond apart
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Meta-analysis of RCTs comparing treatment efficacy (standardized mean difference)
-studies = [
-    "Johnson 2018",
-    "Smith 2019",
-    "Garcia 2020",
-    "Williams 2020",
-    "Brown 2021",
-    "Davis 2021",
-    "Miller 2022",
-    "Wilson 2022",
-    "Anderson 2023",
-    "Taylor 2023",
-]
+# Constants
+NULL_EFFECT = 0.0  # no difference on the mean-difference scale
+Z_95 = 1.959964  # normal quantile behind a 95% confidence interval
+MAX_MARKER_AREA = 90  # marker area (pt²) of the heaviest study
 
-# Effect sizes (standardized mean difference) and 95% CIs
-effect_sizes = np.array([-0.45, -0.32, -0.58, -0.21, -0.67, -0.38, -0.52, -0.29, -0.41, -0.55])
-ci_lower = np.array([-0.78, -0.61, -0.95, -0.48, -1.02, -0.69, -0.88, -0.56, -0.72, -0.91])
-ci_upper = np.array([-0.12, -0.03, -0.21, 0.06, -0.32, -0.07, -0.16, -0.02, -0.10, -0.19])
+# Columns: set these to your table's column names
+STUDY = "Study"  # role: study
+EFFECT = "Standardized Mean Difference (95% CI)"  # role: effect_size
+CI_LOWER = "CI lower"  # role: ci_lower
+CI_UPPER = "CI upper"  # role: ci_upper
+WEIGHT = "Weight (%)"  # role: weight
 
-# Study weights (based on sample size / inverse variance)
-weights = np.array([8.5, 10.2, 7.8, 11.5, 6.9, 9.3, 8.1, 10.8, 9.7, 7.2])
+# Data: replace this block with your own table, for example df = pd.read_csv("meta_analysis.csv")
+# Meta-analysis of RCTs comparing treatment vs control, ordered chronologically
+df = pd.DataFrame(
+    {
+        STUDY: [
+            "Johnson 2018",
+            "Smith 2019",
+            "Garcia 2020",
+            "Williams 2020",
+            "Brown 2021",
+            "Davis 2021",
+            "Miller 2022",
+            "Wilson 2022",
+            "Anderson 2023",
+            "Taylor 2023",
+        ],
+        EFFECT: [-0.45, -0.32, -0.58, -0.21, -0.67, -0.38, -0.52, -0.29, -0.41, -0.55],
+        CI_LOWER: [-0.78, -0.61, -0.95, -0.48, -1.02, -0.69, -0.88, -0.56, -0.72, -0.91],
+        CI_UPPER: [-0.12, -0.03, -0.21, 0.06, -0.32, -0.07, -0.16, -0.02, -0.10, -0.19],
+        WEIGHT: [8.5, 10.2, 7.8, 11.5, 6.9, 9.3, 8.1, 10.8, 9.7, 7.2],
+    }
+)
 
-# Pooled estimate (random effects meta-analysis)
-pooled_effect = -0.42
-pooled_ci_lower = -0.53
-pooled_ci_upper = -0.31
+# Plot: reads only df and the constants above
+effect = df[EFFECT].astype(float).to_numpy()
+lower = df[CI_LOWER].astype(float).to_numpy()
+upper = df[CI_UPPER].astype(float).to_numpy()
+weight = df[WEIGHT].astype(float).to_numpy()
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Pooled estimate: fixed-effect inverse-variance, standard errors recovered from the 95% CIs
+se = (upper - lower) / (2 * Z_95)
+valid = np.isfinite(effect) & np.isfinite(se) & (se > 0)
+iv_weight = 1 / se[valid] ** 2
+pooled = np.sum(iv_weight * effect[valid]) / np.sum(iv_weight)
+pooled_se = 1 / np.sqrt(np.sum(iv_weight))
+pooled_lower = pooled - Z_95 * pooled_se
+pooled_upper = pooled + Z_95 * pooled_se
+
+n_studies = len(df)
+y_positions = np.arange(n_studies, 0, -1)
+pooled_y = 0
+marker_sizes = MAX_MARKER_AREA * weight / np.nanmax(weight)
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-n_studies = len(studies)
-y_positions = np.arange(n_studies, 0, -1)
+# Null-effect reference line through every row
+ax.axvline(x=NULL_EFFECT, color=INK_SOFT, linestyle="--", linewidth=1.2, alpha=0.8, zorder=1)
 
-# Normalize weights for marker sizing (scale between 80 and 300)
-weight_normalized = (weights - weights.min()) / (weights.max() - weights.min())
-marker_sizes = 80 + weight_normalized * 220
-
-# Plot vertical reference line at null effect (0)
-ax.axvline(x=0, color=INK_SOFT, linestyle="--", linewidth=2, alpha=0.7, zorder=1)
-
-# Plot confidence intervals as horizontal lines
-for y, lower, upper in zip(y_positions, ci_lower, ci_upper, strict=True):
-    ax.hlines(y=y, xmin=lower, xmax=upper, color=OKABE_ITO_1, linewidth=3, zorder=2)
-
-# Plot effect size points
+# Study confidence intervals and weight-sized point estimates
+ax.hlines(y=y_positions, xmin=lower, xmax=upper, color=IMPRINT_PALETTE[0], linewidth=1.8, zorder=2)
 ax.scatter(
-    effect_sizes, y_positions, s=marker_sizes, color=OKABE_ITO_1, edgecolors=ELEVATED_BG, linewidths=1.5, zorder=3
+    effect, y_positions, s=marker_sizes, color=IMPRINT_PALETTE[0], edgecolors=ELEVATED_BG, linewidths=0.8, zorder=3
 )
 
-# Plot pooled estimate as diamond
-diamond_y = 0
-diamond_height = 0.4
-
-# Create diamond shape using polygon
-diamond_vertices = np.array(
+# Pooled estimate as a diamond whose tips sit at the pooled CI bounds
+diamond_half_height = 0.4
+diamond = mpatches.Polygon(
     [
-        [pooled_effect, diamond_y + diamond_height],
-        [pooled_ci_upper, diamond_y],
-        [pooled_effect, diamond_y - diamond_height],
-        [pooled_ci_lower, diamond_y],
-    ]
+        [pooled, pooled_y + diamond_half_height],
+        [pooled_upper, pooled_y],
+        [pooled, pooled_y - diamond_half_height],
+        [pooled_lower, pooled_y],
+    ],
+    closed=True,
+    facecolor=IMPRINT_PALETTE[1],
+    edgecolor=INK_SOFT,
+    linewidth=0.8,
+    zorder=4,
 )
-diamond_patch = mpatches.Polygon(
-    diamond_vertices, closed=True, facecolor=OKABE_ITO_2, edgecolor=OKABE_ITO_1, linewidth=2.5, zorder=4
-)
-ax.add_patch(diamond_patch)
+ax.add_patch(diamond)
 
-# Add study labels on y-axis
-ax.set_yticks(list(y_positions) + [0])
-ax.set_yticklabels(studies + ["Pooled Estimate"], color=INK_SOFT, fontsize=16)
+# Style
+ax.set_yticks(np.append(y_positions, pooled_y), list(df[STUDY].astype(str)) + ["Pooled estimate"])
+ax.tick_params(axis="y", length=0, labelsize=8, labelcolor=INK_SOFT)
+ax.tick_params(axis="x", length=0, labelsize=8, labelcolor=INK_SOFT)
+ax.get_yticklabels()[-1].set_fontweight("bold")
+ax.get_yticklabels()[-1].set_color(INK)
 
-# Styling
-ax.set_xlabel("Standardized Mean Difference (95% CI)", fontsize=20, color=INK)
-ax.set_title("forest-basic · matplotlib · pyplots.ai", fontsize=24, color=INK, fontweight="medium")
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT, length=0)
-ax.tick_params(axis="y", length=0)
+ax.set_xlabel(EFFECT, fontsize=10, color=INK)
+ax.set_title("forest-basic · python · matplotlib · anyplot.ai", fontsize=12, color=INK, fontweight="medium")
 
-# Set x-axis limits with padding
-x_min = min(ci_lower.min(), pooled_ci_lower) - 0.15
-x_max = max(ci_upper.max(), pooled_ci_upper) + 0.15
-ax.set_xlim(x_min, x_max)
+x_min = min(np.nanmin(lower), pooled_lower, NULL_EFFECT)
+x_max = max(np.nanmax(upper), pooled_upper, NULL_EFFECT)
+x_pad = (x_max - x_min) * 0.12
+ax.set_xlim(x_min - x_pad, x_max + x_pad)
+ax.set_ylim(pooled_y - 0.8, n_studies + 0.8)
 
-# Set y-axis limits
-ax.set_ylim(-0.8, n_studies + 0.8)
-
-# Add subtle grid for x-axis only
-ax.grid(True, axis="x", alpha=0.15, linestyle="-", linewidth=0.8, color=INK, zorder=0)
+ax.grid(True, axis="x", alpha=0.15, linestyle="-", linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 
-# Add annotation for "Favors Treatment" and "Favors Control"
-ax.text(x_min + 0.05, -0.6, "← Favors Treatment", fontsize=14, ha="left", va="top", color=INK_MUTED)
-ax.text(x_max - 0.05, -0.6, "Favors Control →", fontsize=14, ha="right", va="top", color=INK_MUTED)
+# Direction of effect on either side of the null line, below the pooled row
+for side, label, ha in ((-1, "← Favors treatment", "right"), (1, "Favors control →", "left")):
+    ax.annotate(
+        label,
+        xy=(NULL_EFFECT, 0.015),
+        xycoords=ax.get_xaxis_transform(),
+        xytext=(side * 4, 0),
+        textcoords="offset points",
+        fontsize=8,
+        ha=ha,
+        color=INK_MUTED,
+    )
 
-# Style spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_visible(False)
+for side in ("top", "right", "left"):
+    ax.spines[side].set_visible(False)
 ax.spines["bottom"].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
