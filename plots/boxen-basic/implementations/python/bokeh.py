@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: bokeh 3.10.1 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-09
+Quality: 84/100 | Updated: 2026-11-09
 """
 
 import os
