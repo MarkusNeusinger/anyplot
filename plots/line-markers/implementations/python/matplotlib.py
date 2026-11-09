@@ -4,73 +4,81 @@ Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 75/100 | Updated: 2026-05-12
 """
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
 
-# Data - Temperature readings over 14 days from weather stations
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+MARKERS = ["o", "s", "^", "D", "v", "P", "X", "h"]  # one marker shape per series, in palette order
+
+# Columns: set these to your table's column names
+DAY = "Day"  # role: x
+STATION = "Weather station"  # role: series
+TEMPERATURE = ["Temperature (°C)"]  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("temperatures.csv")
+# Daily mean temperature at three weather stations over 14 days
 np.random.seed(42)
 days = np.arange(1, 15)
-
-# Station A: Coastal location (moderate, stable)
-station_a = 18 + np.cumsum(np.random.randn(14) * 0.8)
-
-# Station B: Inland location (more variable)
-station_b = 15 + np.cumsum(np.random.randn(14) * 1.2)
-
-# Station C: Mountain location (cooler, different pattern)
-station_c = 10 + np.cumsum(np.random.randn(14) * 1.0)
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Plot lines with different marker styles
-ax.plot(
-    days,
-    station_a,
-    marker="o",
-    markersize=12,
-    linewidth=3,
-    color="#306998",
-    label="Coastal Station",
-    markeredgecolor="white",
-    markeredgewidth=2,
+coastal = 18 + np.cumsum(np.random.randn(14) * 0.8)
+inland = 15 + np.cumsum(np.random.randn(14) * 1.2)
+mountain = 10 + np.cumsum(np.random.randn(14) * 1.0)
+df = pd.DataFrame(
+    {
+        DAY: np.tile(days, 3),
+        STATION: np.repeat(["Coastal", "Inland", "Mountain"], 14),
+        TEMPERATURE[0]: np.concatenate([coastal, inland, mountain]),
+    }
 )
 
-ax.plot(
-    days,
-    station_b,
-    marker="s",
-    markersize=12,
-    linewidth=3,
-    color="#FFD43B",
-    label="Inland Station",
-    markeredgecolor="white",
-    markeredgewidth=2,
-)
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, layout="constrained")
+ax.set_facecolor(PAGE_BG)
+for i, (station, rows) in enumerate(df.groupby(STATION, sort=False)):
+    rows = rows.sort_values(DAY)
+    ax.plot(
+        rows[DAY],
+        rows[TEMPERATURE[0]],
+        color=IMPRINT_PALETTE[i],
+        linewidth=2.2,
+        marker=MARKERS[i],
+        markersize=8,
+        markeredgecolor=PAGE_BG,
+        markeredgewidth=1.2,
+        label=station,
+    )
 
-ax.plot(
-    days,
-    station_c,
-    marker="^",
-    markersize=12,
-    linewidth=3,
-    color="#E74C3C",
-    label="Mountain Station",
-    markeredgecolor="white",
-    markeredgewidth=2,
-)
+# Style
+ax.set_title("line-markers · python · matplotlib · anyplot.ai", fontsize=12, fontweight="bold", color=INK)
+ax.set_xlabel(DAY, fontsize=10, color=INK)
+ax.set_ylabel(TEMPERATURE[0], fontsize=10, color=INK)
+ax.xaxis.set_major_locator(MaxNLocator(nbins=16, integer=True))
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, color=INK, linewidth=0.6)
+ax.set_axisbelow(True)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
+legend = ax.legend(title=STATION, fontsize=8, title_fontsize=8, loc="best", frameon=True)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
+legend.get_frame().set_linewidth(0.6)
+legend.get_title().set_color(INK)
+plt.setp(legend.get_texts(), color=INK_SOFT)
 
-# Labels and styling
-ax.set_xlabel("Day", fontsize=20)
-ax.set_ylabel("Temperature (°C)", fontsize=20)
-ax.set_title("line-markers · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
-ax.legend(fontsize=16, loc="best")
-
-# Set x-axis to show all days
-ax.set_xticks(days)
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
