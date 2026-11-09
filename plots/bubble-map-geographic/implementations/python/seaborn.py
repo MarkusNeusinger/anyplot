@@ -1,7 +1,7 @@
 """anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: seaborn 0.13.2 | Python 3.14.9
-Quality: 81/100 | Updated: 2026-11-09
+Quality: pending | Updated: 2026-11-09
 """
 
 import os
