@@ -97,7 +97,7 @@ zero_line = (
 
 intervals = (
     alt.Chart(plot_df)
-    .mark_rule(strokeWidth=2.6, strokeCap="round")
+    .mark_rule(strokeWidth=3, strokeCap="round")
     .encode(
         x=alt.X(CI_LOWER.translate(ESCAPE), type="quantitative", title=COEFFICIENT),
         x2=alt.X2(CI_UPPER.translate(ESCAPE)),
@@ -107,9 +107,10 @@ intervals = (
     )
 )
 
+# A small point with no page-coloured halo, so even a narrow interval still reaches past it on both sides
 estimates_marks = (
     alt.Chart(plot_df)
-    .mark_point(filled=True, size=150, opacity=1, stroke=PAGE_BG, strokeWidth=1.5)
+    .mark_point(filled=True, size=56, opacity=1)
     .encode(
         x=alt.X(COEFFICIENT.translate(ESCAPE), type="quantitative", title=COEFFICIENT),
         y=y,
