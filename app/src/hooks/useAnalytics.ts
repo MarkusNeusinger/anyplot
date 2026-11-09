@@ -20,12 +20,6 @@ export function setAnalyticsAmbientProps(props: Record<string, string>): void {
   ambientProps = merged;
 }
 
-// Snapshot of current ambient props for callers that fire `window.plausible`
-// directly (e.g. reportWebVitals.ts, which runs outside React).
-export function getAnalyticsAmbientProps(): Record<string, string> {
-  return { ...ambientProps };
-}
-
 function debounce<T extends (...args: never[]) => void>(fn: T, delay: number): T {
   let timeoutId: ReturnType<typeof setTimeout>;
   return ((...args: Parameters<T>) => {

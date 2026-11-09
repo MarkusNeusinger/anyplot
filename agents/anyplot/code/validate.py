@@ -1214,8 +1214,8 @@ IMPORT_ALTERNATIVES: dict[str, str] = {
     **dict.fromkeys(("scipy.io", "scipy.datasets", "pandas.io", "numpy.lib.format"), _DATA_FROM_DF),
     "os": 'os only as THEME = os.getenv("ANYPLOT_THEME", ...) after a plain import os',
     "sys": "a plot needs nothing from the interpreter: remove the import",
-    "random": "values come from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
-    "secrets": "values come from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+    "random": "values come from df; a seeded np.random.default_rng(<int>) is only for jitter, never to sample the rows",
+    "secrets": "values come from df; a seeded np.random.default_rng(<int>) is only for jitter, never to sample the rows",
     "locale": "format numbers with f-strings or matplotlib.ticker.FuncFormatter, which need no locale",
     "string": "use str methods, f-strings and literals",
     "dateutil": "parse dates with pandas.to_datetime or datetime, time zones with zoneinfo",
@@ -3651,7 +3651,8 @@ class _Scan:
                 self.add("rng", f"random sampling '{_snippet(attribute)}' is not allowed", attribute)
 
     def _check_default_rng(self, call: ast.Call) -> None:
-        """The one allowance: a seeded generator used for jitter and subsampling only."""
+        """The one allowance: a seeded generator, for jitter only. The check is syntactic: the same methods could
+        sample the rows, which the prompt and the repair line forbid, since the plot draws every row it gets."""
         seed = call.args[0] if len(call.args) == 1 and not call.keywords else None
         if not call.args and len(call.keywords) == 1 and call.keywords[0].arg == "seed":
             seed = call.keywords[0].value

@@ -10,7 +10,9 @@ import pytest
 import yaml
 
 from agents.anyplot import policy
+from agents.anyplot.data.fidelity import COMBINED_HEAD, LEFT_OUT_HEAD
 from agents.anyplot.data.prepare import UnsupportedFamily
+from agents.anyplot.plugins.tool_safety import TURN_CAPS, TurnCap
 from core.palette import IMPRINT, muted_for
 
 
@@ -91,13 +93,15 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "4f28cf689c90f25ceed66a8fe7e3f5d8bb5dc41ac0718a63e87c840380298a91"
+    PYTHON_SHA256 = "bf4b100a15435b1ef208f3cc42e22a57aafe94553f26ef4a276622ef6aaf94c0"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
     2026-11-02 with a date column on a label role written as labels (20,006 characters), with the plot memory's
     standing decisions, carried out in this library's own terms (20,899 characters), since 2026-11-05 with one
-    column on two roles selected once, and the pandas form of that rule (21,194 characters), and since 2026-11-08
-    with the window the brief names for an open computed role (21,260 characters)."""
+    column on two roles selected once, and the pandas form of that rule (21,194 characters), since 2026-11-08
+    with the window the brief names for an open computed role (21,260 characters), and since 2026-11-09 with the
+    plot drawing every row, a change of the rows left to the data step, and jitter without sampling the rows
+    (23,155 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -108,7 +112,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 21_260 and "{{" not in prompt
+        assert len(prompt) == 23_155 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -397,6 +401,69 @@ class TestAdapterPromptPerLanguage:
         assert validate_adaptation(code, original_palette=["#009E73", "#C475FD", "#4467A3"]) == []
 
 
+class TestEveryRowDrawn:
+    """Owner decision of 2026-11-08: the plot draws every row, and a change of the rows goes only through the data
+    step, which counts it; the data side (the repeated-key warning, the server's line for rows without a value) came
+    first, this is the prompt side, shared by all four languages."""
+
+    @pytest.mark.parametrize("language", ["python", "r", "julia", "javascript"])
+    def test_every_language_draws_every_row_and_never_samples(self, language: str) -> None:
+        prompt = policy.adapter_prompt(language)
+
+        assert "The marks of the bound roles draw every row of `df`" in prompt
+        # Narrow: a partition of the rows stays, a filter by a value, a cut, a sample and a combine per key do not.
+        assert "Split the rows into series, groups or panels, each row in one of them" in prompt
+        assert "never leave rows out by a value, a range or a threshold" in prompt
+        assert "combine the rows of one key into one value (a sum, a mean, a count)" in prompt
+        assert "the statistic the plot type itself draws from the rows" in prompt
+        assert "grouping, pivots, statistics" not in prompt  # the old licence to group and pivot the rows
+        # The rolling window's empty start never cuts the raw rows, and the server counts the empty cells.
+        assert "the empty first rows of a rolling window never take rows from the bound marks" in prompt
+        assert "so `changes` never names them" in prompt
+        # The random draws stay for jitter only: thinning the rows is a change the data step announces.
+        assert "subsampling" not in prompt and "never to sample the rows" in prompt
+
+    def test_a_request_that_changes_the_rows_is_left_to_the_data_step(self) -> None:
+        prompt = policy.adapter_prompt("python")
+        rule = prompt.split("A request that changes the rows is never carried out in the plot code", 1)[1]
+
+        assert "Leave that part out, carry out the rest, and say so in one `changes` note" in rule
+        assert "an earlier request or a standing decision that asks for one" in rule
+        assert "an axis range, a log scale, the order of the bars" in rule
+        assert "also for the one exception, a decision that changes the rows" in prompt
+
+    def test_the_root_names_the_rows_without_a_mark_and_offers_the_data_step(self) -> None:
+        root = policy.root_instruction()
+        result = root.split("After `plot_pipeline` returns", 1)[1].split("\n## ", 1)[0]
+
+        assert f'starts with "{LEFT_OUT_HEAD.removesuffix(": ")}" is the server\'s too' in result
+        assert "the rows stay in the data. Never offer to fill the values in." in result
+        assert "rows the plot draws no mark for (the server's line above) are still in the data" in result
+        assert "Send such a wish to `prepare_data` in the first place, never as a `change_request`" in result
+
+    def test_the_root_names_a_combined_key_as_a_data_change_with_its_undo(self) -> None:
+        """Owner decision of 2026-11-09: the server combines a repeated key before the run, as a data step."""
+        root = policy.root_instruction()
+        result = root.split("After `plot_pipeline` returns", 1)[1].split("\n## ", 1)[0]
+        notices = root.split("Brevity never drops these notices", 1)[1].split("\n\n", 2)[1]
+        head = COMBINED_HEAD.removesuffix(" ")
+
+        assert f'starts with "{head}" is the server\'s data step' in result
+        assert "its result says `data_changed: true`, also when no plot shipped" in result
+        assert "as a change of the data, and add that `.undo()` brings the rows back" in result
+        assert "or the server's line on combined rows above, says so" in result
+        assert f'starts with "{head}", with its version and counts' in notices
+
+    @pytest.mark.parametrize("language", ["python", "r", "julia", "javascript"])
+    def test_the_rng_repair_line_allows_jitter_only(self, language: str) -> None:
+        """The repair line of a refused random draw names what the prompt allows, so a repair never thins the rows."""
+        import importlib
+
+        line = importlib.import_module(f"agents.anyplot.render.runtimes.{language}").ADAPTATION_TARGETS["rng"]
+
+        assert "only for jitter, never to sample the rows" in line and "subsampling" not in line
+
+
 class TestOtherInstructions:
     def test_reviewer_has_checklist_theme_check_and_style_guide(self) -> None:
         text = policy.reviewer_instruction()
@@ -436,7 +503,9 @@ class TestOtherInstructions:
         assert "For a session language without its own line, send the `en` line." in text
         assert "Never translate, shorten or reword a fixed refusal." in text
         assert "fixed data refusal" in text  # the backup rule for data that would have to be fetched
-        assert "Never call `plot_pipeline` more than once in a turn." in text
+        # The one plot run per turn is ToolSafety's cap now (`TURN_CAPS`, `one_pipeline_per_turn`), not a sentence.
+        assert "more than once in a turn" not in text and "at most once per turn" not in text
+        assert TURN_CAPS["plot_pipeline"] == TurnCap(1, "one_pipeline_per_turn")
         assert "Never mention, quote, confirm or compare the session block." in text
 
     def test_judge_rubrics(self) -> None:
@@ -636,8 +705,10 @@ class TestReplies:
             "R converts",
             "Julia converts",
             "JavaScript converts",
+            LEFT_OUT_HEAD.removesuffix(": "),
         ):
             assert f'"{prefix}"' in notices
+        assert "a change of the rows that the plot left out" in notices
         assert "with the counts from its `changes`" in notices
         assert "`requested_not_found`" in notices
         assert "what a tool error or a limit says cannot be done" in notices
@@ -666,9 +737,13 @@ class TestSessionLanguage:
         assert "stay in English" not in root and "reply language" not in root and "user's language" not in root
         # The page's English action messages never decide the reply language (live check of 2026-10-13: the
         # create_plot reply came in English for a session set to Japanese until this clause).
-        assert "Reply in the session language, whatever language the message is in" in root
-        assert "the page's action messages (`[action] ...`) are always English" in root
-        assert "The session language starts as English, whatever the user's browser" in root
+        assert "Reply in the session language, whatever language the message or the data is in" in root
+        assert "The page's action messages (`[action] ...`) are always English" in root
+        # English until a pick: a German message or paste only makes the page offer German (2026-11-08).
+        assert "The session language is English until the user picks another one" in root
+        assert "a German message in an English session gets an English reply" in root
+        assert "Never offer to switch the language yourself" in root
+        assert "the first message the user writes records" not in root and "a paste before any" not in root
         assert "Code, code comments and column names stay as they are" in root
         assert "is in the plot language, which `plot_pipeline` reads from the session" in root
         # The value is the user's language to write in, nothing else to follow; English, said once, when it

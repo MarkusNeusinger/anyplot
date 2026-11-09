@@ -2,50 +2,59 @@ library: pygal
 language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:03:10Z'
-updated: '2026-05-15T15:23:09Z'
-generated_by: claude-haiku
-workflow_run: 25925322877
+updated: '2026-11-09T09:26:43Z'
+generated_by: claude-opus
+workflow_run: 42591606760
 issue: 3003
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - 'Flawless visual quality: perfectly readable text in both light and dark themes
-    with no contrast issues'
-  - 'Perfect spec compliance: all required features implemented correctly with comprehensive
-    legends'
-  - Clean, maintainable code with clear structure and proper reproducibility
-  - Excellent data quality and realistic use case (car performance comparison)
-  - Theme-adaptive rendering with correct Okabe-Ito palette usage
-  - No visual artifacts or overlapping elements
+  - 'All seven variables are min-max normalized to 0–1 before mapping, with a zero-span
+    guard (fillna(0.5)), so every feature stays recognizable at both ends of its range:
+    Vortex GT''s wide face and Pebble City''s tall narrow face still read as faces.'
+  - Each of the five faces differs visibly on several features (face width/height,
+    eye size, mouth curve, nose length, eyebrow slant), and the two-column Feature
+    key names the variable behind every feature with units, so the faces can be decoded.
+  - 'Theme tokens are threaded through every hand-built SVG element: features and
+    labels flip between INK tones, eye whites and pupils are fixed so eyes never invert,
+    and both renders are fully legible.'
+  - Tinted fills (fill-opacity 0.3) with a saturated Imprint outline give each face
+    a clear identity in both themes while keeping the black/white facial features
+    high-contrast.
+  - pygal supplies the canvas, title and bottom legend through its Style object, and
+    the SVG it renders is extended with ElementTree, so the HTML output stays a single
+    vector SVG.
   weaknesses:
-  - Design excellence is functional but could be more visually sophisticated (faces
-    lack distinctive artistry or additional visual polish)
-  - Limited visual refinement; minimal customization beyond core element positioning
-  - 'Library mastery: relies primarily on SVG manipulation rather than exploring pygal-specific
-    visualization features'
-  - Data storytelling could emphasize patterns more strongly or create stronger focal
-    points
+  - 'VQ-03 (both): the bottom legend repeats the five car names exactly as the bold
+    labels under each face already state them, and the per-car colors encode nothing
+    beyond identity, so the legend tells the reader nothing new → drop the legend
+    (or reserve color for a real grouping, as the Notes allow). Likely cause: chart.add(name,
+    [None]) for every car with legend_at_bottom=True.'
+  - 'Suggestion: the band between the face labels and the Feature key and the band
+    below the key are wide; larger faces could take that height.'
+  - 'Suggestion: a one-line note in the key on the direction of each mapping (e.g.
+    ''wider = more hp'') would make the faces faster to decode.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "Car Performance Comparison · chernoff-basic · pygal · pyplots.ai" clearly visible at top in dark text (#1A1A17); face labels (Sedan A, SUV B, Sports C, Compact D, Luxury E) are bold and readable; feature mappings legend with secondary text color (#4A4A44); car color legend with names and swatches
-      Data: 5 Chernoff faces with distinct Okabe-Ito colors (green, orange, blue, purple, yellow); all facial features clearly visible and properly scaled - eyes with pupils, eyebrows, nose (vertical line), mouth (bezier curve); face proportions vary per data values
-      Legibility verdict: PASS - all text has excellent contrast; no dark-on-light or light-on-light failures; no overlapping elements
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: title "Car Performance Comparison · chernoff-basic · python · pygal · anyplot.ai" in dark ink, centered, ~70% width; bold dark car labels under each face; bold "Feature key" heading with seven "Feature = Variable (unit)" entries in INK_SOFT in two columns; bottom pygal legend with five colored swatches and car names. All readable.
+      Data: five Chernoff faces in one row — Aurora Sedan (#009E73 outline, green tint, smile), Ridgeback SUV (#C475FD, round, flat mouth), Vortex GT (#4467A3, wide flat ellipse, frown, angry brows, short nose), Pebble City (#BD8233, tall narrow, big smile, long nose, small eyes), Regent Luxe (#AE3030, round, large eyes, flat brows). Features in dark ink, eye whites with dark pupils. First face is brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title rendered in light text (#F0EFE8); face labels in light text; feature mappings and car legend in light secondary text (#B8B7B0); all text clearly readable against dark background - no dark-on-dark failures
-      Data: Identical Okabe-Ito colors to light render (green, orange, blue, purple, yellow) - only chrome adapted; face proportions and layout identical; all facial features equally visible in dark mode
-      Legibility verdict: PASS - light text has strong contrast on dark background; brand green (#009E73) readable on both surfaces; no text readability issues in either theme
+      Background: warm near-black #1A1A17.
+      Chrome: title, car labels, key heading in light ink #F0EFE8; key entries in light-soft gray; legend text light. No dark-on-dark text.
+      Data: identical outline colors and face shapes as light; fills are the same hues at 0.3 opacity over the dark page (deep tinted); facial lines flip to light ink, eye whites and pupils unchanged. Brand green outline clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,68 +62,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text elements readable in both themes with proper font sizing
+        comment: Title, bold face labels, key and legend text explicitly sized and
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent spacing; no overlapping elements
+        comment: No text collisions; faces well separated
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All facial features clearly visible and properly scaled with data
+        comment: Faces and features clearly visible; the bottom legend repeats the
+          face labels and adds no information (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with excellent contrast
+        comment: Faces identified by text labels; color is never the sole signal;
+          black/white features high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned grid; generous margins; nothing cut off
+        comment: 3200x1800, nothing clipped, title proportion fine, balanced vertical
+          rhythm
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Comprehensive title and feature mappings legend
+        comment: N/A for axes (no data axes by design); key entries carry units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 first; Okabe-Ito order; correct backgrounds;
-          both renders theme-correct'
+        comment: 'First face #009E73, Imprint canonical order, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Professional SVG rendering; functional color palette; could be more
-          distinctive
+        passed: true
+        comment: Tinted fill with saturated outline per face, fixed eye whites across
+          themes, typographic hierarchy bold labels / bold key title / soft key entries
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Minimalist with consistent strokes; limited embellishment
+        passed: true
+        comment: Free height split into equal gaps between title, grid, key and legend;
+          key aligned to the side margin
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear comparative visualization; feature mappings enable interpretation;
-          could emphasize patterns more
+        comment: Data displayed; no focal point or hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chernoff faces visualization
+        comment: Chernoff faces, symmetric, no reference layers or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 variables mapped; 5 observations; normalized; grid layout
+        comment: Normalization 0-1, 7 feature mappings, grid layout with labels, feature
+          key present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All observations shown; layout appropriate
+        comment: Each variable drives one feature; grid position is layout
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id; comprehensive legends provided
+        comment: Title format correct with descriptive prefix; legend labels match
     data_quality:
       score: 15
       max: 15
@@ -152,19 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 Chernoff face aspects demonstrated
+        comment: Faces differ visibly across all features; extremes and mid values
+          both present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible car metrics; neutral domain
+        comment: Fictional but plausible car models with real-world metrics, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5 observations appropriate; normalized 0-1; sensible ranges
+        comment: 130-420 hp, 21-40 mpg, 3.5-5 stars, 0.78-1.05 g plausible; no Check
+          values in spec
     code_quality:
       score: 10
       max: 10
@@ -174,31 +190,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary abstractions; direct implementation
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic output
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no bloat
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean parametric calculations; no fake UI
+        comment: Hand-built SVG faces are necessary (pygal has no face glyph); no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/svg/html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
       score: 4
       max: 10
@@ -207,23 +224,32 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Good use of pygal.XY base and Style system; uses cairosvg idiomatically
+        passed: true
+        comment: Style object for theme tokens, pygal canvas/title/legend; faces drawn
+          by extending the rendered SVG
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Limited exploration of pygal-specific capabilities; mostly SVG manipulation
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T09:23:19Z'
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
+  - patches
   - custom-legend
   - html-export
+  - annotations
   patterns:
   - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling: []
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

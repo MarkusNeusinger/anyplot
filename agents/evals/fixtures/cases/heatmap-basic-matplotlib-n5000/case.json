@@ -17,6 +17,19 @@
       "column": "Response Time (min)"
     }
   ],
+  "before_operations": [
+    [
+      {
+        "op": "aggregate",
+        "by": [
+          "Weekday",
+          "Hour"
+        ],
+        "column": "Response Time (min)",
+        "how": "mean"
+      }
+    ]
+  ],
   "expected": "accepted",
   "tags": [
     "heatmap",

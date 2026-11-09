@@ -6,7 +6,6 @@ import 'src/styles/fonts.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-import { reportWebVitals } from 'src/analytics/reportWebVitals';
 import { App } from 'src/app';
 import { watchShellDefaults } from 'src/utils/shellMetadata';
 
@@ -19,5 +18,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>
 );
-
-reportWebVitals();

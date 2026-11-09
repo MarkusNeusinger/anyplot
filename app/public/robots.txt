@@ -22,9 +22,6 @@
 # consumption wants. Applebot-Extended is training-only and is likewise no
 # longer declined, now that training is permitted.
 #
-# One user agent remains declined, and for an operational reason rather than a
-# policy one — see the group below.
-#
 # Cloudflare's AI Crawl Control enforces at the edge and can be stricter than
 # this file: it answers blocked agents with HTTP 403 regardless of what is
 # written here. Keep the dashboard in step with this file, or the published
@@ -34,8 +31,8 @@
 # Two ordering rules are load-bearing, both for the same reason — a compliant
 # crawler resolves by specificity, simpler parsers by first match:
 #   1. Named groups come FIRST, `User-agent: *` last. With the wildcard on top,
-#      a first-match parser would read `Allow: /` and never reach the group
-#      below.
+#      a first-match parser would read `Allow: /` and never reach a named
+#      group below it.
 #   2. Inside a group, `Disallow:` lines come BEFORE `Allow: /` — otherwise a
 #      first-match parser lets /debug and /interactive through (verified with
 #      Python's urllib.robotparser, which is exactly such a parser).
@@ -50,16 +47,7 @@
 # The signal is repeated in every group, because a crawler reads only the group
 # that matches it.
 
-# Bytespider is declined on bandwidth, not principle. It is documented as
-# ignoring robots.txt and crawling far more aggressively than the catalogue can
-# justify serving, so this line states the intent while Cloudflare's AI Crawl
-# Control does the actual enforcing. If its behaviour changes, this group can
-# go — nothing in the licence or the policy above argues against it.
-User-agent: Bytespider
-Content-Signal: search=yes,ai-input=yes,ai-train=yes
-Disallow: /
-
-# Everyone else: search engines, AI assistants and their training crawlers,
+# Everyone: search engines, AI assistants and their training crawlers,
 # social and link previews, feed readers. /debug and /interactive are app
 # internals rather than catalogue content and are not worth crawling.
 User-agent: *

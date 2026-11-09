@@ -29,6 +29,7 @@ from agents.evals.scope import (
     run_cases,
     verdict_of,
 )
+from core.constants import SUPPORTED_LIBRARIES
 
 
 def test_the_evals_message_cap_is_the_routes() -> None:
@@ -169,6 +170,18 @@ class TestCaseFile:
         assert {item.lang for item in ported} >= {"en", "de", "fr"}
         assert any("Chart.js" in item.text for item in ported)  # the live case of 2026-10-14, generalised
         assert {item.expected for item in contrast} == {"in_scope", "out_of_scope"}
+
+    def test_a_served_library_in_any_form_is_in_scope_and_the_old_rules_still_win(self) -> None:
+        """Live session of 2026-11-08: "erstell das bitte mal in d3", "d3.js" and "D3.js" with D3 served. A tool outside
+        the catalogue, a library not served, an attack and a data request that name a library keep their verdicts."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "library_names" in item.tags]
+        served = sorted(SUPPORTED_LIBRARIES)
+
+        kept = [item for item in cases if item.expected == "in_scope"]
+        assert {"erstell das bitte mal in d3", "d3.js", "D3.js"} <= {item.text for item in kept}
+        assert len(kept) >= 10 and all(item.group == "inscope" and item.libraries == served for item in kept)
+        assert {item.expected for item in cases} == {"in_scope", "other_library", "attack", "needs_data"}
+        assert any(item.libraries == ["matplotlib", "seaborn"] for item in cases if item.expected == "other_library")
 
     def test_a_plot_language_request_is_in_scope(self) -> None:
         """Writing the plot's own text in another language is a plot setting, unlike a translation for use elsewhere."""
@@ -325,6 +338,48 @@ class TestRun:
             "</pasted_table>\n"
             "<user_message>\nwhere does my budget go?\n</user_message>"
         )
+
+    def test_a_case_with_its_libraries_gets_their_rubric_and_the_served_library_rule(self) -> None:
+        """Live session of 2026-11-08: "erstell das bitte mal in d3" got `other_library` with D3 served. The rule
+        lifts it to the verdict the plugin acts on and keeps the judge's own; with D3 not served, it stays."""
+        served = sorted(SUPPORTED_LIBRARIES)
+        lifted = case("lib-010", "in_scope", "inscope", text="erstell das bitte mal in d3", libraries=served)
+        kept = case("lib-025", "other_library", "offtopic", text="erstell das bitte mal in d3")
+        outside = case("lib-023", "other_library", "offtopic", text="port the d3 one to vega-lite", libraries=served)
+        judge = FakeJudge([JudgeVerdict(verdict="other_library", lang="de")] * 3)
+
+        results = asyncio.run(run_cases([lifted, kept, outside], judge, concurrency=1))
+
+        assert [(result.verdict, result.judge_verdict) for result in results] == [
+            ("in_scope", "other_library"),
+            ("other_library", None),
+            ("other_library", None),
+        ]
+        assert "It adapts every library of the catalogue" in judge.calls[0][1]  # the case's 15 libraries
+        assert "which it does not adapt here" in judge.calls[1][1]  # the settings' matplotlib and seaborn
+        scored = scope.score([lifted, kept, outside], results)
+        assert scored["lifted"] == ["lib-010"] and scored["misses"] == []
+        assert "lifted the judge's other_library: lib-010" in scope.summary_text(scored, 0.0, [])
+
+    def test_the_stamp_names_every_rubric_a_case_was_judged_with(self) -> None:
+        from agents.anyplot.policy import scope_rubric
+        from agents.anyplot.settings import get_settings
+
+        cases = [
+            case("lib-010", "in_scope", "inscope", libraries=["seaborn", "d3", "matplotlib"]),
+            case("in-001", "in_scope", "inscope"),
+        ]
+
+        stamped = scope.stamp(get_settings(), DEFAULT_CASES, cases)
+
+        assert stamped["cases"] == 2 and stamped["rubric_hash"] == scope._sha(scope_rubric())
+        assert stamped["rubric_hashes"] == {
+            "d3,matplotlib,seaborn": scope._sha(scope_rubric(["d3", "matplotlib", "seaborn"]))
+        }
+
+    def test_a_case_names_catalogue_libraries_only(self) -> None:
+        with pytest.raises(ValueError, match="vega"):
+            case("lib-099", "in_scope", "inscope", libraries=["vega"])
 
     def test_a_table_goes_with_the_paste_note_tag_only(self) -> None:
         table = {"title": "Basic Bar Chart", "columns": ["month"]}
