@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:10:13Z'
-updated: '2026-11-09T08:42:07Z'
+updated: '2026-11-09T08:47:40Z'
 generated_by: claude-opus
 workflow_run: 42587104302
 issue: 3414
@@ -12,47 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - 'True letter-value construction: np.quantile at tail shares 1/4 … 1/128 in one
-    vectorized call, with each box edge at its quantile and widths decaying 82 % per
-    level, all centered on the category'
-  - Ordered quantile levels take discrete imprint_seq steps from brand green (quartiles)
-    to blue (deepest), identical in both themes, with page-colored separators that
-    keep neighbouring levels apart
-  - 'Theme tokens threaded through every chrome element: median line flips INK black/white,
-    legend on the elevated surface, ticks and spines in INK_SOFT; fully readable in
-    light and dark'
-  - Clean proxy-artist legend (Line2D/Patch) explains the median, each quantile range
-    and the outliers
-  - Realistic latency scenario ordered by increasing tail weight, so the stacks rise
-    as a staircase from Fast API to Report Gen
+  - 'Correct letter-value construction: six nested levels from the quartiles out to
+    0.78/99.22 %, each box edge computed with np.quantile at its tail share and drawn
+    on a log value axis that keeps the right-skewed lower tails readable instead of
+    crushing them near zero'
+  - Box widths shrink by a constant 0.82 factor per level, all centered on the category,
+    and page-colored box edges cut a thin gap between levels so the nesting reads
+    even where adjacent ramp steps are close in hue
+  - 'Quantile levels are ordered steps of imprint_seq (#009E73 → #4467A3), with the
+    quartile box in brand green; data colors are identical in both renders and all
+    chrome flips cleanly through the theme tokens'
+  - Custom legend built from Patch and Line2D handles explains the median line, every
+    quantile level with its percentile span, and the outlier marks, each glyph matching
+    the mark it explains
+  - 'Realistic, neutral server response-time scenario: 2000 requests per endpoint
+    from exponential mixtures plus a 5 ms network floor, ordered from fast to slow
+    so the medians climb from about 45 ms to about 330 ms across the chart'
   weaknesses:
-  - 'VQ-03, DQ-01 (both): on the linear 0–9000 ms axis the right-skewed data pushes
-    every lower letter-value edge into the bottom ~100 ms, so the lower halves of
-    all stacks collapse into hairline slivers and Fast API''s quartile box is a few-pixel
-    strip hidden under its median line → make the lower boxes and the quartile box
-    readable, for example with a log value axis (ax.set_yscale("log")) that spreads
-    the 10–100 ms range. Likely cause: default linear y scale with ax.set_ylim(bottom=0)
-    on exponential-mixture data.'
-  - 'Suggestion: the legend''s range labels mix precisions ("3.12–96.88 %", "0.781–99.22
-    %"); a uniform format such as one decimal would read more evenly.'
+  - 'Suggestion: the legend labels mix precisions ("3.12–96.88 %", "0.781–99.22 %");
+    a fixed two-decimal format such as "0.78–99.22 %" would read more evenly.'
+  - 'Suggestion: the middle ramp steps (12.5–87.5 %, 6.25–93.75 %, 3.12–96.88 %) are
+    close teal shades; matching a swatch to a box relies mostly on the nesting order
+    rather than the color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 3200x1800 landscape.
-      Chrome: title "boxen-basic · python · matplotlib · anyplot.ai" in near-black at top center; y-axis "Response Time (ms)" 0–8000 ticks, x-axis "API Endpoint" with Fast API, DB Query, File Upload, Report Gen; subtle horizontal grid; left/bottom spines only. Legend "Letter values" upper left on an elevated surface: Median, 25–75 %, 12.5–87.5 %, 6.25–93.75 %, 3.12–96.88 %, 1.56–98.44 %, 0.781–99.22 %, Outliers. All text readable.
-      Data: four nested-box stacks narrowing with depth, quartile box in brand green #009E73 shading through teal to blue #4467A3 for the deepest level, separated by thin page-colored edges; black median bars; grey translucent outlier points above each stack (up to ~8500 ms for Report Gen). The lower halves of all stacks are compressed into slivers near 0 ms; Fast API's whole stack is short and its quartile box is hidden under the median bar.
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: title "boxen-basic · python · matplotlib · anyplot.ai" in near-black ink, centered, about 47 % of the width; y-axis "Response Time (ms)" and x-axis "API Endpoint" in dark ink; log-scale tick labels 10 / 100 / 1000 / 10000 and category labels Fast API, DB Query, File Upload, Report Gen in soft dark gray; subtle horizontal grid at the decades; top and right spines removed; legend "Letter values" on the right in an elevated off-white frame. All text readable.
+      Data: four letter-value stacks of six nested boxes each, the widest quartile box in brand green #009E73 and the deeper, narrower boxes stepping through imprint_seq toward blue #4467A3; a thick near-black median line across each quartile box; gray translucent outlier dots above and below each stack (many in Report Gen up to ~9000 ms). Boxes are separated by thin page-colored edges.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis labels and ticks in light ink; grid subtle; legend on a dark elevated surface with light text. No dark-on-dark text.
-      Data: box colors identical to the light render (green to blue ramp); median bars flip to near-white; outlier points grey and visible. Same lower-tail compression as light.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles and the legend title in light ink; tick and legend labels in light gray; grid lines subtle dark gray; legend frame in elevated #242420 with a light gray border. No dark-on-dark text anywhere.
+      Data: box colors identical to the light render (green quartile box, teal-to-blue deeper levels); median line flips to light ink and stays clearly visible on the green boxes; outlier dots in the lighter muted gray, visible on the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,49 +59,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 12, labels 10, ticks/legend 8 at dpi 400);
-          all text readable in both themes
+        comment: All font sizes set explicitly (title 12, labels 10, ticks and legend
+          8); readable in both themes; title about 47 % of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in empty upper-left space clear of all marks; no text
-          collisions
+        comment: No text collisions; legend sits outside the axes; stacked outlier
+          dots are expected for a large sample
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Linear axis crushes the lower letter values and Fast API's quartile
-          box into slivers near 0 ms (defect line)
+        passed: true
+        comment: Boxes, median lines and outlier dots (s=14, alpha 0.6) all clearly
+          visible; legend glyphs match the marks in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp with page-colored separators; lightness plus width
-          encode level, CVD-safe
+        comment: Levels told apart by width and page-colored gaps as well as hue;
+          median line high contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, balanced margins, nothing cut off, title ~47% of
-          width
+        comment: 3200x1800, plot fills most of the canvas, legend adjacent on the
+          right, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Response Time (ms)'' with units, ''API Endpoint'''
+        comment: Response Time (ms) with units, API Endpoint
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ordered quantile levels use discrete imprint_seq steps (#009E73
-          to #4467A3), quartile box in brand green; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'Ordered quantile levels in ordered steps of imprint_seq starting
+          at #009E73; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -112,23 +111,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Page-colored 0.8 px separators between nested levels give a crisp
-          stepped read; legend on the elevated surface with an INK title over INK_SOFT
-          entries
+        comment: 'Beyond baseline: log value axis chosen for the skewed data with
+          plain-number FuncFormatter labels, ink median line as the strongest element
+          over the color ramp'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-only grid chosen for the category axis and x tick marks removed
-          (length=0)
+        comment: 'Beyond baseline: page-colored box edges carve gaps between levels,
+          x tick marks removed, median line width matched to the quartile box'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Endpoints ordered by increasing latency so the stacks rise left to
-          right as a staircase of growing tails
+        comment: Endpoints ordered fast to slow, so the medians and tails climb step
+          by step across the chart; tail length differences per endpoint visible
     spec_compliance:
       score: 15
       max: 15
@@ -138,52 +137,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Letter-value plot, no whiskers, strip points or extra layers
+        comment: Letter-value plot; no whiskers, strip points, means or reference
+          lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nested boxes to 1/128, narrowing widths centered on each category,
-          shaded levels, outliers as points, legend explaining levels
+        comment: Nested letter-value boxes, decreasing widths, ordered shading, outliers
+          beyond the deepest level, axis labels and a legend of quantile levels all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Box edges at the computed quantiles, outliers at their values, all
-          data in range
+        comment: Box edges at their quantiles, outliers at their values on a common
+          x; all data within the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend 'Letter values' with readable quantile
-          ranges
+        comment: Title format correct; legend entries name each percentile span plus
+          median and outliers
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Upper-tail shape well shown, but the lower half of every distribution
-          is unreadable on the linear axis (defect line)
+        comment: Four distributions with different centers and tails, outliers on
+          both sides, 2000 points each
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times by API endpoint, neutral and plausible
+        comment: Server response times by endpoint, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Right-skewed latencies from tens of ms to ~8.5 s are plausible; 2000
-          points per endpoint inside the spec range; no Check values in the spec
+        comment: 'Checked: medians about 45 / 115 / 200 / 330 ms read off the axis,
+          minimum near the 5 ms network floor set at line 52, tails up to ~9 s for
+          report generation; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -211,35 +213,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Vectorized np.quantile over all tail shares; matplotlib has no letter-value
-          call to replace the loop
+        comment: Quantiles via vectorized np.quantile; matplotlib has no boxen call,
+          so the bar loop is the necessary hand-roll
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png at 3200x1800, no bbox_inches, current API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: OO Axes API, ax.bar with bottom/width for the boxes, Patch/Line2D
-          proxy artists for the legend
+        comment: Correct Axes-method usage (bar with bottom/width, hlines, scatter);
+          default
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        passed: false
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        passed: true
+        comment: Generic usage; Patch/Line2D legend handles are common practice
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
-  rendered_at: '2026-11-09T08:39:10Z'
+  rendered_at: '2026-11-09T08:44:35Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -252,6 +254,7 @@ impl_tags:
   - explicit-figure
   dataprep: []
   styling:
-  - edge-highlighting
+  - custom-colormap
   - alpha-blending
+  - edge-highlighting
   - grid-styling
