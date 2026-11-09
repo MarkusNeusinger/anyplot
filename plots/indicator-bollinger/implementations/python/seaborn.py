@@ -1,36 +1,30 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 93/100 | Updated: 2026-05-17
 """
 
 import os
-import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
 
-# Prevent script name from shadowing seaborn package
-cwd = os.getcwd()
-sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.abspath(os.path.dirname(__file__))]
-
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import seaborn as sns  # noqa: E402
-
-
-# Theme configuration
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # Close price (primary)
-SECONDARY = "#C475FD"  # SMA (middle band)
-TERTIARY = "#4467A3"  # Bollinger Bands
+# Imprint palette: close price, middle band, outer bands
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+CLOSE_COLOR = IMPRINT_PALETTE[0]
+SMA_COLOR = IMPRINT_PALETTE[1]
+BAND_COLOR = IMPRINT_PALETTE[2]
 
-# Apply theme
 sns.set_theme(
     style="ticks",
     rc={
@@ -42,87 +36,60 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Generate realistic stock price data with Bollinger Bands
-np.random.seed(42)
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Close Price"  # role: close
+SMA = "20-Day SMA"  # role: sma
+UPPER_BAND = "Upper Band (+2σ)"  # role: upper_band
+LOWER_BAND = "Lower Band (−2σ)"  # role: lower_band
 
-# Generate 120 trading days of price data
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
+np.random.seed(42)
 n_days = 120
 dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
 
-# Simulate price movement with trend and volatility
+# Price path with two stretches of extra volatility
 returns = np.random.normal(0.0005, 0.015, n_days)
-price_base = 150
-prices = price_base * np.cumprod(1 + returns)
-
-# Add some volatility clustering (higher volatility periods)
+prices = 150 * np.cumprod(1 + returns)
 volatility_boost = np.zeros(n_days)
-volatility_boost[30:50] = np.random.normal(0, 0.01, 20)  # High volatility period
-volatility_boost[80:95] = np.random.normal(0, 0.008, 15)  # Another volatile period
+volatility_boost[30:50] = np.random.normal(0, 0.01, 20)
+volatility_boost[80:95] = np.random.normal(0, 0.008, 15)
 prices = prices * (1 + volatility_boost)
 
-# Calculate Bollinger Bands (20-period SMA, 2 standard deviations)
-window = 20
+# Bollinger Bands: 20-period SMA with 2 standard deviations
 close = pd.Series(prices)
-sma = close.rolling(window=window).mean()
-std = close.rolling(window=window).std()
-upper_band = sma + 2 * std
-lower_band = sma - 2 * std
-
-# Create DataFrame
-df = pd.DataFrame({"date": dates, "close": close, "sma": sma, "upper_band": upper_band, "lower_band": lower_band})
-
-# Drop NaN values from rolling calculation
-df = df.dropna().reset_index(drop=True)
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Plot Bollinger Bands fill between upper and lower
-ax.fill_between(
-    df["date"], df["lower_band"], df["upper_band"], alpha=0.15, color=TERTIARY, label="Bollinger Band Range"
+sma = close.rolling(window=20).mean()
+std = close.rolling(window=20).std()
+df = pd.DataFrame({DATE: dates, CLOSE: close, SMA: sma, UPPER_BAND: sma + 2 * std, LOWER_BAND: sma - 2 * std}).dropna(
+    subset=[SMA, UPPER_BAND, LOWER_BAND]
 )
 
-# Plot upper band
-ax.plot(df["date"], df["upper_band"], color=TERTIARY, linewidth=2, alpha=0.7, label="Upper Band (+2σ)")
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Plot lower band
-ax.plot(df["date"], df["lower_band"], color=TERTIARY, linewidth=2, alpha=0.7, label="Lower Band (-2σ)")
+ax.fill_between(df[DATE], df[LOWER_BAND], df[UPPER_BAND], alpha=0.2, color=BAND_COLOR, linewidth=0, label="Band Range")
+sns.lineplot(data=df, x=DATE, y=UPPER_BAND, color=BAND_COLOR, linewidth=1.1, label=UPPER_BAND, ax=ax)
+sns.lineplot(data=df, x=DATE, y=LOWER_BAND, color=BAND_COLOR, linewidth=1.1, label=LOWER_BAND, ax=ax)
+sns.lineplot(data=df, x=DATE, y=SMA, color=SMA_COLOR, linewidth=1.25, linestyle="--", label=SMA, ax=ax)
+sns.lineplot(data=df, x=DATE, y=CLOSE, color=CLOSE_COLOR, linewidth=1.6, label=CLOSE, ax=ax)
 
-# Plot SMA (middle band) - dashed line
-ax.plot(df["date"], df["sma"], color=SECONDARY, linewidth=2.5, linestyle="--", label="20-Day SMA")
-
-# Plot close price - prominent line
-ax.plot(df["date"], df["close"], color=BRAND, linewidth=3, label="Close Price")
-
-# Styling
-ax.set_title("indicator-bollinger · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
-
-# Format x-axis dates
+# Style
+ax.set_title("indicator-bollinger · python · seaborn · anyplot.ai", fontsize=12, fontweight="bold", pad=10)
+ax.set_xlabel(DATE, fontsize=10)
+ax.set_ylabel("Price (USD)", fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
 fig.autofmt_xdate(rotation=30)
 
-# Legend
-ax.legend(fontsize=16, loc="upper left", framealpha=0.95, frameon=True)
-
-# Grid
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax.legend(fontsize=8, loc="best", framealpha=0.95, frameon=True)
+ax.yaxis.grid(True, linewidth=0.6)
 ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-
-plt.tight_layout()
-
-# Save to script directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-output_path = os.path.join(script_dir, f"plot-{THEME}.png")
-plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.98, top=0.92, bottom=0.16)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
