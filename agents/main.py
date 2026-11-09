@@ -1037,7 +1037,8 @@ async def status(runtime: RuntimeDep, tier: CallerTier) -> dict[str, Any]:
     `user_max_runs` is the caller's own cap in their tier's lane (`AGENT_USER_MAX_RUNS`, or
     `AGENT_ADMIN_USER_MAX_RUNS` for an admin), which the admin chat's fan-out over every library keeps to; `tier` is
     the tier the request was served as. `paused` says the service's day budget is spent, so every turn gets
-    `service_paused` until `resets_at` (the next 00:00 UTC): the page shows the note before the user types.
+    `service_paused` until `resets_at` (the next 00:00 UTC): the chat frame's tab shows it as its mood before the
+    user types, read again after each run and every 60 s while the tab is visible.
     """
     settings = get_settings()
     queue = runtime.run_queue()

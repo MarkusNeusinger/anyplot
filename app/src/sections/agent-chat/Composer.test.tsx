@@ -1,6 +1,6 @@
 import { createRef } from 'react';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
 import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
@@ -32,7 +32,6 @@ function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
     plot: { kind: 'create', active: true, confirming: false, fresh: false },
     example: { active: false },
     confirmError: null,
-    pausedUntil: null,
     onExampleData: vi.fn(),
     onPlot: vi.fn(),
     ...overrides,
@@ -326,6 +325,59 @@ describe('Composer row', () => {
     fireEvent.keyDown(box, { key: 'Enter' });
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('send-return')).not.toHaveAttribute('aria-disabled');
+  });
+});
+
+describe('Composer placeholder on a phone', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reads short where a browser cuts it without an ellipsis, and long on a wider screen', () => {
+    const placeholders = () => {
+      const states: Partial<ComposerProps>[] = [
+        { hasData: false },
+        {},
+        { step2: true },
+        { hasPlot: true },
+        { step2: true, hasPlot: true },
+        { attachment },
+      ];
+      return states.map(state => {
+        const { unmount } = render(<Composer {...composerProps(state)} />);
+        const text = screen.getByRole('textbox', { name: 'Message' }).getAttribute('placeholder');
+        unmount();
+        return text;
+      });
+    };
+    expect(placeholders()).toEqual([
+      'paste a table or drop a file',
+      'ask about your data, or say what the first plot should do',
+      'optional: what the first plot should do differently',
+      'ask about your data, or say what the next plot should do',
+      'ask for a change, e.g. log scale on y',
+      'add a note for this table, or press Enter',
+    ]);
+    // Below 600 px (owner, 2026-11-08): before the first plot, and once there is one.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: query === '(max-width: 599.95px)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        onchange: null,
+        dispatchEvent: vi.fn(),
+      }))
+    );
+    expect(placeholders()).toEqual([
+      'paste a table or drop a file',
+      'ask or say what to plot',
+      'ask or say what to plot',
+      'ask for a change',
+      'ask for a change',
+      'add a note for this table, or press Enter',
+    ]);
   });
 });
 
