@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:30:50Z'
-updated: '2026-11-09T14:52:46Z'
+updated: '2026-11-09T14:59:13Z'
 generated_by: claude-opus
 workflow_run: 42637221883
 issue: 1945
@@ -12,109 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - 'Builds a genuine 3D frame in a 2D grammar: each axis is scaled into a unit cube,
-    rotated to an oblique 22° elevation / -55° azimuth view and projected, so all
-    three axes have visible extent and every marker sits at its exact x, y, z projection'
-  - 'Strong depth cues: back-pane grid lines aligned to the tick values on floor and
-    both walls, stronger box edges in INK_SOFT, painter''s ordering (far points drawn
-    first) and marker size scaled by nearness to the viewer'
-  - 'Altitude on imprint_seq (scale_fill_gradient #009E73 → #4467A3) with a color
-    bar titled ''Altitude (m)''; page-colored marker outlines at alpha 0.8 keep overlapping
-    points in the dense clusters separable in both themes'
-  - layer_tooltips() with formatted lines restores the original X, Y and Altitude
-    values in the HTML output, where the projected screen coordinates would otherwise
-    be meaningless
-  - 'Theme tokens threaded through every element: grid, edges, tick labels, axis titles,
-    title, legend and backgrounds all flip correctly between #FAF8F1 and #1A1A17'
+  - 'Builds a real 3D frame in a library without a 3D coordinate system: each axis
+    is scaled into a unit cube, rotated to an oblique view (elevation 22°, azimuth
+    −55°) and projected, so all three axes have visible extent and the three clusters
+    read clearly at different depths'
+  - 'Depth cues on several levels: grid lines only on the three back panes, solid
+    front box edges, painter''s order (far points drawn first), marker size growing
+    toward the viewer, alpha 0.8 with page-colored outlines so overlapping roost points
+    stay separable'
+  - All three axes are labeled with units (Easting, Northing, Altitude in m) with
+    tick labels placed just outside the front edges; the altitude color bar is labeled
+    and uses the imprint_seq green-to-blue gradient
+  - 'Theme tokens are threaded through every element: grid in INK at low alpha, edges
+    and ticks in INK_SOFT, outlines in PAGE_BG; both renders are fully readable and
+    the data colors are identical'
+  - layer_tooltips shows the original Easting/Northing/Altitude values (formatted
+    to 2 decimals) on hover in the HTML output instead of the projected screen coordinates
+  - 'Specific, plausible scenario: GPS fixes of tagged starlings at a reed-bed roost
+    (a swirling flock, a high commuting line along a hedgerow, a group foraging just
+    above the meadow)'
   weaknesses:
-  - 'VQ-01 (both): the 3D tick labels (geom_text size=4.2) render at about 22 px on
-    the 3200 px canvas, clearly smaller than the 10 pt legend text, and blur to about
-    3 px in the 400 px thumbnail → about the legend-text size (geom_text size about
-    5.5, +1.3). Likely cause: geom_text(data=tick_labels, size=4.2).'
-  - 'VQ-05 (both): the cube occupies only the middle band of the canvas, leaving roughly
-    the left quarter empty while the color bar floats about 240 px right of the cube''s
-    right edge, so the whitespace sits unbalanced on the left → center the cube plus
-    color bar as one block (shift the x window so the empty left margin shrinks by
-    about half). Likely cause: x_limits centered on text_x.mean() with PANEL_ASPECT
-    1.7, which ignores the space the right-hand legend takes.'
-  - 'DQ-02 (code): the scenario is described as ''simulated sensor readings in a volume''
-    with clusters named only as a sphere, an ellipsoid and a disk, and axes labelled
-    ''X position'' / ''Y position'', which reads as abstract geometric test data rather
-    than a concrete situation → give the clusters a concrete domain (for example drone
-    GPS fixes or tagged bird positions over named sites) and name the axes accordingly.
-    Likely cause: the data block''s generic shape-based clusters.'
-  - 'Suggestion: a few colour-bar ticks below 0 (the bar extends to about -2 m without
-    a label) would make the green end of the scale readable.'
+  - 'Suggestion: the data already has three behavioral groups (roost swirl, hedgerow
+    line, meadow group); coloring by group with a legend would carry a true fourth
+    variable instead of repeating altitude, which the z-axis already shows.'
+  - 'Suggestion: the cube sits left of center with a wide empty band before the color
+    bar; shifting the x window so the gap between cube and legend matches the left
+    margin would balance the composition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 3200x1800 landscape.
-      Chrome: bold dark title "scatter-3d · python · letsplot · anyplot.ai" top-left (~47 % of width); an oblique 3D box with grey back-pane grid lines on the floor and two walls and darker box edges; tick labels -3/0/3 (X), -5/-2.5/0/2.5 (Y) along the front floor edges and 0/2/4 (Altitude) on the left vertical edge; axis titles "X position (m)", "Y position (m)", "Altitude (m)" in dark ink. Color bar "Altitude (m)" at the right with ticks 0, 2, 4. All text readable; tick labels small.
-      Data: ~150 circular markers in three clusters (high elongated blue cluster upper-left, mid teal sphere at right, flat green disk on the floor), filled on an imprint_seq gradient #009E73 → #4467A3 by altitude, alpha 0.8 with page-colored outlines, nearer points drawn larger.
+      Background: warm off-white #FAF8F1 across the whole canvas (theme_void, no panel border).
+      Chrome: bold title "scatter-3d · python · letsplot · anyplot.ai" top-left in near-black (~47 % of the width); an oblique 3D box with solid grey front edges and faint grey grid lines on the floor and the two back walls; tick labels in dark grey (Easting −30/0/30 along the front-left floor edge, Northing −50/−25/0/25 along the front-right floor edge, Altitude 15/30/45 on the left vertical edge); axis titles "Easting (m)", "Northing (m)", "Altitude (m)" in near-black; color bar "Altitude (m)" on the right with ticks 10–50. All text readable, no overlap, nothing clipped.
+      Data: ~150 circles with thin page-colored outlines at alpha 0.8, filled on a green #009E73 (low) → blue #4467A3 (high) gradient by altitude; three clusters: a high elongated cloud upper-left (hedgerow line), a dense mid-height cluster right (roost swirl), a flat green layer on the floor (meadow). Near markers are larger than far ones.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles in light ink, tick labels in light grey INK_SOFT, grid and box edges in light grey at low alpha; color bar title and labels light. No dark-on-dark text anywhere.
-      Data: identical marker colors and positions to the light render; only the marker outlines flip to the dark page color.
+      Chrome: title and axis titles in light off-white, tick labels in light grey, box edges light grey, back-pane grid subtle but visible; color bar title and labels light. No dark-on-dark text anywhere.
+      Data: identical positions, sizes and green→blue fills as the light render; only the marker outlines switch to the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicit and readable in both themes; 3D tick labels at
-          geom_text size 4.2 are small and blur in the thumbnail (defect line)
+        comment: Title, axis titles, ticks and color bar text explicitly sized and
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; marker overlap in the clusters is handled by
-          alpha 0.8 and page-colored outlines
+        comment: No text collisions; marker overlap in the roost cluster is permitted
+          by the spec and handled with alpha and outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points with depth-scaled sizes and alpha 0.8 fit the density;
+        comment: ~150 markers at prominent size with alpha 0.8 and page-colored outlines;
           color bar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp has a luminance step and is redundant with the
-          vertical axis; CVD-safe
+        comment: Green-to-blue sequential gradient, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Cube fills the height but whitespace is unbalanced: empty left quarter
-          and a color bar floating far right (defect line)'
+        comment: 3200x1800 canvas; equal page units for the cube, nothing overflows
+          or clips
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All three axes labelled with units (m)
+        comment: All three axes labeled with units (m)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous altitude on imprint_seq #009E73 → #4467A3; backgrounds
-          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
+        comment: 'Continuous altitude on imprint_seq (#009E73 to #4467A3); backgrounds
+          #FAF8F1 / #1A1A17; theme-correct chrome'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -122,23 +114,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above baseline: a two-level frame hierarchy (faint INK grid vs.
-          stronger INK_SOFT box edges) and page-colored marker outlines that separate
-          overlapping points'
+        comment: 'Raised: two-level ink hierarchy (INK titles, INK_SOFT ticks and
+          edges), page-colored marker outlines that separate overlapping points'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid drawn only on the three back panes at the tick values, tick
-          labels and axis titles offset outward from the front edges; held back by
-          the unbalanced left whitespace
+        comment: 'Raised: grid only on the back panes with tick labels placed outside
+          the front edges, x window centred on the extent so margins balance'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Clusters displayed; no focal point chosen beyond what the spec asks
+        comment: 'Raised: size-by-nearness and painter''s order make the depth ordering
+          of the three clusters readable at a glance'
     spec_compliance:
       score: 15
       max: 15
@@ -148,30 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A true 3D scatter in a visible box frame
+        comment: 3D scatter in a visible 3D frame
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Oblique view with depth apparent, three labelled axes with units,
-          pane grid and box edges, translucent markers, color bar labelled with its
-          variable; rotation N/A in lets-plot
+        comment: Frame with labeled axes and units, oblique view, pane grids/box edges/translucency
+          as depth cues, labeled color bar; rotation N/A (lets-plot has no 3D coordinates)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each marker is the orthographic projection of its x, y, z; axes span
-          the full data range
+        comment: Every marker at its projected x/y/z value; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; color bar titled 'Altitude (m)'
+        comment: Mandated title format; color bar titled 'Altitude (m)'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -179,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three clusters of different 3D shape (round, elongated, flat) show
-          spatial structure in all three dimensions
+        comment: Three clusters at clearly different positions and depths show the
+          spatial-cluster use of a 3D scatter
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Neutral but abstract: shape-named clusters of generic sensor positions
-          (defect line)'
+        comment: 'Starling GPS fixes around a reed-bed roost: specific, neutral and
+          plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Positions of a few metres in a local volume are sensible; no Check
-          values in the spec
+        comment: Altitudes 0.5-58 m and horizontal offsets of tens of metres fit a
+          roost flock; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -204,7 +193,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,14 +205,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; MaxNLocator is a non-plotting matplotlib utility
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The projection code is what lets-plot needs for 3D; no available
-          call replaces it
+        comment: Projection code is the minimum needed for 3D in a 2D-only library;
+          vectorised matrix projection
       - id: CQ-05
         name: Output & API
         score: 1
@@ -236,39 +225,38 @@ review:
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct grammar (layered geom_segment/geom_point/geom_text, theme_void,
-          scale_size_identity, coord_cartesian), but the 3D frame is necessarily low-level
+        comment: 'Raised: per-layer data frames for grid/edges/points/text, scale_size_identity
+          for precomputed depth sizes, coord_cartesian window, theme_void'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: layer_tooltips() with .line()/.format() shows the original coordinates
-          on hover in the HTML; tooltips='none' on the frame layers
-  verdict: REJECTED
+        passed: false
+        comment: 'Raised: layer_tooltips with .line/.format surfaces the original
+          coordinates rather than projected ones'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T14:49:27Z'
+  rendered_at: '2026-11-09T14:56:15Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - matplotlib
   techniques:
   - 3d-projection
-  - layer-composition
   - colorbar
-  - manual-ticks
-  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
-  - custom-colormap
   - alpha-blending
   - edge-highlighting
+  - custom-colormap
+  - minimal-chrome

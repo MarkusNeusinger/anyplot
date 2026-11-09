@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-09
+Quality: 87/100 | Updated: 2026-11-09
 """
 
 import os
