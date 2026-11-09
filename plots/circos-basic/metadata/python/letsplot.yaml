@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: circos-basic
 created: '2025-12-31T21:34:33Z'
-updated: '2026-11-09T09:52:01Z'
+updated: '2026-11-09T10:01:47Z'
 generated_by: claude-opus
 workflow_run: 42594771898
 issue: 3005
@@ -12,102 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - Arc lengths follow the segment lengths and the gaps separate the eight chromosomes
-    cleanly; segments run in natural chromosome order
-  - Ribbon width is proportional to the rearrangement count at both ends (one angle
-    per link unit), each ribbon anchored on the angular span of its two segments
-  - Two concentric expression tracks sit inside the outer ring, aligned with each
-    segment's span, on faint background bands that make the bar heights readable,
-    and the caption names them outer to inner
-  - Ribbons at alpha 0.5 with page-colored outlines stay distinguishable where they
-    cross in both themes; ring, track bars and ribbons step down in opacity for a
-    clear hierarchy
-  - 'Theme tokens threaded through title, labels, legend, caption and outlines: both
-    renders readable, data colors identical'
-  - Exports an interactive HTML alongside the PNG, so the polygons carry lets-plot
-    hover in the detail view
+  - Arc lengths follow the segment lengths (120 to 50 Mb) with even gaps, so the outer
+    ring reads as a real chromosome layout in natural Chr1–Chr8 order
+  - Ribbon widths share one angle-per-unit scale at both anchors (unit derived from
+    the busiest segment), so every ribbon is equally wide at both ends and proportional
+    to its rearrangement count
+  - Two inner expression tracks sit on faint full-height bands that show each track's
+    scale, aligned to the segment spans and kept clear of the ribbon field; a caption
+    names the track order and the ribbon encoding
+  - One Imprint colour per segment used consistently for ring, track bars and outgoing
+    ribbons; ribbons at alpha 0.5 stay distinguishable where they cross in both themes
+  - Built entirely from lets-plot's grammar (geom_polygon layers grouped by polygon
+    id, coord_fixed, scale_fill_manual) with theme tokens threaded through every chrome
+    element; exports both PNG and interactive HTML
   weaknesses:
-  - 'VQ-01 (both): the caption that explains the two inner tracks is set at 9 pt and
-    drops to about 6 px in the 400 px thumbnail, so the track key is unreadable there
-    → about 11 pt (+2 pt). Likely cause: plot_caption=element_text(size=9).'
-  - 'VQ-05 (both): the caption runs flush to the right canvas edge (about 20 px margin
-    at 2400 px) while about 300 px of empty space sits between the ring and the legend
-    → a caption that fits with a margin, and less dead space under the circle. Likely
-    cause: the right-aligned caption string length at plot_caption, and the y limit
-    padding from PANEL_ASPECT/limit.'
-  - 'CQ-04 (code): lines 46 and 191-192 keep the circle round with a hand-tuned PANEL_ASPECT
-    = 1.11 stretching the x limits to the panel shape, which breaks as soon as the
-    title, legend or caption changes height → coord_fixed(ratio=1) with symmetric
-    limits. Likely cause: PANEL_ASPECT constant in scale_x_continuous limits.'
-  - 'Suggestion: a short value scale or the range (e.g. 0-1 normalized) in the caption
-    would let readers read the track bars as numbers, not only as relative heights.'
+  - 'Suggestion: the fill legend repeats the direct Chr1–Chr8 ring labels; dropping
+    it (legend_position=''none'') would give the circle more of the square canvas.'
+  - 'Suggestion: lets-plot tooltips on the ribbon and track polygons (layer_tooltips
+    with the link count or expression value) would make exact values readable in the
+    HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
-      Chrome: bold dark title "circos-basic · python · letsplot · anyplot.ai" top left (~64% width); bold dark chromosome labels Chr1–Chr8 outside the ring; one-row legend of eight swatches at the bottom in soft ink; small soft-ink caption bottom right ("Inner tracks, outer to inner: Expression, liver · Expression, brain | Ribbon width: Rearrangements"). All readable; caption small.
-      Data: outer ring of eight arc segments with gaps, Chr1 in #009E73 then lavender, blue, ochre, red, cyan, rose, lime in Imprint order; two inner tracks of segment-colored bars on faint grey bands; ten translucent ribbons colored by source chromosome cross the interior, widths proportional to the counts.
+      Background: warm off-white #FAF8F1 over the whole canvas, 2400x2400.
+      Chrome: bold title "circos-basic · python · letsplot · anyplot.ai" top-left (~65% width); bold dark segment labels Chr1–Chr8 outside the ring; right-hand legend Chr1–Chr8 in INK_SOFT; two-line caption at the bottom right naming the inner tracks (liver, then brain) and the ribbon encoding. All text dark and readable.
+      Data: outer ring of eight arcs with gaps, sized by length (Chr1 longest), coloured in Imprint order starting with #009E73; two inner tracks of radial bars in segment colours on faint grey bands; translucent ribbons of varying width cross the interior between segments, anchored inside the innermost track. No text overlap, nothing clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and segment labels in light ink, legend text and caption in soft light grey; no dark-on-dark text.
-      Data: segment, track and legend colors identical to the light render; track bands become subtle dark-grey bands; ribbons at the same alpha read darker against the near-black but stay distinguishable where they cross; brand green visible.
+      Chrome: title and segment labels in light ink, legend text and caption in light grey INK_SOFT; no dark-on-dark text. Track bands render as subtle dark-grey bands.
+      Data: identical segment, track and ribbon colours to the light render; ribbons blend darker over the near-black surface but stay visible and distinguishable where they cross; brand green Chr1 reads clearly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Labels, title, legend readable in both themes; 9 pt caption too small
-          in the thumbnail (defect line)
+        passed: true
+        comment: Title 16 pt, labels bold, legend and caption explicit sizes; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ribbon crossings are permitted and translucent
+        comment: No text collisions; ribbon overlap is permitted by the spec and handled
+          with alpha
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ring, track bars and ribbons clearly visible; legend swatches match
-          segment colors
+        comment: Ring, track bars and ribbons all visible in both themes; legend swatches
+          match the ring fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Eight distinct Imprint hues plus labels on every segment; color is
-          not the sole identifier
+        comment: Imprint palette, segments also labelled directly
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Caption flush to the right edge and dead space under the ring (defect
-          line)
+        passed: true
+        comment: 2400x2400, circle fills the canvas with legend at right; nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (none drawn); title and segment labels are reader text
+        comment: No axes by design; caption names tracks and ribbon encoding in reader
+          text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Chr1 #009E73, all eight Imprint hues in canonical order; backgrounds
-          #FAF8F1/#1A1A17'
+        comment: 'Eight Imprint positions in canonical order, first #009E73; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -116,22 +107,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Opacity hierarchy ring 1.0 / bars 0.85 / ribbons 0.5 and faint track
-          bands chosen beyond the baseline
+        passed: true
+        comment: Bold direct segment labels set a clear hierarchy over the soft legend
+          and caption
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Page-colored outlines separate ribbons and segments; consistent ring/track
-          spacing
+        passed: true
+        comment: Faint full-height bands behind the track bars give each track a visible
+          scale; page-coloured outlines separate polygons
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed, no focal hierarchy beyond the Notes
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Circos plot: segment ring, ribbons, inner tracks; no unrequested
-          layers'
+        comment: 'Circos: segment ring, inner tracks, ribbons; no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Gaps, proportional ribbon widths, distinct segment colors, two concentric
-          tracks explained by caption — all present
+        comment: Gaps, proportional ribbons, distinct colours, two concentric tracks
+          explained by caption — all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Arc lengths follow Length (Mb); ribbons anchored on their two segments,
-          width by count
+        comment: Arc lengths from segment sizes, ribbon width from value at both ends,
+          bar heights from track values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend entries Chr1–Chr8 match segments
+        comment: Mandated title; legend entries are the segment names
     data_quality:
       score: 15
       max: 15
@@ -172,24 +162,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Unequal segment sizes, strong and weak links, two tracks with varied
-          values
+        comment: Unequal segments, strong and weak links, two tracks with contrasting
+          profiles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genomic rearrangements between chromosomes with expression tracks,
-          the spec's example; neutral
+        comment: Neutral genomic rearrangement scenario with plausible chromosome
+          lengths
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: No check values; checked lengths 50–120 Mb, counts 8–25, expression
-          0.38–0.93 plausible
+        comment: Lengths 50–120 Mb, counts 8–25, expression 0.38–0.93; no Check values
+          in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,13 +187,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -212,10 +202,11 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hand-tuned PANEL_ASPECT instead of coord_fixed (defect line)
+        passed: true
+        comment: Chord geometry is hand-built because lets-plot has no chord geom;
+          no replaceable algorithm
       - id: CQ-05
         name: Output & API
         score: 1
@@ -230,34 +221,30 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Grammar-of-graphics layering with geom_polygon groups and scale_fill_manual;
-          default
+        passed: true
+        comment: Grammar of graphics with grouped geom_polygon layers and theme tokens;
+          default level
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
         comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T09:49:03Z'
+  rendered_at: '2026-11-09T09:58:25Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - bezier-curves
-  - custom-legend
+  - layer-composition
   - html-export
+  - patches
   patterns:
-  - data-generation
   - iteration-over-groups
-  - dataframe-construction
+  - groupby-aggregation
   dataprep:
-  - aggregation
   - normalization
   styling:
   - alpha-blending
-  - minimal-chrome
-  - theme-tokens
