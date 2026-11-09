@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:12:54Z'
-updated: '2026-11-09T13:40:45Z'
+updated: '2026-11-09T13:45:55Z'
 generated_by: claude-opus
 workflow_run: 42626703247
 issue: 3293
@@ -12,49 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - One pygal XY series per direction draws every bar as three segments (low–high
-    line, left open tick, right close tick) separated by None points with allow_interruptions=True,
-    so each period is a thin vertical line with its ticks at the exact data values
-  - 'Up and down bars use Imprint #009E73 and the #AE3030 red anchor, identical in
-    both renders, and direction still reads from the tick order'
-  - Ticks at 0.3 of the bar spacing are long enough to tell left from right and leave
-    a clear gap to the neighbouring bars across all 45 periods
-  - Weekly 'Jul 01 … Aug 26' date labels placed by dict x_labels fit the business-day
-    frequency, and the price axis spans the lows and highs without being forced to
-    zero
-  - 'Theme tokens flow through the Style object: warm off-white and near-black backgrounds,
-    readable ink text and subtle y guides in both renders'
-  - Native pygal HTML output adds hover tooltips and a clickable legend that toggles
-    up or down bars
+  - Every bar is a thin vertical low–high line with a short left open tick and right
+    close tick, drawn at their exact data values on an un-zeroed price axis (about
+    150–190 $).
+  - 'Uses pygal.XY with allow_interruptions=True and (None, None) breaks so that only
+    two series carry all 45 bars, with direction encoded by Imprint green #009E73
+    (up) and red #AE3030 (down).'
+  - TICK_WIDTH=0.3 of the bar spacing keeps the ticks long enough to tell left from
+    right while a clear gap separates neighbouring bars; xrange is padded so the first
+    and last ticks are not cut off.
+  - The business-day date axis is labelled every fifth bar (each Monday, 'Jul 01'
+    … 'Aug 26'), and the x-axis title carries the date range, which fits the daily
+    frequency.
+  - 'Theme tokens flow through one Style object: both renders have the correct page
+    colour and readable chrome, and the data colours are identical in both themes.'
+  - Native pygal HTML output adds hover tooltips for each segment in the interactive
+    view.
   weaknesses:
-  - 'VQ-05 (both): the first bar (Jul 01) sits on the y-axis spine; its vertical line
-    coincides with the axis line and its open tick protrudes left of the plot area
-    by about 0.3 bar spacings (~20 px) → pad the x range so the first and last bars,
-    ticks included, sit inside the plot area (about half a bar spacing on each side).
-    Likely cause: no xrange set on pygal.XY, so the x range starts at the first bar''s
-    x=0.'
-  - 'Suggestion: a y label at 150 would let the August lows (≈151–156) be read against
-    a labelled gridline, not only against 160.'
-  - 'Suggestion: a little space between each legend swatch and its text would make
-    the bottom legend read more cleanly.'
+  - 'Suggestion: y gridlines every 10 $ leave the lowest ~8 $ of the data (about 151–159
+    $) below the last labelled line at 160; y_labels at 5 $ steps would make exact
+    price levels easier to read across the whole range.'
+  - 'Suggestion: the axis titles inherit title_font_size=66, the same size as the
+    chart title; a smaller axis-title size would give a clearer typographic hierarchy.'
+  - 'Suggestion: naming the security (for example a ticker in the descriptive title
+    prefix) would anchor the price story.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matching #FAF8F1; no pure white.
-      Chrome: The title "ohlc-bar · python · pygal · anyplot.ai" is centred at the top in dark ink and takes about 47 % of the width. The y title "Price ($)" is rotated on the left, with ticks at 160, 170, 180 and 190. The x title "Date (Jul 2024 – Aug 2024)" has weekly tick labels from Jul 01 to Aug 26. Dotted y guides are subtle and there are no x guides. A bottom legend shows "Bullish (Close ≥ Open)" with a green swatch on the left and "Bearish (Close < Open)" with a red swatch at the centre. All text is dark and readable.
-      Data: 45 daily OHLC bars, each a thin vertical high–low line with a short left open tick and a right close tick. Up bars are #009E73 green and down bars #AE3030 red. Prices trend down from about 189 to about 151 with a rebound around Aug 19–23. The first bar sits on the y-axis spine and its open tick sticks out left of the axis.
+      Background: warm off-white #FAF8F1 across the canvas and plot area.
+      Chrome: title "ohlc-bar · python · pygal · anyplot.ai" centered at the top in dark ink; y-axis title "Price ($)" and x-axis title "Date (Jul 2024 – Aug 2024)" in dark ink; y ticks 160–190 and x ticks Jul 01 … Aug 26 (each Monday) are readable; subtle dotted horizontal gridlines only; legend at the bottom with green "Bullish (Close ≥ Open)" and red "Bearish (Close < Open)" swatches. All text readable.
+      Data: 45 daily OHLC bars from about 185 $ down to about 152 $; thin vertical high-low lines with a short left tick (open) and right tick (close); up bars in #009E73, down bars in #AE3030; ticks do not touch the neighbouring bars.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matching #1A1A17; no pure black.
-      Chrome: The title, axis titles, tick labels and legend text are light (#F0EFE8 / muted grey) and clearly readable. There is no dark-on-dark text. The y guides are subtle but visible.
-      Data: same green #009E73 and red #AE3030 bars as the light render, identical positions; only the chrome flipped. Red bars stay visible on the dark surface, and brand green reads well.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text flip to light ink and are clearly readable; gridlines subtle and muted; no dark-on-dark text.
+      Data: identical bar geometry and identical colours (#009E73 up, #AE3030 down); the red reads a little darker on the dark page but every bar and tick stays distinct.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,48 +61,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes are set explicitly in Style (title 66, labels 44);
-          readable in both themes and balanced between the axes
+        comment: Font sizes set explicitly (title 66, labels 44, legend 44); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the bars stay separate
+        comment: No text collisions; bars and ticks stay separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thin stroke_width=5 lines and ticks are clearly visible for 45 bars;
-          the legend swatches match the colors
+        comment: stroke_width=5 lines and ticks are clearly visible for 45 bars; legend
+          swatches match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Direction is also encoded by the left and right tick order, so hue
-          is not the sole signal
+        comment: Direction also reads from the open/close ticks, so red/green is not
+          the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: The plot fills the canvas well, but the first bar sits on the y-axis
-          spine and its open tick protrudes past it (defect line)
+        comment: 3200x1800, plot fills the canvas, title ~48% of width, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Price ($)'' has units; the date title gives the range'
+        comment: '''Price ($)'' with unit; date axis title with range'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Up bars are #009E73 and down bars the #AE3030 Imprint red anchor;
-          backgrounds are #FAF8F1 and #1A1A17; chrome is theme-correct'
+        comment: 'Up = #009E73, down = Imprint red #AE3030 (semantic); backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
       score: 8
       max: 20
@@ -112,22 +111,23 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: The style-guide baseline, nothing decided beyond it
+        passed: true
+        comment: Style-guide baseline; axis titles share the chart-title size, nothing
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Subtle y-only guides; the legend layout and swatch spacing are pygal
-          defaults
+        comment: Only y guides and padded xrange; the 10 $ grid leaves the lowest
+          data band unlabelled, no grid density chosen beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed (downtrend with a late rebound) with no hierarchy
-          chosen beyond the Notes
+        comment: Data displayed with direction colouring as the Notes allow; no hierarchy
+          chosen beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -137,30 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'A true OHLC bar chart: vertical high–low lines, left open tick and
-          right close tick, no bodies'
+        comment: Correct OHLC bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin lines, left and right ticks, up and down colors, date formatting
-          fitted to the frequency, and grid lines behind the bars; all 'A good version
-          shows' bullets met
+        comment: Thin lines, left open / right close ticks, direction colours, date
+          formatting, grid — all Notes and 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All ticks and lines sit at their data values; the price axis spans
-          the lows and highs
+        comment: All marks at data values; axis spans lows and highs without zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: The title is in the mandated format; the legend labels name the direction
-          rule in reader text
+        comment: Mandated title; legend labels describe the direction rule
     data_quality:
       score: 15
       max: 15
@@ -170,21 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both up and down bars, long and short ranges, near-equal open and
-          close days, and a trend with a rebound
+        comment: Up and down bars, varied ranges, near-equal open/close days
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 45 trading days of a stock around $150–190, business days only; neutral
+        comment: Plausible daily stock prices over 45 business days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1.8 % daily volatility and a high ≥ max(open, close) ≥ min(open,
-          close) ≥ low construction; no Check values in the spec
+        comment: Prices 150–190 $, daily moves ~1–2 %, high >= max(open, close) and
+          low <= min(open, close) by construction; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -194,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with one loop, no functions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,14 +207,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: pygal has no OHLC chart; the segment list is the minimal construction
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
-          3 API
+        comment: plot-{THEME}.png and .html, current pygal 3 API
     library_mastery:
       score: 6
       max: 10
@@ -229,30 +223,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with None separators and allow_interruptions=True draws
-          many segments per series, the idiomatic pygal route to multi-segment marks;
-          the theme sits in the Style object
+        comment: XY chart with allow_interruptions and None breaks for discontinuous
+          segments; x_labels as label/value dicts
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Dict x_labels ({'label', 'value'}) place date labels at custom XY
-          positions; the native interactive HTML output has a toggleable legend
-  verdict: REJECTED
+        comment: pygal interruption-based multi-segment series plus native HTML tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T13:37:53Z'
+  rendered_at: '2026-11-09T13:42:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
-  styling:
-  - minimal-chrome
+  styling: []
