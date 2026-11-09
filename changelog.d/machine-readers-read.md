@@ -8,13 +8,13 @@
   that are not counted. It reads `GET /insights/machine-readers`, counts only,
   from the machine-read lines in BigQuery; a failed query answers
   `unavailable` and is never cached, so the tile recovers on the next load.
-  The About page and the README point at it.
+  The About page and the README point at it. (#13015)
 - **A machine readers section on `/debug`.** `GET /debug/machine-readers`
   (admin, 7 or 30 days) answers every live line whatever its verdict, status
   or surface: the totals, one row per vendor and purpose with Cloudflare's
   category, the counts per surface, the 404s and its five most requested
   routes, and one row per day by audience. The section draws them as tiles, one
-  matrix that opens a row to its routes, and a per-day table.
+  matrix that opens a row to its routes, and a per-day table. (#13015)
 
 ### Fixed
 
@@ -24,4 +24,4 @@
   `docs/reference/agent-telemetry.md` say so now. The trigger step of both
   telemetry setups uses the export, edit and import route, because
   `gcloud builds triggers update github` refuses the second-generation
-  `deploy-api` trigger.
+  `deploy-api` trigger. (#13015)
