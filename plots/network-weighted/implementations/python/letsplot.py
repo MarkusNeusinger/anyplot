@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: pending | Updated: 2026-11-08
+Quality: 87/100 | Updated: 2026-11-09
 """
 
 import os
