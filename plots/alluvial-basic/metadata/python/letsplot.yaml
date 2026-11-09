@@ -2,45 +2,58 @@ library: letsplot
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:09Z'
-updated: '2026-05-09T01:28:40Z'
-generated_by: claude-haiku
-workflow_run: 25587359879
+updated: '2026-11-09T01:47:30Z'
+generated_by: claude-opus
+workflow_run: 42545914650
 issue: 1878
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Perfect visual quality in both light and dark themes; all text readable against
-    correct backgrounds
-  - Excellent palette compliance; Okabe-Ito colors identical between renders (chrome
-    only flips)
-  - Accurate alluvial diagram implementation with proper flow visualization and transparency
-  - Clean, reproducible code; no fake functionality
-  - Proper theme-adaptive color tokens applied throughout (PAGE_BG, INK, INK_SOFT)
-  - Correct output filenames and formats (plot-light/dark.png/html)
+  - 'Block heights and band widths fall out of the flow table: every middle block''s
+    incoming total equals its outgoing total (Jul 2024: Annual 81k, Monthly 71k, Free
+    trial 10k, Inactive 69k), so both band stacks fit their blocks exactly'
+  - Bands are stacked inside their source block by target order and inside their target
+    block by source order, so every band attaches cleanly to the blocks it leaves
+    and enters
+  - Labels at every column carry category and value (e.g. 'Annual plan · 81k'), placed
+    left of the first column and right of the others, with bold column headers for
+    each snapshot
+  - Theme tokens threaded through every text layer and block outline; the Imprint
+    fills are identical in both renders and the translucent bands stay distinguishable
+    on both backgrounds
+  - 'Layered grammar with one data frame per layer: geom_polygon grouped by band,
+    geom_rect blocks, geom_text and geom_label for headers and labels on theme_void'
   weaknesses:
-  - 'Title domain error: says ''pyplots.ai'' instead of ''anyplot.ai'' (line 302)
-    — simple 1-line fix required'
+  - 'VQ-02 (both): the middle column''s labels (''Free trial · 10k'', ''Inactive ·
+    69k'', ''Monthly plan · 71k'') sit on top of the outgoing bands, and ''Free trial
+    · 10k'' crosses the green, purple and blue bands that leave that block, so text
+    and data marks collide (readable only through the 50 % label box) → keep the labels
+    off the bands, e.g. widen the gap between the middle blocks and the band start
+    or give the label box a fully opaque PAGE_BG fill. Likely cause: others label_x
+    = xmax + 0.008 places the labels inside the band region, with geom_label alpha=0.5.'
+  - 'Suggestion: configure lets-plot tooltips on the bands (source plan → next plan,
+    accounts moved) for the HTML detail view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "alluvial-basic · letsplot · pyplots.ai" is bold and dark (INK #1A1A17); time headers (2016, 2020, 2024) are bold and clearly visible; party names on left and value labels on right are gray (INK_SOFT #4A4A44) and readable
-      Data: Uses Okabe-Ito palette - Democrats (#009E73), Republicans (#D55E00), Independents (#0072B2), Non-Voters (#CC79A7); flows use destination color with 0.55 alpha; node borders use INK color for definition
-      Legibility verdict: PASS - all elements readable; no light-on-light contrast issues
+      Background: warm off-white #FAF8F1, no axes, no grid (theme_void).
+      Chrome: bold near-black title "alluvial-basic · python · letsplot · anyplot.ai" at top left, INK_SOFT subtitle "Block heights and band widths: Accounts (thousands)", bold column headers Jan 2024 / Jul 2024 / Jan 2025; category labels with values at every block (left of the first column, right of the others; the middle labels on a translucent page-colored box over the bands). All readable.
+      Data: three columns of four stacked blocks — Annual plan #009E73, Monthly plan #C475FD, Free trial #4467A3, Inactive #BD8233 — with INK_SOFT outlines; translucent bands (alpha 0.55) colored by target category, width proportional to flow, smooth S-curves, thin bands for rare transitions.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and headers are light text (#F0EFE8); party and value labels are light gray (#B8B7B0) - all readable against dark background; no dark-on-dark failures
-      Data: Colors identical to light render - data colors are theme-independent as required; only chrome flipped. Brand green (#009E73) is vibrant and clearly distinguishable
-      Legibility verdict: PASS - all text legible; proper theme adaptation throughout
+      Background: warm near-black #1A1A17.
+      Chrome: title and headers in light ink, labels and subtitle in light grey INK_SOFT; no dark-on-dark text; the middle label boxes are dark translucent.
+      Data: identical block and band colors to the light render; translucent bands read darker over the dark page but remain distinguishable, blue Free-trial bands dimmest yet visible; block outlines light grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,76 +61,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly set with appropriate colors and font sizes; readable
-          in both light and dark
+        comment: Title 16 pt bold, headers and labels sized in mm, all readable in
+          both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Labels well-positioned; no collisions between elements
+        passed: false
+        comment: Middle-column labels sit on the outgoing bands; 'Free trial · 10k'
+          crosses several bands (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes, flows, and borders all clearly visible; transparency (0.55
-          alpha) manages overlap
+        comment: Blocks outlined, thin bands still visible in both themes; no legend
+          needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1–4) is colorblind-safe; no red-green
-          as sole signal
+        comment: Four distinct Imprint hues plus direct labels; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper 4800×2700px dimensions; good proportions and margins; nothing
-          cut off
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clear time-point headers, party names, value labels; appropriate
-          for alluvial type
+        comment: N/A axes; column headers and subtitle naming the unit (accounts,
+          thousands)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1→4; backgrounds #FAF8F1/#1A1A17;
-          data colors theme-independent'
+        comment: 'Imprint order from #009E73, correct page backgrounds in both themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Uses standard Okabe-Ito; follows minimal design; no extra polish
-          beyond requirements
+        passed: true
+        comment: 'Beyond baseline: subtitle stating what heights and widths encode,
+          compact ''name · value'' labels, bold column headers as a typographic tier'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Removes clutter (theme_minimal); subtle node borders; could add more
-          refinement
+        comment: 'Beyond baseline: labels flanking the outer columns, page-colored
+          hairline edges on the bands, band order sorted to keep stacks tidy'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Alluvial naturally guides eye left-to-right; color consistency aids
-          tracking; missing emphasis on key transitions
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,26 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram; shows flows between categories across time
+        comment: Correct alluvial diagram, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Time points, categories, flow magnitudes, transparency all present
+        comment: Chronological columns, consistent category colors, proportional bands,
+          transparency, headers and labels at every column — all good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: time points; Y: proportions; flows show transitions'
+        comment: Block heights and band widths proportional to the values; bands attach
+          to their source and target blocks
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title says 'pyplots.ai' instead of 'anyplot.ai' (line 302); legend
-          correctly omitted
+        passed: true
+        comment: Mandated title; no legend needed thanks to direct labels
     data_quality:
       score: 15
       max: 15
@@ -154,19 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 parties across 3 time points; multiple transition types shown
+        comment: Shows stable flows, crossings, thin rare transitions and blocks that
+          grow and shrink
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US election voter migration is real-world plausible and neutral
+        comment: Subscription plan transitions between snapshots — neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voter counts in millions are realistic; proportions sensible
+        comment: 'Checked: middle block inflows equal outflows (81/71/10/69k), Jan
+          2025 totals 85/78/10/58k computed from the flow table'
     code_quality:
       score: 10
       max: 10
@@ -176,60 +191,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes/unnecessary functions; straightforward procedural logic
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded, deterministic data; identical output on every run
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized; no fake UI or simulated interactivity
+        comment: Layout computed with pandas groupby/cumsum; lets-plot has no alluvial
+          geom, so the polygon build is needed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html correctly; uses current API
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ggplot2-style grammar with aes(), geoms, scales, theme; high-level
-          API
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Custom polygon flows with bezier-like easing; good use of letsplot;
-          could leverage more library-specific features
+        passed: true
+        comment: Layered grammar with per-layer data, theme_void, scale_fill_manual
+          by named mapping
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T01:44:36Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - bezier-curves
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
-  dataprep: []
+  - columnar-constants
+  dataprep:
+  - groupby-aggregation
+  - cumulative-sum
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome

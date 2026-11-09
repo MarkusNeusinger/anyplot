@@ -1,91 +1,134 @@
 """ anyplot.ai
 subplot-grid: Subplot Grid Layout
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 73/100 | Updated: 2026-05-13
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 89/100 | Updated: 2026-11-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
+from matplotlib.patches import Patch
+from matplotlib.ticker import MaxNLocator
 
 
-# Data - Financial dashboard example
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions; up days take green, down days the semantic red
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+UP, DOWN = IMPRINT_PALETTE[0], IMPRINT_PALETTE[4]
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", [IMPRINT_PALETTE[4], PAGE_BG, IMPRINT_PALETTE[2]])
+
+# Constants
+MA_WINDOW = 20  # trading days in the moving average
+
+# Columns: set these to your table's column names
+DAY = "Trading day"  # role: x
+PRICE = "Price (USD)"  # role: y
+VOLUME = "Volume (thousand shares)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("stock.csv")
+# 100 trading days of one stock: a random-walk price with slight drift and lognormal volume
 np.random.seed(42)
-
-# Time axis (trading days)
-days = np.arange(1, 101)
-
-# Price data (random walk with drift)
 price_changes = np.random.randn(100) * 2 + 0.05
-prices = 100 + np.cumsum(price_changes)
-
-# Volume data (lognormal distribution)
 volumes = np.random.lognormal(mean=10, sigma=0.5, size=100)
+df = pd.DataFrame({DAY: np.arange(1, 101), PRICE: 100 + np.cumsum(price_changes), VOLUME: volumes / 1000})
 
-# Daily returns
-returns = np.diff(prices) / prices[:-1] * 100
+# Plot: reads only df and the constants above
+days = df.sort_values(DAY)
+returns = days[PRICE].pct_change() * 100
+moving_average = days[PRICE].rolling(MA_WINDOW).mean()
+day_colors = np.where(returns < 0, DOWN, UP)
+spread = np.nanmax(np.abs(returns))
 
-# Moving averages
-ma_20 = np.convolve(prices, np.ones(20) / 20, mode="valid")
+fig, axes = plt.subplots(2, 2, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, layout="constrained")
+(price_ax, volume_ax), (hist_ax, scatter_ax) = axes
+volume_ax.sharex(price_ax)  # both top cells plot the same trading days; the bottom cells keep independent axes
 
-# Create 2x2 subplot grid
-fig, axes = plt.subplots(2, 2, figsize=(16, 9))
-
-# Subplot 1: Price Line Chart (top-left)
-ax1 = axes[0, 0]
-ax1.plot(days, prices, linewidth=2.5, color="#306998", label="Price")
-ax1.plot(days[19:], ma_20, linewidth=2, color="#FFD43B", linestyle="--", label="20-day MA")
-ax1.set_xlabel("Trading Day", fontsize=16)
-ax1.set_ylabel("Price ($)", fontsize=16)
-ax1.set_title("Stock Price", fontsize=18, fontweight="bold")
-ax1.tick_params(axis="both", labelsize=14)
-ax1.legend(fontsize=14, loc="upper left")
-ax1.grid(True, alpha=0.3, linestyle="--")
-
-# Subplot 2: Volume Bar Chart (top-right)
-ax2 = axes[0, 1]
-colors = ["#306998" if r >= 0 else "#D94A4A" for r in np.append(0, returns)]
-ax2.bar(days, volumes / 1000, width=0.8, color=colors, alpha=0.8, edgecolor="none")
-ax2.set_xlabel("Trading Day", fontsize=16)
-ax2.set_ylabel("Volume (thousands)", fontsize=16)
-ax2.set_title("Trading Volume", fontsize=18, fontweight="bold")
-ax2.tick_params(axis="both", labelsize=14)
-ax2.grid(True, alpha=0.3, linestyle="--", axis="y")
-
-# Subplot 3: Returns Histogram (bottom-left)
-ax3 = axes[1, 0]
-ax3.hist(returns, bins=20, color="#306998", edgecolor="white", linewidth=1.5, alpha=0.8)
-ax3.axvline(x=0, color="#FFD43B", linewidth=2.5, linestyle="-", label="Zero Return")
-ax3.axvline(x=np.mean(returns), color="#D94A4A", linewidth=2.5, linestyle="--", label=f"Mean: {np.mean(returns):.2f}%")
-ax3.set_xlabel("Daily Return (%)", fontsize=16)
-ax3.set_ylabel("Frequency", fontsize=16)
-ax3.set_title("Return Distribution", fontsize=18, fontweight="bold")
-ax3.tick_params(axis="both", labelsize=14)
-ax3.legend(fontsize=12, loc="upper right")
-ax3.grid(True, alpha=0.3, linestyle="--", axis="y")
-
-# Subplot 4: Price vs Volume Scatter (bottom-right)
-ax4 = axes[1, 1]
-scatter = ax4.scatter(
-    volumes[1:] / 1000,  # Match returns size (99 elements)
-    np.abs(returns),
-    s=80,
-    c=returns,
-    cmap="RdYlGn",
-    alpha=0.7,
-    edgecolor="white",
-    linewidth=0.5,
+# Stock price with its moving average
+price_ax.plot(days[DAY], days[PRICE], color=IMPRINT_PALETTE[0], linewidth=1.8, label="Close")
+price_ax.plot(
+    days[DAY],
+    moving_average,
+    color=IMPRINT_PALETTE[1],
+    linewidth=1.6,
+    linestyle=(0, (4, 2)),
+    label=f"{MA_WINDOW}-day MA",
 )
-ax4.set_xlabel("Volume (thousands)", fontsize=16)
-ax4.set_ylabel("Absolute Return (%)", fontsize=16)
-ax4.set_title("Volume vs Return Magnitude", fontsize=18, fontweight="bold")
-ax4.tick_params(axis="both", labelsize=14)
-cbar = plt.colorbar(scatter, ax=ax4)
-cbar.ax.tick_params(labelsize=12)
-cbar.set_label("Return (%)", fontsize=14)
-ax4.grid(True, alpha=0.3, linestyle="--")
+price_ax.set_title("Stock price", fontsize=10, fontweight="bold", color=INK, loc="left")
+price_ax.set_xlabel(DAY, fontsize=9, color=INK)
+price_ax.set_ylabel(PRICE, fontsize=9, color=INK)
+price_ax.legend(loc="best", fontsize=8)
 
-# Main title
-fig.suptitle("subplot-grid · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", y=0.98)
+# Daily volume, coloured by the direction of the day's price move
+volume_ax.bar(days[DAY], days[VOLUME], width=0.8, color=day_colors, linewidth=0)
+volume_ax.set_title("Trading volume", fontsize=10, fontweight="bold", color=INK, loc="left")
+volume_ax.set_xlabel(DAY, fontsize=9, color=INK)
+volume_ax.set_ylabel(VOLUME, fontsize=9, color=INK)
+volume_ax.set_ylim(0, days[VOLUME].max() * 1.25)
+volume_ax.legend(
+    handles=[Patch(color=UP, label="Up day"), Patch(color=DOWN, label="Down day")],
+    loc="upper left",
+    ncols=2,
+    fontsize=8,
+)
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Distribution of daily returns
+hist_ax.hist(returns.dropna(), bins=20, color=IMPRINT_PALETTE[0], edgecolor=PAGE_BG, linewidth=0.8)
+hist_ax.axvline(0, color=INK_SOFT, linewidth=1.0, label="Zero return")
+hist_ax.axvline(
+    returns.mean(), color=IMPRINT_PALETTE[1], linewidth=1.6, linestyle=(0, (4, 2)), label=f"Mean {returns.mean():.2f}%"
+)
+hist_ax.set_title("Return distribution", fontsize=10, fontweight="bold", color=INK, loc="left")
+hist_ax.set_xlabel("Daily return (%)", fontsize=9, color=INK)
+hist_ax.set_ylabel("Trading days", fontsize=9, color=INK)
+hist_ax.set_ylim(0, hist_ax.get_ylim()[1] * 1.3)  # headroom keeps the legend clear of the tallest bins
+hist_ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+hist_ax.legend(loc="best", fontsize=8)
+
+# Volume against the size of the day's move, coloured by its sign
+points = scatter_ax.scatter(
+    days[VOLUME],
+    returns.abs(),
+    c=returns,
+    cmap=imprint_div,
+    norm=TwoSlopeNorm(vcenter=0, vmin=-spread, vmax=spread),
+    s=22,
+    edgecolors=INK_SOFT,
+    linewidths=0.4,
+)
+scatter_ax.set_title("Volume vs return size", fontsize=10, fontweight="bold", color=INK, loc="left")
+scatter_ax.set_xlabel(VOLUME, fontsize=9, color=INK)
+scatter_ax.set_ylabel("Absolute daily return (%)", fontsize=9, color=INK)
+cbar = fig.colorbar(points, ax=scatter_ax, pad=0.02, aspect=14)
+cbar.set_label("Daily return (%)", fontsize=8, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, length=0)
+cbar.outline.set_visible(False)
+
+# Style
+fig.suptitle("subplot-grid · python · matplotlib · anyplot.ai", fontsize=12, fontweight="bold", color=INK)
+for ax in axes.flat:
+    ax.set_facecolor(PAGE_BG)
+    ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+    ax.grid(True, axis="y" if ax is not scatter_ax else "both", alpha=0.15, color=INK, linewidth=0.6)
+    ax.set_axisbelow(True)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(INK_SOFT)
+    legend = ax.get_legend()
+    if legend:
+        legend.get_frame().set_facecolor(ELEVATED_BG)
+        legend.get_frame().set_edgecolor(INK_SOFT)
+        legend.get_frame().set_linewidth(0.6)
+        plt.setp(legend.get_texts(), color=INK_SOFT)
+fig.get_layout_engine().set(h_pad=0.06, w_pad=0.08, hspace=0.04, wspace=0.04)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
