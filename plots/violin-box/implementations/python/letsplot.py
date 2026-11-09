@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -56,7 +56,8 @@ plot = (
         color=INK,
         size=0.7,
         outlier_shape=21,
-        outlier_size=1.2,
+        outlier_size=0.4,
+        outlier_stroke=0.4,
         outlier_color=INK,
         outlier_fill=ELEVATED_BG,
     )
