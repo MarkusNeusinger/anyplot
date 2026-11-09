@@ -2,128 +2,142 @@ library: pygal
 language: python
 specification_id: contour-density
 created: '2026-01-01T21:29:18Z'
-updated: '2026-05-16T04:09:08Z'
-generated_by: claude-haiku
-workflow_run: 25951615286
+updated: '2026-11-09T00:15:53Z'
+generated_by: claude-opus-5-5
+adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
+workflow_run: 42538359638
 issue: 2552
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.html
-quality_score: 60
+quality_score: 85
 review:
   strengths:
-  - Light render perfect with correct theme adaptation
-  - Excellent data quality showing realistic real estate market segments
-  - Full spec compliance across all requirements
-  - Clean reproducible code with explicit font sizing
-  - 'Thoughtful design: Greens colormap, scatter overlay for context, subtle grid,
-    proper colorbar'
+  - Gaussian KDE on per-axis standardised scales with a narrow bandwidth (bw_method=0.32)
+    keeps the three housing segments as separate peaks with their own inner rings,
+    while the outer rings still show how the starter and mid-range segments connect
+  - 'Six iso-density levels drawn as stacked translucent fills in discrete imprint_seq
+    steps (#009E73 to #4467A3), so the bands deepen toward each peak and the innermost
+    rings carry the strongest color'
+  - Scatter overlay of all 400 sales as small faint INK_SOFT points at their exact
+    values keeps the contours the main signal and lets the reader check them against
+    the data
+  - Legend labels give each level as a share of peak density and mark the outer and
+    inner ends, so the direction density rises is stated
+  - Uses pygal's allow_interruptions with (None, None) breaks to draw every ring of
+    a level in one series, plus value_formatter / x_value_formatter for $k / $M and
+    thousands-separated ticks
+  - 'Theme tokens threaded through Style: warm page backgrounds, INK/INK_SOFT chrome
+    and 15% rule guides read cleanly in both renders'
+  - Contours come from contourpy on a grid padded 12% past the data, so every ring
+    closes inside the plot
+  - 'Library-native interactivity: the HTML version gives hover tooltips on each observation
+    and each level'
   weaknesses:
-  - 'CRITICAL: Dark mode render has unreadable text — plot background appears light
-    instead of #1A1A17, creating light-on-light contrast. Code correctly sets PAGE_BG
-    based on ANYPLOT_THEME, so failure is in rendering/SVG injection to PNG.'
-  - Library mastery limited — relies on manual SVG workarounds rather than idiomatic
-    pygal, though necessary due to library constraints
-  - Design excellence adequate but not exceptional — follows configured defaults rather
-    than pushing aesthetic boundaries
+  - 'VQ-03 (both): the six legend swatches all carry the single-layer 17% fill, so
+    they read as near-identical pale tints (and in the dark render the 62% and 80%
+    boxes nearly vanish into #1A1A17, only their outline visible), while the plot
+    shows the stacked bands deepening to dark teal/blue → swatches whose fill steps
+    visibly from light to strong like the bands they explain (for example a higher
+    fill-opacity on the legend boxes only). Likely cause: Style opacity=0.17 applied
+    unchanged to the legend rects.'
+  - 'CQ-04 (code): lines 81-83 interpolate the imprint_seq hex stops by hand (parsing
+    hex pairs and mixing RGB channels) → `matplotlib.colors.LinearSegmentedColormap.from_list("imprint_seq",
+    [SEQ_LOW, SEQ_HIGH])` with `matplotlib.colors.to_hex(cmap(t))` per level. Likely
+    cause: the gradient written out instead of using matplotlib''s non-plotting color
+    utilities.'
+  - 'Suggestion: a little more space between each legend swatch and its label text
+    would make the bottom legend read less cramped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels ("Square Footage", "Price ($)"), and tick labels all dark (INK #1A1A17) and clearly visible
-      Data: Green contours from light to dark green (Greens colormap), brand-green scatter points (#009E73) with white stroke, multiple contour levels showing density gradient
-      Colorbar: Dark text labels on light background, "Density" title visible
-      Legibility verdict: PASS ✓
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "contour-density · python · pygal · anyplot.ai" centered in dark ink (~56% of width); y-axis "Sale price (USD)" with $100k–$1.1M ticks, x-axis "Living area (sq ft)" with 800–4,000 ticks; subtle light grid on both axes; 6-entry legend in 3 columns at the bottom. All text dark and readable.
+      Data: three density clusters (starter ~1,200 sq ft/$250k, mid ~2,000/$450k, premium ~3,200/$750k) shown as nested filled contours stepping from brand green #009E73 outlines (outer 8% level) to blue #4467A3 (inner 80% level); stacked translucent fills deepen toward each peak. 400 small faint grey points overlay at their exact values. The starter and mid clusters share the outer rings and have separate inner rings; the premium cluster has its own 8%/18% rings.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: CRITICAL FAILURE — appears to be light/off-white instead of warm near-black (#1A1A17)
-      Chrome: Title, axis labels, and tick labels are light colors (INK #F0EFE8, INK_SOFT #B8B7B0) but rendered on light background creating light-on-light contrast. Text is hard to read.
-      Data: Green contours appear identical to light render (correct), brand-green scatter points same (correct)
-      Colorbar: Light text on light background — not readable
-      Legibility verdict: FAIL ✗ — Dark theme background not rendering correctly, making all text unreadable due to light-on-light contrast
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, all clearly readable; grid subtle; legend text light. No dark-on-dark text.
+      Data: same contour line colors and level steps as the light render (green to blue), fills translucent over the dark page so the bands read as dark green-teal deepening inward; scatter points light grey and faint. Data colors identical to light; only chrome flips. Legend swatches for the 62%/80% levels are nearly the page color, visible mainly by their outline.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Light render fully readable with explicit font sizes (28px title,
-          22px labels, 18px ticks), but dark render has severe legibility failure
-          with unreadable text due to wrong-theme background
+        passed: true
+        comment: Explicit font sizes (66/46/44); all text readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced with adequate margins, no overlapping elements
+        comment: No text collisions; points overlap contours by design
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Contour cells, scatter points, and colorbar all properly visible
-          and appropriately sized
+        comment: Contours and faint points well sized; legend swatches all near-identical
+          pale tints and the inner ones nearly vanish in dark (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Good contrast in light render; Greens colormap perceptually uniform;
-          brand green #009E73 colorblind-safe'
+        comment: Green-to-blue sequential steps plus outlines; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 landscape well-utilized with balanced margins; plot area
-          fills canvas appropriately
+        comment: 3200x1800, balanced axis labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Square Footage' and Y-axis 'Price ($)' descriptive with units;
-          title format correct
+        comment: Descriptive labels with units (sq ft, USD)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dark render plot background wrong-theme (light instead of #1A1A17),
-          creating light-on-light text failure'
+        passed: true
+        comment: 'imprint_seq steps #009E73 to #4467A3; backgrounds #FAF8F1 / #1A1A17;
+          theme-correct chrome'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Thoughtful Greens colormap choice; custom SVG rendering with marching
-          squares shows creativity; colorbar and grid demonstrate deliberate choices.
-          Above default but not exceptional.
+        passed: true
+        comment: Stacked translucent fills that deepen into the peaks, $k/$M and thousands-separated
+          tick formatting, contour outlines over fills
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Subtle grid at 10% opacity; proper axis frame; generous margins.
-          Some refinement but relies on library defaults.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: true
+        comment: Grid padded so every ring closes inside the plot, three-column bottom
+          legend, faint points subordinate to the contours
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Contour plot reveals three distinct property-market clusters; density
-          gradient emphasizes concentration areas. Adequate but no exceptional emphasis
-          technique.
+        comment: Shows the three market segments; no hierarchy chosen beyond what
+          the spec asks
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +147,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D KDE density contour plot with multiple contour levels
+        comment: Filled density contour plot with optional scatter overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: contour lines, filled cells, multiple levels,
-          scatter overlay'
+        comment: KDE, multiple nested levels, legend stating outer/inner, faint scatter
+          overlay, sequential fills; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; continuous-continuous mapping via gaussian_kde
-          correct
+        comment: Area on x, price on y; points at exact values; full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar appropriate legend for continuous
-          data
+        comment: Correct title format; legend labels as share of peak density
     data_quality:
       score: 15
       max: 15
@@ -164,24 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three clusters, full density gradient, scatter
-          context'
+        comment: Multiple peaks, merged outer rings, separate inner rings, sparse
+          tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic property prices/sqft reflecting actual market segments;
-          neutral scenario
+        comment: Neutral housing-market segments
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values factually correct; price-per-sqft ratios consistent; no
-          impossible data
+        comment: Plausible areas (800-3,800 sq ft) and prices ($150k-$1M); no Check
+          values in spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,65 +200,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → setup → data → KDE → SVG → render. No unnecessary
-          functions.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, pathlib, cairosvg, numpy, pygal, matplotlib,
-          scipy'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity for custom contour; manual SVG necessary;
-          no fake functionality
+        comment: Lines 81-83 hand-roll the hex gradient that matplotlib.colors computes
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correctly uses pygal.XY and Style; heavily relies on manual SVG injection
-          due to pygal lack of native contour support (necessary workaround)
+        passed: true
+        comment: XY chart with Style object, per-series kwargs (stroke=False, dots_size,
+          fill=True), value formatters
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'Uses distinctive approaches: marching squares algorithm, SVG injection,
-          matplotlib colormap integration, custom colorbar. Creative but mostly workarounds.'
-  verdict: REJECTED
+        passed: true
+        comment: allow_interruptions with None breaks for multi-ring series, inline
+          CSS injection, native hover tooltips in HTML
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T00:12:43Z'
 impl_tags:
   dependencies:
   - scipy
+  - contourpy
   techniques:
-  - colorbar
-  - manual-ticks
+  - custom-legend
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - matrix-construction
   dataprep:
   - kde
-  - normalization
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
+  - grid-styling
