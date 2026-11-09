@@ -133,16 +133,18 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-l
 # `google-adk[eval]` extra: the evals under agents/evals/ run on this one, and
 # ADK's eval stack pulled in litellm and nltk, two security alerts for code that
 # nothing here ran. tree-sitter parses the non-Python catalogue code (R first,
-# agents/anyplot/code/treesitter.py); both are pinned EXACTLY (owner decision of
-# 2026-10-29): tree-sitter-language-pack 0.13.0 bundles its grammars in the wheel
-# (the R grammar is r-lib's, MIT), while 1.x downloads them at run time, which the
-# service must never do. tests/unit/agents/code/test_treesitter.py pins both, and
-# agents/Dockerfile keeps only the grammars the code profiles load.
+# agents/anyplot/code/treesitter.py); both are pinned EXACTLY, because a pack release
+# changes the grammars the validators read (the R grammar is r-lib's, MIT).
+# tree-sitter-language-pack 1.x ships no grammars and downloads them on first use,
+# which the service must never do: agents/Dockerfile fetches the grammars the code
+# profiles load at build time, `uv run python -m tools.tree_sitter_grammars` does it
+# for a checkout, and the service loads them through a registry that never downloads.
+# tests/unit/agents/code/test_treesitter.py holds all of it.
 agents = [
     "google-adk==2.13.0",
     "anthropic[vertex]>=1.8.0",
     "tree-sitter==0.26.0",
-    "tree-sitter-language-pack==0.13.0",
+    "tree-sitter-language-pack==1.24.0",
 ]
 all = [
     "anyplot[test,dev,plotting,typecheck]",

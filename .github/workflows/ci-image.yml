@@ -2105,8 +2105,8 @@ jobs:
           echo "non-root OK: uid $uid"
 
       # The R code profile in the built image (PR 3b of the R pilot, 2026-10-29): the builder
-      # stage keeps only the grammars of TREE_SITTER_GRAMMARS (R, Julia, JavaScript and TSX), and the service
-      # reads that code only through them; the loop loads every kept grammar. A catalogue
+      # stage fetches only the grammars of TREE_SITTER_GRAMMARS (R, Julia, JavaScript and TSX) into the
+      # read-only directory the service loads them from; the loop loads every baked grammar. A catalogue
       # ggplot2 file, piped in from the checkout because the image
       # carries no plots/, is normalised and scanned by the R runtime as POST /v1/sessions does
       # (opening.assess), with ggplot2 enabled: scatter-basic is coupled in the corpus tests, so

@@ -30,6 +30,9 @@ git clone https://github.com/MarkusNeusinger/anyplot.git
 cd anyplot
 uv sync --all-extras
 
+# Fetch the agents' tree-sitter grammars once per pack version; the service never downloads one
+uv run python -m tools.tree_sitter_grammars
+
 # Database configuration
 cp .env.example .env
 # Edit .env with your DATABASE_URL:
