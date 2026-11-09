@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-clustered
 created: '2025-12-26T15:25:12Z'
-updated: '2026-11-09T10:45:13Z'
+updated: '2026-11-09T10:50:35Z'
 generated_by: claude-opus
 workflow_run: 42602230487
 issue: 2021
@@ -12,45 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Clustermap layout built natively with make_subplots: column dendrogram above,
-    row dendrogram left, a gene-cluster strip and the matrix share axes, so every
-    dendrogram leaf lines up with its row or column of cells in both renders'
-  - Ward/Euclidean clustering reorders rows and columns so tumor (T1/T2) and normal
-    (N1/N2) samples split into two clear blocks and the immune genes separate from
-    the cell-cycle genes
-  - Imprint diverging scale with zmid=0 and symmetric zmin/zmax, theme-adaptive midpoint,
-    colorbar with a wrapped title
-  - 'Gene-cluster color strip cut from the row dendrogram with fcluster, colored in
-    Imprint order starting at #009E73 and explained by a titled legend group'
-  - Hover templates with customdata name gene, sample and z-score in the HTML output;
-    dendrogram traces skip hover
+  - Both dendrograms are drawn from scipy's dendrogram coordinates mapped onto cell
+    indexes, so every leaf lines up with its row or column and the tumor/normal split
+    reads at a glance
+  - imprint_div with a theme-adaptive midpoint, zmid=0 and symmetric limits, plus
+    1 px page-colored cell gaps that keep near-zero cells separable in the dark render
+  - Gene-cluster strip cut from the row dendrogram, aligned row by row and explained
+    by a legend in canonical Imprint order
+  - Rich hovertemplate with customdata (gene, sample, z-score) for the HTML view
   weaknesses:
-  - 'SC-02 (both): in the upper row cluster (PLK1 to BRCA1) and in the column dendrogram
-    near N2_A/N2_B and T1_A/T1_B the low merges are squeezed into a few pixels, so
-    their merge heights cannot be told apart and the short horizontal segments draw
-    almost on top of each other → give the row dendrogram panel more width (about
-    0.13 → 0.18 of the figure) and the column dendrogram more height so the inner
-    merges spread out. Likely cause: make_subplots column_widths[0]=0.13 and row_heights[0]=0.15
-    with linear dcoord scaling dominated by the top merge.'
-  - 'Suggestion: the ''Gene'' axis title floats alone between the tick labels and
-    the color bar; placing it closer to the gene labels or dropping it in favour of
-    the tick labels would tidy the right side.'
-  - 'Suggestion: the legend leaves a wide gap between each cluster swatch and its
-    label; a tighter itemwidth would make the legend more compact.'
+  - 'Suggestion: the Gene axis title sits closer to the colorbar than to the gene
+    labels; standoff or a left-side placement would tie it to its labels.'
+  - 'Suggestion: the low merges inside cluster 4 crowd into about 30 px of the row
+    dendrogram; a square-root distance axis would spread them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across paper and plot areas.
-      Chrome: title "heatmap-clustered · python · plotly · anyplot.ai" centered at top in dark ink; sample tick labels rotated -45° below the matrix with axis title "Sample"; gene labels on the right with axis title "Gene"; colorbar "Expression (z-score)" with ticks −2, 0, 2; legend box "Gene cluster" with Cluster 1–4 at top right. All text dark on light and readable.
-      Data: 20×12 matrix with page-colored cell gaps, Imprint diverging red (#AE3030) ↔ off-white ↔ blue (#4467A3); column dendrogram on top and row dendrogram at left in INK_SOFT gray, leaves aligned with cells; gene-cluster strip in #009E73 (immune), #C475FD (metabolism+TP53), #4467A3 (BRCA1 alone), #BD8233 (cell cycle + cancer). Tumor columns blue, normal columns red for most genes; immune block inverted.
+      Background: warm off-white #FAF8F1 across paper and plot.
+      Chrome: centered title "heatmap-clustered · python · plotly · anyplot.ai" in dark ink; sample labels rotated -45° below, gene labels on the right, axis titles Sample and Gene, colorbar titled "Expression (z-score)" with ticks -2, 0, 2; framed "Gene cluster" legend top right. All readable.
+      Data: 20x12 matrix in red (#AE3030) to off-white to blue (#4467A3); column dendrogram on top splits N1/N2 from T1/T2, row dendrogram on the left; cluster strip in #009E73, #C475FD, #4467A3, #BD8233 with matching legend swatches. Dendrogram lines dark gray.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, tick labels, colorbar title/ticks and legend text in light ink (INK / INK_SOFT); legend on #242420 elevated surface with light border. No dark-on-dark text.
-      Data: identical cluster strip colors and diverging endpoints; the diverging midpoint flips to #1A1A17 as the style guide requires, so near-zero cells sit close to the background; dendrogram lines in light gray, clearly visible.
+      Chrome: title, axis titles and legend title in light ink, tick labels light gray; legend box on elevated #242420 with light border. No dark-on-dark text.
+      Data: same matrix and cluster colors as light; the diverging midpoint follows the page, so near-zero cells go near-black, separated by 1 px gaps. Dendrogram lines light gray, clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,46 +50,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (16/12/10); all text readable in both themes
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10 at scale 4); every
+          label reads in both themes, light text on dark and dark text on light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; rotated sample labels clear of each other
+        comment: Rotated sample labels, gene labels, legend and colorbar all clear
+          of each other and of the cells
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells, 2 px dendrogram lines and legend swatches visible in both
-          themes
+        comment: Dendrogram lines at width 2 in INK_SOFT are visible on both backgrounds;
+          cluster legend swatches match the strip
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red–blue diverging is CVD-safe; cluster strip uses Imprint positions
-          1–4
+        comment: Red to blue diverging ramp is CVD-safe; cluster strip uses distinct
+          Imprint hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400×2400, matrix dominates, dendrograms smaller, nothing clipped
+        comment: 2400x2400 square canvas, matrix dominates, dendrograms take a smaller
+          share, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample, Gene, Expression (z-score)
+        comment: Sample, Gene and Expression (z-score) are reader text with the unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div with theme-adaptive midpoint; strip starts at #009E73;
-          correct backgrounds'
+        comment: 'imprint_div (#AE3030 - page - #4467A3) with theme-adaptive midpoint;
+          cluster strip in canonical Imprint order starting at #009E73; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -110,24 +102,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Wrapped colorbar title, elevated legend card, coherent ink hierarchy
-          across dendrograms, strip and matrix
+        passed: true
+        comment: Considered right-hand column stacking the cluster legend above a
+          half-height colorbar with a two-line title
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Page-colored 1 px cell gaps, all chrome removed from dendrogram and
-          strip axes, tick marks dropped
+        passed: true
+        comment: 1 px page-colored cell gaps keep near-zero cells separable in dark
+          mode; gene labels moved to the right so the row dendrogram sits flush against
+          the strip
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed; no hierarchy chosen beyond the Notes
+        passed: true
+        comment: Tumor/normal split reads clearly, but no focal point chosen beyond
+          what the Notes ask
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,23 +132,26 @@ review:
         comment: Clustermap with row and column dendrograms
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Dendrograms, reordering, diverging map, colorbar and annotated strip
-          present; inner merge heights not distinguishable (defect line)
+        passed: true
+        comment: Both dendrograms aligned leaf by leaf, Ward/Euclidean reordering,
+          diverging map centered on zero, colorbar, optional cluster strip aligned
+          per row and explained by a legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Leaves aligned to cells; labels follow the reorder
+        comment: Every cell at its row and column; dendrogram leaf coordinates mapped
+          (x-5)/10 onto cell indexes; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend 'Gene cluster' explains the strip
+        comment: Title heatmap-clustered · python · plotly · anyplot.ai; legend titled
+          Gene cluster with Cluster 1-4
     data_quality:
       score: 15
       max: 15
@@ -164,20 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Distinct blocks, a singleton row, tumor/normal column split
+        comment: Clear blocks emerge after reordering; dendrograms show distinct merge
+          heights; samples split tumor vs normal
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real gene symbols across cell-cycle, metabolism, immune and cancer
-          groups; tumor vs normal samples
+        comment: Real gene symbols (CDK1, GAPDH, IL6, TP53 ...) across tumor and normal
+          replicates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: z-scores within about ±3.5, symmetric color limits
+        comment: z-scores within about ±3.5, symmetric zmin/zmax around zmid=0; 20x12
+          is inside the spec's size range
     code_quality:
       score: 10
       max: 10
@@ -187,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,14 +204,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: scipy linkage/dendrogram/fcluster computes clustering; no hand-rolled
+        comment: scipy linkage/dendrogram/fcluster compute the clustering; no hand-rolled
           algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html
+        comment: plot-{THEME}.png at 600x600 scale 4 plus plot-{THEME}.html
     library_mastery:
       score: 6
       max: 10
@@ -221,19 +220,20 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: make_subplots grid with None specs, go.Heatmap zmid/xgap/ygap
+        passed: true
+        comment: make_subplots grid with column_widths/row_heights and None cells,
+          go.Heatmap with zmid and xgap/ygap
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: customdata hovertemplates and legendgrouptitle for the interactive
-          HTML
-  verdict: REJECTED
+        passed: true
+        comment: hovertemplate with customdata naming gene, sample and value; legendgrouptitle
+          for the cluster legend
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
-  rendered_at: '2026-11-09T10:42:23Z'
+  rendered_at: '2026-11-09T10:47:42Z'
 impl_tags:
   dependencies:
   - scipy
@@ -241,13 +241,13 @@ impl_tags:
   - subplots
   - colorbar
   - custom-legend
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   styling:
-  - custom-colormap
-  - minimal-chrome
+  - publication-ready
