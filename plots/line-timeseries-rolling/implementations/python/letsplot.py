@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-09
+Quality: 85/100 | Updated: 2026-11-09
 """
 
 import os
