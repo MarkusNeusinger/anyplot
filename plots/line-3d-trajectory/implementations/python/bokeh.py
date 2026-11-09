@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-16
@@ -9,9 +9,9 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d
-from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from selenium import webdriver
@@ -25,259 +25,190 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Lorenz attractor trajectory (classic chaotic system)
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"
 
-# Lorenz system parameters
-sigma = 10.0
-rho = 28.0
-beta = 8.0 / 3.0
 
-# Generate trajectory with 1500 points for smooth visualization (inline Euler integration)
+# imprint_seq: 256-stop sequential ramp, brand green -> blue
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+IMPRINT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)]
+
+# Columns: set these to your table's column names
+X = "X (state)"  # role: x
+Y = "Y (state)"  # role: y
+Z = "Z (state)"  # role: z
+TIME = "Time (s)"  # role: color
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trajectory.csv")
+# Lorenz attractor (sigma=10, rho=28, beta=8/3), inline Euler integration
+sigma, rho, beta = 10.0, 28.0, 8.0 / 3.0
 n_points = 1500
 dt = 0.01
-x, y, z = np.zeros(n_points), np.zeros(n_points), np.zeros(n_points)
-x[0], y[0], z[0] = 0.1, 0.0, 0.0  # Initial conditions
-
+xs, ys, zs = np.zeros(n_points), np.zeros(n_points), np.zeros(n_points)
+xs[0], ys[0], zs[0] = 0.1, 0.0, 0.0
 for i in range(n_points - 1):
-    dx = sigma * (y[i] - x[i]) * dt
-    dy = (x[i] * (rho - z[i]) - y[i]) * dt
-    dz = (x[i] * y[i] - beta * z[i]) * dt
-    x[i + 1] = x[i] + dx
-    y[i + 1] = y[i] + dy
-    z[i + 1] = z[i] + dz
+    xs[i + 1] = xs[i] + sigma * (ys[i] - xs[i]) * dt
+    ys[i + 1] = ys[i] + (xs[i] * (rho - zs[i]) - ys[i]) * dt
+    zs[i + 1] = zs[i] + (xs[i] * ys[i] - beta * zs[i]) * dt
+df = pd.DataFrame({TIME: np.linspace(0, n_points * dt, n_points), X: xs, Y: ys, Z: zs})
 
-# Normalize coordinates for better visualization
-x = (x - x.mean()) / x.std() * 2
-y = (y - y.mean()) / y.std() * 2
-z = (z - z.mean()) / z.std() * 2
+# Plot: reads only df and the constants above
+# Standardize each coordinate so all three axes share one scale in the projection
+coords = df[[X, Y, Z]].astype(float)
+norm = (coords - coords.mean()) / coords.std() * 2
+nx, ny, nz = norm[X].to_numpy(), norm[Y].to_numpy(), norm[Z].to_numpy()
 
-# 3D to 2D isometric projection (elevation=20°, azimuth=55°)
+# Oblique projection (elevation=20°, azimuth=55°)
 elev_rad = np.radians(20)
 azim_rad = np.radians(55)
 
-# Rotation around z-axis (azimuth)
-x_rot = x * np.cos(azim_rad) - y * np.sin(azim_rad)
-y_rot = x * np.sin(azim_rad) + y * np.cos(azim_rad)
 
-# Rotation around x-axis (elevation) and project to 2D
-x_proj = x_rot
-z_proj = y_rot * np.sin(elev_rad) + z * np.cos(elev_rad)
+def project(px, py, pz):
+    x_rot = px * np.cos(azim_rad) - py * np.sin(azim_rad)
+    y_rot = px * np.sin(azim_rad) + py * np.cos(azim_rad)
+    return x_rot, y_rot * np.sin(elev_rad) + pz * np.cos(elev_rad)
 
-# Time/progression for color gradient (shows trajectory evolution)
-time_seconds = np.linspace(0, n_points * dt, n_points)
-max_time = n_points * dt  # 15 seconds
 
-# Color mapping using actual simulation time values
-color_mapper = LinearColorMapper(palette=Viridis256, low=0, high=max_time)
+x_proj, y_proj = project(nx, ny, nz)
+times = df[TIME].astype(float).to_numpy()
 
-# Create segments for multi-colored line with gradient
-n_segments = n_points - 1
-xs = [[x_proj[i], x_proj[i + 1]] for i in range(n_segments)]
-ys = [[z_proj[i], z_proj[i + 1]] for i in range(n_segments)]
+# Line as consecutive segments, each colored by the time at its start
+segments = ColumnDataSource(
+    data={"x0": x_proj[:-1], "y0": y_proj[:-1], "x1": x_proj[1:], "y1": y_proj[1:], "t": times[:-1]}
+)
+color_mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=np.nanmin(times), high=np.nanmax(times))
 
-# Vectorized color mapping for line segments
-segment_times = time_seconds[:-1]
-color_indices = np.clip((segment_times / max_time * 255).astype(int), 0, 255)
-colors = [Viridis256[idx] for idx in color_indices]
-
-# Create ColumnDataSource for line segments
-source = ColumnDataSource(data={"xs": xs, "ys": ys, "color": colors})
-
-# Create scatter points for hover functionality
+# Points for hover, showing the original values
+hover_step = max(1, len(df) // 150)
+hover_rows = df.iloc[::hover_step]
 hover_source = ColumnDataSource(
     data={
-        "x": x_proj[::10],
-        "y": z_proj[::10],
-        "time": time_seconds[::10],
-        "x_coord": x[::10],
-        "y_coord": y[::10],
-        "z_coord": z[::10],
+        "px": x_proj[::hover_step],
+        "py": y_proj[::hover_step],
+        "t": hover_rows[TIME].to_numpy(),
+        "x": hover_rows[X].to_numpy(),
+        "y": hover_rows[Y].to_numpy(),
+        "z": hover_rows[Z].to_numpy(),
     }
 )
 
-# Create Bokeh figure with interactive tools
+title = "Lorenz Attractor · line-3d-trajectory · python · bokeh · anyplot.ai"
+title_pt = round(50 * (67 / len(title) if len(title) > 67 else 1.0))
+
 p = figure(
-    width=4800,
-    height=2700,
-    title="Lorenz Attractor · line-3d-trajectory · bokeh · pyplots.ai",
-    toolbar_location="right",
+    width=3200,
+    height=1800,
+    title=title,
+    toolbar_location=None,
     tools="pan,wheel_zoom,box_zoom,reset,save",
+    min_border_top=110,
+    min_border_bottom=60,
+    min_border_left=60,
+    min_border_right=60,
 )
 
-# Draw trajectory as multi-line with color gradient showing time progression
-p.multi_line(xs="xs", ys="ys", line_color="color", line_width=3, line_alpha=0.85, source=source)
-
-# Add subtle scatter points for hover interaction
-scatter = p.scatter(x="x", y="y", source=hover_source, size=18, alpha=0.15, hover_alpha=0.9, hover_color="orange")
-
-# Add HoverTool for interactivity (Bokeh distinctive feature)
-hover = HoverTool(
-    renderers=[scatter],
-    tooltips=[("Time", "@time{0.2f} s"), ("X", "@x_coord{0.2f}"), ("Y", "@y_coord{0.2f}"), ("Z", "@z_coord{0.2f}")],
-    mode="mouse",
+p.segment(
+    x0="x0",
+    y0="y0",
+    x1="x1",
+    y1="y1",
+    source=segments,
+    line_color={"field": "t", "transform": color_mapper},
+    line_width=4,
+    line_alpha=0.85,
+    line_cap="round",
 )
-p.add_tools(hover)
 
-# Set appropriate ranges with padding
-x_min, x_max = x_proj.min(), x_proj.max()
-y_min, y_max = z_proj.min(), z_proj.max()
-x_pad = (x_max - x_min) * 0.15
-y_pad = (y_max - y_min) * 0.15
+scatter = p.scatter(
+    x="px",
+    y="py",
+    source=hover_source,
+    size=18,
+    fill_color=INK_SOFT,
+    line_color=None,
+    alpha=0.12,
+    hover_fill_color=ANYPLOT_AMBER,
+    hover_alpha=0.95,
+)
+p.add_tools(
+    HoverTool(
+        renderers=[scatter],
+        tooltips=[(TIME, "@t{0.2f}"), (X, "@x{0.2f}"), (Y, "@y{0.2f}"), (Z, "@z{0.2f}")],
+        mode="mouse",
+    )
+)
 
-# Center the plot with balanced padding
-p.x_range = Range1d(x_min - x_pad * 0.8, x_max + x_pad * 1.0)
-p.y_range = Range1d(y_min - y_pad * 1.0, y_max + y_pad * 1.0)
+# 3D axes drawn from the projected origin of the standardized space
+axis_length = 2.5
+arrow_size = 0.18
+origin = np.array(project(0.0, 0.0, 0.0))
+axis_ends = {
+    X: np.array(project(axis_length, 0.0, 0.0)),
+    Y: np.array(project(0.0, axis_length, 0.0)),
+    Z: np.array(project(0.0, 0.0, axis_length)),
+}
+label_offsets = {X: (0.15, -0.2), Y: (-0.75, -0.4), Z: (0.15, 0.1)}
+for name, end in axis_ends.items():
+    p.line(x=[origin[0], end[0]], y=[origin[1], end[1]], line_color=INK_SOFT, line_width=4)
+    direction = (end - origin) / np.linalg.norm(end - origin)
+    perp = np.array([-direction[1], direction[0]])
+    base = end - arrow_size * direction
+    p.patch(
+        x=[end[0], base[0] + arrow_size * 0.5 * perp[0], base[0] - arrow_size * 0.5 * perp[0]],
+        y=[end[1], base[1] + arrow_size * 0.5 * perp[1], base[1] - arrow_size * 0.5 * perp[1]],
+        fill_color=INK_SOFT,
+        line_color=INK_SOFT,
+    )
+    dx, dy = label_offsets[name]
+    p.add_layout(
+        Label(x=end[0] + dx, y=end[1] + dy, text=name, text_font_size="42pt", text_color=INK, text_font_style="bold")
+    )
 
-# Hide default axes for cleaner 3D projection look
+# Ranges from the projected data and axes, with padding
+all_x = np.concatenate([x_proj, [origin[0]], [e[0] for e in axis_ends.values()]])
+all_y = np.concatenate([y_proj, [origin[1]], [e[1] for e in axis_ends.values()]])
+x_min, x_max = np.nanmin(all_x), np.nanmax(all_x)
+y_min, y_max = np.nanmin(all_y), np.nanmax(all_y)
+x_pad = (x_max - x_min) * 0.12
+y_pad = (y_max - y_min) * 0.12
+p.x_range = Range1d(x_min - x_pad, x_max + x_pad)
+p.y_range = Range1d(y_min - y_pad, y_max + y_pad)
+
+# Hide the 2D axes; the drawn 3D axes replace them
 p.xaxis.visible = False
 p.yaxis.visible = False
 
-# Custom 3D axis lines positioned at the projected origin
-origin_3d_x, origin_3d_y, origin_3d_z = 0, 0, 0
-origin_x_rot = origin_3d_x * np.cos(azim_rad) - origin_3d_y * np.sin(azim_rad)
-origin_y_rot = origin_3d_x * np.sin(azim_rad) + origin_3d_y * np.cos(azim_rad)
-origin_x = origin_x_rot
-origin_y = origin_y_rot * np.sin(elev_rad) + origin_3d_z * np.cos(elev_rad)
-
-# Axis styling with theme-adaptive colors
-axis_color = INK_SOFT
-axis_width = 4
-axis_length = 2.5
-
-# Project 3D axis endpoints to 2D
-# X-axis: point (axis_length, 0, 0)
-x_end_x_rot = axis_length * np.cos(azim_rad)
-x_end_y_rot = axis_length * np.sin(azim_rad)
-x_axis_end_x = x_end_x_rot
-x_axis_end_y = x_end_y_rot * np.sin(elev_rad)
-
-# Y-axis: point (0, axis_length, 0)
-y_end_x_rot = -axis_length * np.sin(azim_rad)
-y_end_y_rot = axis_length * np.cos(azim_rad)
-y_axis_end_x = y_end_x_rot
-y_axis_end_y = y_end_y_rot * np.sin(elev_rad)
-
-# Z-axis: point (0, 0, axis_length)
-z_axis_end_x = origin_x
-z_axis_end_y = origin_y + axis_length * np.cos(elev_rad)
-
-# Draw axis lines from projected origin
-p.line(x=[origin_x, x_axis_end_x], y=[origin_y, x_axis_end_y], line_color=axis_color, line_width=axis_width)
-p.line(x=[origin_x, y_axis_end_x], y=[origin_y, y_axis_end_y], line_color=axis_color, line_width=axis_width)
-p.line(x=[origin_x, z_axis_end_x], y=[origin_y, z_axis_end_y], line_color=axis_color, line_width=axis_width)
-
-# Add axis arrows (small triangles at the end of each axis)
-arrow_size = 0.18
-
-# X-axis arrow
-x_dir = np.array([x_axis_end_x - origin_x, x_axis_end_y - origin_y])
-x_dir = x_dir / np.linalg.norm(x_dir)
-x_perp = np.array([-x_dir[1], x_dir[0]])
-p.patch(
-    x=[
-        x_axis_end_x,
-        x_axis_end_x - arrow_size * x_dir[0] + arrow_size * 0.5 * x_perp[0],
-        x_axis_end_x - arrow_size * x_dir[0] - arrow_size * 0.5 * x_perp[0],
-    ],
-    y=[
-        x_axis_end_y,
-        x_axis_end_y - arrow_size * x_dir[1] + arrow_size * 0.5 * x_perp[1],
-        x_axis_end_y - arrow_size * x_dir[1] - arrow_size * 0.5 * x_perp[1],
-    ],
-    fill_color=axis_color,
-    line_color=axis_color,
-)
-
-# Y-axis arrow
-y_dir = np.array([y_axis_end_x - origin_x, y_axis_end_y - origin_y])
-y_dir = y_dir / np.linalg.norm(y_dir)
-y_perp = np.array([-y_dir[1], y_dir[0]])
-p.patch(
-    x=[
-        y_axis_end_x,
-        y_axis_end_x - arrow_size * y_dir[0] + arrow_size * 0.5 * y_perp[0],
-        y_axis_end_x - arrow_size * y_dir[0] - arrow_size * 0.5 * y_perp[0],
-    ],
-    y=[
-        y_axis_end_y,
-        y_axis_end_y - arrow_size * y_dir[1] + arrow_size * 0.5 * y_perp[1],
-        y_axis_end_y - arrow_size * y_dir[1] - arrow_size * 0.5 * y_perp[1],
-    ],
-    fill_color=axis_color,
-    line_color=axis_color,
-)
-
-# Z-axis arrow
-z_dir = np.array([z_axis_end_x - origin_x, z_axis_end_y - origin_y])
-z_dir = z_dir / np.linalg.norm(z_dir)
-z_perp = np.array([-z_dir[1], z_dir[0]])
-p.patch(
-    x=[
-        z_axis_end_x,
-        z_axis_end_x - arrow_size * z_dir[0] + arrow_size * 0.5 * z_perp[0],
-        z_axis_end_x - arrow_size * z_dir[0] - arrow_size * 0.5 * z_perp[0],
-    ],
-    y=[
-        z_axis_end_y,
-        z_axis_end_y - arrow_size * z_dir[1] + arrow_size * 0.5 * z_perp[1],
-        z_axis_end_y - arrow_size * z_dir[1] - arrow_size * 0.5 * z_perp[1],
-    ],
-    fill_color=axis_color,
-    line_color=axis_color,
-)
-
-# Add descriptive axis labels with theme-adaptive colors
-x_label = Label(
-    x=x_axis_end_x + 0.15,
-    y=x_axis_end_y - 0.2,
-    text="X (state)",
-    text_font_size="36pt",
-    text_color=INK,
-    text_font_style="bold",
-)
-p.add_layout(x_label)
-
-y_label = Label(
-    x=y_axis_end_x - 0.6,
-    y=y_axis_end_y - 0.4,
-    text="Y (state)",
-    text_font_size="36pt",
-    text_color=INK,
-    text_font_style="bold",
-)
-p.add_layout(y_label)
-
-z_label = Label(
-    x=z_axis_end_x + 0.15,
-    y=z_axis_end_y + 0.1,
-    text="Z (state)",
-    text_font_size="36pt",
-    text_color=INK,
-    text_font_style="bold",
-)
-p.add_layout(z_label)
-
-# Add color bar for time progression with correct time range (0-15 seconds)
+# Color bar for time progression
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=60,
     location=(0, 0),
-    title="Time (s)",
-    title_text_font_size="32pt",
-    major_label_text_font_size="24pt",
-    title_standoff=20,
+    title=TIME,
+    title_text_font_size="42pt",
+    title_text_color=INK,
+    major_label_text_font_size="34pt",
+    major_label_text_color=INK_SOFT,
+    major_tick_line_color=INK_SOFT,
+    bar_line_color=None,
+    background_fill_color=PAGE_BG,
+    title_standoff=24,
     margin=40,
-    padding=20,
+    padding=24,
 )
 p.add_layout(color_bar, "right")
 
-# Title styling for large canvas
-p.title.text_font_size = "44pt"
+# Style
+p.title.text_font_size = f"{title_pt}pt"
 p.title.text_font_style = "bold"
 p.title.text_color = INK
 
-# Grid styling - subtle with theme-adaptive colors
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
@@ -285,18 +216,16 @@ p.ygrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_dash = [6, 4]
 p.ygrid.grid_line_dash = [6, 4]
 
-# Background styling with theme-adaptive colors
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
-p.min_border_right = 220
 
-# Save HTML for interactive version
+# Save HTML for the interactive version
 output_file(f"plot-{THEME}.html")
-save(p, resources=CDN, title="line-3d-trajectory · bokeh · pyplots.ai")
+save(p, resources=CDN, title="line-3d-trajectory · python · bokeh · anyplot.ai")
 
 # Screenshot with headless Chrome via Selenium
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -310,6 +239,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
