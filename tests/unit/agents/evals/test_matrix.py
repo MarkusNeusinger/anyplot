@@ -20,6 +20,7 @@ from unittest.mock import patch
 import httpx
 import pytest
 
+from agents.anyplot.plugins.ledger import argument_hash
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
@@ -940,6 +941,35 @@ def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons()
     }
     assert (second["edits"], second["render"]["gates"], second["stage"]) == (4, ["G3"], "deadline")
     assert (record["stage"], record["shipped_attempt"], record["reviewed_attempt"]) == ("deadline", 2, None)
+
+
+def test_book_attribution_books_the_tool_calls_per_turn_without_their_arguments() -> None:
+    """A plot button's turn opens with `plot_pipeline` and no arguments; the record shows that, and the refusals, by
+    turn, from the content-free `tool` lines (the arguments' hash, never the arguments)."""
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    refused = "plot_as_confirmed"
+    bound = argument_hash({"bindings": []})
+    turn_one: list[dict[str, Any]] = [
+        {"hook": "tool", "agent": "anyplot", "tool": "set_bindings", "args": bound, "verdict": refused},
+        {"hook": "tool", "agent": "anyplot", "tool": "plot_pipeline", "args": argument_hash({}), "verdict": "allowed"},
+    ]
+    matrix.book_attribution(record, turn_one, settings)
+    record["turns"] = 2
+    turn_two: list[dict[str, Any]] = [
+        {"hook": "tool", "agent": "anyplot", "tool": "made_up", "args": argument_hash({}), "verdict": "no_such_code"},
+        {"hook": "tool", "agent": "anyplot", "tool": "plot_pipeline", "args": argument_hash({"base": "previous"})},
+    ]
+    matrix.book_attribution(record, turn_two, settings)
+
+    assert record["tool_calls"] == [
+        {"turn": 1, "tool": "set_bindings", "verdict": refused, "no_args": False},
+        {"turn": 1, "tool": "plot_pipeline", "verdict": "allowed", "no_args": True},
+        {"turn": 2, "tool": "other", "verdict": "unknown", "no_args": True},  # closed names and verdicts only
+        {"turn": 2, "tool": "plot_pipeline", "verdict": "unknown", "no_args": False},
+    ]
+    assert record["llm_calls"] == 0 and record["cost_usd"] == 0.0  # a tool line books no model call
 
 
 def test_book_attribution_counts_the_failed_probes_by_class() -> None:

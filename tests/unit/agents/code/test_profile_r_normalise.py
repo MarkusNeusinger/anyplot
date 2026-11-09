@@ -2,7 +2,6 @@
 
 import math
 import re
-from collections import Counter
 from fractions import Fraction
 
 import pytest
@@ -241,37 +240,50 @@ def test_code_with_syntax_problems_is_left_alone() -> None:
     assert report.code == code and report.notes[0].startswith("syntax: ")
 
 
-def test_catalogue_corpus() -> None:
-    """All 325 files normalise idempotently onto 3200x1800 (251) or 2400x2400 (74), with these changes (2026-10-29):
-    325 headers and 325 titles removed, 34 dpi rewrites, 1 inlined target; 6 title notes (5 split over `paste0`,
-    one of them a map spec, and 1 `sprintf` format). For every rewritten save the test computes the PNG itself from
-    the save's literals as ragg does, floor(inches * dpi) per side, independent of the normaliser's model."""
-    changes: Counter[str] = Counter()
-    notes: Counter[str] = Counter()
-    canvases: Counter[tuple[int, int] | None] = Counter()
-    for path in R_CATALOGUE_FILES:
-        report = normalise_report(path.read_text(encoding="utf-8"))
-        assert normalise(report.code) == report.code, path
-        changes.update(re.sub(r" at .*|: .*| from .*", "", change) for change in report.changes)
-        notes.update(note.split(":")[0] for note in report.notes)
-        canvas = measure_canvas(report.code)
-        assert canvas.on_target, (path, canvas.note)
-        canvases[canvas.pixels] += 1
-        if any("dpi" in change for change in report.changes):
-            saved = find_regions(report.code).save
-            assert saved is not None
-            width, height, dpi, units = (saved.argument(name) for name in ("width", "height", "dpi", "units"))
-            assert width and height and dpi and units and units.text == '"in"', path
-            pixels = (math.floor(float(width.text) * float(dpi.text)), math.floor(float(height.text) * float(dpi.text)))
-            assert pixels == canvas.target, (path, pixels)
+KNOWN_CHANGES = frozenset(
+    {
+        "removed the catalogue header",
+        "emptied the catalogue title",
+        "set the save's dpi",
+        "inlined output_file as the save target",
+    }
+)
+"""The normaliser's rewrites of a catalogue file (module docstring), by the head of their change line."""
+HEADER = re.compile(r"^#' anyplot\.ai\b")
+CATALOGUE_TITLE = re.compile(r"[\"'][^\"'\n]*· anyplot\.ai[\"']")
+"""The catalogue title, `"scatter-basic · r · ggplot2 · anyplot.ai"`, or its last part where `paste0` splits it."""
+CANVASES = frozenset({(3200, 1800), (2400, 2400)})
 
-    assert changes == Counter(
-        {
-            "removed the catalogue header": 325,
-            "emptied the catalogue title": 325,
-            "set the save's dpi": 34,
-            "inlined output_file as the save target": 1,
-        }
-    )
-    assert notes == Counter({"title": 6})
-    assert canvases == Counter({(3200, 1800): 251, (2400, 2400): 74})
+
+def test_catalogue_corpus() -> None:
+    """Every ggplot2 file normalises idempotently onto 3200x1800 or 2400x2400 with only the known rewrites, and a
+    plain reading of the text decides which apply: the header goes exactly where the file starts with one, every
+    file with a catalogue title has it emptied and none survives, and every normalised save writes the standard
+    target. For every rewritten save the test computes the PNG itself from the save's literals as ragg does,
+    floor(inches * dpi) per side, independent of the normaliser's model. The counts of a day (325 files on
+    2026-10-29: 34 dpi rewrites, 1 inlined target, 6 title notes, 251 landscape and 74 square canvases) move with
+    every regeneration, so the test holds these rules instead."""
+    canvases: set[tuple[int, int] | None] = set()
+    for path in R_CATALOGUE_FILES:
+        text = path.read_text(encoding="utf-8")
+        name = path.parts[-4]
+        report = normalise_report(text)
+        assert normalise(report.code) == report.code, name
+        kinds = {re.sub(r" at .*|: .*| from .*", "", change) for change in report.changes}
+        assert kinds <= KNOWN_CHANGES, (name, report.changes)
+        assert {note.split(":")[0] for note in report.notes} <= {"title"}, (name, report.notes)
+        assert ("removed the catalogue header" in kinds) == bool(HEADER.match(text)), name
+        assert "emptied the catalogue title" in kinds or not CATALOGUE_TITLE.search(text), name
+        assert not HEADER.match(report.code) and not CATALOGUE_TITLE.search(report.code), name
+        saved = find_regions(report.code).save
+        assert saved is not None and saved.standard_target, name
+        canvas = measure_canvas(report.code)
+        assert canvas.on_target and canvas.pixels in CANVASES, (name, canvas.note)
+        canvases.add(canvas.pixels)
+        if "set the save's dpi" in kinds:
+            width, height, dpi, units = (saved.argument(keyword) for keyword in ("width", "height", "dpi", "units"))
+            assert width and height and dpi and units and units.text == '"in"', name
+            pixels = (math.floor(float(width.text) * float(dpi.text)), math.floor(float(height.text) * float(dpi.text)))
+            assert pixels == canvas.target, (name, pixels)
+
+    assert canvases == CANVASES, canvases  # both orientations are in use

@@ -2,44 +2,64 @@ library: bokeh
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:10:30Z'
-updated: '2026-05-17T08:56:50Z'
-generated_by: claude-haiku
-workflow_run: 25986315270
+updated: '2026-11-09T08:41:12Z'
+generated_by: claude-opus
+workflow_run: 42585621053
 issue: 3414
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-dark.html
-quality_score: 96
+quality_score: 84
 review:
   strengths:
-  - Expertly implements complex quantile visualization with nested boxes and proper
-    letter-value construction
-  - 'Perfect theme adaptation: light/dark renders are identical for data colors with
-    correct theme-specific chrome'
-  - Idiomatic bokeh usage with ColumnDataSource, glyphs, and custom legend showing
-    library mastery
-  - Clean, reproducible code with explicit font sizing for all elements
-  - Realistic data with diverse distributions showing all plot type features
-  - Professional visual hierarchy through color gradient and nesting depth
-  weaknesses: []
+  - Letter values computed directly with np.quantile at tails 1/4…1/128, so every
+    box edge sits at its quantile on the value axis, with six nested levels narrowing
+    linearly from 0.75 to 0.25 of the category width, all centered on the category
+  - Each level beyond the quartiles is drawn as its two outer bands only, so translucent
+    levels never stack; page-colored 3 px edges separate neighbouring levels cleanly
+    in both themes
+  - 'Ordered quantile levels take discrete steps of imprint_seq (brand green #009E73
+    → blue #4467A3) in their natural order, and the legend lists each level with its
+    quantile range (e.g. ''Sixteenths (6.25–93.8%)'')'
+  - Custom Legend built from LegendItem objects grouping per-category renderers (one
+    per level, plus Median and Outliers), placed outside the plot on the right with
+    an elevated background
+  - 'Realistic, neutral scenario: 5,000 response times per API endpoint with distinct
+    shapes (exponential with a slow mode, gamma, lognormal), giving long right tails
+    and outliers beyond the 128ths on both sides'
+  - Theme tokens threaded through title, axes, ticks, grid, legend and median line;
+    the median flips ink-colored per theme and stays legible in both renders
+  weaknesses:
+  - 'VQ-07, VQ-03 (dark): the fading alpha (1.0 → 0.4) composites the deeper levels
+    toward the #1A1A17 page, so 32nds, 64ths and 128ths render as near-identical dark
+    slate-navy fills and the 128ths box barely separates from the background, breaking
+    the ordered-categories rule that every step stays distinguishable from its neighbours
+    and the background in both themes → keep each level opaque (fill_alpha=1) and
+    let the imprint_seq steps alone carry the order, or fade toward PAGE_BG only as
+    far as each step stays clearly apart. Likely cause: LEVEL_ALPHAS = np.linspace(1.0,
+    0.4, ...) applied as fill_alpha on a dark page.'
+  - 'Suggestion: a HoverTool on the level quads showing the level name and its quantile
+    bounds would add value in the HTML view.'
+  - 'Suggestion: a few pixels of padding between the ''Median'' legend line glyph
+    and its label would match the spacing of the square swatches.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "boxen-basic · bokeh · anyplot.ai" in dark text (28pt), axis labels "API Endpoint"/"Response Time (ms)" in dark (22pt), tick labels in dark (18pt) - all clearly readable
-      Data: Nested blue gradient boxes (light to dark) for six quantile levels; green median lines (#009E73); green outlier points with jitter; multiple API endpoints showing different distributions
-      Legibility verdict: PASS - all text readable, excellent contrast
+      Background: warm off-white #FAF8F1, legend box on a slightly lighter elevated surface with a soft border.
+      Chrome: bold title "boxen-basic · python · bokeh · anyplot.ai" top-left (~45% width); y-axis "Response Time (ms)" 0–600, x-axis "API Endpoint" with four categories (API Auth, API Users, API Orders, API Search); dark ink title/labels, soft-ink ticks, subtle horizontal grid; all readable.
+      Data: four letter-value stacks, six nested levels each, narrowing outward; innermost Fourths box in brand green #009E73 stepping through teal to pale blue-grey for 128ths; black median bar across each Fourths box; blue outlier points above and below the deepest level. Legend "Quantile level" lists Median, six levels with quantile ranges, and Outliers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in light (#B8B7B0) - all clearly readable; no dark-on-dark failures
-      Data: Identical nested box colors and green data elements to light render (confirming theme-independent data colors); all elements visible
-      Legibility verdict: PASS - all text readable in light colors, professional theme adaptation
+      Background: warm near-black #1A1A17, legend on an elevated dark surface.
+      Chrome: light title, axis labels and tick labels; subtle grid; no dark-on-dark text.
+      Data: same fill hex values as light; median bar flips to near-white. Because the levels fade via alpha, the deeper levels (32nds, 64ths, 128ths) composite to similar dark slate-navy tones and the 128ths box sits close to the background; outlier points stay visible but low-contrast. Brand green Fourths box reads strongly.
+      Legibility verdict: PASS (text); deep quantile levels weakly separated
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,69 +67,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
-          fully readable in both themes
+        comment: Title 50pt, axis labels 42pt, ticks 34pt, legend 30–34pt; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend positioned well; clean layout
+        comment: No text collisions; legend outside plot area; outliers spread across
+          categorical width
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Outliers and median lines perfectly adapted to 5000+ points; nested
-          boxes all distinct
+        passed: false
+        comment: 'Dark: deeper levels fade toward the background, the 128ths box barely
+          separates (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 is Okabe-Ito safe; CVD-safe'
+        comment: Green→blue ramp, no red-green signal; level order also carried by
+          box width
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions at 4800×2700; optimal canvas fill; generous whitespace
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; axes labeled with units
+        comment: '''Response Time (ms)'' with unit, ''API Endpoint'''
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Data colors theme-independent (#009E73); backgrounds correct; text
-          colors theme-adaptive
+        passed: false
+        comment: imprint_seq steps for ordered levels, correct backgrounds; but in
+          dark the alpha fade leaves 32nds/64ths/128ths indistinguishable (defect
+          line)
     design_excellence:
-      score: 17
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: Custom blue gradient; intentional visual hierarchy; publication-ready
+        passed: false
+        comment: Legend entries carry each level's quantile range; page-colored separators
+          between levels give a clean stepped silhouette
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid; refined legend with spacing and padding; clean overall
+        passed: false
+        comment: Levels drawn as outer bands only (no alpha stacking), 3 px page-colored
+          gaps between levels, x-grid removed for a categorical axis
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Nested boxes guide eye through progression; multiple endpoints reveal
-          patterns
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen plot with all quantile levels
+        comment: Letter-value plot with only median, outliers and level legend
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: nested boxes, decreasing widths, contrasting
-          colors, outliers, legend'
+        comment: Nested boxes, narrowing widths, contrasting shading, outliers beyond
+          deepest level, legend explaining levels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: Box edges at np.quantile values; outlier jitter only on the categorical
+          axis (exempt)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Correct title format; legend labels readable with quantile ranges
     data_quality:
       score: 15
       max: 15
@@ -148,20 +173,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All quantile levels shown; outliers displayed; diverse distributions
+        comment: Varied shapes, long tails, outliers on both sides
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times is realistic and neutral
+        comment: Server response times per API endpoint, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 0-600ms plausible; distributions align with backend
-          behavior
+        comment: Millisecond values 5–600 plausible for API latency
     code_quality:
       score: 10
       max: 10
@@ -171,49 +195,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow; no functions/classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set; deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent: figure(), ColumnDataSource, bokeh glyphs, custom Legend'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses quad() glyph, LegendItem, Selenium integration; could explore
-          more interactive capabilities
+        passed: false
+        comment: ColumnDataSource per level, p.quad for boxes, categorical x_range
+          with numeric offsets
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom Legend from LegendItem objects mapping grouped renderers,
+          placed via add_layout(legend, 'right')
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T08:38:32Z'
 impl_tags:
   dependencies:
   - selenium
@@ -224,8 +252,8 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   - columndatasource
-  dataprep: []
+  dataprep:
+  - quantile-computation
   styling:
   - alpha-blending
-  - publication-ready
-  - dark-theme
+  - minimal-chrome

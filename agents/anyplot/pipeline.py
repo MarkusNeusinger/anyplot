@@ -755,6 +755,56 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
         state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
 
 
+def run_args(ledger: RequestLedger, args: PipelineArgs) -> PipelineArgs:
+    """The arguments a `plot_pipeline` call of this turn runs with: a fresh start's base, an action's empty request,
+    and only the expected texts the user wrote (`in_users_words`). The run and ToolSafety's refusal before it
+    (`stop_not_ready`) read the same ones, so both keep the same request."""
+    if ledger.fresh_start and args.base == "previous":
+        # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
+        # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
+        args = args.model_copy(update={"base": "catalogue"})
+    if ledger.kind == "action":
+        # The page's buttons bring no request: the kept note and the plot memory carry the user's words. A request,
+        # texts or decisions the root passes on that turn come from its memory of earlier turns, which may hold a
+        # request the user has since overtaken by rebinding a column, as the root re-sent "the prices" after values
+        # had been bound to Stock by hand.
+        args = args.model_copy(update={"change_request": "", "expected_texts": [], "remember": []})
+    return in_users_words(args, ledger.user_words)
+
+
+def stop_not_ready(
+    ctx: Context, ledger: RequestLedger, args: PipelineArgs, view: SessionView | None, reason: NotReadyReason
+) -> PlotResult:
+    """A plot the session is not ready for (`load_inputs`), from `run_args`: keep a first plot's request, write the
+    `pipeline_run` line and the last run, and answer `not_ready`.
+
+    Both the run and ToolSafety's refusal before it end here: a call after the turn's own data change
+    (`data_changed_this_turn`) or on the summary turn of an unconfirmed paste (`summary_turn`) keeps the wish and
+    leaves the same records as a run that found the data unconfirmed."""
+    kept = keep_pending_request(ctx.state, args, reason)
+    if kept:
+        ledger.kept_note = args  # held for the bindings and data this turn ends with
+    versions = get_services().versions
+    language = plot_language(view, versions.latest_language(ctx.session.id)) if view is not None else None
+    # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
+    index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
+    telemetry.write(
+        telemetry.PipelineRun,
+        ledger,
+        attempt=f"run{index}",
+        run_index=index,
+        base=args.base,
+        status="not_ready",
+        reason=reason,
+        plot_language=telemetry.plot_language(language),
+        readiness=telemetry.readiness(view.readiness) if view is not None else None,
+        lane=ledger.tier,
+    )
+    result = PlotResult.not_ready(reason, request_kept=kept)
+    record_last_run(ctx.state, result, turn=ledger.turn)
+    return result
+
+
 def has_request(args: PipelineArgs) -> bool:
     """Whether a first plot's arguments carry anything a kept note holds: a request, texts or memory decisions."""
     return bool(args.change_request or args.expected_texts or args.remember)
@@ -1723,41 +1773,12 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     services = get_services()
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
-    if ledger.fresh_start and node_input.base == "previous":
-        # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
-        # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
-        node_input = node_input.model_copy(update={"base": "catalogue"})
-    if ledger.kind == "action":
-        # The page's buttons bring no request: the kept note and the plot memory carry the user's words. A request,
-        # texts or decisions the root passes on that turn come from its memory of earlier turns, which may hold a
-        # request the user has since overtaken by rebinding a column, as the root re-sent "the prices" after values
-        # had been bound to Stock by hand.
-        node_input = node_input.model_copy(update={"change_request": "", "expected_texts": [], "remember": []})
-    node_input = in_users_words(node_input, ledger.user_words)
+    node_input = run_args(ledger, node_input)
     view, dataset, not_ready = load_inputs(ctx, services)
-    language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:
-        kept = keep_pending_request(ctx.state, node_input, not_ready)
-        if kept:
-            ledger.kept_note = node_input  # held for the bindings and data this turn ends with
-        # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
-        index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
-        telemetry.write(
-            telemetry.PipelineRun,
-            ledger,
-            attempt=f"run{index}",
-            run_index=index,
-            base=node_input.base,
-            status="not_ready",
-            reason=not_ready or "no_dataset",
-            plot_language=telemetry.plot_language(language),
-            readiness=telemetry.readiness(view.readiness) if view is not None else None,
-            lane=ledger.tier,
-        )
-        result = PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept)
-        record_last_run(ctx.state, result, turn=ledger.turn)
-        yield _result_event(result)
+        yield _result_event(stop_not_ready(ctx, ledger, node_input, view, not_ready or "no_dataset"))
         return
+    language = plot_language(view, services.versions.latest_language(ctx.session.id))
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
