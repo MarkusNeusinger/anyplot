@@ -298,8 +298,10 @@ def upload_to_staging(preview: Path, staging: str) -> None:
 
 
 def promote_to_production(staging: str, production: str) -> None:
-    # Copy then make public; finally clean up staging.
-    _gsutil(["-m", "-h", CACHE_HEADER, "cp", "-r", f"{staging}/*", f"{production}/"])
+    # Copy then make public; finally clean up staging. Only the `plot-*`
+    # renders, as impl-merge promotes them: the pipeline's adapt/ records and
+    # render.sha256 that may sit in the same folder never reach production.
+    _gsutil(["-m", "-h", CACHE_HEADER, "cp", f"{staging}/plot-*", f"{production}/"])
     _gsutil(["-m", "acl", "ch", "-r", "-u", "AllUsers:R", f"{production}/"], check=False)
     _gsutil(["-m", "rm", "-r", f"{staging}/"], check=False)
 

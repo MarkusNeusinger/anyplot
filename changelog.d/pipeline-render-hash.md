@@ -19,3 +19,10 @@
 - **A generation whose branch was never pushed fails.** impl-generate used to
   check out `origin/main` instead, which put a regeneration's renders under
   the live implementation.
+- **The manual re-render script promotes only the renders.**
+  `scripts/migrate_render_and_upload.py` copied everything in staging to
+  production; it now copies the `plot-*` objects, as impl-merge does, so a
+  staged `render.sha256` or `adapt/` record stays private.
+- **`regen_gate.py sanitize-source` keeps line endings.** It used to rewrite
+  CRLF as LF, so a CRLF file was committed in a form other than the one
+  rendered.

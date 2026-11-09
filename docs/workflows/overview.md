@@ -202,7 +202,9 @@ The render hash only warns. `impl-generate.yml` and `impl-repair.yml` stage `ren
 | `missing` | Staging has no `render.sha256`, for example renders staged before the hash existed. | Yes |
 | `unreadable` | Staging or the file at the head couldn't be read. | Yes |
 
-The comment starts with `<!-- render-hash:v1 status=… head=… -->`. Nothing in the check changes the review, its score, or the verdict.
+The comment starts with `<!-- render-hash:v1 status=… head=… -->`, and a PR gets it once per status and head: a re-review or a resumed review of the same head posts nothing new. Nothing in the check changes the review, its score, or the verdict.
+
+`scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
 The review's own header commit rewrites the whole generated header (title, library version, date), not only the score. A re-review of the same staging after that commit, such as a rescue re-dispatch, can therefore report `mismatch` although the code didn't change. A repair renders after that commit, so its hash already covers the rewritten header.
 

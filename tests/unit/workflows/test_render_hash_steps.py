@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from automation.scripts.render_hash import read_hash, render_hash
-from tests.unit.workflows.test_pipeline_retry_gaps import FAKE_GH, _calls, _run, _step, _steps
+from tests.unit.workflows.test_pipeline_retry_gaps import _calls, _run, _step, _steps
 
 
 TOOLS = Path(__file__).resolve().parents[3] / "automation" / "scripts"
@@ -64,6 +64,21 @@ esac
 exit 0
 """
 
+# Logs every call like test_pipeline_retry_gaps' stub. `api` prints the file
+# $GH_HEADS (the PR comments' first lines; fails with GH_FAIL_API=1), and
+# `pr comment` exits $GH_COMMENT_RC.
+FAKE_GH = r"""#!/bin/sh
+for arg in "$@"; do printf '%s\n' "$arg"; done >> "$GH_LOG"
+echo "--END--" >> "$GH_LOG"
+case "$1 $2" in
+  "api "*) [ "${GH_FAIL_API:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+           [ -n "${GH_HEADS:-}" ] && cat "$GH_HEADS"
+           exit 0 ;;
+  "pr comment") exit "${GH_COMMENT_RC:-0}" ;;
+esac
+exit 0
+"""
+
 
 def _git_env(tmp: Path) -> dict[str, str]:
     """No user or system git config and no inherited GIT_* or GH_* state."""
@@ -87,7 +102,7 @@ class Repo:
         self.gcs, self.runner, self.bin = tmp / "gcs", tmp / "runner", tmp / "bin"
         for path in (self.ws, self.gcs, self.runner, self.bin):
             path.mkdir()
-        for name, body in (("gsutil", FAKE_GSUTIL), ("gh", "#!/bin/sh\n" + FAKE_GH), ("sleep", "#!/bin/sh\n")):
+        for name, body in (("gsutil", FAKE_GSUTIL), ("gh", FAKE_GH), ("sleep", "#!/bin/sh\n")):
             (self.bin / name).write_text(body, encoding="utf-8")
             (self.bin / name).chmod(0o755)
         self.git("init", "-q", "-b", "main")
@@ -143,6 +158,7 @@ class Repo:
                 "LANGUAGE": LANG,
                 "EXT": EXT,
                 "BRANCH": BRANCH,
+                "REPOSITORY": "o/r",
                 **env,
             },
             capture_output=True,
@@ -257,9 +273,17 @@ BRANCH_GATE = GENERATE[
 
 @pytest.mark.parametrize("shell", SHELLS, ids=SHELL_IDS)
 class TestGenerateBranchGate:
-    def _metadata(self, repo: Repo, shell: list[str]) -> subprocess.CompletedProcess[str]:
-        script = 'IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"\n' + CACHE + "git fetch -q origin\n"
-        return repo.run(script + BRANCH_GATE, shell)
+    def _metadata(self, repo: Repo, shell: list[str], fetch: bool = True) -> subprocess.CompletedProcess[str]:
+        script = 'IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"\n' + CACHE
+        return repo.run(script + ("git fetch -q origin\n" if fetch else "") + BRANCH_GATE, shell)
+
+    def test_an_unreachable_origin_fails_with_its_own_message(self, tmp_path, shell):
+        repo = Repo(tmp_path)
+        repo.git("remote", "set-url", "origin", str(tmp_path / "gone.git"))
+        result = self._metadata(repo, shell, fetch=False)
+        assert result.returncode == 1
+        assert f"::error::Could not look up {BRANCH} on origin (git ls-remote exit 128)" in result.stdout
+        assert repo.git("rev-parse", "HEAD") == repo.start_sha
 
     def test_a_branch_that_was_never_pushed_fails_instead_of_taking_main(self, tmp_path, shell):
         repo = Repo(tmp_path)
@@ -365,6 +389,32 @@ class TestReviewCheck:
         result, _ = self._review(tmp_path, shell, None, GH_COMMENT_RC="1")
         assert result.returncode == 0
         assert "::warning::render-hash comment not posted on PR #7" in result.stdout
+
+    @pytest.mark.parametrize(
+        ("heads", "env", "posted"),
+        [
+            ("same", {}, False),  # a re-review or a resumed review of the same head
+            ("other-head", {}, True),
+            ("other-status", {}, True),
+            ("same", {"GH_FAIL_API": "1"}, True),  # an unreadable list posts it
+        ],
+    )
+    def test_one_comment_per_status_and_head(self, tmp_path, shell, heads, env, posted):
+        listing = tmp_path / "heads"
+        result, repo = self._review(tmp_path, shell, None, GH_HEADS=str(listing), **env)
+        assert result.returncode == 0  # first run: posts
+        marker = {
+            "same": f"<!-- render-hash:v1 status=missing head={repo.start_sha} -->",
+            "other-head": f"<!-- render-hash:v1 status=missing head={'e' * 40} -->",
+            "other-status": f"<!-- render-hash:v1 status=mismatch head={repo.start_sha} -->",
+        }[heads]
+        listing.write_text(f"## :robot: AI Review\n{marker}\n", encoding="utf-8")
+        (tmp_path / "gh.log").unlink()
+        script = str(_step("impl-review.yml", REVIEW_STEP)["run"])
+        again = repo.run(script, shell, PR_NUM="7", HEAD_SHA=repo.start_sha, GH_HEADS=str(listing), **env)
+        assert again.returncode == 0, again.stdout + again.stderr
+        assert bool(_calls(repo.gh_calls(), "pr", "comment")) == posted
+        assert ("already carries this render-hash comment" in again.stdout) == (not posted)
 
 
 # --- wiring ----------------------------------------------------------------------------------------

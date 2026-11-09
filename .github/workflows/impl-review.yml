@@ -563,6 +563,7 @@ jobs:
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
           EXT: ${{ steps.lang.outputs.ext }}
+          REPOSITORY: ${{ github.repository }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           HASH="$RUNNER_TEMP/render.sha256"
@@ -579,8 +580,17 @@ jobs:
           fi
           git show "${HEAD_SHA}:plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}" > "$SRC" 2>/dev/null || rm -f "$SRC"
           python3 "$RUNNER_TEMP/regen-tools/render_hash.py" check --hash "$HASH" --source "$SRC" --head "$HEAD_SHA" \
-            --fetch-error "$FETCH_ERROR" --run-url "$RUN_URL" --comment-out "$BODY"
-          if [ -s "$BODY" ]; then
+            --fetch-error="$FETCH_ERROR" --run-url "$RUN_URL" --comment-out "$BODY"
+          [ -s "$BODY" ] || exit 0
+          # One comment per status and head: a re-review or a resumed review of
+          # the same head posts nothing new (the pause dedupe reads the PR's
+          # last bot comment). A failed read posts it.
+          MARKER=$(head -n 1 "$BODY")
+          HEADS=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" \
+            --jq '.[] | (.body // "") | split("\n") | .[0] // "" | rtrimstr("\r")' 2>/dev/null) || HEADS=""
+          if grep -qxF "$MARKER" <<< "$HEADS"; then
+            echo "::notice::PR #${PR_NUM} already carries this render-hash comment"
+          else
             gh pr comment "$PR_NUM" --body-file "$BODY" || echo "::warning::render-hash comment not posted on PR #${PR_NUM}"
           fi
 

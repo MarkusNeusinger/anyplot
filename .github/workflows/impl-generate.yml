@@ -924,8 +924,12 @@ jobs:
           # The generator (or the adopt step) pushes the branch. Without it the
           # renders belong to no pushed code, and checking out origin/main
           # would put a regeneration's renders under the live implementation.
-          if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+          rc=0; git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1 || rc=$?
+          if [ "$rc" = 2 ]; then
             echo "::error::Remote branch ${BRANCH} not found: the implementation was never pushed, so its renders are neither committed nor staged"
+            exit 1
+          elif [ "$rc" != 0 ]; then
+            echo "::error::Could not look up ${BRANCH} on origin (git ls-remote exit ${rc}); nothing is committed or staged"
             exit 1
           fi
           git checkout -B "$BRANCH" "origin/$BRANCH"

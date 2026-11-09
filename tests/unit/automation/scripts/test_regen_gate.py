@@ -1242,6 +1242,13 @@ class TestResetHeaderScore:
             == "// anyplot.ai\n// Quality: pending | Updated: 2026-09-01\nconst a = 1;\n"
         )
 
+    def test_cli_keeps_crlf_line_endings(self, tmp_path):
+        """The committed file then hashes like the rendered one (render_hash.py)."""
+        src = tmp_path / "impl.js"
+        src.write_bytes(b"// anyplot.ai\r\n// Quality: 91/100 | Updated: 2026-09-01\r\nconst a = 1;\r\n")
+        assert main(["sanitize-source", "--pending", "--source", str(src), "--out", str(src)]) == 0
+        assert src.read_bytes() == b"// anyplot.ai\r\n// Quality: pending | Updated: 2026-09-01\r\nconst a = 1;\r\n"
+
 
 # ---------------------------------------------------------------------------
 # P3: defects and suggestions, obsolete weaknesses, carriers
