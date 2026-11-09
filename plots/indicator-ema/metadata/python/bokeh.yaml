@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:20Z'
-updated: '2026-11-09T11:33:29Z'
+updated: '2026-11-09T11:39:16Z'
 generated_by: claude-opus
 workflow_run: 42609091246
 issue: 3652
@@ -12,54 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/bokeh/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - 'The close price line (width 6, #009E73) dominates, and the two EMAs at width
-    3.5 in #4467A3 and #BD8233 can be told apart in both themes, as the Notes ask'
-  - The EMAs are computed with pandas ewm(span=12/26, adjust=False); EMA 12 follows
-    the price closely and turns first, EMA 26 is smoother and lags, both stay at the
-    level of recent prices
-  - Crossover markers sit at the exact linear intersection of the two EMA segments
-    (lines 57-64), drawn as small hollow rings in the page color so the lines beneath
-    stay visible
-  - An explicit bokeh Legend model placed outside the plot area on an elevated background
-    keeps the data region clear; every EMA is labelled with its period
-  - 'Chrome is fully theme-tokenised: titles, ticks, axes, grid and legend all flip
-    cleanly between #FAF8F1 and #1A1A17 while the data colors stay identical'
+  - Price line at line_width 6 against EMA lines at 3.5 keeps Close price the dominant
+    series, with EMA 12 (#C475FD) and EMA 26 (#4467A3) clearly told apart in both
+    themes
+  - EMAs computed with pandas ewm(span=..., adjust=False); EMA 12 hugs the price and
+    turns early, EMA 26 is smoother and turns later, exactly as the periods imply
+  - Crossover markers are placed at the exact linear intersection of the two EMA segments
+    between consecutive dates, small hollow rings that leave the lines beneath visible
+  - Explicit bokeh Legend model attached outside the plot area with add_layout(legend,
+    'right'), labelled with each EMA period, on the ELEVATED_BG surface
+  - 'All chrome threaded through theme tokens: warm off-white and near-black backgrounds,
+    INK/INK_SOFT text, 0.15-alpha grid; identical data colors across renders'
+  - 'Adaptable structure: column constants, a replaceable data block and a plot zone
+    that reads only df and the constants'
   weaknesses:
-  - 'VQ-07 (both): the two EMAs use Imprint positions 3 and 4 (#4467A3, #BD8233) and
-    skip position 2 (#C475FD); EMA labels imply no real-world color, so the semantic
-    exception does not apply → canonical order: price #009E73, EMA 12 #C475FD, EMA
-    26 #4467A3. Likely cause: IMPRINT_PALETTE[2] / IMPRINT_PALETTE[3] indices on lines
-    86-87.'
-  - 'VQ-02 (both): the legend''s line glyphs run right up to their labels (the ''Close
-    price'' line touches the ''C'') with no visible gap → about 15-20 px between glyph
-    and label (+10 to +15 px). Likely cause: default label_standoff with glyph_width=60;
-    set p.legend.label_standoff.'
-  - 'DQ-02 (both): the synthetic series shows a one-day ~15 % cliff in late April
-    and a ~8 % one-day jump in late May that come from the piecewise multipliers ending
-    abruptly, which reads as a generation artifact rather than a plausible stock →
-    generate the trends as drifts in the returns so the series stays continuous. Likely
-    cause: price[40:80] *= linspace(1, 1.15) and price[80:100] *= linspace(1, 0.92)
-    on lines 44-45.'
-  - 'Suggestion: a HoverTool showing date, close and both EMA values would add value
-    in the HTML view.'
+  - 'Suggestion: the ''EMA crossover'' legend ring renders noticeably smaller than
+    the 22 px rings on the chart; a larger legend glyph would match them more closely.'
+  - 'Suggestion: a HoverTool showing date, close and both EMA values would add inspection
+    value to the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and plot area, no pure white.
-      Chrome: title "indicator-ema · python · bokeh · anyplot.ai" top-left in dark ink (~45 % of width); y-axis "Price (USD)" and x-axis "Date" in dark ink; tick labels 130-160 and Jan-Jun 2025 in soft dark grey; subtle grid; legend at the right outside the plot on an elevated panel with a thin border. All text readable.
-      Data: close price as a thick #009E73 line, EMA 12 thinner #4467A3 blue, EMA 26 thinner #BD8233 ochre; six hollow ring crossover markers (page-colored fill, dark outline) at the EMA intersections. A sharp ~15 % one-day drop in late April and a jump in late May are visible.
+      Background: warm off-white #FAF8F1 across the canvas and plot area; no plot outline, subtle 0.15-alpha grid.
+      Chrome: title "indicator-ema · python · bokeh · anyplot.ai" top-left in dark ink (~45% width); axis titles "Date" and "Price (USD)" dark, tick labels (Jan–Jun 2025, 130–160) in INK_SOFT, all clearly readable. Legend at right on an elevated off-white box with a soft border: Close price, EMA 12, EMA 26, EMA crossover.
+      Data: Close price as a thick #009E73 line (uptrend Apr, downtrend May, ranges 131–160); EMA 12 thinner #C475FD following closely; EMA 26 thinner #4467A3 smoother and lagging; four hollow ink-outlined rings at the EMA crossovers (early Jan, late Jan, late Mar, mid May).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, no pure black.
-      Chrome: title, axis labels in light ink, ticks in light grey, subtle grid, legend on a #242420 panel with light labels. No dark-on-dark text anywhere.
-      Data: identical colors to the light render (green price, blue EMA 12, ochre EMA 26); crossover rings flip to a dark fill with a light outline and stay visible. Brand green reads well.
+      Background: warm near-black #1A1A17; legend on the #242420 elevated surface.
+      Chrome: title and axis titles in light ink, tick labels in light grey INK_SOFT, grid subtle but visible; no dark-on-dark text anywhere.
+      Data: identical colors to the light render (#009E73 price, #C475FD EMA 12, #4467A3 EMA 26); crossover rings flip to light outline with near-black fill and stay visible. EMA 26 blue is the lowest-contrast line but clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,45 +55,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set explicitly (title 50pt, labels 42pt, ticks/legend
-          34pt); readable in both themes
+        comment: Explicit 50/42/34 pt sizes; all text readable in both themes and
+          at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Legend line glyphs touch their labels (defect line)
+        comment: No text collisions; legend sits outside the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines clearly visible; crossover rings and legend glyphs visible
-          in both themes
+        comment: Lines well weighted for 120 points; crossover rings visible; legend
+          glyphs visible and match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/ochre distinguishable, no red-green as sole signal
+        comment: Green, purple and blue differ in hue and lightness; line width also
+          separates price from EMAs
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off
+        comment: 3200x1800 canvas, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date / Price (USD) with units
+        comment: '''Date'' and ''Price (USD)'' with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: EMAs skip Imprint position 2 (defect line); backgrounds correct
+        passed: true
+        comment: 'First series #009E73, then canonical Imprint order; correct backgrounds
+          and chrome in both themes'
     design_excellence:
       score: 9
       max: 20
@@ -115,20 +105,20 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Style-guide baseline
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Legend moved outside the data area on an elevated panel; plot outline
-          removed for a cleaner frame
+        comment: Plot outline removed and legend padding, spacing and label standoff
+          tuned for the large canvas
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Crossover highlights are what the Notes allow; no further hierarchy
+        comment: Crossover highlights are the Notes' own suggestion; no further hierarchy
           chosen
     spec_compliance:
       score: 15
@@ -139,28 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Price line with EMA overlays on the same axis
+        comment: Price line with overlaid EMA lines on one price axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Prominent price, distinct thinner EMAs, period labels in legend,
-          crossovers at exact intersections; all good-version bullets met
+        comment: Prominent price, distinct EMA colors, thinner EMAs, period labels
+          in legend, crossovers exactly at the intersections; all A good version shows
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every line at its computed value; full range shown
+        comment: Every line at its computed value; crossovers interpolated exactly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend entries readable
+        comment: Mandated title format; legend entries readable and correct
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -168,20 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Trends, reversals, lag and multiple crossovers all shown
+        comment: Uptrend, downtrend and sideways stretches show lag, responsiveness
+          difference and four crossovers
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Abrupt one-day cliff/jump from piecewise multipliers (defect line)
+        comment: Plausible daily stock closes over 120 business days, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 business days, prices 122-164 USD; EMA spans 12/26 match the
-          spec example
+        comment: Prices 131-160 USD with ~1.4% daily volatility; 12/26 spans as in
+          the spec example; checked EMA 12 tracks closer than EMA 26 on the axis
     code_quality:
       score: 10
       max: 10
@@ -191,7 +183,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,13 +201,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ewm() for EMAs; vectorised crossover interpolation
+        comment: EMA via pandas ewm; vectorised crossover interpolation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium, current API
+        comment: plot-{THEME}.html and plot-{THEME}.png via the mandated Selenium
+          path
     library_mastery:
       score: 5
       max: 10
@@ -225,18 +218,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Shared ColumnDataSource with column-name glyph args; explicit Legend
-          model with items added via add_layout
+        comment: Shared ColumnDataSource across glyphs, explicit Legend model with
+          add_layout outside the frame
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        passed: false
+        passed: true
         comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T11:30:45Z'
+  rendered_at: '2026-11-09T11:36:28Z'
 impl_tags:
   dependencies:
   - selenium
@@ -251,4 +244,4 @@ impl_tags:
   - time-series
   - rolling-window
   styling:
-  - grid-styling
+  - edge-highlighting
