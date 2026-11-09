@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -76,7 +76,7 @@ nodes = totals.rename(ACCOUNTS).reset_index()
 nodes = nodes.assign(order=nodes[PLAN].map(rank)).sort_values("order", kind="stable")
 
 # Layout in a unit square: columns spread evenly, blocks stacked with a fixed gap
-x_positions = dict(zip(snapshots, np.linspace(0.14, 0.86, len(snapshots)), strict=True))
+x_positions = dict(zip(snapshots, np.linspace(0.17, 0.83, len(snapshots)), strict=True))
 node_width = 0.032
 node_gap = 0.025
 column_max = nodes.groupby(SNAPSHOT, sort=False)[ACCOUNTS].sum().max()
@@ -142,27 +142,28 @@ plot = (
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill=PLAN), data=nodes, color=INK_SOFT, size=0.4
     )
     + geom_text(aes(x="x", y="y", label="label"), data=headers, size=6, fontface="bold", color=INK)
-    + geom_text(aes(x="label_x", y="label_y", label="label"), data=first, size=4, hjust=1, color=INK_SOFT)
+    + geom_text(aes(x="label_x", y="label_y", label="label"), data=first, size=5, hjust=1, color=INK_SOFT)
     + geom_label(
         aes(x="label_x", y="label_y", label="label"),
         data=others,
-        size=4,
+        size=5,
         hjust=0,
         color=INK_SOFT,
         fill=PAGE_BG,
-        alpha=0.85,
+        alpha=0.5,
         label_size=0,
         label_padding=0.15,
     )
     + scale_fill_manual(values=colors)
     + scale_x_continuous(limits=[0, 1], expand=[0, 0])
     + scale_y_continuous(limits=[0, 1], expand=[0, 0])
-    + labs(title=title)
+    + labs(title=title, subtitle=f"Block heights and band widths: {ACCOUNTS}")
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_title=element_text(size=round(16 * min(1.0, 67 / len(title))), face="bold", color=INK),
+        plot_subtitle=element_text(size=11, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
