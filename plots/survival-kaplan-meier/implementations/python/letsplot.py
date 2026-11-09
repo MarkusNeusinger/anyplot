@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 79/100 | Updated: 2026-11-09
@@ -9,9 +9,11 @@ import shutil
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -75,27 +77,19 @@ curves = []
 censored = []
 for name, sub in obs.groupby(GROUP, sort=False):
     t = sub[TIME].to_numpy(dtype=float)
-    e = sub[EVENT].to_numpy(dtype=float)
-    n_at_risk = len(t)
-    survival, var_sum = 1.0, 0.0
-    rows = [{TIME: 0.0, SURVIVAL: 1.0, CI_LOW: 1.0, CI_HIGH: 1.0}]
-    for u in np.unique(t):
-        at_time = t == u
-        d = e[at_time].sum()
-        if n_at_risk > 0 and d > 0:
-            survival *= 1 - d / n_at_risk
-            var_sum += d / (n_at_risk * (n_at_risk - d)) if n_at_risk > d else 0
-        se = survival * np.sqrt(var_sum)  # Greenwood's formula
-        rows.append(
-            {
-                TIME: u,
-                SURVIVAL: survival,
-                CI_LOW: max(0.0, survival - Z_95 * se),
-                CI_HIGH: min(1.0, survival + Z_95 * se),
-            }
-        )
-        n_at_risk -= at_time.sum()
-    km = pd.DataFrame(rows)
+    fit = sm.SurvfuncRight(t, sub[EVENT].to_numpy(dtype=float))  # product-limit estimate, Greenwood SE
+    se = np.nan_to_num(fit.surv_prob_se)
+    km = pd.DataFrame(
+        {
+            TIME: np.r_[0.0, fit.surv_times],
+            SURVIVAL: np.r_[1.0, fit.surv_prob],
+            CI_LOW: np.r_[1.0, np.clip(fit.surv_prob - Z_95 * se, 0, 1)],
+            CI_HIGH: np.r_[1.0, np.clip(fit.surv_prob + Z_95 * se, 0, 1)],
+        }
+    )
+    # Hold the last estimate to the end of follow-up so the censored tail shows
+    if t.max() > km[TIME].iloc[-1]:
+        km = pd.concat([km, km.iloc[[-1]].assign(**{TIME: t.max()})], ignore_index=True)
     km[GROUP] = name
     curves.append(km)
 
@@ -134,7 +128,8 @@ plot = (
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major=element_line(color=GRID, size=0.3),
         panel_grid_minor=element_line(color=GRID, size=0.2),
         axis_title=element_text(size=12, color=INK),
