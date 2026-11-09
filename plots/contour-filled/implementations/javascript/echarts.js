@@ -1,7 +1,7 @@
 // anyplot.ai
 // contour-filled: Filled Contour Plot
-// Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-04
+// Library: echarts 6.1.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-09
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
