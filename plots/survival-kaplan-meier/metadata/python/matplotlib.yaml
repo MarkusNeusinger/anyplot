@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:00Z'
-updated: '2026-11-09T07:24:33Z'
+updated: '2026-11-09T07:30:05Z'
 generated_by: claude-opus
 workflow_run: 42578495153
 issue: 2441
@@ -15,41 +15,32 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Kaplan-Meier estimate from statsmodels SurvfuncRight, drawn with ax.step(where="post")
-    and a matching fill_between(step="post") so curve and 95% band step together from
-    S=1 at t=0
-  - Censored observations drawn as small '|' scatter ticks at the step curve's height
-    via searchsorted, clearly distinct from the vertical drops
-  - 'Median survival shown where it belongs: group-colored dotted drop lines at the
-    0.5 crossing plus a compact elevated-background text box with both medians'
-  - Theme tokens threaded through every chrome element (title, labels, ticks, spines,
-    grid, legend frame, annotation box); both renders read cleanly and data colors
-    are identical
-  - Translucent bands (alpha 0.18) keep the overlapping early-follow-up region and
-    both curves distinguishable in light and dark
+  - Kaplan-Meier estimate comes from statsmodels SurvfuncRight rather than a hand-rolled
+    product-limit loop, with the 95% band from its standard errors
+  - Curves drawn with ax.step(where='post') and bands with fill_between(step='post'),
+    so the band steps with its curve and each curve starts at S=1 at t=0
+  - Censoring ticks are placed at the step curve's height at each censoring time via
+    searchsorted, small '|' marks that do not read as steps
+  - Median survival is marked where each curve crosses 0.5 with group-colored dotted
+    drop lines, and the values sit in an elevated box clear of the curves
+  - Theme tokens are threaded through every chrome element; both renders are fully
+    readable and data colors are identical across themes
   weaknesses:
-  - 'DQ-03 (both): np.clip(..., 0.5, 60) turns every subject surviving past 60 months
-    into a death at exactly month 60 (event stays 1), so the Treatment curve plunges
-    vertically from about 0.19 to about 0.02 at the end of follow-up — an artifact
-    no real trial shows, where survivors at study end are censored → set event = 0
-    for times clipped at the follow-up cutoff so the curve ends at about 0.19 with
-    censoring ticks. Likely cause: lines 37–40 clip the times without censoring the
-    clipped rows.'
-  - 'Suggestion: km.quantile(0.5) from SurvfuncRight could replace the three-line
-    manual median lookup (lines 77–79).'
-  - 'Suggestion: an at-risk count table below the axis, which the Notes allow, would
-    explain the widening bands in the tail.'
+  - 'Suggestion: an at-risk table below the plot aligned with the time axis, which
+    the Notes allow, would show why the bands widen late in follow-up'
+  - 'Suggestion: a log-rank p-value as text clear of the curves (statsmodels.duration.survdiff)
+    would quantify the group difference the Notes allow'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across figure and axes.
-      Chrome: title "survival-kaplan-meier · python · matplotlib · anyplot.ai" in dark ink, ~57% of width; axis labels "Time (months)" and "Survival probability" in dark ink; soft-ink tick labels 0–60 and 0.0–1.0; subtle y-only grid; top/right spines removed; legend "Arm" (Treatment Group, Control Group) upper right on elevated frame; median box "Treatment Group median: 21.9 mo / Control Group median: 16.6 mo" below it. All readable.
-      Data: Treatment Group step curve in #009E73, Control Group in #C475FD, each with a translucent 95% band stepping with the curve (overlap reads as a grey-blue mix); vertical '|' censoring ticks on the curves; dotted horizontal line at 0.5 and group-colored dotted drop lines at 16.6 and 21.9 months. Treatment ends with a vertical plunge from ~0.19 to ~0.02 at month 60; Control ends near 0.03 at ~58 months.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "survival-kaplan-meier · python · matplotlib · anyplot.ai" dark, ~57% of the width; axis titles "Time (months)" and "Survival probability" dark; ticks 0–60 and 0.0–1.0 in soft ink; subtle horizontal grid; top/right spines removed. Legend "Arm" (Treatment Group, Control Group) top right in an elevated frame; median box "Treatment Group median: 21.9 mo / Control Group median: 16.6 mo" below it, clear of the curves. All readable.
+      Data: Treatment Group step curve in #009E73, Control Group in #C475FD, both starting at 1.0 at t=0, with translucent stepped 95% bands; vertical censoring ticks on the curves; dotted 0.5 reference line and group-colored dotted drop lines at 21.9 and 16.6 months. Control drops to 0 near 58 months, Treatment ends near 0.19 at 60 months.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis labels in light ink; tick labels in light soft ink; grid subtle but visible; legend and median box on #242420 elevated frame with light text. No dark-on-dark text.
-      Data: same #009E73 and #C475FD curves, bands, ticks and median lines as the light render; only chrome flipped. Brand green clearly visible.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, axis titles, ticks, legend and median box text all in light ink; grid subtle but visible; no dark-on-dark text.
+      Data: identical #009E73 and #C475FD curves, bands, censoring ticks and median drop lines; bands remain distinguishable, overlap reads as a muted blue-grey.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,49 +52,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set explicitly (12/10/8 pt); all text readable in both
-          themes and at thumbnail size
+        comment: Explicit sizes (12/10/8 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend and median box stacked in the empty upper right; no text collides
-          with data
+        comment: Legend and median box sit in empty top-right space; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2.5 lw curves, visible censor ticks, translucent bands distinguishable
-          where they overlap
+        comment: 2.5 lw curves, visible censoring ticks, bands at alpha 0.18 visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lilac separate under CVD; no red-green signal
+        comment: Green vs purple is CVD-safe and high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; balanced axis labels; nothing cut off
+        comment: 3200x1800, balanced margins, title ~57% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (months), Survival probability
+        comment: '''Time (months)'' with unit, ''Survival probability'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD; correct backgrounds in both
-          themes'
+        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -111,23 +99,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Coordinated weight hierarchy (2.5 curves / 1.4 ticks / 1.3 dotted
-          medians), tickless axes with soft-ink labels, rounded elevated median box
-          matching the legend
+        comment: Elevated median box and legend frames in matching tokens, clear type
+          hierarchy beyond baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Legend and median box share a right-aligned column in empty space;
-          tick length 0; xlim padding keeps the month-60 end clear of the edge
+        comment: Group-colored dotted median drop lines tied to a soft 0.5 reference,
+          tick marks removed for a cleaner frame
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Group-colored median drop lines on the shared 0.5 reference make
-          the 5-month median gap the focal comparison
+        comment: Median annotation is Notes-prescribed; no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +123,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Kaplan-Meier step curves per group
+        comment: Kaplan-Meier step functions per group
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, 95% shaded bands, censor ticks, distinct colors +
-          legend; optional median annotation drawn at the 0.5 crossing
+        comment: Step function, shaded 95% bands, censoring ticks, colors + legend,
+          median annotation where curves cross 0.5
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Curves from SurvfuncRight; censor ticks at the curve height at their
-          times
+        comment: Curves start at S=1, ticks at curve height at censoring times; axes
+          show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; legend titled Arm with readable group names
+        comment: Mandated title format; legend title 'Arm' with reader-facing labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -167,21 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Curves overlap early then diverge, censoring throughout, bands widen
-          in the tail
+        comment: Events, censoring (incl. administrative at 60 mo), widening bands,
+          crossing curves early and separation later
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral clinical-trial treatment vs control scenario
+        comment: Neutral two-arm clinical trial over 60 months
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Medians 21.9 / 16.6 mo plausible; clipping times at 60 as deaths
-          produces an artificial plunge at month 60 (defect line)
+        passed: true
+        comment: Medians 21.9 and 16.6 mo fall out of the KM computation and match
+          the drop lines read off the axis; probabilities clipped to [0,1]
     code_quality:
       score: 10
       max: 10
@@ -209,14 +195,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: KM via SurvfuncRight; the manual median lookup is a handful of lines
-          (suggestion only)
+        comment: KM via SurvfuncRight; no hand-rolled estimator
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png, no bbox_inches tight, current API
+        comment: Saves plot-{THEME}.png, current API, no bbox_inches tight
     library_mastery:
       score: 6
       max: 10
@@ -226,19 +211,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes API throughout; ax.step(where='post') with fill_between(step='post'),
-          scatter marker '|' for censor ticks, vlines/axhline
+        comment: Axes methods, step(where='post'), fill_between(step='post'), transAxes
+          text, legend frame styling
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: fill_between's step='post' mode pairing exactly with ax.step is a
-          matplotlib-specific idiom
-  verdict: REJECTED
+        comment: fill_between step='post' keeps the band in step with the curve
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
-  rendered_at: '2026-11-09T07:21:39Z'
+  rendered_at: '2026-11-09T07:27:03Z'
 impl_tags:
   dependencies:
   - statsmodels
