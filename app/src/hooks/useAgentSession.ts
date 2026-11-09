@@ -221,6 +221,7 @@ import {
   type AgentEvent,
   type ArtifactName,
   type Binding,
+  type BindingsApplied,
   type ChatSwitch,
   codeArtifact,
   type CodeArtifact,
@@ -866,6 +867,15 @@ export interface AgentSessionState {
   bindingsBusy: boolean;
   bindingsError: Failure | null;
   /**
+   * The warnings of the server's binding check (`PUT .../bindings`, `BindingsApplied.warnings`) on
+   * the data and the bindings in force: a role that needs values of 0 or more on negative values,
+   * a computed role on a column of another window, a role that takes labels on a wide table's
+   * numbers, a lower bound above its upper one, a key whose rows repeat. Never a refusal. `null`
+   * while unknown: a new data version or a binding change of a turn came without a check, until
+   * the next one (`checkBindings`). The plot button's one click stops at the card on any of them.
+   */
+  bindingWarnings: string[] | null;
+  /**
    * Step 1 is done: the user confirmed that the stored dataset and its bindings
    * fit. A stored parse, a transcription and an applied binding change clear it.
    */
@@ -962,7 +972,14 @@ type Action =
   | { type: 'transcribed'; transcription: TranscriptionState; chip?: string }
   | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
-  | { type: 'bindings_done'; bindings: BindingMap; complete: boolean; missingRoles: string[] }
+  | {
+      type: 'bindings_done';
+      bindings: BindingMap;
+      complete: boolean;
+      missingRoles: string[];
+      /** The check's warnings (`checkWarnings`); none when absent. */
+      warnings?: string[];
+    }
   | { type: 'bindings_failed'; bindings: BindingMap; failure: Failure }
   | { type: 'confirm_start' }
   | { type: 'confirm_done' }
@@ -1064,6 +1081,7 @@ export function initialAgentState(library: string): AgentSessionState {
     missingRoles: [],
     bindingsBusy: false,
     bindingsError: null,
+    bindingWarnings: null,
     dataConfirmed: false,
     confirmLoss: null,
     confirmBusy: false,
@@ -1184,6 +1202,14 @@ function toMap(bindings: readonly Binding[]): BindingMap {
   return map;
 }
 
+/** The binding check's warnings: an older server names none, and the answer is not typed. */
+function checkWarnings(applied: BindingsApplied): string[] {
+  const { warnings } = applied as { warnings?: unknown };
+  return Array.isArray(warnings)
+    ? warnings.filter((line): line is string => typeof line === 'string')
+    : [];
+}
+
 /** The data's version number; an answer without one (an older server) is the paste's 1. */
 function versionOf(value: unknown): number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 1 ? value : 1;
@@ -1235,6 +1261,8 @@ function withDataVersion(
     bindingsComplete: missing.length === 0,
     missingRoles: missing,
     bindingsError: null,
+    // No binding check answered for this version: its warnings are unknown until the next one.
+    bindingWarnings: null,
     dataConfirmed: false,
     confirmError: null,
     confirmLoss: state.confirmLoss === null ? null : 'data',
@@ -1621,6 +1649,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           bindingsComplete: false,
           missingRoles: [],
           bindingsError: null,
+          // The parse's own binding call names them next.
+          bindingWarnings: null,
           // A new dataset is unchecked: the server dropped its confirmation when it stored it.
           dataConfirmed: false,
           confirmError: null,
@@ -1665,6 +1695,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         bindings: action.bindings,
         bindingsComplete: action.complete,
         missingRoles: action.missingRoles,
+        bindingWarnings: action.warnings ?? [],
         // An applied change replaces the set the user confirmed, and the server
         // drops its confirmation with it. The parse's own default PUT lands while
         // the flag is already false, so it never looks like a change.
@@ -1697,6 +1728,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           bindings: action.bindings,
           bindingsComplete: missing.length === 0,
           missingRoles: missing,
+          // The root's `set_bindings` came without the check's warnings: unknown until the next one.
+          ...(sameBindings(action.bindings, state.bindings) ? {} : { bindingWarnings: null }),
         };
       }
       if (action.dataConfirmed !== null) next = { ...next, dataConfirmed: action.dataConfirmed };
@@ -1730,6 +1763,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           bindingsComplete: dataset.complete,
           missingRoles: dataset.missing_roles,
           bindingsError: null,
+          bindingWarnings: null,
           // The server confirmed the copy with the bindings the page session confirmed.
           dataConfirmed: true,
           confirmError: null,
@@ -2218,6 +2252,7 @@ export function useAgentSession({
           bindings: toMap(applied.bindings),
           complete: applied.complete,
           missingRoles: applied.missing_roles,
+          warnings: checkWarnings(applied),
         });
       } catch (err) {
         safeDispatch({ type: 'bindings_failed', bindings: previous, failure: handleFailure(err) });
@@ -2227,6 +2262,21 @@ export function useAgentSession({
     },
     [token, safeDispatch, handleFailure]
   );
+
+  /**
+   * The server's binding check again on the bindings in force, which it holds already: the same
+   * set, so nothing changes there and it counts as no change by hand (`main.put_bindings`). The
+   * answer names `complete`, the open roles and the warnings a turn's new data version or
+   * `set_bindings` brought without a check (`bindingWarnings` `null`). Resolves to whether the
+   * check ran: nothing starts without data, while a table read from text waits, or while
+   * anything else is in flight.
+   */
+  const checkBindings = useCallback(async (): Promise<boolean> => {
+    const current = stateRef.current;
+    if (!current.dataset || current.transcription || current.run || busy()) return false;
+    await applyBindings(current.bindings, current.bindings);
+    return true;
+  }, [applyBindings, busy]);
 
   /** `.discard()`: drop the transcribed table; nothing was stored, so the server is not asked. */
   const discardTranscription = useCallback(() => {
@@ -2270,7 +2320,8 @@ export function useAgentSession({
 
   /**
    * The end of step 1, the first link of the page's `.create_plot()` (and of the carry and
-   * `.plot_all()`) on unconfirmed data: the server marks the stored dataset and its current
+   * `.plot_all()`) on unconfirmed data, also where the plot button's one click goes on by itself
+   * after reading the box's data clean (`plotChain.ts`): the server marks the stored dataset and its current
    * bindings as checked, which a plot run needs. Resolves to whether the data is confirmed now,
    * so the caller starts the plot only then; a refusal lands in `confirmError`. Nothing starts
    * without a stored dataset, while a table read from text waits for its decision, or while
@@ -2431,6 +2482,7 @@ export function useAgentSession({
           bindings: toMap(applied.bindings),
           complete: applied.complete,
           missingRoles: applied.missing_roles,
+          warnings: checkWarnings(applied),
         });
         if (!applied.complete) return { code: 'bindings_incomplete', ref: null };
       } catch (err) {
@@ -3558,6 +3610,7 @@ export function useAgentSession({
     confirmTranscription,
     discardTranscription,
     setBinding,
+    checkBindings,
     confirmData,
     undoData,
     createPlot,

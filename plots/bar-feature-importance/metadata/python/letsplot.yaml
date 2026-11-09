@@ -2,47 +2,53 @@ library: letsplot
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:45:26Z'
-updated: '2026-05-10T01:33:05Z'
-generated_by: claude-haiku
-workflow_run: 25616339082
+updated: '2026-11-09T00:56:34Z'
+generated_by: claude-opus-5-5
+adopted_from: 205656846cb7a7fff63713ab2141a2f574b45c8f (205656846cb7a7fff63713ab2141a2f574b45c8f)
+workflow_run: 42542476514
 issue: 2276
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-dark.html
-quality_score: 74
+quality_score: 86
 review:
   strengths:
-  - Clear visual hierarchy through sorted bars and color gradient
-  - Good data coverage with 15 features showing variability (std)
-  - Clean layout with appropriate spacing and readable text at both themes
-  - Error bars effectively communicate uncertainty in importance estimates
+  - 'Sequential Imprint gradient (#009E73 → #4467A3) mapped to importance via scale_fill_gradient,
+    so color and bar length tell the same ranking, and the weakest bar (region, 0.003)
+    stays brand green and distinct from the page in both themes'
+  - Two-layer error bars (a page-colored halo under an ink bar) stay visible on every
+    step of the gradient and on both backgrounds, centered on each bar end as the
+    spec asks
+  - Value labels sit past each error bar using lets-plot's nudge_unit='px' and label_format='.3~g',
+    so the numbers read cleanly, match the bars and never collide with the whiskers
+  - Realistic loan-default random forest scenario whose normalized MDI importances
+    sum to exactly 1.000 and show the expected dominant-head, long-tail shape
+  - Theme tokens threaded through every chrome element; the colorbar title wraps the
+    long importance label onto two lines
   weaknesses:
-  - Title domain is 'pyplots.ai' instead of 'anyplot.ai' (spec requires exact format)
-  - Output filenames hardcoded as plot.png/plot.html instead of theme-aware plot-{THEME}.png/plot-{THEME}.html
-  - Custom blue gradient (#A8D5E5→#306998) should use standard colormap (viridis/cividis/BrBG)
-    for continuous data
-  - 'No theme-adaptive color tokens — hardcodes #333333, #E0E0E0, #F0F0F0 instead
-    of INK/INK_SOFT per library guide'
+  - 'Suggestion: the x-axis headroom and the colorbar leave a wide empty band between
+    the 0.2 gridline and the legend; a horizontal colorbar under the plot, or a narrower
+    legend box, would give the bars more width.'
+  - 'Suggestion: the colorbar title repeats the full x-axis title; a short ''Importance''
+    title would lighten the legend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct surface color
-      Chrome: Title "bar-feature-importance · letsplot · pyplots.ai" in dark, bold font; axis labels "Feature" (y) and "Importance Score" (x) clearly readable in dark text; tick labels readable
-      Data: 15 horizontal bars with gradient fill from light blue (#A8D5E5, low importance) to dark blue (#306998, high importance); error bars in dark gray; data labels (0.003–0.182) positioned right of bars in dark text
-      Legibility verdict: PASS — all text is readable, no overlap issues
+      Background: warm off-white #FAF8F1 on both the plot and the panel; the legend box sits on a slightly elevated #FFFDF6 card.
+      Chrome: bold near-black title "bar-feature-importance · python · letsplot · anyplot.ai" spanning about 61% of the width; the axis titles "Importance (mean decrease in impurity)" and "Feature" are dark; the tick labels (snake_case feature names, 0–0.2) are dark gray; subtle vertical gridlines only, plus a thin y-axis line. All text is readable.
+      Data: 15 horizontal bars sorted with income (0.182) at the top and region (0.003) at the bottom, filled on a gradient from brand green #009E73 (low) to blue #4467A3 (high). Black error bars with a page-colored halo sit centered on each bar end, and three-decimal value labels sit just past each whisker. A vertical colorbar titled "Importance (mean decrease in impurity)" is on the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct surface color
-      Chrome: Title in light text; axis labels in light text; tick labels readable; grid lines visible in light gray
-      Data: Same 15 bars with identical gradient colors (blue remains the same — data colors don't flip, correct); error bars appear in light gray (visible); data labels in light text
-      Legibility verdict: PASS — all elements readable in both themes; data colors are identical between renders (only chrome adapted)
-
-    Note: Dark render shows light colors despite code hardcoding dark (#333333), suggesting pipeline applies theme adaptation.
+      Background: warm near-black #1A1A17; the legend card is #242420.
+      Chrome: the title and axis titles are off-white, the tick labels are light gray and the gridlines are faint. There is no dark-on-dark text anywhere; the value labels and the colorbar ticks are light.
+      Data: the bar gradient is identical to the light render (green → blue). The error bars flip to light ink with a dark halo and stay visible on every bar. Brand green stays clearly visible on the low bars.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -50,73 +56,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders despite code hardcoding
-          concerns
+        comment: All font sizes are set explicitly (title 16, axis titles 12, ticks
+          10, value labels 4 mm); everything reads in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature labels and data values have ample spacing, no collisions
+        comment: Value labels start past the error bars, and no text collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, error bars, and data labels all clearly visible
+        comment: The bars are well sized, the haloed error bars are visible on every
+          gradient step, and the colorbar is clear in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue gradient has adequate contrast; no red-green dependency
+        comment: The green-to-blue ramp is CVD-safe, and the bar length carries the
+          value redundantly
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportions well-balanced, margins generous, nothing cut off
+        comment: 3200x1800; the title is about 61% of the width; balanced labels;
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
-        max: 3
-        passed: false
-        comment: Title has 'pyplots.ai' instead of required 'anyplot.ai'; axis labels
-          otherwise descriptive
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Importance (mean decrease in impurity)'' names the measure; ''Feature'''
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Backgrounds correct (#FAF8F1/#1A1A17), but custom blue gradient violates
-          requirement for standard colormaps (viridis/cividis/BrBG) on continuous
-          data
+        passed: true
+        comment: 'imprint_seq stops #009E73 → #4467A3; #FAF8F1 / #1A1A17 backgrounds;
+          both renders are theme-correct'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Generic blue gradient with no distinctive design choices; defaults
-          only
+        passed: true
+        comment: Page-colored bar outlines and a halo under the error bars, a bold
+          title over soft tick ink, and a wrapped two-line colorbar title
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: theme_minimal() base, subtle grid, but no custom refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Sorted bars and gradient create some hierarchy; data labels help,
-          but limited visual emphasis
+        passed: true
+        comment: Grid limited to the value axis, axis ticks removed, value labels
+          nudged by a fixed pixel gap past the whiskers
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Sorting, the gradient and the value labels are what the Notes ask
+          for; no further focal point is chosen
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,27 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart for feature importance
+        comment: Horizontal feature-importance bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: sorting, gradient, error bars, text annotations'
+        comment: Sorted highest at the top, sequential gradient, value labels at the
+          bar ends clear of the error bars, error bars centered on the bar ends and
+          visible on every fill, names written out in full, zero baseline
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (importance) and Y (features) correctly mapped; all 15 features
-          visible
+        comment: x = importance from 0, y = feature; the axis covers all upper whiskers
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format violated: ''pyplots.ai'' instead of ''anyplot.ai'';
-          legend label ''Importance'' is appropriate'
+        passed: true
+        comment: Mandated title format; the colorbar title is readable
     data_quality:
       score: 15
       max: 15
@@ -154,22 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 features with full range of importances and std shown
+        comment: 15 features with a dominant head and a long tail, plus std error
+          bars
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Loan default prediction model is plausible and neutral context
+        comment: Random forest for loan default with plausible credit features; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance 0.003–0.182, std proportional to importance, sensible
-          domain
+        comment: 'Checked: the MDI importances sum to 1.000 and the std values shrink
+          with importance; the spec has no Check values'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,61 +186,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear script, no unnecessary functions/classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is deterministic; no random seed needed
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code in imports
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Hardcoded colors (#333333, #E0E0E0, #F0F0F0) instead of theme tokens
-          (INK, INK_SOFT); fragile to theme changes'
+        passed: true
+        comment: Appropriate complexity; no hand-rolled computation
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
-          violates output spec
+        passed: true
+        comment: Saves plot-{THEME}.png at scale=4 and plot-{THEME}.html with the
+          current API
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ggplot2-style composition (+) but doesn't implement letsplot-recommended
-          theme tokens and environment variable patterns
+        passed: true
+        comment: Grammar-of-graphics layering, orientation='y' bars, guide_colorbar(barheight=...)
+          through guides()
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Error bars added (good) but no distinctive letsplot-specific features;
-          mostly generic ggplot2 pattern
-  verdict: REJECTED
+        passed: true
+        comment: lets-plot's label_format='.3~g' and nudge_unit='px' on geom_text
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T00:53:43Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - colorbar
   - layer-composition
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
   - custom-colormap
+  - gradient-fill
+  - edge-highlighting
   - grid-styling

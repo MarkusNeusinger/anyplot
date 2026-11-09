@@ -9,7 +9,11 @@ import Typography from '@mui/material/Typography';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { FEEDBACK_STATUS_OPTIONS, FeedbackMessageFilter } from 'src/sections/debug/constants';
 import { CopyClaudePromptButton } from 'src/sections/debug/CopyClaudePromptButton';
-import { FeedbackTopList, FeedbackTopPage } from 'src/sections/debug/FeedbackTopList';
+import {
+  FeedbackTopList,
+  type FeedbackVoteItem,
+  type VoteSort,
+} from 'src/sections/debug/FeedbackTopList';
 import { timeAgo } from 'src/sections/debug/format';
 import { debugControlSx } from 'src/sections/debug/styles';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -25,15 +29,17 @@ export interface FeedbackMessage {
 }
 
 export function FeedbackSection({
-  topThumbsUp,
-  topThumbsDown,
+  votes,
+  voteSort,
+  setVoteSort,
   feedbackStatusFilter,
   setFeedbackStatusFilter,
   feedbackMessages,
   handleStatusChange,
 }: {
-  topThumbsUp: FeedbackTopPage[];
-  topThumbsDown: FeedbackTopPage[];
+  votes: FeedbackVoteItem[];
+  voteSort: VoteSort;
+  setVoteSort: (sort: VoteSort) => void;
   feedbackStatusFilter: FeedbackMessageFilter;
   setFeedbackStatusFilter: (val: FeedbackMessageFilter) => void;
   feedbackMessages: FeedbackMessage[];
@@ -41,9 +47,9 @@ export function FeedbackSection({
 }) {
   return (
     <>
-      {/* Feedback: top pages + messages with triage (issue #5662) */}
+      {/* Feedback: the plots' votes + messages with triage (issue #5662) */}
       <Box sx={{ mt: 4 }}>
-        <SectionHeader prompt="❯" title={<em>feedback · top pages</em>} />
+        <SectionHeader prompt="❯" title={<em>feedback · votes per plot</em>} />
       </Box>
       <Typography
         sx={{
@@ -53,12 +59,10 @@ export function FeedbackSection({
           mb: 1,
         }}
       >
-        grouped by URL — clickable
+        one row per plot, clickable · 👍 👎 and total count the current version, “earlier” the
+        versions before its last regeneration · one vote per visitor and version
       </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <FeedbackTopList title="👍 thumbs up" items={topThumbsUp} accent={colors.success} />
-        <FeedbackTopList title="👎 thumbs down" items={topThumbsDown} accent={colors.error} />
-      </Box>
+      <FeedbackTopList items={votes} sort={voteSort} onSortChange={setVoteSort} />
 
       <Box sx={{ mt: 4, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         <SectionHeader prompt="❯" title={<em>feedback · messages</em>} />
@@ -91,7 +95,10 @@ export function FeedbackSection({
           no messages{feedbackStatusFilter ? ` with status "${feedbackStatusFilter}"` : ''}
         </Typography>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
+        <Box
+          data-testid="feedback-messages"
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}
+        >
           {feedbackMessages.map(m => (
             <Box
               key={m.id}

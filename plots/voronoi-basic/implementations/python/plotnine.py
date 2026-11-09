@@ -1,7 +1,7 @@
 """ anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-17
+Library: plotnine 0.15.8 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
 
 import os
@@ -19,7 +19,7 @@ from plotnine import (
     geom_polygon,
     ggplot,
     labs,
-    scale_fill_manual,
+    scale_fill_identity,
     theme,
 )
 from scipy.spatial import Voronoi
@@ -28,193 +28,101 @@ from scipy.spatial import Voronoi
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Seed for reproducibility
+# Imprint palette: all eight positions, assigned so neighbouring cells differ
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+BOX_PAD = 0.12  # bounding box margin around the seeds, as a share of their spread
+
+# Columns: set these to your table's column names
+EASTING = "Easting (km)"  # role: x
+NORTHING = "Northing (km)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("cell_towers.csv")
+# 20 cell-tower sites on a 10 km city grid; each cell is the area that tower serves
 np.random.seed(42)
+n_towers = 20
+df = pd.DataFrame({EASTING: np.random.uniform(1, 9, n_towers), NORTHING: np.random.uniform(1, 9, n_towers)})
 
-# Generate seed points (20 points for clear visualization)
-n_points = 20
-x_points = np.random.uniform(1, 9, n_points)
-y_points = np.random.uniform(1, 9, n_points)
-points = np.column_stack([x_points, y_points])
+# Plot: reads only df and the constants above
+seeds = df[[EASTING, NORTHING]].dropna().to_numpy(dtype=float)
+n_seeds = len(seeds)
+pad_x = BOX_PAD * np.ptp(seeds[:, 0])
+pad_y = BOX_PAD * np.ptp(seeds[:, 1])
+x_min, x_max = seeds[:, 0].min() - pad_x, seeds[:, 0].max() + pad_x
+y_min, y_max = seeds[:, 1].min() - pad_y, seeds[:, 1].max() + pad_y
 
-# Define bounding box for clipping
-x_min, x_max = 0, 10
-y_min, y_max = 0, 10
+# Mirror the seeds far outside the box so every real cell is bounded
+margin = 2 * max(x_max - x_min, y_max - y_min)
+mirrors = np.vstack(
+    [
+        np.column_stack([2 * x_min - margin - seeds[:, 0], seeds[:, 1]]),
+        np.column_stack([2 * x_max + margin - seeds[:, 0], seeds[:, 1]]),
+        np.column_stack([seeds[:, 0], 2 * y_min - margin - seeds[:, 1]]),
+        np.column_stack([seeds[:, 0], 2 * y_max + margin - seeds[:, 1]]),
+    ]
+)
+vor = Voronoi(np.vstack([seeds, mirrors]))
 
-# Add mirror points outside bounds to ensure all cells are bounded
-margin = 20
-mirror_points = []
-for px, py in points:
-    mirror_points.append([2 * x_min - margin - px, py])
-    mirror_points.append([2 * x_max + margin - px, py])
-    mirror_points.append([px, 2 * y_min - margin - py])
-    mirror_points.append([px, 2 * y_max + margin - py])
+# Greedy colouring over the cell adjacency, so cells sharing an edge never share a hue
+neighbours = {i: set() for i in range(n_seeds)}
+for a, b in vor.ridge_points:
+    if a < n_seeds and b < n_seeds:
+        neighbours[a].add(b)
+        neighbours[b].add(a)
+slot = {}
+usage = [0] * len(IMPRINT_PALETTE)
+for i in sorted(neighbours, key=lambda k: -len(neighbours[k])):
+    taken = {slot[j] for j in neighbours[i] if j in slot}
+    free = [c for c in range(len(IMPRINT_PALETTE)) if c not in taken]
+    slot[i] = min(free, key=lambda c: (usage[c], c))  # least-used free hue spreads the palette
+    usage[slot[i]] += 1
 
-all_points = np.vstack([points, mirror_points])
+# Sutherland-Hodgman clipping against the four box edges: (axis, bound, keep side)
+edges = [(0, x_min, 1), (0, x_max, -1), (1, y_min, 1), (1, y_max, -1)]
+polygon_rows = []
+for i in range(n_seeds):
+    polygon = [tuple(vor.vertices[v]) for v in vor.regions[vor.point_region[i]]]
+    for axis, bound, side in edges:
+        clipped = []
+        for k in range(len(polygon)):
+            curr, prev = polygon[k], polygon[k - 1]
+            curr_in = side * (curr[axis] - bound) >= 0
+            prev_in = side * (prev[axis] - bound) >= 0
+            if curr_in != prev_in:
+                t = (bound - prev[axis]) / (curr[axis] - prev[axis])
+                clipped.append(tuple(p + t * (c - p) for p, c in zip(prev, curr, strict=True)))
+            if curr_in:
+                clipped.append(curr)
+        polygon = clipped
+    for vx, vy in polygon:
+        polygon_rows.append({"cell": i, EASTING: vx, NORTHING: vy, "fill": IMPRINT_PALETTE[slot[i]]})
+cells = pd.DataFrame(polygon_rows)
 
-# Compute Voronoi diagram with mirrored points
-vor = Voronoi(all_points)
-
-# Build polygon dataframe for Voronoi cells
-polygon_data = []
-
-for point_idx in range(n_points):
-    region_idx = vor.point_region[point_idx]
-    region = vor.regions[region_idx]
-
-    if not region or -1 in region:
-        continue
-
-    vertices = [tuple(vor.vertices[v]) for v in region]
-
-    # Sutherland-Hodgman polygon clipping algorithm (inline)
-    polygon = list(vertices)
-
-    # Clip left edge
-    clipped = []
-    for i in range(len(polygon)):
-        curr = polygon[i]
-        prev = polygon[i - 1]
-        curr_in = curr[0] >= x_min
-        prev_in = prev[0] >= x_min
-        if curr_in:
-            if not prev_in:
-                x1, y1 = prev
-                x2, y2 = curr
-                t = (x_min - x1) / (x2 - x1) if x2 != x1 else 0
-                clipped.append((x_min, y1 + t * (y2 - y1)))
-            clipped.append(curr)
-        elif prev_in:
-            x1, y1 = prev
-            x2, y2 = curr
-            t = (x_min - x1) / (x2 - x1) if x2 != x1 else 0
-            clipped.append((x_min, y1 + t * (y2 - y1)))
-    polygon = clipped
-
-    # Clip right edge
-    clipped = []
-    for i in range(len(polygon)):
-        curr = polygon[i]
-        prev = polygon[i - 1]
-        curr_in = curr[0] <= x_max
-        prev_in = prev[0] <= x_max
-        if curr_in:
-            if not prev_in:
-                x1, y1 = prev
-                x2, y2 = curr
-                t = (x_max - x1) / (x2 - x1) if x2 != x1 else 0
-                clipped.append((x_max, y1 + t * (y2 - y1)))
-            clipped.append(curr)
-        elif prev_in:
-            x1, y1 = prev
-            x2, y2 = curr
-            t = (x_max - x1) / (x2 - x1) if x2 != x1 else 0
-            clipped.append((x_max, y1 + t * (y2 - y1)))
-    polygon = clipped
-
-    # Clip bottom edge
-    clipped = []
-    for i in range(len(polygon)):
-        curr = polygon[i]
-        prev = polygon[i - 1]
-        curr_in = curr[1] >= y_min
-        prev_in = prev[1] >= y_min
-        if curr_in:
-            if not prev_in:
-                x1, y1 = prev
-                x2, y2 = curr
-                t = (y_min - y1) / (y2 - y1) if y2 != y1 else 0
-                clipped.append((x1 + t * (x2 - x1), y_min))
-            clipped.append(curr)
-        elif prev_in:
-            x1, y1 = prev
-            x2, y2 = curr
-            t = (y_min - y1) / (y2 - y1) if y2 != y1 else 0
-            clipped.append((x1 + t * (x2 - x1), y_min))
-    polygon = clipped
-
-    # Clip top edge
-    clipped = []
-    for i in range(len(polygon)):
-        curr = polygon[i]
-        prev = polygon[i - 1]
-        curr_in = curr[1] <= y_max
-        prev_in = prev[1] <= y_max
-        if curr_in:
-            if not prev_in:
-                x1, y1 = prev
-                x2, y2 = curr
-                t = (y_max - y1) / (y2 - y1) if y2 != y1 else 0
-                clipped.append((x1 + t * (x2 - x1), y_max))
-            clipped.append(curr)
-        elif prev_in:
-            x1, y1 = prev
-            x2, y2 = curr
-            t = (y_max - y1) / (y2 - y1) if y2 != y1 else 0
-            clipped.append((x1 + t * (x2 - x1), y_max))
-    polygon = clipped
-
-    if len(polygon) < 3:
-        continue
-
-    for order, (vx, vy) in enumerate(polygon):
-        polygon_data.append({"cell_id": str(point_idx), "x": vx, "y": vy, "order": order})
-
-df_polygons = pd.DataFrame(polygon_data)
-
-# Create dataframe for seed points
-df_points = pd.DataFrame({"x": x_points, "y": y_points})
-
-# Cell colors - diverse palette starting with Okabe-Ito positions
-colors_20 = [
-    "#009E73",
-    "#C475FD",
-    "#4467A3",
-    "#BD8233",
-    "#AE3030",
-    "#2ABCCD",
-    "#954477",
-    "#306998",
-    "#8DD3C7",
-    "#BEBADA",
-    "#FB8072",
-    "#80B1D3",
-    "#FDB462",
-    "#B3DE69",
-    "#FCCDE5",
-    "#BC80BD",
-    "#CCEBC5",
-    "#FFED6F",
-    "#A6CEE3",
-    "#B2DF8A",
-]
-
-# Create the Voronoi diagram plot
 plot = (
-    ggplot()
-    + geom_polygon(df_polygons, aes(x="x", y="y", group="cell_id", fill="cell_id"), color=INK_SOFT, size=1.0, alpha=0.7)
-    + geom_point(df_points, aes(x="x", y="y"), color="#009E73", fill="#009E73", size=6, stroke=1.5, shape="o")
-    + scale_fill_manual(values=colors_20)
-    + coord_fixed(ratio=1.0, xlim=(x_min, x_max), ylim=(y_min, y_max))
-    + labs(title="voronoi-basic · plotnine · anyplot.ai", x="X Coordinate", y="Y Coordinate")
+    ggplot(cells, aes(x=EASTING, y=NORTHING))
+    + geom_polygon(aes(group="cell", fill="fill"), color=PAGE_BG, size=0.8)
+    + geom_point(df, aes(x=EASTING, y=NORTHING), fill=INK, color=PAGE_BG, size=3, stroke=0.8, shape="o")
+    + scale_fill_identity()
+    + coord_fixed(ratio=1.0, xlim=(x_min, x_max), ylim=(y_min, y_max), expand=False)
+    + labs(title="voronoi-basic · python · plotnine · anyplot.ai")
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK, weight="bold", margin={"b": 20}),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_ticks=element_line(color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK, weight="bold", margin={"b": 10}),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         legend_position="none",
     )
 )
 
-# Save the plot
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)

@@ -1,7 +1,7 @@
 """ anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
-Library: pygal 3.1.3 | Python 3.13.14
-Quality: 81/100 | Updated: 2026-08-04
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-08
 """
 
 import os
@@ -19,101 +19,141 @@ from pygal.style import Style  # noqa: E402
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Imprint palette position 1 — wireframe surface color
-BRAND_FADE = "rgba(0, 158, 115, 0.55)"  # translucent wireframe strokes fake depth ordering
 
-ISO_ANGLE = np.pi / 6
-COS_A, SIN_A = np.cos(ISO_ANGLE), np.sin(ISO_ANGLE)
-
-
-def isometric_project(x, y, z):
-    """Project 3D coordinates onto a 2D isometric view."""
-    x2d = (x - y) * COS_A
-    y2d = z + (x + y) * SIN_A * 0.5
-    return x2d, y2d
-
-
-# Data — kept at the lower end of the spec's 20x20-50x50 range so the
-# isometric projection (no hidden-line removal) doesn't overplot into an
-# unreadable crosshatch.
+# Data — a 20x20 grid, the lower end of the spec's range, keeps the see-through mesh open
 grid_size = 20
 x = np.linspace(-5, 5, grid_size)
 y = np.linspace(-5, 5, grid_size)
 X, Y = np.meshgrid(x, y)
 Z = np.sin(np.sqrt(X**2 + Y**2))
 
-# One continuous polyline per row/column instead of a segment-per-edge —
-# keeps the same mesh but at 2*grid_size series instead of ~grid_size^2*2.
-row_lines = [[isometric_project(X[i, j], Y[i, j], Z[i, j]) for j in range(grid_size)] for i in range(grid_size)]
-col_lines = [[isometric_project(X[i, j], Y[i, j], Z[i, j]) for i in range(grid_size)] for j in range(grid_size)]
+# Plot: orthographic view from elevation 30°, azimuth 45° (world x, y, z → screen u, v)
+ELEV, AZIM = np.radians(30), np.radians(45)
+PROJ = np.array(
+    [
+        [np.cos(AZIM), -np.sin(AZIM), 0.0],
+        [np.sin(AZIM) * np.sin(ELEV), np.cos(AZIM) * np.sin(ELEV), np.cos(ELEV)],
+    ]
+)
+z_scale = 0.5 * np.ptp(x) / np.ptp(Z)  # the box is drawn half as tall as it is wide
 
-# Small axis gizmo anchored at the world origin, projected the same way as
-# the surface, so it stays true to the isometric view instead of a separate
-# 2D inset. Its 3 legend entries are the only explicit "X/Y/Z axis" labels
-# pygal.XY's two native axis titles can't provide on their own.
-axis_extent = 5.8
-z_extent = 1.6
-x_axis = [isometric_project(-axis_extent, 0, 0), isometric_project(axis_extent, 0, 0)]
-y_axis = [isometric_project(0, -axis_extent, 0), isometric_project(0, axis_extent, 0)]
-z_axis = [isometric_project(0, 0, -z_extent), isometric_project(0, 0, z_extent)]
+# Mesh: one polyline per grid row and per grid column, joined into one series with gaps
+screen = np.stack([X, Y, Z * z_scale], axis=-1) @ PROJ.T
+mesh = []
+for line in [*screen, *screen.transpose(1, 0, 2)]:
+    mesh += [tuple(p) for p in line] + [None]
 
-# Y axis has no native pygal ticks (unlike X/Z, which get real numeric ticks
-# from the chart's own axes), so hand-draw perpendicular tick marks along its
-# gizmo line at real world-Y positions.
-y_tangent = np.array([-COS_A, SIN_A * 0.5])
-y_tangent /= np.linalg.norm(y_tangent)
-y_perp = np.array([-y_tangent[1], y_tangent[0]])
-tick_half_len = 0.22
-y_tick_values = np.linspace(-5, 5, 5)
-y_ticks = []
-for v in y_tick_values:
-    cx, cy = isometric_project(0, v, 0)
-    p0 = (cx - y_perp[0] * tick_half_len, cy - y_perp[1] * tick_half_len)
-    p1 = (cx + y_perp[0] * tick_half_len, cy + y_perp[1] * tick_half_len)
-    y_ticks.append([p0, p1])
+# Axes along the front floor edges (X, Y) and up the left corner (Z), just below the surface,
+# so their ticks and numbers stay clear of the mesh
+x0, x1, y0, y1 = x.min(), x.max(), y.min(), y.max()
+z_ticks = np.linspace(Z.min(), Z.max(), 5)
+x_ticks = np.linspace(x0, x1, 5)
+y_ticks = np.linspace(y0, y1, 5)
+z_floor = (Z.min() - 0.25 * np.ptp(Z)) * z_scale
+tick_len = 0.04 * np.ptp(x)
+corner_out = np.array([-1.0, 1.0, 0.0]) / np.sqrt(2)  # outward from the left corner, straight left on screen
 
-# Title fontsize scales with title length (default-style-guide.md "Title fontsize")
+axis_world = [
+    [(x0, y0, z_floor), (x1, y0, z_floor)],
+    [(x0, y0, z_floor), (x0, y1, z_floor)],
+    [(x0, y1, z_floor), (x0, y1, Z.max() * z_scale)],
+]
+tick_world = (
+    [[(t, y0, z_floor), (t, y0 - tick_len, z_floor)] for t in x_ticks]
+    + [[(x0, t, z_floor), (x0 - tick_len, t, z_floor)] for t in y_ticks]
+    + [[(x0, y1, t * z_scale), np.array((x0, y1, t * z_scale)) + tick_len * corner_out] for t in z_ticks]
+)
+axes, ticks = [], []
+for segments, series in ((axis_world, axes), (tick_world, ticks)):
+    for segment in segments:
+        series += [tuple(p) for p in np.array(segment, dtype=float) @ PROJ.T] + [None]
+
+# Tick numbers in world units, and axis names further out
+gap = 2.6 * tick_len
+tick_labels = (
+    [((t, y0 - gap, z_floor), f"{t:g}") for t in x_ticks]
+    + [((x0 - gap, t, z_floor), f"{t:g}") for t in y_ticks]
+    + [(np.array((x0, y1, t * z_scale)) + gap * corner_out, f"{t:.1f}") for t in z_ticks]
+)
+name_labels = [
+    (((x0 + x1) / 2, y0 - 2.4 * gap, z_floor), "X"),
+    ((x0 - 2.4 * gap, (y0 + y1) / 2, z_floor), "Y"),
+    ((x0, y1, Z.max() * z_scale + 1.6 * gap), "Z = sin(√(X² + Y²))"),
+]
+
+# Canvas: equal screen units per pixel on both axes so the projection is not stretched.
+# pygal reserves `margin` on every side and `spacing + title_font_size` for the title above the plot.
+WIDTH, HEIGHT, MARGIN, SPACING = 3200, 1800, 60, 30
+TITLE_FS, LABEL_FS, NAME_FS = 66, 44, 52
 title = "wireframe-3d-basic · python · pygal · anyplot.ai"
-title_font_size = round(66 * min(1.0, 67 / len(title)))
+view_w, view_h = WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN - (SPACING + TITLE_FS)
+anchors = np.array([np.asarray(p, dtype=float) for p, _ in tick_labels + name_labels]) @ PROJ.T
+extent = np.vstack([screen.reshape(-1, 2), anchors])
+pad = np.array([0.9, 0.35]) * np.ptp(x) / 10  # room for the label text around its anchor
+lo, hi = extent.min(axis=0) - pad, extent.max(axis=0) + pad
+px_per_unit = min(view_w / (hi[0] - lo[0]), view_h / (hi[1] - lo[1]))
+center = (lo + hi) / 2
+half = np.array([view_w, view_h]) / px_per_unit / 2
+
+# pygal prints a point's label value_font_size px right of and 4/3 value_font_size px below the point;
+# shift each label point back so the (centered) text sits on its anchor
+shift = np.array([-LABEL_FS, (4 / 3) * LABEL_FS - 0.35 * LABEL_FS]) / px_per_unit
+label_points = [{"value": tuple(a + shift), "label": text} for a, (_, text) in zip(anchors, tick_labels + name_labels)]
+tick_points, name_points = label_points[: len(tick_labels)], label_points[len(tick_labels) :]
 
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(BRAND_FADE,) * (2 * grid_size) + (INK, INK, INK) + (INK,) * len(y_ticks),
-    title_font_size=title_font_size,
-    label_font_size=56,
-    major_label_font_size=44,
-    legend_font_size=44,
-    value_font_size=36,
+    foreground_subtle=INK_SOFT,
+    colors=(INK, INK, BRAND, INK_SOFT, INK_SOFT),
+    value_colors=(INK, INK, INK, INK, INK),
+    opacity=1,
+    stroke_opacity=1,
+    stroke_opacity_hover=1,
+    stroke_width=4,  # the mesh; pygal's .reactive rule outranks a per-series stroke_style width
+    title_font_size=TITLE_FS,
+    label_font_size=LABEL_FS,
+    major_label_font_size=LABEL_FS,
+    value_font_size=LABEL_FS,
+    value_label_font_size=LABEL_FS,
+    tooltip_font_size=36,
 )
 
-# Plot
 chart = pygal.XY(
     style=custom_style,
-    width=3200,
-    height=1800,
+    width=WIDTH,
+    height=HEIGHT,
     title=title,
-    x_title="X Axis",
-    y_title="Z Axis (projected)",
-    show_legend=True,
+    margin=MARGIN,
+    spacing=SPACING,
+    show_legend=False,
+    show_x_labels=False,
+    show_y_labels=False,
+    xrange=(center[0] - half[0], center[0] + half[0]),
+    range=(center[1] - half[1], center[1] + half[1]),
+    print_labels=True,
+    print_values=False,
+    css=(
+        "file://style.css",
+        "file://graph.css",
+        "inline:.text-overlay text.label { text-anchor: middle; }",
+        f"inline:.serie-0 text.label {{ font-size: {NAME_FS}px !important; font-weight: bold; }}",
+        "inline:.plot_title { font-weight: bold; }",
+        "inline:.serie-3 .line, .serie-4 .line { stroke-width: 2.5px !important; }",
+    ),
 )
 
-for points in row_lines:
-    chart.add(None, points, show_dots=False, stroke_style={"width": 1.6})
-for points in col_lines:
-    chart.add(None, points, show_dots=False, stroke_style={"width": 1.6})
-
-chart.add("X axis", x_axis, show_dots=True, dots_size=6, stroke_style={"width": 4})
-chart.add("Y axis", y_axis, show_dots=True, dots_size=6, stroke_style={"width": 4})
-chart.add("Z axis", z_axis, show_dots=True, dots_size=6, stroke_style={"width": 4})
-
-for points in y_ticks:
-    chart.add(None, points, show_dots=False, stroke_style={"width": 3})
+# Label series first, so their indices are fixed for the CSS above; text is always drawn on top
+chart.add("Axis names", name_points, stroke=False, dots_size=0)
+chart.add("Tick values", tick_points, stroke=False, dots_size=0)
+chart.add("Surface", mesh, show_dots=False, allow_interruptions=True)
+chart.add("Axes", axes, show_dots=False, allow_interruptions=True)
+chart.add("Ticks", ticks, show_dots=False, allow_interruptions=True)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")

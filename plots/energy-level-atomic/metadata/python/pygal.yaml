@@ -2,115 +2,109 @@ library: pygal
 language: python
 specification_id: energy-level-atomic
 created: '2026-02-27T20:49:53Z'
-updated: '2026-05-30T07:42:54Z'
-generated_by: claude-sonnet
-workflow_run: 26677787568
+updated: '2026-11-08T22:40:43Z'
+generated_by: claude-opus-5-5
+adopted_from: 365ba75e404fcff41bbfe9ad1009cb74471b78d3 (365ba75e404fcff41bbfe9ad1009cb74471b78d3)
+workflow_run: 42527070458
 issue: 4434
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Semantic spectral color mapping (UV→lavender/blue, visible→brand green H-alpha
-    focal, IR→ochre/amber/lime) creates intuitive wavelength-domain association and
-    demonstrates thoughtful design intent
-  - 'H-alpha 656 nm anchored to brand green #009E73 with widest stroke (11px) and
-    largest destination dot (r=28) establishes a clear visual focal point — the reader''s
-    eye goes straight to the most prominent hydrogen transition'
-  - Varying stroke widths (6–11px) and node radii across series create an elegant
-    visual weight graduation that encodes relative importance without labels
-  - Ionization reference line correctly rendered as a dashed horizontal at the continuum
-    boundary — INK-colored and wider, clearly distinguishing it from the energy level
-    lines
-  - Nonlinear visual Y-axis scale (positions 1.0, 2.5, 4.0, 5.5, 7.0, 8.5) correctly
-    approximates the converging upper levels from the spec requirement
-  - 'Theme-adaptive chrome properly applied: background #FAF8F1 light / #1A1A17 dark,
-    INK/INK_MUTED tokens threaded to foreground/foreground_subtle — both renders pass
-    readability in every element'
-  - Grid disabled (show_x_guides=False, show_y_guides=False) and x-axis labels hidden
-    — appropriate choice as horizontal axis has no physical meaning in an energy level
-    diagram
-  - Custom y_labels dict correctly annotates each level with both quantum number and
-    actual eV value, providing scientific context directly on the chart
+  - 'Every level is a horizontal line at its rank on an upward energy axis. Its tick
+    label names both the quantum number and the true energy (n=1: −13.60 eV … n=6:
+    −0.38 eV), so the nonlinear scale the Notes allow shows in the ticks and in the
+    axis title (''levels evenly spaced'').'
+  - Each of the 10 emission arrows starts on its upper level and ends with a filled
+    arrowhead on its lower level. The arrows sit in one column per series (Lyman,
+    Balmer, Paschen) and are evenly spaced, so every arrow can be followed on its
+    own.
+  - 'Wavelengths are computed from the level energies (λ = 1239.84 / ΔE) and match
+    the textbook values: Ly-α 122 nm, Hα 656 nm, Hβ 486 nm, Pa-α 1875 nm. pd.cut sorts
+    them into ultraviolet, visible and infrared, and each region gets a fitting Imprint
+    hue: blue for UV, green for visible, matte red for IR.'
+  - A bold colored series header ('Balmer series · visible') stands in for a legend
+    and names the spectral region, and a muted ink tone for the level lines keeps
+    the colored arrows in front.
+  - 'The dashed ionization line at the top carries the tick label ''Ionization: 0.00
+    eV'', so it reads apart from the solid level lines.'
+  - 'Idiomatic pygal: an XY chart with allow_interruptions and None breaks draws all
+    level lines as one series, y_labels dicts place tick labels at the levels, print_labels
+    with per-point label dicts places the wavelength labels, and targeted inline CSS
+    sets stroke widths and the header font. The HTML export keeps pygal''s hover tooltips.'
   weaknesses:
-  - label_font_size=48 is set below the pygal style guide recommendation of 56 — increase
-    to 56 to ensure axis label proportions match the target visual hierarchy at 3200×1800
-  - Transitions are represented as vertical line segments with endpoint dots rather
-    than true directional arrows; spec requires downward arrows for emission transitions
-    — consider using pygal's SVG marker or arrow capabilities to add arrowheads, or
-    at minimum ensure the directional encoding (large dot at destination, small at
-    origin) is clearly documented in a legend note
-  - 'DQ-01: Spectral series data could mention selection rules (ΔL=±1) or show fine-structure
-    splitting for n>2 levels to increase feature coverage depth — currently shows
-    transitions correctly but omits quantum mechanical context beyond wavelengths'
+  - 'Suggestion: shortening the level lines so they stop just past the last arrow
+    of the outermost column would make it clearer that they span only part of the
+    plot width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "Hydrogen Atom · energy-level-atomic · python · pygal · anyplot.ai" fully visible in dark ink at the top; Y-axis title "Energy (eV)" rotated vertically in dark ink; Y-axis tick labels (n=1: -13.60 eV through Ionization: 0.00 eV) readable in muted dark tone; legend at bottom with 4-column layout clearly readable; no x-axis tick labels (intentionally hidden)
-      Data: Six thin horizontal energy level lines in INK_MUTED (grey-brown); dashed ionization reference line in INK at top; Lyman transitions in lavender (#C475FD), rose (#954477), blue (#4467A3) as vertical lines with dots; Balmer transitions anchored by Hα in brand green (#009E73) as widest stroke with largest destination dot at n=2, followed by cyan (#2ABCCD), blue (#4467A3), lavender (#C475FD); Paschen transitions in ochre (#BD8233), amber (#DDCC77), lime (#99B314) with dots at n=3; first-series Hα in #009E73 is the visual focal point with stroke width 11px
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1 across the whole canvas, no frame or grid.
+      Chrome: bold dark title 'Hydrogen Atom · energy-level-atomic · python · pygal · anyplot.ai' centred at the top (about 75 % of the width). Rotated y-axis title 'Energy (eV), levels evenly spaced'. Tick labels 'n=1: −13.60 eV' … 'n=6: −0.38 eV' and 'Ionization: 0.00 eV' in dark ink. All readable.
+      Data: six muted grey level lines, evenly spaced. A dashed ink ionization line at the top. Ten downward arrows with filled heads ending on their lower levels: three blue Lyman arrows (#4467A3) to n=1, four green Balmer arrows (#009E73) to n=2, three red Paschen arrows (#AE3030) to n=3. Grey wavelength labels ('Hα 656 nm' etc.) above each arrow's tail. Bold colored series headers above the ionization line. No overlaps, nothing clipped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title visible in light cream text against dark background; Y-axis title "Energy (eV)" visible; tick labels in muted light tone (INK_MUTED #A8A79F); legend text readable; all chrome elements properly inverted
-      Data: Data colors are identical to the light render — brand green Hα (#009E73) still prominently visible; lavender, rose, blue Lyman transitions; ochre/amber/lime Paschen transitions unchanged; energy level lines in dark-muted tone appropriate for the dark surface
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text elements clearly legible against the near-black background; brand green #009E73 reads well on the dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis title and tick labels flip to light ink and are clearly readable. Level lines are a light muted grey, the ionization dash is light ink. No dark-on-dark text.
+      Data: blue, green and red arrows and headers are identical to the light render. Wavelength labels are light grey and readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; label_font_size=48 slightly below
-          recommended 56 but all text readable in both themes
+        comment: Title 62 px, ticks/labels 44 px, readable in both themes and at thumbnail
+          size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap in either render
+        comment: Every wavelength label sits clear of the neighbouring stems; headers
+          clear of the ionization line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Transition lines and dots well-sized; varying stroke widths (6-11px)
-          and node radii provide clear differentiation
+        comment: 6 px stems with ~46x52 px heads; level lines visible but muted in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green as sole signal
+        comment: Blue/green/red are backed by series headers and per-arrow wavelength
+          text, so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, generous margins (margin_left=280, margin_bottom=200),
-          plot well-proportioned
+        comment: 3200x1800; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Energy (eV)' with units; title includes descriptive 'Hydrogen
-          Atom' prefix
+        comment: '''Energy (eV), levels evenly spaced'' with unit and scale note'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette with valid semantic spectral exception; H-alpha
-          uses brand green #009E73; backgrounds #FAF8F1/#1A1A17 correct in both renders'
+        comment: Imprint hues, semantic spectral order (blue UV, green visible, red
+          IR); correct backgrounds
     design_excellence:
       score: 14
       max: 20
@@ -120,80 +114,77 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: spectral color mapping, focal point hierarchy, stroke
-          width graduation — clearly above defaults'
+        comment: 'Clear hierarchy: bold colored series headers, muted level lines,
+          mid-grey wavelength labels below ink tick labels'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, no x-axis labels, dashed ionization reference, generous
-          whitespace; pygal's frame visible but otherwise well-refined
+        comment: Wavelength labels aligned on each arrow's tail; series columns separated
+          by a gap; dashed ionization line extends past the level lines
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear H-alpha focal point with brand green + widest stroke + largest
-          dot; spectral grouping by color; emission direction via dot-size encoding
+        comment: Series headers name the spectral region of each series, tying each
+          series to its band beyond what the Notes require
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: XY chart adapted to energy level diagram; correct approach for pygal;
-          transitions as line+dot segments rather than true directional arrows
+        comment: Energy level diagram with transition arrows
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Level lines, transitions, spectral color coding, ionization reference,
-          quantum labels all present; missing true directional arrowheads
+        comment: Partial-width labeled levels, emission arrows downward, wavelength
+          coloring, ionization line, nonlinear scale with energy ticks; all characteristic
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 6 levels + ionization and all 10 transitions correctly mapped
-          and visible
+        comment: Arrow ends sit on their levels; horizontal position is schematic
+          per spec
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Hydrogen Atom · energy-level-atomic · python · pygal · anyplot.ai'
-          correct; legend labels match series
+        comment: Prefixed mandated title; series headers in place of a legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three spectral series (Lyman, Balmer, Paschen), ionization reference,
-          quantum labels, 10 transitions, nonlinear scale; could include selection
-          rules or fine-structure
+        comment: Three series, 10 transitions, converging levels; no absorption, which
+          the Notes leave conditional
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real hydrogen atom data with accurate wavelengths (Ly-α 122 nm, Hα
-          656 nm, Pa-α 1875 nm) and energy values
+        comment: Real hydrogen spectrum
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: eV values factually correct (-13.60 to 0 eV); wavelengths accurate
-          for hydrogen spectral series
+        comment: Checked E(n)=−13.6/n² ticks and wavelengths Ly-α 122, Ly-β 103, Hα
+          656, Hβ 486, Hδ 410, Pa-α 1875 nm, all computed from ΔE
     code_quality:
       score: 10
       max: 10
@@ -203,33 +194,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: tokens → data → chart → add series → save;
-          no functions or classes'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random seed needed
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, pygal.style.Style — all used
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI; appropriate use of loops for Lyman/Balmer/Paschen
-          series
+        comment: Arrowheads hand-built because pygal has no arrow primitive; pd.cut
+          for regions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: plot-{THEME}.png and .html
     library_mastery:
       score: 7
       max: 10
@@ -239,22 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic pygal: Style system, XY chart, node dict customization,
-          y_labels dict format, stroke_style with dasharray'
+        comment: XY chart, allow_interruptions with None breaks, y_labels dicts, Style
+          tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific node radius customization ({''r'': ...}), stroke_style
-          dasharray, y_labels dict format, HTML interactive export, legend_at_bottom_columns'
+        comment: print_labels per-point label dicts, inline css injection per serie,
+          stroke_style dasharray, value_colors
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-08T22:37:56Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
+  - layer-composition
+  - patches
+  - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - iteration-over-groups
-  dataprep: []
-  styling: []
+  dataprep:
+  - binning
+  styling:
+  - minimal-chrome

@@ -9,7 +9,11 @@ Two services stand behind the edge and both have an origin gate now. The API's
 is in Python (`api/origin_gate.py`); the site's is in nginx
 (`app/origin-gate.conf.template`). They share one secret, one set of five
 verdicts, and one rollout procedure — the API's is done, the app's is
-[at the end of this file](#the-sites-own-origin-anyplot-app).
+[further down](#the-sites-own-origin-anyplot-app).
+
+The zone's security rules (WAF, Super Bot Fight Mode, and the transform and
+custom rules) have no file here; they are recorded in
+[Security rules](#security-rules-pro-since-2026-11-09) at the end of this file.
 
 ## What is here
 
@@ -461,3 +465,203 @@ forward untouched.
 of one value: Secret Manager, the API service, the app service, the Worker
 binding and the GitHub repository secret. The gate is off in between, which is
 the documented safe state.
+
+---
+
+## Security rules (Pro, since 2026-11-09)
+
+> **Status (2026-11-09):** the managed rules, the transform rule, and the smoke
+> bypass are live, and the crawler block rule is deleted, so no crawler is
+> blocked at the edge. A Managed Challenge for two ASNs is planned once the
+> nginx analytics shield (#12860) is deployed. Whether Super Bot Fight Mode
+> challenges "definitely automated" traffic is an open owner decision.
+
+On 2026-11-09 the `anyplot.ai` zone moved to the Cloudflare Pro plan, and the
+rules in this section were applied through the Cloudflare API with the scoped
+zone token, `CLOUDFLARE_API_TOKEN` in `.env.example`. Hand that token to `curl`
+through a `--config` file descriptor, as in [Deploying](#deploying). The rules live in
+Cloudflare, not in this repository, so this section is their written record.
+The dashboard is the source of truth for their current state: when the two
+disagree, the dashboard is right and this section needs an update.
+
+### The principle
+
+No rule may hard-block traffic that could be a human. Two responses are
+allowed instead: a Managed Challenge, an interstitial that a real browser
+passes, and hiding the traffic on the analytics side, which has to be narrow,
+dated, and measured.
+
+### Managed rules (WAF)
+
+Both rules sit in a new zone entry-point ruleset for the phase
+`http_request_firewall_managed`, and both answer a match with a Managed
+Challenge, never a block.
+
+| | Cloudflare Managed Ruleset | OWASP Core Ruleset |
+|---|---|---|
+| Rule ID | `e07982f22bab4b0e9db17368b3337d8e` | `71ed4b6173954299bf5b8361e510db52` |
+| Executes ruleset | `efb7b8c949ac4650a09736fc376e9aee` | `4814384a9e5d4991b9815dcfc25d2f1f` |
+| Runs on | every host, minus the free-text routes (expression below) | the site hosts only: `(http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"})` |
+| Overrides | action `managed_challenge` for all of its rules | categories `paranoia-level-2`, `paranoia-level-3`, and `paranoia-level-4` disabled, which leaves paranoia level 1; anomaly score rule `6179ae15870a4bb7b2d480d4843b323c` at `score_threshold` 40 (Medium in the dashboard) with action `managed_challenge` |
+| Since | 2026-11-09 | 2026-11-09 |
+
+The Cloudflare Managed Ruleset runs on this expression:
+
+```text
+not ((http.host eq "api.anyplot.ai" and (starts_with(http.request.uri.path, "/agent") or starts_with(http.request.uri.path, "/mcp") or starts_with(http.request.uri.path, "/feedback"))) or (http.host eq "anyplot.ai" and starts_with(http.request.uri.path, "/api/agent")))
+```
+
+The excluded paths are the ones that carry free text: the public agent chat
+(`/agent` on the API host, and `/api/agent`, its path on the apex through the
+Worker), the MCP server (`/mcp`), and the site feedback (`/feedback`). Their
+requests carry pasted data, such as a CSV, code, or a chat message, and to a
+WAF that looks like injection. A challenge there would break these routes for
+the people and MCP clients using them.
+
+### Transform rule: verified bot category
+
+| | |
+|---|---|
+| Rule ID | `19e144356aac49f3820233f564cf880f` |
+| Ruleset | phase `http_request_late_transform`, beside the existing rule that sets `X-Origin-Secret` |
+| Expression | `true` |
+| Action | set the request header `X-Verified-Bot-Category` from the field `cf.verified_bot_category` |
+| Since | 2026-11-09 |
+
+Cloudflare fills `cf.verified_bot_category` only for a verified bot, so for
+everyone else the header is absent. Nothing reads it yet: a later PR teaches
+the API to tell verified AI assistants and crawlers from clients that only
+spoof a user agent. Before the API relies on the header, measure two cases:
+
+- A request that sends its own `X-Verified-Bot-Category` must arrive without
+  it, or the header can be forged.
+- A request through the apex Worker (`anyplot.ai/api/*`) may arrive without
+  it, because a Worker subrequest bypasses the zone's Transform Rules (see
+  [The Worker](#the-worker)).
+
+### Custom rules
+
+The smoke bypass is the first rule of the custom ruleset.
+
+| Rule | ID | Action | Matches | State |
+|---|---|---|---|---|
+| Smoke bypass | `6a18892a4acf4461a38afe4e12ef6c00` | Skip, phase `http_request_sbfm` | the site hosts with the right `X-Smoke-Token` (see [The smoke bypass](#the-smoke-bypass)) | active since 2026-11-09 |
+| Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so Super Bot Fight Mode never challenges API and MCP clients | active |
+| Block public agent chat | `56aee2fcb6b547bb914a59bbc4da5e12` | Block | the public agent chat | disabled |
+
+The AI Crawl Control block rule is gone. On 2026-11-09 it was first narrowed
+to the two ByteDance crawlers, Bytespider and TikTokSpider, and then deleted
+when the owner decided that every crawler is welcome. Blocking returns only on
+evidence from the request logs. `app/public/robots.txt` drops its Bytespider
+group in #12868; the crawler policy is in
+[`docs/reference/seo.md`](../../docs/reference/seo.md#cloudflare-is-the-enforcement-layer).
+
+### Other rules kept from before the move
+
+| Rule | Kind | What it does | State |
+|---|---|---|---|
+| Rate limit for `api.anyplot.ai` | rate limiting rule | 100 requests per 10 seconds per IP; `/health` is exempt | active |
+| Cache rule for `api.anyplot.ai` | cache rule | bypasses the cache by default | active |
+
+### Super Bot Fight Mode
+
+On Pro, Super Bot Fight Mode has one group for unverified bots, "definitely
+automated". The "likely automated" group needs the Business plan or higher.
+
+| Setting | Value on 2026-11-09 |
+|---|---|
+| Definitely automated | Allow |
+| Verified bots | Allow |
+| Static resource protection | Off |
+| JavaScript detections | On, carried over from the Bot Fight Mode era |
+| Optimize for WordPress | Off |
+
+Switching "definitely automated" to Managed Challenge is an open owner
+decision. The recommendation is to stay on Allow while every crawler is
+welcome: verified bots are exempt either way, so a challenge would stop only
+unverified automation, and that includes self-hosted AI agents and agentic
+browsers that can't solve one. Revisit it at the Pro audit with the bot
+analysis data.
+
+If you switch it, verify the switch:
+
+1. In the dashboard, set **Definitely automated** to **Managed Challenge**.
+2. Run the post-merge smoke with the token, following the recipe in
+   `.claude/skills/open-pr/SKILL.md`, section 4. Every check must pass.
+3. Run the smoke once without the token, which is the recipe's last command
+   without its `SMOKE_TOKEN=` prefix. Every site page must come back as a
+   `SKIP` line marked `challenged by Cloudflare`, and the run exits 2. That
+   proves the bypass let the previous run through, not a gap in the rule.
+4. Watch Security → Analytics → Events for challenges on normal pages. A
+   solved challenge is a browser, usually a human, so many unsolved ones on
+   `/`, `/plots`, or a spec page mean the switch is catching visitors.
+5. Update the table above with the new value and its date.
+
+### AI policies
+
+Nothing is blocked through the AI policies: `ai_bots_protection`,
+`ai_training`, `ai_search`, `ai_user`, and every `ai_agents` entry are
+disabled, and the managed robots.txt is off, so Cloudflare serves the
+repository's `robots.txt` unchanged. With the crawler block rule deleted, no
+crawler is blocked at the edge.
+
+### The smoke bypass
+
+`scripts/site-smoke.mjs`, the post-merge check that the site renders, loads
+the live site in headless Chromium, which Cloudflare classes as definitely
+automated. If that group is ever challenged, every run would meet a challenge
+page instead of the site and check nothing; the script marks such a page as a
+`SKIP` line and exits 2. The bypass lets the smoke through:
+
+- **The rule.** Custom rule `6a18892a4acf4461a38afe4e12ef6c00`, first in the
+  custom ruleset, created on 2026-11-09: a request to the site hosts that
+  carries the header `X-Smoke-Token` with the secret value skips the phase
+  `http_request_sbfm`. Its expression, with the value left out here:
+
+  ```text
+  (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"} and http.request.headers["x-smoke-token"][0] eq "<secret>")
+  ```
+
+- **What it skips.** Only the Super Bot Fight Mode phase. The managed rules and
+  the OWASP rules still apply.
+- **Where the value lives.** In the dev box's `.env` as `SMOKE_TOKEN` and in
+  that rule, nowhere else: not in the repository, CI, or Secret Manager. The
+  open-pr skill's recipe reads it from the shared checkout's `.env`.
+- **Where the header goes.** The script adds it only to https requests for
+  the site's own origin on one of the three site hosts, and never under
+  `/api`, because there [the Worker](#the-worker) forwards headers to the API
+  host and nginx forwards `/api/event` to Plausible. So neither `api.anyplot.ai`
+  nor a third party sees it, and the script never prints the value.
+  `api.anyplot.ai` needs no bypass, because the API skip rule above already
+  exempts it from Super Bot Fight Mode.
+- **CI never needs it.** The "Browser boot" step of `ci-image.yml` runs the
+  script against the container on localhost, with no Cloudflare in between.
+- **If the value leaks**, a client can skip Super Bot Fight Mode on the site
+  hosts and nothing more. To rotate it, change the rule's value and the `.env`
+  line together.
+
+### Planned: a Managed Challenge for two ASNs
+
+Once the nginx analytics shield (#12860) is deployed, a custom rule answers
+this expression with a Managed Challenge. It is not applied as of 2026-11-09.
+
+```text
+(ip.src.asnum in {132203 394380}) and not cf.client.bot and (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"})
+```
+
+`not cf.client.bot` keeps verified bots out of the challenge.
+
+### Verify the rules
+
+- **Events.** Security → Analytics → Events lists every request a rule acted
+  on. Filter by service (managed rules, Super Bot Fight Mode, custom rules) or
+  by a rule ID from the tables above to see what it challenged and why. After
+  any change, look here first: a rise in challenges on the site hosts means a
+  rule is catching visitors.
+- **Bot analysis.** The bot analysis in the same Security analytics shows how
+  Cloudflare classes the traffic. Compare the definitely-automated share
+  before and after the switch above.
+- **The smoke.** With the token, every check passes. Without it, every check
+  passes too while "definitely automated" stays on Allow; once that group is
+  challenged, the site pages come back as `SKIP` lines marked `challenged by
+  Cloudflare`.

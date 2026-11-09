@@ -54,11 +54,11 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
    | `llm-pipeline-auditor` | `prompts/`, `scripts/evaluate-plot.py`, `core/config.py` (claude_*), `agentic/workflows/`, `.github/workflows/{spec,impl,bulk,daily}-*.yml` | correctness, speed, maintainability |
    | `db-auditor` | `alembic/`, `core/database/`, `alembic.ini` | correctness, speed |
    | `security-auditor` | repo-wide (primarily `api/`, `core/config.py`, `agentic/workflows/`, `.github/workflows/`) | security |
-   | `observability-auditor` | `api/analytics.py`, `api/cache.py`, `app/src/analytics/`, `docs/reference/plausible.md` | maintainability, speed |
+   | `observability-auditor` | `api/analytics.py`, `api/cache.py`, `app/src/hooks/useAnalytics.ts`, `app/src/analytics/`, `docs/reference/plausible.md` | maintainability, speed |
    | `agentic-auditor` | `CLAUDE.md`, `agentic/`, `prompts/`, `.claude/`, `agentic/commands/` (TAC-style: agent ergonomics) | maintainability, modern |
    | `gcloud-auditor` | live `anyplot` GCP project (Cloud Run, Cloud SQL, GCS, Cloud Build, Logs, IAM, Secret Manager) — **read-only** | security, speed |
    | `github-auditor` | `MarkusNeusinger/anyplot` GitHub repo via `gh` (branches, PRs, issues, runs, labels, secrets/vars, branch protection) — **read-only** | maintainability, security |
-   | `plausible-auditor` | live Plausible Stats API for `anyplot.ai`, cross-checked against `api/analytics.py`, `app/src/analytics/`, `docs/reference/plausible.md` — **read-only** | speed, maintainability |
+   | `plausible-auditor` | live Plausible Stats API for `anyplot.ai`, cross-checked against `api/analytics.py`, `app/src/hooks/useAnalytics.ts`, `docs/reference/plausible.md` — **read-only** | maintainability |
    | `pagespeed-auditor` | live `anyplot.ai` via PageSpeed Insights v5 REST (mobile + desktop) — **read-only** | speed, looks |
    | `seo-auditor` | live `anyplot.ai` via Google Search Console API + structural fetches (sitemap, robots, canonical, meta, JSON-LD) — **read-only** | modern, maintainability |
    | `catalog-auditor` | the plot catalog itself: `plots/` filesystem, Postgres rows, GCS preview integrity (sampled) — **read-only** | maintainability, correctness |
@@ -139,7 +139,7 @@ The dimension answers "which pillar of an exemplary repo does this finding move?
 | Dimension | What it covers | Owns (typical auditors) |
 |---|---|---|
 | **security** | Auth, secrets, injection, CVEs, IAM, branch protection, data exposure | security, gcloud, github, infra |
-| **speed** | Latency, CWV, bundle size, N+1, cold starts, caching, query plans | pagespeed, plausible, backend, db, gcloud |
+| **speed** | Latency, CWV, bundle size, N+1, cold starts, caching, query plans | pagespeed, backend, db, gcloud |
 | **looks** | Visual design, theme/dark-mode correctness, responsive layout, UX polish, design-system consistency, a11y *as user experience* | design, pagespeed (a11y/visual audits) |
 | **modern** | Up-to-date deps & framework idioms, current language features, no deprecated APIs, modern tooling/CI, structured data | frontend, backend, infra, agentic, seo |
 | **correctness** | Bugs, broken builds, data integrity, wrong behavior, failing/missing tests for core paths | backend, frontend, db, llm-pipeline, catalog |
@@ -172,7 +172,7 @@ Before synthesis, every finding with `IMPORTANCE >= 4` is peer-reviewed by a **d
    - Agentic ↔ quality (commands/docs overlap) or infra (prompts and workflow integration)
    - Gcloud ↔ observability (logs/metrics overlap) or infra (deploy/workflow side) or security (IAM/secrets)
    - Github ↔ infra (workflow files) or quality (issue/docs hygiene) or security (branch protection, secret hygiene)
-   - Plausible ↔ observability (event drift) or frontend (Web Vitals → component code)
+   - Plausible ↔ observability (event drift)
    - Pagespeed ↔ frontend (perf opportunities → component code) or design (visual/a11y → component code) or infra (caching/headers/Cloud Run config)
    - Seo ↔ frontend (missing meta/JSON-LD → component code) or infra (robots/sitemap/headers) or pagespeed (lab vs field Web Vitals)
    - Catalog ↔ db (FS/DB drift) or llm-pipeline (specs failing generation) or infra (sync workflow)
@@ -209,7 +209,7 @@ After all specialists report back and cross-validation has run:
 8. **Sort** within each importance bucket: Effort ascending, then Auto-fix `ruff` / `eslint` / `format` / `codemod` / `manual` (auto-fixable first)
 9. **Optional cross-auditor synthesis** — only when the relevant auditors all ran in this session and produced data:
    - **Deprecation candidates** (Catalog × Plausible × SEO): specs that show up as low-traffic in Plausible AND zero-impression in Search Console AND have low coverage / low quality in catalog → emit a single Medium-importance `maintainability` finding listing the candidate spec-ids with effort `M` and auto-fix `manual`.
-   - **Web Vitals lab vs field divergence** (Pagespeed × Plausible / Pagespeed × SEO): URLs where lab CWV passes but field CWV fails (or vice-versa) → emit one `speed` finding per affected URL, importance derived from how far off the field metric is.
+   - **Web Vitals lab vs field divergence** (Pagespeed × SEO; Plausible carries no vitals since 2026-11-08): URLs where lab CWV passes but field CWV fails (or vice-versa) → emit one `speed` finding per affected URL, importance derived from how far off the field metric is.
    - **Exemplary-gap rollup** (any auditor): if multiple auditors flagged the same missing-best-practice theme (e.g. missing repo-health files, no JSON-LD anywhere, no bundle budget), merge into one rollup finding tagged with the dominant dimension.
    - These are computed from the auditors' findings, not by re-querying. If any required auditor is `COVERAGE: blocked`, skip that synthesis silently.
 10. **Persist** the final report to disk:

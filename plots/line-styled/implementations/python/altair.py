@@ -1,97 +1,142 @@
 """ anyplot.ai
 line-styled: Styled Line Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-12
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - Monthly temperature readings from different weather stations
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette: color comes on top of the line style, one hue per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants: the standard styles first (solid, dashed, dotted, dash-dot), then long dash and dash-dot-dot
+LINE_WIDTH = 2.5  # one width for every style; a dash as long as the line is wide draws a square dot
+LINE_STYLES = [[1, 0], [10, 4], [2.5, 4], [10, 4, 2.5, 4], [18, 4], [10, 4, 2.5, 4, 2.5, 4]]
+
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: x
+STATIONS = ["Harbor Point (10 m)", "Pine Ridge (1,850 m)", "Sun Valley (120 m)", "Elk Plateau (950 m)"]  # role: y_
+TEMPERATURE = "Temperature (°C)"  # the measure the series share, for the value axis
+STATION = "Weather Station"  # what tells the series apart, for the legend
+
+# Data: replace this block with your own table, for example df = pd.read_csv("station_temperatures.csv")
 np.random.seed(42)
-months = np.arange(1, 13)
-month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-# Temperature data for 4 weather stations with seasonal patterns
 base_temp = np.array([5, 7, 12, 16, 21, 25, 28, 27, 23, 17, 11, 6])
-station_a = base_temp + np.random.randn(12) * 1.5
-station_b = base_temp - 3 + np.random.randn(12) * 1.5
-station_c = base_temp + 5 + np.random.randn(12) * 1.5
-station_d = base_temp - 6 + np.random.randn(12) * 1.5
-
-# Create long-form DataFrame for Altair
 df = pd.DataFrame(
     {
-        "Month": month_names * 4,
-        "MonthNum": list(months) * 4,
-        "Temperature": np.concatenate([station_a, station_b, station_c, station_d]),
-        "Station": (["Coastal"] * 12 + ["Mountain"] * 12 + ["Valley"] * 12 + ["Highland"] * 12),
+        MONTH: pd.date_range("2025-01-01", periods=12, freq="MS"),
+        **{
+            station: base_temp + offset + np.random.randn(12) * 1.5
+            for station, offset in zip(STATIONS, [0, -6, 5, -3], strict=True)
+        },
     }
 )
 
-# Define line styles (strokeDash) for each station
-line_styles = {
-    "Coastal": [0],  # solid
-    "Mountain": [8, 4],  # dashed
-    "Valley": [2, 2],  # dotted
-    "Highland": [8, 4, 2, 4],  # dash-dot
-}
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 
-# Colors - using Python palette and accessible colors
-station_colors = {
-    "Coastal": "#306998",  # Python Blue
-    "Mountain": "#FFD43B",  # Python Yellow
-    "Valley": "#48A9A6",  # Teal
-    "Highland": "#E76F51",  # Coral
-}
+long = df.melt(id_vars=MONTH, value_vars=STATIONS, var_name=STATION, value_name=TEMPERATURE)
 
-# Create the chart
-chart = (
-    alt.Chart(df)
-    .mark_line(
-        strokeWidth=4  # Thicker lines for visibility
-    )
+lines = (
+    alt.Chart(long)
+    .mark_line(strokeWidth=LINE_WIDTH, strokeJoin="round")
     .encode(
         x=alt.X(
-            "MonthNum:O",
-            title="Month",
-            axis=alt.Axis(
-                labelFontSize=18,
-                titleFontSize=22,
-                values=list(months),
-                labelExpr="['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][datum.value - 1]",
-            ),
+            MONTH.translate(ESCAPE),
+            type="temporal",
+            title=MONTH,
+            axis=alt.Axis(format="%b", tickCount="month", grid=False, labelPadding=6),
         ),
-        y=alt.Y(
-            "Temperature:Q",
-            title="Temperature (\u00b0C)",
-            scale=alt.Scale(domain=[-5, 40]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
-        ),
+        y=alt.Y(TEMPERATURE.translate(ESCAPE), type="quantitative", title=TEMPERATURE, scale=alt.Scale(zero=False)),
         color=alt.Color(
-            "Station:N",
-            scale=alt.Scale(domain=list(station_colors.keys()), range=list(station_colors.values())),
-            legend=alt.Legend(
-                title="Weather Station", titleFontSize=20, labelFontSize=18, symbolStrokeWidth=4, symbolSize=300
-            ),
+            STATION.translate(ESCAPE),
+            type="nominal",
+            title=STATION,
+            sort=STATIONS,
+            scale=alt.Scale(domain=STATIONS, range=IMPRINT_PALETTE),
         ),
         strokeDash=alt.StrokeDash(
-            "Station:N", scale=alt.Scale(domain=list(line_styles.keys()), range=list(line_styles.values())), legend=None
-        ),  # Combine with color legend
+            STATION.translate(ESCAPE),
+            type="nominal",
+            title=STATION,
+            sort=STATIONS,
+            scale=alt.Scale(domain=STATIONS, range=LINE_STYLES),
+        ),
+        tooltip=[
+            alt.Tooltip(STATION.translate(ESCAPE), title=STATION),
+            alt.Tooltip(MONTH.translate(ESCAPE), type="temporal", title=MONTH, format="%B"),
+            alt.Tooltip(TEMPERATURE.translate(ESCAPE), type="quantitative", title=TEMPERATURE, format=".1f"),
+        ],
     )
-    .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(text="line-styled \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
-    )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[2, 2])
-    .configure_view(strokeWidth=0)
 )
 
-# Save as PNG (scale_factor=3 gives 4800x2700)
-chart.save("plot.png", scale_factor=3.0)
+chart = (
+    lines.properties(
+        width=480,
+        height=340,
+        background=PAGE_BG,
+        padding={"left": 12, "right": 16, "top": 10, "bottom": 10},
+        title=alt.Title("line-styled · python · altair · anyplot.ai", fontSize=16, color=INK, offset=12),
+    )
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=11,
+        titleFontSize=12,
+        titleFontWeight="normal",
+        titlePadding=10,
+        gridColor=INK,
+        gridOpacity=0.15,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=RULE,
+        padding=12,
+        offset=18,
+        titleColor=INK,
+        labelColor=INK_SOFT,
+        titleFontSize=11,
+        labelFontSize=11,
+        titlePadding=8,
+        symbolType="stroke",
+        symbolSize=1600,
+        symbolStrokeWidth=LINE_WIDTH,
+        rowPadding=2,
+        labelOffset=8,
+    )
+)
 
-# Save as HTML for interactivity
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")

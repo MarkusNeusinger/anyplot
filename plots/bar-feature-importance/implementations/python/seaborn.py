@@ -1,18 +1,53 @@
 """ anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-10
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 
 
-# Data: Simulated feature importances from a Random Forest model
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions; the gradient runs between the first and third
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]])
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Columns: set these to your table's column names
+FEATURE = "Feature"  # role: feature
+IMPORTANCE = "Feature Importance"  # role: importance
+STD = "Std"  # role: std
+
+# Data: simulated Random Forest importances for a credit-default model; replace with e.g. pd.read_csv("importances.csv")
 np.random.seed(42)
-
 features = [
     "Annual Income",
     "Credit Score",
@@ -30,62 +65,61 @@ features = [
     "Savings Balance",
     "Previous Defaults",
 ]
-
-# Generate realistic importance values (sum to 1.0 for interpretability)
 raw_importance = np.array([0.18, 0.15, 0.12, 0.11, 0.09, 0.08, 0.07, 0.06, 0.05, 0.03, 0.02, 0.015, 0.01, 0.008, 0.007])
-importance = raw_importance / raw_importance.sum()
+df = pd.DataFrame(
+    {
+        FEATURE: features,
+        IMPORTANCE: raw_importance / raw_importance.sum(),
+        STD: np.random.uniform(0.005, 0.025, len(features)),
+    }
+)
 
-# Standard deviation for error bars (ensemble variability)
-std = np.random.uniform(0.005, 0.025, len(features))
+# Plot: reads only df and the constants above
+ranked = df.sort_values(IMPORTANCE, ascending=False).reset_index(drop=True)
+norm = Normalize(vmin=ranked[IMPORTANCE].min(), vmax=ranked[IMPORTANCE].max())
+bar_colors = {name: imprint_seq(norm(value)) for name, value in zip(ranked[FEATURE], ranked[IMPORTANCE], strict=True)}
+bar_end = ranked[IMPORTANCE] + ranked[STD]
+x_max = bar_end.max() * 1.15
 
-# Create DataFrame and sort by importance
-df = pd.DataFrame({"feature": features, "importance": importance, "std": std})
-df = df.sort_values("importance", ascending=True).reset_index(drop=True)
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Create color palette based on importance values (sequential gradient)
-colors = sns.color_palette("Blues", n_colors=len(df))
-
-# Plot horizontal bars using seaborn
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 sns.barplot(
-    data=df,
-    x="importance",
-    y="feature",
-    hue="feature",
-    palette=colors,
+    data=ranked,
+    x=IMPORTANCE,
+    y=FEATURE,
+    hue=FEATURE,
+    palette=bar_colors,
     legend=False,
     ax=ax,
-    edgecolor="#306998",
-    linewidth=1.5,
+    edgecolor=PAGE_BG,
+    linewidth=0.6,
 )
 
-# Add error bars manually for ensemble variability
+# Ensemble variability as error bars centered on each bar end
 ax.errorbar(
-    df["importance"], range(len(df)), xerr=df["std"], fmt="none", color="#306998", capsize=4, capthick=2, linewidth=2
+    ranked[IMPORTANCE],
+    np.arange(len(ranked)),
+    xerr=ranked[STD],
+    fmt="none",
+    ecolor=INK,
+    capsize=2.5,
+    capthick=1,
+    linewidth=1,
 )
 
-# Add value annotations at the end of bars
-for i, (imp, std_val) in enumerate(zip(df["importance"], df["std"], strict=True)):
-    ax.text(
-        imp + std_val + 0.008, i, f"{imp:.3f}", va="center", ha="left", fontsize=14, color="#306998", fontweight="bold"
-    )
+# Importance values just past the end of each error bar
+for i, (value, end) in enumerate(zip(ranked[IMPORTANCE], bar_end, strict=True)):
+    ax.text(end + x_max * 0.01, i, f"{value:.3f}", va="center", ha="left", fontsize=8, color=INK_SOFT)
 
-# Styling
-ax.set_xlabel("Feature Importance", fontsize=20)
-ax.set_ylabel("Feature", fontsize=20)
-ax.set_title("bar-feature-importance · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
-ax.tick_params(axis="both", labelsize=16)
-ax.set_xlim(0, df["importance"].max() + df["std"].max() + 0.05)
-
-# Subtle grid on x-axis only
-ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+# Style
+title = "bar-feature-importance · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=round(12 * (67 / len(title) if len(title) > 67 else 1.0)), pad=10)
+ax.set_xlabel(IMPORTANCE, fontsize=10)
+ax.set_ylabel(FEATURE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.set_xlim(0, x_max)
+ax.xaxis.grid(True, linewidth=0.8)
 ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-# Remove top and right spines for cleaner look
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.2, right=0.97, top=0.9, bottom=0.13)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

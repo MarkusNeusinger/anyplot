@@ -1,220 +1,134 @@
 """ anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 63/100 | Updated: 2026-05-13
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-09
 """
 
-import matplotlib.patches as mpatches
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 
 
-# Set seaborn style for consistent aesthetics
-sns.set_style("whitegrid")
-sns.set_context("talk", font_scale=1.2)
+# Theme tokens (prompts/default-style-guide.md "Background" and "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Use seaborn's colorblind-safe palette for accessibility
-class_palette = sns.color_palette("colorblind", 3)
-class_colors = {"First": class_palette[0], "Second": class_palette[1], "Third": class_palette[2]}
+# Imprint sequential ramp: passenger class is an ordered category, so its levels take steps of one ramp
+IMPRINT_SEQ = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Data - Titanic-style dataset with categorical dimensions
+sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+
+# Constants
+BAR_WIDTH = 0.46  # width of an axis bar, as a share of the spacing between two axes; wide enough to hold the labels
+RIBBON_ALPHA = 0.65 if THEME == "light" else 0.8  # the dark page needs denser ribbons to keep their hue
+
+# Columns: set these to your table's column names; the first one colors the ribbons
+DIMENSIONS = ["Class", "Sex", "Age group", "Embarked", "Outcome"]  # role: dimension_
+
+# Data: replace this block with your own table, for example df = pd.read_csv("passengers.csv")
+# Titanic-style passengers: survival chances rise with class, for women and for children.
 np.random.seed(42)
+n_passengers = 500
+passenger_class = np.random.choice(["First", "Second", "Third"], n_passengers, p=[0.25, 0.25, 0.50])
+sex = np.random.choice(["Male", "Female"], n_passengers, p=[0.55, 0.45])
+age_group = np.random.choice(["Child", "Adult", "Senior"], n_passengers, p=[0.15, 0.70, 0.15])
+port = np.random.choice(["Southampton", "Cherbourg", "Queenstown"], n_passengers, p=[0.70, 0.20, 0.10])
+survival_chance = 0.3 + 0.35 * (passenger_class == "First") + 0.15 * (passenger_class == "Second")
+survival_chance = np.minimum(survival_chance + 0.25 * (sex == "Female") + 0.15 * (age_group == "Child"), 0.95)
+outcome = np.where(np.random.random(n_passengers) < survival_chance, "Survived", "Lost")
+df = pd.DataFrame(dict(zip(DIMENSIONS, [passenger_class, sex, age_group, port, outcome], strict=True)))
 
-n_samples = 500
-data = {
-    "Class": np.random.choice(["First", "Second", "Third"], n_samples, p=[0.25, 0.25, 0.50]),
-    "Sex": np.random.choice(["Male", "Female"], n_samples, p=[0.55, 0.45]),
-    "Age Group": np.random.choice(["Child", "Adult", "Senior"], n_samples, p=[0.15, 0.70, 0.15]),
-    "Embarked": np.random.choice(["Southampton", "Cherbourg", "Queenstown"], n_samples, p=[0.70, 0.20, 0.10]),
+# Plot: reads only df and the constants above
+data = df[DIMENSIONS].dropna().astype(str)
+total = len(data)
+color_dim = DIMENSIONS[0]
+pairs = list(zip(DIMENSIONS[:-1], DIMENSIONS[1:], strict=True))
+
+# Category order per axis: the first axis sorted, every later one by the mean position its observations
+# hold on the axis before it (the barycenter heuristic), which keeps ribbon crossings low
+orders = {color_dim: sorted(data[color_dim].unique())}
+for left, right in pairs:
+    share = data[left].value_counts().reindex(orders[left])
+    center = share.cumsum() - share / 2
+    orders[right] = list(data[left].map(center).groupby(data[right]).mean().sort_values().index)
+counts = {dim: data[dim].value_counts().reindex(orders[dim]) for dim in DIMENSIONS}
+above = {dim: counts[dim].cumsum() - counts[dim] for dim in DIMENSIONS}  # observations above each segment
+rank = {dim: pd.Series(range(len(orders[dim])), index=orders[dim]) for dim in DIMENSIONS}
+
+levels = orders[color_dim]
+ribbon_colors = dict(zip(levels, IMPRINT_SEQ(np.linspace(0, 1, len(levels))), strict=True))
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+
+# Axis bars: one stacked count bar per dimension, one segment per category, top to bottom in layout order;
+# the first dimension's segments carry the ribbon colors and so name them
+segments = data.melt(value_vars=DIMENSIONS, var_name="dimension", value_name="category")
+segments["segment"] = segments["dimension"] + " · " + segments["category"]
+segment_colors = {
+    f"{dim} · {cat}": ribbon_colors[cat] if dim == color_dim else INK_SOFT for dim in DIMENSIONS for cat in orders[dim]
 }
-
-# Create survival based on realistic patterns
-survival_prob = np.zeros(n_samples)
-for i in range(n_samples):
-    p = 0.3
-    if data["Class"][i] == "First":
-        p += 0.35
-    elif data["Class"][i] == "Second":
-        p += 0.15
-    if data["Sex"][i] == "Female":
-        p += 0.25
-    if data["Age Group"][i] == "Child":
-        p += 0.15
-    survival_prob[i] = min(p, 0.95)
-
-data["Outcome"] = np.where(np.random.random(n_samples) < survival_prob, "Survived", "Lost")
-
-df = pd.DataFrame(data)
-
-# Aggregate data for parallel categories
-dimensions = ["Class", "Sex", "Age Group", "Embarked", "Outcome"]
-dim_orders = {
-    "Class": ["First", "Second", "Third"],
-    "Sex": ["Female", "Male"],
-    "Age Group": ["Child", "Adult", "Senior"],
-    "Embarked": ["Southampton", "Cherbourg", "Queenstown"],
-    "Outcome": ["Survived", "Lost"],
-}
-
-# Create figure - removed inset to reduce crowding
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Calculate positions for each dimension
-n_dims = len(dimensions)
-x_positions = np.linspace(0.10, 0.90, n_dims)
-dim_width = 0.025
-
-# Track category positions and heights
-category_positions = {}
-
-# Draw category bars and labels
-for dim_idx, dim in enumerate(dimensions):
-    x_pos = x_positions[dim_idx]
-    categories = dim_orders[dim]
-    counts = df[dim].value_counts()
-    total = counts.sum()
-    heights = {cat: counts.get(cat, 0) / total for cat in categories}
-
-    y_start, y_end = 0.08, 0.88
-    y_range = y_end - y_start
-    current_y = y_start
-
-    for cat in categories:
-        height = heights[cat] * y_range
-        category_positions[(dim, cat)] = (x_pos, current_y, height)
-
-        # Draw category rectangle
-        rect = mpatches.FancyBboxPatch(
-            (x_pos - dim_width / 2, current_y),
-            dim_width,
-            height,
-            boxstyle="round,pad=0.003,rounding_size=0.008",
-            facecolor="#3a3a3a",
-            edgecolor="white",
-            linewidth=1.5,
-            zorder=10,
-        )
-        ax.add_patch(rect)
-
-        # Place all category labels outside bars for better readability
-        label_y = current_y + height / 2
-        if dim_idx == 0:
-            # First dimension: labels on left
-            ax.text(
-                x_pos - dim_width / 2 - 0.015, label_y, cat, ha="right", va="center", fontsize=13, fontweight="bold"
-            )
-        elif dim_idx == n_dims - 1:
-            # Last dimension: labels on right
-            ax.text(x_pos + dim_width / 2 + 0.015, label_y, cat, ha="left", va="center", fontsize=13, fontweight="bold")
-        elif dim_idx == n_dims - 2:
-            # Embarked dimension: labels on right to avoid ribbon overlap
-            ax.text(x_pos + dim_width / 2 + 0.015, label_y, cat, ha="left", va="center", fontsize=11, fontweight="bold")
-        else:
-            # Other middle dimensions: labels on left
-            ax.text(
-                x_pos - dim_width / 2 - 0.012, label_y, cat, ha="right", va="center", fontsize=12, fontweight="bold"
-            )
-
-        current_y += height
-
-# Draw ribbons connecting categories
-for i in range(n_dims - 1):
-    dim1, dim2 = dimensions[i], dimensions[i + 1]
-    x1, x2 = x_positions[i], x_positions[i + 1]
-    flow_counts = df.groupby([dim1, dim2]).size().reset_index(name="count")
-
-    cat1_current = {cat: category_positions[(dim1, cat)][1] for cat in dim_orders[dim1]}
-    cat2_current = {cat: category_positions[(dim2, cat)][1] for cat in dim_orders[dim2]}
-
-    total_count = len(df)
-    y_range = 0.80
-
-    for _, row in flow_counts.iterrows():
-        cat1, cat2, count = row[dim1], row[dim2], row["count"]
-        ribbon_height = (count / total_count) * y_range
-
-        y1_bottom = cat1_current[cat1]
-        y2_bottom = cat2_current[cat2]
-        y1_top = y1_bottom + ribbon_height
-        y2_top = y2_bottom + ribbon_height
-
-        cat1_current[cat1] = y1_top
-        cat2_current[cat2] = y2_top
-
-        x_mid = (x1 + x2) / 2
-
-        verts = [
-            (x1 + dim_width / 2, y1_bottom),
-            (x_mid, y1_bottom),
-            (x_mid, y2_bottom),
-            (x2 - dim_width / 2, y2_bottom),
-            (x2 - dim_width / 2, y2_top),
-            (x_mid, y2_top),
-            (x_mid, y1_top),
-            (x1 + dim_width / 2, y1_top),
-            (x1 + dim_width / 2, y1_bottom),
-        ]
-
-        codes = [
-            Path.MOVETO,
-            Path.CURVE3,
-            Path.CURVE3,
-            Path.LINETO,
-            Path.LINETO,
-            Path.CURVE3,
-            Path.CURVE3,
-            Path.LINETO,
-            Path.CLOSEPOLY,
-        ]
-
-        path = Path(verts, codes)
-
-        # Color by Class category
-        first_cat = df.loc[(df[dim1] == cat1) & (df[dim2] == cat2), "Class"].mode()
-        color = class_colors.get(first_cat.iloc[0], class_palette[0]) if len(first_cat) > 0 else class_palette[0]
-
-        patch = mpatches.PathPatch(path, facecolor=color, edgecolor="white", linewidth=0.3, alpha=0.55, zorder=5)
-        ax.add_patch(patch)
-
-# Add dimension labels at the top
-for dim_idx, dim in enumerate(dimensions):
-    ax.text(
-        x_positions[dim_idx],
-        0.94,
-        dim,
-        ha="center",
-        va="bottom",
-        fontsize=17,
-        fontweight="bold",
-        color=class_palette[0],
-    )
-
-# Legend for Class colors
-legend_patches = [
-    mpatches.Patch(color=class_colors["First"], alpha=0.7, label="First Class"),
-    mpatches.Patch(color=class_colors["Second"], alpha=0.7, label="Second Class"),
-    mpatches.Patch(color=class_colors["Third"], alpha=0.7, label="Third Class"),
-]
-ax.legend(
-    handles=legend_patches,
-    loc="lower center",
-    fontsize=12,
-    framealpha=0.9,
-    edgecolor="gray",
-    ncol=3,
-    bbox_to_anchor=(0.5, -0.02),
+sns.histplot(
+    data=segments,
+    x="dimension",
+    hue="segment",
+    hue_order=list(segment_colors),
+    palette=segment_colors,
+    multiple="stack",
+    shrink=BAR_WIDTH,
+    alpha=1,
+    edgecolor=PAGE_BG,
+    linewidth=1.2,
+    legend=False,
+    zorder=2,
+    ax=ax,
 )
 
-# Style adjustments
-ax.set_xlim(0, 1)
-ax.set_ylim(0, 1.02)
-ax.set_aspect("auto")
-ax.axis("off")
+# Ribbons: one closed band per combination of neighboring categories and ribbon color, its width the
+# number of observations it carries, stacked inside each segment by color so every color keeps its place
+codes = [Path.MOVETO, *[Path.CURVE4] * 3, Path.LINETO, *[Path.CURVE4] * 3, Path.CLOSEPOLY]
+for i, (left, right) in enumerate(pairs):
+    keys = list(dict.fromkeys([color_dim, left, right]))
+    flows = data.groupby(keys).size().rename("n").reset_index()
+    for dim in keys:
+        flows[f"rank {dim}"] = flows[dim].map(rank[dim])
+    flows = flows.sort_values([f"rank {left}", f"rank {color_dim}", f"rank {right}"])
+    flows["start"] = flows[left].map(above[left]) + flows.groupby(left)["n"].cumsum() - flows["n"]
+    flows = flows.sort_values([f"rank {right}", f"rank {color_dim}", f"rank {left}"])
+    flows["end"] = flows[right].map(above[right]) + flows.groupby(right)["n"].cumsum() - flows["n"]
+    x0, x1 = i + BAR_WIDTH / 2, i + 1 - BAR_WIDTH / 2
+    mid = (x0 + x1) / 2
+    for start, end, n, level in zip(flows["start"], flows["end"], flows["n"], flows[color_dim], strict=True):
+        top0, top1 = total - start, total - end
+        vertices = [(x0, top0), (mid, top0), (mid, top1), (x1, top1)]
+        vertices += [(x1, top1 - n), (mid, top1 - n), (mid, top0 - n), (x0, top0 - n), (x0, top0)]
+        band = PathPatch(Path(vertices, codes), facecolor=ribbon_colors[level], edgecolor="none", alpha=RIBBON_ALPHA)
+        ax.add_patch(band)
 
-# Title
-ax.set_title("parallel-categories-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=15)
+# Category labels inside their segments, where no ribbon runs: page-colored on the soft-ink bars,
+# a fixed light ink on the class colors, which are the same in both themes
+for i, dim in enumerate(DIMENSIONS):
+    label_color = "#FAF8F1" if dim == color_dim else PAGE_BG
+    for cat, y in (total - above[dim] - counts[dim] / 2).items():
+        ax.text(i, y, cat, ha="center", va="center", fontsize=7.5, color=label_color, zorder=5)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+# Style: dimension names head their axes; only segment lengths and ribbon widths carry counts
+ax.set_title("parallel-categories-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10)
+ax.xaxis.set_ticks_position("top")
+ax.tick_params(axis="x", length=0, labelsize=10, labelcolor=INK, pad=4)
+ax.set_xlabel("")
+ax.set_yticks([])
+ax.set_ylabel("")
+ax.set_xlim(-BAR_WIDTH, len(DIMENSIONS) - 1 + BAR_WIDTH)
+ax.set_ylim(0, total)
+sns.despine(ax=ax, left=True, bottom=True)
+
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

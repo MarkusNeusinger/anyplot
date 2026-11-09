@@ -27,6 +27,13 @@ def js_library(path: Path) -> str:
     return path.stem
 
 
+def merged_specs(language: str, library: str) -> set[str]:
+    """The specs with a merged implementation in `language` by `library`: impl-merge writes
+    `plots/<spec>/metadata/<language>/<library>.yaml` with every one, so the catalogue's file globs can be held to
+    this second record instead of to a count that every new spec moves."""
+    return {path.parents[2].name for path in REPO_ROOT.glob(f"plots/*/metadata/{language}/{library}.yaml")}
+
+
 def source(text: str) -> str:
     """Dedent a triple-quoted snippet and drop its leading newline."""
     return textwrap.dedent(text).lstrip("\n")

@@ -5,6 +5,7 @@ import {
   axisWord,
   bindingRows,
   boundRoles,
+  checkOnlyWarnings,
   columnLabel,
   dtypeWord,
   emptyChoice,
@@ -26,6 +27,29 @@ const radius: RoleSpec = {
 function column(min: number | string | null | undefined, dtype: ColumnProfile['dtype'] = 'number') {
   return { name: 'y', dtype, missing: 0, unique: 3, min } as ColumnProfile;
 }
+
+describe('checkOnlyWarnings', () => {
+  it("keeps the check's lines that no bound column's own warning shows", () => {
+    // The service's sentences (`signs.py`, `bindings.py`, `computed.py`, `bounds.py`, `fidelity.py`).
+    const sign =
+      "radius: column 'y' has negative values (down to -2); this role needs values of 0 or more";
+    const sibling =
+      "y: bound to 'Mo', one of 7 number columns ('Mo', 'Tu', 'We', 'Th', ...) that hold one measure side by side; y wants labels, so each number would become a category of its own: turn the columns into rows first (.to_long())";
+    const unbound =
+      "size: not bound, because every column that fits it ('a') has negative values; this role needs values of 0 or more";
+    const window =
+      "sma: column 'SMA 200' holds a 200-period value; the spec's convention is 20, so the plot shows the column's window";
+    const repeated =
+      "x: column 'Length' holds 9 values in 27 rows; the plot draws one value per x, so rows with the same x need an aggregate first";
+    expect(checkOnlyWarnings([sign, sibling, unbound, window, repeated, 'a new kind'])).toEqual([
+      unbound,
+      window,
+      repeated,
+      'a new kind',
+    ]);
+    expect(checkOnlyWarnings(null)).toEqual([]);
+  });
+});
 
 describe('signHint', () => {
   it('warns when a role that needs values of 0 or more gets a negative column', () => {

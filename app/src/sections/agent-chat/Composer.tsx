@@ -18,16 +18,18 @@
  * - The message box: Enter sends its text as a turn, or the attachment with the text as its note;
  *   Shift+Enter is a new line. On a touch screen, whose keyboard names Enter "return", a small
  *   `↵` inside the box sends too. It has no `.send()` beside it any more.
- * - The plot button, filled from the moment data is stored, quiet and inert before: `.create_plot()
- *   →` (confirms the data and the bindings as shown, then plots, with the box's text as the
- *   request), `.update_plot() →` once the library has a plot (sends the box's text, inert while
- *   the box is empty), `plot the new data` after a change to data the user had confirmed (acts
- *   with an empty box), `.plot_all()` while the admin's fan-out is on. A switch keeps its name.
+ * - The plot button, filled from the moment data is stored or waits in the box, quiet and inert
+ *   before: `.create_plot() →` (confirms the data and the bindings as shown, then plots, with the
+ *   box's text as the request), `.update_plot() →` once the library has a plot (sends the box's
+ *   text, inert while the box is empty), `plot the new data` after a change to data the user had
+ *   confirmed (acts with an empty box), `.plot_all()` while the admin's fan-out is on. A switch
+ *   keeps its name.
  *
  * A table pasted into the box, or a file opened with `.open()` or dropped on the chat, waits
  * above the text as an attachment (`AttachmentChip`, `useChatAttachment.ts`): Enter reads it with
- * the typed text as its note, and the plot button waits until it is read, since it would plot
- * the data before it.
+ * the typed text as its note; the plot button reads it the same way and plots it in one click
+ * once it reads clean (`plotChain.ts`), and names the plot it makes: `.create_plot() →`, or
+ * `plot the new data` once the library has a plot.
  *
  * The page decides what each button does and when it acts; this component only lays them out.
  */
@@ -446,8 +448,8 @@ export function Composer(props: ComposerProps) {
           data-testid="chat-file-input"
           sx={{ display: 'none' }}
         />
-        {/* The step's action from the moment data is stored, quiet and inert before. A plain
-            button: Enter in the box sends a turn and never confirms. */}
+        {/* The step's action from the moment data is stored or waits in the box, quiet and inert
+            before. A plain button: Enter in the box sends a turn and never confirms. */}
         <Box
           component="button"
           type="button"
@@ -460,7 +462,7 @@ export function Composer(props: ComposerProps) {
           aria-label={plotWords.name}
           aria-describedby={plot.fresh ? `${STATUS_LINE_ID} ${PLOT_HELP_ID}` : STATUS_LINE_ID}
           sx={{
-            ...(hasData ? composerFilledSx : composerGhostSx),
+            ...(hasData || attachment || plot.active ? composerFilledSx : composerGhostSx),
             // From `sm` up as wide as its longest name (`plot the new data`, mono), so a new name
             // moves nothing beside it; below `sm` a line of its own at the full width, in the
             // same size, since it no longer shares the line with the box.
