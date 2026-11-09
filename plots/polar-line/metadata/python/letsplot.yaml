@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: polar-line
 created: '2025-12-30T16:34:34Z'
-updated: '2026-11-09T01:32:49Z'
+updated: '2026-11-09T01:38:39Z'
 generated_by: claude-opus-5-5
 adopted_from: a4e2e85072ed327681b894bd8f1e19f48ec5f26b (a4e2e85072ed327681b894bd8f1e19f48ec5f26b)
 workflow_run: 42545741516
@@ -13,50 +13,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - coord_polar(start=0, direction=1) puts January at 12 o'clock and runs the months
-    clockwise, so the circle reads like a calendar dial
-  - Each series is closed into a loop by appending its first point a full turn later
-    (theta + 360), so the cyclic December→January segment is drawn without a gap or
-    a seam
-  - Lines interpolate linearly in theta and radius between the monthly points, so
-    every point sits on its line and nothing is smoothed past the data
-  - 'Grid of concentric circles and month radials is drawn from a translucent ink
-    token, clearly lighter than the data lines and visible on both #FAF8F1 and #1A1A17'
-  - Radial axis title 'Mean temperature (°C)' is centered on the center-to-top half
-    where the radial scale actually runs (hjust=0.75), and the round panel's outline
-    is removed so it does not cut through the month labels
-  - 'Imprint palette in canonical order (#009E73, #C475FD), identical in both renders;
-    all chrome follows the theme tokens'
-  - Long-format melt plus one aes(color=Series) mapping drives both geom_line and
-    geom_point and the legend, with HTML export giving native lets-plot hover tooltips
+  - Real 1981–2010 monthly temperature normals for maritime Lisbon and continental
+    Madrid give two loops of clearly different shape that cross in early summer and
+    autumn, so the polar form earns its place
+  - Each loop is closed by appending the first month a full turn later (theta + 360)
+    instead of hard-coding a point, so the line joins its points in theta order and
+    wraps back to January without a gap
+  - Month names replace raw degrees on the angular axis via scale_x_continuous breaks/labels
+    derived from the data, and coord_polar(start=0, direction=1) puts January at 12
+    o'clock running clockwise like a calendar
+  - 'Theme tokens threaded through every chrome element: INK for title and month labels,
+    INK_SOFT for radial ticks and legend, a translucent grid lighter than the data
+    lines in both themes; Imprint #009E73 then #C475FD'
+  - The round panel's outline is removed so it does not cut the month labels' descenders,
+    and the radial-axis title is centred on the centre-to-top half the scale actually
+    spans
+  - gggrid one-cell wrapper paints the whole 2400×2400 canvas in the page colour despite
+    coord_polar narrowing the plot box; HTML export keeps lets-plot's native hover
+    tooltips
   weaknesses:
-  - 'DQ-02 (both): the two series are labelled ''City A'' and ''City B'', generic
-    placeholders for a real-world temperature scenario → name two real cities whose
-    monthly means match the values (for example two Northern-Hemisphere cities). Likely
-    cause: RADII = ["City A", "City B"].'
-  - 'DQ-01 (both): City B is City A plus a near-constant 2–3 °C every month, so the
-    two loops are nested copies of one shape and the plot shows no difference in seasonal
-    amplitude or timing between series → choose two series whose cycles differ in
-    shape (for example a continental and a maritime climate). Likely cause: the RADII[1]
-    value list.'
-  - 'Suggestion: a slightly larger radial tick size (10 → 11 pt) would make the 0–30
-    scale easier to read in the 400 px thumbnail.'
-  - 'Suggestion: lets-plot tooltips could be customised with layer_tooltips() to show
-    month, city and temperature in the HTML view.'
+  - 'Suggestion: the radial tick label "0" sits on the same baseline as the "Oct"
+    month label at the left edge; a little more horizontal separation would keep them
+    from reading as one label at thumbnail size.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 across the whole 2400x2400 canvas (no white box around the panel).
-      Chrome: bold title "polar-line · python · letsplot · anyplot.ai" top-left in near-black ink, about 60 % of the width; month labels Jan (top) clockwise through Dec in dark ink at 12 pt around the circle; radial tick labels 0–30 in soft grey on the left, aligned with the circle tops; rotated axis title "Mean temperature (°C)" on the left; legend "City A / City B" centered below. Concentric circles every 5 °C and twelve month radials in a light translucent grey. All text readable.
-      Data: City A in brand green #009E73 and City B in purple #C475FD, thick lines with medium point markers at each month, each closed into a loop; heart-shaped loops with the cold months near the center at the top and the summer peak at Jul at the bottom. First series is #009E73.
+      Background: warm off-white #FAF8F1 over the whole 2400×2400 canvas, no white box around the round panel.
+      Chrome: bold dark title "polar-line · python · letsplot · anyplot.ai" top-left (~60 % of the width); twelve month labels Jan (top) clockwise to Dec in dark ink around the circle; radial tick labels 0–25 in soft grey on the left with the rotated title "Mean temperature (°C)"; concentric rings every 5 °C and 12 radial spokes in a light translucent grey; legend at the bottom (Lisbon, Madrid) with line+point glyphs. All text readable.
+      Data: Lisbon in #009E73 (first series) as a nearly round closed loop between ~11.6 and 23.6 °C; Madrid in #C475FD as a lopsided loop, inside Lisbon in winter (~6 °C at Jan) and outside it in summer (~25.6 °C at Jul), crossing near Jun and Sep. Markers sit on the lines at every month.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 across the canvas.
-      Chrome: title and month labels in light off-white ink, radial ticks and legend text in light grey, axis title in light ink; grid circles and radials in a subtle light translucent grey, visible but quieter than the data. No dark-on-dark text anywhere.
-      Data: identical colors to the light render (#009E73 green, #C475FD purple), same geometry and markers; brand green reads clearly on the dark surface.
+      Background: warm near-black #1A1A17 over the full canvas.
+      Chrome: title and month labels in light ink, radial ticks and legend text in light soft grey, grid rings and spokes in a translucent light grey that stays lighter than the data lines but visible. No dark-on-dark text anywhere.
+      Data: identical #009E73 Lisbon and #C475FD Madrid loops, same positions and markers as the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -68,74 +60,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes set explicitly (title 16, months 12, radial ticks 10, axis
-          title 12, legend 11); readable in both themes and in the 400 px thumbnail
+        comment: Explicit sizes (title 16, months 12, ticks 10, legend 11); all text
+          readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; month labels clear of the circle, radial ticks
-          clear of Oct
+        comment: No text collisions; month labels clear of the outer ring and the
+          loops
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line size 1.4 and point size 3.2 suit 24 sparse points; legend glyphs
-          show line and point in the series colors
+        comment: 24 sparse points with prominent markers on 1.4-wide lines; legend
+          glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple differ strongly in hue and lightness; CVD-safe
+        comment: Green vs lilac separable under CVD, strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, polar panel fills most of it, legend directly below,
-          balanced margins
+        comment: 2400×2400 square canvas, round panel well centred, title ~60 % width,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial axis 'Mean temperature (°C)' with units; month labels make
-          the angular axis self-explanatory
+        comment: Radial title 'Mean temperature (°C)' with unit; month names on the
+          angular axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint #009E73 then #C475FD, identical across themes; backgrounds
-          #FAF8F1 / #1A1A17; chrome theme-correct'
+        comment: 'Imprint #009E73 first, #C475FD second; #FAF8F1 / #1A1A17 backgrounds;
+          both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
-          sizes) and nothing decided beyond it typographically
+        comment: Clear three-level text hierarchy (bold INK title, INK month labels,
+          INK_SOFT radial ticks/legend) and month names instead of degrees
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Beyond baseline: panel outline removed so it does not run through
-          month descenders, radial axis title centered on the half the scale spans,
-          axis ticks removed, one radial per month chosen as grid density'
+        comment: Panel outline removed so it no longer crosses month-label descenders;
+          radial title centred on the half the scale spans; translucent grid; full-canvas
+          page colour via gggrid
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed, no hierarchy or focal point chosen beyond the Notes
+        passed: true
+        comment: Maritime vs continental city pair chosen so the loops' shape difference
+          and their summer crossing carry the message
     spec_compliance:
       score: 15
       max: 15
@@ -145,53 +138,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Polar line plot with points joined in theta order
+        comment: Polar line plot with coord_polar
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Lines in theta order, multiple colored series with legend, concentric
-          circles and radial lines, angles and radii labeled, markers on the line
+        comment: Lines in theta order, markers on the line, concentric-circle + radial-line
+          grid with angles and radii labelled, multiple series in a legend on shared
+          scales
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theta = month angle, radius = temperature from 0; linear interpolation,
-          no overshoot; all data visible
+        comment: Points at their values (checked Lisbon Apr 16.0, Madrid Apr 12.9
+          against rings); no smoothing; radius from 0 at centre
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend entries match the series
+        comment: Mandated title format; legend entries Lisbon/Madrid
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Cyclic closed loops and two series shown, but the series are near-constant
-          offsets of one shape (defect line)
+        passed: true
+        comment: Cyclic closed loops, two series of differing shape and amplitude,
+          crossing loops
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Monthly temperatures are a real scenario, but the series are labelled
-          'City A'/'City B' (defect line)
+        passed: true
+        comment: Real monthly climate normals for Lisbon and Madrid; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: monthly means 2–28 °C and 5–30 °C with a July peak and
-          January low are plausible for Northern-Hemisphere temperate cities; no Check
-          values in the spec'
+        comment: Values match published normals (Lisbon 11.6–23.6, Madrid 6.3–25.6
+          °C); no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -201,32 +193,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Deterministic tabulated data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported name is used
+        comment: Every imported name used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Loop closing via one appended row per series is concise; no written-out
-          algorithm
+        comment: melt + one-row wrap per series is a compact loop closure; limits
+          derived from data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current lets-plot
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html; current lets-plot
           4 API
     library_mastery:
       score: 6
@@ -237,19 +229,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Tidy melt + single aes color mapping shared by layers, scale_x_continuous
-          breaks/labels for months, coord_polar start/direction
+        comment: Grammar layering, tidy long data via melt, data-derived scale breaks/labels,
+          theme_minimal + theme overrides
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: gggrid one-cell wrapper to paint the full canvas behind a coord_polar
-          plot and native HTML tooltips; otherwise ggplot-grammar generic
-  verdict: REJECTED
+        passed: true
+        comment: coord_polar(start, direction) and gggrid used to fix the polar plot-box
+          background; native HTML tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T01:30:02Z'
+  rendered_at: '2026-11-09T01:35:44Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -257,9 +249,9 @@ impl_tags:
   - layer-composition
   - manual-ticks
   - html-export
+  - hover-tooltips
   patterns:
   - wide-to-long
   dataprep: []
   styling:
-  - minimal-chrome
   - grid-styling
