@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -15,7 +15,8 @@ from pygal.style import Style
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+# 15 % ink rule pre-blended onto the page: cairosvg ignores rgba() alpha in the PNG
+RULE = "#D8D7D0" if THEME == "light" else "#3A3A36"
 
 # Imprint palette: all eight positions, the single series takes position 1
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
@@ -62,6 +63,8 @@ custom_style = Style(
     tooltip_font_size=36,
     opacity=1,
     stroke_width=5,
+    guide_stroke_color=RULE,  # graph.css strokes the guides with these, not foreground_subtle
+    major_guide_stroke_color=RULE,
     guide_stroke_dasharray="1,0",
     major_guide_stroke_dasharray="1,0",
 )
