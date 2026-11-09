@@ -12,7 +12,12 @@ import { resetTurnstile, TURNSTILE_HEADER } from 'src/lib/turnstile';
 const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));
 vi.mock('src/hooks/useAnalytics', () => ({ useAnalytics: () => analytics }));
 
-const TARGET = { specId: 'scatter-basic', language: 'python', libraryId: 'matplotlib' };
+const TARGET = {
+  specId: 'scatter-basic',
+  language: 'python',
+  libraryId: 'matplotlib',
+  version: '2026-11-08T04:54:13',
+};
 
 function stubTurnstile(pass: boolean) {
   window.turnstile = {

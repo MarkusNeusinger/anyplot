@@ -2,46 +2,45 @@ library: plotnine
 language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:54:48Z'
-updated: '2026-05-17T08:36:31Z'
-generated_by: claude-haiku
-workflow_run: 25985324242
+updated: '2026-11-08T23:03:24Z'
+generated_by: claude-opus-5-5
+adopted_from: ae75eb4427c022069c41b1b5b2989e51a63bfe4e (ae75eb4427c022069c41b1b5b2989e51a63bfe4e)
+workflow_run: 42532540774
 issue: 3341
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing and theme-aware color management
-  - Correctly implements Kagi chart algorithm with clear visual distinction between
-    bullish and bearish trends
-  - Excellent theme adaptation - identical data colors across light/dark renders with
-    properly themed chrome elements
-  - Data quality demonstrates realistic stock price scenario with appropriate reversal
-    threshold and feature coverage
-  - Clean, idiomatic plotnine code with proper use of aesthetic mappings and theme
-    customization
+  - 'Correct Kagi construction: a 4 % reversal against the running extreme; verticals
+    split at the previous shoulder or waist, so thickness changes exactly where the
+    rule says (columns 1, 5, 9 thicken; 2, 8, 20 thin out).'
+  - Color and thickness agree at every point; thickness alone also separates the states,
+    so the red/green pair is not the only signal.
+  - Mapping both color and size to the trend with the same scale name and labels gives
+    plotnine one merged legend whose samples match the marks.
+  - Categorical order draws yang last, so the thick line's round caps cover the thin
+    line's joints.
+  - Theme tokens threaded through every chrome element; both renders are correct.
   weaknesses:
-  - Design Excellence could explore additional visual refinement - current implementation
-    uses well-configured defaults rather than custom aesthetic sophistication
-  - 'Library Mastery: while idiomatic and correct, implementation doesn''t leverage
-    plotnine-specific features that distinguish it from other grammar-of-graphics
-    libraries'
+  - 'Suggestion: a slightly heavier yin line (about 0.7) would read more firmly in
+    the 400 px thumbnail on the dark page while keeping the weight contrast.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) providing clean surface
-      Chrome: Title "kagi-basic · plotnine · anyplot.ai" clearly visible in dark text (24pt); axis labels "Kagi Line Index" and "Price ($)" properly sized (20pt) with units; tick labels (16pt) well-spaced with no overlaps; legend positioned on right with "Trend" header and "Yang (Bullish)" / "Yin (Bearish)" labels in readable gray text (16pt)
-      Data: Yang segments rendered in brand green (#009E73) with thick lines (size=2); Yin segments in orange-red (#D55E00) with thin lines (size=0.7); clear visual distinction between bullish and bearish trends; subtle grid lines (10% alpha) enhance readability without competing with data
-      Legibility verdict: PASS - All text fully readable against light background; no legibility issues
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title "kagi-basic · python · plotnine · anyplot.ai" and axis titles "Kagi Line Index" / "Price ($)" in dark ink, tick labels in soft ink, subtle horizontal grid only, left and bottom axis lines, framed "Trend" legend on an elevated background at the right. All readable.
+      Data: one unbroken Kagi line over 22 columns ($80-$118); thick #009E73 yang and thin #AE3030 yin with horizontal shoulders and waists; thickness switches inside the verticals at the previous shoulder/waist (columns 1, 5, 9 thicken; 2, 8, 20 thin out); the last column is open and thin.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) providing appropriate dark surface
-      Chrome: Title renders in light text (#F0EFE8) at 24pt, clearly visible against dark background; axis labels in light text (20pt), all tick labels in soft gray (#B8B7B0, 16pt) with strong contrast against background; legend text similarly light-colored and readable
-      Data: Yang segments still render in identical green (#009E73) with thick lines; Yin segments in identical orange-red (#D55E00) with thin lines - confirming data colors are theme-independent; grid maintains 10% opacity in appropriate light color
-      Legibility verdict: PASS - All text perfectly readable in dark theme; no dark-on-dark failures; brand green visibility confirmed; chrome properly theme-adapted
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, ticks and legend text #B8B7B0, faint light grid, legend box #242420 with a soft outline. No dark-on-dark text.
+      Data: colors and line weights identical to the light render; the thin red yin line stays visible, brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,71 +51,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          fully readable in both themes
+        comment: Explicit sizes (title 12, axis 10, ticks 8); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements well-spaced and distinct
+        comment: No text collisions; legend clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Yang/Yin line widths (2/0.7) perfectly adapted; all segments clearly
-          visible
+        comment: Thick yang and thin yin both visible in both themes; legend samples
+          match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00); CVD-safe with strong contrast'
+        comment: Thickness doubles the red/green signal, so color is not the sole
+          cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format (4800×2700px); balanced layout with ~70% canvas utilization
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Price ($)'', ''Kagi Line Index'''
+        comment: '''Kagi Line Index'' and ''Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: first series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
-          theme-correct chrome'
+        comment: 'Green #009E73 yang, red #AE3030 yin as the semantic pair; correct
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Professional polish with theme tokens and intentional hierarchy;
-          solid design but not publication-exceptional
+        passed: false
+        comment: Round line ends give clean joins where thick meets thin; elevated
+          framed legend
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Good refinement: subtle grid (10% alpha), theme-aware legend styling,
-          clean layout'
+        passed: false
+        comment: x grid and ticks dropped because the index carries no value; only
+          the price-reading grid kept
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color (green/orange) and line width
-          (thick/thin) effectively guides viewer to trend patterns
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kagi chart with proper direction changes and reversal threshold
+        comment: Correct basic Kagi chart, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: thick yang, thin yin, green/orange colors,
-          reversal logic, legend'
+        comment: Thick/thin, green/red, shoulders and waists, line index x-axis, reversal
+          threshold; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis Kagi index (per spec), Y-axis price; all data visible
+        comment: Verticals run between turn prices; thickness switches at the previous
+          shoulder/waist
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'kagi-basic · plotnine · anyplot.ai'; legend labels accurate
+        comment: Mandated title; one merged legend with readable labels
     data_quality:
       score: 15
       max: 15
@@ -155,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Kagi aspects: bullish segments, bearish segments, multiple
-          reversals'
+        comment: Both transitions yin to yang and yang to yin, mid-vertical splits,
+          long and short verticals, open last segment
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price series (250 business days, ~1 year); neutral,
-          comprehensible financial context
+        comment: 250 business days of daily closing prices with a 4 % reversal, as
+          the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $80-$120 realistic; 4% reversal threshold sensible for
-          trading
+        comment: Prices $80-$118 from $100 start with 2 % daily volatility; 22 columns
+          from 250 days is plausible at 4 %
     code_quality:
       score: 10
       max: 10
@@ -180,59 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → constants → data → algorithm → plot → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-implemented Kagi algorithm; no over-engineering; no fake functionality
+        comment: Kagi construction has no library call; loops are compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output format: plot-{THEME}.png; current plotnine API'
+        comment: Saves plot-{THEME}.png at 3200x1800 with current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Excellent: ggplot() + geom_segment(), proper aes() mapping, scale_color/size_manual(),
-          full theme customization'
+        passed: false
+        comment: geom_segment with x/xend/y/yend from a tidy table, manual scales
+          with limits, categorical order controls drawing order
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses geom_segment() with dual aesthetic mapping; good theme system
-          usage but broadly applicable across ggplot2-like libraries
+        passed: false
+        comment: Shared scale name merges color and size into one legend, a grammar-of-graphics
+          idiom
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-08T23:00:55Z'
 impl_tags:
   dependencies: []
   techniques:
-  - line-segments
-  - dual-aesthetics
+  - layer-composition
   patterns:
-  - algorithm-implementation
+  - data-generation
   dataprep:
-  - synthetic-financial-data
+  - kagi-construction
   styling:
-  - theme-adaptation
   - publication-ready

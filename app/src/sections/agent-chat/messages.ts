@@ -9,6 +9,7 @@
 
 import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import type { ChainStop } from 'src/sections/agent-chat/plotChain';
 
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
@@ -518,21 +519,63 @@ export function describeConvertWarnings(
 }
 
 /**
- * The status line's part while an attachment waits, in place of the step's part: the plot
- * button waits for it, since it would plot the data before it, or none. Enter sends it; the `↵`
- * names the key, and the button that a phone shows inside the message box.
+ * The status line's part while an attachment waits that only Enter sends, in place of the step's
+ * part: one still read on the server or over the cap, or with the admin's fan-out on, whose
+ * `.plot_all()` takes data already stored. The `↵` names the key, and the button that a phone
+ * shows inside the message box.
  */
 export const ATTACHMENT_LINE =
   'the attached table is read when you press Enter ↵, with a note if you like';
 
 /**
- * `ATTACHMENT_LINE`, or, while the session holds data of `rows` rows, the line that says the
- * attachment replaces it. A paste starts the data's versions anew, so `.undo()` cannot bring
- * the old data back: the line says so before the user sends, not after.
+ * The status line's part while an attachment waits, in place of the step's part. With `action`,
+ * the plot button the attachment goes with (`plotChain.ts`): its click reads the attachment and
+ * plots it, while Enter only reads it. Without, `ATTACHMENT_LINE`. While the session holds data
+ * of `rows` rows, the line says the attachment replaces it: a paste starts the data's versions
+ * anew, so `.undo()` cannot bring the old data back, which the line says before the user sends.
  */
-export function attachmentWaitLine(rows: number | null): string {
-  if (rows === null) return ATTACHMENT_LINE;
-  return `the attached table replaces your data (${countOf(rows, 'row')}, no .undo()) when you press Enter ↵, with a note if you like`;
+export function attachmentWaitLine(rows: number | null, action: string | null = null): string {
+  const replaces =
+    rows === null ? null : `replaces your data (${countOf(rows, 'row')}, no .undo())`;
+  if (action === null) {
+    return replaces === null
+      ? ATTACHMENT_LINE
+      : `the attached table ${replaces} when you press Enter ↵, with a note if you like`;
+  }
+  return replaces === null
+    ? `${action} reads the attached table and plots it · Enter ↵ only reads it`
+    : `the attached table ${replaces} · ${action} reads and plots it, Enter ↵ only reads it`;
+}
+
+/** The status line's part while the plot button's one click reads the box's data (`plotChain.ts`). */
+export const CHAIN_READING_TEXT =
+  'reading your data · the plot follows by itself unless something needs a look';
+
+/**
+ * The status line's part after the plot button's one click stopped at the data card
+ * (`plotChain.ts`, `ChainStop`): what to look at, then the button (`action`) as it reads now.
+ */
+export function chainStopText(stop: ChainStop, action: string): string {
+  switch (stop.reason) {
+    case 'question':
+      return `the assistant asked a question · answer it in the box, or ${action}`;
+    case 'data_warnings':
+      return `${countOf(stop.count, 'warning')} on the data · check above, then ${action}`;
+    case 'tables':
+      return `the paste held ${stop.count} tables · check the one read above, then ${action}`;
+    case 'wide':
+      return `the table is wide for this plot · check .to_long() above, then ${action}`;
+    case 'binding_warning':
+      return `a warning on ${stop.role} · check it above, then ${action}`;
+    case 'bindings_failed':
+      return `the binding check failed · check the bindings above, then ${action}`;
+    case 'refused':
+      return `the reading ended in a refusal · see above, then ${action}`;
+    case 'error':
+      return `the reading ended in an error · see above, then ${action}`;
+    case 'stopped':
+      return `the reading was stopped · check the data above, then ${action}`;
+  }
 }
 
 /** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */
