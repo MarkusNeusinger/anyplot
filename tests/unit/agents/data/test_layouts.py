@@ -186,6 +186,9 @@ class TestChangeRequests:
             "x 2030, y 60",  # an axis letter alone is no label
             "x=1, y=2, z=3",
             "Schriftgröße 14, Breite 800",
+            "Y MAX 60, X MAX 2030",  # capitals are no first name
+            "dpi 300, margin 20, padding 10",
+            "Rand 5, Abstand 2, Rahmen 1",
         ],
     )
     def test_a_change_request_is_no_pair_list(self, text: str) -> None:

@@ -119,11 +119,24 @@ WISH_WORDS: tuple[str, ...] = (
     "höhe",
     "bereich",
     "grenze",
+    "margin",
+    "margins",
+    "padding",
+    "dpi",
+    "opacity",
+    "alpha",
+    "bins",
+    "rand",
+    "abstand",
+    "rahmen",
+    "transparenz",
+    "deckkraft",
 )
 """Words of a plot wish or a change request, matched as whole words in any case: the page's `wishWords.json`
 (`words`), which `tests/unit/agents/data/test_layouts.py` pins to this tuple."""
 LOWERCASE_WISH_WORDS: tuple[str, ...] = ("max", "min")
-"""Wish words matched only as written: `Max` and `Min` with a capital are first names (`lowercase_only`)."""
+"""Wish words matched in lowercase or in capitals (`max`, `MAX`), never capitalised: `Max` and `Min` with a capital
+are first names (`lowercase_only`)."""
 _AXIS_LABEL = re.compile(r"^[xyz]$", re.IGNORECASE)
 """A label that is an axis letter alone: `x 2030` asks about the axis, it is no row."""
 
@@ -134,7 +147,7 @@ def _word_pattern(words: tuple[str, ...], flags: int = 0) -> re.Pattern[str]:
 
 
 _WISH = _word_pattern(WISH_WORDS, re.IGNORECASE)
-_LOWERCASE_WISH = _word_pattern(LOWERCASE_WISH_WORDS)
+_LOWERCASE_WISH = _word_pattern(LOWERCASE_WISH_WORDS + tuple(word.upper() for word in LOWERCASE_WISH_WORDS))
 
 
 def is_wish(text: str) -> bool:

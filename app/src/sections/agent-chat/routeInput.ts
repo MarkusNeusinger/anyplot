@@ -372,8 +372,11 @@ function wordPattern(words: string[], flags: string): RegExp {
 
 /** The words of a plot wish or a change request (`wishWords.json`, `layouts.WISH_WORDS`). */
 const WISH_WORDS = wordPattern(wishWords.words, 'iu');
-/** `max` and `min` as written: `Max` and `Min` with a capital are first names. */
-const LOWERCASE_WISH_WORDS = wordPattern(wishWords.lowercase_only, 'u');
+/** `max` and `min` in lowercase or capitals: `Max` and `Min` with a capital are first names. */
+const LOWERCASE_WISH_WORDS = wordPattern(
+  [...wishWords.lowercase_only, ...wishWords.lowercase_only.map(word => word.toUpperCase())],
+  'u'
+);
 
 /**
  * Whether the text holds a word of a plot wish or an instruction: what the user meant to say,

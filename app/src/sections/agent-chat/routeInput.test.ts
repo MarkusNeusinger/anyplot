@@ -34,8 +34,12 @@ describe('routeInput', () => {
       expect(routeInput(text, { hasData: true })).toBe('message');
       expect(routeInput(text)).toBe('message');
     }
-    // `Max` with a capital is a name; `max` as written is a wish.
+    // `Max` with a capital is a name; `max` and `MAX` are a wish.
     expect(routeInput('Max 7, Lisa 5, Tim 2', { hasData: true })).toBe('data');
+    expect(routeInput('Y MAX 60, X MAX 2030')).toBe('message');
+    for (const text of ['dpi 300, margin 20, padding 10', 'Rand 5, Abstand 2, Rahmen 1']) {
+      expect(routeInput(text, { hasData: true })).toBe('message');
+    }
   });
 
   it('asks three pairs of a list while there is data, two on a fresh page', () => {
