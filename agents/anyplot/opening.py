@@ -37,7 +37,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .code.readiness import ReadinessStatus, scan
-from .data.bindings import carry_by_name, default_bindings
+from .data.bindings import carry_by_name, columns_gone, default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
@@ -56,6 +56,7 @@ from .session_state import (
     initial_state,
 )
 from .settings import AgentSettings
+from .switch import CARRY
 
 
 @dataclass(frozen=True)
@@ -119,13 +120,18 @@ class IngestedDataset:
     bindings: list[Binding]
     number: int = 1
     """The session's number of the stored version (`StoredDataset.number`)."""
+    columns_changed: bool = False
+    """The data replaces data, and a column a binding of the old data used is not in it, by name or meaning
+    (`bindings.columns_gone`): the paste answer's `columns_changed`."""
 
     def state_delta(self) -> dict[str, Any]:
         """The delta of a paste: the first version of the data, with no history to undo.
 
         A request kept from a plot that stopped before the confirmation (`PENDING_REQUEST`) was
         written for the data it replaces, so it goes too: a title for the Swiss table must not
-        land on the German one pasted after it. Pasted data is the session's own: it was not copied
+        land on the German one pasted after it. So does a switch's carry (`CARRY`), the texts and theme
+        of a plot of the replaced data (owner decision of 2026-11-08); the plot memory stays, since only
+        the user clears it. Pasted data is the session's own: it was not copied
         from another session (`DATASET_COPIED_FROM`). It is the original of every version made from it
         (`DATASET_ORIGINAL`), and its number is the session's next (`DATASET_TOP`): the numbers of the
         data it replaces stay taken, so none of them ever names this data.
@@ -139,6 +145,7 @@ class IngestedDataset:
             DATASET_TOP: self.number,
             DATASET_COPIED_FROM: None,
             **PENDING_CLEARED,
+            CARRY: None,
         }
 
 
@@ -181,7 +188,10 @@ def store_dataset(
             store.delete(old, session_id)
     roles = snapshot.roles()
     bindings = carry_by_name(carried, roles, parsed.profile) if carried else default_bindings(roles, parsed.profile)
-    return IngestedDataset(dataset_id, parsed, bindings, number)
+    # A column the replaced data was plotted by is not in the new data (`IngestedDataset.columns_changed`); one that
+    # is there but no longer fits its role is no column that went.
+    changed = bool(carried) and columns_gone(carried, parsed.profile)
+    return IngestedDataset(dataset_id, parsed, bindings, number, columns_changed=changed)
 
 
 def ingest_dataset(

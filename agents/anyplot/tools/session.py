@@ -35,8 +35,10 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   for a wish before the confirmation, typed or in the pasted notes (live round 9 of
   2026-10-16), with its lasting decisions for the plot memory, stored once that plot ships.
   It answers `request_kept`, the only basis on which the root may say a
-  request is kept; `false` with `plot_exists` when this library already has a plot.
-  Refused while the pipeline runs.
+  request is kept; `false` with `plot_exists` when this library already has a plot of
+  the current data. A plot of data a new paste replaced is none (`CodeVersion.earlier_data`,
+  owner decision of 2026-11-08): the note pasted with the new data is kept for that data's
+  first plot. Refused while the pipeline runs.
 * `forget(entry_id)`: removes an entry of the user's plot memory (`memory.py`, since
   2026-11-02), the standing decisions the page shows and every later run hands the
   adapter and the reviewer, in any library. Entries come in with a run
@@ -133,7 +135,7 @@ from ..language import LANGUAGE_TARGETS, is_valid, normalise, refusal_lang, same
 from ..memory import ForgetArgs, MemoryRefused, memory_delta, read_memory
 from ..memory import forget as memory_forget
 from ..opening import store_dataset
-from ..pipeline import has_request, hold_request, in_users_words, run_pipeline
+from ..pipeline import has_request, hold_request, in_users_words, plot_shows_replaced_data, run_pipeline
 from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
     DATA_CODE_TOOL,
@@ -352,7 +354,7 @@ async def keep_plot_request(
     expected_texts: list[str] | None = None,
     remember: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Keep a request for the first plot of this library without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot (then call plot_pipeline with base "previous" once the data is confirmed), or when nothing is left to keep once the texts the user did not write are left out (nothing_to_keep)."""
+    """Keep a request for this library's first plot of the current data without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes, also when the library has a plot of data pasted before. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot of the current data (plot_exists: then call plot_pipeline with base "previous" once the data is confirmed), or when nothing is left to keep once the texts the user did not write are left out (nothing_to_keep)."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
@@ -364,8 +366,12 @@ async def keep_plot_request(
         )
     except ValidationError:
         return _error("invalid_arguments")
-    if get_services().versions.latest_rendered(tool_context.session.id, target=view.target) is not None:
-        # A change of an existing plot is no first-plot note: the root repeats it once the data is confirmed.
+    services = get_services()
+    latest = services.versions.latest_rendered(tool_context.session.id, target=view.target)
+    # A change of an existing plot is no first-plot note: the root repeats it once the data is confirmed. A plot of
+    # data a new paste replaced is no plot of this data: the note pasted with the new data is for its first plot
+    # (owner decision of 2026-11-08), which the fresh run of the plot button takes (`take_pending_request`).
+    if latest is not None and not plot_shows_replaced_data(services, tool_context.session.id, view):
         return {"status": "ok", "request_kept": False, "reason": "plot_exists"}
     ledger = ledger_for(tool_context.invocation_id)
     # A text the user never wrote is no text to check the plot for: only what stands in their words is kept.

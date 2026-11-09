@@ -229,8 +229,11 @@
  * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all. A shipped plot's event
  * names the memory its version stands on, `memory: {kept, added}` by entry id, settled before the event as the
  * service does. A typed plot wish before the data is confirmed (also in the note sent with a paste), while the
- * library has no plot, is kept for its first plot as the root's `keep_plot_request` keeps it, which the stream
- * shows nothing of; that plot then remembers it.
+ * library has no plot of this data (a plot of data a new paste replaced is none), is kept for its first plot as
+ * the root's `keep_plot_request` keeps it, which the stream shows nothing of; that plot then remembers it. Every
+ * new data version (a paste, a change, an undo) drops the carry, and a switch takes only the asked theme of a plot
+ * of another data version. The paste answer's `columns_changed` says that a column the replaced data was bound to is not in the
+ * new data (by its exact name), as the service's does (owner decisions of 2026-11-08).
  *
  * What a turn changed: every `done` of a turn that ended well carries `turn` (`answer`, `data`, `plot`,
  * `language` or `kept`, the service's `stream.turn_outcome` for the paths the mock plays): a question, a
@@ -1246,7 +1249,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         const year = lower.match(/\b(?:nur|only)\s+(\d{4})\b/);
         // A plot wish in the note (a title, a label, a scale…) is kept for the first plot, as the
         // root's `keep_plot_request`; a question about the data changes nothing.
-        const wish = !year && plotWish(lower) && !libraryHasPlot(session);
+        const wish = !year && plotWish(lower) && !libraryHasPlotOfThisData(session);
         const acted = year
           ? keepYear(session, year[1])
           : /dezimal|decimal comma|tausender|thousands/.test(lower)
@@ -1365,12 +1368,13 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
           : !session.complete
             ? 'incomplete_bindings'
             : 'data_unconfirmed';
-        // A typed plot wish before the data is confirmed, while this library has no plot yet: the
-        // root's `keep_plot_request` keeps it for the first plot, which the stream shows nothing of.
+        // A typed plot wish before the data is confirmed, while this library has no plot of this
+        // data yet: the root's `keep_plot_request` keeps it for the first plot, which the stream
+        // shows nothing of.
         if (
           reason === 'data_unconfirmed' &&
           typeof body.text === 'string' &&
-          !libraryHasPlot(session)
+          !libraryHasPlotOfThisData(session)
         ) {
           // A language the same message chose comes first in the service's order.
           if (turn !== 'language') turn = 'kept';
@@ -1480,14 +1484,16 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         theme,
         themeAsked: askedTheme !== null,
         dataset: session.dataset,
+        // The data version it drew (`CodeVersion.data_version`).
+        dataNumber: session.version,
         bindings: session.bindings,
         // The session language the version's text was written in, as the service keeps it.
         language: session.language,
         pngs: {},
       };
       renderVersion(session, version, theme);
-      // The library's first plot: a wish kept for it in step 1 is its request.
-      const firstHere = !libraryHasPlot(session);
+      // The library's first plot of this data: a wish kept for it in step 1 is its request.
+      const firstHere = !libraryHasPlotOfThisData(session);
       session.versions.push(version);
       const x = columnOf(version, 'x');
       const y = yColumns(version).join(', ');
@@ -1644,8 +1650,18 @@ function memoryKind(lower) {
 /** Whether a message is a wish for the plot (a title, a label, a scale…), not a question. */
 const plotWish = lower => !lower.trim().endsWith('?') && memoryKind(lower) !== 'other';
 
-/** Whether the session's library has a plot yet: a wish for its first plot is kept until then. */
+/** Whether the session's library has a plot yet. */
 const libraryHasPlot = session => session.versions.some(item => item.library === session.library);
+
+/**
+ * Whether the library has a plot of the current data: a version whose data number is the paste's
+ * or later (`CodeVersion.earlier_data` on the service). A wish for the first plot of this data is
+ * kept until then, also when the library has a plot of data a new paste replaced (2026-11-08).
+ */
+const libraryHasPlotOfThisData = session =>
+  session.versions.some(
+    item => item.library === session.library && (item.dataNumber ?? 0) >= session.first
+  );
 
 /**
  * The root's `keep_plot_request` in miniature: a plot wish before the data is confirmed is kept
@@ -1843,17 +1859,24 @@ function storeVersion(session, parsed, changes) {
   session.top += 1;
   session.version = session.top;
   session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
+  // A new data version drops the switch's carry and a wish kept for the first plot, as the
+  // service's version delta does (2026-11-08).
+  session.carry = null;
+  session.keptWish = null;
 }
 
 /**
  * New data (a paste, a copy, a table computed without data): its first version, under the
- * session's next number, with no history to undo.
+ * session's next number, with no history to undo. A switch's carry and a kept wish go with the
+ * data before.
  */
 function newData(session) {
   session.history = [];
   session.top += 1;
   session.version = session.top;
   session.first = session.top;
+  session.carry = null;
+  session.keptWish = null;
 }
 
 /**
@@ -2648,6 +2671,8 @@ async function route(req, res) {
     const target = body.library;
     const latestIn = library => session.versions.findLast(item => item.library === library);
     if (target !== session.library) {
+      // A plot of another data version carries its asked theme too; its texts and requests, which
+      // the mock does not carry, stay behind on the service (`switch.source_plot`, 2026-11-09).
       const plot = latestIn(session.library);
       const pending = session.carry;
       session.carry =
@@ -2741,6 +2766,11 @@ async function route(req, res) {
       await sleep(900);
       return json(res, 200, transcribed, ref);
     }
+    // A column the replaced data was bound to that the new data lacks (the service's `columns_changed`,
+    // which matches by name and meaning; the mock by the exact name).
+    const header = new Set(parsed.profile.columns.map(column => column.name));
+    const columnsChanged =
+      !!session.dataset && session.bindings.some(binding => !header.has(binding.column));
     session.dataset = parsed;
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
@@ -2756,6 +2786,7 @@ async function route(req, res) {
         // A dropped file's name, kept apart from the notes as the service does (unscreened here).
         ...(typeof body?.source === 'string' ? { file_name: body.source.slice(0, 80) } : {}),
         ...(tables ? { tables, table } : {}),
+        columns_changed: columnsChanged,
         roles: SPECS[session.specId].roles,
         language: languageBody(session, dataOffer),
       },
@@ -2849,6 +2880,9 @@ async function route(req, res) {
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // restored, but confirmed again by the user
     session.version = previous.number; // its own number again; the undone one is never given again
+    // A new data version drops the switch's carry and a kept wish (2026-11-08).
+    session.carry = null;
+    session.keptWish = null;
     return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
   }
   if (method === 'PUT' && rest === '/bindings') {

@@ -22,7 +22,9 @@
  * The remembered decisions stand on the chapter line that holds them (`decisionsAt`): its `3
  * decisions ▾` unfolds the list (`Remembered`) as the row right after the line, a row of the same
  * flat list, so a newer chapter's line takes it over without remounting it. Its removals are
- * announced outside the log, by the page.
+ * announced outside the log, by the page. After a paste with other columns than the data the
+ * latest plot drew, the new data's line holds them until the next plot, as `3 earlier decisions ▾
+ * · .forget_all()` (`decisionsEarlier`).
  *
  * Versions: the live data card at the latest data version stays open in both steps, its label
  * `data v3 · made long · 48 rows × 4 cols`; every older data version folds to that label (`▸ data
@@ -84,7 +86,12 @@ import {
   refusalLabel,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
-import { Remembered, RememberedCount } from 'src/sections/agent-chat/Remembered';
+import {
+  ForgetEarlier,
+  Remembered,
+  RememberedCount,
+  type RememberedHandle,
+} from 'src/sections/agent-chat/Remembered';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { awaitsReply, type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import {
@@ -470,10 +477,13 @@ export function ChatThread(props: ChatThreadProps) {
     [items, versions]
   );
   const { memoryTurn, memory } = props.state;
-  const { rows, chapters, answers, decisionsAt } = useMemo(
+  const { rows, chapters, answers, decisionsAt, decisionsEarlier } = useMemo(
     () => threadModel(items, memoryTurn),
     [items, memoryTurn]
   );
+  // The list's own `.forget_all()`, which the new data's line offers after a paste with other
+  // columns (`ForgetEarlier`): the list shows its progress and a failure, so it opens for it.
+  const rememberedRef = useRef<RememberedHandle>(null);
   const questions = useMemo(
     () => new Set(chapters.flatMap(chapter => chapter.questions)),
     [chapters]
@@ -537,6 +547,19 @@ export function ChatThread(props: ChatThreadProps) {
                       listId={decisionsId}
                       onToggle={() => setDecisionsOpen(open => !open)}
                       handoffRef={decisionsHandoffRef}
+                      earlier={decisionsEarlier}
+                    />
+                  ) : undefined
+                }
+                decisionsAction={
+                  holds && decisionsEarlier && decisions.onForgetAll ? (
+                    <ForgetEarlier
+                      memory={memory}
+                      disabled={decisions.disabled}
+                      onForgetAll={() => {
+                        setDecisionsOpen(true);
+                        rememberedRef.current?.forgetAll();
+                      }}
                     />
                   ) : undefined
                 }
@@ -558,6 +581,8 @@ export function ChatThread(props: ChatThreadProps) {
                 onForgetAll={decisions.onForgetAll}
                 fallbackFocusRef={decisions.fallbackFocusRef}
                 onAnnounce={decisions.onAnnounce}
+                earlier={decisionsEarlier}
+                handleRef={rememberedRef}
               />,
             ];
           }

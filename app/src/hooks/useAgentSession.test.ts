@@ -3901,6 +3901,59 @@ describe('useAgentSession: session language', () => {
   });
 });
 
+describe("agentReducer: a new data version and the switch's offer", () => {
+  // Owner decision of 2026-11-08: the server drops the switch's carry with every new data version,
+  // since its texts and theme came from a plot of the data before; the page's offer goes with it.
+  const offered: AgentSessionState = {
+    ...initialAgentState('seaborn'),
+    phase: 'ready',
+    sessionId: 'S1',
+    carryOffer: {
+      target: { spec_id: 'scatter-basic', library: 'seaborn' },
+      decisions: 2,
+      memoryBacked: true,
+    },
+  };
+  const pasted = (state: AgentSessionState, extra: Record<string, unknown> = {}) =>
+    agentReducer(state, {
+      type: 'parse_done',
+      parsed: { ...DATASET, ...extra } as unknown as DatasetParsed,
+      bytes: 10,
+      chip: '▤ table',
+    });
+
+  it('ends the offer with a paste, a data change and an undo', () => {
+    expect(pasted(offered).carryOffer).toBeNull();
+    const withData = { ...pasted(offered), carryOffer: offered.carryOffer };
+    const changed = agentReducer(withData, {
+      type: 'data_prepared',
+      dataset: PREPARED as unknown as DatasetChanged,
+    });
+    expect(changed.carryOffer).toBeNull();
+    const undone = agentReducer(
+      { ...changed, carryOffer: offered.carryOffer },
+      { type: 'undo_done', parsed: DATASET as unknown as DatasetParsed }
+    );
+    expect(undone.carryOffer).toBeNull();
+  });
+
+  it("marks the card of a paste whose answer says a plotted column is gone, and no other one's", () => {
+    const card = (state: AgentSessionState) => {
+      const item = state.items.filter(entry => entry.kind === 'data').pop();
+      return item?.kind === 'data' ? item.snapshot : undefined;
+    };
+    expect(card(pasted(offered, { columns_changed: true }))?.columnsChanged).toBe(true);
+    expect(card(pasted(offered, { columns_changed: false }))?.columnsChanged).toBeUndefined();
+    expect(card(pasted(offered, { columns_changed: 'yes' }))?.columnsChanged).toBeUndefined();
+    // A change of that data is a version of its own, which no paste answer named.
+    const changed = agentReducer(pasted(offered, { columns_changed: true }), {
+      type: 'data_prepared',
+      dataset: PREPARED as unknown as DatasetChanged,
+    });
+    expect(card(changed)?.columnsChanged).toBeUndefined();
+  });
+});
+
 describe('agentReducer', () => {
   it('syncs the session language from done, never down from chosen and never into the data', () => {
     const ready: AgentSessionState = {
