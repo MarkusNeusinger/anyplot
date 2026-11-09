@@ -1240,7 +1240,15 @@ statistics after that. The table's columns are in
   lines, the config stamp and your message. Under the pipeline it lists one
   line per round with the gates it failed and the class of a crash, and a line
   with the session's version count and how its latest run ended, so a chat case
-  tells a plot the page did not show from a run that failed. The diff runs against the
+  tells a plot the page did not show from a run that failed. Under `turns` it
+  shows the session's turn record (`turns` of the detail, `null` for a case sent
+  before the agents service kept one; see [Session bundle](#session-bundle)) as
+  one row per turn: the page's action or a message, how the turn ended, the
+  guards that fired and the tool calls as chips, with a refusal, a cap or a
+  failed render marked. Selecting a row opens that turn's whole record, and the
+  transcript labels each of your lines with its turn number. The API closes
+  every code to the record's vocabularies again, so a value outside them reads
+  `other`. The diff runs against the
   catalogue at triage time, which a regeneration may have changed since the
   session: compare
   `snapshot_library_version`, the version the session adapted, with

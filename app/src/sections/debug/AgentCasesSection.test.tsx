@@ -373,6 +373,11 @@ describe('AgentCasesSection triage', () => {
     );
     expect(within(article).getByText('VQ-03 light: overlap')).toBeInTheDocument();
     expect(within(article).getByText('make the legend smaller')).toBeInTheDocument();
+    // The transcript's user lines carry the turn numbers the turn record uses; this case predates the record.
+    expect(within(article).getByText('you · turn 1')).toBeInTheDocument();
+    expect(
+      within(article).getByText(/no turn record: this case was sent before/)
+    ).toBeInTheDocument();
     expect(within(article).getByText('root: aaaa1111')).toBeInTheDocument();
     expect(
       within(article).getByText('your reaction contradicts the pipeline outcome (ok)')

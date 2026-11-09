@@ -1,9 +1,9 @@
 /**
  * One opened case, below the list: who sent it and when, the message, the
  * triage controls (status, tags, promotion), both renders, what the pipeline
- * reported, the code as a diff against the catalogue or as is, the
- * conversation and the config stamp. The text holds the agent chat's 13 px
- * floor, because most of it is the chat's own content.
+ * reported, the turn record, the code as a diff against the catalogue or as
+ * is, the conversation and the config stamp. The text holds the agent chat's
+ * 13 px floor, because most of it is the chat's own content.
  *
  * When the bucket's lifecycle rule has deleted the files (`expired`), one line
  * replaces everything read from them; the row and its triage stay.
@@ -25,6 +25,7 @@ import { acceptMatch } from 'src/sections/debug/acceptMatch';
 import { CaseImages } from 'src/sections/debug/CaseImages';
 import { ReactionMark } from 'src/sections/debug/CaseList';
 import { roundLine, sessionLine } from 'src/sections/debug/caseRounds';
+import { CaseTurns } from 'src/sections/debug/CaseTurns';
 import { formatUtc } from 'src/sections/debug/format';
 import { PromoteControl } from 'src/sections/debug/PromoteControl';
 import {
@@ -246,6 +247,11 @@ export function CaseDetail({
   const session = sessionLine(detail.session_versions, detail.last_run);
   // A chat case holds no version, so the latest run's rounds stand in for the version's own.
   const runRounds = rounds.length === 0 ? (detail.last_run?.rounds ?? []) : [];
+  // Turn N is the transcript's N-th user line, the number the turn record and the latest run use.
+  let userLines = 0;
+  const lineTurns = (detail.transcript ?? []).map(turn =>
+    turn.role === 'user' ? ++userLines : null
+  );
 
   return (
     <Box
@@ -474,12 +480,17 @@ export function CaseDetail({
             </Box>
           </Block>
 
-          {/* 6. Code */}
+          {/* 6. Turns: each turn's tool calls and guard verdicts, closed codes only. */}
+          <Block label="turns">
+            <CaseTurns key={detail.id} turns={detail.turns} />
+          </Block>
+
+          {/* 7. Code */}
           <Block label="code">
             <CodeBlock key={detail.id} detail={detail} />
           </Block>
 
-          {/* 7. Transcript */}
+          {/* 8. Transcript */}
           <Block label="transcript">
             {detail.transcript && detail.transcript.length > 0 ? (
               <Box
@@ -495,7 +506,9 @@ export function CaseDetail({
               >
                 {detail.transcript.map((turn, index) => (
                   <Box component="li" key={index} sx={{ minWidth: 0 }}>
-                    <Box sx={detailMutedSx}>{turn.role === 'user' ? 'you' : 'assistant'}</Box>
+                    <Box sx={detailMutedSx}>
+                      {turn.role === 'user' ? `you · turn ${lineTurns[index]}` : 'assistant'}
+                    </Box>
                     <Box sx={{ ...detailTextSx, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
                       {turn.text}
                     </Box>
@@ -507,7 +520,7 @@ export function CaseDetail({
             )}
           </Block>
 
-          {/* 8. Config stamp */}
+          {/* 9. Config stamp */}
           <Block label="config">
             {detail.config ? (
               <ConfigStamp config={detail.config} />
