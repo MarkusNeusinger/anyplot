@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -24,6 +24,7 @@ from lets_plot import (
     labs,
     scale_fill_manual,
     scale_x_continuous,
+    scale_y_log10,
     theme,
     theme_minimal,
 )
@@ -43,7 +44,8 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 IMPRINT_SEQ = ["#009E73", "#4467A3"]
 
 # Constants
-MAX_LEVELS = 8  # deepest letter value drawn, however large the sample
+MAX_LEVELS = 6  # deepest letter value drawn, however large the sample
+MAX_TINT = 0.6  # the deepest level mixes this share of white into its ramp step
 MIN_LEVELS = 2
 BOX_HALF_WIDTH = 0.4  # half width of the quartile box, in category units
 WIDTH_DECAY = 0.85  # each deeper level is this share of the previous width
@@ -104,10 +106,16 @@ for x_pos, group in enumerate(groups):
     outlier_rows.extend({X_POS: x_pos, Y_POS: v} for v in values[(values < low) | (values > high)])
 
 # Level names give the share of observations each box spans; colors step along imprint_seq
+# and lighten toward the tails, so neighbouring levels differ in hue and in shade
 level_names = [f"{100 * (1 - 0.5 ** (i + 1)):.4g}%" for i in range(n_levels)]
 start, end = (np.array([int(c[j : j + 2], 16) for j in (1, 3, 5)]) for c in IMPRINT_SEQ)
 steps = np.linspace(0, 1, n_levels) if n_levels > 1 else np.zeros(1)
-level_colors = ["#{:02X}{:02X}{:02X}".format(*np.round(start + t * (end - start)).astype(int)) for t in steps]
+level_colors = [
+    "#{:02X}{:02X}{:02X}".format(
+        *np.round((start + t * (end - start)) * (1 - MAX_TINT * t) + 255 * MAX_TINT * t).astype(int)
+    )
+    for t in steps
+]
 
 # Deepest (narrowest, tallest) boxes first, so each wider inner box stays on top
 box_df = pd.DataFrame(box_rows).sort_values(LEVEL, ascending=False, kind="stable")
@@ -121,6 +129,7 @@ plot = (
     + geom_segment(aes(x=X_POS, xend=X_END, y=Y_POS, yend=Y_POS), data=median_df, color=INK, size=1.2)
     + scale_fill_manual(values=dict(zip(level_names, level_colors, strict=True)), breaks=level_names, name=LEVEL)
     + scale_x_continuous(breaks=list(range(len(groups))), labels=groups)
+    + scale_y_log10()
     + labs(x=ENDPOINT, y=RESPONSE_TIME, title="boxen-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
