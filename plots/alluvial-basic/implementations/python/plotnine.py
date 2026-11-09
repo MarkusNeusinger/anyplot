@@ -1,19 +1,14 @@
 """ anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 74/100 | Updated: 2026-05-09
+Library: plotnine 0.15.8 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-09
 """
 
 import os
-import sys
 
-
-# Prevent current directory from shadowing the plotnine package
-sys.path = [p for p in sys.path if p and not p.endswith("implementations") and not p.endswith("python")]
-
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
     annotate,
     coord_cartesian,
@@ -25,289 +20,169 @@ from plotnine import (  # noqa: E402
     geom_text,
     ggplot,
     labs,
+    scale_color_identity,
     scale_fill_manual,
     theme,
-    theme_minimal,
+    theme_void,
 )
 
 
-# Theme tokens
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per plan tier in data order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BAND_ALPHA = (
+    0.5 if THEME == "light" else 0.7
+)  # translucent bands fade toward a dark page, so they need more opacity there
+LABEL_INKS = ("#1A1A17", "#F0EFE8")  # block labels sit on the fixed fills, so they use whichever ink contrasts more
 
-# Data - Voter migration between parties across 4 election cycles
-transitions = pd.DataFrame(
+# Columns: set these to your table's column names
+QUARTER = "Quarter"  # role: time_point
+NEXT_QUARTER = "Next quarter"  # role: extra
+PLAN = "Plan tier"  # role: category
+NEXT_PLAN = "Next plan tier"  # role: extra
+SUBSCRIBERS = "Subscribers (thousands)"  # role: value
+MOVED = "Subscribers moving (thousands)"  # role: flow
+
+# Data: replace this block with your own table, for example df = pd.read_csv("plan_moves.csv")
+quarters = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"]
+plans = ["Basic", "Standard", "Premium"]
+moves = [
+    [38, 9, 3, 4, 26, 5, 1, 2, 12],  # Q1 -> Q2, from Basic, Standard, Premium to Basic, Standard, Premium
+    [32, 8, 3, 3, 27, 7, 1, 2, 17],  # Q2 -> Q3
+    [27, 6, 3, 3, 26, 8, 1, 3, 23],  # Q3 -> Q4
+]
+df = pd.DataFrame(
     {
-        "from_time": [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-        "to_time": [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-        "from_party": [
-            "Democrats",
-            "Democrats",
-            "Democrats",
-            "Republicans",
-            "Republicans",
-            "Republicans",
-            "Independent",
-            "Independent",
-            "Independent",
-            "Democrats",
-            "Democrats",
-            "Democrats",
-            "Republicans",
-            "Republicans",
-            "Republicans",
-            "Independent",
-            "Independent",
-            "Independent",
-            "Democrats",
-            "Democrats",
-            "Democrats",
-            "Republicans",
-            "Republicans",
-            "Republicans",
-            "Independent",
-            "Independent",
-            "Independent",
-        ],
-        "to_party": [
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-            "Democrats",
-            "Republicans",
-            "Independent",
-        ],
-        "voters": [38, 4, 3, 3, 36, 2, 2, 3, 9, 35, 5, 5, 4, 33, 4, 4, 4, 6, 32, 6, 7, 5, 30, 6, 6, 5, 3],
+        QUARTER: np.repeat(quarters[:-1], len(plans) ** 2),
+        NEXT_QUARTER: np.repeat(quarters[1:], len(plans) ** 2),
+        PLAN: np.tile(np.repeat(plans, len(plans)), len(quarters) - 1),
+        NEXT_PLAN: np.tile(plans, len(plans) * (len(quarters) - 1)),
+        MOVED: np.concatenate(moves),
     }
 )
 
-# Party colors using Okabe-Ito palette
-party_colors = {
-    "Democrats": IMPRINT[0],  # #009E73 (bluish green)
-    "Republicans": IMPRINT[1],  # #C475FD (vermillion)
-    "Independent": IMPRINT[2],  # #4467A3 (blue)
+# Plot: reads only df and the constants above
+flows = df.dropna(subset=[QUARTER, NEXT_QUARTER, PLAN, NEXT_PLAN, MOVED])
+stages = pd.unique(pd.concat([flows[QUARTER], flows[NEXT_QUARTER]])).tolist()
+tiers = pd.unique(pd.concat([flows[PLAN], flows[NEXT_PLAN]])).tolist()
+fill_colors = dict(zip(tiers, IMPRINT_PALETTE, strict=False))  # tiers past the eighth fall back to the muted anchor
+
+# Label ink per tier: WCAG relative luminance of the block fill and of both inks, then the higher contrast ratio
+srgb = {
+    c: np.array([int(c[i : i + 2], 16) for i in (1, 3, 5)]) / 255 for c in [*IMPRINT_PALETTE, INK_MUTED, *LABEL_INKS]
+}
+lum = {
+    c: np.where(v <= 0.04045, v / 12.92, ((v + 0.055) / 1.055) ** 2.4) @ [0.2126, 0.7152, 0.0722]
+    for c, v in srgb.items()
+}
+dark_ink, light_ink = LABEL_INKS
+fill_lum = {tier: lum[fill_colors.get(tier, INK_MUTED)] for tier in tiers}
+label_inks = {
+    tier: dark_ink if (fl + 0.05) / (lum[dark_ink] + 0.05) >= (lum[light_ink] + 0.05) / (fl + 0.05) else light_ink
+    for tier, fl in fill_lum.items()
 }
 
-parties = ["Democrats", "Republicans", "Independent"]
-time_points = [0, 1, 2, 3]
-time_labels = ["2016", "2018", "2020", "2022"]
+# Block value: what leaves a block, or what arrives in it at the last time point
+outflow = flows.groupby([QUARTER, PLAN], sort=False)[MOVED].sum()
+inflow = flows.groupby([NEXT_QUARTER, NEXT_PLAN], sort=False)[MOVED].sum()
+inflow.index.names = outflow.index.names
+block_values = outflow.combine_first(inflow)
 
-# Layout parameters
-x_positions = {0: 0.15, 1: 0.38, 2: 0.62, 3: 0.85}
-node_width = 0.06
-node_gap = 0.04
-total_height = 0.85
-y_start = 0.95
+block_width = 0.32
+gap = 0.05 * block_values.groupby(level=0).sum().max()
+stack_heights = {
+    stage: block_values[stage].sum() + gap * (len(block_values[stage]) - 1) for stage in block_values.index.levels[0]
+}
+tallest = max(stack_heights.values())
 
-# Calculate node sizes at each time point
-node_positions = {}
-for t in time_points:
-    if t == 0:
-        totals = transitions[transitions["from_time"] == t].groupby("from_party")["voters"].sum()
-    else:
-        totals = transitions[transitions["to_time"] == t].groupby("to_party")["voters"].sum()
-
-    total_voters = totals.sum()
-    current_y = y_start
-
-    for party in parties:
-        count = totals.get(party, 0)
-        height = (count / total_voters) * total_height
-
-        node_positions[(t, party)] = {
-            "x": x_positions[t],
-            "y_top": current_y,
-            "y_bottom": current_y - height,
-            "height": height,
-            "count": count,
-            "flow_offset": 0,
-        }
-        current_y = current_y - height - node_gap
-
-# Build node rectangles
-node_data = []
-for (t, party), pos in node_positions.items():
-    node_data.append(
-        {
-            "time": t,
-            "party": party,
-            "xmin": pos["x"] - node_width / 2,
-            "xmax": pos["x"] + node_width / 2,
-            "ymin": pos["y_bottom"],
-            "ymax": pos["y_top"],
-            "label_y": (pos["y_top"] + pos["y_bottom"]) / 2,
-            "count": pos["count"],
-        }
-    )
-nodes_df = pd.DataFrame(node_data)
-
-# Build flow polygons between adjacent time points
-flow_polygons = []
-min_voters_for_flow = 3
-
-for _, row in transitions.iterrows():
-    from_t = row["from_time"]
-    to_t = row["to_time"]
-    from_party = row["from_party"]
-    to_party = row["to_party"]
-    voters = row["voters"]
-
-    if voters < min_voters_for_flow:
-        src_pos = node_positions[(from_t, from_party)]
-        tgt_pos = node_positions[(to_t, to_party)]
-
-        total_src = sum(
-            transitions[(transitions["from_time"] == from_t) & (transitions["from_party"] == from_party)]["voters"]
+node_rows = []
+for i, stage in enumerate(stages):
+    y_top = (tallest + stack_heights[stage]) / 2
+    for tier in tiers:
+        value = block_values.get((stage, tier), np.nan)
+        if not value > 0:
+            continue
+        node_rows.append(
+            {
+                PLAN: tier,
+                SUBSCRIBERS: value,
+                "x": i,
+                "xmin": i - block_width / 2,
+                "xmax": i + block_width / 2,
+                "ymin": y_top - value,
+                "ymax": y_top,
+                "label": f"{tier}\n{value:,.0f}k",
+                "label_color": label_inks[tier],
+            }
         )
-        flow_height_src = (voters / total_src) * src_pos["height"] if total_src > 0 else 0
+        y_top -= value + gap
+nodes = pd.DataFrame(node_rows)
+nodes["label_y"] = (nodes["ymin"] + nodes["ymax"]) / 2
 
-        total_tgt = sum(transitions[(transitions["to_time"] == to_t) & (transitions["to_party"] == to_party)]["voters"])
-        flow_height_tgt = (voters / total_tgt) * tgt_pos["height"] if total_tgt > 0 else 0
-
-        src_pos["flow_offset"] += flow_height_src
-        tgt_pos["flow_offset"] += flow_height_tgt
+# Bands: each one leaves its source block and enters its target block at a running offset from the top
+out_cursor = {(stages[int(r["x"])], r[PLAN]): r["ymax"] for _, r in nodes.iterrows()}
+in_cursor = dict(out_cursor)
+curve = np.linspace(0, 1, 50)
+ease = 3 * curve**2 - 2 * curve**3
+band_parts = []
+for k, row in flows.iterrows():
+    source, target, flow = (row[QUARTER], row[PLAN]), (row[NEXT_QUARTER], row[NEXT_PLAN]), row[MOVED]
+    if not flow > 0 or source not in out_cursor or target not in in_cursor:
         continue
-
-    src_pos = node_positions[(from_t, from_party)]
-    tgt_pos = node_positions[(to_t, to_party)]
-
-    total_src = sum(
-        transitions[(transitions["from_time"] == from_t) & (transitions["from_party"] == from_party)]["voters"]
+    src_top, tgt_top = out_cursor[source], in_cursor[target]
+    out_cursor[source] -= flow
+    in_cursor[target] -= flow
+    x_left = stages.index(source[0]) + block_width / 2
+    x_right = stages.index(target[0]) - block_width / 2
+    xs = x_left + (x_right - x_left) * curve
+    upper = src_top + (tgt_top - src_top) * ease
+    band_parts.append(
+        pd.DataFrame(
+            {
+                "x": np.concatenate([xs, xs[::-1]]),
+                "y": np.concatenate([upper, (upper - flow)[::-1]]),
+                "band": k,
+                PLAN: source[1],
+            }
+        )
     )
-    flow_height_src = (voters / total_src) * src_pos["height"] if total_src > 0 else 0
+bands = pd.concat(band_parts, ignore_index=True)
 
-    total_tgt = sum(transitions[(transitions["to_time"] == to_t) & (transitions["to_party"] == to_party)]["voters"])
-    flow_height_tgt = (voters / total_tgt) * tgt_pos["height"] if total_tgt > 0 else 0
-
-    src_y_top = src_pos["y_top"] - src_pos["flow_offset"]
-    src_y_bottom = src_y_top - flow_height_src
-    src_pos["flow_offset"] += flow_height_src
-
-    tgt_y_top = tgt_pos["y_top"] - tgt_pos["flow_offset"]
-    tgt_y_bottom = tgt_y_top - flow_height_tgt
-    tgt_pos["flow_offset"] += flow_height_tgt
-
-    flow_x_left = x_positions[from_t] + node_width / 2
-    flow_x_right = x_positions[to_t] - node_width / 2
-    n_points = 40
-
-    t_param = np.linspace(0, 1, n_points)
-    x_top = flow_x_left + (flow_x_right - flow_x_left) * t_param
-    y_top = src_y_top + (tgt_y_top - src_y_top) * (3 * t_param**2 - 2 * t_param**3)
-
-    x_bottom = flow_x_right + (flow_x_left - flow_x_right) * t_param
-    y_bottom = tgt_y_bottom + (src_y_bottom - tgt_y_bottom) * (3 * t_param**2 - 2 * t_param**3)
-
-    x_polygon = np.concatenate([x_top, x_bottom])
-    y_polygon = np.concatenate([y_top, y_bottom])
-
-    flow_id = f"{from_t}_{to_t}_{from_party}_{to_party}"
-    for i in range(len(x_polygon)):
-        flow_polygons.append({"x": x_polygon[i], "y": y_polygon[i], "flow_id": flow_id, "from_party": from_party})
-
-flows_df = pd.DataFrame(flow_polygons)
-
-# Create the plot
+header_y = tallest * 1.04
 plot = (
     ggplot()
-    + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="from_party"), alpha=0.5)
-    + geom_rect(
-        nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="party"), color="white", size=0.5
-    )
+    + geom_polygon(bands, aes(x="x", y="y", group="band", fill=PLAN), alpha=BAND_ALPHA, color=None)
+    + geom_rect(nodes, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill=PLAN), color=PAGE_BG, size=0.6)
     + geom_text(
-        nodes_df[nodes_df["count"] >= 10],
-        aes(x=(nodes_df["xmin"] + nodes_df["xmax"]) / 2, y="label_y", label="count"),
-        ha="center",
-        va="center",
-        size=12,
-        color=ELEVATED_BG,
-        fontweight="bold",
+        nodes, aes(x="x", y="label_y", label="label", color="label_color"), size=6.5, fontweight="bold", lineheight=1.1
     )
-    + scale_fill_manual(
-        values=party_colors, name="Party", breaks=parties, labels=["Democrats", "Republicans", "Independent"]
+    + scale_color_identity()
+    + annotate(
+        "text", x=range(len(stages)), y=header_y, label=stages, color=INK, size=9, fontweight="bold", va="bottom"
     )
-    + labs(title="Voter Migration · alluvial-basic · plotnine · pyplots.ai", x="", y="")
-    + coord_cartesian(xlim=(0, 1), ylim=(-0.05, 1.05))
-    + theme_minimal()
+    + scale_fill_manual(values=fill_colors, limits=tiers, na_value=INK_MUTED)
+    + coord_cartesian(xlim=(-0.35, len(stages) - 0.65), ylim=(0, header_y * 1.06), expand=False)
+    + labs(
+        title="alluvial-basic · python · plotnine · anyplot.ai",
+        subtitle=f"Block height: {SUBSCRIBERS} per {PLAN.lower()} · Band width: {MOVED.lower()} to the next {QUARTER.lower()}",
+    )
+    + theme_void()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid=element_blank(),
-        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
+        plot_title=element_text(size=12, color=INK, weight="bold", ha="left"),
+        plot_subtitle=element_text(size=8, color=INK_SOFT, ha="left"),
+        plot_margin=0.03,
+        legend_position="none",
         axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        axis_title=element_blank(),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=16, weight="bold", color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
-        legend_position="right",
     )
 )
 
-# Add time point labels at bottom
-for t, label in zip(time_points, time_labels, strict=True):
-    plot = plot + annotate(
-        "text", x=x_positions[t], y=0.02, label=label, size=18, color=INK, fontweight="bold", ha="center"
-    )
-
-# Add party name labels on the left side of first column nodes
-for party in parties:
-    pos = node_positions[(0, party)]
-    label_y = (pos["y_top"] + pos["y_bottom"]) / 2
-    plot = plot + annotate(
-        "text",
-        x=x_positions[0] - node_width / 2 - 0.015,
-        y=label_y,
-        label=party,
-        size=11,
-        color=INK,
-        fontweight="bold",
-        ha="right",
-        va="center",
-    )
-
-# Add party name labels on the right side of last column nodes
-for party in parties:
-    pos = node_positions[(3, party)]
-    label_y = (pos["y_top"] + pos["y_bottom"]) / 2
-    plot = plot + annotate(
-        "text",
-        x=x_positions[3] + node_width / 2 + 0.015,
-        y=label_y,
-        label=party,
-        size=11,
-        color=INK,
-        fontweight="bold",
-        ha="left",
-        va="center",
-    )
-
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
