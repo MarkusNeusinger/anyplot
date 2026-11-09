@@ -1,17 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 75/100 | Updated: 2026-11-09
 """
 
+import json
 import os
+from urllib.request import urlopen
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.collections import PolyCollection
+from matplotlib.colors import LinearSegmentedColormap, LogNorm
+from matplotlib.path import Path
+from matplotlib.ticker import FuncFormatter
 
 
 # Theme tokens
@@ -22,10 +27,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette: categorical positions (unused for this continuous map) and the sequential ramp
+# Imprint palette and the sequential ramp built from its positions 1 and 3
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
-TILE_INK = "#FFFDF6"  # labels on the filled tiles: the fills are identical in both themes
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]])
+REGION_INK = "#FFFDF6"  # labels on the filled regions: the fills are identical in both themes
 
 sns.set_theme(
     style="white",
@@ -42,157 +47,165 @@ sns.set_theme(
     },
 )
 
+# Constants: US state outlines and an Albers Equal Area composite (Alaska, Hawaii and
+# Puerto Rico get their own Albers parameters and are moved next to the lower 48)
+GEOJSON_URL = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
+ALBERS_LOWER48 = {"lon0": -96.0, "lat0": 37.5, "p1": 29.5, "p2": 45.5, "scale": 1.0, "shift": (0.0, 0.0)}
+ALBERS_PLACED = {
+    "Alaska": {"lon0": -154.0, "lat0": 50.0, "p1": 55.0, "p2": 65.0, "scale": 0.35, "shift": (-0.27, -0.29)},
+    "Hawaii": {"lon0": -157.0, "lat0": 3.0, "p1": 8.0, "p2": 18.0, "scale": 1.0, "shift": (-0.12, -0.54)},
+    "Puerto Rico": {"lon0": -66.5, "lat0": 18.0, "p1": 8.0, "p2": 18.0, "scale": 1.0, "shift": (0.30, -0.20)},
+}
+LABEL_MIN_AREA = 0.0017  # smallest projected area that holds a state code
+
 # Columns: set these to your table's column names
 STATE = "State"  # role: region_id
-GRID_ROW = "Grid row"  # role: extra
-GRID_COL = "Grid column"  # role: extra
-GDP_GROWTH = "GDP growth rate (%)"  # role: value
+STATE_CODE = "State code"  # role: extra
+DENSITY = "Population density (people per sq mi)"  # role: value
 
-# Data: US states as a tile grid map (row, column approximate the US layout);
-# replace this block with your own table, for example df = pd.read_csv("states.csv")
+# Data: 2020 US Census population density of the 50 states and DC (Puerto Rico is not
+# part of this table and shows as no data); replace this block with your own table,
+# for example df = pd.read_csv("states.csv")
 states = [
-    ("WA", 0, 1, 3.2),
-    ("MT", 0, 3, 1.8),
-    ("ND", 0, 5, 2.1),
-    ("MN", 0, 6, 2.9),
-    ("WI", 0, 7, 2.3),
-    ("MI", 0, 8, 1.9),
-    ("NY", 0, 10, 3.5),
-    ("VT", 0, 11, 1.5),
-    ("ME", 0, 12, 1.2),
-    ("OR", 1, 1, 2.8),
-    ("ID", 1, 2, 3.1),
-    ("WY", 1, 3, 0.9),
-    ("SD", 1, 5, 1.7),
-    ("IA", 1, 6, 2.0),
-    ("IL", 1, 7, 2.5),
-    ("IN", 1, 8, 2.2),
-    ("OH", 1, 9, 1.8),
-    ("PA", 1, 10, 2.1),
-    ("MA", 1, 11, 3.8),
-    ("NH", 1, 12, 2.4),
-    ("NV", 2, 1, 4.1),
-    ("UT", 2, 2, 4.5),
-    ("CO", 2, 3, 3.9),
-    ("NE", 2, 5, 1.6),
-    ("KS", 2, 6, 1.4),
-    ("MO", 2, 7, 1.9),
-    ("KY", 2, 8, 2.0),
-    ("WV", 2, 9, 0.5),
-    ("VA", 2, 10, 3.2),
-    ("MD", 2, 11, 2.8),
-    ("NJ", 2, 12, 2.6),
-    ("CA", 3, 1, 3.7),
-    ("AZ", 3, 2, 4.2),
-    ("NM", 3, 3, 1.3),
-    ("OK", 3, 5, 1.1),
-    ("AR", 3, 6, 1.5),
-    ("TN", 3, 7, 3.0),
-    ("NC", 3, 9, 3.4),
-    ("SC", 3, 10, 2.7),
-    ("DE", 3, 11, 2.3),
-    ("CT", 3, 12, 2.9),
-    ("TX", 4, 3, 3.6),
-    ("LA", 4, 5, 0.8),
-    ("MS", 4, 6, 0.6),
-    ("AL", 4, 7, 1.7),
-    ("GA", 4, 8, 3.3),
-    ("FL", 4, 10, 3.8),
-    ("RI", 4, 12, 2.0),
-    ("PR", 4, 13, np.nan),  # no data
-    ("AK", 5, 0, 0.4),
-    ("HI", 5, 2, 2.5),
-    ("DC", 3, 13, np.nan),  # no data
+    ("Alabama", "AL", 99.2),
+    ("Alaska", "AK", 1.3),
+    ("Arizona", "AZ", 62.9),
+    ("Arkansas", "AR", 57.9),
+    ("California", "CA", 253.7),
+    ("Colorado", "CO", 55.7),
+    ("Connecticut", "CT", 744.7),
+    ("Delaware", "DE", 508.0),
+    ("District of Columbia", "DC", 11280.0),
+    ("Florida", "FL", 401.4),
+    ("Georgia", "GA", 185.6),
+    ("Hawaii", "HI", 226.6),
+    ("Idaho", "ID", 22.3),
+    ("Illinois", "IL", 231.1),
+    ("Indiana", "IN", 189.4),
+    ("Iowa", "IA", 57.1),
+    ("Kansas", "KS", 35.9),
+    ("Kentucky", "KY", 114.1),
+    ("Louisiana", "LA", 107.5),
+    ("Maine", "ME", 44.2),
+    ("Maryland", "MD", 636.1),
+    ("Massachusetts", "MA", 901.2),
+    ("Michigan", "MI", 177.6),
+    ("Minnesota", "MN", 71.7),
+    ("Mississippi", "MS", 63.1),
+    ("Missouri", "MO", 89.5),
+    ("Montana", "MT", 7.4),
+    ("Nebraska", "NE", 25.5),
+    ("Nevada", "NV", 28.3),
+    ("New Hampshire", "NH", 153.8),
+    ("New Jersey", "NJ", 1263.0),
+    ("New Mexico", "NM", 17.5),
+    ("New York", "NY", 428.7),
+    ("North Carolina", "NC", 214.7),
+    ("North Dakota", "ND", 11.3),
+    ("Ohio", "OH", 288.8),
+    ("Oklahoma", "OK", 57.7),
+    ("Oregon", "OR", 44.1),
+    ("Pennsylvania", "PA", 290.5),
+    ("Rhode Island", "RI", 1061.4),
+    ("South Carolina", "SC", 173.3),
+    ("South Dakota", "SD", 11.7),
+    ("Tennessee", "TN", 167.6),
+    ("Texas", "TX", 111.6),
+    ("Utah", "UT", 39.7),
+    ("Vermont", "VT", 69.8),
+    ("Virginia", "VA", 218.6),
+    ("Washington", "WA", 115.9),
+    ("West Virginia", "WV", 74.6),
+    ("Wisconsin", "WI", 108.8),
+    ("Wyoming", "WY", 6.0),
 ]
-df = pd.DataFrame(states, columns=[STATE, GRID_ROW, GRID_COL, GDP_GROWTH])
+df = pd.DataFrame(states, columns=[STATE, STATE_CODE, DENSITY])
 
 # Plot: reads only df and the constants above
-rows = np.arange(int(df[GRID_ROW].max()) + 1)
-cols = np.arange(int(df[GRID_COL].max()) + 1)
-grid = df.pivot_table(index=GRID_ROW, columns=GRID_COL, values=GDP_GROWTH, aggfunc="mean", dropna=False).reindex(
-    index=rows, columns=cols
-)
-values = pd.to_numeric(df[GDP_GROWTH], errors="coerce")
-missing = df[values.isna()]
-vmin = np.floor(values.min())
-vmax = np.ceil(values.max())
+with urlopen(GEOJSON_URL, timeout=30) as response:
+    features = json.load(response)["features"]
+
+
+def albers(lon, lat, lon0, lat0, p1, p2, scale, shift):
+    """Albers Equal Area conic on the unit sphere, then scaled and moved into place."""
+    lon, lat = np.radians(lon), np.radians(lat)
+    lon0, lat0, p1, p2 = np.radians([lon0, lat0, p1, p2])
+    n = (np.sin(p1) + np.sin(p2)) / 2
+    c = np.cos(p1) ** 2 + 2 * n * np.sin(p1)
+    rho0 = np.sqrt(c - 2 * n * np.sin(lat0)) / n
+    rho = np.sqrt(c - 2 * n * np.sin(lat)) / n
+    theta = n * (lon - lon0)
+    return np.column_stack([rho * np.sin(theta) * scale + shift[0], (rho0 - rho * np.cos(theta)) * scale + shift[1]])
+
+
+values = pd.to_numeric(df[DENSITY], errors="coerce")
+lookup = dict(zip(df[STATE], values, strict=True))
+codes = dict(zip(df[STATE], df[STATE_CODE], strict=True))
+
+shaded, shaded_values, missing, labels = [], [], [], []
+for feature in features:
+    name = feature["properties"]["name"]
+    params = ALBERS_PLACED.get(name, ALBERS_LOWER48)
+    geometry = feature["geometry"]
+    polygons = [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"]
+    rings = []
+    for polygon in polygons:
+        ring = np.asarray(polygon[0], dtype=float)
+        lon = np.where(ring[:, 0] > 0, ring[:, 0] - 360, ring[:, 0])  # Aleutians past the antimeridian
+        rings.append(albers(lon, ring[:, 1], **params))
+    value = lookup.get(name, np.nan)
+    if pd.notna(value):
+        shaded.extend(rings)
+        shaded_values.extend([value] * len(rings))
+    else:
+        missing.extend(rings)
+    # State code at the interior point farthest from the outline of the largest part,
+    # where the part is big enough to hold it
+    areas = [abs(np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y)) / 2 for x, y in (ring.T for ring in rings)]
+    ring = rings[int(np.argmax(areas))]
+    if name in codes and max(areas) >= LABEL_MIN_AREA:
+        gx, gy = np.meshgrid(*(np.linspace(ring[:, i].min(), ring[:, i].max(), 40) for i in range(2)))
+        candidates = np.column_stack([gx.ravel(), gy.ravel()])
+        candidates = candidates[Path(ring).contains_points(candidates)]
+        start, edge = ring[:-1], np.diff(ring, axis=0)
+        offset = candidates[:, None, :] - start[None, :, :]
+        t = np.clip((offset * edge).sum(-1) / np.maximum((edge**2).sum(-1), 1e-12), 0, 1)
+        clearance = np.linalg.norm(offset - t[..., None] * edge, axis=-1).min(axis=1)
+        cx, cy = candidates[np.argmax(clearance)]
+        labels.append((cx, cy, codes[name]))
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
-sns.heatmap(
-    grid,
-    cmap=imprint_seq,
-    vmin=vmin,
-    vmax=vmax,
-    linewidths=1.2,
-    linecolor=PAGE_BG,
-    square=True,
-    cbar_kws={"label": GDP_GROWTH, "shrink": 0.62, "aspect": 18, "pad": 0.02},
-    ax=ax,
+norm = LogNorm(vmin=np.nanmin(values), vmax=np.nanmax(values))
+regions = PolyCollection(
+    shaded, array=np.asarray(shaded_values), cmap=imprint_seq, norm=norm, edgecolor=PAGE_BG, linewidth=0.4
 )
+ax.add_collection(regions)
 
 # No-data regions: muted gray with hatching, never a color of the scale
-for _, region in missing.iterrows():
-    ax.add_patch(
-        mpatches.Rectangle(
-            (region[GRID_COL], region[GRID_ROW]),
-            1,
-            1,
-            facecolor=INK_MUTED,
-            edgecolor=PAGE_BG,
-            linewidth=1.2,
-            hatch="///",
-            alpha=0.55,
-            zorder=2,
-        )
-    )
+ax.add_collection(
+    PolyCollection(missing, facecolor=INK_MUTED, edgecolor=PAGE_BG, linewidth=0.4, hatch="////", alpha=0.55)
+)
 
-# Region labels: state code and value on every tile
-for _, region in df.iterrows():
-    x, y = region[GRID_COL] + 0.5, region[GRID_ROW] + 0.5
-    has_value = pd.notna(region[GDP_GROWTH])
-    label_color = TILE_INK if has_value else INK
-    ax.text(x, y - 0.13, region[STATE], ha="center", va="center", fontsize=8, fontweight="bold", color=label_color)
-    ax.text(
-        x,
-        y + 0.2,
-        f"{region[GDP_GROWTH]:.1f}%" if has_value else "n/a",
-        ha="center",
-        va="center",
-        fontsize=6,
-        color=label_color,
-        fontstyle="normal" if has_value else "italic",
-        zorder=3,
-    )
+for cx, cy, code in labels:
+    ax.text(cx, cy, code, ha="center", va="center", fontsize=6.5, fontweight="bold", color=REGION_INK)
 
 # Colorbar
-cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, length=0)
-cbar.set_label(GDP_GROWTH, fontsize=10, color=INK, labelpad=6)
+cbar = fig.colorbar(regions, ax=ax, shrink=0.72, aspect=22, pad=0.01)
+cbar.set_label(DENSITY, fontsize=9, color=INK, labelpad=6)
+cbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, length=0, which="both")
 cbar.outline.set_visible(False)
 
 # Style
 title = "choropleth-basic · python · seaborn · anyplot.ai"
-ax.set_title(title, fontsize=round(12 * min(1.0, 67 / len(title))), fontweight="medium", color=INK, pad=10)
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_xlabel("")
-ax.set_ylabel("")
-sns.despine(ax=ax, left=True, bottom=True)
+ax.set_title(title, fontsize=round(12 * min(1.0, 67 / len(title))), fontweight="medium", color=INK, pad=6)
+ax.set_aspect("equal")
+ax.autoscale_view()
+ax.set_axis_off()
 
-if not missing.empty:
-    no_data = mpatches.Patch(facecolor=INK_MUTED, edgecolor=PAGE_BG, hatch="///", alpha=0.55, label="No data")
+if missing:
+    no_data = mpatches.Patch(facecolor=INK_MUTED, edgecolor=PAGE_BG, hatch="////", alpha=0.55, label="No data")
     ax.legend(handles=[no_data], loc="lower right", fontsize=8, frameon=True, labelcolor=INK)
 
-ax.text(
-    0.5,
-    -0.04,
-    f"{GDP_GROWTH} by {STATE.lower()} · tile grid map, one equal-size tile per region",
-    ha="center",
-    va="top",
-    fontsize=8,
-    color=INK_SOFT,
-    transform=ax.transAxes,
-)
-
-fig.subplots_adjust(left=0.03, right=0.97, top=0.9, bottom=0.08)
+fig.subplots_adjust(left=0.01, right=0.99, top=0.94, bottom=0.02)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
