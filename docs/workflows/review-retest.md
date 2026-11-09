@@ -106,11 +106,13 @@ gh workflow run review-retest.yml -f set=v3 -f label=v3-baseline
 gh workflow run review-retest.yml -f set=v3 -f rules_ref=<candidate-sha> -f spec_source=rules_ref -f label=<short-name> -f compare_to=<baseline-run-id>
 ```
 
-To measure on set v4, add `-f set=v4` once its lock is on `main`. Give the baseline the rules the candidate branches from; `baseline_rules_sha` in `set-v4.yaml` is `586d42424`, whose `prompts/` and `regen_gate.py` `main` still had on 2026-11-09. To read SC-01 for the stand-ins and the controls apart, run each class as its own `subset`:
+To measure on set v4, add `-f set=v4` once its lock is on `main`. Give the baseline the rules the candidate branches from; `baseline_rules_sha` in `set-v4.yaml` is `586d42424`, whose `prompts/` and `regen_gate.py` `main` still had on 2026-11-09. The default `core` subset leaves out six items, so measure on `full`:
 
 ```bash
-gh workflow run review-retest.yml -f set=v4 -f rules_ref=586d4242432491519c5bd0f5dda62f35471b31a1 -f label=v4-baseline
+gh workflow run review-retest.yml -f set=v4 -f subset=full -f rules_ref=586d4242432491519c5bd0f5dda62f35471b31a1 -f label=v4-baseline
 ```
+
+The report pools the criteria over every item of an arm. Read SC-01 for the stand-ins and the controls apart from the arm's `records.jsonl`, or dispatch each class as its own arm with `-f subset=<ids>`; the header of `set-v4.yaml` lists each class as a comma-separated `subset`.
 
 Compare two arms of the same set; the report flags "set changed" when they differ.
 
@@ -203,7 +205,7 @@ Each upload is a one-time, owner-authorized write with no clobber and no deletes
    uv run python -m automation.scripts.review_retest freeze --staging /tmp/retest-set-v1 --execute --write-lock
    ```
 
-   Write the lock only together with `--execute`. `--write-lock` on a dry run writes a lock for objects that aren't public yet: the prep job accepts a set with a lock, and its bundle step then fails to download the renders.
+   `freeze` writes the lock only after every uploaded object matches it, so a failed or partial upload leaves no lock behind, and it refuses `--write-lock` without `--execute`. A lock for objects that aren't public yet would let the prep job accept a set whose renders its bundle step can't download.
 
 6. Commit the set's lock, for example `automation/retest/set-v1.lock.json`.
 7. Smoke-test one cell of the new set, and check that the run left no comment, label, or dispatch behind. The workflow is on the default branch since set v1, so a later set can be tested from its own branch before it merges:

@@ -222,3 +222,33 @@ def test_control_probes_stay_quiet_on_praise():
 )
 def test_no_catch_on_an_unrelated_defect_line(item_id, label_id, text):
     assert not _matches(item_id, label_id, text)
+
+
+# Defect lines any review may write about any of the 28 items, and comments of
+# a criterion deducted for something else. No label of the set names one.
+UNRELATED = (
+    "CQ-01 (code): two helper functions sit beside the plot code → inline them. Likely cause: helper structure.",
+    "VQ-07 (both): the second series is #AE3030, the semantic red → the next palette member. Likely cause: colors=.",
+    "SC-04 (both): the title reads 'Plot' → '{spec-id} · python · pygal · anyplot.ai'. Likely cause: title=.",
+    "VQ-01 (both): the y tick labels render at 32 px, below the 44 px minimum → 44 px. Likely cause: font size.",
+    "VQ-05 (both): the plot area fills about 60 % of the canvas width → widen it. Likely cause: margin.",
+    "LM-02 (code): no library-distinctive feature is used → a library idiom. Likely cause: plain defaults.",
+    "DQ-02 (both): the scenario names a real company → an invented one. Likely cause: the data block.",
+    "SC-02 (both): the stacked bar order follows the data order, as the Notes ask, but the legend lacks units.",
+    "VQ-07 (dark): the first series is not #009E73; the legend keys show no dark-on-dark failure.",
+    "VQ-01 (dark): the axis titles and tick labels have no dark-on-dark issue; the subtitle wraps.",
+    "VQ-01 (dark): all text is readable, without contrast issues; the subtitle is 2 px smaller than asked.",
+    "SC-01: the schematic legend layout is clear; one point off for the unrequested trend line.",
+    "Suggestion: a subtitle naming the data source would add context to the plot.",
+)
+
+
+@pytest.mark.parametrize("text", UNRELATED)
+def test_no_label_of_the_set_matches_an_unrelated_line(text):
+    hits = [
+        f"{item['id']}/{label['id']}"
+        for item in _manifest()["items"]
+        for label in [*(item.get("defects") or []), *(item.get("permitted") or [])]
+        if re.compile(label["match"], re.IGNORECASE).search(text)
+    ]
+    assert hits == []

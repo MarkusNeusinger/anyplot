@@ -14,3 +14,13 @@
   other render to a review. The workflow's `set` input takes `v4`; its 56
   renders go up with the owner's one-time upload, and its labels stay drafts
   until the owner confirms them. (#12957)
+
+### Fixed
+
+- **The retest's `freeze` writes the lock only after a verified upload.** It
+  wrote `set-v<N>.lock.json` before it uploaded, so a failed or partial upload
+  left a lock behind, and a dry run with `--write-lock` wrote one for objects
+  that weren't public. Either lock makes the prep job accept a set whose
+  renders its bundle step can't download. `freeze` now writes the lock once
+  every uploaded object matches it, and refuses `--write-lock` without
+  `--execute`. (#12957)
