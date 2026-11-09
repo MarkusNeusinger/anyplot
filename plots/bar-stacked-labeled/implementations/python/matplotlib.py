@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -59,7 +59,7 @@ for i, line in enumerate(table.columns):
     luminance = np.dot(to_rgb(color), [0.299, 0.587, 0.114])
     text_color = "#FFFFFF" if luminance < DARK_TEXT_LUMINANCE else "#1A1A17"
     segment_labels = [f"${v:,.0f}M" if v >= LABEL_MIN_SHARE * y_top else "" for v in table[line].fillna(0)]
-    ax.bar_label(bars, labels=segment_labels, label_type="center", fontsize=7, color=text_color)
+    ax.bar_label(bars, labels=segment_labels, label_type="center", fontsize=8, color=text_color)
 
 # Total labels: bold, directly above every complete stack
 for xi, total in zip(x, totals, strict=True):
