@@ -8,7 +8,8 @@
  * what the chapter counts stands in the row beside the heading, between the name and the
  * right-hand rule, so a control never becomes part of the heading's name. First the remembered
  * decisions on the line that holds them (`3 decisions ▾ · full`, `Remembered.tsx`, which the
- * thread passes), then the chapter's questions (`· 2 questions`), nothing for none. Where the
+ * thread passes; on the new data's line after a paste with other columns `3 earlier decisions ▾ ·
+ * .forget_all()`), then the chapter's questions (`· 2 questions`), nothing for none. Where the
  * words do not fit one line (a phone), they wrap between the rules, the heading first, each count
  * whole.
  *
@@ -117,10 +118,16 @@ function QuestionJump({ questions }: { questions: readonly number[] }) {
 export function ChapterLine({
   chapter,
   decisions,
+  decisionsAction,
 }: {
   chapter: Chapter;
   /** The remembered decisions' count and toggle, on the line that holds them (`Remembered.tsx`). */
   decisions?: ReactNode;
+  /**
+   * A control beside that count, as a count of its own that wraps whole: the new data's
+   * `.forget_all()` after a paste with other columns (`ForgetEarlier`).
+   */
+  decisionsAction?: ReactNode;
 }) {
   const asked = chapter.questions.length > 0;
   return (
@@ -161,6 +168,7 @@ export function ChapterLine({
           {chapter.kind}
         </Box>
         {decisions && <Count>{decisions}</Count>}
+        {decisions && decisionsAction && <Count>{decisionsAction}</Count>}
         {asked && (
           <Count>
             <QuestionJump questions={chapter.questions} />

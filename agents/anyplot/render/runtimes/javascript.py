@@ -100,7 +100,7 @@ harness under development."""
 UNAVAILABLE_IMPORT_RULE = "unavailable-import"
 ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
     {
-        "rng": "take the values from data; Math.random is only for jitter or subsampling",
+        "rng": "take the values from data; Math.random is only for jitter, never to sample the rows",
         "literal-data": "take the values from data instead of writing them out",
         "palette-prefix": (
             "read the colours from t.palette (all eight Imprint positions, in order) and pick them under a new name "

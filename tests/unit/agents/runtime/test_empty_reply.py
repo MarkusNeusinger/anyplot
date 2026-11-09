@@ -11,8 +11,16 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
 from agents.anyplot.plugins import reply_language
-from agents.anyplot.plugins.empty_reply import NO_REPLY, RETRY_LINE, EmptyReplyPlugin, is_empty
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger
+from agents.anyplot.plugins.empty_reply import (
+    NO_REPLY,
+    RETRY_LINE,
+    EmptyReplyPlugin,
+    carries_answer,
+    is_empty,
+    stored_in_turn,
+)
+from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, ToolCall
+from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin
 from agents.anyplot.services import Services
 
 from .fakes import ScriptedRoot, gemini_response
@@ -115,7 +123,8 @@ class TestEmptyReply:
     async def test_after_a_tool_the_second_ask_has_no_tools(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A second call of a tool that stores something would apply its change twice; none has a per-turn cap."""
+        """A second call of a tool that stores something would apply its change twice, within its per-turn cap or
+        without one (`set_bindings`)."""
         model = ScriptedRoot([gemini_response({"text": "Renamed: Hours."})])
         monkeypatch.setattr(reply_language, "root_model", lambda: model)
         ledger.root_request = root_request()
@@ -142,21 +151,33 @@ class TestEmptyReply:
             ("get_dataset_profile", {"status": "ok", "rows": 3}, "anyplot", False),
             ("query_data", {"status": "ok"}, "anyplot", False),
             ("prepare_data", {"status": "ok"}, "adapter_matplotlib", False),
+            # ToolSafety refuses the result for its size, but the version was stored before: still a change.
+            ("prepare_data", {"status": "ok", "rows": 3, "profile": "x" * 20_000}, "anyplot", True),
+            ("get_dataset_profile", {"status": "ok", "rows": 3, "profile": "x" * 40_000}, "anyplot", False),
+            # A plot run that kept the first plot's request is no stored change: a summary turn still owes its reply.
+            (
+                "plot_pipeline",
+                {"status": "not_ready", "reason": "data_unconfirmed", "request_kept": True},
+                "anyplot",
+                False,
+            ),
         ],
     )
     async def test_a_tool_that_stored_a_change_is_noted(
         self, ledger: RequestLedger, tool: str, result: dict[str, Any], agent: str, stored: bool
     ) -> None:
+        """Read from the record of the turn's calls, which ToolSafety closes from each tool's own answer, also when it
+        then refuses the result (6a's finding: such a change used to miss EmptyReply's own note)."""
         context = SimpleNamespace(agent_name=agent, invocation_id="inv-1")
 
-        returned = await EmptyReplyPlugin().after_tool_callback(
+        await ToolSafetyPlugin().after_tool_callback(
             tool=SimpleNamespace(name=tool),  # type: ignore[arg-type]
             tool_args={},
             tool_context=context,  # type: ignore[arg-type]
             result=result,
         )
 
-        assert returned is None and ledger.state_changed is stored
+        assert stored_in_turn(ledger) is stored and carries_answer(ledger) is stored
 
     async def test_an_answer_that_calls_a_tool_goes_on_in_the_flow(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
@@ -259,7 +280,7 @@ class TestEmptyReply:
         elif carried == "switch":
             ledger.switch_request = {"library": "plotly", "plot": True}
         else:
-            ledger.state_changed = True
+            ledger.tool_calls.append(ToolCall("set_bindings", outcome="changed"))
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             await check(EMPTY[2].model_copy(deep=True))

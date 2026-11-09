@@ -91,7 +91,7 @@ DATASET_PACKAGE_RULE = "dataset-package"
 ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
     {
         "rng": (
-            "take the values from df; Random.seed! with rand, shuffle or randperm is only for jitter or subsampling"
+            "take the values from df; Random.seed! with rand, shuffle or randperm is only for jitter, never to sample the rows"
         ),
         "literal-data": "take the values from df instead of writing them out (no dataset package)",
         "palette-prefix": (
