@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:12:01Z'
-updated: '2026-11-09T08:37:48Z'
+updated: '2026-11-09T08:44:33Z'
 generated_by: claude-opus
 workflow_run: 42586352829
 issue: 3414
@@ -15,47 +15,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 quality_score: 81
 review:
   strengths:
-  - 'Letter values are computed correctly: level i spans the 0.5^(i+2) and 1-0.5^(i+2)
-    quantiles, the legend names the share each box covers (50% … 99.61%), and outliers
-    are exactly the points beyond the deepest drawn level'
-  - Boxes narrow by a constant 0.85 factor per level and stay centered on each category,
-    and the deepest-first draw order keeps every wider inner box on top so the nested
-    stack reads cleanly
-  - 'Ordered quantile levels step along imprint_seq from #009E73 to #4467A3 in their
-    natural order, identical in both renders, with the median mark and outlines threaded
-    through the INK/INK_SOFT theme tokens'
-  - Realistic server response-time scenario (4 endpoints, 2000 requests each, exponential
-    tails with 5 % slow requests) that shows long right tails of different length
-  - Layered lets-plot grammar (geom_rect + geom_segment + geom_point with separate
-    data frames) with the HTML export keeping lets-plot's native hover tooltips
+  - Letter values computed with np.quantile at depths 0.5**(i+2) and drawn with geom_rect,
+    so every box edge sits at its quantile on the value axis and each deeper level
+    narrows by a constant 0.85 factor around the category center
+  - 'scale_y_log10 suits the right-skewed response-time data: four endpoints spanning
+    about 8 ms to 1,500 ms stay readable on one axis'
+  - Median segment in the INK token flips between near-black and near-white, so it
+    contrasts with the green quartile box in both themes
+  - Outliers beyond the deepest letter value are drawn as individual translucent INK_SOFT
+    points at their values, and the quantile legend uses scale_fill_manual with explicit
+    breaks in level order
+  - 'All chrome is threaded through the theme tokens: page and elevated backgrounds,
+    INK/INK_SOFT text, legend frame; both renders are fully legible'
   weaknesses:
-  - 'SC-02 (both): the eight quantile levels are linear steps between only two colors,
-    so neighbouring levels (75 % vs 87.5 %, 93.75 % vs 96.88 % vs 98.44 %) are nearly
-    the same teal and the legend cannot be matched to a box by color → adjacent levels
-    clearly distinct, for example a wider lightness spread along the imprint_seq ramp
-    or fewer drawn levels. Likely cause: the 8-step np.linspace interpolation between
-    IMPRINT_SEQ''s two stops with MAX_LEVELS = 8.'
-  - 'VQ-03 (both): the Cache Layer stack (about 8–90 ms) is compressed into a ~70
-    px band at the bottom of a 0–1,400 ms axis, so its quartile box is hidden under
-    the median bar and its letter-value boxes cannot be read → a value range in which
-    every category''s inner boxes are legible, for example a less extreme Cache Layer
-    scale in the data generation or a log value axis. Likely cause: distributions[''Cache
-    Layer''] base 8 / scale 5 on a linear y scale shared with Database''s 1,400 ms
-    tail.'
-  - 'Suggestion: a log10 response-time axis (scale_y_log10) would suit latency data
-    and give the short lower tails room.'
-  - 'Suggestion: the unused IMPRINT_PALETTE constant could be dropped.'
+  - 'VQ-07 (both): the deeper quantile levels are mixed with up to 60 % white (#B5C4DD-like
+    lavender at 98.44 %), so four of the six legend steps are custom tints that lie
+    off the imprint_seq ramp #009E73 → #4467A3 → use plain steps of imprint_seq (and,
+    if neighbouring steps need more separation, the box outlines rather than off-ramp
+    tints). Likely cause: the MAX_TINT white-mixing term in the level_colors comprehension.'
+  - 'CQ-04 (code): the level colors are interpolated by parsing and re-formatting
+    hex strings by hand (the start/end int(c[j:j+2], 16) parse and the "#{:02X}..."
+    format, lines ~107–115), and IMPRINT_PALETTE is defined but never used → build
+    the steps with matplotlib.colors (LinearSegmentedColormap.from_list("imprint_seq",
+    IMPRINT_SEQ) plus to_hex) and delete the unused constant. Likely cause: hand-rolled
+    color math instead of the available matplotlib.colors utilities.'
+  - 'Suggestion: a legend title such as ''Central share of observations'' would make
+    the 50 % … 98.44 % labels self-explanatory.'
+  - 'Suggestion: a very faint horizontal grid at the log decades (1, 10, 100, 1,000
+    ms) would make the box edges easier to read off the log axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across plot and panel; no grid; legend panel on #FFFDF6 with a soft outline.
-      Chrome: title "boxen-basic · python · letsplot · anyplot.ai" top-left in dark ink (~42 % width); y-axis "Response Time (ms)" with ticks 0–1,400; x-axis "Server Endpoint" with API Gateway, Auth Service, Database, Cache Layer; legend "Quantile Range" 50 %…99.61 %. All text dark and readable.
-      Data: four nested letter-value stacks, widest quartile box #009E73 at the median, each deeper level narrower and stepping toward #4467A3; boxes outlined in #4A4A44; a thick near-black median bar; grey outlier dots above each stack (e.g. Database to ~1,410 ms). Cache Layer is squashed near 0. Neighbouring mid levels are hard to tell apart by color.
+      Background: warm off-white #FAF8F1, landscape 3200x1800, no grid; thin INK_SOFT axis lines on left and bottom.
+      Chrome: title "boxen-basic · python · letsplot · anyplot.ai" top-left in dark ink (~47 % width); y-axis "Response Time (ms)" on a log scale with ticks 10, 100, 1,000; x-axis "Server Endpoint" with API Gateway, Auth Service, Database, Cache Layer; legend "Quantile Range" at right in a #FFFDF6 framed box with six entries 50 %, 75 %, 87.5 %, 93.75 %, 96.88 %, 98.44 %. All text dark and readable.
+      Data: four letter-value stacks; the widest box (50 %, the quartiles) is brand green #009E73 with a thick near-black median line; deeper levels narrow step by step and move through teal to grey-blue to pale lavender toward the tails; long upper tails, short lower tails; grey translucent outlier points above each top box and a few at the bottom. Boxes have thin dark grey outlines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; legend panel on #242420.
-      Chrome: title, axis titles and tick labels in light ink (#F0EFE8 / #B8B7B0), all readable; no dark-on-dark text.
-      Data: box fills identical to the light render (green → blue ramp); outlines flip to light grey; the median bar flips to off-white; outliers light grey. Brand green clearly visible.
+      Background: warm near-black #1A1A17; legend box #242420 with a light grey frame.
+      Chrome: title and axis titles in near-white, tick and legend labels in light grey #B8B7B0; no dark-on-dark text anywhere.
+      Data: box fills are identical to the light render (green quartile box, teal → blue → lavender deeper levels); only the median line flips to near-white and the box outlines and outlier points to light grey.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,62 +65,63 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (16/12/10 pt); all text readable in both themes
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10, legend 10/11);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; outliers clear of the boxes
+        comment: No text collisions; outlier stacking at the tails is expected
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Cache Layer stack compressed to a ~70 px band; its quartile box is
-          hidden under the median bar (defect line)
+        passed: true
+        comment: Boxes outlined, outliers visible at alpha 0.6, legend swatches match
+          the box fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp is CVD-safe; outlines add contrast
+        comment: Levels differ in hue and lightness; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced proportions, nothing cut off
+        comment: 3200x1800, balanced layout, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) and Server Endpoint, with units
+        comment: Response Time (ms), Server Endpoint
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Ordered levels in steps of imprint_seq starting at #009E73; correct
-          backgrounds in both themes'
+        passed: false
+        comment: 'Backgrounds correct and the quartile box is #009E73, but deeper
+          levels are white-tinted custom colors off the imprint_seq ramp (defect line)'
     design_excellence:
       score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Legend labels give the share of observations each box covers (50
-          %…99.61 %) instead of raw level indices; theme-flipping median bar
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, framed legend'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: 'Style-guide baseline: grid removed, outlines set; nothing beyond'
+        comment: Thin theme-adaptive box outlines separate the nested levels cleanly
+          and the median spans the quartile box; otherwise baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -130,7 +129,7 @@ review:
         passed: false
         comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct letter-value plot, no unasked layers
+        comment: Letter-value plot; no whiskers, strip points, mean marks or reference
+          lines
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Contrasting colors per quantile level only partly met: neighbouring
-          levels nearly identical (defect line); all other Notes and good-version
-          bullets met'
+        passed: true
+        comment: Nested boxes to the 1/128 level, narrowing widths centered on the
+          category, shading by level, outliers as points, legend explaining the levels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Box edges at their quantiles, outliers at their values
+        comment: Box edges at np.quantile values, outliers at their values, log axis
+          shows all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend 'Quantile Range' with readable entries
+        comment: Mandated title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -168,22 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Many nested levels, narrowing widths, unequal tails, outliers
+        comment: Skewed tails of differing lengths, outliers, four groups at different
+          scales
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server endpoint response times, neutral
+        comment: Server response times by endpoint, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Millisecond latencies 8–1,400 ms plausible; checked legend shares
-          1-0.5^(i+1) match box quantiles 0.5^(i+2)
+        comment: 2000 obs per group (within 1000+), ms values plausible for cache
+          through database; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -191,7 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,17 +207,17 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Letter values via np.quantile; no native boxen geom in lets-plot,
-          so geom_rect is justified
+        passed: false
+        comment: Hand-rolled hex parsing/formatting for the ramp and an unused IMPRINT_PALETTE
+          constant (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html via ggsave
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
       score: 4
       max: 10
@@ -225,28 +226,29 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Layered grammar with per-layer data frames; default
+        passed: true
+        comment: Grammar-of-graphics layering with per-layer data, scale_fill_manual
+          breaks, scale_y_log10; letsplot has no boxen geom, so geom_rect is reasonable
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
         comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T08:35:09Z'
+  rendered_at: '2026-11-09T08:41:27Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - manual-ticks
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - quantile-computation
+  dataprep: []
   styling:
-  - minimal-chrome
+  - edge-highlighting
+  - alpha-blending
