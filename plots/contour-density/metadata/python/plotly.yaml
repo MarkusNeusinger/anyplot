@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:31:21Z'
-updated: '2026-11-09T20:49:21Z'
+updated: '2026-11-09T20:55:50Z'
 generated_by: claude-opus
 workflow_run: 42597771760
 issue: 2552
@@ -12,51 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Uses plotly's native go.Histogram2dContour, which computes the density surface
-    from the raw points inside the trace — no hand-rolled estimation code
-  - 'Filled contours on the Imprint sequential ramp (brand green → #4467A3) with the
-    strongest blue at the two density peaks, and a colorbar that states which way
-    density rises'
-  - Contour separators drawn in the page color (white on light, near-black on dark)
-    keep the bands distinguishable in both themes
-  - Faint 4 px scatter overlay at alpha 0.30 sits at the exact values, so the contours
-    stay the main signal and the tail points remain checkable
-  - The lowest band fades into the page, so empty space stays background and the cluster
-    outlines read cleanly
-  - Theme tokens threaded through title, axes, ticks, grid and an elevated colorbar
-    panel; both renders fully legible
-  - Hover templates with units on both the density surface and the measurements for
-    the HTML view
+  - Native go.Contour with coloring='fill' and explicit start/end/size draws 12 nested
+    density levels from a scipy gaussian_kde on a grid padded by 10 % of the data
+    range, so the outer rings close inside the frame and the two concentrations (about
+    160 cm / 62 kg and 178 cm / 74 kg) each sit inside their own set of rings
+  - 'imprint_seq (brand green to blue) with a transparent floor below 4 % relative
+    density: empty space stays the page color and the strongest blue marks the peak,
+    identical in both themes'
+  - Contour separators drawn in the page color (cream lines on light, near-black on
+    dark) keep the adjacent, similar-hued bands distinguishable in both renders
+  - Colorbar titled 'Relative density (peak = 1)' on the elevated surface states which
+    way density rises; density normalised to the peak makes the scale read 0–1 on
+    any units
+  - 'Scatter overlay at exact values as 4 px points at 30 % ink opacity: the contours
+    stay the main signal and sparse tail points outside every contour remain checkable'
+  - 'Library-native interactivity: hovertemplates report relative density on the contour
+    and the exact height/weight on each point in the HTML output'
+  - 'All chrome threads the theme tokens: title, axis titles, ticks, colorbar text
+    and grid are readable on #FAF8F1 and #1A1A17'
   weaknesses:
-  - 'SC-02 (both): the surface is a 2D histogram (go.Histogram2dContour bin counts)
-    rather than the kernel density estimate the Notes name, and its binning leaves
-    a small detached island ring around (175 cm, 82 kg) next to the main peak → a
-    smooth KDE surface (scipy.stats.gaussian_kde evaluated on a grid and drawn with
-    go.Contour, or a coarser/smoothed binning) with nested rings and no islands. Likely
-    cause: go.Histogram2dContour with default nbinsx/nbinsy.'
-  - 'VQ-06 (both): the colorbar is titled ''Density'' but its ticks (0–35) are raw
-    points-per-bin counts with no unit → either label it ''Points per bin'' or plot
-    a true density. Likely cause: colorbar title text with histogram-count z values.'
-  - 'Suggestion: the gap between the title and the plot area is generous; trimming
-    the top margin slightly would give the contours more height.'
+  - 'Suggestion: the data block generates three groups, but clusters 2 (175 cm / 80
+    kg) and 3 (180 cm / 70 kg) overlap so far that the KDE shows only two peaks; moving
+    the third group further apart would make the third concentration readable as its
+    own set of rings.'
+  - 'Suggestion: the top colorbar tick label ''1'' sits just below the two-line colorbar
+    title; a few pixels more spacing (colorbar title side or ypad) would let it breathe.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page and plot area.
-      Chrome: centered title "contour-density · python · plotly · anyplot.ai" in dark ink (~38% of width); axis titles "Height (cm)" and "Weight (kg)" in dark ink; tick labels 140–200 and 40–100 in INK_SOFT; subtle grid; colorbar "Density" (0–35) in an elevated off-white panel with an ink-soft border. All text readable.
-      Data: filled density contours from brand green #009E73 (outer band) to blue #4467A3 at the peaks, separated by white page-colored contour lines; two main concentrations (around 157 cm / 62 kg and 177 cm / 72 kg) with a small detached ring near 175 cm / 82 kg; ~500 faint dark-gray scatter points overlaid, sparse tail points outside the contours.
+      Background: warm off-white #FAF8F1 page and plot area; colorbar on a slightly lighter elevated box with an INK_SOFT border.
+      Chrome: title "contour-density · python · plotly · anyplot.ai" centred in dark ink at about 38 % of the width; axis titles "Height (cm)" and "Weight (kg)" in dark ink; dark-grey tick labels 140–210 and 40–100; subtle grid; colorbar "Relative density (peak = 1)" with ticks 0–1. All readable.
+      Data: filled density contours in imprint_seq, brand green #009E73 outermost band shading to blue #4467A3 at the peak; 12 nested levels separated by thin cream lines; two peaks at about (160, 62) and (178, 74); faint dark 30 % opacity points at exact values, a few tail points outside every contour on the page.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page and plot area.
-      Chrome: title, axis titles in light ink, tick labels in light INK_SOFT, subtle light grid; colorbar panel in elevated #242420 with light border and light tick labels. No dark-on-dark text.
-      Data: identical green→blue fill colors and contour shapes as light; contour separator lines flip to near-black; scatter points flip to faint light gray, visible on both the fill and the background.
+      Background: warm near-black #1A1A17; colorbar box on #242420 with a light border.
+      Chrome: title, axis titles in off-white; tick labels light grey; grid subtle but visible; colorbar title and ticks light. No dark-on-dark text.
+      Data: identical green-to-blue fill colors and contour geometry as the light render; separators flip to near-black; scatter points flip to faint off-white. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -64,45 +62,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (16/12/10); all text readable in both themes
+        comment: All font sizes set explicitly (title 16, axis titles 12, ticks 10,
+          colorbar 12/10); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; point overlap is faint and expected
+        comment: No text collisions; points overlap contours by design at low opacity
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bands separated by page-colored lines; 500 points small and faint
-          as appropriate
+        comment: 500 points at 4 px / 30 % opacity suit the density; contour bands
+          separated by page-colored lines; colorbar swatches visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue ramp is CVD-safe with lightness separation
+        comment: Green-to-blue sequential ramp, CVD-safe, lightness supported by separators
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced labels, no overflow or clipping
+        comment: 3200x1800, balanced margins, nothing cut off, title and axis labels
+          proportionate
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axes have units, but colorbar 'Density' shows raw bin counts (defect
-          line)
+        passed: true
+        comment: Height (cm), Weight (kg) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq ramp with a transparent lowest stop; correct theme backgrounds
+        comment: 'imprint_seq #009E73 to #4467A3 for density, theme-correct backgrounds'
     design_excellence:
       score: 10
       max: 20
@@ -112,23 +111,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Lowest band faded into the page and elevated colorbar panel — a deliberate
-          finish beyond the baseline
+        comment: Transparent density floor so empty space stays page-colored; colorbar
+          framed on the elevated surface with a two-line descriptive title
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Page-colored contour separators that flip with the theme, borderless
-          markers
+        comment: Contour separators in the page color flip with the theme and keep
+          similar bands apart; KDE grid padded so rings close inside the frame
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Data displayed; no hierarchy chosen beyond the Notes
+        comment: Density displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,26 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled density contour with optional scatter overlay
+        comment: KDE density contour plot (filled, with optional scatter overlay)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Histogram binning instead of KDE; small detached island ring (defect
-          line). Nested levels, colorbar, faint overlay, sequential fill all met
+        passed: true
+        comment: KDE, multiple nested levels, colorbar giving direction, faint scatter
+          overlay, sequential fill with strongest color at the peak, smoothing neither
+          fragmented nor over-blurred
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Height on x, weight on y, all points shown at exact values
+        comment: Height on x, weight on y, points at exact values, all data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; colorbar is the only legend needed
+        comment: Mandated title format; colorbar labeled; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -165,20 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple peaks, gradients, sparse tails
+        comment: Multiple peaks, nested gradients, irregular outer contour, tail points
+          outside all contours
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Height vs weight measurements, neutral
+        comment: Height vs weight of individuals, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Heights 140–205 cm, weights 40–100 kg plausible; no Check values
-          in spec
+        comment: Heights 140–205 cm and weights 40–100 kg read off the axes are plausible;
+          spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -188,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,21 +201,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly all used
+        comment: os, numpy, pandas, plotly.graph_objects, scipy gaussian_kde all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Density computed by the library trace; no written-out algorithm
+        comment: KDE via scipy gaussian_kde, contouring via go.Contour; nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html, current API
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html; Plotly
+          7 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,21 +224,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: graph_objects with nested dict config, contours.coloring='fill',
-          ncontours
+        comment: go.Contour with contours start/end/size and coloring='fill', colorbar
+          dict with dtick and bgcolor, layered go.Scatter
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: go.Histogram2dContour computes density in-trace; rgba colorscale
-          stop; per-trace hovertemplates for HTML
-  verdict: REJECTED
+        comment: hovertemplate on the contour trace reporting relative density at
+          any cursor position in the HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
-  rendered_at: '2026-11-09T10:05:03Z'
+  rendered_at: '2026-11-09T20:52:58Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - colorbar
   - layer-composition
@@ -244,8 +247,11 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - matrix-construction
   dataprep:
-  - binning
+  - kde
+  - normalization
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
+  - edge-highlighting
