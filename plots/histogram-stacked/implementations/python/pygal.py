@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-stacked: Stacked Histogram
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -63,7 +63,13 @@ custom_style = Style(
     opacity_hover=0.8,
 )
 
-chart = pygal.StackedBar(
+
+class ContiguousStackedBar(pygal.StackedBar):
+    # Histogram bins touch, as in pygal's own Histogram: no margin inside each bin slot
+    _series_margin = 0
+
+
+chart = ContiguousStackedBar(
     width=3200,
     height=1800,
     style=custom_style,
@@ -76,7 +82,7 @@ chart = pygal.StackedBar(
     legend_at_bottom_columns=observed[LIGHT_CONDITION].nunique(),
     legend_box_size=36,
     margin=60,
-    spacing=24,
+    spacing=0,
     truncate_legend=-1,
     range=(0, tallest_total * 1.1),
 )
