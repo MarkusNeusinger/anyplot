@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -29,14 +29,15 @@ WINDOW = 14  # rolling window in days
 
 # Columns: set these to your table's column names
 DATE = "Date"  # role: date
-TEMPERATURE = "Temperature (°C)"  # role: value
+TEMPERATURE = "Vienna Daily Mean Temperature (°C)"  # role: value
 ROLLING = "14-Day Rolling Average"  # role: rolling_avg
 
 # Data: replace this block with your own table, for example df = pd.read_csv("sensor.csv")
+# Simulated weather-station record: the seasonal cycle peaks in mid-July (day ~195)
 np.random.seed(42)
 n_days = 180
 days = np.arange(n_days)
-temperature = 15 + 10 * np.sin(2 * np.pi * days / 365) + np.random.normal(0, 3, n_days) + np.linspace(0, 2, n_days)
+temperature = 11 + 10 * np.sin(2 * np.pi * (days - 104) / 365) + np.random.normal(0, 3, n_days)
 df = pd.DataFrame({DATE: pd.date_range("2024-01-01", periods=n_days, freq="D"), TEMPERATURE: temperature})
 df[ROLLING] = df[TEMPERATURE].rolling(window=WINDOW).mean()
 
