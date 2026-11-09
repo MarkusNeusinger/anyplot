@@ -305,8 +305,19 @@ describe('ChatThread working line', () => {
     items,
     run: current,
   });
+  /** A reply's line height, resolved to pixels as a browser does: the bar for the working line. */
+  const replyLineHeight = () => {
+    const reply = renderThread(
+      inFlight([summaryPrompt, { id: 2, kind: 'assistant', text: 'Done.' }], null)
+    );
+    const lineHeight = getComputedStyle(screen.getByText('Done.')).lineHeight;
+    reply.unmount();
+    expect(lineHeight).toMatch(/^\d+(\.\d+)?px$/);
+    return lineHeight;
+  };
 
   it("holds the assistant's slot while the summary is written, as the log's last entry", () => {
+    const lineHeight = replyLineHeight();
     const state = inFlight([summaryPrompt], run());
     expect(pendingReply(state)).toBe('summarize_data');
     renderThread(state);
@@ -321,7 +332,7 @@ describe('ChatThread working line', () => {
       within(pending).getByTestId('loader-spinner')
     );
     expect(pending.lastElementChild).toHaveTextContent(/^summarizing your data$/);
-    expect(pending).toHaveStyle({ lineHeight: '1.6' });
+    expect(pending).toHaveStyle({ lineHeight });
   });
 
   it('gives way to the reply', () => {
@@ -338,6 +349,7 @@ describe('ChatThread working line', () => {
     const plotPrompt: ChatItem = { id: 1, kind: 'action', action: 'create_plot', library: 'x' };
     const card: ChatItem = { id: 2, kind: 'plot', version: 1 };
     const plotRun = run({ kind: 'create_plot', steps: [{ step: 'reviewing', attempt: 1 }] });
+    const lineHeight = replyLineHeight();
     // The card is in, the reply is still being written: one line says so, a notice between them
     // or not.
     for (const items of [
@@ -350,7 +362,7 @@ describe('ChatThread working line', () => {
       expect(screen.getByRole('log').lastElementChild).toBe(pending);
       // The line keeps the thread's gap alone, where the reply goes, in the reply's line height,
       // so a one-line reply moves nothing below it.
-      expect(pending).toHaveStyle({ lineHeight: '1.6' });
+      expect(pending).toHaveStyle({ lineHeight });
       unmount();
     }
     // The card of a run that failed gets its reply too.

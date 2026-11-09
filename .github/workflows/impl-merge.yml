@@ -649,7 +649,7 @@ jobs:
           PRESENT=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")
           for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending" \
                        "impl:${LIBRARY}:failed" "watchdog:retried-${LIBRARY}"; do
-            if echo "$PRESENT" | grep -qx "$stale"; then
+            if grep -qx "$stale" <<< "$PRESENT"; then
               gh issue edit "$ISSUE" --remove-label "$stale" \
                 || echo "::warning::Could not remove stale label '$stale' from issue #$ISSUE"
             fi
