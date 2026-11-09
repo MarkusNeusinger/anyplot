@@ -9,6 +9,12 @@ This document provides a comprehensive overview of Plausible Analytics implement
 - Self-hosted Plausible script loaded via `/js/script.js`
 - Custom endpoint: `/api/event` (proxied through nginx to avoid adblockers)
 - Manual pageview tracking: `autoCapturePageviews: false`
+- No form-submission goal: `formSubmissions: false` (since 2026-11-08). The
+  agent chat's message box is a form, so the script's automatic
+  `Form: Submission` goal counted chat messages that the chat's own events
+  already count: 144 of its 146 events in the 28 days before were the
+  admin's own chat messages.
+  Outbound links and file downloads keep the script's defaults.
 - Production-only: Only tracks on `anyplot.ai` domain
 - Privacy-focused: No cookies, GDPR-compliant
 
@@ -144,13 +150,8 @@ visitor", and after an expired admin session — it records no pageview and no
 event: `AgentChatPage` mutes the analytics (`app/src/analytics/mute.ts`), which
 stops every `useAnalytics` call while the page is mounted, the site's own
 events on that page included, and unmutes them when it unmounts, before the
-next page records its pageview. The Web Vitals measure the whole page load and
-report late (CLS and INP when the page is hidden), so they stay muted for the
-rest of a load in which the chat served an admin. TTFB and FCP can report
-before the chat has mounted, so a load that starts on `/agent` with the admin
-hint, or on `/debug/agent`, reports none of them either, decided when the
-metrics register (`app/src/analytics/reportWebVitals.ts`). Until 2026-11-06 the admin
-chat recorded the pageview `/debug/agent` and the same events as a visitor's.
+next page records its pageview. Until 2026-11-06 the admin chat recorded the
+pageview `/debug/agent` and the same events as a visitor's.
 So every event below is a visitor's, and `agent_session_saved`, whose `.save()`
 only an admin has, no longer fires in production.
 
@@ -228,8 +229,9 @@ than from `NotFoundPage.tsx`. Every other source accompanies a rendered 404.
 
 The bot-facing side of the same URLs answers HTTP 404 from `api/routers/seo.py`,
 but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
-agents with `return 202` on `/api/event`, so nothing they do appears here — this
-event covers humans only.
+agents with `return 202` on `/api/event` (see
+[The analytics shield](#the-analytics-shield)), so nothing they do appears
+here — this event covers humans only.
 
 ### Navigation clicks (`nav_click`)
 
@@ -282,19 +284,74 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 **External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`, `kurrentschrift`, `cite_citadel`
 **Internal destinations (Footer)**: `about`, `legal`
 
-### Performance (Core Web Vitals)
+### Core Web Vitals are not tracked
 
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `LCP` | `value`, `rating` | reportWebVitals.ts | Largest Contentful Paint (rounded to nearest 100ms) |
-| `CLS` | `value`, `rating` | reportWebVitals.ts | Cumulative Layout Shift (2 decimal places) |
-| `INP` | `value`, `rating` | reportWebVitals.ts | Interaction to Next Paint (rounded to nearest 50ms) |
-| `FCP` | `value`, `rating` | reportWebVitals.ts | First Contentful Paint (rounded to nearest 100ms) |
-| `TTFB` | `value`, `rating` | reportWebVitals.ts | Time to First Byte (rounded to nearest 100ms) |
+The site sent `LCP`, `CLS`, `INP`, `FCP`, and `TTFB` as custom events from
+2026-03-10 (#4741) to 2026-11-08 and stopped for three reasons:
 
-**Rating values**: `good`, `needs-improvement`, `poor` (per web-vitals thresholds)
+- They were 44 % of the billable events (17,044 of 38,818 in the 28 days
+  before), and `FCP` and `TTFB` had no goal, so they were billed and shown
+  nowhere.
+- Every custom event un-bounces its visit. Visits with a vitals event bounced
+  at 0 %, visits without one at 88 %, so the dashboard's bounce rate of about
+  5 % was an artifact. Expect it to rise to a realistic value from 2026-11-08.
+- No code change in nearly eight months was motivated by a vitals number.
 
-CWV tracking is production-only and dynamically imported (zero dev/bundle cost).
+Read Core Web Vitals from [PageSpeed Insights](https://pagespeed.web.dev/)
+when you need them: it reports lab numbers and, through the Chrome UX Report,
+field numbers. The events before 2026-11-08 stay visible in Plausible.
+
+---
+
+## The analytics shield
+
+`app/nginx.conf` answers `/api/event` itself with `202` when the sender's user
+agent is a crawler (`$is_bot`) or automation (`$is_headless_client`), so the
+event never reaches Plausible. Nothing is blocked: such a client still gets
+every page, it is just not counted, and the `202` mirrors Plausible's accepted
+response so the client doesn't retry. The shield exists since audit 2026-07-08
+(High #7), when synthetic traffic inflated visitor counts by about 40 %.
+Server-side events are a separate path, see
+[Two things Plausible will silently drop](#two-things-plausible-will-silently-drop).
+
+### The Windows 10 Chrome farm
+
+Since 2026-11-03 a crawler farm has loaded about 17 spec pages per hour around
+the clock. It rotates Windows 10 Chrome user agents, versions 103 to 138, some
+with a full build number (`Chrome/104.0.5112.81`) and some truncated to
+`Safari/537.3`, and it sends almost every request from a new exit IP: about
+64 % from Tencent Cloud (AS132203), the rest through residential proxies. It
+runs the page's JavaScript, so its events arrive as a browser's, and the
+automation list of `$is_headless_client` caught 6 of 16,195 event posts in
+44 hours. Plausible's own filter dropped the data-center share but counted the
+residential one: in the 7 days before 2026-11-08 the farm made up 675 of 1,451
+dashboard visitors. Because the IP changed between requests, one page load of
+the farm became up to three Plausible visitors: `TTFB`, `FCP`, and the
+pageview, each from another IP.
+
+Since 2026-11-08 `$is_headless_client` carries one more entry, which matches
+`Windows NT 10.0; Win64; x64` with Chrome 100 to 139 and a tail that ends in
+`Safari/537.3` or `Safari/537.36`:
+
+- Edge and Opera add `Edg/` or `OPR/` after `Safari/537.36`, so the anchored
+  tail keeps them out.
+- Windows 7 and 8.1 send `Windows NT 6.x`.
+- Chrome 140 and later is not matched. Brave and Vivaldi send Chrome's user
+  agent unchanged, so only their old builds fall under the entry.
+
+The entry costs real visitors on Windows 10 or 11 (both send
+`Windows NT 10.0`) with a pinned old Chrome: about 2 % of visits (37 of 2,069
+in the 28 days before 2026-11-08) are no longer counted. `tests/unit/api/test_analytics_shield.py` holds the map against the
+farm's user agents and against current browsers.
+
+To review the entry:
+
+1. Open the dashboard's browser-version breakdown for Chrome on Windows.
+2. Keep the ceiling about 15 versions below stable Chrome: 139 against stable
+   156 on 2026-11-08. Raise it to 14x once stable passes about 165, or sooner
+   only if the farm's pool moves past 139.
+3. Change the version cases in `tests/unit/api/test_analytics_shield.py` in
+   the same pull request.
 
 ---
 
@@ -558,7 +615,6 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
 | `mode` | Spec detail view mode (`preview` / `interactive`) | `view_mode_change` |
 | `theme` | Ambient *effective* theme attached to **every** pageview & event (`dark` / `light`) — resolved from the tri-state mode so OS-followers still split cleanly | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
-| `rating` | CWV rating (good, needs-improvement, poor) | `LCP`, `CLS`, `INP` |
 | `filter_lib` | Library filter value (for og:image) | `og_image_view` |
 | `filter_spec` | Specification filter value (for og:image) | `og_image_view` |
 | `filter_plot` | Plot type filter value (for og:image) | `og_image_view` |
@@ -616,9 +672,6 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `agent_session_saved` | Custom Event | Track how often admins save an agent chat session as a file, and with the data or without |
 | `agent_result_feedback` | Custom Event | Track quick feedback on agent chat results by reaction, and how often the case holds the data |
 | `agent_turn_resumed` | Custom Event | Track how often the agent chat's stream is cut mid-turn, and how often the page reads the result anyway |
-| `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
-| `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
-| `INP` | Custom Event | Interaction to Next Paint (Core Web Vital) |
 
 ### Funnels (optional)
 
@@ -638,7 +691,6 @@ Recommended custom widgets:
 4. **Search Terms**: `search` breakdown by `query`
 5. **Missing Content**: `search_no_results` breakdown by `query`
 6. **View Preference**: `grid_resize` breakdown by `size`
-7. **CWV Performance**: `LCP` / `CLS` / `INP` breakdown by `rating`
 
 ---
 
@@ -723,14 +775,12 @@ User lands on anyplot.ai
 | `map_node_click` | `spec` | MapPage.tsx |
 | `map_node_pin` | `spec` | MapPage.tsx |
 | `map_search_select` | `spec` | MapPage.tsx |
-| `LCP` | `value`, `rating` | reportWebVitals.ts |
-| `CLS` | `value`, `rating` | reportWebVitals.ts |
-| `INP` | `value`, `rating` | reportWebVitals.ts |
-| `FCP` | `value`, `rating` | reportWebVitals.ts |
-| `TTFB` | `value`, `rating` | reportWebVitals.ts |
+| `feedback_opened` | `path` | FeedbackWidget.tsx |
+| `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `library`?, `mode` | FeedbackWidget.tsx, SpecDetailView.tsx |
+| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 39 client-side + 1 server-side = 40 events** (the nine `agent_*`
+**Total: 39 client-side + 1 server-side = 40 events** (the twelve `agent_*`
 events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
 
 > Removed events: `potd_dismiss` (and the `nav_click` sources `potd_image` /
@@ -739,6 +789,14 @@ events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
 > and only emits the `potd_terminal_*` `nav_click` sources. Historical
 > `potd_dismiss` data remains visible in Plausible; the goal can be deleted
 > from the dashboard.
+>
+> `LCP`, `CLS`, `INP`, `FCP`, and `TTFB`, with their `value` and `rating`
+> properties, stopped on 2026-11-08 together with `reportWebVitals.ts` and the
+> `web-vitals` dependency (see
+> [Core Web Vitals are not tracked](#core-web-vitals-are-not-tracked)). So did
+> the script's automatic `Form: Submission` goal. Their history stays visible
+> in Plausible; the `LCP`, `CLS`, and `INP` goals can be deleted from the
+> dashboard.
 
 > Every pageview and event additionally carries a `theme` ambient prop (`dark` /
 > `light`). Set in `RootLayout` via `setAnalyticsAmbientProps` whenever the user
@@ -843,13 +901,6 @@ normal   # Larger cards (1-3 columns)
 compact  # Smaller cards (2-6 columns)
 ```
 
-### `rating` values (Core Web Vitals)
-```
-good              # Within recommended thresholds
-needs-improvement # Between good and poor thresholds
-poor              # Exceeds poor threshold
-```
-
 ---
 
 ## Reading stats — backend → Plausible Stats API
@@ -878,10 +929,11 @@ public stats page.
 
 ## Code locations
 
-- **Plausible setup**: `app/index.html` (lines 59-68)
+- **Plausible setup**: `app/index.html` (the inline script at the end of `<head>`)
+- **Analytics shield**: the `$is_bot` and `$is_headless_client` maps and both `location = /api/event` blocks in `app/nginx.conf`
 - **Analytics hook**: `app/src/hooks/useAnalytics.ts`
+- **Admin mute**: `app/src/analytics/mute.ts`
 - **Pageview building**: `buildPlausibleUrl()` in useAnalytics.ts
-- **Core Web Vitals**: `app/src/analytics/reportWebVitals.ts`
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
 - **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (pageview, open), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
@@ -921,7 +973,6 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Internal link events (`internal_link`)
 - [x] Feature link events (`open_interactive`, `suggest_spec`, `report_issue`)
 - [x] Plot rotation (`plot_rotate`)
-- [x] Core Web Vitals tracking (`LCP`, `CLS`, `INP`)
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
@@ -932,12 +983,13 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 
 ### Plausible dashboard checklist
 
-- [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
-- [ ] Create goals for key events (including `LCP`, `CLS`, `INP`)
+- [ ] Register all custom properties (see table above, including `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
+- [ ] Create goals for key events
+- [ ] Delete the `LCP`, `CLS`, and `INP` goals, whose events stopped on 2026-11-08
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)
 
 ---
 
-**Last Updated**: 2026-07-10
-**Status**: Production-ready with full journey tracking, Core Web Vitals, server-side og:image analytics, landing-page nav tracking, and theme analytics
+**Last Updated**: 2026-11-08
+**Status**: Production-ready with full journey tracking, server-side og:image analytics, landing-page nav tracking, theme analytics, and the analytics shield against automation

@@ -155,7 +155,8 @@
         s.async = true;
         s.src = '/js/script.js';
         document.head.appendChild(s);
-        plausible.init({ autoCapturePageviews: false, endpoint: '/api/event' });
+        // No form-submission goal: the agent chat's composer is a form, and its own events already count turns.
+        plausible.init({ autoCapturePageviews: false, formSubmissions: false, endpoint: '/api/event' });
       }
     </script>
   </head>
