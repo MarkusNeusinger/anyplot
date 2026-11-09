@@ -253,8 +253,8 @@ export function LegalPage() {
                     >
                       Plausible
                     </Link>{' '}
-                    counts page views, searches, clicks, copies, downloads and Core Web Vitals, only
-                    in aggregate, on a{' '}
+                    counts page views, searches, clicks, copies and downloads, only in aggregate, on
+                    a{' '}
                     <Link
                       href="https://plausible.io/anyplot.ai"
                       target="_blank"

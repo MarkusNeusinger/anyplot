@@ -2,108 +2,98 @@ library: letsplot
 language: python
 specification_id: violin-box
 created: '2025-12-30T11:30:38Z'
-updated: '2026-05-15T22:23:55Z'
-generated_by: claude-sonnet
-workflow_run: 25943180785
+updated: '2026-11-09T08:08:11Z'
+generated_by: claude-opus
+workflow_run: 42581859566
 issue: 2646
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Correct violin + embedded box plot implementation matching spec exactly
-  - 'Excellent data storytelling: four distinct distribution shapes (normal, outlier-heavy,
-    bimodal, tight) make group differences immediately clear'
-  - Outliers shown as open circles, whiskers and IQR box all present — full spec feature
-    coverage
-  - 'Good grid control: x-axis major grid removed, minor grid removed, only horizontal
-    reference lines remain'
-  - Realistic, neutral domain (server response times in ms) with appropriate scale
-    and 150 data points per group
-  - Reproducible with np.random.seed(42) and clean flat-script code structure
+  - Narrow boxes (width=0.12) filled with the elevated surface token and outlined
+    in INK sit centered on each violin's axis; the violin shape stays visible on both
+    sides and the box reads clearly in both themes
+  - 'Groups use the Imprint palette in canonical order (#009E73 first); chrome is
+    threaded through theme tokens, so text, grid and outlines adapt correctly between
+    #FAF8F1 and #1A1A17'
+  - 'Data exercises every aspect of the plot type: a unimodal group, a bimodal Premium
+    group, a long right tail with a planted outlier cluster (Optimized), and a compact
+    group with high outliers (Enterprise)'
+  - Native geom_boxplot outlier styling (outlier_shape/size/fill/color) draws outliers
+    as individual points at their values, and a shared, non-zero-forced value axis
+    lets positions compare directly
+  - The redundant fill legend is suppressed because the x axis already names each
+    group; the HTML export keeps lets-plot's native hover tooltips
   weaknesses:
-  - 'CRITICAL — Palette violation: scale_fill_manual uses ["#306998", "#FFD43B", "#4A90A4",
-    "#7CB342"] (Python brand colors) instead of Okabe-Ito. First series MUST be #009E73.
-    Fix: scale_fill_manual(values=["#009E73", "#D55E00", "#0072B2", "#CC79A7"])'
-  - 'CRITICAL — No ANYPLOT_THEME handling: code does not read os.getenv("ANYPLOT_THEME",
-    "light") and applies no theme-adaptive chrome (background, text, grid colors).
-    Both renders will be identical light-themed output regardless of environment variable.'
-  - 'CRITICAL — Wrong output filename: ggsave saves to "plot.png" and "plot.html"
-    instead of "plot-{THEME}.png" and "plot-{THEME}.html". The pipeline requires theme-suffixed
-    filenames.'
-  - Title in code uses "pyplots.ai" instead of "anyplot.ai" — the correct domain for
-    the title watermark.
+  - 'Suggestion: slightly larger outlier points (outlier_size about 0.6) would read
+    more easily in the 400 px thumbnail.'
+  - 'Suggestion: ordering the groups by median would make the latency ranking explicit.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct surface color.
-      Chrome: Title "violin-box · letsplot · anyplot.ai" in dark bold text, clearly readable. Axis label "Response Time (ms)" on y-axis and "Server Configuration" on x-axis — both clearly readable with dark ink. Tick labels (0, 10, 20, ... 140 on y; group names on x) are dark text on light background, legible.
-      Data: Four violins: Standard=teal-green (#009E73-like), Optimized=burnt orange (#D55E00-like), Premium=steel blue (#0072B2-like), Enterprise=reddish purple (#CC79A7-like). Each has embedded white-fill box plot showing quartiles and whiskers. Outlier circles visible on Standard (low outlier ~45ms), Optimized (several high outliers ~100-105ms, one low ~15ms), Enterprise (high outliers ~68-70ms). Premium shows bimodal shape clearly. Grid lines are subtle horizontal lines only.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
-      NOTE: Images appear to be from a PREVIOUS code version. Current code uses non-Okabe-Ito palette (#306998, #FFD43B, #4A90A4, #7CB342) and has no ANYPLOT_THEME handling — if re-run, output will differ significantly from these images.
+      Background: warm off-white #FAF8F1 across plot and panel.
+      Chrome: bold title "violin-box · python · letsplot · anyplot.ai" top-left (~50% width); y-axis "Response Time (ms)" 10–120 with subtle horizontal grid only; x-axis "Server Configuration" with Standard, Optimized, Premium, Enterprise. All text dark and readable.
+      Data: four violins in #009E73, #C475FD, #4467A3, #BD8233 (alpha 0.75, dark-grey outline), each with a narrow off-white box, black median bar, capped whiskers and small hollow outlier circles (Standard 122/46, Optimized ~96–105 cluster and 16, Enterprise ~67–71 and 48). Premium is visibly bimodal; Enterprise is compact with a thin upper tail.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — correct dark surface.
-      Chrome: Title "violin-box · letsplot · anyplot.ai" in white/light text, clearly readable. Axis labels in light text on dark background, readable. Tick labels are light-colored, no dark-on-dark issues detected.
-      Data: Violin colors are identical to the light render (green, orange, blue, pink) — correct, only chrome flipped. Box plot interiors appear slightly darker in the dark render (box fill="white" is hardcoded which may render as off-white or get theme-overridden). Outliers visible as white-bordered open circles against dark violin fills.
-      Legibility verdict: PASS for these cached images — all text visible against dark background. However, current code lacks ANYPLOT_THEME handling, so re-running would NOT produce a dark-themed render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink; grid subtle; no dark-on-dark text.
+      Data: same four Imprint hues (slightly deeper due to alpha over the dark page); boxes flip to dark elevated fill with light ink outline, median and whiskers; outlines light grey. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Text sizes correct (24pt title, 20pt axis, 16pt tick). Readable in
-          both renders from cached images.
+        comment: Explicit sizes (16/12/10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Violins well-separated, no text collisions, outlier circles don't
-          overlap.
+        comment: No text collisions; outlier cluster overlap is minor and readable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'All violins and boxes clearly visible. Minor: box fill=''white''
-          hardcoded may reduce contrast in dark mode.'
+        comment: Boxes, whiskers, medians and outliers clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette visible in images. Not using red-green as sole signal.
+        comment: Imprint hues distinguishable; groups also named on the x axis
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off. Slight margin tightness.
+        comment: 3200x1800, balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (ms), correct axis assignment.
+        comment: Response Time (ms) with unit; Server Configuration
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CODE uses [''#306998'',''#FFD43B'',''#4A90A4'',''#7CB342''] — not
-          Okabe-Ito. First series must be #009E73. No ANYPLOT_THEME reading, no theme-adaptive
-          background set. Images appear cached from previous version.'
+        passed: true
+        comment: 'Imprint order from #009E73; correct backgrounds in both themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,24 +101,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Violin+box combination is inherently sophisticated. Clean layout,
-          no legend (appropriate). Penalized for wrong color palette in code.
+        comment: 'Deliberate token hierarchy: elevated-surface box fill with INK outline
+          against INK_SOFT violin outlines, so the statistics layer reads above the
+          density'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Good choices: x-grid removed, minor grid removed, no legend. No
-          explicit spine removal evident.'
+        comment: Ticks removed and the redundant fill legend dropped since the x axis
+          names the groups
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Four distinct distribution shapes (normal, outlier-heavy, bimodal,
-          tight) create a clear comparative narrative. Bimodal Premium is a nice touch.
+        comment: Groups ordered so the tier progression reads left to right, with
+          planted tails/outliers that make the box-vs-shape contrast visible
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,28 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin with embedded box plot.
+        comment: Violin with centered embedded box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE violin shape, median line, IQR box, whiskers, outlier points
-          — all present.
+        comment: Centered box, median, quartiles, whiskers, KDE visible, outliers
+          as points; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=configuration (categorical), y=response_time (numeric). 4 groups,
-          150 points each.
+        comment: Shared value axis not forced to zero; tails trimmed to data range
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Code title uses 'pyplots.ai' instead of 'anyplot.ai'. Images show
-          correct 'anyplot.ai' but code is authoritative for future runs.
+        passed: true
+        comment: Mandated title format; legend N/A (groups on x axis)
     data_quality:
       score: 15
       max: 15
@@ -167,23 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows KDE shape, quartiles, whiskers, outliers across 4 groups with
-          different distribution profiles.
+        comment: Unimodal, bimodal, skewed-tail and outlier groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times in ms — realistic, neutral, non-controversial.
-          Tier names believable.
+        comment: Server response times by configuration, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10-140ms range appropriate for server response times.
+        comment: 15–122 ms response times, plausible for the domain; no Check values
+          in spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -191,34 +179,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, lets_plot — all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, appropriate complexity.
+        comment: Native geom_violin/geom_boxplot compute KDE and quartiles
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to 'plot.png'/'plot.html' instead of 'plot-{THEME}.png'/'plot-{THEME}.html'.
-          Does not read ANYPLOT_THEME.
+        passed: true
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -226,23 +213,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, layered geom_violin + geom_boxplot, scale_fill_manual,
-          theme customization.
+        comment: Grammar layering geom_violin + geom_boxplot sharing the fill mapping,
+          scale_fill_manual, theme_minimal + theme()
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses violin+box layer composition, trim=False to show full distribution
-          tails, HTML export.
-  verdict: REJECTED
+        comment: geom_boxplot outlier_* parameters for native outlier styling; HTML
+          export with native tooltips
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T08:02:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling

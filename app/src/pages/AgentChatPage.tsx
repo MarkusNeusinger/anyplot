@@ -46,7 +46,8 @@
  * back, and carries the library menu (`LibraryChip`, `seaborn ▾`, since
  * 2026-11-02 in place of a pill per library: the libraries grouped by language), next to it the
  * session language chip (`LanguageChip`, `English ▾`): the language of the replies and of the
- * text in the plot, English until the first typed message or a choice sets another (the
+ * text in the plot, English until the user picks another there, in the chat or with the
+ * thread's `.switch()` on the offer of a language found in a message or a paste (the
  * thumbnail and both ⓘ stood in the row until the start item took them). For an admin, the
  * admin menu stands at the row's end (since
  * 2026-11-06, where the "⋯" menu with `.save()` stood): the fan-out toggle, `.save()` with its
@@ -1349,6 +1350,7 @@ function AgentChat({
                 onTrack={trackEvent}
                 onOutcome={session.reportOutcome}
                 onSendFeedback={session.sendFeedback}
+                onAcceptLanguage={session.acceptLanguage}
                 start={
                   <StartItem
                     title={title ?? specId}
