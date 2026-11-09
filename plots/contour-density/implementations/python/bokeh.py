@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-density: Density Contour Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -42,25 +42,25 @@ ANYPLOT_SEQ256 = [
 N_LEVELS = 8  # number of density contour levels
 
 # Columns: set these to your table's column names
-MEASUREMENT_A = "Measurement A (units)"  # role: x
-MEASUREMENT_B = "Measurement B (units)"  # role: y
+HEIGHT = "Height (cm)"  # role: x
+WEIGHT = "Weight (kg)"  # role: y
 
-# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
+# Data: replace this block with your own table, for example df = pd.read_csv("body_measurements.csv")
+# Adult height and weight survey: two groups with their own centres, weight rising with height
 np.random.seed(42)
-n_points = 500
-df = pd.DataFrame(
-    {
-        MEASUREMENT_A: np.concatenate([np.random.normal(25, 4, n_points // 2), np.random.normal(40, 6, n_points // 2)]),
-        MEASUREMENT_B: np.concatenate([np.random.normal(35, 5, n_points // 2), np.random.normal(50, 4, n_points // 2)]),
-    }
-)
+n_group = 250
+height_f = np.random.normal(163, 6, n_group)
+height_m = np.random.normal(178, 7, n_group)
+weight_f = 62 + 0.6 * (height_f - 163) + np.random.normal(0, 6, n_group)
+weight_m = 82 + 0.7 * (height_m - 178) + np.random.normal(0, 7, n_group)
+df = pd.DataFrame({HEIGHT: np.concatenate([height_f, height_m]), WEIGHT: np.concatenate([weight_f, weight_m])})
 
 # Plot: reads only df and the constants above
-points = df[[MEASUREMENT_A, MEASUREMENT_B]].dropna()
+points = df[[HEIGHT, WEIGHT]].dropna()
 kde = stats.gaussian_kde(points.to_numpy().T)
 
-x_lo, x_hi = points[MEASUREMENT_A].min(), points[MEASUREMENT_A].max()
-y_lo, y_hi = points[MEASUREMENT_B].min(), points[MEASUREMENT_B].max()
+x_lo, x_hi = points[HEIGHT].min(), points[HEIGHT].max()
+y_lo, y_hi = points[WEIGHT].min(), points[WEIGHT].max()
 x_pad, y_pad = 0.08 * (x_hi - x_lo), 0.08 * (y_hi - y_lo)
 x_min, x_max, y_min, y_max = x_lo - x_pad, x_hi + x_pad, y_lo - y_pad, y_hi + y_pad
 
@@ -75,8 +75,8 @@ p = figure(
     width=3200,
     height=1800,
     title="contour-density · python · bokeh · anyplot.ai",
-    x_axis_label=MEASUREMENT_A,
-    y_axis_label=MEASUREMENT_B,
+    x_axis_label=HEIGHT,
+    y_axis_label=WEIGHT,
     x_range=(x_min, x_max),
     y_range=(y_min, y_max),
     toolbar_location=None,
@@ -88,7 +88,7 @@ p = figure(
 
 # Scatter overlay: small faint points behind the contours, for context only
 source = ColumnDataSource(points)
-p.scatter(x=MEASUREMENT_A, y=MEASUREMENT_B, source=source, size=9, color=INK_MUTED, alpha=0.35, line_color=None)
+p.scatter(x=HEIGHT, y=WEIGHT, source=source, size=9, color=INK_MUTED, alpha=0.35, line_color=None)
 
 # Density contours (native bokeh contour renderer), inner rings = higher density
 contours = p.contour(xx, yy, density, levels, line_color=level_colors, line_width=4.5, line_alpha=0.95)
