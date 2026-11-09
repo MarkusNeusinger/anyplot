@@ -1,15 +1,19 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    coord_cartesian,
     element_blank,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -18,190 +22,172 @@ from lets_plot import (
     ggsize,
     labs,
     layer_tooltips,
-    scale_color_viridis,
+    scale_fill_gradient,
     scale_size_identity,
     theme,
-    theme_minimal,
+    theme_void,
 )
 from lets_plot.export import ggsave
+from matplotlib.ticker import MaxNLocator
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette; altitude is continuous, so it takes imprint_seq: position 1 (green) → position 3 (blue)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 LetsPlot.setup_html()
 
-# Data - Simulated 3D spatial measurements (e.g., sensor readings in a volume)
+# Constants: the fixed viewpoint of the 3D frame
+ELEVATION = np.radians(22)
+AZIMUTH = np.radians(-55)
+PANEL_ASPECT = 1.7  # width / height of the panel left beside the title and color bar
+
+# Columns: set these to your table's column names
+X_POS = "X position (m)"  # role: x
+Y_POS = "Y position (m)"  # role: y
+Z_POS = "Altitude (m)"  # role: z
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sensors.csv")
+# Simulated sensor readings in a volume: a dense sphere, an elongated ellipsoid and a flat disk
 np.random.seed(42)
-
-# Create 3 distinct clusters with varied characteristics
-n_points = 150
-
-# Cluster 1: Dense spherical cluster (tight sensor group) - 60 points
-n1 = 60
-c1_x = np.random.randn(n1) * 0.5 + 3
-c1_y = np.random.randn(n1) * 0.5 + 2
-c1_z = np.random.randn(n1) * 0.5 + 1
-
-# Cluster 2: Elongated ellipsoid (stretched along X) - 50 points
-n2 = 50
-c2_x = np.random.randn(n2) * 1.8 - 2
-c2_y = np.random.randn(n2) * 0.4 - 1
-c2_z = np.random.randn(n2) * 0.6 + 3.5
-
-# Cluster 3: Flat disk (spread in X-Y plane, thin in Z) - 40 points
-n3 = 40
-c3_x = np.random.randn(n3) * 1.2 + 0.5
-c3_y = np.random.randn(n3) * 1.2 - 2.5
-c3_z = np.random.randn(n3) * 0.2 - 1.5
-
-x = np.concatenate([c1_x, c2_x, c3_x])
-y = np.concatenate([c1_y, c2_y, c3_y])
-z = np.concatenate([c1_z, c2_z, c3_z])
-
-# 3D to 2D isometric projection with rotation angles for good viewing
-elev = np.radians(25)  # elevation angle
-azim = np.radians(-50)  # azimuth angle
-
-# Apply rotation: first around z-axis (azimuth), then x-axis (elevation)
-cos_azim, sin_azim = np.cos(azim), np.sin(azim)
-cos_elev, sin_elev = np.cos(elev), np.sin(elev)
-
-x_rot = x * cos_azim - y * sin_azim
-y_rot = x * sin_azim + y * cos_azim
-
-# Project to 2D
-x_proj = x_rot
-y_proj = y_rot * sin_elev + z * cos_elev
-
-# Depth for sorting (painter's algorithm - back to front)
-depth = y_rot * cos_elev - z * sin_elev
-depth_norm = (depth - depth.min()) / (depth.max() - depth.min())
-point_sizes = 4 + depth_norm * 6  # perspective: closer points larger
-
-# Create DataFrame and sort by depth
-df = pd.DataFrame({"x_proj": x_proj, "y_proj": y_proj, "altitude": z, "depth": depth, "size": point_sizes})
-df = df.sort_values("depth").reset_index(drop=True)
-
-# Project axis lines from origin - extended to span full data range
-# Calculate data bounds for axis sizing
-data_range = max(x.max() - x.min(), y.max() - y.min(), z.max() - z.min())
-axis_length = data_range * 0.8  # 80% of data range for visible axes
-
-# Project origin to 2D
-origin_x_rot = 0.0
-origin_y_rot = 0.0
-origin_x_proj = origin_x_rot
-origin_y_proj = origin_y_rot * sin_elev + 0.0 * cos_elev
-
-# Project axis endpoints (X, Y, Z directions from origin)
-# X axis direction: (axis_length, 0, 0)
-x_end_rot_x = axis_length * cos_azim
-x_end_rot_y = axis_length * sin_azim
-x_end_proj_x = x_end_rot_x
-x_end_proj_y = x_end_rot_y * sin_elev
-
-# Y axis direction: (0, axis_length, 0)
-y_end_rot_x = -axis_length * sin_azim
-y_end_rot_y = axis_length * cos_azim
-y_end_proj_x = y_end_rot_x
-y_end_proj_y = y_end_rot_y * sin_elev
-
-# Z axis direction: (0, 0, axis_length)
-z_end_proj_x = 0.0
-z_end_proj_y = axis_length * cos_elev
-
-axes_df = pd.DataFrame(
+sphere = [np.random.randn(60) * 0.5 + 3, np.random.randn(60) * 0.5 + 2, np.random.randn(60) * 0.5 + 1]
+ellipsoid = [np.random.randn(50) * 1.8 - 2, np.random.randn(50) * 0.4 - 1, np.random.randn(50) * 0.6 + 3.5]
+disk = [np.random.randn(40) * 1.2 + 0.5, np.random.randn(40) * 1.2 - 2.5, np.random.randn(40) * 0.2 - 1.5]
+df = pd.DataFrame(
     {
-        "x": [origin_x_proj, origin_x_proj, origin_x_proj],
-        "y": [origin_y_proj, origin_y_proj, origin_y_proj],
-        "xend": [x_end_proj_x, y_end_proj_x, z_end_proj_x],
-        "yend": [x_end_proj_y, y_end_proj_y, z_end_proj_y],
-        "axis": ["X", "Y", "Z"],
+        X_POS: np.concatenate([sphere[0], ellipsoid[0], disk[0]]),
+        Y_POS: np.concatenate([sphere[1], ellipsoid[1], disk[1]]),
+        Z_POS: np.concatenate([sphere[2], ellipsoid[2], disk[2]]),
     }
 )
 
-# Axis label positions (slightly beyond axis endpoints)
-label_offset = 1.15
-axis_labels_df = pd.DataFrame(
-    {
-        "x": [x_end_proj_x * label_offset, y_end_proj_x * label_offset, z_end_proj_x],
-        "y": [x_end_proj_y * label_offset, y_end_proj_y * label_offset, z_end_proj_y * label_offset],
-        "label": ["X", "Y", "Z"],
-    }
+# Plot: reads only df and the constants above
+# Each axis is scaled into a unit cube [-0.5, 0.5]³, then rotated and projected to the page
+columns = [X_POS, Y_POS, Z_POS]
+lows = df[columns].min().to_numpy(dtype=float)
+highs = df[columns].max().to_numpy(dtype=float)
+spans = np.where(highs > lows, highs - lows, 1.0)
+projection = np.array(
+    [
+        [np.cos(AZIMUTH), -np.sin(AZIMUTH), 0.0],
+        [np.sin(AZIMUTH) * np.sin(ELEVATION), np.cos(AZIMUTH) * np.sin(ELEVATION), np.cos(ELEVATION)],
+    ]
+)
+toward_viewer = np.array(
+    [-np.sin(AZIMUTH) * np.cos(ELEVATION), -np.cos(AZIMUTH) * np.cos(ELEVATION), np.sin(ELEVATION)]
 )
 
-# Create floor grid (XY plane at z_min) for depth perception
-z_floor = z.min() - 0.5
-grid_size = 6
-grid_step = 2.0
-grid_lines = []
-for i in range(-grid_size // 2, grid_size // 2 + 1):
-    # Lines parallel to X axis
-    start_x, start_y = i * grid_step, -grid_size // 2 * grid_step
-    end_x, end_y = i * grid_step, grid_size // 2 * grid_step
-    # Project start point
-    sx_rot = start_x * cos_azim - start_y * sin_azim
-    sy_rot = start_x * sin_azim + start_y * cos_azim
-    sx_proj = sx_rot
-    sy_proj = sy_rot * sin_elev + z_floor * cos_elev
-    # Project end point
-    ex_rot = end_x * cos_azim - end_y * sin_azim
-    ey_rot = end_x * sin_azim + end_y * cos_azim
-    ex_proj = ex_rot
-    ey_proj = ey_rot * sin_elev + z_floor * cos_elev
-    grid_lines.append({"x": sx_proj, "y": sy_proj, "xend": ex_proj, "yend": ey_proj})
-    # Lines parallel to Y axis
-    start_x, start_y = -grid_size // 2 * grid_step, i * grid_step
-    end_x, end_y = grid_size // 2 * grid_step, i * grid_step
-    sx_rot = start_x * cos_azim - start_y * sin_azim
-    sy_rot = start_x * sin_azim + start_y * cos_azim
-    sx_proj = sx_rot
-    sy_proj = sy_rot * sin_elev + z_floor * cos_elev
-    ex_rot = end_x * cos_azim - end_y * sin_azim
-    ey_rot = end_x * sin_azim + end_y * cos_azim
-    ex_proj = ex_rot
-    ey_proj = ey_rot * sin_elev + z_floor * cos_elev
-    grid_lines.append({"x": sx_proj, "y": sy_proj, "xend": ex_proj, "yend": ey_proj})
+cube = (df[columns].to_numpy(dtype=float) - lows) / spans - 0.5
+points = df.copy()
+points["sx"], points["sy"] = (cube @ projection.T).T
+nearness = pd.Series(cube @ toward_viewer, index=df.index)
+points["size"] = 3.0 + 4.0 * (nearness - nearness.min()) / max(nearness.max() - nearness.min(), 1e-9)
+points = points.iloc[np.argsort(nearness.to_numpy())]  # painter's order: far points first
 
-grid_df = pd.DataFrame(grid_lines)
+# The three back panes (floor and two walls) face away from the viewer
+u_back = 0.5 * np.sign(np.sin(AZIMUTH))
+v_back = 0.5 * np.sign(np.cos(AZIMUTH))
+tick_text = [MaxNLocator(nbins=4).tick_values(lo, hi) for lo, hi in zip(lows, highs, strict=True)]
+tick_text = [t[(t >= lo) & (t <= hi)] for t, lo, hi in zip(tick_text, lows, highs, strict=True)]
+ticks = [(t - lo) / span - 0.5 for t, lo, span in zip(tick_text, lows, spans, strict=True)]
 
-# Create the plot
+grid = []
+for t in ticks[0]:
+    grid += [(t, -0.5, -0.5, t, 0.5, -0.5), (t, v_back, -0.5, t, v_back, 0.5)]
+for t in ticks[1]:
+    grid += [(-0.5, t, -0.5, 0.5, t, -0.5), (u_back, t, -0.5, u_back, t, 0.5)]
+for t in ticks[2]:
+    grid += [(u_back, -0.5, t, u_back, 0.5, t), (-0.5, v_back, t, 0.5, v_back, t)]
+edges = [
+    (-0.5, -v_back, -0.5, 0.5, -v_back, -0.5),
+    (-u_back, -0.5, -0.5, -u_back, 0.5, -0.5),
+    (u_back, -v_back, -0.5, u_back, -v_back, 0.5),
+    (-0.5, v_back, 0.5, 0.5, v_back, 0.5),
+    (u_back, -0.5, 0.5, u_back, 0.5, 0.5),
+    (-u_back, v_back, -0.5, -u_back, v_back, 0.5),
+]
+grid, edges = (pd.DataFrame(s, columns=["u0", "v0", "w0", "u1", "v1", "w1"]) for s in (grid, edges))
+for frame in (grid, edges):
+    frame["x"], frame["y"] = (frame[["u0", "v0", "w0"]].to_numpy() @ projection.T).T
+    frame["xend"], frame["yend"] = (frame[["u1", "v1", "w1"]].to_numpy() @ projection.T).T
+
+# Tick labels sit just outside the front edges; axis titles a little further out
+tick_labels = pd.DataFrame(
+    [(t, -v_back * 1.22, -0.5, f"{s:g}") for t, s in zip(ticks[0], tick_text[0], strict=True)]
+    + [(-u_back * 1.22, t, -0.5, f"{s:g}") for t, s in zip(ticks[1], tick_text[1], strict=True)]
+    + [(u_back * 1.18, -v_back * 1.18, t, f"{s:g}") for t, s in zip(ticks[2], tick_text[2], strict=True)],
+    columns=["u", "v", "w", "label"],
+)
+axis_titles = pd.DataFrame(
+    [(0.0, -v_back * 1.62, -0.5, X_POS), (-u_back * 1.62, 0.0, -0.5, Y_POS), (u_back, -v_back, 0.68, Z_POS)],
+    columns=["u", "v", "w", "label"],
+)
+for frame in (tick_labels, axis_titles):
+    frame["x"], frame["y"] = (frame[["u", "v", "w"]].to_numpy(dtype=float) @ projection.T).T
+
+# Widen the x window to the panel's aspect so the cube keeps equal page units on both axes
+text_y = pd.concat([tick_labels["y"], axis_titles["y"]])
+text_x = pd.concat([tick_labels["x"], axis_titles["x"]])
+y_limits = [text_y.min() - 0.05, text_y.max() + 0.05]
+x_half = (y_limits[1] - y_limits[0]) * PANEL_ASPECT / 2
+x_limits = [text_x.mean() - x_half, text_x.mean() + x_half]
+
+tooltips = (
+    layer_tooltips()
+    .line(f"{X_POS}|@{{{X_POS}}}")
+    .line(f"{Y_POS}|@{{{Y_POS}}}")
+    .line(f"{Z_POS}|@{{{Z_POS}}}")
+    .format(f"@{{{X_POS}}}", ".2f")
+    .format(f"@{{{Y_POS}}}", ".2f")
+    .format(f"@{{{Z_POS}}}", ".2f")
+)
+
 plot = (
     ggplot()
-    # Floor grid first (behind everything)
     + geom_segment(
-        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#CCCCCC", size=0.5, alpha=0.4
+        data=grid, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, alpha=0.15, size=0.4, tooltips="none"
     )
-    # Axis lines
     + geom_segment(
-        data=axes_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#555555", size=2.0, alpha=0.8
+        data=edges,
+        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        color=INK_SOFT,
+        alpha=0.7,
+        size=0.6,
+        tooltips="none",
     )
-    # Axis labels (X, Y, Z)
-    + geom_text(
-        data=axis_labels_df, mapping=aes(x="x", y="y", label="label"), color="#333333", size=14, fontface="bold"
-    )
-    # Data points
     + geom_point(
-        data=df,
-        mapping=aes(x="x_proj", y="y_proj", color="altitude", size="size"),
-        alpha=0.75,
-        tooltips=layer_tooltips().line("Altitude|@altitude").line("Depth|@depth"),
+        data=points,
+        mapping=aes(x="sx", y="sy", fill=Z_POS, size="size"),
+        color=PAGE_BG,
+        alpha=0.8,
+        stroke=0.4,
+        shape=21,
+        tooltips=tooltips,
     )
-    + scale_color_viridis(name="Altitude (m)", option="viridis")
+    + geom_text(data=tick_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=4.2)
+    + geom_text(data=axis_titles, mapping=aes(x="x", y="y", label="label"), color=INK, size=5.0)
+    + scale_fill_gradient(low=IMPRINT_PALETTE[0], high=IMPRINT_PALETTE[2], name=Z_POS)
     + scale_size_identity()
-    + labs(x="Projected X (m)", y="Projected Y (m)", title="scatter-3d · letsplot · pyplots.ai")
-    + theme_minimal()
+    + coord_cartesian(xlim=x_limits, ylim=y_limits)
+    + labs(title="scatter-3d · python · letsplot · anyplot.ai")
+    + theme_void()
     + theme(
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        plot_title=element_text(size=32),  # Fixed: increased from 28 to 32 for optimal visibility
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        panel_grid=element_blank(),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=16, color=INK, face="bold"),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_blank(),
+        legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
