@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-asymmetric: Asymmetric Error Bars Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -129,8 +129,9 @@ p.legend.label_text_color = INK_SOFT
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.border_line_alpha = 0.4
-p.legend.glyph_width = 50
-p.legend.glyph_height = 50
+# Bokeh draws legend markers at 0.4x the glyph box, so 100 px matches the 40 px plotted markers
+p.legend.glyph_width = 100
+p.legend.glyph_height = 100
 p.legend.padding = 24
 p.legend.margin = 40
 
