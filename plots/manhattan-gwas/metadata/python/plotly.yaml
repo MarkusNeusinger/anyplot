@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: manhattan-gwas
 created: '2025-12-31T05:32:43Z'
-updated: '2026-11-09T13:30:50Z'
+updated: '2026-11-09T13:41:55Z'
 generated_by: claude-opus
 workflow_run: 42624020964
 issue: 2925
@@ -12,48 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Faithful Manhattan layout: about 115k variants on a cumulative genomic axis,
-    with each chromosome label centered under its own region via tickvals at the computed
-    chromosome centers'
-  - Alternating Imprint green/blue chromosome bands read the boundaries without separators,
-    and significant variants stand out as lavender diamonds with an ink outline, identical
-    in both themes
+  - Cumulative genomic layout computed from the data (groupby max + cumsum offsets)
+    with chromosome labels centered under each region via tickvals/ticktext
+  - 'Alternating Imprint green #009E73 and blue #4467A3 chromosomes stay distinct
+    in both themes; data colors identical across light and dark renders'
   - Genome-wide (dashed) and suggestive (dotted) threshold lines span all chromosomes
-    and carry right-aligned in-place labels with properly typeset p-values (5×10⁻⁸,
-    10⁻⁵)
-  - Uses go.Scattergl (WebGL) for the 22 dense background traces and customdata-driven
-    hovertemplates showing chromosome, bp position and -log₁₀(p) in the HTML
-  - Theme tokens threaded through every chrome element; both renders fully readable
+    in INK_MUTED, distinguishable by dash style, named in a horizontal legend above
+    the plot so no peak runs into a label
+  - Significant SNPs drawn once as lavender diamonds with an INK outline, standing
+    out clearly at the three peaks; band of ~117k null variants at size 3 / opacity
+    0.7 does not clot the peaks
+  - Scattergl (WebGL) for the dense background band plus customdata-driven hovertemplates
+    showing chromosome, base-pair position and -log10(p) in the HTML output
+  - LD-style signal decay around each lead SNP gives realistic stacked columns at
+    associated loci; seeded and deterministic
   weaknesses:
-  - 'VQ-01 (both): x-axis tick labels are set to 9 px, smaller than the 10 px y-axis
-    ticks, and the narrow chromosomes 19–22 crowd together at that size, blurring
-    in the 400 px thumbnail → 10 px to match the y-axis (+1 px). Likely cause: xaxis
-    tickfont size=9.'
-  - 'DQ-02 (both): each association peak is an isolated column of 6–10 SNPs jumping
-    from the ~2 background straight to -log₁₀(p) 7.5–13, with no flanking variants
-    at intermediate significance as linkage disequilibrium produces at a real locus
-    → give each peak a tower of neighbouring SNPs whose -log₁₀(p) decays with distance
-    from the lead SNP. Likely cause: the peak block overwrites only pvalues[peak_idx-5:peak_idx+5]
-    with uniform extreme values.'
-  - 'CQ-01 (code): a `p_label()` helper function formats the two threshold labels
-    → write the two label strings inline in the threshold list (e.g. "p = 5×10⁻⁸",
-    "p = 10⁻⁵"). Likely cause: the def p_label(p) block before the threshold loop.'
-  - 'Suggestion: labelling the lead SNP of each peak with a SNP id (the spec''s optional
-    snp_id column) would tie the highlight to named loci.'
+  - 'VQ-02 (both): the tick labels ''20'', ''21'' and ''22'' at the right end of the
+    x axis sit almost edge to edge (gap under one character width), so ''21 22'' nearly
+    reads as one number → keep a visible gap of at least half a character between
+    adjacent chromosome labels, e.g. tick font about 9 px for the axis (−1 px) or
+    a slightly wider canvas share for the axis via a smaller left margin. Likely cause:
+    xaxis tickfont size=10 with the narrow chromosomes 19–22 (47–64 Mb each).'
+  - 'Suggestion: the legend''s ''Significant SNPs'' entry has a wide gap between the
+    diamond glyph and its text compared with the line entries; a fixed legend itemwidth
+    would even out the spacing.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 for paper and plot area.
-      Chrome: title "manhattan-gwas · python · plotly · anyplot.ai" centered in dark ink; y-axis "-log₁₀(p-value)" with ticks 0–12, x-axis "Chromosome" with labels 1–22 centered under each chromosome region; subtle horizontal grid, no x grid; legend box top-left with "Significant SNPs" lavender diamond; threshold labels "Genome-wide significance (p = 5×10⁻⁸)" and "Suggestive threshold (p = 10⁻⁵)" in muted gray, right-aligned above their lines. All readable; x ticks at 19–22 are close but legible.
-      Data: dense band of small points alternating Imprint green #009E73 / blue #4467A3 per chromosome (0–~4), solid overplotted base (permitted); dashed line at 7.3, dotted line at 5; lavender #C475FD diamonds with dark outline at peaks on chr 2 (~9–12), chr 8 (~7.5–9.5), chr 15 (~9.5–13).
+      Background: warm off-white #FAF8F1 for paper and plot area, not pure white.
+      Chrome: title "manhattan-gwas · python · plotly · anyplot.ai" centered at top in near-black; horizontal legend above the plot at right (dashed "Genome-wide (p = 5×10⁻⁸)", dotted "Suggestive (p = 10⁻⁵)", lavender diamond "Significant SNPs"); y-axis "-log₁₀(p-value)" 0–13 with subtle horizontal grid; x-axis "Chromosome" with labels 1–22 centered under each region. All text dark and readable; labels 20/21/22 are tightly packed at the right end.
+      Data: ~117k variants at size 3, alternating #009E73 green and #4467A3 blue per chromosome, dense band below ~2 with scattered points to ~4.8; tall columns at chr 2, 8 and 15 with significant SNPs as lavender (#C475FD) diamonds with dark outline above the dashed line at 7.3 (top at ~13 on chr 15). Dotted suggestive line at 5. First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis titles in light ink, ticks in light soft gray, grid faint light lines, legend box on elevated dark background with light border, threshold lines and labels in light muted gray. No dark-on-dark text.
-      Data: identical green/blue alternation and lavender diamonds (outline flips to light ink); same positions as light render.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles, tick labels and legend text all in light ink, clearly readable; grid lines subtle grey; threshold lines in light grey; no dark-on-dark text.
+      Data: green/blue alternation and lavender diamonds identical to the light render; diamond outlines flip to light ink. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,52 +58,52 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; x tick labels at 9 px smaller than
-          y ticks and crowded at chr 19–22 (defect line)
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; threshold labels clear of points; band overplotting
-          is permitted by the spec
+        comment: Chromosome tick labels 20/21/22 nearly touch at the right end (defect
+          line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Size 3 / opacity 0.7 for ~115k points, size 7 outlined diamonds for
-          hits; legend glyph visible in both themes
+        comment: Size-3 markers at 0.7 opacity for ~117k variants, size-7 outlined
+          diamonds for hits; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue alternation plus lavender diamond shape — CVD-safe, not
-          red-green
+        comment: Green/blue alternation and lavender highlight are CVD-safe; highlight
+          also differs by shape
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800, balanced margins, x range trimmed to genome, nothing cut
-          off
+        comment: 3200x1800; balanced margins, title ~70% width, legend above plot,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Chromosome / -log₁₀(p-value)
+        comment: '''-log₁₀(p-value)'' and ''Chromosome'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint green first, blue alternation, lavender highlight; correct
-          backgrounds in both themes
+        comment: 'First series #009E73, Imprint positions 1/3 alternating, #C475FD
+          highlight; correct backgrounds in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -117,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Typeset superscript p-values in in-place threshold labels, muted
-          INK_MUTED line hierarchy below the data
+        comment: Shape+color highlight (outlined lavender diamond) and muted INK_MUTED
+          threshold lines create a deliberate hierarchy above the style-guide baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: x grid removed for the categorical genome axis, range pinned to [0,
-          genome length] so the bands touch the axes
+        comment: X grid removed for a cumulative-position axis where it carries no
+          meaning; threshold legend moved above the plot off the data
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Labelled thresholds in place give the reader the significance scale
-          directly; highlight itself is Notes-allowed
+        comment: 'Peaks are the clear focal point: hits drawn once on top in a contrasting
+          shape, null band recedes'
     spec_compliance:
       score: 15
       max: 15
@@ -142,29 +138,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Manhattan plot on cumulative position
+        comment: Correct Manhattan plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Centered chromosome labels, alternating colors, dashed 7.3 line,
-          suggestive line below and distinct, significant variants highlighted at
-          their peaks
+        comment: Cumulative x with centered labels, alternating colors, dashed 7.3
+          line, optional suggestive line at 5 below it and distinguishable, reduced
+          point size, highlighted hits at their peaks — all characteristic bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at base-pair position + offset, no jitter; all data shown
+        comment: Each point at its cumulative bp position and -log10 p; no jitter;
+          full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend 'Significant SNPs' reads for a reader
+        comment: Mandated title format; legend entries readable and match the marks
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -172,32 +170,32 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Background band, three loci above threshold, near-suggestive variants,
-          unequal chromosome widths
+        comment: Null band, three loci of different strength, sub-threshold columns,
+          near-suggestive points, unequal chromosome widths
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Simulated GWAS with real chromosome lengths, but peaks lack flanking
-          LD signal (defect line)
+        comment: Simulated GWAS with GRCh-like chromosome lengths and LD-shaped peaks;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: 'Checked: genome-wide line at -log10(5e-8)=7.30 and suggestive at
-          5.0 computed from constants and read off the axis; peaks 7.5–13'
+          5.0 on the axis, both computed from the p constants; peaks 8.5–13 plausible'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: p_label() helper function (defect line)
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,13 +213,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Cumulative offsets via groupby/cumsum/shift; appropriate complexity
+        comment: Offsets via groupby/cumsum, threshold lines via add_hline; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png at 800×450×4 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and .html with current Plotly 7 API
     library_mastery:
       score: 7
       max: 10
@@ -231,30 +230,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: add_hline for thresholds, array tickmode for centered labels, customdata
-          + hovertemplate
+        comment: graph_objects with add_hline, array tickmode, legend-only traces,
+          customdata hovertemplates
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: go.Scattergl WebGL rendering for ~115k points and rich per-point
-          hover in HTML
-  verdict: REJECTED
+        comment: Scattergl WebGL traces for 100k+ points and rich customdata hovertemplates
+          in the HTML output
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
-  rendered_at: '2026-11-09T13:27:56Z'
+  rendered_at: '2026-11-09T13:38:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
+  - grid-styling
