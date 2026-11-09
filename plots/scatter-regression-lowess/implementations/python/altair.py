@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-lowess: Scatter Plot with LOWESS Regression
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 77/100 | Updated: 2026-11-09
+Quality: 82/100 | Updated: 2026-11-09
 """
 
 import os

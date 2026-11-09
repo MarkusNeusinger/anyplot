@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-regression-lowess
 created: '2025-12-30T23:52:29Z'
-updated: '2026-11-09T15:18:31Z'
+updated: '2026-11-09T15:23:53Z'
 generated_by: claude-opus
 workflow_run: 42642312229
 issue: 2855
@@ -12,52 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/python/altair/plot-dark.html
-quality_score: 77
+quality_score: 82
 review:
   strengths:
-  - 'Points are drawn in Imprint #009E73 at 60 % opacity and size 55, with the LOWESS
-    curve as one solid 3 px line in the second Imprint position #C475FD, so the curve
-    stands clearly apart from the cloud in both themes'
-  - LOWESS at frac=0.3 follows both bends of the sine-plus-trend cloud (peak near
-    x=2.7, trough near x=5.4) without wiggling from point to point, and the curve
-    spans exactly the data's x range from 0 to 10 with nothing extrapolated
-  - Theme tokens are threaded through every chrome element (axis domain, ticks, labels,
-    titles, grid at 10 % ink opacity, view fill, title color), so both renders are
-    fully legible
-  - 'Library-native interactivity: per-point tooltips with formatted values and .interactive()
-    zoom/pan in the HTML output'
+  - 'Real LOWESS via statsmodels lowess(frac=0.3) with return_sorted=True: the purple
+    curve follows the U-shaped centre of the cloud, bends at the cold and hot ends,
+    ignores the 31 GW outlier at 16 °C and ends exactly at the outermost points (-4.8
+    °C and 34.5 °C) with no extrapolation'
+  - 'A realistic, neutral scenario: daily electricity demand against mean temperature,
+    with a heating load, a flat comfort zone and a steeper cooling load, all in plausible
+    GW values'
+  - 200 points at size 55 and opacity 0.6 show where the data is dense while the 3
+    px curve drawn on top stays clearly distinct in both themes
+  - 'Theme tokens reach every chrome element: the warm backgrounds, INK titles, INK_SOFT
+    ticks and the 10 % grid all read well on both surfaces, and the data colors are
+    identical between the two renders'
+  - Layered Altair composition (scatter + line) with formatted tooltips and .interactive()
+    zoom/pan gives the HTML view real inspection value
   weaknesses:
-  - 'VQ-06, DQ-02 (both): the axes read "Independent Variable (meters)" and "Dependent
-    Variable (kg)", generic role names that tell the reader nothing about what is
-    measured, and the pairing of a distance with a mass has no story → name a concrete,
-    neutral scenario with real quantities and units (for example "Daily Temperature
-    (°C)" against "Electricity Demand (GW)", or "Dose (mg)" against "Response (%)").
-    Likely cause: the DISTANCE and MASS column constants.'
-  - 'DQ-03 (both): the y axis is labelled in kg, yet several points sit below zero
-    (lowest about −0.7 kg at x≈5.5), a negative mass the domain cannot have → generate
-    y so that it stays within the quantity''s plausible range (shift the baseline
-    or pick a quantity that can be negative). Likely cause: y = 2*sin(0.8x) + 0.5x
-    + N(0, 0.8) with no offset.'
   - 'Suggestion: Altair''s native transform_loess(bandwidth=0.3) could compute the
-    curve inside the chart spec instead of the statsmodels pre-computation, keeping
-    the smoothing visible in the Vega-Lite spec.'
-  - 'Suggestion: the optional confidence band the Notes allow could be added as a
-    semi-transparent mark_area behind the curve.'
+    curve inside the chart spec instead of a precomputed statsmodels frame, keeping
+    the fit attached to df in the interactive HTML (note that it has no robustness
+    iterations, so the curve would differ slightly).'
+  - 'Suggestion: an x-axis tick every 5 °C instead of every 2 °C would thin the 20
+    vertical gridlines and calm the background behind the cloud.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas, view fill matches.
-      Chrome: centered bold title "LOWESS Smoothing · scatter-regression-lowess · python · altair · anyplot.ai" in dark ink spanning ~63 % of the width; bold axis titles "Independent Variable (meters)" and "Dependent Variable (kg)"; x ticks 0.0–10.0 in 0.5 steps, y ticks −1 to 9; soft grey grid at low opacity; all text dark on light and readable.
-      Data: 200 translucent #009E73 circles following a sine-plus-trend cloud; one solid violet #C475FD LOWESS curve rising to a peak near x=2.7 (y≈2.8), dipping to a trough near x=5.4 (y≈1.05) and climbing to ≈7.1 at x=10, spanning the full x range.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas; no view frame.
+      Chrome: centered bold title "LOWESS Smoothing · scatter-regression-lowess · python · altair · anyplot.ai" at about 63 % of the width; axis titles "Daily Mean Temperature (°C)" and "Electricity Demand (GW)" in dark INK; tick labels -4 to 34 (step 2) and 30 to 60 (step 5) in INK_SOFT; subtle grid at 10 % opacity. Everything is readable.
+      Data: about 200 translucent #009E73 circles forming a U-shaped cloud (55 GW at -5 °C, lowest about 38 GW near 17 °C, rising to 54-60 GW at 34 °C); one thick solid purple #C475FD LOWESS curve on top that follows the centre, spans the data's x range and ends at the outermost points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, view fill matches.
-      Chrome: title, axis titles and tick labels flip to light ink and are clearly readable; grid lines light at low opacity, subtle but visible; no dark-on-dark text.
-      Data: same #009E73 points at 60 % opacity and the same #C475FD curve as the light render; only chrome changed. Brand green remains visible.
+      Background: warm near-black #1A1A17; no pure black.
+      Chrome: the title and axis titles are in light INK (#F0EFE8) and the ticks in light INK_SOFT, with a subtle light grid. No dark-on-dark text anywhere.
+      Data: identical #009E73 points and #C475FD curve, same positions; only the chrome flipped. The points read slightly darker on the dark surface but stay clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,49 +58,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 13, axis titles 12, labels 10 at 4x scale);
-          readable in both themes and at thumbnail size
+        comment: Font sizes set explicitly (title 14, axis titles 12, ticks 10 at
+          scale 4); readable in both themes and in the 400 px thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; point overlap is light and handled with 60 %
-          opacity
+        comment: No text collisions; point overlap in the dense ends is handled with
+          opacity 0.6
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 points at size 55 with alpha 0.6 suit the density; 3 px curve
-          clearly visible
+        comment: 200 points at size 55, opacity 0.6; the 3 px curve is clearly on
+          top
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green points vs violet curve differ in hue and lightness; CVD-safe
+        comment: 'Green points with a purple curve: they differ in lightness and hue
+          and are CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced axis titles and tick labels;
-          title ~63 % width
+        comment: 3200x1800; the plot fills the canvas with balanced margins; title
+          about 63 % of the width
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Units present but labels are generic role names 'Independent Variable'
-          / 'Dependent Variable' (defect line)
+        passed: true
+        comment: Descriptive axis titles with units (°C, GW)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Points #009E73, curve Imprint position 2 #C475FD; backgrounds #FAF8F1
-          / #1A1A17; data colors identical across themes'
+        comment: 'Points #009E73 (position 1), curve #C475FD (position 2); backgrounds
+          #FAF8F1 / #1A1A17; both themes correct'
     design_excellence:
       score: 8
       max: 20
@@ -117,20 +110,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Style-guide baseline typography and palette, nothing beyond it
+        comment: 'Style-guide baseline: Imprint colors, theme tokens, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Grid and frame rules met, no further refinement chosen for this chart
+        comment: View frame removed and grid subtle (the baseline); the default 2
+          °C tick density is kept
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data and curve displayed as the Notes ask; no hierarchy chosen beyond
-          them
+        comment: The curve as the focal layer is what the Notes ask for; no further
+          hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with overlaid LOWESS curve, no unrequested layers
+        comment: Scatter with a LOWESS curve overlaid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid contrasting curve, frac=0.3, alpha 0.6, axis labels, title
-          mentions LOWESS; curve smooth, spans the x range without extrapolation
+        comment: Solid contrasting curve, frac 0.3, alpha 0.6, axis labels, a title
+          mentioning LOWESS smoothing, a smooth curve spanning the data range; the
+          optional band is not drawn (no deduction)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correct, all points shown at their values; LOWESS shows no overshoot
+        comment: Points at their exact (x, y) values; the axes show all the data;
+          the curve has no overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'LOWESS Smoothing · scatter-regression-lowess · python · altair
-          · anyplot.ai' matches format; single series, legend N/A
+        comment: '''LOWESS Smoothing · scatter-regression-lowess · python · altair
+          · anyplot.ai''; legend N/A for a single series with one curve'
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data has two bends and an upward trend, so the curve demonstrates
-          local adaptation; optional band not required
+        comment: A non-linear relationship with a slope that reverses, bends at both
+          ends and an outlier the curve does not chase
       - id: DQ-02
         name: Realistic Context
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Generic 'Independent/Dependent Variable' scenario pairing meters
-          with kg has no real-world story (defect line)
+        passed: true
+        comment: 'Electricity demand against daily temperature: real-world and neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Checked y range: values down to about −0.7 on an axis labelled kg,
-          a negative mass (defect line); no Check values in the Notes'
+        passed: true
+        comment: 'Checked: temperatures -5 to 35 °C, demand 31-60 GW with a minimum
+          near 17 °C, plausible for a national grid; the spec gives no check values'
     code_quality:
       score: 10
       max: 10
@@ -207,20 +203,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used (PIL for the mandated pad block)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: LOWESS via statsmodels lowess call, no hand-rolled algorithm
+        comment: Uses the statsmodels lowess call rather than a hand-roll; the pad
+          block is mandated
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (padded to target) and plot-{THEME}.html;
-          current Altair 6 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current Altair
+          6 API
     library_mastery:
       score: 4
       max: 10
@@ -230,19 +227,18 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Layered chart with escaped fields, explicit types and configure_*
-          chrome; library-prompt baseline
+        comment: 'Layered charts, escaped fields with type= and title=, configure_*
+          chrome: the library-prompt baseline'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Tooltips and .interactive() are what the library prompt mandates;
-          nothing beyond
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt shows (tooltips, .interactive())
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
-  rendered_at: '2026-11-09T15:15:42Z'
+  rendered_at: '2026-11-09T15:21:12Z'
 impl_tags:
   dependencies:
   - statsmodels
@@ -254,6 +250,7 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
-  - lowess
+  - regression
   styling:
   - alpha-blending
+  - grid-styling
