@@ -70,6 +70,9 @@ describe('loadMood', () => {
     const resting = loadMood(load({ pausedUntil: reset, waiting: 4 }), true);
     expect(resting).toEqual({ kind: 'resting', until: localClock(reset) });
     expect(moodText(resting!)).toBe(`resting until ${localClock(reset)}`);
+    // A phone's tab is too narrow for it: the short form.
+    expect(moodText(resting!, true)).toBe(`back at ${localClock(reset)}`);
+    expect(moodText({ kind: 'busy' }, true)).toBe('busy');
     // A reset already past rests no more.
     expect(loadMood(load({ pausedUntil: new Date(T0 - 1).toISOString() }), false)).toEqual({
       kind: 'quiet',

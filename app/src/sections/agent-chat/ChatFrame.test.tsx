@@ -56,6 +56,18 @@ describe('ChatFrame', () => {
       '~/anyplot.ai/agent · ● the assistant is resting until 01:00'
     );
   });
+
+  it('shortens the resting mood on a phone, where the long one ran past the frame', () => {
+    asPhone();
+    render(
+      <ChatFrame header={null} mood={<LoadMood mood={{ kind: 'resting', until: '01:00 AM' }} />}>
+        <p>thread</p>
+      </ChatFrame>
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /^· ● the assistant is resting, back at 01:00 AM$/
+    );
+  });
 });
 
 describe('StatusLine', () => {

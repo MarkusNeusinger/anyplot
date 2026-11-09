@@ -11,12 +11,17 @@
  * hidden box: a screen reader hears "the assistant is busy" when the mood changes. The page
  * mounts it with the first answer and keeps it, so the mood a visitor meets is not read out on
  * arrival; a failed first read shows none.
+ *
+ * On a phone (`PHONE_QUERY`) the resting mood reads `● back at 01:00`: `resting until 01:00 AM`
+ * ran past the frame's right edge at 390 px, the label on one line. A screen reader still hears
+ * that the assistant rests.
  */
 
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { type Mood, moodText } from 'src/hooks/useAgentStatus';
-import { visuallyHiddenSx } from 'src/sections/agent-chat/styles';
+import { PHONE_QUERY, visuallyHiddenSx } from 'src/sections/agent-chat/styles';
 import { colors } from 'src/theme';
 
 const DOT: Record<Mood['kind'], string> = {
@@ -26,6 +31,9 @@ const DOT: Record<Mood['kind'], string> = {
 };
 
 export function LoadMood({ mood }: { mood: Mood }) {
+  // Read at the first render, so a phone never shows the long words first.
+  const narrow = useMediaQuery(PHONE_QUERY, { noSsr: true });
+  const short = narrow && mood.kind === 'resting';
   return (
     <Box component="span" role="status" data-testid="load-mood" data-mood={mood.kind}>
       <span aria-hidden>
@@ -35,9 +43,9 @@ export function LoadMood({ mood }: { mood: Mood }) {
         </Box>{' '}
       </span>
       <Box component="span" sx={visuallyHiddenSx}>
-        the assistant is{' '}
+        {short ? 'the assistant is resting, ' : 'the assistant is '}
       </Box>
-      {moodText(mood)}
+      {moodText(mood, short)}
     </Box>
   );
 }

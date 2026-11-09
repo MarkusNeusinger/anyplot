@@ -84,10 +84,14 @@ export function loadMood(
   return load.waiting > 0 || ownQueued ? { kind: 'busy' } : { kind: 'quiet' };
 }
 
-/** The mood's word, as the frame's tab shows it: `quiet`, `busy`, `resting until 01:00`. */
-export function moodText(mood: Mood): string {
+/**
+ * The mood's word, as the frame's tab shows it: `quiet`, `busy`, `resting until 01:00`; `short`,
+ * a phone's form of the resting one, which fits the tab at 390 px: `back at 01:00`.
+ */
+export function moodText(mood: Mood, short = false): string {
   if (mood.kind !== 'resting') return mood.kind;
-  return mood.until ? `resting until ${mood.until}` : 'resting';
+  if (!mood.until) return 'resting';
+  return short ? `back at ${mood.until}` : `resting until ${mood.until}`;
 }
 
 export interface UseAgentStatusOptions {
