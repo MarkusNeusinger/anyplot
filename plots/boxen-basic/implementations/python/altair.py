@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -72,9 +72,12 @@ level_labels = [
     f"{LEVEL_NAMES.get(level, f'1/{2 ** (level + 1)}')} ({100 * (1 - 0.5**level):.3g}%)"
     for level in range(1, k_max + 1)
 ]
-# Steps of imprint_seq, interpolated in RGB between its two stops like a two-stop linear colormap
+# Steps of imprint_seq (green to blue), shaded lighter with depth: the hue alone barely changes between
+# neighbouring levels, so a growing tint gives every level a clearly different lightness from the next
 seq_rgb = np.array([[int(stop[i : i + 2], 16) for i in (1, 3, 5)] for stop in IMPRINT_SEQ])
-steps = np.rint(seq_rgb[0] + np.linspace(0, 1, k_max)[:, None] * (seq_rgb[1] - seq_rgb[0])).astype(int)
+position = np.linspace(0, 1, k_max)[:, None]
+hues = seq_rgb[0] + position * (seq_rgb[1] - seq_rgb[0])
+steps = np.rint(hues + (255 - hues) * 0.7 * position**1.6).astype(int)
 level_colors = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in steps]
 boxes["Letter value"] = [level_labels[level - 1] for level in boxes["Level"]]
 # Widths shrink linearly with depth; the widest box takes 72 % of a category's slot
