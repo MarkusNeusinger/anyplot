@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
-Library: plotly 7.1.0 | Python 3.14.9
-Quality: pending | Updated: 2026-11-09
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-09
 """
 
 import os
