@@ -1176,6 +1176,10 @@ class TestSeoProxyRouter:
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text
         assert "rubric of 24 criteria" in response.text
+        # The MCP section's pointer at the machine readers on the stats page, as AboutPage.tsx has it.
+        assert "how many assistants and crawlers read the catalogue and how many came on behalf of a person" in (
+            response.text
+        )
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
 
@@ -2642,6 +2646,121 @@ class TestInsightsRouter:
             response = client.get("/insights/visitors")
             assert response.status_code == 200
             assert captured["payload"]["date_range"] == [expected_start_iso, today_iso]
+
+    # --- /insights/machine-readers: the machine-read telemetry's public tile -------------------
+
+    class _MachineReadsQuery:
+        """A BigQuery reader that records the window start and answers rows, or raises."""
+
+        def __init__(self, rows: list[dict] | None = None, error: Exception | None = None) -> None:
+            self.calls: list[tuple[str, object]] = []
+            self._rows = rows or []
+            self._error = error
+
+        def rows(self, sql: str, since):
+            self.calls.append((sql, since))
+            if self._error is not None:
+                raise self._error
+            return self._rows
+
+    @staticmethod
+    def _frozen(now):
+        from datetime import datetime as _dt
+
+        class _FrozenDatetime(_dt):
+            @classmethod
+            def now(cls, tz=None):  # type: ignore[override]
+                return now if tz is not None else now.replace(tzinfo=None)
+
+        return _FrozenDatetime
+
+    def test_machine_readers_not_configured(self, client: TestClient) -> None:
+        """No dataset: `not_configured` with no points, and no query, before the cache."""
+        from core.config import settings
+
+        for dataset in (None, "not a dataset"):
+            with (
+                patch.object(settings, "machine_reads_dataset", dataset),
+                patch("api.routers.insights.usage_query") as usage_query,
+                patch("api.routers.insights.get_or_set_cache") as cache,
+            ):
+                response = client.get("/insights/machine-readers")
+            assert response.status_code == 200
+            body = response.json()
+            assert (body["status"], body["points"], body["days"]) == ("not_configured", [], 28)
+            usage_query.assert_not_called()
+            cache.assert_not_called()
+
+    def test_machine_readers_unavailable_is_not_cached(self, client: TestClient) -> None:
+        """A failed cold miss answers `unavailable` without keeping it, so the next load queries again."""
+        from core.config import settings
+
+        failing = self._MachineReadsQuery(error=RuntimeError("403 Access Denied"))
+        working = self._MachineReadsQuery(rows=[])
+        with (
+            patch.object(settings, "machine_reads_dataset", "anyplot.machine_reads"),
+            patch("api.routers.insights.usage_query", side_effect=[failing, working, working]),
+        ):
+            first = client.get("/insights/machine-readers").json()
+            second = client.get("/insights/machine-readers").json()
+            third = client.get("/insights/machine-readers").json()
+        assert (first["status"], first["points"]) == ("unavailable", [])
+        assert second["status"] == "ok" and len(second["points"]) == 28
+        assert third == second  # kept: the third load ran no query
+        assert len(failing.calls) == 1 and len(working.calls) == 1
+
+    def test_machine_readers_without_a_client_is_unavailable(self, client: TestClient) -> None:
+        from core.config import settings
+
+        with (
+            patch.object(settings, "machine_reads_dataset", "anyplot.machine_reads"),
+            patch("api.routers.insights.usage_query", return_value=None),
+        ):
+            body = client.get("/insights/machine-readers").json()
+        assert body["status"] == "unavailable" and body["totals"]["unverified"] == 0
+
+    def test_machine_readers_zero_fills_28_days(self, client: TestClient) -> None:
+        """The 28 days run oldest first to today; a day without reads is zeros, the totals sum the window."""
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+
+        from core.config import settings
+
+        frozen_now = _dt(2026, 11, 9, 13, 50, tzinfo=_tz.utc)
+        rows = [
+            {"day": "2026-11-09", "for_person": 2, "index_training": 16, "search": 3, "mcp": 4, "unverified": 26},
+            {"day": "2026-10-20", "for_person": 0, "index_training": 1, "search": 0, "mcp": 0, "unverified": 0},
+        ]
+        query = self._MachineReadsQuery(rows=rows)
+        with (
+            patch.object(settings, "machine_reads_dataset", "anyplot.machine_reads"),
+            patch("api.routers.insights.usage_query", return_value=query),
+            patch("api.machine_reads_query.datetime", self._frozen(frozen_now)),
+        ):
+            body = client.get("/insights/machine-readers").json()
+        points = body["points"]
+        assert body["status"] == "ok" and len(points) == 28
+        assert (points[0]["date"], points[-1]["date"]) == ("2026-10-13", "2026-11-09")
+        assert points[-1] == {"date": "2026-11-09", "for_person": 2, "index_training": 16, "search": 3, "mcp": 4}
+        assert points[-2] == {"date": "2026-11-08", "for_person": 0, "index_training": 0, "search": 0, "mcp": 0}
+        assert body["totals"] == {"for_person": 2, "index_training": 17, "search": 3, "mcp": 4, "unverified": 26}
+
+    def test_machine_readers_since_is_utc_midnight_27_days_back(self, client: TestClient) -> None:
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+
+        from core.config import settings
+
+        query = self._MachineReadsQuery(rows=[])
+        with (
+            patch.object(settings, "machine_reads_dataset", "anyplot.machine_reads"),
+            patch("api.routers.insights.usage_query", return_value=query),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.machine_reads_query.datetime", self._frozen(_dt(2026, 11, 9, 23, 59, tzinfo=_tz.utc))),
+        ):
+            client.get("/insights/machine-readers")
+        assert query.calls[0][1] == _dt(2026, 10, 13, tzinfo=_tz.utc)
+        assert "`anyplot.machine_reads_logs._AllLogs`" in query.calls[0][0]
 
 
 class TestSpecCodeEndpoint:

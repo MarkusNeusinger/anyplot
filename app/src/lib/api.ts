@@ -32,6 +32,7 @@ export const endpoints = {
   download: (specId: string, library: string) => `/download/${specId}/${library}`,
   feedback: '/feedback',
   insightsDashboard: '/insights/dashboard',
+  insightsMachineReaders: '/insights/machine-readers',
   insightsVisitors: '/insights/visitors',
   languages: '/languages',
   libraries: '/libraries',

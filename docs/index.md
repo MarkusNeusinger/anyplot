@@ -99,7 +99,7 @@ Technical details for development and integration.
 - **[Style Guide](reference/style-guide.md)** - Brand, frontend, and plot design system
 - **[GCP Budget Guard](reference/gcp-budget-guard.md)** - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached: decision rules, logging, retries, permissions, limits (as of 2026-10-09, in the repository and not yet deployed)
 - **[Agent usage telemetry](reference/agent-telemetry.md)** - The agent chat's content-free events, the log bucket, sink and BigQuery views, the `/debug` card, and the one-time setup (the log bucket, the sink, and the linked dataset are live, checked 2026-11-09)
-- **[Machine readers](reference/machine-readers.md)** - One content-free line per request by a crawler, an AI assistant, or an MCP client, from the API and the site's nginx: when a line is written, its fields, the verified-bot header chain, the log bucket, sink and BigQuery views, and the one-time setup (as of 2026-11-09, in the repository; the log bucket, sink, and `_Default` exclusion exist, the BigQuery side is pending)
+- **[Machine readers](reference/machine-readers.md)** - One content-free line per request by a crawler, an AI assistant, or an MCP client, from the API and the site's nginx: when a line is written, its fields, the verified-bot header chain, the log bucket, sink and BigQuery views, the tile on `/stats` and the section on `/debug` that read them, and the one-time setup (as of 2026-11-09, the log bucket, sink, `_Default` exclusion, and BigQuery side are live; the Worker redeploy is pending)
 - **[Performance](reference/performance.md)** - Backend API response-time measurements
 
 ---

@@ -5,6 +5,8 @@ Public analytics and discovery features that leverage aggregated database data:
 - Dashboard: Rich platform statistics and visualizations
 - Plot of the Day: Daily featured high-quality implementation
 - Related Plots: Tag-based similarity recommendations
+- Visitors: unique visitors per day from Plausible
+- Machine readers: verified crawler and AI assistant reads per day from the machine-read telemetry
 """
 
 from __future__ import annotations
@@ -18,11 +20,14 @@ from datetime import date, datetime, timedelta, timezone
 
 import httpx
 from fastapi import APIRouter, Depends, Query
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.agent_usage import DATASET_PATTERN, usage_query
 from api.cache import cache_key, get_or_set_cache
 from api.dependencies import require_db
+from api.machine_reads_query import MachineReadersResponse, empty_public, read_public
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
 from core.database import ImplRepository, Spec, SpecRepository
@@ -803,3 +808,38 @@ async def get_visitors() -> VisitorsResponse:
         refresh_after=3600,
         refresh_factory=_fetch_plausible_visitors,
     )
+
+
+# =============================================================================
+# 5. Machine readers
+# =============================================================================
+
+
+def _read_machine_readers(dataset: str) -> MachineReadersResponse:
+    """The tile's numbers from BigQuery; raises when the client cannot start or the query fails."""
+    return read_public(usage_query(dataset), dataset)
+
+
+@router.get("/machine-readers", response_model=MachineReadersResponse)
+async def get_machine_readers() -> MachineReadersResponse:
+    """Verified crawler and AI assistant reads per UTC day for the last 28 days (machine-read telemetry).
+
+    Counts only, from the content-free lines in BigQuery (`api/machine_reads_query.py`,
+    `docs/reference/machine-readers.md`). `not_configured` while `MACHINE_READS_DATASET` is unset or no dataset
+    name; `unavailable` when BigQuery does not answer, never kept, so the next load tries again. An answer is kept
+    and refreshed in the background after an hour; a failed refresh keeps the last answer.
+    """
+    dataset = settings.machine_reads_dataset
+    if not dataset or not DATASET_PATTERN.fullmatch(dataset):
+        return empty_public("not_configured")
+
+    async def _fetch() -> MachineReadersResponse:
+        return await run_in_threadpool(_read_machine_readers, dataset)
+
+    try:
+        return await get_or_set_cache(
+            cache_key("insights", "machine-readers", "28d"), _fetch, refresh_after=3600, refresh_factory=_fetch
+        )
+    except Exception as exc:  # a cold miss that failed: answered, never kept
+        logger.warning("machine readers query failed: %s", type(exc).__name__)
+        return empty_public("unavailable")

@@ -37,6 +37,20 @@ export const listTextSx = {
 /** Muted list text. */
 export const listMutedSx = { ...listTextSx, color: semanticColors.mutedText } as const;
 
+/** A cell of the per-day tables (agent usage, machine readers): right-aligned tabular numbers. */
+export const tableCellSx = {
+  ...listTextSx,
+  px: 1,
+  py: 0.5,
+  borderBottom: '1px solid var(--rule)',
+  textAlign: 'right',
+  whiteSpace: 'nowrap',
+  fontVariantNumeric: 'tabular-nums',
+} as const;
+
+/** A header cell of the per-day tables. */
+export const tableHeadSx = { ...tableCellSx, fontWeight: 600, color: 'var(--ink-soft)' } as const;
+
 /** Text of the opened case: 13 px. */
 export const detailTextSx = {
   fontFamily: typography.fontFamily,

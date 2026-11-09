@@ -20,6 +20,7 @@ from api.agent_usage import USAGE_WINDOWS, AgentUsage, AgentUsageDaily, UsageQue
 from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
+from api.machine_reads_query import DETAIL_WINDOWS, MachineReadsDetail, read_detail
 from api.secret_compare import secret_matches
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
@@ -541,6 +542,27 @@ async def agent_usage_daily(query: UsageQuery | None = Depends(get_usage_query))
     (`api/agent_usage.py` `read_daily`, `docs/reference/agent-telemetry.md`).
     """
     return await run_in_threadpool(read_daily, query, settings.agent_telemetry_dataset)
+
+
+def get_machine_reads_query() -> UsageQuery | None:
+    """The BigQuery reader of the machine-read telemetry; tests override it with a fake."""
+    return usage_query(settings.machine_reads_dataset)
+
+
+@router.get("/machine-readers", response_model=MachineReadsDetail, dependencies=[Depends(require_admin)])
+async def machine_readers(
+    days: Annotated[int, Query()] = 7, query: UsageQuery | None = Depends(get_machine_reads_query)
+) -> MachineReadsDetail:
+    """Every machine read of the last 7 or 30 UTC days, read-only from the BigQuery machine-read telemetry.
+
+    Counts only: the totals (live, verified, unverified, MCP, synthetic), one row per vendor and purpose with its
+    five most requested routes, and one row per day, newest first. `status` `not_configured` while
+    `MACHINE_READS_DATASET` is unset and `unavailable` when the query fails, both with zeros
+    (`api/machine_reads_query.py`, `docs/reference/machine-readers.md`). `days` other than 7 or 30 is a 400.
+    """
+    if days not in DETAIL_WINDOWS:
+        raise_validation_error(f"days must be one of {', '.join(map(str, DETAIL_WINDOWS))}")
+    return await run_in_threadpool(read_detail, query, settings.machine_reads_dataset, days)
 
 
 class CacheInvalidateResponse(BaseModel):
