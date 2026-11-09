@@ -2,52 +2,48 @@ library: plotnine
 language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:15Z'
-updated: '2026-05-08T13:10:48Z'
-generated_by: claude-haiku
-workflow_run: 25556562728
+updated: '2026-11-09T15:05:26Z'
+generated_by: claude-opus
+workflow_run: 42640212734
 issue: 2004
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - 'Excellent visual quality: all text legible in both light and dark themes, no
-    overlap, correct color mapping with viridis'
-  - 'Perfect data quality: realistic sensor grid scenario with natural spatial temperature
-    gradient'
-  - 'Perfect spec compliance: scatter plot with colorbar correctly implements color-mapped
-    third variable'
-  - 'Proper theme adaptation in rendered output: data colors consistent across light
-    and dark, chrome appropriately inverts'
-  - 'Idiomatic plotnine usage: clean ggplot() + aes() + geom_point() + scale_color_cmap()
-    flow following plotnine conventions'
-  - Simple, maintainable code structure with clear imports and reproducible data generation
-    (seed=42)
+  - 'Fill mapped to Temperature (°C) through scale_fill_gradient with the two imprint_seq
+    stops (#009E73 → #4467A3), identical in both renders'
+  - 'Thin theme-adaptive outline (color=INK, stroke=0.3) keeps every point, including
+    the green low end, visible on #FAF8F1 and #1A1A17'
+  - guide_colorbar(nbin=100) gives a smooth, tall color bar whose 20–46 °C range covers
+    every point; the column name supplies the bar title with its unit
+  - Column constants feed aes() directly, so the axes and the color bar are titled
+    from the data with units and no extra labs() calls
+  - '150 points at size 3.2 with alpha 0.9: markers large enough for their color to
+    be read, colors still match the bar'
+  - Seeded data generation, clean imports, plot.save at 3200×1800 for both themes
   weaknesses:
-  - 'CQ-05 CRITICAL: Code saves to bare plot.png instead of plot-{THEME}.png. Source
-    code does not read ANYPLOT_THEME environment variable or implement theme-adaptive
-    color tokens (INK, INK_SOFT), yet rendered images show correct theming — indicates
-    workflow compensation for incomplete code'
-  - 'Code contains typo: title string has ''pyplots.ai'' instead of ''anyplot.ai''
-    (though rendered images show correct ''anyplot.ai'')'
-  - 'Design Excellence is low (8/20): uses library defaults with no custom color palette,
-    minimal visual refinement, no visual hierarchy or data storytelling emphasis'
+  - 'Suggestion: most readings fall in the 28–38 °C middle of the ramp; a wider spatial
+    gradient in the generated data would let both ends of the color bar show more
+    points.'
+  - 'Suggestion: the color bar''s tick marks draw as light dashes across the bar;
+    shortening them or matching them to INK_SOFT would read cleaner in the light render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color, not pure white
-      Chrome: Title "scatter-color-mapped · plotnine · anyplot.ai", axis labels "X Position (m)" and "Y Position (m)", tick labels, and colorbar all render in dark text. All elements clearly readable.
-      Data: 150 scatter points colored by viridis colormap (purple ~15°C → yellow ~55°C). Spatial pattern visible: warmer temperatures in upper-right corner. Color transition smooth and clear.
-      Legibility verdict: PASS — all text and data elements fully readable on light surface
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), 3200×1800 landscape.
+      Chrome: title "scatter-color-mapped · python · plotnine · anyplot.ai" centered in dark ink, about 55 % of the width; axis titles "X Position (m)" and "Y Position (m)" and tick labels 0–100 in dark gray, all readable; subtle grid, left and bottom axis lines only; color bar titled "Temperature (°C)" on the right with ticks 25–45.
+      Data: 150 circular points with thin dark outline, fill on the imprint_seq ramp from brand green #009E73 (lower left, cool) to blue #4467A3 (upper right, warm); no clipping, no text overlap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color, not pure black
-      Chrome: Same title, axes, and colorbar labels now render in light text for dark background. No dark-on-dark text failures. All elements clearly readable.
-      Data: Data colors IDENTICAL to light render — same viridis progression from purple to yellow. Spatial temperature pattern equally clear. Marker visibility maintained with alpha=0.8.
-      Legibility verdict: PASS — all text and data elements fully readable on dark surface. Proper theme adaptation confirmed: only chrome (background, text, grid) changed; data colors stayed constant.
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, axis titles, tick labels and color bar text in light ink/soft ink, all readable; no dark-on-dark text; grid subtle but visible.
+      Data: the same point fills as the light render (green → blue ramp unchanged); the point outlines flip to light ink so green and blue points both stand out from the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,48 +54,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Perfectly readable in both themes.
+        comment: Explicit sizes (title 12, axis 10, ticks 8, legend 8–9 pt); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Title, axes, colorbar all clearly positioned.
+        comment: No text collisions; few touching points remain distinguishable by
+          outline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points with size=4, alpha=0.8. Optimal for density — points clearly
-          visible, no overcrowding.
+        comment: 150 points at size 3.2 with outline; color bar clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe. Good contrast throughout
-          range.
+        comment: Green→blue ramp with lightness change, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of 4800×2700 with balanced margins. Legend well-positioned.
+        comment: 3200×1800, balanced labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All labels descriptive with units: X Position (m), Y Position (m),
-          Temperature (°C).'
+        comment: Descriptive labels with units (m, °C)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous. Light background #FAF8F1, dark #1A1A17.
-          Data colors identical between themes. Text colors theme-appropriate.'
+        comment: 'imprint_seq #009E73→#4467A3; correct backgrounds in both themes'
     design_excellence:
       score: 8
       max: 20
@@ -109,21 +102,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with no custom design. Lacks intentional
-          visual hierarchy.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization. No explicit grid or
-          spine adjustments.
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed correctly but lacks visual emphasis or narrative hierarchy.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -133,25 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with color-mapped third variable.
+        comment: Color-mapped scatter, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Scatter + colorbar with labels. All spec requirements met.
+        comment: Uniform two-stop ramp, labeled color bar with unit, moderate markers,
+          mild alpha, outline for both ramp ends
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X→x_position, Y→y_position, color→temperature. All data visible.
+        comment: Points at exact x/y; bar range 20–46 covers all values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Colorbar labeled correctly.
+        comment: Mandated title; color bar title is reader text
     data_quality:
       score: 15
       max: 15
@@ -161,23 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: scatter with color variation, spatial pattern,
-          full colormap range.'
+        comment: Spatial gradient plus noise shows the third variable's pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real sensor grid scenario. Neutral, comprehensible, non-controversial.
+        comment: Sensor-grid temperatures, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 15–55°C realistic. Grid 0–100m plausible. Spatial pattern
-          logically consistent.
+        comment: 0–100 m grid, about 20–46 °C; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,54 +175,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: Imports → Data → Plot → Save. No functions/classes.'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Deterministic data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. Uses ggplot() fluent API correctly.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Code saves to plot.png instead of plot-{THEME}.png. No
-          ANYPLOT_THEME env var reading. No theme-adaptive color tokens (INK/INK_SOFT).
-          Yet images show correct theming — code-image mismatch indicates workflow
-          compensation.'
+        passed: true
+        comment: plot-{THEME}.png via plot.save, current API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper ggplot() + aes() + geom_point() + scale_color_cmap() flow.
-          Follows plotnine conventions.
+        comment: 'Grammar idioms: aes fill mapping on outlined shape ''o'', guide_colorbar(nbin=100)
+          passed through the scale''s guide argument'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses scale_color_cmap() (plotnine-specific). Relies on defaults for
-          visual polish; could leverage more distinctive features.
-    score_caps_applied: []
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T15:02:54Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -241,4 +229,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
