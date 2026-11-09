@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 manhattan-gwas: Manhattan Plot for GWAS
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -22,7 +22,6 @@ import plotly.graph_objects as go  # noqa: E402
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
@@ -71,23 +70,21 @@ chr_lengths = {
     "22": 51,
 }
 
+# Association loci: chromosome -> (lead SNP position in bp, lead -log10 p)
+peaks = {"2": (100e6, 11.5), "8": (70e6, 9.0), "15": (50e6, 13.0)}
+
 frames = []
 for chrom, length in chr_lengths.items():
     # Number of SNPs proportional to chromosome length
     n_snps = int(length * 40)
     positions = np.sort(np.random.uniform(0, length * 1e6, n_snps))
 
-    # Mostly null p-values, with association peaks on chromosomes 2, 8 and 15
+    # Mostly null p-values; at each locus, linkage disequilibrium makes the signal decay with distance from the lead SNP
     pvalues = np.random.uniform(0, 1, n_snps)
-    if chrom == "2":
-        peak_idx = np.abs(positions - 100e6).argmin()
-        pvalues[peak_idx - 5 : peak_idx + 5] = 10 ** (-np.random.uniform(8, 12, 10))
-    elif chrom == "8":
-        peak_idx = np.abs(positions - 70e6).argmin()
-        pvalues[peak_idx - 3 : peak_idx + 3] = 10 ** (-np.random.uniform(7.5, 10, 6))
-    elif chrom == "15":
-        peak_idx = np.abs(positions - 50e6).argmin()
-        pvalues[peak_idx - 4 : peak_idx + 4] = 10 ** (-np.random.uniform(9, 14, 8))
+    if chrom in peaks:
+        center, lead = peaks[chrom]
+        ld_signal = lead * np.exp(-np.abs(positions - center) / 0.5e6) * np.random.uniform(0.7, 1.0, n_snps)
+        pvalues = np.minimum(pvalues, 10**-ld_signal)
 
     frames.append(pd.DataFrame({CHROMOSOME: chrom, POSITION: positions.round().astype(int), P_VALUE: pvalues}))
 
@@ -122,28 +119,15 @@ for i, chrom in enumerate(chrom_span.index):
     )
 
 
-def p_label(p):
-    mantissa, exponent = f"{p:.0e}".split("e")
-    superscript = str(int(exponent)).translate(str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"))
-    return f"10{superscript}" if mantissa == "1" else f"{mantissa}×10{superscript}"
-
-
 # Threshold lines across all chromosomes
-for p, name, dash in [
-    (GENOME_WIDE_P, "Genome-wide significance", "dash"),
-    (SUGGESTIVE_P, "Suggestive threshold", "dot"),
+for p, label, dash in [
+    (GENOME_WIDE_P, "Genome-wide (p = 5×10⁻⁸)", "dash"),
+    (SUGGESTIVE_P, "Suggestive (p = 10⁻⁵)", "dot"),
 ]:
-    y = -np.log10(p)
-    fig.add_hline(y=y, line={"color": INK_MUTED, "width": 1.5, "dash": dash})
-    fig.add_annotation(
-        text=f"{name} (p = {p_label(p)})",
-        font={"size": 10, "color": INK_MUTED},
-        xref="paper",
-        x=0.99,
-        xanchor="right",
-        y=y,
-        yanchor="bottom",
-        showarrow=False,
+    fig.add_hline(y=-np.log10(p), line={"color": INK_MUTED, "width": 1.5, "dash": dash})
+    # Legend-only twin of the line: the legend above the plot names it, so no peak can run into a label
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None], mode="lines", line={"color": INK_MUTED, "width": 1.5, "dash": dash}, name=label)
     )
 
 # Highlight significant SNPs
@@ -177,7 +161,7 @@ fig.update_layout(
     },
     xaxis={
         "title": {"text": CHROMOSOME, "font": {"size": 12, "color": INK}},
-        "tickfont": {"size": 9, "color": INK_SOFT},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickangle": 0,
         "tickmode": "array",
         "tickvals": chrom_center.to_numpy(),
@@ -200,16 +184,15 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "yanchor": "top",
-        "y": 0.99,
-        "xanchor": "left",
-        "x": 0.01,
+        "orientation": "h",
+        "yanchor": "bottom",
+        "y": 1.0,
+        "xanchor": "right",
+        "x": 1.0,
         "font": {"size": 10, "color": INK_SOFT},
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "bgcolor": "rgba(0,0,0,0)",
     },
-    margin={"l": 60, "r": 20, "t": 60, "b": 50},
+    margin={"l": 60, "r": 20, "t": 70, "b": 50},
     hovermode="closest",
 )
 
