@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 silhouette-basic: Silhouette Plot
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-09
+Quality: 85/100 | Updated: 2026-11-09
 """
 
 import os

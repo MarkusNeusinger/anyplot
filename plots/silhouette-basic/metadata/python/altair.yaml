@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:37:53Z'
-updated: '2026-11-09T15:27:29Z'
+updated: '2026-11-09T15:34:37Z'
 generated_by: claude-opus
 workflow_run: 42643367725
 issue: 2334
@@ -12,43 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Direct, bold labels in the cluster's color ('Cluster 1 · avg 0.80') next to each
-    block replace the legend
-  - Bars drawn as mark_rect from x2=alt.datum(0) to each score; the 1.15 row overlap
-    merges 150 thin bars into seam-free blocks with clear gaps between clusters
-  - Dashed average line in the INK token stays visible on both backgrounds, labelled
-    'Overall avg 0.55' at the plot's bottom through the Vega 'height' signal
-  - 'Real computation: KMeans on iris plus sklearn silhouette_samples, giving correct
-    values (0.55 overall; 0.80 / 0.45 / 0.42)'
-  - Theme tokens used for all chrome; Imprint colors identical in both renders
-  - Per-sample tooltips (sample, cluster, coefficient) in the HTML output
+  - 'Faithful silhouette plot: one rect per iris sample from x=0 (alt.datum(0) as
+    x2) to its sklearn silhouette_samples score, sorted within each cluster, with
+    a clear gap between the three blocks so block thickness reads as cluster size'
+  - 'Each block in its own Imprint colour (#009E73, #C475FD, #4467A3), identical in
+    both renders; direct bold labels ''Cluster k · avg 0.xx'' sit beside their own
+    block just right of its longest bar, so no legend is needed'
+  - Dashed overall-average rule drawn in the INK token runs across all clusters and
+    stays clearly visible in both themes, labelled 'Overall avg 0.55' at its foot
+  - 'Theme tokens thread through every chrome element: warm off-white and near-black
+    surfaces, readable title, axis title and ticks in both renders, subtle x grid
+    and no y axis'
+  - Native Vega-Lite tooltips (sample, cluster, score to 3 decimals) add per-sample
+    inspection in the HTML output
+  - 'Data block follows the adaptable-code zones: escaped column constants, real iris
+    data clustered with KMeans(random_state=42)'
   weaknesses:
-  - 'VQ-04 (light): the ''Cluster 1 · avg 0.80'' annotation is set in lavender #C475FD,
-    about 2.7:1 against the #FAF8F1 page, below the 3:1 floor (dark render ~6:1 is
-    fine) → draw the annotation text in a theme ink token (INK or INK_SOFT) and let
-    its position beside the block carry the cluster link. Likely cause: color=alt.Color(''cluster_name'')
-    on the cluster_labels mark_text layer.'
-  - 'Suggestion: the x-domain padding plus Vega''s nice rounding leaves an empty −0.10
-    to 0 strip and runs past the coefficient''s maximum to 1.10; setting nice=False
-    or clamping the upper end at 1.0 would tighten the frame.'
+  - 'CQ-04 (code): the configure_legend(...) block (about 9 lines) and the ELEVATED_BG
+    token it alone uses style a legend that never renders, because the colour encoding
+    sets legend=None → delete both. Likely cause: theme template copied without pruning
+    the unused legend config.'
+  - 'Suggestion: the x domain runs to 1.1 to make room for the Cluster 1 label; a
+    domain capped at 1.0 with the label placed inside the free space would keep every
+    tick inside the coefficient''s valid range.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
-      Chrome: bold dark title 'silhouette-basic · python · altair · anyplot.ai' top-left (~50% width); x-axis 'Silhouette coefficient' with ticks −0.10 to 1.10 in soft dark grey; subtle vertical grid every 0.05; no y-axis (sort order only). All readable.
-      Data: three horizontal blocks of per-sample bars sorted within cluster, separated by gaps: Cluster 0 bottom in #009E73 (tips up to ~0.63), Cluster 1 middle in lavender #C475FD (up to ~0.85), Cluster 2 top in blue #4467A3 (up to ~0.61). Each block tapers to thin tips near 0. Black dashed vertical line at 0.55 with 'Overall avg 0.55' label at its base. Bold colored labels 'Cluster n · avg x.xx' right of each block's tip; the lavender label is lower-contrast on cream but still legible.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, chart centred with even margins.
+      Chrome: dark title "silhouette-basic · python · altair · anyplot.ai" left-anchored at the top (~41% of width); x axis "Silhouette coefficient" in bold dark ink with ticks −0.1 to 1.1 in soft dark grey; subtle vertical grid lines; no y axis. All text readable.
+      Data: three stacked blocks of horizontal bars from x=0, sorted within each cluster and separated by gaps: Cluster 0 green #009E73 (bottom, 0.03–0.63), Cluster 1 purple #C475FD (middle, 0.64–0.85), Cluster 2 blue #4467A3 (top, 0.05–0.61). A black dashed vertical line at 0.55 spans all blocks, labelled "Overall avg 0.55" at its foot; bold labels "Cluster 0 · avg 0.42", "Cluster 1 · avg 0.80", "Cluster 2 · avg 0.45" sit right of each block, clear of the bars.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis title in light ink; tick labels in light grey; grid subtle but visible. No dark-on-dark text.
-      Data: identical cluster colors and bar shapes to the light render; average line flips to light ink dashes and stays clearly visible; cluster labels in the same palette colors (blue label slightly dimmer but readable).
+      Chrome: title, axis title and cluster labels in light ink #F0EFE8, ticks in light grey; grid lines subtle but visible; no dark-on-dark text anywhere.
+      Data: bar colours identical to the light render (#009E73, #C475FD, #4467A3); the average rule flips to a light dashed line and stays clearly visible across all blocks.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,51 +60,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set explicitly (title 16, axis title 12, ticks 10, annotations
-          11 at scale 4); all text readable in both themes
+        comment: Explicit font sizes per the library prompt (title 16, axis title
+          12, ticks 10, annotations 11 bold); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or bars; cluster labels sit right of each
-          block's tip, overall-average label sits clear of the thin bottom bars
+        comment: Cluster labels sit right of their block's longest bar; overall-average
+          label clear of the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 bars at 1.15 units overlap seamlessly into solid blocks; dashed
-          average line clear in both themes; no legend glyphs needed
+        comment: Bars slightly overlapped to avoid seams; blocks read cleanly; average
+          rule visible in both themes; no legend
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Lavender 'Cluster 1' annotation text is 2.7:1 on the cream background
-          (defect line); blocks themselves are separated by gaps and labels, CVD-safe
+        comment: Green / purple / blue are CVD-distinguishable, and the clusters are
+          also separated by gaps and labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800, balanced margins, title ~50% width, nothing overflows
+        comment: 3200x1800, balanced margins, title well inside the width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Silhouette coefficient'' is the dimensionless quantity; y-axis
-          rightly hidden (sort order, not data)'
+        comment: '''Silhouette coefficient'' is descriptive; the dimensionless score
+          needs no unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Cluster 0 #009E73, then #C475FD, #4467A3 from the full Imprint list;
-          backgrounds #FAF8F1 / #1A1A17; chrome from theme tokens'
+        comment: 'First cluster #009E73, then Imprint in canonical order; correct
+          theme backgrounds'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -108,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised: direct, bold, cluster-colored labels replace the legend,
-          with a clear hierarchy title > cluster labels > plain overall-average label'
+        comment: Left-anchored title and bold inline 'Cluster k · avg' labels with
+          a middle dot form a typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Raised: legend dropped in favor of direct labels, meaningless y-axis
-          removed, gaps between blocks, x-only grid, seam-free bars via 1.15 overlap'
+        comment: No y axis or view stroke, block gaps sized to the sample count, and
+          a 1.15 rect overlap that removes anti-aliasing seams
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default: the annotations are what the Notes require; no hierarchy
-          chosen beyond them'
+        comment: Shows the data with the annotations the Notes ask for; no further
+          hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -133,30 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Classic silhouette plot; only the Notes' layers (bars, average line,
-          per-cluster averages)
+        comment: Silhouette plot of a single clustering with no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal bar per sample sorted within cluster, distinct colors
-          per cluster, vertical dashed average line across all clusters, per-cluster
-          average annotations beside their blocks, silhouette_samples used — every
-          Notes and good-version bullet met
+        comment: 'Every Notes and ''A good version shows'' bullet is met: sorted bars
+          per sample, a colour per cluster with gaps, an average line across all clusters,
+          per-cluster average annotations beside their blocks, silhouette_samples
+          used'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bars run from 0 (alt.datum(0)) to each sample's score; no displacement
+        comment: Each bar runs from 0 to its score; the y position is the sort order;
+          the axis covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'silhouette-basic · python · altair · anyplot.ai'; legend replaced
-          by direct labels 'Cluster n · avg x.xx'
+        comment: Title in the mandated format; no legend needed because direct labels
+          name each cluster
     data_quality:
       score: 15
       max: 15
@@ -166,23 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: One well-separated cluster (0.80) vs two weaker overlapping ones
-          (0.42, 0.45) with thin tails near 0; unequal thickness shown
+        comment: Three clusters of unequal size and quality, including a cluster well
+          above the average; iris k=3 has no negative scores, which is a permission,
+          not a requirement
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset clustered with KMeans k=3, the spec's own example
+        comment: The iris dataset, as in the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: overall average 0.55 and cluster averages 0.80 / 0.45 /
-          0.42 match sklearn''s known iris k=3 values and are computed, not placed'
+        comment: Averages computed from silhouette_samples (overall 0.55, clusters
+          0.42/0.80/0.45, consistent with KMeans on iris); there are no 'Check values:'
+          in the Notes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -196,27 +203,27 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: KMeans random_state=42 on a fixed dataset
+        comment: KMeans random_state=42 on the fixed iris data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: silhouette_samples and pandas groupby do the computation; no hand-rolled
-          algorithm
+        comment: Dead configure_legend block and its ELEVATED_BG token, although the
+          legend is disabled (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (padded to target) and plot-{THEME}.html;
-          current Altair 6 API
+        comment: Saves plot-{THEME}.png (padded to the target) and plot-{THEME}.html
+          with the current Altair 6 API
     library_mastery:
       score: 6
       max: 10
@@ -226,20 +233,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised: declarative layer composition, x2=alt.datum(0) for the bar
-          baseline, mark_rect with y/y2, shared color scale with legend=None on the
-          label layer'
+        comment: Layered alt.layer composition, x2=alt.datum(0), typed and escaped
+          encodings, chart-level configure_*
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: 'Raised: Vega signal positioning (y=''height'') for the average label,
-          per-sample tooltips in the HTML output'
-  verdict: REJECTED
+        comment: Vega-Lite mark property y='height' pins the average label to the
+          plot foot; native tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
-  rendered_at: '2026-11-09T15:24:16Z'
+  rendered_at: '2026-11-09T15:31:47Z'
 impl_tags:
   dependencies:
   - sklearn
@@ -254,4 +260,4 @@ impl_tags:
   - groupby-aggregation
   dataprep: []
   styling:
-  - minimal-chrome
+  - grid-styling
