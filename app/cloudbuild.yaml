@@ -302,8 +302,9 @@ steps:
           "a crawler did not get the prerendered page for this route"
         # The machine files must come from the `location =` bypasses, not the
         # proxy — and llms.txt carries UTF-8 punctuation that needs the charset.
-        # The robots.txt marker is the Sitemap line because the API's own
-        # robots.txt shares every other directive with the site's file.
+        # The robots.txt marker is the Sitemap line: the API's own robots.txt
+        # has none, while it shares `User-agent: *` and the Content-Signal
+        # line with the site's file.
         expect "$$GOOGLEBOT" "/robots.txt" 'Sitemap: https://anyplot.ai/sitemap.xml' \
           "robots.txt did not come from the location = bypass"
         expect "$$GOOGLEBOT" "/llms.txt" '# anyplot' \
