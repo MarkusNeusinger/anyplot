@@ -658,6 +658,15 @@ def parse_dataset(
         # layouts it does not see (`layouts.py`): a web table copied one cell per line, a list of label/value pairs.
         layouts = find_table and not canonical and table == 1
         said = list(warnings)
+
+        def relayout(layout: Layout) -> tuple[list[str], list[list[str]], SourceFormat]:
+            # The delimited reading's notes, marks and warnings were about a table that is not there.
+            warnings[:] = said
+            context.clear()
+            declared.clear()
+            tables.clear()
+            return _layout_read(layout, warnings, context)
+
         try:
             read = _read_delimited(
                 text, warnings, find_table=find_table, context=context, declared=declared, table=table, tables=tables
@@ -666,15 +675,10 @@ def parse_dataset(
             layout = read_layout(text) if layouts and exc.code == "no_table" else None
             if layout is None:
                 raise
-            read = _layout_read(layout, warnings, context)
+            read = relayout(layout)
         else:
             if layouts and _layout_may_read(read) and (layout := read_layout(text)) is not None:
-                # The delimited reading's notes and warnings were about a table that is not there.
-                warnings[:] = said
-                context.clear()
-                declared.clear()
-                tables.clear()
-                read = _layout_read(layout, warnings, context)
+                read = relayout(layout)
     elif table > 1:
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     marks = frozenset(declared)

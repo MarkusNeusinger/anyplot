@@ -86,7 +86,8 @@ _PAIR_SPLIT_ALL = re.compile(r"[,;\n]")
 _COLON_PAIR = re.compile(r"^(?P<label>[^:=;,\t]{1,40}?)\s*:(?P<space>\s*)(?P<value>\S.*)$")
 _EQUALS_PAIR = re.compile(r"^(?P<label>[^:=;,\t]{1,40}?)\s*=\s*(?P<value>\S.*)$")
 _SPACE_PAIR = re.compile(r"^(?P<label>[^:=;,\t]*\S)\s+(?P<value>\S+)$")
-_LETTER = re.compile(r"[^\W\d_]")
+_LINE_BREAK = re.compile(r"\r\n|\r|\n")
+"""The line breaks the page splits at (`routeInput.ts`); `str.splitlines` would also split at `\\u2028`."""
 
 
 @dataclass(frozen=True)
@@ -133,7 +134,7 @@ def read_layout(text: str) -> Layout | None:
 
 def cell_lines_table(text: str) -> Layout | None:
     """The table of a one-cell-per-line copy (see the module notes), or None when the text has no such shape."""
-    cells = [line.strip() for line in text.splitlines() if line.strip()]
+    cells = [line.strip() for line in _LINE_BREAK.split(text) if line.strip()]
     if len(cells) < 2 * MIN_ROWS:
         return None
     kinds = [cell_kind(cell) for cell in cells]
@@ -239,17 +240,29 @@ def pair_list_table(text: str) -> Layout | None:
         headers = [LABEL_COLUMN, VALUE_COLUMN]
         if "\n" in stripped and len(pieces) > MIN_ROWS and (names := _pair_header(pieces[0])) is not None:
             headers, pieces = names, pieces[1:]
-        pairs = [_pair(piece) for piece in pieces]
-        if len(pairs) < MIN_ROWS or any(pair is None for pair in pairs):
+        rows = _pair_rows(pieces)
+        if rows is None:
             continue
-        forms = {pair[0] for pair in pairs if pair is not None}
-        if len(forms) != 1:
-            continue
-        rows = [[pair[1], pair[2]] for pair in pairs if pair is not None]
         named = "" if headers != [LABEL_COLUMN, VALUE_COLUMN] else f", named {LABEL_COLUMN} and {VALUE_COLUMN}"
         note = f"read a list of {len(rows)} label/value pairs as two columns{named}"
         return Layout(kind="pair_list", headers=headers, rows=rows, note=note)
     return None
+
+
+def _pair_rows(pieces: list[str]) -> list[list[str]] | None:
+    """The `[label, value]` rows of the pieces when every one is a pair of one form, at least `MIN_ROWS`; None at the
+    first piece that is not, so a long text that is no list costs one look at its first pieces."""
+    if len(pieces) < MIN_ROWS:
+        return None
+    rows: list[list[str]] = []
+    form = None
+    for piece in pieces:
+        pair = _pair(piece)
+        if pair is None or form not in (None, pair[0]):
+            return None
+        form = pair[0]
+        rows.append([pair[1], pair[2]])
+    return rows
 
 
 def is_pair(cell: str) -> bool:
@@ -271,7 +284,8 @@ def _pair(piece: str) -> tuple[str, str, str] | None:
     if match := _SPACE_PAIR.match(piece):
         label, value = match.group("label").strip(), match.group("value").strip()
         words = label.split()
-        if not _LETTER.search(label) or len(words) > MAX_LABEL_WORDS or len(label) > MAX_LABEL_CHARS:
+        # A letter as the page's `\p{L}` reads one (`str.isalpha`: the letter categories alone).
+        if not any(c.isalpha() for c in label) or len(words) > MAX_LABEL_WORDS or len(label) > MAX_LABEL_CHARS:
             return None
         return ("space", label, value) if _number(value) else None
     return None

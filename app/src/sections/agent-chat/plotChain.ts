@@ -44,7 +44,7 @@ export function boxData(attachment: Attachment | null, draft: string): BoxData {
     if (text.length > MAX_MESSAGE_CHARS) return null;
     return attachment.status === 'ready' || attachment.status === 'failed' ? 'attachment' : null;
   }
-  return text && routeInput(text) === 'data' && !overCap(text) ? 'typed' : null;
+  return text && !overCap(text) && routeInput(text) === 'data' ? 'typed' : null;
 }
 
 /**

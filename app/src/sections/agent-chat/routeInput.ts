@@ -417,10 +417,10 @@ function isPairList(text: string): boolean {
     if (stripped.includes('\n') && pieces.length > LAYOUT_MIN_ROWS && pairHeader(pieces[0])) {
       pieces = pieces.slice(1);
     }
-    const forms = pieces.map(pairForm);
-    if (forms.length >= LAYOUT_MIN_ROWS && forms.every(Boolean) && new Set(forms).size === 1) {
-      return true;
-    }
+    if (pieces.length < LAYOUT_MIN_ROWS) continue;
+    // Every piece a pair of one form; the first piece that is not ends the look.
+    const form = pairForm(pieces[0]);
+    if (form && pieces.every(piece => pairForm(piece) === form)) return true;
   }
   return false;
 }
