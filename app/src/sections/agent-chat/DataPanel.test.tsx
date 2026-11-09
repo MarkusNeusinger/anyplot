@@ -414,6 +414,20 @@ describe('DataPanel bindings line pairs', () => {
     expect(screen.getByTestId('bindings-line')).toHaveTextContent(words);
   });
 
+  it('hands the focus to .change() when a step starts under a focused pair', () => {
+    const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    line().getByRole('button', { name: 'Change the column for x (across): month' }).focus();
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
+    expect(line().queryAllByRole('button')).toEqual([]);
+    expect(screen.getByRole('button', { name: 'Change the bindings' })).toHaveFocus();
+
+    // A step that starts while the focus is elsewhere leaves it there.
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    screen.getByRole('button', { name: 'View all 1 row' }).focus();
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
+    expect(screen.getByRole('button', { name: 'View all 1 row' })).toHaveFocus();
+  });
+
   it('reaches each pair by Tab, opens on Enter and gives the focus back after Escape', async () => {
     render(panel(stateWith({ x: 'month', y1: 'shoes' })));
     screen.getByRole('button', { name: 'View all 1 row' }).focus();

@@ -21,7 +21,7 @@
  * with `.change()` on the card's action line under the bindings line.
  */
 
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import Box from '@mui/material/Box';
@@ -179,6 +179,15 @@ export function DataCard(props: DataCardProps) {
   const toggleRef = useRef<HTMLButtonElement>(null);
   // The pairs are buttons on the dropdowns' own rule: they answer when the dropdowns do.
   const pairsAnswer = ready && !busy;
+  // The pair that holds the focus (its `data-pair`). A step that starts under it turns the pair
+  // into words, and the removed button would drop the focus to the page: `.change()` takes it.
+  const focusedPair = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (pairsAnswer || focusedPair.current === null) return;
+    focusedPair.current = null;
+    const active = document.activeElement;
+    if (!active || active === document.body) toggleRef.current?.focus({ preventScroll: true });
+  }, [pairsAnswer]);
   // A click on a pair: the dropdowns render at once, so the role's control is there to take the
   // focus, and its list to open, within the click that asked for it.
   const openRole = (name: string) => {
@@ -388,7 +397,15 @@ export function DataCard(props: DataCardProps) {
             </Box>
           )}
 
-          <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box
+            sx={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
+            onFocus={(event: React.FocusEvent<HTMLElement>) => {
+              focusedPair.current = event.target.dataset.pair ?? null;
+            }}
+            onBlur={() => {
+              focusedPair.current = null;
+            }}
+          >
             <BindingsLine
               roles={boundRoles(rows, state.bindings)}
               hasRoles={rows.length > 0}

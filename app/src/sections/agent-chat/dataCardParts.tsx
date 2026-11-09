@@ -720,7 +720,9 @@ interface BindingsLineProps {
  * green on hover, the site's focus ring. A 32 px target at phone width, as the chapter line's
  * controls: each row of a line that wraps grows to hold it, so the targets of two rows meet and
  * never overlap. 24 px from `sm` up, where its negative margin keeps the line's height. The padding
- * and its negative margin keep the words where plain words stand.
+ * and its negative margin keep the words where plain words stand. The underline sits on the one
+ * span inside, a block that holds the words, since engines differ on carrying a flex container's
+ * decoration into its items.
  */
 const pairSx = {
   font: 'inherit',
@@ -740,13 +742,12 @@ const pairSx = {
   textAlign: 'start',
   overflowWrap: 'anywhere',
   cursor: 'pointer',
-  textDecoration: 'underline dotted',
-  textUnderlineOffset: '3px',
+  '& > span': { minWidth: 0, textDecoration: 'underline dotted', textUnderlineOffset: '3px' },
   // Green as text in the shade that reads 4.5:1 in each theme; the underline in the brand green.
   '&:hover': {
     color: 'var(--code-comment)',
-    textDecorationColor: colors.primary,
     '& *': { color: 'inherit' },
+    '& > span': { textDecorationColor: colors.primary },
   },
   '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
 } as const;
@@ -807,14 +808,13 @@ export function BindingsLine({ roles, hasRoles, checking, toggle, onRole }: Bind
                   component="button"
                   type="button"
                   id={pairId(role.name)}
+                  data-pair={role.name}
                   aria-label={pairName(role)}
                   onClick={() => onRole(role.name)}
                   sx={pairSx}
                 >
                   {/* One flex item, so the space after the colon stays. */}
-                  <Box component="span" sx={{ minWidth: 0 }}>
-                    {words}
-                  </Box>
+                  <span>{words}</span>
                 </Box>
               ) : (
                 words
