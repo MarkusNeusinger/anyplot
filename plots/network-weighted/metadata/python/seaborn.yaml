@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: network-weighted
 created: '2026-01-08T15:57:59Z'
-updated: '2026-11-09T01:20:55Z'
+updated: '2026-11-09T01:26:02Z'
 generated_by: claude-opus-5-5
 adopted_from: c882ea10530b3cf9e7659804da27d774102d3fc7 (c882ea10530b3cf9e7659804da27d774102d3fc7)
 workflow_run: 42544695665
@@ -13,44 +13,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-w
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Edges drawn with seaborn''s own size semantic: sns.lineplot with units=''edge'',
-    estimator=None, sizes=(0.6, 6.0) and a fixed size_norm, so the edge-width legend
-    is seaborn''s and agrees exactly with the edges (100–600 billion USD samples)'
-  - Node area encodes weighted degree via sns.scatterplot size semantic with size_norm=(0,
-    max), named in its own legend; USA and China read immediately as the heavy hubs
-  - Weight-aware Fruchterman-Reingold layout written in numpy (networkx is not installed)
-    pulls heavy pairs together and pushes nodes off foreign edges, so no edge hides
-    beneath a node
-  - Node labels are placed in the widest angular gap between each node's edges, with
-    a page-colored halo, and drawn above edges and nodes
-  - 'Theme tokens threaded through every chrome element: legend frames on the elevated
-    surface, INK titles and INK_SOFT entries, page-colored node outlines; data colors
-    identical in both renders'
+  - 'Edge widths come from seaborn''s own size semantic: sns.lineplot with units=''edge'',
+    estimator=None, sort=False and size=TRADE draws one segment per edge with widths
+    0.6–6 pt normed to the data range, so the 620 bn USA–Canada link is unmistakably
+    the heaviest and the 20 bn links stay visible in both themes'
+  - Both legends are seaborn-generated from the same size mappings, so the 100–600
+    line samples and the 800/1600/2400 node circles agree exactly with the marks they
+    explain and carry reader-facing titles with units
+  - Node area encodes weighted degree as the Notes allow, making USA and China read
+    as the hubs at a glance; muted INK_MUTED edges behind Imprint-green nodes keep
+    a clear foreground/background hierarchy
+  - Labels sit in the widest angular gap between each node's edges with a page-colored
+    halo, so all 17 country names stay readable on top of the edges in both renders
+  - Spring layout with weight-scaled pull keeps strongly linked partners (USA–Canada–Mexico,
+    China–Japan–S. Korea, Germany–Netherlands–France) close together, with no axes
+    or grid
+  - Theme tokens threaded through figure, legend frames, text and node outlines; both
+    renders are theme-correct
   weaknesses:
-  - 'DQ-03 (code): the edge list carries two pairs twice with different volumes —
-    Japan–Australia (70 and 60) and UK–Netherlands (80 and 70) — so the lighter duplicate
-    is drawn hidden under the heavier one and both are summed into the nodes'' weighted
-    degree → one row per country pair. Likely cause: the rows ("Australia", "Japan",
-    60) and ("Netherlands", "UK", 70) in the df literal.'
-  - 'VQ-01 (both): legend entry labels at 7 pt ("100" … "600", "800" … "2400") are
-    the smallest text on the canvas and blur in the 400 px thumbnail → about 9 pt
-    (+2 pt). Likely cause: legend_kws fontsize=7.'
-  - 'Suggestion: the empty band between the two legends on the right could be tightened
-    by moving the edge-width legend up under the node-size legend.'
+  - 'VQ-02 (both): the thick Netherlands–Germany edge (200 bn) runs underneath the
+    ''Germany'' label, so the halo cuts a gap into that edge right where it meets
+    its node → the label sits clear of the node''s edges. Likely cause: the widest
+    angular gap at Germany points up, but the label''s ha=''center''/va=''bottom''
+    box is wider than the gap and reaches over the up-left Netherlands edge.'
+  - 'Suggestion: a slightly larger node label font (8 pt → 9 pt) would match the 9
+    pt legend text and hold up better in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no axes, no grid.
-      Chrome: title "network-weighted · python · seaborn · anyplot.ai" centered in dark ink; bold dark country labels with page-colored halos beside each node; two framed legends on the right on the elevated surface — "Total trade volume (billion USD)" with circles at 800/1600/2400 and "Trade volume (billion USD)" with line samples 100–600. All readable.
-      Data: 16 country nodes in brand green #009E73 with page-colored outlines, area by weighted degree (USA and China largest); 30 grey (INK_MUTED) edges whose width grows with trade volume, Canada–USA, Mexico–USA and USA–China the thickest, Mexico–Canada the thinnest but visible.
+      Background: warm off-white #FAF8F1, no axes, no grid; legend frames on the slightly elevated #FFFDF6 with an INK_SOFT outline.
+      Chrome: title "network-weighted · python · seaborn · anyplot.ai" centered at the top (~51 % width) in dark ink; 17 bold country labels in dark ink with page-colored halos; two legends on the right — "Total trade volume (billion USD)" with circles for 800/1600/2400 and "Trade volume (billion USD)" with line samples 100–600. All readable.
+      Data: 17 nodes in #009E73 with page-colored outlines, sized by weighted degree (USA and China largest); 30 edges in muted grey #6B6A63 whose widths range from hairline (Spain–Mexico, Canada–UK) to thick (USA–Canada, USA–Mexico, USA–China). Spring layout clusters North America, East Asia and Europe. The Netherlands–Germany edge passes under the 'Germany' label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and node labels in light ink, legend titles light, entries light grey on the #242420 elevated surface with a light frame; no dark-on-dark text anywhere.
-      Data: node green #009E73 identical to the light render; edges flip to the light muted token and stay clearly visible; layout identical.
+      Background: warm near-black #1A1A17; legend frames on #242420 with a light outline.
+      Chrome: title, node labels and legend titles in light ink #F0EFE8, legend entries in INK_SOFT; no dark-on-dark text anywhere.
+      Data: node green #009E73 identical to the light render; edges flip to the light muted grey and remain clearly visible, the thinnest included; node outlines flip to the dark page color. Layout identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,51 +60,50 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, node labels and legend titles readable in both themes; legend
-          entries at 7 pt blur in the thumbnail (defect line)
+        comment: Title 12 pt, labels 8 pt bold with halos, legends 9 pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Labels sit in the widest gap between edges with halos; no text collisions
+        comment: The Netherlands–Germany edge runs under the 'Germany' label (defect
+          line); no text-on-text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thinnest edge (20) visible in both themes, thickest does not bury
-          nodes; legend glyphs match the marks
+        comment: Thinnest 0.6 pt edges visible in both themes; node circles and legend
+          glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue for nodes, neutral edges; encodings by size and width,
-          CVD-safe
+        comment: Single green series against neutral edges; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, network fills the left, legends on the right, nothing
-          clipped
+        comment: 3200x1800, network fills the left area, legends stacked on the right,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A axes (layout positions); legend titles carry units
+        comment: N/A for axes (layout positions); legend titles carry units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Nodes #009E73, edges on the muted ink token, correct backgrounds
-          in both themes'
+        comment: 'Nodes #009E73, edges INK_MUTED, backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 12
       max: 20
@@ -113,23 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear hierarchy: muted edges recede behind brand nodes, bold haloed
-          labels, legends on the elevated surface'
+        comment: 'Muted edges behind brand-green nodes with page-colored outlines
+          and haloed bold labels: a deliberate figure/ground hierarchy beyond the
+          baseline'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Label angle chosen per node from the widest edge gap, page-colored
-          node outlines, layout pass that keeps nodes off foreign edges, alternate
-          node-size legend entries thinned so circles stay apart
+        comment: Labels placed in each node's widest angular edge gap; node-to-foreign-edge
+          clearance pass; legend spacing and handle sizes tuned to the largest circle
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Weight-aware layout clusters the North-American and East-Asian blocs
-          around the USA and China hubs, so the regional story reads at a glance
+        comment: The muted edge ink lets the weighted-degree hubs (USA, China) carry
+          the focus; regional clusters read clearly
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Weighted network with width-encoded edges
+        comment: Weighted network with edge thickness
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Width grows with weight; spring layout, no axes; weight legend labeled
-          with weights; node size = weighted degree with legend; nodes and labels
-          above edges
+        comment: Proportional widths, weight-scale legend, weighted-degree node size,
+          spring layout with weight-scaled pull, nodes and labels above edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; widths and areas map linearly from fixed
-          norms
+        comment: Layout-positioned type; widths and areas map the data exactly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; legend titles readable with units
+        comment: Mandated title; both legend titles reader-facing with units
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -170,21 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hubs, heavy and light links, peripheral single-link nodes, 20–620
-          weight range
+        comment: Heavy hub links, many thin links, peripheral single-link-ish nodes,
+          regional clusters
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-country trade network, neutral, as the spec's example
+        comment: Bilateral trade among 17 economies, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Volumes plausible in billion USD, but two country pairs are listed
-          twice with different volumes (defect line)
+        comment: Edge volumes 20–620 bn USD and hub totals up to ~2540 bn are plausible
+          orders of magnitude
     code_quality:
       score: 10
       max: 10
@@ -194,13 +192,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic circular start and fixed iterations
+        comment: 'Deterministic: circular initial layout, no randomness'
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -212,16 +210,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Layout written out because networkx is not installed and no available
-          call computes a spring layout
+        comment: 'Hand-written Fruchterman-Reingold is justified: networkx is not
+          available'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current API
+        comment: Saves plot-{THEME}.png at 3200x1800, no bbox_inches
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -229,30 +227,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Edges via lineplot units/estimator=None/sort=False with the size
-          semantic; nodes via scatterplot size semantic; legends built from seaborn's
-          own handles
+        comment: Tidy segment frame fed to sns.lineplot/scatterplot with size, size_norm
+          and sizes semantics
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: seaborn's size semantic with sizes/size_norm generates both quantitative
-          legends automatically
-  verdict: REJECTED
+        comment: Uses lineplot's units + estimator=None + sort=False to draw an edge
+          list, and reuses seaborn's brief size legends for both encodings
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
-  rendered_at: '2026-11-09T01:18:02Z'
+  rendered_at: '2026-11-09T01:23:10Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   - layer-composition
   patterns:
-  - data-generation
   - groupby-aggregation
-  - explicit-figure
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
+  - edge-highlighting
