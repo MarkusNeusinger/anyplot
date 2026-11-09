@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-17
@@ -18,11 +18,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Apply seaborn theme with theme-adaptive colors
+# Imprint palette: all eight positions, one per series in order (first series always #009E73)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 sns.set_theme(
-    style="whitegrid",
+    style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
         "axes.facecolor": PAGE_BG,
@@ -32,81 +33,73 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data - Quarterly revenue by product line across regions
+# Columns: set these to your table's column names
+REGION = "Region"  # role: category
+PRODUCT_LINE = "Product line"  # role: series
+REVENUE = "Revenue (M$)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("revenue.csv")
 np.random.seed(42)
-categories = ["North", "South", "East", "West"]
-series = ["Electronics", "Clothing", "Food"]
-n_categories = len(categories)
-n_series = len(series)
-
-# Generate realistic revenue data with wider range (in millions)
-data = []
 base_values = {"Electronics": 50, "Clothing": 35, "Food": 25}
-for cat in categories:
-    for s in series:
-        # Wider range to improve data quality
-        value = base_values[s] + np.random.uniform(-15, 25)
-        data.append({"Region": cat, "series": s, "Revenue (M$)": value})
+rows = []
+for region in ["North", "South", "East", "West"]:
+    for line, base in base_values.items():
+        rows.append({REGION: region, PRODUCT_LINE: line, REVENUE: base + np.random.uniform(-15, 25)})
+df = pd.DataFrame(rows)
 
-df = pd.DataFrame(data)
+# Plot: reads only df and the constants above
+# Regions sorted by total revenue, product lines kept in the data's order
+regions = df.groupby(REGION, sort=False)[REVENUE].sum().sort_values(ascending=False).index.tolist()
+lines = df[PRODUCT_LINE].drop_duplicates().tolist()
+n_lines = len(lines)
+step = 0.75 / n_lines
+offsets = {line: (i - (n_lines - 1) / 2) * step for i, line in enumerate(lines)}
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+plot_df = df.dropna(subset=[REVENUE]).copy()
+plot_df["x"] = plot_df[REGION].map({r: i for i, r in enumerate(regions)}) + plot_df[PRODUCT_LINE].map(offsets)
+colors = {line: IMPRINT_PALETTE[i] for i, line in enumerate(lines)}
 
-# Okabe-Ito palette (positions 1, 2, 3) - first series is always #009E73
-colors = ["#009E73", "#C475FD", "#4467A3"]
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Calculate positions for grouped lollipops
-x = np.arange(n_categories)
-width = 0.25
-offsets = np.linspace(-width * (n_series - 1) / 2, width * (n_series - 1) / 2, n_series)
+# Stems from the shared zero baseline
+ax.vlines(plot_df["x"], 0, plot_df[REVENUE], colors=plot_df[PRODUCT_LINE].map(colors), linewidth=1.4, zorder=1)
 
-# Plot lollipops for each series using seaborn styling + manual positioning
-for i, (s, color) in enumerate(zip(series, colors, strict=True)):
-    series_data = df[df["series"] == s]
-    positions = x + offsets[i]
-    values = series_data["Revenue (M$)"].values
+# Markers via seaborn, one hue per product line
+sns.scatterplot(
+    data=plot_df,
+    x="x",
+    y=REVENUE,
+    hue=PRODUCT_LINE,
+    hue_order=lines,
+    palette=IMPRINT_PALETTE[:n_lines],
+    s=80,
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
+    zorder=2,
+    ax=ax,
+)
 
-    # Draw stems (vertical lines from 0 to value)
-    for pos, val in zip(positions, values, strict=True):
-        ax.plot([pos, pos], [0, val], color=color, linewidth=2.5, zorder=1)
-
-    # Draw markers at the top with white edges for definition
-    ax.scatter(positions, values, s=280, color=color, zorder=2, label=s, edgecolors="white", linewidths=1.5)
-
-# Customize axes
-ax.set_xticks(x)
-ax.set_xticklabels(categories)
-ax.set_xlabel("Region", fontsize=20, color=INK)
-ax.set_ylabel("Revenue (M$)", fontsize=20, color=INK)
-ax.set_title("lollipop-grouped · seaborn · pyplots.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Set y-axis to start from 0
-ax.set_ylim(0, df["Revenue (M$)"].max() * 1.15)
-
-# Grid styling (y-axis only, subtle)
-ax.grid(True, axis="y", alpha=0.10, linestyle="-", linewidth=0.8)
+# Style
+ax.set_title("lollipop-grouped · python · seaborn · anyplot.ai", fontsize=12, color=INK)
+ax.set_xticks(range(len(regions)), regions)
+ax.set_xlim(-0.6, len(regions) - 0.4)
+ax.set_ylim(0, plot_df[REVENUE].max() * 1.15)
+ax.set_xlabel(REGION, fontsize=10)
+ax.set_ylabel(REVENUE, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.tick_params(axis="x", length=0)
+ax.yaxis.grid(True, linewidth=0.6)
 ax.set_axisbelow(True)
+sns.despine(ax=ax)
 
-# Spine styling
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
-
-# Legend styling
-legend = ax.legend(title="series", fontsize=14, title_fontsize=16, loc="upper right", framealpha=0.95)
-legend.get_frame().set_facecolor(ELEVATED_BG)
-legend.get_frame().set_edgecolor(INK_SOFT)
-if legend.get_title():
-    legend.get_title().set_color(INK)
+legend = ax.legend(title=PRODUCT_LINE, fontsize=8, title_fontsize=8, loc="upper right", frameon=True)
+legend.get_frame().set_linewidth(0.6)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
