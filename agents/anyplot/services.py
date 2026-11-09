@@ -12,7 +12,9 @@ outcome per rendered theme, the adapter plan and the `PlotResult`. The artifact,
 bundle and theme-toggle routes read from it.
 
 `RefusalStore` keeps, only with `AGENT_KEEP_REFUSALS`, the messages the scope judge
-refused, per session and bounded, for the feedback bundle.
+refused, per session and bounded, for the feedback bundle. `TurnRecords`
+(`turn_record.py`) keeps the record of each session's latest turns for the bundle:
+tool calls and guard verdicts as closed codes, never content.
 """
 
 from collections import deque
@@ -38,6 +40,7 @@ from .schemas import (
     artifact_names,
 )
 from .settings import get_settings
+from .turn_record import TurnRecords
 
 
 PADDED_REASON = "canvas_padded"
@@ -234,6 +237,9 @@ class Services:
     versions: VersionStore = field(default_factory=VersionStore)
     usage: UsageBook = field(default_factory=UsageBook)
     refusals: RefusalStore = field(default_factory=RefusalStore)
+    turns: TurnRecords = field(default_factory=TurnRecords)
+    """The record of each session's latest turns (`turn_record.py`): the root's tool calls and the guards' verdicts,
+    closed codes only, which the session bundle carries."""
     backend_factory: Callable[[], RenderBackend] = field(default=lambda: make_backend(get_settings()))
     judge_factory: Callable[[], JudgeClient] = field(default=lambda: make_judge_client(get_settings()))
     _backend: SerialRenderer | None = None
@@ -278,6 +284,7 @@ class Services:
         self.renders.delete_session(session_id)
         self.versions.delete_session(session_id)
         self.refusals.delete_session(session_id)
+        self.turns.delete_session(session_id)
         self.session_networks.pop(session_id, None)
 
 

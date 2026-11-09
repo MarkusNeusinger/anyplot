@@ -171,6 +171,7 @@ from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes import runtime_for
+from .repeated_keys import combine_repeated_key
 from .schemas import (
     EXPECTED_TEXT,
     MAX_CHANGE_CHARS,
@@ -574,6 +575,10 @@ class Run:
     """The server's line for the rows a bound mark has no value for, with the count per role (`fidelity.left_out_line`,
     owner decision of 2026-11-08: the plot draws every row, and a row it cannot draw is announced with its count):
     in `changes` right after `loader_notes`, never a residual note, so the status stays as the render earns it."""
+    data_notes: list[str] = field(default_factory=list)
+    """The server's line for a repeated key it combined into a new data version before the run
+    (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09): the first line of `changes`, never a residual
+    note, and on a run that ships nothing the result's one change, since the data changed all the same."""
     data_json: str | None = None
     """The run's table as typed JSON for a runtime whose code reads no `data.csv` (`RuntimeAdapter.data_json`:
     JavaScript), built once per run; every render job of the run and the shipped version carry it."""
@@ -1600,9 +1605,11 @@ def finish(run: Run) -> PlotResult:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
     # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
-    # server's notes come first, the loader's and then the rows without a value to draw, so the cap never drops them
-    # (owner decisions of 2026-10-29, "what changed", and 2026-11-08, every row the plot cannot draw counted).
-    server = [*run.loader_notes[: MAX_CHANGES - len(run.row_notes)], *run.row_notes]
+    # server's notes come first, the data step it made, the loader's and then the rows without a value to draw, so
+    # the cap never drops them (owner decisions of 2026-10-29, "what changed", 2026-11-08, every row the plot cannot
+    # draw counted, and 2026-11-09, a repeated key combined as a data step).
+    fixed = [*run.data_notes, *run.row_notes]
+    server = [*run.data_notes, *run.loader_notes[: MAX_CHANGES - len(fixed)], *run.row_notes]
     adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(server))
     changes = [change[:MAX_CHANGE_CHARS] for change in [*server, *adapted]]
     return PlotResult(
@@ -1902,9 +1909,14 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     )
     # The memory with this change's own decisions applied: the adapter sees what will stand once it ships.
     memory_plan = plan_memory(ctx.state, node_input, turn=ledger.turn)
+    # A key the rows repeat is combined first, as a data step with a number, a change line and an undo, so the plot
+    # draws every row of the version it gets (owner decision of 2026-11-09). After the kept note was taken: a new
+    # version drops a kept note, and this run carries it (`settle_pending_request` writes it back if nothing ships).
+    view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger)
     run = Run(
         view=view,
         dataset=dataset,
+        data_notes=[data_step] if data_step is not None else [],
         theme=theme,
         theme_asked=theme_asked,
         language=language or view.language,
@@ -1960,6 +1972,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     result = result.model_copy(
         update={"bindings": list(view.bindings), "kept_request": kept_request, "new_data": new_data}
     )
+    if data_step is not None:
+        # The data changed whether the plot shipped or not: a run that ships nothing announces the step alone.
+        changes = result.changes if result.status in ("ok", "needs_attention") else run.data_notes
+        result = result.model_copy(update={"combined": True, "changes": changes})
     settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
     settle_memory(ctx.state, run, ledger.plot_shipped)
     # The memory the stored version stands on, for its `plot` event: known only once settled with the version.
@@ -1969,6 +1985,32 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
     yield close_scope(scope)
     yield _result_event(result)
+
+
+def _combine_repeated_key(
+    ctx: Context, services: Services, view: SessionView, dataset: StoredDataset, ledger: RequestLedger
+) -> tuple[SessionView, StoredDataset, str | None]:
+    """The view and dataset the run draws, and the announcement of the server's data step for a repeated key
+    (`repeated_keys.combine_repeated_key`), or None when nothing was combined.
+
+    The step is written into the session state, the turn's data changes (the `done` event's card) and the ledger
+    (`RequestLedger.data_step`), so a run ADK re-runs on resume, which finds the key combined already, announces it
+    all the same. Never raises: without the step the run draws the data as it is, and the warning stands.
+    """
+    if ledger.data_step is not None and ledger.data_step[0] == view.dataset_id:
+        return view, dataset, ledger.data_step[1]
+    try:
+        combined = combine_repeated_key(services.datasets, ctx.session.id, view, dataset)
+    except Exception as exc:  # a bug in the data step must not cost the user the plot; the class only
+        logger.warning("combining a repeated key failed: %s", type(exc).__name__)
+        return view, dataset, None
+    if combined is None:
+        return view, dataset, None
+    for key, value in combined.delta().items():
+        ctx.state[key] = value
+    ledger.dataset_changes.extend(combined.changes)
+    ledger.data_step = (combined.version.dataset_id, combined.line)
+    return read_session(ctx.state) or view, combined.version.stored, combined.line
 
 
 def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> None:

@@ -207,6 +207,52 @@ async def test_a_case_that_names_a_language_chooses_it_before_the_first_turn(
     assert "<plot_language>\\nde\\n</plot_language>" in json.dumps(adapter_calls[0]["messages"], ensure_ascii=False)
 
 
+async def test_a_cases_data_steps_are_stored_before_the_bindings_and_the_plot_draws_their_table(
+    tmp_path: Path, services: Services, swap_models, backend: FakeBackend
+) -> None:
+    """`before_operations` change the data the way `prepare_data` does, one version per step, with no model call: the
+    plot then draws the table the last step left (the `n5000` aggregates of `make_fixtures.py`)."""
+    fake = swap_models(
+        "anthropic-vertex",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
+    steps = (({"op": "sort", "column": "Exam Score", "descending": True},), ({"op": "keep_rows", "n": 5},))
+    case = dataclasses.replace(two_fixtures()[1], before_operations=steps)
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case.case_id), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    (run,) = result.report["runs"]
+    assert (run["status"], run["passed"]) == ("ok", True)
+    plotted = backend.jobs[-1].data_csv.splitlines()
+    assert len(plotted) == 1 + 5  # the header and the five rows the second step kept
+    scores = [float(line.rsplit(",", 1)[1]) for line in plotted[1:]]
+    assert scores == sorted(scores, reverse=True)
+    # No model call made the steps: one root turn, one adapter call and the review, as without them.
+    assert [FakeAnthropic.kind(call) for call in fake.calls].count("adapter") == 1
+
+
+async def test_a_case_with_data_steps_needs_the_runtime(tmp_path: Path) -> None:
+    """A runner without the app's runtime cannot store a version, so the case ends as the harness's error."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/v1/sessions":
+            return httpx.Response(200, json={"session_id": "sid"})
+        return httpx.Response(200, json={})
+
+    runner = runner_over(handler, tmp_path)
+    case = dataclasses.replace(two_fixtures()[1], before_operations=(({"op": "keep_rows", "n": 5},),))
+
+    record = await runner.run(case, 1)
+
+    assert (record["status"], record["error"]) == ("harness_error", "RuntimeError")
+
+
 async def test_a_refused_language_is_the_services_error(tmp_path: Path) -> None:
     """`load_case` checked the value against the route's pattern, so a refusal there is no outcome of the case."""
     requests: list[httpx.Request] = []

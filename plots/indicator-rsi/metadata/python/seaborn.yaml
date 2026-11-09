@@ -2,119 +2,133 @@ library: seaborn
 language: python
 specification_id: indicator-rsi
 created: '2026-01-07T20:20:04Z'
-updated: '2026-05-16T16:42:18Z'
-generated_by: claude-haiku
-workflow_run: 25967061547
+updated: '2026-11-09T11:57:04Z'
+generated_by: claude-opus
+workflow_run: 42611466995
 issue: 3229
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Excellent visual legibility in both light and dark themes
-  - All RSI technical features correctly implemented (zones, thresholds, centerline)
-  - Realistic data showing multiple market conditions (overbought, oversold, neutral,
-    mean-reversion)
-  - Clean code structure with proper seeding for reproducibility
-  - Proper use of seaborn plot functions (lineplot and scatterplot)
+  - The RSI is computed with Wilder smoothing from a simulated close series through
+    pandas `ewm(alpha=1/14, adjust=False, min_periods=14)`, so the line starts once
+    the lookback is filled and sits at its computed values
+  - Y ticks reduced to the meaningful levels 0, 30, 50, 70 and 100, so every gridline
+    doubles as a threshold reference
+  - Zone labels (Overbought >70, Neutral 50, Oversold <30) sit in the right margin
+    in the colors of their reference lines, a direct-labelled key that never touches
+    the data
+  - Lookback period is noted in the y-axis title 'RSI (14-period)', fulfilling the
+    spec's Notes
+  - Brand-green RSI line at 2.5 pt stands clearly above the dashed red/blue thresholds,
+    the dotted muted centerline and the zone tints at alpha 0.10 in both themes
+  - 'Idiomatic seaborn: sns.set_theme with theme-token rc, sns.lineplot(data=df, x=DATE,
+    y=RSI) on the tidy frame, sns.despine for spine handling'
   weaknesses:
-  - Code does not read ANYPLOT_THEME environment variable or implement theme-adaptive
-    chrome via sns.set_theme()
-  - Saves to bare plot.png instead of plot-{THEME}.png as required by API
-  - 'Uses hardcoded color values (#306998, #D32F2F, #388E3C) instead of theme-adaptive
-    approach'
-  - Zone shading colors are not theme-adaptive and should use neutral colors or derive
-    from theme tokens
-  - 'Design could be more sophisticated: consider removing top/right spines, more
-    subtle grid (alpha ~0.1), refined typography'
-  - Library mastery is basic - no distinctive seaborn features beyond standard plot
-    functions
+  - 'VQ-01 (dark): the 8 pt zone labels ''Overbought (>70)'' in #AE3030 and ''Oversold
+    (<30)'' in #4467A3 reach only about 2.7:1 and 3.1:1 contrast on the #1A1A17 background
+    and read dim, especially in the 400 px thumbnail → at least about 4.5:1, e.g.
+    a lighter tint of the zone color in dark or the line color only on a marker with
+    the text in INK_SOFT. Likely cause: the ax.text color set straight from OVERBOUGHT_COLOR
+    / OVERSOLD_COLOR in both themes.'
+  - 'Suggestion: the x date ticks are short (''2024-02'') and need no 30° rotation;
+    horizontal ticks would read faster.'
+  - 'Suggestion: a price panel above the RSI panel sharing the date axis, as the Notes
+    allow, would show what the RSI is measuring.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "indicator-rsi · seaborn · anyplot.ai" in dark text; axis labels "Date" and "RSI (14-period)" clearly visible; tick labels all readable
-      Data: Cyan/teal RSI line (#009E73), markers highlight extreme points, light gray shaded zones for overbought/oversold
-      Legibility verdict: PASS - all text clearly readable against light background
+      Background: warm off-white #FAF8F1, landscape 3200x1800.
+      Chrome: title "Northwind Logistics (NWL) Daily RSI · indicator-rsi · python · seaborn · anyplot.ai" in dark ink, ~70% of width; y-axis title "RSI (14-period)", x-axis title "Date"; y ticks 0/30/50/70/100, x ticks 2024-02 … 2024-07 rotated 30°; left and bottom spines only; all text dark and readable.
+      Data: one continuous #009E73 RSI line (2.5 pt) from late January to early July 2024, peaking ~83 in February and ~78 in June, bottoming ~14 in late April; dashed red line at 70 over a light red-tinted zone 70–100, dashed blue line at 30 over a light blue-grey zone 0–30, dotted muted centerline at 50; right-margin labels "Overbought (>70)" red, "Neutral (50)" grey, "Oversold (<30)" blue.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title and all axis labels in light text, clearly readable against dark background; no dark-on-dark failures
-      Data: RSI line color identical to light render (cyan/teal #009E73), markers and zones maintained; brand green visible throughout
-      Legibility verdict: PASS - all text readable, theme adaptation correct, both renders have identical data colors with only chrome adapting
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, ticks in light grey; spines light grey; no dark-on-dark text. Zone labels in red and blue are readable but dim against the dark surface (~2.7:1 and ~3.1:1).
+      Data: identical colors to the light render — #009E73 line, #AE3030 / #4467A3 dashed thresholds and tints (tints now dark maroon / dark slate), muted dotted centerline.
+      Legibility verdict: PASS (zone labels dim, see VQ-01)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes
+        comment: All font sizes set explicitly and readable in both themes; the red
+          and blue zone labels are dim on the dark background (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean legend and axis spacing
+        comment: Zone labels sit in the right margin, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and line properly sized for 120-point data
+        comment: 2.5 pt line clearly visible over the light zone tints in both themes;
+          reference lines visible and subordinate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green CVD-safe with good contrast
+        comment: Red/blue zones are additionally labelled and positioned; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced, 50-80% canvas utilization
+        comment: 3200x1800, balanced axis titles, title ~70% width, margins used for
+          labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Date'' and ''RSI (14-period)'' are reader-facing; RSI is unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Data colors identical across themes; backgrounds correctly themed
+        comment: 'RSI line #009E73, zones from Imprint red/blue, backgrounds #FAF8F1
+          / #1A1A17, theme-correct chrome'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Generic defaults with functional zone shading; competent but not
-          sophisticated
+        passed: true
+        comment: Zone labels typeset in their line colors with two-line value notation,
+          a coherent color hierarchy line > thresholds > tint
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Basic customization; grid could be more subtle
+        passed: true
+        comment: Y ticks reduced to 0/30/50/70/100 so the y grid coincides with the
+          levels; tick marks removed; labels moved to the right margin; x limits snug
+          to the data
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Markers emphasize extremes; limited narrative
+        passed: true
+        comment: Data scenario of rally, sell-off and recovery makes the line visit
+          both zones and recross the centerline, showing what the indicator signals
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct RSI technical indicator chart
+        comment: RSI oscillator chart, standalone as allowed
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: line, scale, thresholds, zones, period notation'
+        comment: Y fixed 0–100, lines at 30/70, optional 50 centerline, both zones
+          shaded lightly, lookback noted in the y title, line distinct from references
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date (X) and RSI (Y) correctly assigned
+        comment: Date on x, RSI on y, line at computed values, begins after the lookback
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; labels accurate
+        comment: Title is a descriptive prefix + 'indicator-rsi · python · seaborn
+          · anyplot.ai'; single series, N/A legend; zone labels act as key
     data_quality:
       score: 15
       max: 15
@@ -152,21 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows overbought, oversold, neutral, mean-reverting behavior
+        comment: Overbought and oversold excursions, threshold crossings and centerline
+          crossings all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real technical indicator; plausible 120-day dataset
+        comment: Fictional logistics stock, daily business-day dates in 2024, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct RSI values and timeframe
+        comment: 'Checked: RSI computed via Wilder smoothing (alpha=1/14) from 134
+          closes, 120 plotted periods, values ~14–83 within 0–100, read off the axis'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,56 +192,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded random generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary libraries
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Uses hardcoded colors; should use theme-adaptive approach
+        passed: true
+        comment: RSI via pandas ewm rather than a hand loop; no dead code
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png; missing theme-awareness
+        passed: true
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches; current seaborn
+          0.13 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct API; standard patterns
+        passed: true
+        comment: sns.lineplot on the tidy df with column constants, axis titles taken
+          from the column names
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Generic usage without distinctive seaborn techniques
+        passed: true
+        comment: sns.despine for spine handling; the rest is matplotlib axhspan/axhline
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T11:54:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - time-series
+  - rolling-window
   styling:
+  - minimal-chrome
+  - alpha-blending
   - grid-styling

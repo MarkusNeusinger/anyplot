@@ -55,7 +55,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
+from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple, cast, get_args
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
@@ -1036,6 +1036,27 @@ def turn_kind(ledger: RequestLedger) -> TurnKind:
     if "prepare_data" in ledger.tools:
         return "prep"
     return "talk"
+
+
+class TurnCodes(NamedTuple):
+    """What a turn did and how it ended, as closed codes: the `chat_turn` line's `kind`, `refusal` and `error`."""
+
+    kind: TurnKind
+    refusal: RefusalCode | None
+    error: ErrorCode | None
+
+
+def turn_codes(ledger: RequestLedger, failure: str | None = None) -> TurnCodes:
+    """A turn's `kind`, `refusal` and `error` as the `chat_turn` line and the turn's record (`turn_record.py`) both
+    write them, so the two never disagree. `failure` is the route's own error of the turn (`cancelled`, `deadline`, an
+    exception's code), which wins over the ledger's; a turn with an error and no refusal is an `error` turn."""
+    error = failure or ledger.error
+    refusal = closed(ledger.refusal[0] if ledger.refusal else None, get_args(RefusalCode))
+    return TurnCodes(
+        kind="error" if error is not None and ledger.refusal is None else turn_kind(ledger),
+        refusal=cast("RefusalCode | None", refusal),
+        error=cast("ErrorCode | None", closed(error, get_args(ErrorCode))),
+    )
 
 
 def closed(value: str | None, allowed: Iterable[str], fallback: str = "other") -> str | None:

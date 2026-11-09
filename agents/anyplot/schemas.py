@@ -847,6 +847,10 @@ class PlotResult(_ServerContract):
     `new_data` is where the page's "plot the new data" (`plot_new_data`) started (`pipeline.new_data_base`):
     `previous`, the library's latest version, or why it started from the catalogue plot instead; None for every
     other run. The root's reply and the plot card's label both say it, so it goes to the page too.
+
+    `combined` is `true` on a run that first combined the rows sharing a repeated key into a new data version
+    (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09), which the first line of `changes` announces
+    with its counts, also on a run that shipped nothing. Root-only too: the root reads it as `data_changed: true`.
     """
 
     status: PlotStatus
@@ -863,6 +867,7 @@ class PlotResult(_ServerContract):
     bindings: list[Binding] | None = Field(default=None, max_length=MAX_COLUMNS)
     kept_request: Literal["used", "dropped"] | None = None
     new_data: NewDataBase | None = None
+    combined: bool | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:

@@ -99,8 +99,8 @@ what slips through, and the check stays hygiene for the exported `plot.jl`.
 ADAPTATION rules, with the Python profile's ids: exactly one top-level
 `df = load_user_data()` (`placeholder-count`) and `load_user_data` nowhere else
 (`placeholder-use`); no random draws that fabricate data (`rng`: `randn`, `randexp` and
-their `!` forms; `rand`, `shuffle`, `randperm` and `Random.seed!` stay allowed for jitter
-and subsampling, as R's `runif` and `sample`); no data from memory (`literal-data`: a
+their `!` forms; `rand`, `shuffle`, `randperm` and `Random.seed!` stay allowed for jitter,
+as R's `runif` and `sample`, never to sample the rows, which the prompt forbids); no data from memory (`literal-data`: a
 vector or matrix literal with more than `MAX_LITERAL_NUMBERS` numbers;
 `dataset-package`: loading or calling RDatasets or PalmerPenguins, owner decision of
 2026-10-29); the palette prefix kept (`palette-prefix`: `IMPRINT_PALETTE` or `IMPRINT`
@@ -414,8 +414,8 @@ PROTECTED_NAMES = frozenset({SAVE_NAME, "get"})
 """Names the save statement and the theme statement call: never bound by the code, also not as a `Base` method."""
 
 RNG_DRAWS = frozenset({"randn", "randn!", "randexp", "randexp!"})
-"""Random draws that fabricate data; `rand`, `shuffle`, `randperm` and `Random.seed!` stay allowed for jitter and
-subsampling (R's precedent, owner 2026-10-29)."""
+"""Random draws that fabricate data; `rand`, `shuffle`, `randperm` and `Random.seed!` stay allowed for jitter (R's
+precedent, owner 2026-10-29), never to sample the rows, which the prompt forbids (the check is syntactic)."""
 
 _URL_IN_TEXT = re.compile(
     r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"

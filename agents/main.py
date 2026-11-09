@@ -31,7 +31,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form, and `turns` (`{records, dropped}`: the record of each of the session's latest turns, its root tool calls and guard verdicts as closed codes, `anyplot/turn_record.py`) in every form too; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -168,7 +168,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
-from agents.anyplot import telemetry
+from agents.anyplot import telemetry, turn_record
 from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste, request_for_chat
 from agents.anyplot.data.parse import (
@@ -571,6 +571,9 @@ StreamNote = (
 """What the stream's outbox carries: a queue position of a waiting sandbox run, that run's start once it waited,
 an ADK event, or the run's end."""
 
+QueueOutcome = Literal["started", "expired", "withdrawn"]
+"""How a turn's wait in the run queue ended, the `queue` line's verdict besides `run_limit` and `full`, which the
+turn's record closes (`turn_record.HOOK_VERDICTS`, pinned equal by a test)."""
 TIER_LANES: dict[Tier, Lane] = {"admin": "admin", "public": "normal"}
 """The run queue's lane of each tier (`run_queue.py`): an admin's runs share the concurrency and the rate with
 everyone's and have a per-user cap of their own."""
@@ -629,7 +632,7 @@ class TurnSlot:
             self._fail("capacity")
             return False
         self.run.ticket = ticket
-        outcome = "started"
+        outcome: QueueOutcome = "started"
         waited = False
         try:
             async with contextlib.aclosing(queue.wait(ticket, heartbeat_s=HEARTBEAT_S)) as positions:
@@ -2446,20 +2449,20 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
     The request id goes into the idempotency key only (hashed), so two turns of the same number, such as a turn
     refused before the judge and the turn sent after it, stay two rows.
     """
-    error = failure or ledger.error
+    codes = telemetry.turn_codes(ledger, failure)  # the turn's record (`_keep_turn`) writes the same three
     telemetry.write(
         telemetry.ChatTurn,
         ledger,
         attempt=f"turn:{ledger.request_id}",
-        kind="error" if error is not None and ledger.refusal is None else telemetry.turn_kind(ledger),
+        kind=codes.kind,
         action=facts.action or "text",
         asked_question=ledger.reply_question and ledger.refusal is None,
         tools=sorted({tool for tool in ledger.tools if tool in telemetry.TOOL_NAMES}),
         prep_ops=sorted({op for op in ledger.prep_ops if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
         capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
-        refusal=telemetry.closed(ledger.refusal[0] if ledger.refusal else None, get_args(telemetry.RefusalCode)),
-        error=telemetry.closed(error, get_args(telemetry.ErrorCode)),
+        refusal=codes.refusal,
+        error=codes.error,
         reply_reasked=ledger.reply_reasked,
         language_source=telemetry.closed(facts.language_source, get_args(telemetry.LanguageSource), "default"),
         plot_language=telemetry.plot_language(facts.language),
@@ -2472,13 +2475,29 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
     )
 
 
-async def _refused(translator: Translator, ledger: RequestLedger, facts: TurnFacts) -> AsyncGenerator[str, None]:
+def _keep_turn(runtime: Runtime, ledger: RequestLedger, facts: TurnFacts, failure: str | None = None) -> None:
+    """The turn's record for the feedback case (`turn_record.py`), kept next to its `chat_turn` line at each of the
+    turn's ends with the same `failure`: the root's tool calls and the guards' verdicts, closed codes only. A session
+    purged while the turn ran (its turn log is gone, `Runtime.purge`) keeps nothing, so no ring outlives its session.
+    Never raises, and logs the exception's class only: the record must never cost the turn."""
+    try:
+        if ledger.session_id not in runtime.turns:
+            return
+        get_services().turns.add(ledger.session_id, turn_record.build(ledger, facts.action, failure))
+    except Exception as exc:
+        logger.warning("turn record failed: %s", type(exc).__name__)
+
+
+async def _refused(
+    runtime: Runtime, translator: Translator, ledger: RequestLedger, facts: TurnFacts
+) -> AsyncGenerator[str, None]:
     """A turn the ledger refused before the scope judge and any model call: `ready`, the refusal, `done`."""
     yield translator.ready()
     for chunk in translator.refusal():
         yield chunk
     attribution("run", ledger, model_versions=[], kind=ledger.kind)
     _telemetry_turn(ledger, facts)
+    _keep_turn(runtime, ledger, facts)
     yield translator.done()
 
 
@@ -2495,12 +2514,19 @@ def _turn_stream(
 
 
 def _refuse_now(
-    translator: Translator, ledger: RequestLedger, facts: TurnFacts, log: TurnLog, code: str, hook: str, **fields: Any
+    runtime: Runtime,
+    translator: Translator,
+    ledger: RequestLedger,
+    facts: TurnFacts,
+    log: TurnLog,
+    code: str,
+    hook: str,
+    **fields: Any,
 ) -> StreamingResponse:
     """The fixed refusal `code` as the whole turn, sent before the judge: no model call, no queue, no message counted."""
     ledger.refuse(code, refusal(code, ledger.lang))
     attribution(hook, ledger, verdict=code, **fields)
-    return _turn_stream(_refused(translator, ledger, facts), log)
+    return _turn_stream(_refused(runtime, translator, ledger, facts), log)
 
 
 async def _produce(
@@ -2602,18 +2628,18 @@ async def post_message(
     # An admin is exempt from all but the strikes and the global budget (`plugins/ledger.py`, the ledger's tier).
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
-        return _refuse_now(translator, ledger, facts, log, SESSION_CLOSED, "session_closed", refusals=refused)
+        return _refuse_now(runtime, translator, ledger, facts, log, SESSION_CLOSED, "session_closed", refusals=refused)
     if services.usage.locked_out(user, settings):
         # Past the day's `attack` strikes: its own refusal, never the misleading "usage limit" text (2026-10-14).
-        return _refuse_now(translator, ledger, facts, log, LOCKED_OUT, "budget_halt", agent="route")
+        return _refuse_now(runtime, translator, ledger, facts, log, LOCKED_OUT, "budget_halt", agent="route")
     if not budget_allows(ledger, services.usage, settings):
         # The refusal the root would send, sent now: a user over the daily budget spends nothing. When only the
         # service's day budget is spent, every user gets `service_paused`, which says their own limit is untouched.
         code = day_refusal(services.usage, user, settings, tier=tier)
-        return _refuse_now(translator, ledger, facts, log, code, "budget_halt", agent="route")
+        return _refuse_now(runtime, translator, ledger, facts, log, code, "budget_halt", agent="route")
     limit = services.usage.message_limit(user, settings, tier)
     if limit is not None:
-        return _refuse_now(translator, ledger, facts, log, limit, "message_limit")
+        return _refuse_now(runtime, translator, ledger, facts, log, limit, "message_limit")
     services.usage.add_message(user)
     run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
     # Registered here so a second request cannot slip in before the stream starts; the
@@ -2725,6 +2751,7 @@ async def post_message(
                 with contextlib.suppress(BaseException):  # the original exit goes on after the line
                     after = await _after_turn(runtime, user, sid, facts)
                 _telemetry_turn(ledger, after, "cancelled")
+                _keep_turn(runtime, ledger, after, "cancelled")
         try:
             if ledger.error is not None:
                 failure = ledger.error
@@ -2732,7 +2759,9 @@ async def post_message(
                 failure = "deadline"
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
             # Written before anything else is yielded: a client that goes during the error event loses no line.
-            _telemetry_turn(ledger, await _after_turn(runtime, user, sid, facts), failure)
+            after = await _after_turn(runtime, user, sid, facts)
+            _telemetry_turn(ledger, after, failure)
+            _keep_turn(runtime, ledger, after, failure)
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk
@@ -2959,7 +2988,11 @@ async def bundle(
     that made no plot: no version, and with `include_data` the session's current `data.csv` as
     the top-level `data_csv`. A fan-out session whose data is a copy names the source's data version
     as `session.dataset_copied_from`. `session.versions` counts the versions the session holds and
-    `session.last_run` says how its latest plot run ended, in every form, also `version=0`.
+    `session.last_run` says how its latest plot run ended, in every form, also `version=0`; so does `turns`, the
+    record of the session's latest turns (`turn_record.py`: `records`, the root's tool calls and the guards'
+    verdicts per turn as closed codes, and `dropped`, the older turns the ring no longer holds). A record's `turn` is
+    the ordinal of its user line in `transcript`; a turn refused before the scope judge stores no line and shares the
+    number of the next turn's.
     """
     session = await runtime.session(user, sid)
     services = get_services()
@@ -3031,6 +3064,8 @@ async def bundle(
         },
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,
+        # Content-free like `last_run`, in every form: what each turn called and what its guards said.
+        "turns": services.turns.bundle(sid),
         "versions": items,
         "profile": dataset.profile.model_dump(mode="json") if dataset else None,
         "bindings": [binding.model_dump() for binding in view.bindings],

@@ -1021,15 +1021,16 @@ is in [Agent network design](../concepts/agent-network.md#footer-strip).
 
 `GET /sessions/{sid}/bundle` answers the feedback case that the agents service
 assembles for the session: the conversation (your messages and the assistant's
-replies, never tool calls or thoughts), the catalogue snapshot's spec id and
+replies, never tool calls or thoughts; the tool calls' names and codes are in
+`turns`), the catalogue snapshot's spec id and
 library version, every version's working, run and exported code with its adapt
 plan, plot result, gate outcome per theme and the PNG of every rendered theme
 as base64 (with the footer strip), the dataset profile, the bindings, and a
 config stamp (provider, model, judge model, location, ADK and service versions,
 prompt hashes); each version's `data.csv` only with `include_data=true`. The
-top-level keys are `session`, `snapshot`, `transcript`, `versions`, `profile`,
-`bindings` and `config`, plus `refusals` when the agents service runs with
-`AGENT_KEEP_REFUSALS`. `session` names the spec, the library, the browser's
+top-level keys are `session`, `snapshot`, `transcript`, `turns`, `versions`,
+`profile`, `bindings` and `config`, plus `refusals` when the agents service runs
+with `AGENT_KEEP_REFUSALS`. `session` names the spec, the library, the browser's
 locale and the session language (`plot_language`, `plot_language_source`), and
 each version carries the `language` its text was written in. `session` also
 holds two content-free facts, in every form of the bundle: `versions`, the
@@ -1039,6 +1040,33 @@ its `rounds`), or `null` before any run. Each round of a plot result carries
 `gates_failed`, the ids of the host gates its renders failed or reported on
 (`R1`, `R3`, `G8`), and `sandbox_failures`, the closed class of each render
 that crashed (`key`, `timeout`, `memory`), never an error message.
+
+`turns` is the record of the session's latest turns, in every form of the
+bundle too: `records`, in turn order, and `dropped`, how many older turns the
+record no longer holds (it keeps the latest 50). Each record holds closed codes
+only, never an argument, a result, your words, an id or a time:
+
+- `turn`, `action`, `kind`, `refusal` and `error`: the turn's number and how it
+  ended, as the usage telemetry's `chat_turn` line records them. Turn N is the
+  N-th `user` line of `transcript`. A turn refused before the scope judge
+  (`session_closed`, `budget_halt` or `message_limit` in its `guards`) adds no
+  line, so it has the number of the line that the next turn adds.
+- `tools`: every tool call of the turn in order, refused calls included, each as
+  `{tool, verdict, outcome, code}`. `verdict` is `allowed` or the guard's refusal
+  code, `outcome` what the call did (`ok`, `changed`, `shipped`, `error`,
+  `unfinished` for a call that had not answered when the turn ended, and so on),
+  and `code` the code of its answer (`invalid_operations`,
+  `incomplete_bindings`), or `null`. At most 32 per turn; `tools_dropped` counts
+  the rest.
+- `guards`: the verdicts of the turn's guards in order, each as
+  `{guard, verdict}`, such as `{"guard": "output_guard", "verdict": "reply_cut"}`.
+  The scope judge's `attack` reads `out_of_scope`. The latest 24 per turn;
+  `guards_dropped` counts the earlier ones.
+- `prep_ops`: the operations of the turn's data changes (`derive`, `aggregate`).
+  At most 16 per turn; `prep_ops_dropped` counts the rest.
+
+The record isn't a join key: don't match it against log or telemetry lines,
+by sequence or by time.
 
 A bundle over 32 MiB can't be saved: that is Cloud Run's limit on an HTTP/1
 response that is not streamed, and the agents service answers the bundle in one
