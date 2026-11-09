@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -20,12 +20,7 @@ import plotly.graph_objects as go
 # Theme-adaptive chrome tokens (Imprint palette)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-
-# Imprint palette position 1 — brand green accent for chrome
-ACCENT = "#009E73"
 
 # QR code modules: dark on a white tile in both themes — scanners expect dark-on-light,
 # so the code itself never inverts with the theme; only the surrounding chrome does
@@ -35,7 +30,6 @@ MODULE_LIGHT = "#FFFDF6"
 # Constants — ISO/IEC 18004 byte-mode tables for versions 1–4. The runner has no
 # QR package (qrcode, segno), so the standard encoding is written out here.
 QUIET_ZONE = 4  # modules of blank border the standard requires
-EC_SHARE = {"L": "7%", "M": "15%", "Q": "25%", "H": "30%"}
 EC_FORMAT_BITS = {"L": 1, "M": 0, "Q": 3, "H": 2}
 # version → total codewords, and per level (EC codewords per block, number of blocks)
 VERSION_TABLE = {
@@ -179,7 +173,6 @@ for mask_id, mask_rule in enumerate(MASKS):
 
 qr_matrix = np.pad(qr_core, QUIET_ZONE).astype(int)
 n_modules = qr_matrix.shape[0]
-frame_pad = n_modules * 0.01  # gap between the white tile and the accent frame
 
 fig = go.Figure(
     data=go.Heatmap(
@@ -210,7 +203,7 @@ fig.update_layout(
         "scaleratio": 1,
         "constrain": "domain",
         "showline": False,
-        "range": [-0.5 - frame_pad * 2, n_modules - 0.5 + frame_pad * 2],
+        "range": [-0.5, n_modules - 0.5],
     },
     yaxis={
         "showticklabels": False,
@@ -218,65 +211,9 @@ fig.update_layout(
         "zeroline": False,
         "constrain": "domain",
         "showline": False,
-        "range": [n_modules - 0.5 + frame_pad * 2, -0.5 - frame_pad * 2],
+        "range": [n_modules - 0.5, -0.5],
     },
     margin={"l": 40, "r": 40, "t": 80, "b": 150},
-)
-
-# Accent border framing the QR code area
-fig.add_shape(
-    type="rect",
-    xref="x",
-    yref="y",
-    x0=-0.5 - frame_pad,
-    y0=-0.5 - frame_pad,
-    x1=n_modules - 0.5 + frame_pad,
-    y1=n_modules - 0.5 + frame_pad,
-    line={"color": ACCENT, "width": 1.5},
-    fillcolor="rgba(0,0,0,0)",
-    opacity=0.7,
-)
-
-# Dotted divider between QR code and annotation area
-fig.add_shape(
-    type="line",
-    xref="paper",
-    yref="paper",
-    x0=0.25,
-    y0=-0.06,
-    x1=0.75,
-    y1=-0.06,
-    line={"color": ACCENT, "width": 1.5, "dash": "dot"},
-    opacity=0.5,
-)
-
-# Encoded URL — prominent, just below the divider
-fig.add_annotation(
-    text=f"<b>{CONTENT}</b>",
-    xref="paper",
-    yref="paper",
-    x=0.5,
-    y=-0.14,
-    showarrow=False,
-    font={"size": 12, "color": ACCENT, "family": "Arial, sans-serif"},
-    xanchor="center",
-    yanchor="top",
-)
-
-# QR code metadata — version, error correction, module count
-fig.add_annotation(
-    text=(
-        f"Error Correction: {ERROR_CORRECTION} ({EC_SHARE[ERROR_CORRECTION]})"
-        f"  ·  Version {version}  ·  {size}×{size} modules"
-    ),
-    xref="paper",
-    yref="paper",
-    x=0.5,
-    y=-0.27,
-    showarrow=False,
-    font={"size": 12, "color": INK_SOFT, "family": "Arial, sans-serif"},
-    xanchor="center",
-    yanchor="top",
 )
 
 # Save — square canvas: 600×600 logical → 2400×2400 px at scale=4
