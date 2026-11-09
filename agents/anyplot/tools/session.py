@@ -337,7 +337,9 @@ async def set_language(language: str, tool_context: ToolContext, applies_to: str
     # plot language (made before a choice in another library), so the rewrite is decided against it.
     latest = versions.latest_rendered(tool_context.session.id, target=view.target)
     plot_outdated = latest is not None and not same_language(latest.language, plot)
-    # A choice is final either way: detection never writes over `chosen`, and nothing but a choice writes the plot's.
+    # A request for the replies' language is a pick, final either way: no language is offered after it. One for the
+    # plot's text alone leaves the replies and their source, so a German "Beschriftung auf Deutsch" in an English
+    # session still offers German replies. Nothing but a pick writes the plot's language.
     delta = {**(language_delta(value, "chosen") if replies else {}), PLOT_LANGUAGE: plot}
     for key, item in delta.items():
         tool_context.state[key] = item

@@ -5,8 +5,8 @@ Only the service writes these keys: the `/v1` routes through
 after `apply_bindings` accepted the bindings, the `prepare_data` tool after
 `apply_operations` produced the next dataset version (`dataset_versions.py`), the
 root's before-agent callback after it made a paste's `certain` conversions
-(`paste_conversions.py`), the scope guard, which records the detected session language once (`LANGUAGE`,
-`LANGUAGE_SOURCE`), and the `set_language` tool (also `PLOT_LANGUAGE`). No model output and no client body
+(`paste_conversions.py`), the scope guard, which records the languages it offered (`LANGUAGE_OFFERED`), and
+the `set_language` tool (`LANGUAGE`, `LANGUAGE_SOURCE`, `PLOT_LANGUAGE`). No model output and no client body
 ever becomes a state value unchecked, and `plot_pipeline` reads spec, library,
 dataset, bindings and language from here, never from its arguments.
 
@@ -27,7 +27,7 @@ from .data.bindings import BindingCheck, check_bindings, resolve_role
 from .data.computed import mark_name_only
 from .data.fidelity import mark_keys
 from .data.signs import mark_non_negative
-from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
+from .language import DEFAULT_LANGUAGE, MAX_OFFERED, LanguageSource, is_valid, read_source
 from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile, LastRun
 
 
@@ -40,11 +40,14 @@ LANGUAGE = PREFIX + "language"
 """The session language: the language of the replies, and of the first plot's text (`plot_language`). A short
 language name or code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Swedish`). Absent means `en`."""
 LANGUAGE_SOURCE = PREFIX + "language_source"
-"""How it was set: `default` (nobody yet), `pasted` (the judges' code for the notes or the column
-names of a paste before any typed message, `language.pasted_language`), `detected` (the scope
-judge's code for the session's first in-scope typed message), `chosen` (the language route or the
-root's `set_language`). Absent means `default`. Only `chosen` is final: detection writes only over
-`default` and `pasted`, a paste only over `default` and `pasted`."""
+"""How it was set: `default` (nobody yet, English), `chosen` (the chip through the language route, or the root's
+`set_language`), `offer` (the user accepted an offer, the language route with `via: offer`). Absent means `default`,
+and so do `pasted` and `detected`, which detection wrote before 2026-11-08 (`language.read_source`). Only `chosen` is
+final: no offer comes after it (`language.offer`)."""
+LANGUAGE_OFFERED = PREFIX + "language_offered"
+"""The languages the page was offered, as stored forms, oldest first, at most `language.MAX_OFFERED`: each comes
+once (`language.offer`). The scope guard appends a typed message's offer, the dataset route a paste's; a fan-out
+copy takes the page session's. Absent means none."""
 PLOT_LANGUAGE = PREFIX + "plot_language"
 """The language the user asked for the plot's text: the language route (the chip, which sets the session language
 too) or the root's `set_language`, or the page session's plot language for a fan-out copy. Absent until then: the
@@ -200,7 +203,9 @@ class SessionView:
     language: str = DEFAULT_LANGUAGE
     """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
     language_source: LanguageSource = "default"
-    """How the session language was set (`LANGUAGE_SOURCE`): `default`, `pasted`, `detected` or `chosen`."""
+    """How the session language was set (`LANGUAGE_SOURCE`): `default`, `chosen` or `offer`."""
+    language_offered: list[str] = field(default_factory=list)
+    """The languages the page was offered (`LANGUAGE_OFFERED`), validated, oldest first."""
     plot_language_choice: str | None = None
     """The language the user asked for the plot's text (`PLOT_LANGUAGE`), validated; None when none was asked for
     (or the stored value is outside the pattern). `plot_language` resolves the language a run writes in."""
@@ -305,8 +310,13 @@ def narrowed_confirmation(
 
 
 def language_delta(language: str, source: LanguageSource) -> dict[str, Any]:
-    """The state delta that sets the session language (the language route, `set_language`, detection)."""
+    """The state delta that sets the session language (the language route, `set_language`, a fan-out copy)."""
     return {LANGUAGE: language, LANGUAGE_SOURCE: source}
+
+
+def offered_delta(offered: list[str], language: str) -> dict[str, Any]:
+    """The state delta that records `language` as offered, after the ones `offered` holds."""
+    return {LANGUAGE_OFFERED: [*offered, language][-MAX_OFFERED:]}
 
 
 def plot_language(view: SessionView, latest: str | None) -> str:
@@ -317,8 +327,8 @@ def plot_language(view: SessionView, latest: str | None) -> str:
     (`CodeVersion.language`, in any library), so a follow-up message in another language
     never rewrites the text of a plot the user already has: the live test of 2026-11-01
     had "Use a log scale on y" turn a German plot's title and numbers English, while its
-    axes and months stayed German. Before the first plot, the session language decides, so
-    the first plot follows the paste, the first typed message or the chip as before.
+    axes and months stayed German. Before the first plot, the session language decides: English
+    until the user picks another (the chip, a request in the chat, an accepted offer).
     """
     if view.plot_language_choice is not None:
         return view.plot_language_choice
@@ -333,8 +343,8 @@ def initial_state(
     """The state delta that opens a session (or switches its library).
 
     The session language is not part of it: ADK applies a delta key by key, so a library
-    switch keeps `LANGUAGE`, `LANGUAGE_SOURCE` and `PLOT_LANGUAGE`, and a new session reads
-    them as `en`, `default` and no choice for the plot (`read_session`). Nor is a kept
+    switch keeps `LANGUAGE`, `LANGUAGE_SOURCE`, `LANGUAGE_OFFERED` and `PLOT_LANGUAGE`, and a new session
+    reads them as `en`, `default`, none offered and no choice for the plot (`read_session`). Nor is a kept
     first-plot note (`PENDING_REQUEST`, its texts and bindings): a switch keeps the data and
     the bindings it was written for, so the note waits for the first plot in the new library
     (owner decision of 2026-11-02). The plot memory (`memory.MEMORY`) stays the same way.
@@ -395,10 +405,14 @@ def read_session(state: Any) -> SessionView | None:
     # Validated on every read, so a corrupt value can never reach a prompt.
     raw_language = state.get(LANGUAGE)
     language = raw_language if isinstance(raw_language, str) and is_valid(raw_language) else DEFAULT_LANGUAGE
-    raw_source = state.get(LANGUAGE_SOURCE)
-    language_source: LanguageSource = "default"
-    if raw_source in SOURCES and language == raw_language:
-        language_source = raw_source
+    # A source is the stored language's: a value the pattern refused reads as the default, from nobody.
+    language_source = read_source(state.get(LANGUAGE_SOURCE) if language == raw_language else None)
+    raw_offered = state.get(LANGUAGE_OFFERED)
+    language_offered = (
+        [item for item in raw_offered if isinstance(item, str) and is_valid(item)][-MAX_OFFERED:]
+        if isinstance(raw_offered, list)
+        else []
+    )
     raw_plot_language = state.get(PLOT_LANGUAGE)
     plot_language_choice = (
         raw_plot_language if isinstance(raw_plot_language, str) and is_valid(raw_plot_language) else None
@@ -424,6 +438,7 @@ def read_session(state: Any) -> SessionView | None:
         dataset_top=max(int(state.get(DATASET_TOP) or 0), dataset_version if state.get(DATASET_ID) else 0),
         language=language,
         language_source=language_source,
+        language_offered=language_offered,
         plot_language_choice=plot_language_choice,
         readiness=status if isinstance(status, str) else None,
         summary_pending=bool(state.get(DATASET_ID)) and state.get(SUMMARY_PENDING) == state.get(DATASET_ID),
