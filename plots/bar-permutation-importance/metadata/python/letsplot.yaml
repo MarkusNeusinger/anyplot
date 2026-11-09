@@ -2,50 +2,56 @@ library: letsplot
 language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:56:21Z'
-updated: '2026-05-17T12:47:04Z'
-generated_by: claude-haiku
-workflow_run: 25990960947
+updated: '2026-11-09T08:00:41Z'
+generated_by: claude-opus
+workflow_run: 42548394025
 issue: 2998
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Excellent text legibility with explicitly set font sizes for all elements
-  - 'Perfect specification compliance: all required features implemented correctly'
-  - Clean, reproducible code with proper theming setup
-  - Realistic, neutral data with good feature coverage showing permutation importance
-    patterns
-  - Strong layout with balanced margins and good canvas utilization
-  - Proper theme-adaptive chrome (background, text, grid) in both renders
+  - Bars sorted by mean importance via as_discrete(order_by=..., order=1) with coord_flip,
+    so the ranking comes from the data, not a hand-sorted list
+  - Horizontal error bars in the INK token stay visible on every bar fill in both
+    themes (near-black on light, near-white on dark), centered on each bar end
+  - 'Sequential imprint_seq gradient (#009E73 → #4467A3) mapped to the mean importance,
+    so color and bar length tell the same ranking; the weakest green bars stay distinct
+    from both pages'
+  - Dashed vertical zero line in INK_SOFT runs the full height and separates the negative
+    Region Code bar and the error bars that cross zero
+  - 'Example data covers the spec''s characteristic cases: a negative mean, error
+    bars crossing zero, very different error-bar widths and a long tail near zero,
+    in a plausible credit-risk model'
+  - layer_tooltips() with formatted mean and std gives a clean hover readout in the
+    HTML output
   weaknesses:
-  - 'VQ-07 Palette Issue: Custom gradient using #306998 (forbidden legacy Python Blue)
-    instead of approved continuous colormap (viridis, cividis, Blues, Greens, or BrBG
-    style). Should replace scale_fill_gradient(low=''#FFD43B'', high=''#306998'')
-    with approved colormap.'
-  - 'DE-01 Low: Generic gradient styling without custom aesthetic choices or intentional
-    design hierarchy'
-  - 'DE-03 Low: Data displayed effectively but no visual storytelling or emphasis
-    to guide viewer to key insights'
+  - 'VQ-06 (both): the value-axis title ''Mean decrease in model score'' does not
+    name the score being decreased, so the unit of the importance values is unstated
+    → name the metric, e.g. ''Mean decrease in accuracy'' or ''Mean decrease in ROC
+    AUC''. Likely cause: the IMPORTANCE_MEAN column constant used as the axis title.'
+  - 'Suggestion: the per-bar value labels repeat what the bar length and axis already
+    show; labelling only the top few features would lighten the right side of the
+    chart.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme surface
-      Chrome: Title "bar-permutation-importance · letsplot · anyplot.ai" is bold, large, and clearly readable in dark color. Axis labels "Feature" (y-axis) and "Mean Decrease in Model Score" (x-axis) are descriptive and readable. Feature names and tick values are all dark text, fully visible against light background. Grid lines are subtle but visible.
-      Data: Bars use yellow-to-dark-blue gradient mapped to importance values. Error bars show variability. Gradient is continuous and visually clear. Reference line at x=0 present.
-      Legibility verdict: PASS - All elements readable, no "light on light" issues, excellent contrast
+      Background: warm off-white, consistent with #FAF8F1 across plot and panel.
+      Chrome: bold near-black title "bar-permutation-importance · python · letsplot · anyplot.ai" at about 67 % of the width; axis titles "Feature" and "Mean decrease in model score" in dark ink; tick labels (feature names, -0.02 … 0.16) in soft dark grey; subtle thin vertical grid lines only. All text readable.
+      Data: 15 horizontal bars sorted with Income Level (0.149) at the top and Region Code (-0.001, a short bar left of zero) at the bottom, filled by the imprint_seq gradient from brand green #009E73 (weakest) to blue #4467A3 (strongest); near-black capped error bars on each bar end; value labels past each error bar; dashed grey vertical zero line over the full height.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme surface
-      Chrome: Title, axis labels, feature names are all light-colored text, clearly readable against dark background. No dark-on-dark failures. Grid lines are subtle but visible. All chrome elements properly theme-adapted.
-      Data: Bar colors (yellow-to-blue gradient) are IDENTICAL to light render - only chrome flipped, confirming correct theme adaptation. Error bars and reference line clearly visible.
-      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no theme-readability failures
+      Background: warm near-black, consistent with #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light grey, grid lines subtle but visible. No dark-on-dark text.
+      Data: identical bar gradient colors to the light render (green → blue); error bars flip to near-white and stay visible on every bar fill; zero line light grey dashed; value labels light grey. Brand green on the weakest bars reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,71 +59,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (24pt title, 20pt labels, 16pt ticks),
-          all perfectly readable in both themes
+        comment: All font sizes set (title 16, axis titles 12, ticks 10, labels 4.5
+          mm); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all content fully readable
+        comment: No text collisions; value labels sit clear past each error bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and error bars perfectly adapted to 15-feature data density
+        comment: 15 bars at width 0.72, error bars 0.8 wide in ink, all visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe gradient application
+        comment: Green→blue ramp is CVD-safe and redundant with bar length
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins and excellent proportions
+        comment: 3200x1800, plot fills the canvas, balanced margins, room left of
+          zero for negative error bars
       - id: VQ-06
         name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Value axis title does not name the score metric, so the unit is unstated
+          (defect line)
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: ''Mean Decrease in Model Score'''
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: 'Custom gradient using #306998 (forbidden legacy Python Blue) instead
-          of approved continuous colormap. Should use viridis, cividis, Blues, Greens,
-          or BrBG-style'
+        comment: 'imprint_seq #009E73→#4467A3 for continuous importance; #FAF8F1 /
+          #1A1A17 backgrounds; theme-correct chrome'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Gradient shows intentionality but looks like configured default,
-          not publication-ready
+        passed: true
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Subtle grid and reasonable whitespace, some customization but minimal
-          polish
+        passed: true
+        comment: Grid density chosen for the chart (value-axis grid only), bars outlined
+          in the page color, labels aligned past the error-bar ends
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed with gradient emphasis but no visual hierarchy or
-          narrative focal point
+        passed: true
+        comment: Ranking and gradient are what the Notes prescribe; no hierarchy chosen
+          beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart for permutation importance
+        comment: Horizontal bar chart of permutation importance
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sorted bars, error bars, gradient mapping,
-          reference line at x=0'
+        comment: Sorted highest at top, horizontal error bars on every bar, zero reference
+          line full height, sequential gradient mapped to importance; all A good version
+          shows bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on y-axis (sorted ascending), importance_mean on x-axis,
-          all data visible
+        comment: Features on the category axis, mean importance on the value axis,
+          bars from zero including a negative one; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Correct format: ''bar-permutation-importance · letsplot · anyplot.ai'',
-          legend not needed'
+        comment: Mandated title format; color legend omitted, N/A since color duplicates
+          bar length
     data_quality:
       score: 15
       max: 15
@@ -158,21 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full spectrum: high (Income Level, Credit Score), mid-range,
-          and low importance features'
+        comment: Negative mean, error bars crossing zero, varied error widths, long
+          near-zero tail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world loan/credit scenario with comprehensible features, neutral
-          topic
+        comment: Credit-risk model features (Income Level, Credit Score, Debt Ratio
+          …), neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance values 0-0.15 are realistic for permutation importance
+        comment: 'Checked: importances 0–0.15 and std 0.003–0.02 plausible for a score
+          decrease; sort order and labels match the data code; no check values in
+          the spec'
     code_quality:
       score: 10
       max: 10
@@ -182,33 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple sequential: setup → data generation → plot → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extraneous packages
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no fake functionality
+        comment: Appropriate complexity, nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html, current
+          lets-plot 4 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -216,25 +227,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ggplot grammar, geom composition, + operator idioms,
-          theme system
+        comment: as_discrete(order_by=, order=) sorts inside the grammar instead of
+          pre-sorting the frame; label_format on geom_text
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses tooltip aes() and HTML export, but could leverage more letsplot-specific
-          features
+        passed: true
+        comment: lets-plot layer_tooltips() with title, lines and .format() for the
+          HTML hover; as_discrete ordering
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T02:09:13Z'
 impl_tags:
   dependencies: []
   techniques:
-  - errorbar
   - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
-  - theme-adaptive
+  - grid-styling

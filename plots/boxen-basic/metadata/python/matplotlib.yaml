@@ -2,116 +2,134 @@ library: matplotlib
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:10:13Z'
-updated: '2026-05-17T08:55:30Z'
-generated_by: claude-haiku
-workflow_run: 25986191041
+updated: '2026-11-09T08:47:40Z'
+generated_by: claude-opus
+workflow_run: 42587104302
 issue: 3414
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Correct boxen plot implementation with all nested quantile boxes
-  - Realistic API response time distributions showing natural variance
-  - Proper theme adaptation in output with readable light and dark renders
-  - Clear legend and axis labels with descriptive quantile ranges
-  - Smart outlier sampling limiting markers to ~80 for readability
+  - 'Correct letter-value construction: six nested levels from the quartiles out to
+    0.78/99.22 %, each box edge computed with np.quantile at its tail share and drawn
+    on a log value axis that keeps the right-skewed lower tails readable instead of
+    crushing them near zero'
+  - Box widths shrink by a constant 0.82 factor per level, all centered on the category,
+    and page-colored box edges cut a thin gap between levels so the nesting reads
+    even where adjacent ramp steps are close in hue
+  - 'Quantile levels are ordered steps of imprint_seq (#009E73 → #4467A3), with the
+    quartile box in brand green; data colors are identical in both renders and all
+    chrome flips cleanly through the theme tokens'
+  - Custom legend built from Patch and Line2D handles explains the median line, every
+    quantile level with its percentile span, and the outlier marks, each glyph matching
+    the mark it explains
+  - 'Realistic, neutral server response-time scenario: 2000 requests per endpoint
+    from exponential mixtures plus a 5 ms network floor, ordered from fast to slow
+    so the medians climb from about 45 ms to about 330 ms across the chart'
   weaknesses:
-  - 'Code uses custom Python Blue shades instead of Okabe-Ito brand green #009E73'
-  - Missing theme-adaptive code - no ANYPLOT_THEME environment variable handling
-  - Output saved to plot.png instead of plot-{THEME}.png
-  - Title says pyplots.ai instead of anyplot.ai
-  - No spine removal for visual refinement - could remove top/right spines
+  - 'Suggestion: the legend labels mix precisions ("3.12–96.88 %", "0.781–99.22 %");
+    a fixed two-decimal format such as "0.78–99.22 %" would read more evenly.'
+  - 'Suggestion: the middle ramp steps (12.5–87.5 %, 6.25–93.75 %, 3.12–96.88 %) are
+    close teal shades; matching a swatch to a box relies mostly on the nesting order
+    rather than the color.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text
-      Data: Teal/green nested boxes, yellow median line, gray outlier dots - all distinguishable
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: title "boxen-basic · python · matplotlib · anyplot.ai" in near-black ink, centered, about 47 % of the width; y-axis "Response Time (ms)" and x-axis "API Endpoint" in dark ink; log-scale tick labels 10 / 100 / 1000 / 10000 and category labels Fast API, DB Query, File Upload, Report Gen in soft dark gray; subtle horizontal grid at the decades; top and right spines removed; legend "Letter values" on the right in an elevated off-white frame. All text readable.
+      Data: four letter-value stacks of six nested boxes each, the widest quartile box in brand green #009E73 and the deeper, narrower boxes stepping through imprint_seq toward blue #4467A3; a thick near-black median line across each quartile box; gray translucent outlier dots above and below each stack (many in Report Gen up to ~9000 ms). Boxes are separated by thin page-colored edges.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels all clearly visible in light text
-      Data: Data colors identical to light render (teal/green boxes, yellow median line)
-      Legibility verdict: PASS - No dark-on-dark failures detected
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles and the legend title in light ink; tick and legend labels in light gray; grid lines subtle dark gray; legend frame in elevated #242420 with a light gray border. No dark-on-dark text anywhere.
+      Data: box colors identical to the light render (green quartile box, teal-to-blue deeper levels); median line flips to light ink and stays clearly visible on the green boxes; outlier dots in the lighter muted gray, visible on the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicit; all readable in both themes; could be more prominent
+        comment: All font sizes set explicitly (title 12, labels 10, ticks and legend
+          8); readable in both themes; title about 47 % of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; axis labels well-spaced
+        comment: No text collisions; legend sits outside the axes; stacked outlier
+          dots are expected for a large sample
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nested boxes and outliers perfectly sized and visible
+        comment: Boxes, median lines and outlier dots (s=14, alpha 0.6) all clearly
+          visible; legend glyphs match the marks in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast; outliers distinguishable
+        comment: Levels told apart by width and page-colored gaps as well as hue;
+          median line high contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 65% of canvas with balanced margins
+        comment: 3200x1800, plot fills most of the canvas, legend adjacent on the
+          right, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Response Time ms)
+        comment: Response Time (ms) with units, API Endpoint
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses Python Blue not Okabe-Ito #009E73; images show correct
-          colors suggesting code-output mismatch; hardcoded colors not theme-adaptive'
+        passed: true
+        comment: 'Ordered quantile levels in ordered steps of imprint_seq starting
+          at #009E73; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Elegant nested-box approach but uses custom palette instead of design
-          system
+        passed: true
+        comment: 'Beyond baseline: log value axis chosen for the skewed data with
+          plain-number FuncFormatter labels, ink median line as the strongest element
+          over the color ramp'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: false
-        comment: Subtle grid present; could enhance with spine removal
+        passed: true
+        comment: 'Beyond baseline: page-colored box edges carve gaps between levels,
+          x tick marks removed, median line width matched to the quartile box'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Shows distribution comparison and reveals tail behavior; lacks dramatic
-          emphasis
+        passed: true
+        comment: Endpoints ordered fast to slow, so the medians and tails climb step
+          by step across the chart; tail length differences per endpoint visible
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -119,25 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen plot with nested quantiles decreasing in width
+        comment: Letter-value plot; no whiskers, strip points, means or reference
+          lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: nested boxes, outliers, quantile legend'
+        comment: Nested letter-value boxes, decreasing widths, ordered shading, outliers
+          beyond the deepest level, axis labels and a legend of quantile levels all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; 0-8000ms range properly displayed
+        comment: Box edges at their quantiles, outliers at their values on a common
+          x; all data within the axes
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has pyplots.ai not anyplot.ai; legend correct
+        passed: true
+        comment: Title format correct; legend entries name each percentile span plus
+          median and outliers
     data_quality:
       score: 15
       max: 15
@@ -147,21 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all boxen features across multiple groups
+        comment: Four distributions with different centers and tails, outliers on
+          both sides, 2000 points each
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic API response times by endpoint
+        comment: Server response times by endpoint, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and distributions factually plausible for server data
+        comment: 'Checked: medians about 45 / 115 / 200 / 330 ms read off the axis,
+          minimum near the 5 ms network floor set at line 52, tails up to ~9 s for
+          report generation; no check values in the spec'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,60 +195,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → seed → data → plot → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded colors and no environment-based theme handling
+        passed: true
+        comment: Quantiles via vectorized np.quantile; matplotlib has no boxen call,
+          so the bar loop is the necessary hand-roll
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: Saves plot-{THEME}.png at 3200x1800, no bbox_inches, current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: false
-        comment: Uses axes methods correctly; manual color generation verbose
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses FancyBboxPatch and custom legend; could explore more library
-          features
+        passed: true
+        comment: Correct Axes-method usage (bar with bottom/width, hlines, scatter);
+          default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Generic usage; Patch/Line2D legend handles are common practice
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T08:44:35Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - custom-legend
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
-  - publication-ready
+  - custom-colormap
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
