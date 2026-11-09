@@ -1,29 +1,51 @@
-""" anyplot.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-13
 """
 
-import matplotlib.patches as patches
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.colors import to_rgb
+from matplotlib.patches import Rectangle
 
 
-# Data: File system structure with folders and files
-# Format: (name, parent, value) - leaf nodes have values, internal nodes will be computed
-hierarchy_data = [
-    ("Root", None, 0),
-    ("Documents", "Root", 0),
-    ("Pictures", "Root", 0),
-    ("Music", "Root", 0),
-    ("Reports", "Documents", 0),
-    ("Letters", "Documents", 0),
-    ("Spreadsheets", "Documents", 0),
-    ("Photos", "Pictures", 0),
-    ("Screenshots", "Pictures", 0),
-    ("Icons", "Pictures", 0),
-    ("Albums", "Music", 0),
-    ("Playlists", "Music", 0),
-    ("Podcasts", "Music", 0),
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: one hue per hierarchy level, root first
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+LABEL_PAD = 0.9  # a label may fill at most this share of its rectangle
+
+# Columns: set these to your table's column names
+NAME = "Name"  # role: name
+PARENT = "Parent"  # role: parent
+SIZE = "Size (MB)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("files.csv")
+# Leaves carry a size; folders are left empty and sum their children
+hierarchy = [
+    ("Root", None, None),
+    ("Documents", "Root", None),
+    ("Pictures", "Root", None),
+    ("Music", "Root", None),
+    ("Reports", "Documents", None),
+    ("Letters", "Documents", None),
+    ("Spreadsheets", "Documents", None),
+    ("Photos", "Pictures", None),
+    ("Screenshots", "Pictures", None),
+    ("Icons", "Pictures", None),
+    ("Albums", "Music", None),
+    ("Playlists", "Music", None),
+    ("Podcasts", "Music", None),
     ("Q1_Report", "Reports", 45),
     ("Q2_Report", "Reports", 55),
     ("Q3_Report", "Reports", 50),
@@ -47,140 +69,104 @@ hierarchy_data = [
     ("Podcast_1", "Podcasts", 45),
     ("Podcast_2", "Podcasts", 45),
 ]
+df = pd.DataFrame(hierarchy, columns=[NAME, PARENT, SIZE]).astype({SIZE: float})
 
-# Build tree structure inline (no functions per KISS principle)
-nodes = {}
-children = {}
-
-for name, parent, value in hierarchy_data:
-    nodes[name] = {"name": name, "parent": parent, "value": value}
-    if parent is not None:
-        if parent not in children:
-            children[parent] = []
+# Plot: reads only df and the constants above
+names = df[NAME].astype(str).tolist()
+parents = dict(zip(names, df[PARENT].where(df[PARENT].notna(), None), strict=True))
+children = {name: [] for name in names}
+for name, parent in parents.items():
+    if parent is not None and parent in children:
         children[parent].append(name)
+roots = [name for name, parent in parents.items() if parent is None or parent not in children]
 
-# Calculate total values for all nodes (bottom-up traversal)
-# First, get nodes in reverse depth order using BFS
-node_depths = {"Root": 0}
-queue = ["Root"]
-depth_order = []
-while queue:
-    current = queue.pop(0)
-    depth_order.append(current)
-    if current in children:
-        for child in children[current]:
-            node_depths[child] = node_depths[current] + 1
-            queue.append(child)
+# Breadth-first order gives each node's depth; reversed, it sums sizes bottom-up
+depth = dict.fromkeys(roots, 0)
+order = list(roots)
+for node in order:
+    for child in children[node]:
+        depth[child] = depth[node] + 1
+        order.append(child)
+own_size = dict(zip(names, df[SIZE], strict=True))
+total = {}
+for node in reversed(order):
+    total[node] = np.nansum([total[c] for c in children[node]]) if children[node] else np.nan_to_num(own_size[node])
 
-# Calculate values bottom-up
-node_values = {}
-for node_name in reversed(depth_order):
-    if node_name not in children:
-        node_values[node_name] = nodes[node_name]["value"]
-    else:
-        node_values[node_name] = sum(node_values[child] for child in children[node_name])
+# Top-down layout: each child takes its share of its parent's horizontal extent
+grand_total = sum(total[root] for root in roots)
+x0 = {}
+cursor = 0.0
+for root in roots:
+    x0[root] = cursor
+    cursor += total[root] / grand_total
+for node in order:
+    start = x0[node]
+    for child in children[node]:
+        x0[child] = start
+        start += total[child] / grand_total
 
-# Calculate positions for icicle chart (top-to-bottom layout)
-positions = {}
-positions["Root"] = {"x_start": 0, "x_end": 1, "depth": 0, "value": node_values["Root"]}
+levels = max(depth.values()) + 1
+row_height = 1.0 / levels
+row_gap = row_height * 0.04
 
-# Process nodes level by level
-for node_name in depth_order:
-    if node_name in children:
-        pos = positions[node_name]
-        current_x = pos["x_start"]
-        total_value = node_values[node_name]
-        for child in children[node_name]:
-            child_value = node_values[child]
-            child_width = (child_value / total_value) * (pos["x_end"] - pos["x_start"])
-            positions[child] = {
-                "x_start": current_x,
-                "x_end": current_x + child_width,
-                "depth": pos["depth"] + 1,
-                "value": child_value,
-            }
-            current_x += child_width
-
-# Find max depth
-max_depth = max(pos["depth"] for pos in positions.values())
-
-# Color palette by depth level (colorblind-safe)
-depth_colors = [
-    "#306998",  # Python Blue - Level 0
-    "#FFD43B",  # Python Yellow - Level 1
-    "#4ECDC4",  # Teal - Level 2
-    "#FF6B6B",  # Coral - Level 3
-    "#95E1D3",  # Light teal - Level 4
-]
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Draw rectangles
-row_height = 1.0 / (max_depth + 1)
-
-for node_name, pos in positions.items():
-    depth = pos["depth"]
-    x_start = pos["x_start"]
-    x_end = pos["x_end"]
-    width = x_end - x_start
-
-    # Y position (top-to-bottom: depth 0 at top)
-    y_start = 1.0 - (depth + 1) * row_height
-
-    # Get color based on depth
-    color = depth_colors[depth % len(depth_colors)]
-
-    # Draw rectangle
-    rect = patches.Rectangle(
-        (x_start, y_start),
-        width,
-        row_height * 0.95,  # Small gap between rows
-        linewidth=2,
-        edgecolor="white",
-        facecolor=color,
-        alpha=0.85,
-    )
-    ax.add_patch(rect)
-
-    # Add label if rectangle is wide enough
-    if width > 0.03:
-        label = node_name.replace("_", " ")
-        max_chars = max(3, int(width * 80))
-        if len(label) > max_chars:
-            label = label[: max_chars - 2] + ".."
-
-        # Calculate font size based on width
-        fontsize = min(16, max(9, int(width * 120)))
-
-        ax.text(
-            x_start + width / 2,
-            y_start + row_height * 0.95 / 2,
-            label,
-            ha="center",
-            va="center",
-            fontsize=fontsize,
-            fontweight="bold",
-            color="white" if depth != 1 else "black",
-        )
-
-# Configure axes
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.865, top=0.9, bottom=0.03)
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
-ax.set_aspect("auto")
-
-# Add depth level labels on the right
-level_labels = ["Root", "Category", "Subcategory", "Item", "Detail"]
-for depth in range(max_depth + 1):
-    y_pos = 1.0 - (depth + 0.5) * row_height
-    level_label = level_labels[depth] if depth < len(level_labels) else ""
-    ax.text(1.02, y_pos, level_label, fontsize=14, va="center", color="#333333")
-
-# Remove axes for cleaner look
 ax.axis("off")
+fig.canvas.draw()
+renderer = fig.canvas.get_renderer()
 
-# Add title in correct format per spec
-ax.set_title("icicle-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+for node in order:
+    width = total[node] / grand_total
+    if width <= 0:
+        continue
+    level = depth[node]
+    fill = IMPRINT_PALETTE[level]
+    y = 1.0 - (level + 1) * row_height
+    ax.add_patch(
+        Rectangle(
+            (x0[node], y + row_gap / 2), width, row_height - row_gap, facecolor=fill, edgecolor=PAGE_BG, linewidth=1.2
+        )
+    )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+    # Label only where the text fits inside its rectangle: horizontal first, then upright
+    red, green, blue = to_rgb(fill)
+    text_color = "#1A1A17" if 0.299 * red + 0.587 * green + 0.114 * blue > 0.5 else "#FAF8F1"
+    label = ax.text(
+        x0[node] + width / 2,
+        y + row_height / 2,
+        str(node).replace("_", " "),
+        ha="center",
+        va="center",
+        fontsize=9 if level < 2 else 7,
+        fontweight="bold" if level < 2 else "normal",
+        color=text_color,
+    )
+    box = ax.transData.transform([(x0[node], y + row_gap / 2), (x0[node] + width, y + row_height - row_gap / 2)])
+    room_w, room_h = (box[1] - box[0]) * LABEL_PAD
+    extent = label.get_window_extent(renderer)
+    if extent.width > room_w or extent.height > room_h:
+        label.set_rotation(90)
+        extent = label.get_window_extent(renderer)
+        if extent.width > room_w * LABEL_PAD or extent.height > room_h:
+            label.remove()
+
+# Row captions in the right margin name each hierarchy level
+for level in range(levels):
+    ax.text(
+        1.015,
+        1.0 - (level + 0.5) * row_height,
+        f"Level {level + 1}",
+        transform=ax.transAxes,
+        ha="left",
+        va="center",
+        fontsize=9,
+        color=INK_SOFT,
+    )
+
+# Style
+ax.set_title("icicle-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="bold", color=INK, pad=10)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
