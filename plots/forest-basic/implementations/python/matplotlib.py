@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -18,7 +18,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette: position 1 for the studies, position 2 sets the pooled diamond apart
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -125,19 +124,6 @@ ax.set_ylim(pooled_y - 0.8, n_studies + 0.8)
 
 ax.grid(True, axis="x", alpha=0.15, linestyle="-", linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
-
-# Direction of effect on either side of the null line, below the pooled row
-for side, label, ha in ((-1, "← Favors treatment", "right"), (1, "Favors control →", "left")):
-    ax.annotate(
-        label,
-        xy=(NULL_EFFECT, 0.015),
-        xycoords=ax.get_xaxis_transform(),
-        xytext=(side * 4, 0),
-        textcoords="offset points",
-        fontsize=8,
-        ha=ha,
-        color=INK_MUTED,
-    )
 
 for side in ("top", "right", "left"):
     ax.spines[side].set_visible(False)
