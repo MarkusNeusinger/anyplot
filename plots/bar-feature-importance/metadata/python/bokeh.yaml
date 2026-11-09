@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:38:23Z'
-updated: '2026-11-09T02:01:31Z'
+updated: '2026-11-09T02:09:07Z'
 generated_by: claude-opus
 workflow_run: 42547701316
 issue: 2276
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-featu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Bars sorted with the highest importance at the top by sorting ascending and letting
-    bokeh's bottom-up categorical y_range place Income first; every feature name is
-    written out in full beside its bar
-  - 'Sequential imprint_seq gradient (brand green #009E73 for the weakest feature
-    to blue #4467A3 for the strongest) built with interp_palette and applied through
-    a LinearColorMapper field transform, so color and bar length tell the same ranking;
-    the weakest green bar stays distinct from the page in both themes'
-  - Error bars use bokeh's native Whisker annotation in the INK token, centered on
-    each bar end and visible against every step of the gradient in both themes
-  - Value labels via LabelSet are positioned past the whisker tip (max of bar end
-    and upper whisker), so each 3-decimal value stays clear of its error bar
-  - 'Theme tokens thread through all chrome: title, axis label, tick labels, axis
-    lines and the 15 % x-grid read correctly on #FAF8F1 and #1A1A17'
-  - Realistic credit-risk feature set with plausible RandomForest-style importances
-    summing to 1.0
+  - 'Native bokeh field transform `fill_color={"field": IMPORTANCE, "transform": LinearColorMapper(...)}`
+    maps the imprint_seq ramp (built with bokeh''s own `interp_palette`) straight
+    onto the bar values, so color and bar length tell the same ranking, with the weakest
+    bar in brand green #009E73, clearly distinct from the page in both themes'
+  - Error bars use bokeh's native `Whisker` annotation, centered on each bar end and
+    drawn in the INK token so they stay visible against every step of the gradient
+    in both themes
+  - Value labels sit just past the further of bar end and whisker tip (computed from
+    the data with `np.fmax`), so every label is clear of its error bar and nothing
+    collides
+  - Sorting is data-driven (`sort_values` plus a categorical y_range built from the
+    sorted names), so the highest importance lands on top and all twelve feature names
+    are written out in full
+  - Theme tokens are threaded through every chrome element; both renders are fully
+    readable, and the data colors are identical between light and dark
+  - Realistic credit-risk random-forest scenario whose importances sum to exactly
+    1.000, as Gini importances do
   weaknesses:
-  - 'DE-02 (dark): a 1 px gray (#535350) frame line runs along the top and right edges
-    of the plot area, so the dark render shows a box where the light render shows
-    open top/right edges → no visible top/right frame in either theme. Likely cause:
-    the seam between border_fill and background_fill at the frame boundary; set p.outline_line_alpha=0
-    together with min_border padding, or match p.background_fill_color and p.border_fill_color
-    through the same token and check the screenshot edge.'
-  - 'DQ-02 (both): ''Payment History'' ranks 11th of 12 at 0.032 in a credit-risk
-    model, where payment history is usually among the strongest predictors, which
-    makes the ranking read as arbitrary → give Payment History an importance near
-    the top (about 0.14–0.17) and keep the values summing to 1. Likely cause: the
-    IMPORTANCE list order in the data block.'
-  - 'Suggestion: a HoverTool listing feature, importance and std would add detail
-    to the HTML view.'
+  - 'Suggestion: add a bokeh `HoverTool` showing feature, importance and std in the
+    HTML output; it costs nothing in the PNG and is bokeh''s distinctive strength.'
+  - 'Suggestion: the x-range headroom past the 0.2 tick (up to about 0.23) leaves
+    a band of empty plot on the right; trimming the 1.12 factor slightly would tighten
+    the layout while keeping the 0.185 label clear.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: left-aligned title "bar-feature-importance · python · bokeh · anyplot.ai" in dark ink (~half the width); y-axis feature names (Income … Account Balance) and x ticks 0–0.2 in soft dark gray; x-axis title "Importance score"; subtle vertical x-grid only; left and bottom axis lines; no ticks. All text readable.
-      Data: 12 horizontal bars from 0, sorted highest (Income 0.185) at top to lowest (Account Balance 0.015) at bottom; gradient from brand green #009E73 (weakest) to blue #4467A3 (strongest); black ±1 std whiskers centered on bar ends; values in 3 decimals placed right of each whisker tip.
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: title "bar-feature-importance · python · bokeh · anyplot.ai" top-left in dark ink at about half the width; twelve full feature names on the y axis in soft dark ink; x ticks 0–0.2 and the axis title "Importance score" readable; subtle vertical x-grid only, no tick marks, left and bottom axis lines in INK_SOFT.
+      Data: twelve horizontal bars from a zero baseline, sorted with Income (0.185) on top and Account Balance (0.016) at the bottom, colored along imprint_seq from brand green #009E73 (weakest) to blue #4467A3 (strongest); thin dark ±std whiskers centered on each bar end, visible over both the bar fills and the page; value labels (0.185 … 0.016) just past each whisker tip, no overlaps.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and axis title in light ink, ticks and feature names in light gray — no dark-on-dark text; x-grid subtle. A faint 1 px gray frame line is visible along the top and right of the plot area (not visible in the light render).
-      Data: bar colors identical to the light render; whiskers flip to light ink and stay visible on every gradient step; value labels light gray and readable.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title in light ink, feature names and tick labels in light soft ink, axis title light; no dark-on-dark text anywhere; grid faint but visible.
+      Data: bar colors identical to the light render (same green-to-blue ramp); whiskers flip to light ink and read well on every bar and on the page; value labels in light soft ink, all readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,33 +60,33 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title ~50pt, axis 42pt, ticks 34pt, values 30pt);
-          readable in both themes and at thumbnail size
+        comment: Explicit sizes (50/42/34/30 pt); every text readable in both themes,
+          balanced tick sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels sit past the whisker tips; no text collisions
+        comment: Value labels placed past the whisker tips; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 bars at height 0.7 with page-colored outline; whiskers 3 px visible
-          on every gradient step in both themes
+        comment: Bars, whiskers and labels clearly visible; weakest green bar distinct
+          from both pages
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp redundant with bar length; CVD-safe
+        comment: Green-to-blue ramp is redundant with bar length; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, gate passed; balanced margins, nothing clipped
+        comment: 3200x1800, nothing clipped, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,33 +99,32 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq #009E73→#4467A3; backgrounds #FAF8F1 / #1A1A17; chrome
-          theme-correct'
+        comment: 'imprint_seq #009E73→#4467A3; correct page colors in both themes'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Typographic hierarchy beyond baseline: ink title/axis title, soft-ink
-          ticks and smaller soft-ink value labels; capless ink whiskers'
+        passed: true
+        comment: Deliberate size hierarchy (value labels at 30 pt below 34 pt ticks,
+          softer ink), page-colored bar outlines separating adjacent bars
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Label placement past whisker tips and tick removal are offset by
-          the dark-only top/right frame line (defect line)
+        passed: true
+        comment: Y-grid dropped for a horizontal bar chart and tick marks removed;
+          label positions computed past the whisker tips
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Sorting, gradient and value labels are all prescribed by the Notes;
-          no hierarchy chosen beyond them
+        comment: Ranking shown by sort and gradient as the Notes prescribe; no hierarchy
+          chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal feature-importance bars
+        comment: Horizontal feature-importance bars from zero
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted highest at top, sequential gradient on importance, value labels
-          at bar ends clear of whiskers, error bars centered on bar ends — all good-version
-          bullets met
+        comment: Sorted highest on top, sequential gradient on importance, value labels
+          at bar ends clear of error bars, optional error bars centered on bar ends;
+          all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bars from zero baseline at their values; whiskers ±std
+        comment: Bars at their values, axis from 0 covers all whiskers
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; no legend needed (single encoding, N/A)
+        comment: Mandated title format; legend N/A (single series, color redundant
+          with length)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,21 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 features with dominant leaders and tail, std error bars
+        comment: Dominant features plus tail, error bars, labels
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Credit-risk scenario plausible, but Payment History ranked near the
-          bottom reads as arbitrary (defect line)
+        passed: true
+        comment: Credit-risk model features, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importances 0.015–0.185 sum to 1.0; std 0.005–0.021 sensible; no
-          Check values in spec
+        comment: Importances sum to 1.000 (checked), std 0.005–0.021 plausible; no
+          Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -195,13 +188,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, six zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic literal data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,45 +206,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Native Whisker/LabelSet/LinearColorMapper; no hand-rolled algorithm
+        comment: interp_palette instead of a hand-written lerp; NaN-safe label positions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium; Bokeh 3 API
+        comment: plot-{THEME}.html + .png via Selenium, current Bokeh 3 API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: ColumnDataSource with field-transform fill_color dict, categorical
-          y_range, Whisker and LabelSet bound to the source
+        passed: true
+        comment: ColumnDataSource-driven glyphs, field transform for color mapping,
+          Whisker and LabelSet sharing the source
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: bokeh.palettes.interp_palette for the ramp and the Whisker annotation
-          model; no HoverTool
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates (no HoverTool or
+          other bokeh-specific interactivity)
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T01:58:14Z'
+  rendered_at: '2026-11-09T02:06:02Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - error-bars
   - annotations
   - html-export
   patterns:
+  - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - custom-colormap
-  - edge-highlighting
-  - grid-styling
+  - gradient-fill
+  - minimal-chrome
