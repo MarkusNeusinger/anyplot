@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 silhouette-basic: Silhouette Plot
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -78,6 +78,7 @@ bars = (
             title=CLUSTER,
             sort=cluster_names,
             scale=alt.Scale(domain=cluster_names, range=IMPRINT_PALETTE),
+            legend=None,
         ),
         tooltip=[
             alt.Tooltip(SAMPLE.translate(ESCAPE), type="nominal", title=SAMPLE),
@@ -101,21 +102,16 @@ avg_label = (
 
 cluster_labels = (
     alt.Chart(summary)
-    .mark_text(align="left", baseline="middle", dx=10, fontSize=11, fontWeight="bold")
-    .encode(
-        x=alt.X("x_tip", type="quantitative"),
-        y=alt.Y("y_mid", type="quantitative"),
-        text="label",
-        color=alt.Color("cluster_name", type="nominal", legend=None),
-    )
+    .mark_text(align="left", baseline="middle", dx=10, fontSize=11, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x_tip", type="quantitative"), y=alt.Y("y_mid", type="quantitative"), text="label")
 )
 
 title = "silhouette-basic · python · altair · anyplot.ai"
 chart = (
     alt.layer(bars, avg_line, avg_label, cluster_labels)
     .properties(
-        width=660,
-        height=340,
+        width=620,
+        height=320,
         background=PAGE_BG,
         padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
         title=alt.Title(title, fontSize=16, anchor="start"),
