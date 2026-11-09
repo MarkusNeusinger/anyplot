@@ -25,8 +25,27 @@ import pytest
 from tests.unit.api.test_machine_reads_nginx import CONF, evaluate
 
 
-EVENT_LOCATIONS = re.findall(r"location = /api/event \{(.*?)\n    \}", CONF, re.DOTALL)
-CONDITIONAL = re.compile(r"\bif \((?P<test>[^)]*)\)\s*\{(?P<body>[^}]*)\}")
+def _code(text: str) -> str:
+    """Config text without its comment lines, so prose about an `if` or a brace is never read as config."""
+    return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+
+
+def _event_locations() -> list[str]:
+    """The body of every `location = /api/event { … }`, delimited by brace depth rather than by indentation."""
+    code = _code(CONF)
+    bodies = []
+    for opening in re.finditer(r"location\s*=\s*/api/event\s*\{", code):
+        depth = 1
+        for index in range(opening.end(), len(code)):
+            depth += {"{": 1, "}": -1}.get(code[index], 0)
+            if depth == 0:
+                bodies.append(code[opening.end() : index])
+                break
+    return bodies
+
+
+EVENT_LOCATIONS = _event_locations()
+CONDITIONAL = re.compile(r"\bif\s*\((?P<test>[^)]*)\)\s*\{(?P<body>[^}]*)\}")
 
 WIN10_CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{} Safari/{}"
 MAC_CHROME = (
@@ -40,14 +59,20 @@ BROWSERS = [
     *(WIN10_CHROME.format(version, "537.36") for version in ["148.0.0.0", "150.0.0.0", "156.0.0.0"]),
     WIN10_CHROME.format("104.0.5112.81", "537.36"),
     WIN10_CHROME.format("105.0.0.0", "537.3"),
-    *(MAC_CHROME.format(version) for version in ["148.0.0.0", "149.0.0.0", "150.0.0.0"]),
+    *(MAC_CHROME.format(version) for version in ["120.0.0.0", "148.0.0.0", "149.0.0.0", "150.0.0.0"]),
     WIN10_CHROME.format("150.0.0.0", "537.36 Edg/150.0.0.0"),
     WIN10_CHROME.format("120.0.0.0", "537.36 OPR/106.0.0.0"),
     "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:145.0) Gecko/20100101 Firefox/145.0",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:145.0) Gecko/20100101 Firefox/145.0",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Safari/605.1.15",
     "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 15; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/29.0 "
+    "Chrome/136.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPad; CPU OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 "
+    "Mobile/15E148 Safari/604.1",
     "Mozilla/5.0 (iPhone; CPU iPhone OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 "
     "Mobile/15E148 Safari/604.1",
 ]
@@ -63,8 +88,16 @@ AUTOMATION = [
 
 def _dropping_maps(location: str) -> list[str]:
     """The map variables whose value 1 makes this location answer 202 instead of proxying."""
+    code = _code(location)
+    conditionals = list(CONDITIONAL.finditer(code))
+    # A test with a parenthesis in it, `if ($http_user_agent ~ "(...)")`, escapes CONDITIONAL; counting the
+    # keywords keeps such an `if`, or a bare `return`, from passing unread.
+    assert len(re.findall(r"\bif\b", code)) == len(conditionals), "/api/event has an `if` this test cannot read"
+    assert len(re.findall(r"\b(?:return|deny)\b", code)) == len(conditionals), (
+        "/api/event answers a request itself outside a map's conditional"
+    )
     variables = []
-    for conditional in CONDITIONAL.finditer(location):
+    for conditional in conditionals:
         test, body = conditional.group("test").strip(), conditional.group("body").strip()
         assert re.fullmatch(r"\$\w+", test), f"/api/event tests something other than one map variable: if ({test})"
         assert body == "return 202;", f"/api/event does something other than a 202 when {test} is set: {body!r}"

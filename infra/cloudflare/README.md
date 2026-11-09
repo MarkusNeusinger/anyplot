@@ -582,7 +582,7 @@ The smoke bypass is the first rule of the custom ruleset.
 |---|---|---|---|---|
 | Smoke bypass | `6a18892a4acf4461a38afe4e12ef6c00` | Skip, phase `http_request_sbfm` | the site hosts with the right `X-Smoke-Token` (see [The smoke bypass](#the-smoke-bypass)) | active since 2026-11-09 |
 | Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so Super Bot Fight Mode never challenges API and MCP clients | active |
-| Hosting-network challenge | `34be33ec` (prefix) | Managed Challenge | four hosting-network ASNs on the site hosts, verified bots excluded (see [A Managed Challenge for hosting-network ASNs](#a-managed-challenge-for-hosting-network-asns)) | active since 2026-11-09 |
+| Hosting-network challenge | `34be33ecb34f4c21935ca75e3f9c0d3a` | Managed Challenge | four hosting-network ASNs on the site hosts, verified bots excluded (see [A Managed Challenge for hosting-network ASNs](#a-managed-challenge-for-hosting-network-asns)) | active since 2026-11-09 |
 | Block public agent chat | `56aee2fcb6b547bb914a59bbc4da5e12` | Block | the public agent chat | disabled |
 
 The AI Crawl Control block rule is gone. On 2026-11-09 it was first narrowed
@@ -678,9 +678,9 @@ page instead of the site and check nothing; the script marks such a page as a
 
 ### A Managed Challenge for hosting-network ASNs
 
-Since 2026-11-09, custom rule `34be33ec` in the custom ruleset
-`0f3e161fc09f4d62b6af6eea7fe838a9` answers this expression with a Managed
-Challenge:
+Since 2026-11-09, custom rule `34be33ecb34f4c21935ca75e3f9c0d3a` in the custom
+ruleset `0f3e161fc09f4d62b6af6eea7fe838a9` answers this expression with a
+Managed Challenge (rule version 2, which added the last two ASNs at 20:44 UTC):
 
 ```text
 (ip.src.asnum in {132203 394380 136907 45090}) and not cf.client.bot and (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"})
