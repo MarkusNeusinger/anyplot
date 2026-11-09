@@ -246,7 +246,7 @@ export function awaitsReply(state: AgentSessionState): boolean {
  * without pipeline steps waits for its reply: the summary of the data, example
  * data, a question, a data request. It shows exactly while the turn's own prompt is the
  * last item, so the first reply (a message, a refusal, an error, a plot) takes
- * its place. A plot run (`create_plot`, `carry_plot`) gets none, and neither
+ * its place. A plot run (`create_plot`, `carry_plot`, `plot_new_data`) gets none, and neither
  * does a turn that reached a pipeline step: the progress timeline below the
  * thread shows those, and two indicators would say the same thing. A wait in
  * the run queue keeps the line, since the queue counter says where, not what.
@@ -259,7 +259,7 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
     if (run.reconnecting && !run.stopping) return 'reconnecting';
     return run.stopping ? 'stopping' : 'writing';
   }
-  if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
+  if (!run || isPlotAction(run.kind)) return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
   // A cut stream the page reads again: the turn's only indicator, also after its reply arrived.
   if (run.reconnecting && !run.stopping) return 'reconnecting';

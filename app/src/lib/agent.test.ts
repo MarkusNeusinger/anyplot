@@ -244,6 +244,28 @@ describe('parseAgentEvent', () => {
     ).toMatchObject({ result: expect.not.objectContaining({ memory: expect.anything() }) });
   });
 
+  it('reads where "plot the new data" started, and no field for any other value', () => {
+    const base = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('plot', { status: 'ok', attempts: 1, artifacts: [], version: 2, new_data: value })
+      );
+      return event?.type === 'plot' ? event.result.new_data : 'not a plot';
+    };
+    for (const value of [
+      'previous',
+      'other_paste',
+      'other_data',
+      'bindings_changed',
+      'kept_note',
+      'no_plot',
+    ]) {
+      expect(base(value)).toBe(value);
+    }
+    expect(base('renamed')).toBeUndefined();
+    expect(base(null)).toBeUndefined();
+    expect(base(undefined)).toBeUndefined();
+  });
+
   it("reads done's switch the user asked for in the chat, and drops one the page cannot make", () => {
     const done = (value: unknown) => parseAgentEvent(raw('done', { switch: value }));
     expect(done({ library: 'seaborn', plot: true })).toMatchObject({

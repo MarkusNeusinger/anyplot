@@ -227,8 +227,13 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
       ['done', { llm_calls: 1 }],
     ];
   }
-  // The first plot: `.create_plot()` as it is, or with a change the user typed first.
-  if (body.action === 'create_plot' || body.text?.includes('log scale')) {
+  // The first plot: `.create_plot()` as it is, or with a change the user typed first; `plot the
+  // new data` the same way.
+  if (
+    body.action === 'create_plot' ||
+    body.action === 'plot_new_data' ||
+    body.text?.includes('log scale')
+  ) {
     return [
       ['plot', PLOT],
       ['message', { text: 'Here is your plot.' }],
@@ -1112,10 +1117,16 @@ describe('AgentChatPage gating', () => {
       'create_plot',
     ]);
 
+    // `.start_over()` stands beside it: the catalogue plot without waiting for a run that may
+    // change the latest plot instead.
+    expect(statusActions()).toEqual(['.start_over()']);
+
     // The thread names the button as it read: the plot of the new data, not `.create_plot()`.
+    // Its action is its own, which the server starts from the latest plot when its guard allows.
     fireEvent.click(screen.getByRole('button', { name: 'Plot the new data' }), { detail: 1 });
     await waitFor(() => expect(lastAction()).toHaveTextContent(/^❯plot the new data# matplotlib$/));
     await turnEnded();
+    expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'plot_new_data']);
   });
 
   it('sends a pasted formula to the chat, whose table becomes version 1', async () => {
@@ -1428,9 +1439,10 @@ describe('AgentChatPage gating', () => {
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toBe(1);
       // Step 1 again with a plot here: the plot button acts with an empty box, named for what
-      // it does now: the next version from the changed data. `.start_over()` steps back.
+      // it does now: the next version from the changed data. `.start_over()` beside it is the
+      // catalogue plot instead, since the button may change the latest plot.
       expect(composerButtons()).toEqual(['.example_data() (inert)', 'plot the new data']);
-      expect(statusActions()).toEqual([]);
+      expect(statusActions()).toEqual(['.start_over()']);
       // The step line alone says it: no notice right above it in the thread.
       expect(lossNotice()).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -1445,14 +1457,15 @@ describe('AgentChatPage gating', () => {
       expect(within(stub).getByRole('cell', { name: '52' })).toBeInTheDocument();
       expect(within(stub).getAllByRole('button')).toEqual([older]);
 
-      // One click: the changed data confirmed, then a new version from the catalogue plot, which
-      // opens the next plot chapter below the card.
+      // One click: the changed data confirmed, then a new version for it (`plot_new_data`, which
+      // the server starts from the latest plot when its guard allows), which opens the next plot
+      // chapter below the card.
       const create = screen.getByRole('button', { name: 'Plot the new data' });
       await untilActive(create);
       fireEvent.click(create);
       await waitFor(() => expect(screen.getAllByText('Here is your plot.')).toHaveLength(2));
       await turnEnded();
-      expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'create_plot']);
+      expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'plot_new_data']);
       expect(composerButtons()).toEqual(['.example_data() (inert)', '.update_plot() → (inert)']);
       expect(statusActions()).toEqual(['.start_over()']);
       expect(chapters()).toEqual(['data', 'plot', 'data', 'plot']);
@@ -3897,13 +3910,15 @@ describe('AgentChatPage attachment', () => {
         expect(lastAction()).toHaveTextContent(/^❯plot the new data# matplotlib$/)
       );
       await turnEnded();
+      // The new data's plot is "plot the new data" (`plot_new_data`), which the server starts from
+      // the catalogue plot here, since the paste is other data.
       expect(confirmAndTurns()).toEqual([
         'summarize_data',
         'confirm',
         'create_plot',
         'summarize_data',
         'confirm',
-        'create_plot',
+        'plot_new_data',
       ]);
     });
 

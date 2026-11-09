@@ -194,6 +194,7 @@ from .schemas import (
     Defect,
     FailureReason,
     LastRun,
+    NewDataBase,
     NotReadyReason,
     PipelineArgs,
     PlotResult,
@@ -246,6 +247,16 @@ LANGUAGE_REWRITE_REQUEST = (
     "Write the title, axis titles, legend entries and annotations in the plot language; change nothing else."
 )
 """The change request of a run on a version written in another language when the root sent none (`rewrite_request`)."""
+DATA_CHANGE_REQUEST = (
+    "The data changed since this version, with the same columns bound to the same roles: draw the new data and keep "
+    "every other choice of the code. Change only what the code chose for the old values and the new data no longer "
+    "fits, such as axis limits, ticks, category colours or an annotation; whatever the standing decisions or the "
+    "earlier requests ask for stays as it is."
+)
+"""The change request of the page's "plot the new data" on the library's latest version (`new_data_base`), written by
+the server as `LANGUAGE_REWRITE_REQUEST` is (owner decision of 2026-11-08): the action brings no request of its own,
+and without one the adapter would not know that the data changed. It is the server's, never the user's, so the
+version it ships keeps it out of its lineage's requests (`lineage_requests`)."""
 MEASURED_LINE = (
     "Measured: the server's checks found the lines below in this render's code or image; fix each of them, "
     "or the plot goes to a repair round."
@@ -519,7 +530,10 @@ class Run:
     """The switch's carry this run takes (`switch.read_carry`): a run in a new target without a version to change."""
     fresh: bool = False
     """The page's `create_plot` action (`.create_plot()`, `.start_over()`): the catalogue code again, the way out of
-    broken code, without the switch's carry but with the visible memory (owner decision of 2026-11-02)."""
+    broken code, without the switch's carry but with the visible memory (owner decision of 2026-11-02); also the
+    page's "plot the new data" when it does not start from the latest version (`new_data`)."""
+    new_data: NewDataBase | None = None
+    """Where the page's "plot the new data" (`plot_new_data`) started (`new_data_base`); None for every other run."""
     memory_plan: Planned | None = None
     """The plot memory as the run leaves it once it ships (`plan_memory`): its `decisions` are these entries."""
     memory_seq: int = 1
@@ -1011,6 +1025,49 @@ def rewrite_request(args: PipelineArgs, language_changed: bool) -> PipelineArgs:
     if not language_changed or args.change_request.strip():
         return args
     return args.model_copy(update={"change_request": LANGUAGE_REWRITE_REQUEST})
+
+
+def new_data_base(
+    latest: CodeVersion | None, view: SessionView, original: int, source: str | None, *, note_kept: bool = False
+) -> NewDataBase:
+    """Where the page's "plot the new data" starts (owner decision of 2026-11-08): `previous` while the library's
+    latest version (`latest`) drew a version of the current data's paste (its data number at or above `original`, the
+    number of the current data's first version) and of the same table (`source`, the current version's
+    `StoredDataset.source`: a table `generate_data` or `run_data_code` computed carries one, a paste none), with the
+    bindings in force, role for role; otherwise the reason it starts from the catalogue plot, as `.start_over()`
+    does. A first-plot note that waits (`note_kept`) is a first plot's, which only the fresh start takes.
+
+    A change of the same paste keeps the tuning only the code holds (persona case 02 lost it to the fresh start),
+    while the old code on other data keeps what was written for that data (case 06): a new paste, a computed table
+    that replaced the data (it keeps the paste's original, so the number alone would let it through), a rebind and a
+    reshape such as `.to_long()` start fresh. A version without the stamps counts as other data. A renamed or
+    rebound column starts fresh too, until a measurement shows the fallback is frequent.
+    """
+    if latest is None:
+        return "no_plot"
+    if latest.data_version is None or latest.earlier_data(original):
+        return "other_paste"
+    if latest.data_source != source:
+        return "other_data"
+    if latest.bindings is None or _assignments(latest.bindings) != _assignments(view.bindings):
+        return "bindings_changed"
+    if note_kept:
+        return "kept_note"
+    return "previous"
+
+
+def _assignments(bindings: Sequence[Binding]) -> list[tuple[str, str | None]]:
+    """A set of bindings as the role-to-column pairs it assigns, sorted: the same assignments in another order are the
+    same bindings (`confirmation_fingerprint`)."""
+    return sorted((binding.role, binding.column) for binding in bindings)
+
+
+def lineage_requests(run: Run) -> list[str]:
+    """The requests a version the run ships carries out (`CodeVersion.requests`): its base's standing ones and the
+    run's own change request, never the server's `DATA_CHANGE_REQUEST`, which no user wrote and which a later change
+    must not read as one of the user's standing decisions."""
+    own = [] if run.change_request == DATA_CHANGE_REQUEST else [run.change_request]
+    return standing_requests([*run.user_requests, *own])
 
 
 PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS, PENDING_REMEMBER)
@@ -1618,10 +1675,12 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             theme=run.theme,
             theme_asked=run.theme_asked,
             language=run.language,
-            requests=standing_requests([*run.user_requests, run.change_request]),
+            requests=lineage_requests(run),
             expected_texts=list(run.expected_texts),
             turn=ledger_for(ctx.invocation_id).turn,
             data_version=run.dataset.number,
+            data_source=run.dataset.source,
+            bindings=list(run.view.bindings),
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
@@ -1759,7 +1818,11 @@ def _reraise_unless_schema(exc: Exception) -> None:
 
 
 def run_theme(
-    asked: Theme | None, site: Theme | None, previous: CodeVersion | None, carry: Carry | None = None
+    asked: Theme | None,
+    site: Theme | None,
+    previous: CodeVersion | None,
+    carry: Carry | None = None,
+    latest: CodeVersion | None = None,
 ) -> tuple[Theme, bool]:
     """The one theme a run renders, and whether the user asked for it (`CodeVersion.theme_asked`).
 
@@ -1767,6 +1830,8 @@ def run_theme(
     change, the theme of the version it changes (`previous`) when the user asked for that one, because the root
     leaves `theme` out of a refinement and a dark plot asked for must not silently come back light; on a run that
     takes a switch's carry, the theme the user asked for in the source plot (`Carry.theme`), for the same reason;
+    on the page's "plot the new data" from the catalogue plot, the theme the user asked for on the library's latest
+    version (`latest`; owner decision of 2026-11-08), since new data is no reason to drop it;
     the site theme the page sent with the turn (`RequestLedger.site_theme`; owner decision of 2026-11-01: a user on
     the dark site gets a dark plot, the other theme one click away on the toggle), so a change after a switch of
     the site theme follows the switch; without a page (`adk web`, the evals) the version it changes, else light.
@@ -1777,6 +1842,8 @@ def run_theme(
         return previous.theme, True
     if previous is None and carry is not None and carry.theme is not None:
         return carry.theme, True
+    if previous is None and latest is not None and latest.theme_asked:
+        return latest.theme, True
     if site is not None:
         return site, False
     return (previous.theme if previous is not None else "light"), False
@@ -1802,6 +1869,21 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         hold_request(ctx.state, node_input)
         ledger.pipeline_active = False
         return
+    # The page's "plot the new data": from the library's latest version with the server's request while it drew the
+    # same paste with the same bindings, else the fresh start (owner decision of 2026-11-08). Decided in code, here,
+    # where the run reads the state it plots; the root's arguments of an action turn were emptied above.
+    latest = services.versions.latest_rendered(ctx.session.id, target=view.target) if ledger.new_data else None
+    new_data: NewDataBase | None = None
+    if ledger.new_data:
+        original = original_number(services.datasets, ctx.session.id, view)
+        note_kept = any(ctx.state.get(key) is not None for key in PENDING_KEYS)
+        new_data = new_data_base(latest, view, original, dataset.source, note_kept=note_kept)
+        base: dict[str, Any] = {"base": "catalogue"}
+        if new_data == "previous":
+            # An undo back to the data the version drew changed nothing: no request says it did.
+            same = latest is not None and latest.data_version == dataset.number
+            base = {"base": "previous", "change_request": "" if same else DATA_CHANGE_REQUEST}
+        node_input = node_input.model_copy(update=base)
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one. A note
     # whose bindings the user changed since is dropped here, and the result says so (`kept_request`).
     kept_request = pending_fate(ctx.state, node_input)
@@ -1812,15 +1894,19 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         services.versions.latest_rendered(ctx.session.id, target=view.target) if node_input.base == "previous" else None
     )
     # The page's `.create_plot()` or `.start_over()` asks for the catalogue code again, the way out of broken code:
-    # no carry, but the visible memory still applies (owner decision of 2026-11-02).
-    fresh = ledger.fresh_start and previous is None
+    # no carry, but the visible memory still applies (owner decision of 2026-11-02). So does "plot the new data" when
+    # it cannot start from the latest version.
+    fresh = (ledger.fresh_start or new_data not in (None, "previous")) and previous is None
     # A first run in a new target takes the switch's carry; a change of a version in the target needs none.
     carry = None if previous is not None or fresh else read_carry(ctx.state, view.target)
     # The arguments the user's note is settled from: the carried texts feed this run's checks only, never the kept
     # first-plot note, which a carry run that ships nothing would otherwise take them into (Copilot on #12520).
     own_input = node_input
     node_input = take_carried_texts(node_input, carried_texts(ctx.state, carry))
-    theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous, carry)
+    # "Plot the new data" from the catalogue plot keeps the theme the user asked for on the latest version.
+    theme, theme_asked = run_theme(
+        node_input.theme, ledger.site_theme, previous, carry, latest if new_data is not None else None
+    )
     # The memory with this change's own decisions applied: the adapter sees what will stand once it ships.
     memory_plan = plan_memory(ctx.state, node_input, turn=ledger.turn)
     # A key the rows repeat is combined first, as a data step with a number, a change line and an undo, so the plot
@@ -1841,6 +1927,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         memory_written=memory_written(ctx.state),
         carry=carry,
         fresh=fresh,
+        new_data=new_data,
         memory_plan=memory_plan,
         memory_seq=next_seq(ctx.state, read_memory(ctx.state)),
     )
@@ -1882,7 +1969,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         result = result.model_copy(update={"memory_full": True})  # the plot carries the change, the memory cannot
     # The bindings the run drew with, and what became of a kept note: the root's reply rests on them, not on what an
     # earlier turn said, since the user may have rebound a column in the data panel in between.
-    result = result.model_copy(update={"bindings": list(view.bindings), "kept_request": kept_request})
+    result = result.model_copy(
+        update={"bindings": list(view.bindings), "kept_request": kept_request, "new_data": new_data}
+    )
     if data_step is not None:
         # The data changed whether the plot shipped or not: a run that ships nothing announces the step alone.
         changes = result.changes if result.status in ("ok", "needs_attention") else run.data_notes
@@ -2039,6 +2128,7 @@ def _telemetry_run(
         user_tokens_today=telemetry.tokens_today_bucket(ledger.user_tokens_share),
         carried=run.carry is not None,
         fresh=run.fresh,
+        new_data=run.new_data,
         memory_entries=len(run.decisions),
         remembered=(run.memory_plan.seq - run.memory_seq) if shipped and run.memory_plan is not None else 0,
         memory_full=bool(shipped and run.memory_plan is not None and run.memory_plan.refused),

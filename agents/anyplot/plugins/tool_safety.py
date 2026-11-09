@@ -42,8 +42,9 @@
   as a category label, or the `https://` to strip off a column of links. A column reference (`column`,
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
-  On a turn of the page's plot buttons (`RequestLedger.plot_action`: `create_plot`, `carry_plot`) only the reads and
-  `plot_pipeline` pass (`PLOT_ACTION_TOOLS`); every tool that would store a change answers `plot_as_confirmed`. The
+  On a turn of the page's plot buttons (`RequestLedger.plot_action`: `create_plot`, `carry_plot`, `plot_new_data`)
+  only the reads and `plot_pipeline` pass (`PLOT_ACTION_TOOLS`); every tool that would store a change answers
+  `plot_as_confirmed`. The
   click confirmed the data with its bindings as shown, and the confirmation is a fingerprint of both, so a binding the
   root added in that turn voided it and the run stopped on `data_unconfirmed` (persona tests of 2026-11-06).
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for

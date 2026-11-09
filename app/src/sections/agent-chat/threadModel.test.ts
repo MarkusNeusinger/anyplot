@@ -6,7 +6,7 @@ import {
   type ChatItem,
   initialAgentState,
 } from 'src/hooks/useAgentSession';
-import type { DatasetChanged, DatasetParsed, PlotResult } from 'src/lib/agent';
+import type { DatasetChanged, DatasetParsed, NewDataBase, PlotResult } from 'src/lib/agent';
 import {
   cutRequest,
   PLOT_SUMMARY_MAX,
@@ -577,6 +577,33 @@ describe('plotSummaries', () => {
       [2, null],
       [3, 'first plot'],
     ]);
+  });
+
+  it('names where "plot the new data" started: the version before it, or the catalogue plot', () => {
+    // Owner decision of 2026-11-08: the plot's `new_data` says whether the latest plot was the base.
+    const newData = (id: number): ChatItem => ({
+      id,
+      kind: 'action',
+      action: 'plot_new_data',
+      library: 'matplotlib',
+      label: 'plot the new data',
+    });
+    const items: ChatItem[] = [
+      create(1),
+      { id: 2, kind: 'plot', version: 1 },
+      newData(3),
+      { id: 4, kind: 'plot', version: 2 },
+      newData(5),
+      { id: 6, kind: 'plot', version: 4 },
+    ];
+    const bases: Record<number, NewDataBase> = { 2: 'previous', 4: 'other_paste' };
+    expect([...plotSummaries(items, libraryOf, version => bases[version])]).toEqual([
+      [1, 'first plot'],
+      [2, 'new data on v1'],
+      [4, 'new data, new from the catalogue'],
+    ]);
+    // A plot whose server named no base reads as before.
+    expect(plotSummaries(items, libraryOf).get(2)).toBeNull();
   });
 
   it('cuts a request to one line of 40 characters, the ellipsis included', () => {

@@ -321,6 +321,18 @@ export function describeLibraryFailure(code: string, ref: string | null): string
  */
 export const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 
+/**
+ * What `plot the new data` does, its description beside the status line (owner decision of
+ * 2026-11-08): the latest plot changed for the new data while the data comes from its paste with
+ * its bindings, else the catalogue plot as `.start_over()` makes it. The page cannot know which
+ * before the click; the plot's label says it after (`new data on v3`, `NEW_DATA_FRESH_LABEL`).
+ */
+export const NEW_DATA_HELP =
+  'your latest plot with the new data when it comes from the same paste with the same bindings, else new from the catalogue plot; keeps your remembered decisions';
+
+/** A plot card's label after "plot the new data" started from the catalogue plot (`plotSummaries`). */
+export const NEW_DATA_FRESH_LABEL = 'new data, new from the catalogue';
+
 /** What the remembered decisions do, behind the ⓘ at the end of their list (`Remembered`). */
 export const REMEMBERED_DETAILS = [
   'every next plot keeps these decisions, also in another library',

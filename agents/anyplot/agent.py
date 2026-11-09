@@ -163,8 +163,8 @@ PLOT_ACTION_LINE = (
     "- This turn: the user's action to create the plot from the data and the bindings as confirmed; call "
     "plot_pipeline with no arguments"
 )
-"""The session block's line on the turns of the two plot actions (`RequestLedger.plot_action`: `create_plot`,
-`carry_plot`, also in each session of the admin fan-out), which root.md's rule for those turns no longer opens with:
+"""The session block's line on the turns of the plot actions (`RequestLedger.plot_action`: `create_plot`, `carry_plot`,
+also in each session of the admin fan-out, and `plot_new_data`), which root.md's rule for those turns no longer opens with:
 the server adds the remembered decisions, and the turn may only read and plot (`tool_safety.PLOT_ACTION_TOOLS`)."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary

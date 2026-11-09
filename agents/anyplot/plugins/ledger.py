@@ -386,11 +386,16 @@ class RequestLedger:
     """The turn is the page's `create_plot` action (`.create_plot()`, `.start_over()`): its run starts from the
     catalogue code whatever base the root passes, without a switch's carry, and applies the plot memory, which only the
     user clears (`pipeline.Run.fresh`, owner decision of 2026-11-02)."""
+    new_data: bool = False
+    """The turn is the page's `plot_new_data` action ("plot the new data"): its run starts from the library's latest
+    version with the server's data-change request while that version drew the same paste with the same bindings,
+    else from the catalogue code like `fresh_start` (`pipeline.new_data_base`, owner decision of 2026-11-08)."""
     plot_action: bool = False
     """The turn is one of the page's plot buttons (`create_plot` or `carry_plot`, which the admin fan-out's `.plot_all()`
-    also sends in each library's session): the click confirmed the data and the bindings as shown, so the turn plots
-    them as they are and ToolSafety refuses every tool that would change something (`PLOT_ACTION_TOOLS`); the session
-    block says to call `plot_pipeline` with no arguments (`agent.PLOT_ACTION_LINE`)."""
+    also sends in each library's session, or `plot_new_data`): the click confirmed the data and the bindings as shown,
+    so the turn plots them as they are and ToolSafety refuses every tool that would change something
+    (`PLOT_ACTION_TOOLS`); the session block says to call `plot_pipeline` with no arguments
+    (`agent.PLOT_ACTION_LINE`)."""
     user_words: str | None = None
     """The user's own text for the turn, set by the `/messages` route: the typed message and the notes pasted with
     the session's data; empty for an action on data without notes. A text the plot is checked for must stand in it
