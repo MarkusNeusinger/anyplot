@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -86,25 +86,6 @@ for power in range(255):
         value ^= 0x11D
 gf_exp[255:510] = gf_exp[:255]
 
-
-def reed_solomon(block, ec_len):
-    generator = [1]
-    for i in range(ec_len):
-        generator = [
-            (generator[j] if j < len(generator) else 0)
-            ^ (gf_exp[gf_log[generator[j - 1]] + i] if 0 < j <= len(generator) and generator[j - 1] else 0)
-            for j in range(len(generator) + 1)
-        ]
-    remainder = list(block) + [0] * ec_len
-    for i in range(len(block)):
-        lead = remainder[i]
-        if lead:
-            for j, coef in enumerate(generator):
-                if coef:
-                    remainder[i + j] ^= gf_exp[gf_log[coef] + gf_log[lead]]
-    return remainder[len(block) :]
-
-
 # Smallest version (1-10) whose data capacity holds the content
 payload = content.encode("utf-8")
 for version in range(1, 11):
@@ -131,7 +112,16 @@ data_words = [int(bits[i : i + 8], 2) for i in range(0, len(bits), 8)]
 data_words += [0xEC, 0x11] * ((data_capacity - len(data_words)) // 2 + 1)
 data_words = data_words[:data_capacity]
 
-# Split into blocks, add error correction, interleave
+# Reed-Solomon generator polynomial for ec_len error-correction codewords
+generator = [1]
+for i in range(ec_len):
+    generator = [
+        (generator[j] if j < len(generator) else 0)
+        ^ (gf_exp[gf_log[generator[j - 1]] + i] if 0 < j <= len(generator) and generator[j - 1] else 0)
+        for j in range(len(generator) + 1)
+    ]
+
+# Split into blocks, add each block's Reed-Solomon remainder, interleave
 short_len = raw_codewords // n_blocks
 n_short = n_blocks - raw_codewords % n_blocks
 blocks, start = [], 0
@@ -139,7 +129,14 @@ for b in range(n_blocks):
     length = short_len - ec_len + (b >= n_short)
     chunk = data_words[start : start + length]
     start += length
-    blocks.append((chunk + [None] if b < n_short else chunk) + reed_solomon(chunk, ec_len))
+    remainder = chunk + [0] * ec_len
+    for i in range(length):
+        lead = remainder[i]
+        if lead:
+            for j, coef in enumerate(generator):
+                if coef:
+                    remainder[i + j] ^= gf_exp[gf_log[coef] + gf_log[lead]]
+    blocks.append((chunk + [None] if b < n_short else chunk) + remainder[length:])
 codewords = [blk[i] for i in range(short_len + 1) for blk in blocks if blk[i] is not None]
 
 # Function patterns: finders with separators, timing, alignment, reserved format/version areas
@@ -184,20 +181,22 @@ for (row, col), bit in zip(positions, stream + [0] * (len(positions) - len(strea
     grid[row, col] = bool(bit)
 
 
-def with_format(matrix, mask_id):
-    symbol = matrix.copy()
-    rr, cc = np.mgrid[0:side, 0:side]
-    symbol ^= MASKS[mask_id](rr, cc) & ~reserved
+# Mask selection: apply each of the eight masks with its format bits, keep the lowest-penalty symbol
+rr, cc = np.mgrid[0:side, 0:side]
+first = [(i, 8) for i in range(6)] + [(7, 8), (8, 8), (8, 7)] + [(8, 14 - i) for i in range(9, 15)]
+second = [(8, side - 1 - i) for i in range(8)] + [(side - 15 + i, 8) for i in range(8, 15)]
+finder_like = [np.array([1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1])]
+best_symbol, best_score = None, None
+for mask_id, mask in enumerate(MASKS):
+    candidate = grid ^ (mask(rr, cc) & ~reserved)
     fmt = ECC_FORMAT_BITS[error_correction] << 3 | mask_id
     rem = fmt
     for _ in range(10):
         rem = (rem << 1) ^ ((rem >> 9) * 0x537)
     fmt_bits = [((fmt << 10 | rem) ^ 0x5412) >> i & 1 for i in range(15)]
-    first = [(i, 8) for i in range(6)] + [(7, 8), (8, 8), (8, 7)] + [(8, 14 - i) for i in range(9, 15)]
-    second = [(8, side - 1 - i) for i in range(8)] + [(side - 15 + i, 8) for i in range(8, 15)]
     for (r, c), bit in zip(first + second, fmt_bits * 2, strict=True):
-        symbol[r, c] = bit
-    symbol[side - 8, 8] = True
+        candidate[r, c] = bit
+    candidate[side - 8, 8] = True
     if version >= 7:
         rem = version
         for _ in range(12):
@@ -205,31 +204,25 @@ def with_format(matrix, mask_id):
         ver_bits = version << 12 | rem
         for i in range(18):
             a, b = side - 11 + i % 3, i // 3
-            symbol[b, a] = symbol[a, b] = ver_bits >> i & 1
-    return symbol
+            candidate[b, a] = candidate[a, b] = ver_bits >> i & 1
 
-
-def penalty(symbol):
+    # Penalty rules: long runs, finder-like sequences, 2×2 blocks, dark/light imbalance
     score = 0
-    finder_like = [np.array([1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1])]
-    for lines in (symbol, symbol.T):
+    for lines in (candidate, candidate.T):
         for line in lines.astype(int):
-            edges = np.flatnonzero(np.diff(np.r_[-1, line, -1]))
-            runs = np.diff(edges)
+            runs = np.diff(np.flatnonzero(np.diff(np.r_[-1, line, -1])))
             score += int(np.sum(runs[runs >= 5] - 2))
-            padded = np.r_[np.zeros(4, int), line, np.zeros(4, int)]
-            windows = np.lib.stride_tricks.sliding_window_view(padded, 11)
+            windows = np.lib.stride_tricks.sliding_window_view(np.r_[np.zeros(4, int), line, np.zeros(4, int)], 11)
             score += 40 * sum(int(np.sum(np.all(windows == pattern, axis=1))) for pattern in finder_like)
-    square = symbol[:-1, :-1] == symbol[1:, :-1]
-    square &= (symbol[:-1, :-1] == symbol[:-1, 1:]) & (symbol[:-1, :-1] == symbol[1:, 1:])
+    square = candidate[:-1, :-1] == candidate[1:, :-1]
+    square &= (candidate[:-1, :-1] == candidate[:-1, 1:]) & (candidate[:-1, :-1] == candidate[1:, 1:])
     score += 3 * int(square.sum())
-    total = symbol.size
-    score += 10 * ((abs(int(symbol.sum()) * 20 - total * 10) + total - 1) // total - 1)
-    return score
+    total = candidate.size
+    score += 10 * ((abs(int(candidate.sum()) * 20 - total * 10) + total - 1) // total - 1)
+    if best_score is None or score < best_score:
+        best_symbol, best_score = candidate, score
 
-
-symbol = min((with_format(grid, m) for m in range(8)), key=penalty)
-symbol = np.pad(symbol, QUIET_ZONE)
+symbol = np.pad(best_symbol, QUIET_ZONE)
 
 full = symbol.shape[0]
 rr, cc = np.mgrid[0:full, 0:full]
@@ -252,8 +245,8 @@ plot = (
     + theme_void()
     + theme(
         plot_title=element_text(size=16, hjust=0.5, face="bold", color=INK),
-        plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
-        plot_caption=element_text(size=9, hjust=0.5, color=INK_MUTED),
+        plot_subtitle=element_text(size=12, hjust=0.5, color=INK_SOFT),
+        plot_caption=element_text(size=11, hjust=0.5, color=INK_MUTED),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
