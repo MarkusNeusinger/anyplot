@@ -68,6 +68,20 @@ consequences, one of them subtle: the documented "unset binding stamps nothing"
 would be false, and an unarmed `/health` probe would report a spurious
 `off-seen` — corrupting the one measurement the rollout hangs on.
 
+**Why it deletes the verdict headers.** The API counts a request as a verified
+machine read on `X-Verified-Bot-Category` (`api/machine_reads.py`,
+[`docs/reference/machine-readers.md`](../../docs/reference/machine-readers.md#verified-or-not)),
+which the zone's Transform Rule sets from Cloudflare's own verdict and removes
+when there is none. The Worker's subrequest skips that rule, and its headers are
+cloned from the incoming request, so a value the client wrote itself would be
+forwarded as a verdict. Both branches therefore delete the header, and the API
+branch also deletes `X-Prerender-Bot-Category`, the copy the site's nginx puts on
+its own hop to `/seo-proxy/*`. The apex path (`anyplot.ai/api/*`, `/api/mcp`
+included) reads as unverified by construction, whether or not the rule runs
+before the Worker. The deletes were added on 2026-11-09 and take effect with the
+next redeploy ([Deploying](#deploying)); until then the deployed bytes lag this
+file.
+
 **Why the binding is guarded by `if (env.ORIGIN_SECRET)`.** A missing binding
 stamps nothing rather than sending an empty header, which makes the Worker
 harmless while the gate is not yet armed. It is **not a rollback**: as long as
@@ -529,15 +543,31 @@ the people and MCP clients using them.
 | Since | 2026-11-09 |
 
 Cloudflare fills `cf.verified_bot_category` only for a verified bot, so for
-everyone else the header is absent. Nothing reads it yet: a later PR teaches
-the API to tell verified AI assistants and crawlers from clients that only
-spoof a user agent. Before the API relies on the header, measure two cases:
+everyone else the field is empty, and a Set with an empty value removes the
+header. Both machine-read writers read it: the API (`api/machine_reads.py`)
+and the site's nginx (`app/nginx.conf`), which write one line per crawler, AI
+assistant or MCP request and file it as verified or unverified on this header
+([Machine readers](../../docs/reference/machine-readers.md#verified-or-not)).
 
-- A request that sends its own `X-Verified-Bot-Category` must arrive without
-  it, or the header can be forged.
-- A request through the apex Worker (`anyplot.ai/api/*`) may arrive without
-  it, because a Worker subrequest bypasses the zone's Transform Rules (see
-  [The Worker](#the-worker)).
+The rule also fires on nginx's own hop to `api.anyplot.ai`, where the caller is
+the app container, not a verified bot, so the header is gone by the time the
+API sees a prerendered page. nginx therefore copies the crawler's verdict into
+`X-Prerender-Bot-Category` on that hop, and the API accepts the copy on the hop
+paths only (`/seo-proxy/*`, `/sitemap.xml`, `/llms-full.txt`).
+
+The two cases this section asked to measure before anything relied on the
+header:
+
+- **A request that sends its own `X-Verified-Bot-Category`** must arrive
+  without it. The day-one check in
+  [Machine readers](../../docs/reference/machine-readers.md#verify-on-day-one)
+  measures it through the edge: a forged value on `anyplot.ai/legal` has to
+  land as an unverified line.
+- **A request through the apex Worker** (`anyplot.ai/api/*`) needs no
+  measurement: the Worker deletes `X-Verified-Bot-Category` and
+  `X-Prerender-Bot-Category` before it forwards (see
+  [The Worker](#the-worker)), so the apex path reads as unverified by
+  construction, never as a forged verdict.
 
 ### Custom rules
 

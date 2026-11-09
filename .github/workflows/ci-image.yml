@@ -465,6 +465,59 @@ jobs:
           want "armed, no secret: empty header too"   "$(code -H 'X-Origin-Secret;' localhost:8083/)" 403
           want "armed, no secret: /_health exempt"    "$(code localhost:8083/_health)"   200
 
+      # nginx's machine-read lines (docs/reference/machine-readers.md), in the
+      # real image. tests/unit/api/test_machine_reads_nginx.py evaluates the maps
+      # from the config text; only a running container shows that the line
+      # reaches stdout as one JSON object, that a browser writes none, and that
+      # the http-level access_log adds to the image's combined log instead of
+      # replacing it. Every probe is answered by nginx itself (the shell for a
+      # crawler outside $is_bot, robots.txt), so none of them reaches production.
+      - name: Machine-read lines (a browser writes none, a crawler one)
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          HUMAN="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0 Safari/537.36"
+          AHREFS="Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"
+          GOOGLEBOT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+          lines() { sleep 1; docker logs gate-off 2>/dev/null | grep '"log_type":"machine_read"' || true; }
+
+          before=$(lines | wc -l)
+          curl -fsS -o /dev/null -A "$HUMAN" localhost:8081/
+          curl -fsS -o /dev/null -A "$HUMAN" localhost:8081/scatter-basic
+          curl -fsS -o /dev/null -A "$HUMAN" localhost:8081/robots.txt
+          after=$(lines | wc -l)
+          if [ "$after" != "$before" ]; then
+            echo "::error::a browser request wrote a machine_read line"; lines | tail -3; exit 1
+          fi
+          echo "OK: a browser writes no machine_read line"
+
+          curl -fsS -o /dev/null -A "$AHREFS" localhost:8081/scatter-basic
+          curl -fsS -o /dev/null -A "$GOOGLEBOT" localhost:8081/robots.txt
+          lines | tail -n +"$((before + 1))" > machine_read.jsonl
+          python3 - <<'EOF'
+          import json, sys
+          lines = [json.loads(line) for line in open("machine_read.jsonl")]
+          want = [
+              ("ahrefs", "seo", "shell", "spec_hub", 200),
+              ("google", "search", "machine_file", "robots", 200),
+          ]
+          got = [(l["assistant"], l["kind"], l["surface"], l["route"], l["status"]) for l in lines]
+          if got != want:
+              print(f"::error::machine_read lines: got {got}, expected {want}")
+              sys.exit(1)
+          for line in lines:
+              assert line["log_type"] == "machine_read" and line["writer"] == "nginx", line
+              assert "scatter-basic" not in json.dumps(line), "the raw path reached a line"
+          print("OK: each crawler request wrote one JSON line with closed values")
+          EOF
+          # To a file first: `grep -q` stops reading at the first match, which
+          # SIGPIPEs `docker logs` and fails the pipe under pipefail.
+          docker logs gate-off > container.log 2>/dev/null
+          if ! grep -qF '"GET /scatter-basic HTTP/1.1" 200' container.log; then
+            echo "::error::the image's combined access log stopped"; exit 1
+          fi
+          echo "OK: the combined access log still runs"
+
       # Served is not booted. On 2026-10-22 a Vite minor bump (#12225) passed
       # every step above and blanked every page in production: Rolldown put its
       # runtime helper into a chunk cycle, and the bundle threw `TypeError: t is

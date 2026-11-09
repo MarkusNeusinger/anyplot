@@ -10,12 +10,9 @@ configured (which is the rollback), and that the paths which must never be
 locked out are not.
 """
 
-from unittest.mock import patch
-
 import pytest
 from fastapi.testclient import TestClient
 
-import api.main as api_main
 from api.main import app
 from api.origin_gate import ORIGIN_SECRET_HEADER, is_exempt
 from api.secret_compare import secret_matches
@@ -193,40 +190,35 @@ class TestCORS:
 
 
 class TestARefusalCostsNothing:
-    """The gate has to sit OUTSIDE the analytics middleware.
+    """The gate has to sit OUTSIDE the machine-read middleware.
 
-    An asset path plus a crawler user agent makes the counter fire an outbound
-    Plausible request per request. If the gate were inside it, a caller on the
-    direct `run.app` URL could turn each of its OWN refusals into one —
-    unthrottled, and to a third-party endpoint. A refused request must cost
-    nothing at all.
+    A crawler user agent makes the middleware write a machine-read line. If the
+    gate were inside it, a caller on the direct `run.app` URL could turn each of
+    its OWN refusals into a counted read. A refused request must cost nothing
+    and count nothing.
     """
 
     CRAWLER = {"User-Agent": "Mozilla/5.0 (compatible; ClaudeBot/1.0)"}
     ASSET = "/specs/scatter-basic/matplotlib/code"
 
-    def test_a_refused_asset_read_reports_nothing(self, client: TestClient, armed):
-        with patch.object(api_main, "track_asset_fetch") as assets:
-            assert client.get(self.ASSET, headers=self.CRAWLER).status_code == 403
-            assert assets.call_count == 0
+    def test_a_refused_code_read_writes_no_line(self, client: TestClient, armed, machine_lines):
+        assert client.get(self.ASSET, headers=self.CRAWLER).status_code == 403
+        assert machine_lines.raw == []
 
-    def test_a_refused_crawler_page_reports_nothing_either(self, client: TestClient, armed):
-        """The prerendered pages are the ones an unthrottled caller would pick:
-        every request with a crawler user agent schedules an outbound event."""
-        with patch.object(api_main, "track_bot_fetch") as pages:
-            assert client.get("/seo-proxy/legal", headers=self.CRAWLER).status_code == 403
-            assert pages.call_count == 0
+    def test_a_refused_crawler_page_writes_no_line_either(self, client: TestClient, armed, machine_lines):
+        """The prerendered pages are machine reads by definition, so they are the
+        ones a refusal would most easily turn into a line."""
+        assert client.get("/seo-proxy/legal", headers=self.CRAWLER).status_code == 403
+        assert machine_lines.raw == []
 
-    def test_with_the_header_the_crawler_page_counts(self, client: TestClient, armed):
-        with patch.object(api_main, "track_bot_fetch") as pages:
-            client.get("/seo-proxy/legal", headers=self.CRAWLER | EDGE)
-            assert pages.call_count == 1
+    def test_with_the_header_the_crawler_page_counts(self, client: TestClient, armed, machine_lines):
+        client.get("/seo-proxy/legal", headers=self.CRAWLER | EDGE)
+        assert [(line["surface"], line["route"]) for line in machine_lines.lines] == [("page", "legal")]
 
-    def test_with_the_header_the_read_counts_again(self, client: TestClient, armed):
+    def test_with_the_header_the_read_counts_again(self, client: TestClient, armed, machine_lines):
         """The gate suppresses a refusal, not the measurement."""
-        with patch.object(api_main, "track_asset_fetch") as assets:
-            client.get(self.ASSET, headers=self.CRAWLER | EDGE)
-            assert assets.call_count == 1
+        client.get(self.ASSET, headers=self.CRAWLER | EDGE)
+        assert [(line["surface"], line["route"]) for line in machine_lines.lines] == [("code", "code")]
 
 
 class TestHealthReportsTheVerdictForTheRequestItWasAskedWith:

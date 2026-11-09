@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { AgentApiError } from 'src/lib/agent';
-import { AdminMenu, type AdminMenuProps, AdminSection } from 'src/sections/agent-chat/AdminMenu';
+import {
+  AdminMenu,
+  type AdminMenuProps,
+  AdminMeters,
+  AdminSection,
+} from 'src/sections/agent-chat/AdminMenu';
 import { render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 const MENU = { name: 'Admin' } as const;
@@ -149,6 +154,34 @@ describe('AdminMenu', () => {
       'not_enabled · AGENT_ENABLED is off'
     );
     expect(within(menu).getByRole('region', { name: 'later' })).toHaveTextContent('a meter');
+  });
+
+  it('names the grid and the meters in its title, and says when it opens', async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    render(
+      <AdminMenu {...props({ onOpen })}>
+        <AdminSection heading="load · runs in flight, today's budget">
+          <AdminMeters runs={2} share={62} />
+        </AdminSection>
+      </AdminMenu>
+    );
+    expect(button()).toHaveAttribute(
+      'title',
+      "admin only · the fan-out, .save(), the visitor's view, the progress grid and the meters"
+    );
+    expect(onOpen).not.toHaveBeenCalled();
+    await user.click(button());
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    const meters = within(screen.getByRole('dialog', MENU)).getByTestId('admin-meters');
+    expect(meters).toHaveTextContent(/^now 2 runs · today 62 %$/);
+  });
+
+  it('reads the meters in counts, one run as one, and a dash for what is not read', () => {
+    const { rerender } = render(<AdminMeters runs={1} share={0} />);
+    expect(screen.getByTestId('admin-meters')).toHaveTextContent(/^now 1 run · today 0 %$/);
+    rerender(<AdminMeters runs={null} share={null} />);
+    expect(screen.getByTestId('admin-meters')).toHaveTextContent(/^now — · today —$/);
   });
 
   it('keeps the data box across closing and drops a failure line once it closes', async () => {

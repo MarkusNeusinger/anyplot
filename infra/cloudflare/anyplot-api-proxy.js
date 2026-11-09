@@ -21,6 +21,8 @@ export default {
     // measurement the rollout hangs on.
     if (url.pathname === '/api/event') {
       const eventHeaders = new Headers(request.headers);
+      // Never a verdict from the client: see the API branch below.
+      eventHeaders.delete('X-Verified-Bot-Category');
       eventHeaders.delete('X-Origin-Secret');
       if (env.ORIGIN_SECRET) eventHeaders.set('X-Origin-Secret', env.ORIGIN_SECRET);
       return fetch(new Request(request, { headers: eventHeaders }));
@@ -29,6 +31,15 @@ export default {
     const targetUrl = `https://api.anyplot.ai${targetPath}${url.search}`;
     const headers = new Headers(request.headers);
     headers.delete('host');
+    // The API counts a request as a VERIFIED machine read on this header
+    // (api/machine_reads.py), which the zone's Transform Rule sets from
+    // Cloudflare's own verdict. A Worker subrequest skips the zone's Transform
+    // Rules, so whatever the incoming request carried would be forwarded as
+    // is, a value the client wrote itself included. Deleted, so the apex path
+    // reads as unverified by construction; so is the copy the site's nginx
+    // puts on its own hop, which the API accepts under /seo-proxy.
+    headers.delete('X-Verified-Bot-Category');
+    headers.delete('X-Prerender-Bot-Category');
     // The API's origin gate (api/origin_gate.py) admits only requests that
     // carry the secret Cloudflare stamps at the edge. A Worker subrequest to
     // the same zone skips the zone's Transform Rules, so the Worker stamps the

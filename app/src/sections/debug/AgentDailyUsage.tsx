@@ -20,6 +20,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import { DEBUG_API_URL } from 'src/constants';
+import { type AgentBudget, budgetShare, countsOf, LIMIT_KINDS, readBudget } from 'src/lib/agent';
 import { fetchWithAuth } from 'src/lib/api';
 import { localClock } from 'src/sections/agent-chat/messages';
 import { formatUsd, formatUtc, timeAgo } from 'src/sections/debug/format';
@@ -30,31 +31,8 @@ import { colors } from 'src/theme';
 // Answers
 // ============================================================================
 
-/** The day caps the agents service counts users at (`ledger.LIMIT_KINDS`). */
-const LIMIT_KINDS = [
-  'tokens',
-  'runs',
-  'data_runs',
-  'messages',
-  'pastes',
-  'conversions',
-  'locked_out',
-] as const;
-
-/** The answer of `GET /debug/agent/budget`: counts and times only. */
-export interface AgentBudget {
-  since: string;
-  started_at: string;
-  resets_at: string;
-  paused: boolean;
-  tokens: number;
-  budget_tokens: number;
-  usd: number | null;
-  budget_usd: number | null;
-  users: number;
-  users_at_limit: number;
-  limits: Record<string, number>;
-}
+// The live answer of `GET /debug/agent/budget` (`AgentBudget`, `readBudget`) is the chat's too,
+// whose admin meters show the same share: both live in `src/lib/agent.ts`.
 
 /** The refusal codes the per-day table counts, in its order (`api/agent_usage.py` `LIMIT_CODES`). */
 const LIMIT_CODES = [
@@ -91,37 +69,6 @@ const count = (value: unknown): number =>
 const amount = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 
-const instant = (value: unknown): string | null =>
-  typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
-
-const counts = (value: unknown, keys: readonly string[]): Record<string, number> => {
-  const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
-  return Object.fromEntries(keys.map(key => [key, count(record[key])]));
-};
-
-/** The live answer as the line reads it; `null` for one without its times. */
-function readBudget(body: unknown): AgentBudget | null {
-  if (!body || typeof body !== 'object') return null;
-  const record = body as Record<string, unknown>;
-  const since = instant(record.since);
-  const started = instant(record.started_at);
-  const resets = instant(record.resets_at);
-  if (!since || !started || !resets) return null;
-  return {
-    since,
-    started_at: started,
-    resets_at: resets,
-    paused: record.paused === true,
-    tokens: count(record.tokens),
-    budget_tokens: count(record.budget_tokens),
-    usd: amount(record.usd),
-    budget_usd: amount(record.budget_usd),
-    users: count(record.users),
-    users_at_limit: count(record.users_at_limit),
-    limits: counts(record.limits, LIMIT_KINDS),
-  };
-}
-
 const STATUSES = new Set<string>(['ok', 'not_configured', 'unavailable']);
 
 /** The per-day answer as the table reads it; `null` for one without a known status. */
@@ -146,7 +93,7 @@ function readDaily(body: unknown): AgentUsageDaily | null {
           cost_usd: amount(row.cost_usd) ?? 0,
           fanout_cost_usd: amount(row.fanout_cost_usd) ?? 0,
           unpriced_calls: count(row.unpriced_calls),
-          limit_hits: counts(row.limit_hits, LIMIT_CODES),
+          limit_hits: countsOf(row.limit_hits, LIMIT_CODES),
           queue_wait_p95_ms: typeof wait === 'number' && wait >= 0 ? wait : null,
           queue_waits: count(row.queue_waits),
         };
@@ -242,8 +189,7 @@ export function AgentTodayLine({ token, reloadCounter }: DayViewProps) {
 }
 
 function TodayText({ budget }: { budget: AgentBudget }) {
-  const share =
-    budget.budget_tokens > 0 ? Math.round((budget.tokens / budget.budget_tokens) * 100) : null;
+  const share = budgetShare(budget);
   const spend =
     budget.usd !== null && budget.budget_usd !== null
       ? `${formatUsd(budget.usd)} of ${formatUsd(budget.budget_usd)}`
