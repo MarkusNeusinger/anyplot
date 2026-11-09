@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 circos-basic: Circos Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -11,6 +11,7 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    coord_fixed,
     element_blank,
     element_rect,
     element_text,
@@ -22,8 +23,6 @@ from lets_plot import (
     guides,
     labs,
     scale_fill_manual,
-    scale_x_continuous,
-    scale_y_continuous,
     theme,
 )
 from lets_plot.export import ggsave
@@ -46,7 +45,6 @@ TRACK_BANDS = [(0.89, 0.79), (0.75, 0.65), (0.61, 0.51)]  # (outer, inner) per t
 LABEL_RADIUS = 1.10
 GAP_SHARE = 0.10  # share of the circle left as gaps between segments
 ARC_POINTS = 60
-PANEL_ASPECT = 1.11  # panel width / height on the square canvas under title, legend and caption: keeps the circle round
 
 # Columns: set these to your table's column names
 CHROMOSOME = "Chromosome"  # role: source
@@ -188,7 +186,7 @@ label_df = pd.DataFrame(
 )
 
 limit = LABEL_RADIUS + 0.06
-caption = f"Inner tracks, outer to inner: {' · '.join(tracks)} | Ribbon width: {LINKS}"
+caption = f"Inner tracks, outer to inner: {' · '.join(tracks)}\nRibbon width: {LINKS}"
 title = "circos-basic · python · letsplot · anyplot.ai"
 
 plot = (
@@ -199,14 +197,14 @@ plot = (
     + geom_polygon(aes(x="x", y="y", group="poly", fill=CHROMOSOME), data=ring_df, color=PAGE_BG, size=0.6)
     + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=6, color=INK, fontface="bold")
     + scale_fill_manual(values=colors, limits=order, name=CHROMOSOME)
-    + scale_x_continuous(limits=(-limit * PANEL_ASPECT, limit * PANEL_ASPECT))
-    + scale_y_continuous(limits=(-limit, limit))
-    + guides(fill=guide_legend(nrow=1))
+    + coord_fixed(ratio=1, xlim=(-limit, limit), ylim=(-limit, limit))
+    + guides(fill=guide_legend(ncol=1))
     + labs(title=title, caption=caption)
     + ggsize(600, 600)
     + theme(
         plot_title=element_text(size=16, face="bold", color=INK),
-        plot_caption=element_text(size=9, color=INK_SOFT),
+        plot_caption=element_text(size=11, color=INK_SOFT),
+        plot_margin=[33, 28, 33, 16],  # pads the fixed-ratio layout out to the square canvas
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -214,7 +212,7 @@ plot = (
         panel_grid=element_blank(),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_title=element_blank(),
-        legend_position="bottom",
+        legend_position="right",
         legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
