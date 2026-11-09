@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -9,7 +9,9 @@ import os
 import numpy as np
 import pandas as pd
 import pygal
+import statsmodels.api as sm
 from pygal.style import Style
+from scipy.special import expit
 
 
 # Theme tokens
@@ -40,22 +42,18 @@ biomarker_levels = np.clip(biomarker_levels, 0, 100)
 true_probs = 1 / (1 + np.exp(-0.08 * (biomarker_levels - 50)))
 outcome = (np.random.random(n_samples) < true_probs).astype(int)
 
-# Logistic regression fitted by gradient descent on the standardized predictor
-X = (biomarker_levels - biomarker_levels.mean()) / biomarker_levels.std()
-b0, b1 = 0.0, 0.0
-for _ in range(1000):
-    p = 1 / (1 + np.exp(-np.clip(b0 + b1 * X, -500, 500)))
-    b0 -= 0.1 * np.mean(p - outcome)
-    b1 -= 0.1 * np.mean((p - outcome) * X)
-fitted = 1 / (1 + np.exp(-np.clip(b0 + b1 * X, -500, 500)))
-se = np.sqrt(fitted * (1 - fitted) / n_samples) * 1.5
+# Logistic regression; the 95% CI comes from the coefficient covariance on the logit scale
+design = sm.add_constant(biomarker_levels)
+model = sm.Logit(outcome, design).fit(disp=0)
+logit = design @ model.params
+logit_se = np.sqrt(np.einsum("ij,jk,ik->i", design, model.cov_params(), design))
 df = pd.DataFrame(
     {
         BIOMARKER: biomarker_levels,
         DISEASE: outcome,
-        PROBABILITY: fitted,
-        CI_LOWER: np.clip(fitted - 1.96 * se, 0, 1),
-        CI_UPPER: np.clip(fitted + 1.96 * se, 0, 1),
+        PROBABILITY: expit(logit),
+        CI_LOWER: expit(logit - 1.96 * logit_se),
+        CI_UPPER: expit(logit + 1.96 * logit_se),
     }
 )
 
@@ -120,6 +118,8 @@ chart = pygal.XY(
         "file://graph.css",
         "inline:.serie-0 .reactive{fill-opacity:0.18 !important;stroke-width:1.5 !important}"
         " .serie-1 .reactive{stroke-width:7 !important} .serie-2 .reactive{stroke-width:3.5 !important}",
+        # graph.css pins .dot to full opacity; class dots get 0.6 so piled-up stretches read darker
+        "inline:" + ", ".join(f".serie-{3 + i} .dot" for i in range(len(classes))) + "{fill-opacity:0.6 !important}",
     ],
 )
 
