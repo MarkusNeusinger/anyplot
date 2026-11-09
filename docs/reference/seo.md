@@ -598,8 +598,8 @@ the owner decided that every crawler is welcome. State after that change:
 | Blocked at the edge | none; blocking returns only on evidence from the request logs |
 | Passing | everyone, including `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, and `Timpibot`, which were blocked until 2026-11-09 |
 
-Until its own PR lands, the `Bytespider` group in `robots.txt` still declines
-that crawler, which the edge no longer enforces. The zone's other security
+The `Bytespider` group in `robots.txt`, which the edge no longer enforces, goes
+in #12868. The zone's other security
 rules, and the principle that no rule hard-blocks traffic that could be a
 human, are in
 [`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#security-rules-pro-since-2026-11-09).

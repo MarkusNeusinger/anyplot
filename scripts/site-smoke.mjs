@@ -35,9 +35,12 @@
 // that phase when it carries `X-Smoke-Token` with the right value
 // (infra/cloudflare/README.md, "Security rules"). The value lives only in the
 // dev box's .env and in that rule, never in the repository; the open-pr skill's
-// recipe passes it in. The header goes only to requests for SITE's own origin,
-// so neither the API host nor a third party ever sees it, and the script never
-// prints it. Unset, nothing is sent. CI's "Browser boot" step runs against
+// recipe passes it in. The header goes only to https requests for SITE's own
+// origin, and only when that is one of the site hosts the rule names. Paths
+// under /api never get it: there the apex Worker forwards headers to the API
+// host and nginx forwards /api/event to Plausible. So neither the API host nor
+// a third party ever sees it, and the script never prints it. Unset, nothing is
+// sent. CI's "Browser boot" step runs against
 // localhost, where no Cloudflare stands in between, and never needs it. A page
 // Cloudflare challenged anyway says nothing about the site behind it, so its
 // line reads SKIP, not FAIL, and names the challenge.
@@ -57,6 +60,13 @@ if (pages.length === 0) pages.push('/', '/plots', '/scatter-basic');
 const MIN_TEXT = Number(process.env.MIN_TEXT || 200);
 const SMOKE_TOKEN = process.env.SMOKE_TOKEN || '';
 const SITE_ORIGIN = new URL(SITE).origin;
+// The hosts the Cloudflare smoke bypass matches; anywhere else the token means nothing.
+const TOKEN_HOSTS = new Set(['anyplot.ai', 'www.anyplot.ai', 'python.anyplot.ai']);
+const carriesToken = (u) =>
+  u.protocol === 'https:' &&
+  u.origin === SITE_ORIGIN &&
+  TOKEN_HOSTS.has(u.hostname) &&
+  !/^\/api(\/|$)/.test(u.pathname);
 
 // A browser that is already on the machine: CHROME_PATH, the cloud container's
 // Chromium, or the one the Playwright MCP plugin installed locally. Never
@@ -111,7 +121,7 @@ async function openPage() {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   if (SMOKE_TOKEN) {
     await context.route(
-      (u) => u.origin === SITE_ORIGIN,
+      carriesToken,
       (route) => route.continue({ headers: { ...route.request().headers(), 'x-smoke-token': SMOKE_TOKEN } }),
     );
   }

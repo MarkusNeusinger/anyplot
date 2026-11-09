@@ -546,14 +546,14 @@ The smoke bypass is the first rule of the custom ruleset.
 | Rule | ID | Action | Matches | State |
 |---|---|---|---|---|
 | Smoke bypass | `6a18892a4acf4461a38afe4e12ef6c00` | Skip, phase `http_request_sbfm` | the site hosts with the right `X-Smoke-Token` (see [The smoke bypass](#the-smoke-bypass)) | active since 2026-11-09 |
-| Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so API and MCP clients are never challenged | active |
+| Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so Super Bot Fight Mode never challenges API and MCP clients | active |
 | Block public agent chat | `56aee2fcb6b547bb914a59bbc4da5e12` | Block | the public agent chat | disabled |
 
 The AI Crawl Control block rule is gone. On 2026-11-09 it was first narrowed
 to the two ByteDance crawlers, Bytespider and TikTokSpider, and then deleted
 when the owner decided that every crawler is welcome. Blocking returns only on
-evidence from the request logs. Until its own PR lands, `app/public/robots.txt`
-still declines Bytespider; the crawler policy is in
+evidence from the request logs. `app/public/robots.txt` drops its Bytespider
+group in #12868; the crawler policy is in
 [`docs/reference/seo.md`](../../docs/reference/seo.md#cloudflare-is-the-enforcement-layer).
 
 ### Other rules kept from before the move
@@ -627,10 +627,13 @@ page instead of the site and check nothing; the script marks such a page as a
 - **Where the value lives.** In the dev box's `.env` as `SMOKE_TOKEN` and in
   that rule, nowhere else: not in the repository, CI, or Secret Manager. The
   open-pr skill's recipe reads it from the shared checkout's `.env`.
-- **Where the header goes.** The script adds it only to requests for the
-  site's own origin, so neither `api.anyplot.ai` nor a third party sees it,
-  and it never prints the value. `api.anyplot.ai` needs no bypass, because the
-  API skip rule above already exempts it.
+- **Where the header goes.** The script adds it only to https requests for
+  the site's own origin on one of the three site hosts, and never under
+  `/api`, because there [the Worker](#the-worker) forwards headers to the API
+  host and nginx forwards `/api/event` to Plausible. So neither `api.anyplot.ai`
+  nor a third party sees it, and the script never prints the value.
+  `api.anyplot.ai` needs no bypass, because the API skip rule above already
+  exempts it from Super Bot Fight Mode.
 - **CI never needs it.** The "Browser boot" step of `ci-image.yml` runs the
   script against the container on localhost, with no Cloudflare in between.
 - **If the value leaks**, a client can skip Super Bot Fight Mode on the site
