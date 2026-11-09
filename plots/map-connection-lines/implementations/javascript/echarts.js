@@ -202,17 +202,35 @@ const data = [
 const rad = Math.PI / 180;
 const maxPassengers = Math.max(...data.map((d) => d[PASSENGERS]));
 
-// One marker per airport, sized by the passengers of all its routes
+// Northward component of the initial great-circle bearing from one point to another
+const northward = (lon1, lat1, lon2, lat2) => {
+  const [l1, p1, l2, p2] = [lon1, lat1, lon2, lat2].map((v) => v * rad);
+  return Math.cos(Math.atan2(
+    Math.sin(l2 - l1) * Math.cos(p2),
+    Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(l2 - l1),
+  ));
+};
+
+// One marker per airport, sized by the passengers of all its routes; the label goes
+// above or below the marker, on the side no route leaves from as steeply
 const hubs = new Map();
 data.forEach((d) => {
   [
-    [d[ORIGIN], d[ORIGIN_LON], d[ORIGIN_LAT]],
-    [d[DESTINATION], d[DEST_LON], d[DEST_LAT]],
-  ].forEach(([name, lon, lat]) => {
-    const hub = hubs.get(name) ?? { name, value: [lon, lat, 0] };
+    [d[ORIGIN], d[ORIGIN_LON], d[ORIGIN_LAT], d[DEST_LON], d[DEST_LAT]],
+    [d[DESTINATION], d[DEST_LON], d[DEST_LAT], d[ORIGIN_LON], d[ORIGIN_LAT]],
+  ].forEach(([name, lon, lat, otherLon, otherLat]) => {
+    const hub = hubs.get(name) ?? { name, value: [lon, lat, 0], north: -1, south: -1 };
+    const north = northward(lon, lat, otherLon, otherLat);
     hub.value[2] += d[PASSENGERS];
+    hub.north = Math.max(hub.north, north);
+    hub.south = Math.max(hub.south, -north);
     hubs.set(name, hub);
   });
+});
+hubs.forEach((hub) => {
+  hub.label = { position: hub.north > hub.south ? "bottom" : "top" };
+  delete hub.north;
+  delete hub.south;
 });
 const maxTraffic = Math.max(...[...hubs.values()].map((hub) => hub.value[2]));
 
@@ -241,7 +259,7 @@ const routes = data.flatMap((d) => {
     name: `${d[ORIGIN]}–${d[DESTINATION]}`,
     value: d[PASSENGERS],
     coords,
-    lineStyle: { width: 1.2 + share * 5, opacity: 0.28 + share * 0.32 },
+    lineStyle: { width: 1.2 + share * 5, opacity: 0.4 + share * 0.3 },
   }));
 });
 
@@ -345,7 +363,7 @@ chart.setOption({
       data: [...hubs.values()],
       symbolSize: (val) => 10 + 24 * Math.sqrt(val[2] / maxTraffic),
       itemStyle: { color: t.palette[0], opacity: 0.9, borderColor: t.pageBg, borderWidth: 1.5 },
-      label: { show: true, formatter: "{b}", position: "top", distance: 6, color: t.ink, fontSize: 14, fontWeight: 500 },
+      label: { show: true, formatter: "{b}", distance: 6, color: t.ink, fontSize: 14, fontWeight: 500 },
       labelLayout: { moveOverlap: "shiftX" },
       z: 3,
     },
