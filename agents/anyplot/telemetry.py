@@ -55,7 +55,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
+from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple, cast, get_args
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
@@ -300,7 +300,9 @@ ErrorCode = Literal[
 """`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection);
 `run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions;
 `no_reply`: the root wrote no reply, also when asked once more (`plugins/empty_reply.py`)."""
-LanguageSource = Literal["default", "pasted", "detected", "chosen"]
+LanguageSource = Literal["default", "chosen", "offer"]
+"""`language.LanguageSource` (pinned equal by a test): `offer` (since 2026-11-08) is an accepted offer; `pasted` and
+`detected` were detection's, which no longer sets the language."""
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
@@ -508,7 +510,7 @@ class ChatTurn(_Event):
     error: ErrorCode | None = None
     reply_reasked: bool = False
     language_source: LanguageSource | None = None
-    """How the session language was set, as the turn left it (detection or `set_language` may set it in the turn)."""
+    """How the session language was set, as the turn left it (`set_language` may set it in the turn)."""
     plot_language: PlotLanguage | None = None
     """The session language as the turn left it, as a closed code (`plot_language`)."""
     llm_calls: Count = 0
@@ -638,8 +640,23 @@ class Outcome(_Event):
     reaction: Reaction | None = None
 
 
-AnyEvent = DataInput | ChatTurn | PipelineRun | PlotSwitch | Outcome
-EVENTS: tuple[str, ...] = ("data_input", "chat_turn", "pipeline_run", "plot_switch", "outcome")
+LanguageVia = Literal["shown", "offer", "header"]
+"""How a `language_offer` line came about: `shown`, the server sent the page an offer of a language it found in a
+typed message or a paste (`language.offer`); `offer`, the user took one with its `.switch()`; `header`, the user
+picked a language in the chat header's menu (`PUT /v1/sessions/{sid}/language`)."""
+
+
+class LanguageOffer(_Event):
+    """The session language's offers and picks (since 2026-11-08): the share of offers taken is `offer` over `shown`."""
+
+    event: Literal["language_offer"] = "language_offer"
+    via: LanguageVia
+    language: PlotLanguage
+    """The offered or picked language as a closed code (`plot_language`), never the value itself."""
+
+
+AnyEvent = DataInput | ChatTurn | PipelineRun | PlotSwitch | Outcome | LanguageOffer
+EVENTS: tuple[str, ...] = ("data_input", "chat_turn", "pipeline_run", "plot_switch", "outcome", "language_offer")
 
 
 class _Envelope(_Event):
@@ -1012,6 +1029,27 @@ def turn_kind(ledger: RequestLedger) -> TurnKind:
     if "prepare_data" in ledger.tools:
         return "prep"
     return "talk"
+
+
+class TurnCodes(NamedTuple):
+    """What a turn did and how it ended, as closed codes: the `chat_turn` line's `kind`, `refusal` and `error`."""
+
+    kind: TurnKind
+    refusal: RefusalCode | None
+    error: ErrorCode | None
+
+
+def turn_codes(ledger: RequestLedger, failure: str | None = None) -> TurnCodes:
+    """A turn's `kind`, `refusal` and `error` as the `chat_turn` line and the turn's record (`turn_record.py`) both
+    write them, so the two never disagree. `failure` is the route's own error of the turn (`cancelled`, `deadline`, an
+    exception's code), which wins over the ledger's; a turn with an error and no refusal is an `error` turn."""
+    error = failure or ledger.error
+    refusal = closed(ledger.refusal[0] if ledger.refusal else None, get_args(RefusalCode))
+    return TurnCodes(
+        kind="error" if error is not None and ledger.refusal is None else turn_kind(ledger),
+        refusal=cast("RefusalCode | None", refusal),
+        error=cast("ErrorCode | None", closed(error, get_args(ErrorCode))),
+    )
 
 
 def closed(value: str | None, allowed: Iterable[str], fallback: str = "other") -> str | None:

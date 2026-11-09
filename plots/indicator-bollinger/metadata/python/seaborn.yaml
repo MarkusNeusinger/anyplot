@@ -2,45 +2,54 @@ library: seaborn
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-09T08:15:56Z'
-updated: '2026-05-17T09:42:04Z'
-generated_by: claude-haiku
-workflow_run: 25987272446
+updated: '2026-11-09T11:27:06Z'
+generated_by: claude-opus
+workflow_run: 42608269091
 issue: 3237
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 82
 review:
   strengths:
-  - Excellent visual hierarchy using Okabe-Ito palette correctly (close=green, SMA=orange,
-    bands=blue)
-  - Both light and dark renders are perfectly legible with correct theme adaptation
-  - Professional Bollinger Bands implementation with all required elements (close,
-    SMA, upper/lower bands, fill)
-  - Clean, minimal design with proper spine removal and subtle grid
-  - Deterministic, reproducible output with realistic stock price data
-  - Proper canvas sizing and text scaling for 4800×2700 resolution
-  - Theme-aware styling with correct color tokens for all chrome elements
+  - Bollinger math computed in the data block from pandas rolling windows (close.rolling(window=20).mean()/.std(),
+    SMA ± 2σ), and the leading rows without a full period are dropped, so every band
+    sits at its computed value and starts only where a full 20-day window exists
+  - 'The price is drawn prominently in Imprint green #009E73 (1.6 pt, the heaviest
+    stroke, drawn last on top), the bands share one color (#4467A3) with a semi-transparent
+    fill (alpha 0.2), and the SMA is a dashed purple line, so price and middle band
+    stay readable through the fill in both themes'
+  - 'Theme tokens are threaded through sns.set_theme rc (page, ink, soft ink, elevated
+    legend face), so the chrome flips correctly between #FAF8F1 and #1A1A17 while
+    the data colors stay identical'
+  - The parameters are stated in the legend labels ('20-Day SMA', 'Upper Band (+2σ)',
+    'Lower Band (−2σ)'), and the seeded synthetic series shows the bands widening
+    in the volatile February–March stretch and narrowing into a squeeze in April and
+    May
+  - Canvas is exactly 3200×1800 (figsize 8×4.5 at dpi 400, no bbox_inches='tight'),
+    and the layout is set with subplots_adjust
   weaknesses:
-  - Design sophistication could be elevated with additional refinement (slightly generic
-    compared to gallery standards)
-  - Limited showcase of seaborn's distinctive capabilities (could use more advanced
-    styling patterns)
+  - 'Suggestion: Upper and Lower Band have identical legend glyphs, so one ''Bands
+    (±2σ)'' entry beside ''Band Range'' would make the legend shorter.'
+  - 'Suggestion: the short ''YYYY-MM'' tick labels fit horizontally, so the 30° rotation
+    from fig.autofmt_xdate could be dropped.'
+  - 'Suggestion: plot the series in long form with one sns.lineplot(hue=..., style=...)
+    call instead of four separate calls. That is the more idiomatic seaborn approach.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title in bold dark text (24pt), axis labels in dark text (20pt), tick labels in dark text (16pt) - all readable
-      Data: Close price in bright green (#009E73), SMA in orange dashed line (#D55E00), upper/lower bands in blue (#0072B2), band fill semi-transparent light blue (alpha 0.15)
-      Legibility verdict: PASS - All text readable, no contrast issues, proper theme adaptation
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold near-black title 'indicator-bollinger · python · seaborn · anyplot.ai' at the top (about 58 % of the width). Axis titles 'Date' and 'Price (USD)' in dark ink. Soft dark-grey ticks (125–165 on y, 2024-02…2024-06 on x, rotated 30°). Subtle horizontal grid only. Top and right spines removed. Legend at the top right on an elevated off-white face with a soft-ink frame. All text is readable.
+      Data: blue (#4467A3) upper and lower band lines with a light blue-grey semi-transparent fill between them. Dashed purple (#C475FD) 20-day SMA midway between the bands. Green (#009E73) close-price line, the heaviest stroke, on top. The bands are wide in February/March, narrow in April–May, and the price rides the lower band in Feb–Mar and touches the upper band in mid-April and early May. The series runs from late Jan to mid-June 2024 (101 days after the 20-day warm-up).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text (24pt), axis labels in light text (20pt), tick labels in light text (16pt) - all readable with no dark-on-dark issues
-      Data: Close price in bright green (#009E73), SMA in orange dashed line (#D55E00), upper/lower bands in blue (#0072B2) - IDENTICAL to light render (only chrome flipped, as required)
-      Legibility verdict: PASS - All text readable against dark background, proper color contrast, theme-correct implementation
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis titles and legend text in light ink (#F0EFE8). Tick labels in light grey. Grid lines faint but visible. Legend on a dark elevated face (#242420) with a light frame. No dark-on-dark text anywhere.
+      Data: identical colors to the light render (green price, purple dashed SMA, blue bands). The alpha-0.2 band fill reads as a dark blue tint, so price and SMA remain clearly visible through it. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,74 +60,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes properly scaled. Title (24pt), labels (20pt), ticks
-          (16pt) readable in both themes.
+        comment: Explicit sizes (title 12, labels 10, ticks/legend 8); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Dates rotated 30° without collision. Legend
-          well-positioned.
+        comment: No text collisions; legend sits in empty top-right space above the
+          data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All lines clearly visible and distinguishable. Semi-transparent fill
-          doesn't obscure data.
+        comment: Line widths 1.1–1.6 suit ~100 points; price heaviest; legend glyphs
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly. Good contrast. Colorblind-safe.
+        comment: Green / purple / blue distinguishable, and the SMA is also dashed;
+          no red-green as the only cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape (4800×2700). Good proportions, generous margins, nothing
-          cut off.
+        comment: 3200×1800; balanced margins; title about 58 % of the width; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format. Axis labels include units (Price ($)).
+        comment: '''Date'' and ''Price (USD)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Close #009E73, SMA #D55E00, bands #0072B2. Backgrounds correct.
-          Both renders theme-compliant.'
+        comment: 'Close is #009E73; SMA and bands use Imprint positions 2 and 3; correct
+          backgrounds in both themes'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean, professional with intentional hierarchy. Close (green) is
-          focal point, SMA (dashed orange) shows trend, bands (blue) show volatility.
-          Follows standard practices.
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Top/right spines removed. Y-axis grid only with alpha 0.15. Generous
-          whitespace. Clean refinement.
+        passed: false
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color and line weight. Natural focal
-          point on close price.
+        passed: false
+        comment: Data displayed with the stroke weight the Notes ask for; no hierarchy
+          or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bollinger Bands chart.
+        comment: Bollinger Bands price chart with an SMA and ±2σ envelope
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close price, SMA, upper/lower bands, fill between bands - all present
-          and correct.
+        comment: Price prominent; bands share one color with a semi-transparent fill;
+          dashed SMA; parameters are standard and named in the legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates (2024-02 to 2024-06), Y-axis prices ($125-$165). All
-          data visible.
+        comment: Every line at its computed rolling value; bands start after a full
+          20-day window
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend clearly identifies all five series.
+        comment: Mandated title format; legend entries read 20-Day SMA, Upper/Lower
+          Band (±2σ), Close Price, Band Range
     data_quality:
       score: 15
       max: 15
@@ -158,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all Bollinger Bands aspects. 120 trading days sufficient for
-          patterns and volatility visualization.
+        comment: Shows band widening in the volatile stretch, a narrowing squeeze,
+          and the price riding and touching both bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock prices with volatility clustering. Neutral, plausible
-          context.
+        comment: Neutral daily stock prices in USD on business days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ($125-$165) sensible. 120-day period appropriate for
-          20-day SMA analysis.
+        comment: Prices of 125–165 USD and daily returns of about 1.5 % σ are plausible;
+          checked that the bands are SMA ± 2·rolling std from the code; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -183,60 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions. Clean script with data generation and plot
-          creation.
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity. Straightforward and appropriate.
+        comment: pandas rolling for the indicator; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Uses current API.
+        comment: Saves plot-{THEME}.png with the default bbox
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses seaborn/matplotlib idiomatically. sns.set_theme(), ax.plot(),
-          ax.fill_between(). Proper theme-token usage.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
+        passed: true
+        comment: Axes-level sns.lineplot with data=df and column constants; four separate
+          calls rather than one long-form hue call
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Solid use of fill_between() and theme adaptation. Could showcase
-          more advanced seaborn features.
+        comment: Nothing beyond what the library prompt mandates (set_theme rc, despine)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T11:24:28Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  - time-series
+  - explicit-figure
   dataprep:
   - rolling-window
+  - time-series
+  - cumulative-sum
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling

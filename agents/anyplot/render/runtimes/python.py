@@ -77,7 +77,7 @@ RENDER_RLIMIT_FSIZE_MB = 50
 """The renderer's deployed `RENDERER_RLIMIT_FSIZE_MB` (pinned by a test), which the local backend's renders apply."""
 ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
     {
-        "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+        "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter, never to sample the rows",
         "literal-data": "take the values from df instead of writing them out",
         "palette-prefix": (
             "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "

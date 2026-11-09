@@ -91,7 +91,10 @@ LANGUAGE = "r"
 DATASET_PACKAGE_RULE = "dataset-package"
 ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
     {
-        "rng": "take the values from df; set.seed() with sample(), runif() or jitter() is only for jitter or subsampling",
+        "rng": (
+            "take the values from df; set.seed() with sample(), runif() or jitter() is only for jitter, "
+            "never to sample the rows"
+        ),
         "literal-data": "take the values from df instead of writing them out (no data(), no built-in dataset)",
         "palette-prefix": (
             "keep the Imprint palette one literal c() of colour strings, assigned once: the original entries in "

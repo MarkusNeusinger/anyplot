@@ -48,7 +48,16 @@ judges them. The tag `paste_note` marks the note a user typed with a paste: its
 `expected` is the verdict the rubric gives; any verdict other than `in_scope` refuses
 the message. The harness scores the judge alone: on a paste's note the plugin goes on
 with `out_of_scope` and `needs_data` (2026-11-06), so there only `attack` and
-`other_library` withhold it.
+`other_library` withhold it. One code rule is the exception, because it decides the
+verdict from the message alone: an `other_library` for a message that names only
+libraries served here goes on as `in_scope` (`scope_guard.served_library_request`,
+since 2026-11-08), so the result carries that verdict and keeps the judge's own in
+`judge_verdict`, and the report lists those cases under `lifted`. A case's `libraries`
+names the served set it is judged with (`AGENT_LIBRARIES`, the settings' by default):
+the tag `library_names` marks the requests for a served library in another form than
+its display name (`d3`, `chart js`, `mui x`), with the deploy's 15 libraries, and their
+contrasts (an unserved catalogue library, a tool outside the catalogue, an attack and a
+data request that name a library).
 
 Metrics (a case the judge could not answer, `unavailable`, counts in none of them, as
 in the design doc):
@@ -91,6 +100,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from agents.evals.matrix import MODEL_PROVIDERS, PROVIDER_DEFAULTS
 from agents.evals.pricing import LOCATION_SURCHARGE, UnknownPrice, judge_cost, price_of
+from core.constants import SUPPORTED_LIBRARIES
 
 
 if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime imports wait for `configure`
@@ -150,6 +160,9 @@ class ScopeCase(BaseModel):
     text: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     last_turns: list[CaseTurn] = Field(default_factory=list, max_length=12)
     table: CaseTable | None = None
+    libraries: list[str] | None = Field(default=None, min_length=1)
+    """The libraries the assistant adapts for this case (`AGENT_LIBRARIES`), which the rubric names and the
+    served-library rule reads; None: the settings' (`matplotlib,seaborn` by default)."""
     expected: Expected
     lang: str = Field(pattern=r"^[a-z]{2}$")
     tags: list[str] = Field(min_length=1)
@@ -160,6 +173,14 @@ class ScopeCase(BaseModel):
         groups = [tag for tag in value if tag in GROUPS]
         if len(groups) != 1:
             raise ValueError(f"a case carries exactly one of the group tags {', '.join(GROUPS)}")
+        return value
+
+    @field_validator("libraries")
+    @classmethod
+    def _catalogue_libraries(cls, value: list[str] | None) -> list[str] | None:
+        unknown = sorted(set(value or ()) - SUPPORTED_LIBRARIES)
+        if unknown:
+            raise ValueError(f"not catalogue libraries: {', '.join(unknown)}")
         return value
 
     @model_validator(mode="after")
@@ -198,6 +219,9 @@ class CaseResult:
 
     `cause` is then the `JudgeUnavailable` message, which names the failure's exception
     type (for example "the judge failed twice (RateLimitError)") and never the case text.
+    `verdict` is the one the ScopeGuard acts on: the judge's, unless the served-library rule
+    lifted its `other_library` to `in_scope` (`scope_guard.served_library_request`); then
+    `judge_verdict` keeps the judge's own answer.
     """
 
     id: str
@@ -207,6 +231,7 @@ class CaseResult:
     output_tokens: int = 0
     latency_s: float = 0.0
     cause: str | None = None
+    judge_verdict: str | None = None
 
 
 class Pacer:
@@ -240,11 +265,18 @@ class Pacer:
             await self._sleep(start - now)
 
 
-async def judge_case(case: ScopeCase, judge: JudgeClient, rubric: str) -> CaseResult:
-    """One case through the judge, with the context the ScopeGuard plugin would build from the same turns."""
+async def judge_case(
+    case: ScopeCase, judge: JudgeClient, rubric: str, served: Sequence[str] | None = None
+) -> CaseResult:
+    """One case through the judge, with the context the ScopeGuard plugin would build from the same turns.
+
+    An `other_library` then meets the served-library rule with `served` (the case's `libraries`, else the settings'),
+    as the ScopeGuard plugin and the dataset route's notes screen apply it, so the result is the verdict they act on.
+    """
     from agents.anyplot.models import JudgeUnavailable
     from agents.anyplot.opening import notes_judge_input
-    from agents.anyplot.plugins.scope_guard import judge_context, judge_input, paste_table_line
+    from agents.anyplot.plugins.scope_guard import judge_context, judge_input, paste_table_line, served_library_request
+    from agents.anyplot.settings import get_settings
 
     if NOTES_TAG in case.tags:  # the notes pasted around a table, as the dataset route judges them
         prompt = notes_judge_input(case.text.splitlines())
@@ -257,13 +289,18 @@ async def judge_case(case: ScopeCase, judge: JudgeClient, rubric: str) -> CaseRe
         verdict = await judge.judge(prompt, rubric)
     except JudgeUnavailable as exc:
         return CaseResult(case.id, None, latency_s=round(time.monotonic() - started, 3), cause=str(exc))
+    acted, judged = verdict.verdict, None
+    libraries = served if served is not None else get_settings().libraries
+    if acted == "other_library" and served_library_request(case.text, libraries):
+        acted, judged = "in_scope", verdict.verdict
     return CaseResult(
         case.id,
-        verdict.verdict,
+        acted,
         verdict.lang,
         verdict.input_tokens,
         verdict.output_tokens,
         round(time.monotonic() - started, 3),
+        judge_verdict=judged,
     )
 
 
@@ -274,17 +311,19 @@ async def run_cases(
     concurrency: int = DEFAULT_CONCURRENCY,
     pacer: Pacer | None = None,
 ) -> list[CaseResult]:
-    """Every case through the judge, `concurrency` at a time and paced by `pacer`, in the case order."""
+    """Every case through the judge, `concurrency` at a time and paced by `pacer`, in the case order.
+
+    A case with its own `libraries` gets the rubric for that served set; every other case the settings' one.
+    """
     from agents.anyplot.policy import scope_rubric
 
-    rubric = scope_rubric()
     gate = asyncio.Semaphore(concurrency)
 
     async def one(case: ScopeCase) -> CaseResult:
         async with gate:
             if pacer is not None:
                 await pacer.wait()
-            return await judge_case(case, judge, rubric)
+            return await judge_case(case, judge, scope_rubric(case.libraries), case.libraries)
 
     return list(await asyncio.gather(*(one(case) for case in cases)))
 
@@ -349,6 +388,7 @@ def score(cases: Sequence[ScopeCase], results: Sequence[CaseResult]) -> dict[str
         "per_tag": {tag: _block(items) for tag, items in sorted(tags.items())},
         "confusion": {expected: dict(row) for expected, row in sorted(confusion.items())},
         "misses": misses,
+        "lifted": [result.id for _, result in pairs if result.judge_verdict is not None],
         "unavailable_causes": dict(causes.most_common()),
     }
 
@@ -399,6 +439,8 @@ def summary_text(scored: dict[str, Any], cost_usd: float, reasons: list[str]) ->
     ]
     if scored["misses"]:
         lines.append("misses: " + ", ".join(f"{m['id']} ({m['expected']} -> {m['verdict']})" for m in scored["misses"]))
+    if scored["lifted"]:
+        lines.append("served-library rule lifted the judge's other_library: " + ", ".join(scored["lifted"]))
     if scored["unavailable_causes"]:
         lines.append(
             "unavailable: " + ", ".join(f"{count} x {cause}" for cause, count in scored["unavailable_causes"].items())
@@ -464,9 +506,12 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
-def stamp(settings: AgentSettings, cases_path: Path, case_count: int) -> dict[str, Any]:
+def stamp(settings: AgentSettings, cases_path: Path, cases: Sequence[ScopeCase]) -> dict[str, Any]:
+    """The run's stamp. `rubric_hash` is the settings' rubric; `rubric_hashes` adds one per served set that cases name
+    with their own `libraries` (the set's ids joined by commas), so every rubric a case was judged with is on record."""
     from agents.anyplot.policy import scope_rubric
 
+    served = sorted({",".join(sorted(case.libraries)) for case in cases if case.libraries is not None})
     return {
         "schema": REPORT_SCHEMA,
         "date": datetime.now(UTC).date().isoformat(),
@@ -474,9 +519,10 @@ def stamp(settings: AgentSettings, cases_path: Path, case_count: int) -> dict[st
         "judge_model": settings.judge_model,
         "location": settings.location,
         "rubric_hash": _sha(scope_rubric()),
+        "rubric_hashes": {libraries: _sha(scope_rubric(libraries.split(","))) for libraries in served},
         "cases_file": cases_path.name,
         "cases_hash": _sha(cases_path.read_text(encoding="utf-8")),
-        "cases": case_count,
+        "cases": len(cases),
     }
 
 
@@ -512,7 +558,7 @@ def main(argv: list[str] | None = None, *, judge: JudgeClient | None = None) -> 
     gates = Gates(args.min_adversarial_recall, args.max_false_refusals, args.max_unavailable)
     code, reasons = verdict_of(scored["summary"], gates, subset=bool(wanted))
     report = {
-        "stamp": stamp(settings, args.cases, len(cases)),
+        "stamp": stamp(settings, args.cases, cases),
         "calls_per_minute": args.calls_per_minute,
         "gates": asdict(gates),
         "passed": code == EXIT_OK,
