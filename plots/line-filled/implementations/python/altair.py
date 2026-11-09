@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-filled: Filled Line Plot
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -38,21 +38,7 @@ title_size = round(16 * (67 / len(title) if len(title) > 67 else 1.0))
 
 chart = (
     alt.Chart(df)
-    .mark_area(
-        line={"color": BRAND, "strokeWidth": 2.5},
-        interpolate="linear",
-        color=alt.Gradient(
-            gradient="linear",
-            stops=[
-                alt.GradientStop(color="rgba(0, 158, 115, 0.45)", offset=0),
-                alt.GradientStop(color="rgba(0, 158, 115, 0.12)", offset=1),
-            ],
-            x1=1,
-            x2=1,
-            y1=0,
-            y2=1,
-        ),
-    )
+    .mark_area(line={"color": BRAND, "strokeWidth": 2.5}, interpolate="linear", color=BRAND, fillOpacity=0.35)
     .encode(
         x=alt.X(DAY.translate(ESCAPE), type="quantitative", title=DAY, scale=alt.Scale(nice=False)),
         y=alt.Y(VISITORS.translate(ESCAPE), type="quantitative", title=VISITORS, scale=alt.Scale(zero=True)),
