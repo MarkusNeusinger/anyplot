@@ -34,7 +34,7 @@ jobs:
         run: |
           # Check if already has report-validated label
           LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels -q '.labels[].name' | tr '\n' ' ')
-          if echo "$LABELS" | grep -q "report-validated"; then
+          if grep -q "report-validated" <<< "$LABELS"; then
             echo "::notice::Skipping: Issue already validated"
             echo "should_run=false" >> $GITHUB_OUTPUT
             exit 0

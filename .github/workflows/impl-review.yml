@@ -396,7 +396,7 @@ jobs:
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
           done
 
-          if [ "$READ_OK" = "1" ] && echo "$LABELS" | grep -qx "regen:forced"; then
+          if [ "$READ_OK" = "1" ] && grep -qx "regen:forced" <<< "$LABELS"; then
             echo "is_regen=false" >> $GITHUB_OUTPUT
             echo "::notice::Forced regeneration (regen:forced) — fresh generation path with repair loop"
             exit 0
@@ -474,16 +474,16 @@ jobs:
         run: |
           LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name' 2>/dev/null || echo "")
 
-          if echo "$LABELS" | grep -q "ai-attempt-4"; then
+          if grep -q "ai-attempt-4" <<< "$LABELS"; then
             echo "count=4" >> $GITHUB_OUTPUT
             echo "display=5" >> $GITHUB_OUTPUT
-          elif echo "$LABELS" | grep -q "ai-attempt-3"; then
+          elif grep -q "ai-attempt-3" <<< "$LABELS"; then
             echo "count=3" >> $GITHUB_OUTPUT
             echo "display=4" >> $GITHUB_OUTPUT
-          elif echo "$LABELS" | grep -q "ai-attempt-2"; then
+          elif grep -q "ai-attempt-2" <<< "$LABELS"; then
             echo "count=2" >> $GITHUB_OUTPUT
             echo "display=3" >> $GITHUB_OUTPUT
-          elif echo "$LABELS" | grep -q "ai-attempt-1"; then
+          elif grep -q "ai-attempt-1" <<< "$LABELS"; then
             echo "count=1" >> $GITHUB_OUTPUT
             echo "display=2" >> $GITHUB_OUTPUT
           else
@@ -1425,7 +1425,10 @@ jobs:
           # `adapt_overruled`).
           ADAPT_ROUTE: ${{ steps.adapt.outputs.route }}
         run: |
-          RECORD=/tmp/anyplot-regen-record.json
+          # Record and summary live in $RUNNER_TEMP, not /tmp: the reviewer has
+          # already run and never reads them, and the workflow tests run this
+          # script in parallel, where a fixed /tmp path is shared by all runs.
+          RECORD="$RUNNER_TEMP/anyplot-regen-record.json"
           rm -f "$RECORD"
           FLAGS=()
           [ -f /tmp/anyplot-canvas-gate.txt ] && FLAGS+=(--canvas-failed)
@@ -1444,7 +1447,7 @@ jobs:
                --weaknesses-json /tmp/anyplot-prev-weaknesses.json \
                --spec-file "plots/${SPEC_ID}/specification.md" \
                --prev-renders "$PREV_RENDERS" \
-               --summary-out /tmp/anyplot-regen-summary.md \
+               --summary-out "$RUNNER_TEMP/anyplot-regen-summary.md" \
                --pr "$PR_NUM" --model "$MODEL_ID" \
                --criteria-version "$CRITERIA_VERSION" --prompts-tree "$PROMPTS_TREE" \
                --prev-model "$PREV_MODEL" --prev-criteria-version "$PREV_CRITERIA_VERSION" \
@@ -1459,7 +1462,7 @@ jobs:
               echo "prev_rescored=n/a"
               echo "code=script_crashed"
             } >> "$GITHUB_OUTPUT"
-            printf '**Reason:** gate script crashed (see the impl-review run log)\n' > /tmp/anyplot-regen-summary.md
+            printf '**Reason:** gate script crashed (see the impl-review run log)\n' > "$RUNNER_TEMP/anyplot-regen-summary.md"
             # Minimal record so the decision still leaves a trace in the comment.
             jq -cn --arg pr "$PR_NUM" --arg spec "$SPEC_ID" --arg lib "$LIBRARY" --arg model "$MODEL_ID" \
                --arg cv "$CRITERIA_VERSION" --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -1501,8 +1504,8 @@ jobs:
           cp "/tmp/anyplot-prev-impl${EXT}" "$DIR/prev/${LIBRARY}${EXT}" 2>/dev/null || true
           cp /tmp/anyplot-prev-review.md /tmp/anyplot-prev-weaknesses.json "$DIR/prev/" 2>/dev/null || true
           cp review_*.json review_*.txt quality_score.txt "$DIR/" 2>/dev/null || true
-          cp /tmp/anyplot-regen-record.json "$DIR/gate-record.json" 2>/dev/null || true
-          cp /tmp/anyplot-regen-summary.md "$DIR/gate-summary.md" 2>/dev/null || true
+          cp "$RUNNER_TEMP/anyplot-regen-record.json" "$DIR/gate-record.json" 2>/dev/null || true
+          cp "$RUNNER_TEMP/anyplot-regen-summary.md" "$DIR/gate-summary.md" 2>/dev/null || true
           mkdir -p "$DIR/adapt"
           cp -r "$RUNNER_TEMP/adapt/." "$DIR/adapt/" 2>/dev/null || true
           rm -rf "$DIR/adapt/prev-src"
@@ -2222,7 +2225,7 @@ jobs:
           if [ "$READ_OK" -ne 1 ]; then
             give_up "a later step failed and the PR's labels could not be read afterwards."
           fi
-          if echo "$LABELS" | grep -qxE "ai-approved|ai-rejected|regen:improved|regen:kept"; then
+          if grep -qxE "ai-approved|ai-rejected|regen:improved|regen:kept" <<< "$LABELS"; then
             echo "::notice::PR #${PR_NUM} already carries a verdict label — left to the watchdog, no re-review"
             exit 1
           fi
@@ -2543,10 +2546,10 @@ jobs:
             local what="$1"; shift
             local attempt err
             for attempt in 1 2 3; do
-              if "$@" 2> /tmp/gh_retry.err; then
+              if "$@" 2> "$RUNNER_TEMP/gh_retry.err"; then
                 return 0
               fi
-              err=$(head -c 500 /tmp/gh_retry.err | tr '\n' ' ')
+              err=$(head -c 500 "$RUNNER_TEMP/gh_retry.err" | tr '\n' ' ')
               echo "::warning::${what} failed (attempt ${attempt}/3): ${err}"
               if [ "$attempt" -lt 3 ]; then
                 sleep $((attempt * 5))
@@ -2559,7 +2562,7 @@ jobs:
           # ── Regeneration: the regen gate decided, the cascade does not apply ──
           if [ "$IS_REGEN" = "true" ]; then
             RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
-            SUMMARY_FILE=/tmp/anyplot-regen-summary.md
+            SUMMARY_FILE="$RUNNER_TEMP/anyplot-regen-summary.md"
             if [ ! -s "$SUMMARY_FILE" ]; then
               printf '**Reason:** %s\n' "${GATE_REASON:-regen gate produced no verdict}" > "$SUMMARY_FILE"
             fi
@@ -2580,17 +2583,17 @@ jobs:
                 opened|unchanged|no_rescore|invalid|stale|failed) ;;
                 *) WB_STATUS=failed ;;
               esac
-              if [ -s /tmp/anyplot-regen-record.json ]; then
-                jq -c --arg wb "$WB_STATUS" '. + {writeback: $wb}' /tmp/anyplot-regen-record.json \
-                  > /tmp/anyplot-regen-record-wb.json \
-                  && mv /tmp/anyplot-regen-record-wb.json /tmp/anyplot-regen-record.json \
+              if [ -s "$RUNNER_TEMP/anyplot-regen-record.json" ]; then
+                jq -c --arg wb "$WB_STATUS" '. + {writeback: $wb}' "$RUNNER_TEMP/anyplot-regen-record.json" \
+                  > "$RUNNER_TEMP/anyplot-regen-record-wb.json" \
+                  && mv "$RUNNER_TEMP/anyplot-regen-record-wb.json" "$RUNNER_TEMP/anyplot-regen-record.json" \
                   || echo "::warning::writeback=${WB_STATUS} not added to the gate record"
               fi
             fi
             # Machine-readable gate record (`<!-- regen-gate-record:v1 {...} -->`)
             # for both comments; empty when the gate wrote none.
             GATE_RECORD_MARKER=$(python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" marker \
-              --record /tmp/anyplot-regen-record.json 2>/dev/null) || GATE_RECORD_MARKER=""
+              --record "$RUNNER_TEMP/anyplot-regen-record.json" 2>/dev/null) || GATE_RECORD_MARKER=""
             # A route that held before the review and that the review turned
             # off (the early step's `regen:adapt-overruled`), on either verdict.
             OVERRULED_TEXT=""
@@ -2631,8 +2634,8 @@ jobs:
                   echo ""
                   echo "$GATE_RECORD_MARKER"
                 fi
-              } > /tmp/anyplot-regen-merged.md
-              GH_RETRY_LEVEL=warning gh_retry "regen gate PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-merged.md \
+              } > "$RUNNER_TEMP/anyplot-regen-merged.md"
+              GH_RETRY_LEVEL=warning gh_retry "regen gate PR comment" gh pr comment "$PR_NUM" --body-file "$RUNNER_TEMP/anyplot-regen-merged.md" \
                 || echo "::warning::regen gate comment not posted — the merge goes ahead"
               gh_retry "impl-merge dispatch" gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
               exit 0
@@ -2679,9 +2682,9 @@ jobs:
                 echo ""
                 echo "$GATE_RECORD_MARKER"
               fi
-            } > /tmp/anyplot-regen-kept.md
+            } > "$RUNNER_TEMP/anyplot-regen-kept.md"
 
-            gh_retry "kept-regen PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-kept.md || FAILED=1
+            gh_retry "kept-regen PR comment" gh pr comment "$PR_NUM" --body-file "$RUNNER_TEMP/anyplot-regen-kept.md" || FAILED=1
             # A lost close is re-tried by watchdog Case 0 (open + regen:kept).
             gh_retry "kept-regen PR close" gh pr close "$PR_NUM" --delete-branch || FAILED=1
 
@@ -2694,7 +2697,7 @@ jobs:
               if PRESENT=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2>/dev/null); then
                 for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending" \
                              "impl:${LIBRARY}:failed" "watchdog:retried-${LIBRARY}"; do
-                  if echo "$PRESENT" | grep -qx "$stale"; then
+                  if grep -qx "$stale" <<< "$PRESENT"; then
                     gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || FAILED=1
                   fi
                 done
@@ -2703,7 +2706,7 @@ jobs:
                 # here only turns the run red; the pair is already done again.
                 gh_retry "remove impl:${LIBRARY}:pending" gh issue edit "$ISSUE_NUMBER" --remove-label "impl:${LIBRARY}:pending" || FAILED=1
               fi
-              gh_retry "issue comment" gh issue comment "$ISSUE_NUMBER" --body-file /tmp/anyplot-regen-kept.md || FAILED=1
+              gh_retry "issue comment" gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/anyplot-regen-kept.md" || FAILED=1
 
               LIBRARIES=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))" 2>/dev/null || echo "")
               if [ -n "$LIBRARIES" ]; then
@@ -2730,11 +2733,11 @@ jobs:
           CURRENT_LABELS=""
           READ_OK=0
           for attempt in 1 2 3; do
-            if CURRENT_LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2> /tmp/labels.err); then
+            if CURRENT_LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2> "$RUNNER_TEMP/labels.err"); then
               READ_OK=1
               break
             fi
-            LERR=$(head -c 500 /tmp/labels.err | tr '\n' ' ')
+            LERR=$(head -c 500 "$RUNNER_TEMP/labels.err" | tr '\n' ' ')
             echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): ${LERR}"
             if [ "$attempt" -lt 3 ]; then
               sleep $((attempt * 5))
@@ -2745,7 +2748,7 @@ jobs:
             exit 1
           fi
 
-          if echo "$CURRENT_LABELS" | grep -q "ai-approved"; then
+          if grep -q "ai-approved" <<< "$CURRENT_LABELS"; then
             if [ "$NOTHING_TO_REPAIR" = "true" ] && [ "$SCORE" -lt "$THRESHOLD" ]; then
               echo "::notice::ai-approved label already set (Score $SCORE < $THRESHOLD, nothing to repair), triggering merge"
               # Say why on the PR (the run log expires). Warning only: this
@@ -2760,7 +2763,7 @@ jobs:
             exit 0
           fi
 
-          if echo "$CURRENT_LABELS" | grep -q "ai-rejected"; then
+          if grep -q "ai-rejected" <<< "$CURRENT_LABELS"; then
             # Still have repair attempts left? (Max 4 repairs = 5 reviews total)
             if [ "$ATTEMPT_COUNT" -lt 4 ]; then
               echo "::notice::ai-rejected label set (Score $SCORE < $THRESHOLD), triggering repair attempt $((ATTEMPT_COUNT + 1))"
@@ -2901,11 +2904,11 @@ jobs:
                 PRESENT=""
                 PRESENT_OK=0
                 for attempt in 1 2 3; do
-                  if PRESENT=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2> /tmp/labels.err); then
+                  if PRESENT=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2> "$RUNNER_TEMP/labels.err"); then
                     PRESENT_OK=1
                     break
                   fi
-                  echo "::warning::gh issue view (labels) failed (attempt ${attempt}/3): $(head -c 500 /tmp/labels.err | tr '\n' ' ')"
+                  echo "::warning::gh issue view (labels) failed (attempt ${attempt}/3): $(head -c 500 "$RUNNER_TEMP/labels.err" | tr '\n' ' ')"
                   [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
                 done
                 if [ "$PRESENT_OK" -ne 1 ]; then
@@ -2916,7 +2919,7 @@ jobs:
                   if [ "$PRESENT_OK" -ne 1 ]; then
                     # Blind best effort; the run is already red.
                     GH_RETRY_LEVEL=warning gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || true
-                  elif echo "$PRESENT" | grep -qxF "$stale"; then
+                  elif grep -qxF "$stale" <<< "$PRESENT"; then
                     gh_retry "remove ${stale}" gh issue edit "$ISSUE_NUMBER" --remove-label "$stale" || FAILED=1
                   fi
                 done

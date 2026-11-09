@@ -661,7 +661,7 @@ jobs:
             # Get Claude's comment to find duplicate info
             COMMENT=$(gh issue view "$ISSUE_NUM" --json comments -q '.comments[-1].body' 2>/dev/null || echo "")
 
-            if echo "$COMMENT" | grep -qi "duplicate\|exists\|already"; then
+            if grep -qi "duplicate\|exists\|already" <<< "$COMMENT"; then
               echo "::notice::Claude detected duplicate - closing issue"
 
               gh label create "duplicate" --color "cfd3d7" \

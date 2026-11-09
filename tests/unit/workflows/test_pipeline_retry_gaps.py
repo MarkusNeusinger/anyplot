@@ -25,9 +25,10 @@ Follow-ups from the reviews of that fix:
 7. impl-repair's crash retry read `gh api --paginate --jq … | length` as one
    number; on a PR with more than 100 comments the cap never held.
 
-The step scripts run under `bash -eo pipefail` like Actions runs them, with a
-fake `gh` that records its calls and a no-op `sleep` on PATH. The rest are
-content guards for wiring without a local execution loop.
+The step scripts run under `bash -eo pipefail`, stricter than the `bash -e`
+Actions uses for a step without `shell:`, with a fake `gh` that records its
+calls, a no-op `sleep` on PATH and a `$RUNNER_TEMP` of the test's own. The
+rest are content guards for wiring without a local execution loop.
 """
 
 from __future__ import annotations
@@ -121,6 +122,13 @@ def _run(
     log = tmp_path / "gh_log"
     log.unlink(missing_ok=True)
     base = {k: v for k, v in os.environ.items() if not k.startswith(("GIT_", "GH_"))}
+    # Steps keep their scratch files in $RUNNER_TEMP. Without a directory of
+    # the test's own they would share one: CI's RUNNER_TEMP is inherited by
+    # every xdist worker, and an unset one turns the paths into `/name`.
+    if "RUNNER_TEMP" not in env:
+        runner_temp = tmp_path / "runner"
+        runner_temp.mkdir(exist_ok=True)
+        env["RUNNER_TEMP"] = str(runner_temp)
     result = subprocess.run(
         ["bash", "-eo", "pipefail", "-c", script],
         cwd=cwd,
