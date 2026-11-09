@@ -2,51 +2,59 @@ library: matplotlib
 language: python
 specification_id: frontier-efficient
 created: '2026-01-08T21:53:55Z'
-updated: '2026-05-17T04:49:17Z'
-generated_by: claude-haiku
-workflow_run: 25981437847
+updated: '2026-11-09T00:32:09Z'
+generated_by: claude-opus-5-5
+adopted_from: 077b271135867220bd50f03fbe3bfd476f130b27 (077b271135867220bd50f03fbe3bfd476f130b27)
+workflow_run: 42540323921
 issue: 3342
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Excellent visual legibility in both light and dark themes
-  - All required portfolio optimization features correctly implemented
-  - Realistic and well-curated data example with appropriate scale
-  - Clean, reproducible code with proper seeding
-  - Effective use of colorbar for continuous Sharpe ratio encoding
-  - Proper layout and whitespace management
-  - No text overlap or collision issues
+  - The efficient frontier is a 3 px brand-green line with a page-colored pe.Stroke
+    halo, so it separates cleanly from the dense band of random portfolios right below
+    it in both themes
+  - The capital market line runs from the 3% risk-free point at zero risk, touches
+    the frontier at the maximum Sharpe star (0.72), and stays above the frontier everywhere
+    else, which matches the tangency geometry the spec describes
+  - The minimum variance diamond sits at the leftmost point of the frontier, and the
+    tangency star is told apart from it by shape, size and color (Imprint positions
+    2 and 4), with edges outlined in the theme ink
+  - The Sharpe ratio coloring uses imprint_seq exactly as the style guide builds it,
+    with an opaque colorbar (solids alpha 1, no outline, no tick marks)
+  - 'The data is honest: 400 Dirichlet long-only portfolios plus 60 scipy-optimized
+    frontier portfolios from a five-asset covariance model, and every point sits at
+    its own risk and return'
+  - 'Theme tokens carry through to every element: title, labels, ticks, legend frame,
+    colorbar and marker edges all flip correctly between light and dark'
   weaknesses:
-  - Efficient frontier line uses Python blue (#306998) instead of brand green (#009E73)
-    - violates palette compliance
-  - Code saves 'plot.png' instead of theme-based 'plot-{THEME}.png' - breaks pipeline
-    compatibility
-  - No theme-adaptive chrome in code (background, text colors, grid) - theme adaptation
-    only in rendered output
-  - Generic color choices without custom palette or design refinement
-  - Frontier line color doesn't emphasize the primary insight - should use brand green
-    for visual hierarchy
+  - 'Suggestion: the frontier''s brand green is also the low-Sharpe end of the imprint_seq
+    scale, so at high risk (x > 20) the line and the nearby teal points share a hue;
+    the thickness and halo already tell them apart, but a darker frontier outline
+    could separate them further.'
+  - 'Suggestion: the y-axis starts at 0 to show the risk-free intercept, which leaves
+    the lower right half of the plot empty; that is a fair tradeoff, but a tighter
+    x-range or an inset could give the dense cloud more room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clearly visible and matches spec
-      Chrome: Title "frontier-efficient · matplotlib · anyplot.ai", axis labels with units, tick labels all in dark text; all readable on light surface
-      Data: Scatter points colored by viridis (Sharpe ratio scale, purple→yellow), efficient frontier curve in blue, min variance point (yellow diamond), max Sharpe point (red star), capital market line (dashed gray), risk-free rate point
-      Legibility verdict: PASS - all elements clearly readable with no overlap
+      Background: warm off-white #FAF8F1 across both figure and axes, with no pure white.
+      Chrome: the bold dark title "frontier-efficient · python · matplotlib · anyplot.ai" fills about 60% of the width. The axis titles "Risk: standard deviation (% per year)" and "Expected return (% per year)" are dark ink, and the tick labels are soft dark gray. The grid is subtle, and only the left and bottom spines are drawn. The legend in the upper left sits on an elevated off-white frame with a thin gray edge. A "Sharpe ratio" colorbar runs from 0.45 to 0.70. All text is readable.
+      Data: about 460 portfolios form a thin crescent from about (9, 9) to (30, 16), colored by Sharpe ratio on imprint_seq (green at the low end, blue at the high end). A thick #009E73 efficient-frontier line with a halo runs along the upper left edge. A dashed gray capital market line starts at the 3% risk-free dot on the y-axis and is tangent at the ochre star (maximum Sharpe 0.72, about 10.2% risk and 10.4% return). A purple diamond marks the minimum variance portfolio at the frontier's leftmost point (about 9.2% risk and 9.05% return). The first series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec
-      Chrome: Title, axis labels, tick labels all in light text on dark surface; all readable with excellent contrast
-      Data: Scatter point colors identical to light render (only chrome flipped, not data colors - correctly theme-adaptive)
-      Legibility verdict: PASS - no dark-on-dark failures; all text legible; grid subtle but visible; same visual clarity as light render
+      Background: warm near-black #1A1A17, with no pure black.
+      Chrome: the title is off-white, and the axis titles and tick labels are light gray. The legend frame is the dark elevated surface #242420 with light text. The grid is faint but visible, and the colorbar labels are light. There is no dark-on-dark text.
+      Data: the colors match the light render: the green frontier, the imprint_seq cloud, the purple diamond and the ochre star (now with light edges), with a light gray dashed CML and risk-free dot. Brand green stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,73 +62,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized; title 24pt, labels 20pt, ticks 16pt;
-          readable at full resolution in both themes
+        comment: Title 12 pt bold, axis titles 10 pt, ticks and legend 8 pt; everything
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend well-positioned; clean layout
+        comment: No text collisions; the legend sits clear of the CML end and the
+          cloud
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 300 scatter points well-sized for density; frontier curve prominent;
-          key markers clearly visible
+        comment: s=16 at alpha 0.75 keeps the dense crescent readable; the key markers
+          are large and outlined; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: The two key markers differ by shape as well as color; the green-to-blue
+          sequential scale is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins; no wasted space
+        comment: 3200x1800; constrained layout; nothing cut off; the title fills about
+          60% of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units included
+        comment: Descriptive axis titles with units (% per year)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Efficient frontier line is Python blue (#306998), not Okabe-Ito
-          #009E73. Backgrounds and text colors are theme-correct. Viridis for continuous
-          data is correct.'
+        passed: true
+        comment: 'Frontier #009E73; Sharpe ratio on imprint_seq; backgrounds #FAF8F1
+          and #1A1A17'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Competent but not sophisticated; Python blue is generic/dated; no
-          custom palette or intentional design hierarchy
+        passed: true
+        comment: 'Beyond baseline: frontier halo via pe.Stroke, elevated legend surface,
+          clean colorbar (solids alpha 1, no outline, zero-length ticks)'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; grid subtle (alpha=0.3); generous whitespace
+        comment: The page-colored halo separates the frontier from the cloud hugging
+          it; the colorbar is stripped of its frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Frontier story clear but frontier line color (blue) doesn't emphasize
-          as primary insight; green would create stronger hierarchy
+        passed: true
+        comment: The maximum Sharpe value (0.72) appears in the legend entry and the
+          star is the focal point at the tangency
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -128,27 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter + curve efficient frontier plot'
+        comment: Efficient frontier with a random portfolio scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: random portfolios, efficient frontier, min
-          variance, max Sharpe, CML, risk-free rate'
+        comment: Risk on x and return on y; distinguished frontier; random cloud below
+          it; min variance and max Sharpe marked; optional CML and Sharpe coloring
+          with a colorbar
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Every portfolio sits at its own risk and return; the CML is tangent
+          at the star and above the frontier elsewhere
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Minor: Code shows ''pyplots.ai'' but images show ''anyplot.ai'';
-          legend labels correct'
+        passed: true
+        comment: Correct title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -158,21 +170,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of efficient frontier concept
+        comment: Shows the frontier shape, the suboptimal cloud, the min variance
+          and tangency points, and the CML
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic portfolio optimization scenario; neutral financial context
+        comment: A plausible five-asset universe with a correlation matrix and long-only
+          weights
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Returns, risks, and Sharpe ratios factually plausible
+        comment: Returns 8-16%, volatility 9-30%, risk-free rate 3%, Sharpe 0.45-0.72
+          are all realistic; the tangency is checked as the argmax Sharpe point, which
+          the CML touches
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,32 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save; no functions/classes'
+        comment: Linear script with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic
+        comment: np.random.seed(42); deterministic optimizer
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy; all used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering; no fake functionality
+        comment: scipy.optimize.minimize and ConvexHull do the computing, with no
+          hand-rolled algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves as ''plot.png'' instead of ''plot-{THEME}.png'';
-          breaks pipeline compatibility'
+        passed: true
+        comment: Saves plot-{THEME}.png with the current API
     library_mastery:
       score: 7
       max: 10
@@ -215,24 +231,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct matplotlib usage; ax.scatter(), ax.plot(), plt.colorbar();
-          standard patterns
+        comment: layout='constrained', fig.colorbar with fraction/aspect, Axes API
+          throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses colorbar with viridis (nice feature) but otherwise generic implementation
+        passed: true
+        comment: matplotlib.patheffects Stroke halo on the frontier; cbar.solids alpha
+          override
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T00:29:07Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - colorbar
-  - scatter-with-colormap
+  - custom-legend
+  - path-effects
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
-  - correlation-matrix
+  - optimization
+  - convex-hull
   styling:
-  - publication-ready
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
