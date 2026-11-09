@@ -49,9 +49,9 @@ belt-and-braces. The site's nginx fetches the prerendered pages over
 `https://api.anyplot.ai` (`app/nginx.conf` `@seo_proxy` and `@seo_proxy_python`),
 so that path does pass the edge and does carry the header — while an exemption
 would leave the most expensive reads in the API open on the direct URL: a cache
-miss or an unknown id queries `SpecRepository`/`ImplRepository`, and a crawler
-user agent schedules an outbound Plausible event per request. That is precisely
-the cost this gate exists to refuse. The rollout measures the
+miss or an unknown id queries `SpecRepository`/`ImplRepository`, and every such
+request is a counted machine read. That is precisely the cost this gate exists
+to refuse. The rollout measures the
 crawler path end to end before arming, and `bot-serving-check.yml` runs daily,
 so being wrong here is loud rather than silent.
 
@@ -171,11 +171,10 @@ class OriginSecretMiddleware:
 
     Placed (`api/main.py`) INSIDE `CORSMiddleware`, so a 403 still carries the
     CORS headers a browser needs to read it as a 403 rather than as an opaque
-    network error, and OUTSIDE the analytics middleware, so a refused request
-    can never fire an outbound Plausible event. That second one is not
-    hypothetical: `track_asset_fetch` fires per request for anything with a
-    crawler user agent, and a caller on the direct URL could otherwise turn
-    each of its own refusals into one.
+    network error, and OUTSIDE the machine-read middleware, so a refused
+    request can never write a line: a caller on the direct URL with a crawler
+    user agent could otherwise turn each of its own refusals into a counted
+    read (`api/machine_reads.py`).
     """
 
     def __init__(self, app):

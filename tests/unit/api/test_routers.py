@@ -762,65 +762,84 @@ class TestSeoProxyRouter:
             assert "1 plot specifications" in response.text
             assert "hundreds of" not in response.text
 
-    def test_seo_proxy_records_the_agent_that_read_the_page(self, client: TestClient) -> None:
-        """The router dependency reports the PUBLIC path, not its own prefix."""
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_bot_fetch") as track:
+    def test_seo_proxy_records_the_agent_that_read_the_page(self, client: TestClient, machine_lines) -> None:
+        """One machine-read line: the route's name and the served id, never the path."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
             client.get("/seo-proxy/bar-basic", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
-        track.assert_called_once()
-        assert track.call_args.args[1] == "/bar-basic"
-        assert track.call_args.args[2] == 200  # the status the handler produced
+        [line] = machine_lines.lines
+        assert (line["surface"], line["route"], line["assistant"], line["kind"]) == (
+            "page",
+            "spec_hub",
+            "claude",
+            "user_directed",
+        )
+        assert line["status"] == 200  # the status the handler produced
+        assert line["spec_id"] == "bar-basic"
+        assert "seo-proxy" not in machine_lines.raw[0]
 
-    def test_seo_proxy_home_records_root(self, client: TestClient) -> None:
-        """The proxy root maps to "/", and the hook fires exactly once per request."""
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_bot_fetch") as track:
+    def test_seo_proxy_home_records_root(self, client: TestClient, machine_lines) -> None:
+        """The proxy root is the `home` route, and the middleware writes exactly once per request."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
             client.get("/seo-proxy/", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
-        track.assert_called_once()
-        assert track.call_args.args[1] == "/"
+        assert [(line["surface"], line["route"]) for line in machine_lines.lines] == [("page", "home")]
 
-    def test_robots_and_sitemap_are_not_page_reads(self, client: TestClient) -> None:
-        """Both live on this router but are machine files, not catalogue pages."""
-        with patch("api.main.track_bot_fetch") as track, patch("api.main.track_asset_fetch") as asset:
-            client.get("/robots.txt", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
-            client.get("/sitemap.xml", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
-            client.get(
-                "/llms.txt", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}, follow_redirects=False
-            )
-        track.assert_not_called()
-        asset.assert_not_called()
+    def test_robots_llms_and_sitemap_are_machine_file_reads(self, client: TestClient, machine_lines) -> None:
+        """Machine files are recorded since the machine-read lines replaced the bot site, as their own surface:
+        which crawler reads robots.txt, and how often, is the answer to "does it follow the rules"."""
+        googlebot = {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            statuses = [
+                client.get("/robots.txt", headers=googlebot).status_code,
+                client.get("/sitemap.xml", headers=googlebot).status_code,
+                client.get("/llms.txt", headers=googlebot, follow_redirects=False).status_code,
+            ]
+        # The sitemap is a hop path, so a 5xx would be nginx's line; without a database it still answers.
+        assert statuses[1] < 500
+        assert [(line["surface"], line["route"], line["status"]) for line in machine_lines.lines] == [
+            ("machine_file", "robots", statuses[0]),
+            ("machine_file", "sitemap", statuses[1]),
+            ("machine_file", "llms", statuses[2]),
+        ]
 
-    def test_an_assistant_reading_one_implementation_s_code_is_an_asset_fetch(self, client: TestClient) -> None:
+    def test_an_assistant_reading_one_implementation_s_code_is_a_code_read(
+        self, client: TestClient, machine_lines
+    ) -> None:
         """The API read that follows a page read: which plot's code did it pull."""
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_asset_fetch") as track:
+        with patch(DB_CONFIG_PATCH, return_value=False):
             response = client.get(
                 "/specs/bar-basic/seaborn/code", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"}
             )
-        track.assert_called_once()
-        assert track.call_args.kwargs == {
-            "asset": "code",
-            "spec": "bar-basic",
-            "library": "seaborn",
-            "status": response.status_code,
-        }
+        [line] = machine_lines.lines
+        assert (line["surface"], line["route"], line["status"]) == ("code", "code", response.status_code)
+        served = 200 <= response.status_code < 300
+        assert (line.get("spec_id"), line.get("library")) == (("bar-basic", "seaborn") if served else (None, None))
 
-    def test_an_assistant_reading_one_spec_is_an_asset_fetch(self, client: TestClient) -> None:
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_asset_fetch") as track:
+    def test_an_assistant_reading_one_spec_is_a_spec_read(self, client: TestClient, machine_lines) -> None:
+        with patch(DB_CONFIG_PATCH, return_value=False):
             response = client.get(
                 "/specs/bar-basic", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"}
             )
-        track.assert_called_once()
-        assert track.call_args.kwargs == {
-            "asset": "spec",
-            "spec": "bar-basic",
-            "library": None,
-            "status": response.status_code,
-        }
+        [line] = machine_lines.lines
+        assert (line["surface"], line["route"], line["status"]) == ("spec", "spec", response.status_code)
+        assert "library" not in line
 
-    def test_catalogue_navigation_is_not_an_asset_fetch(self, client: TestClient) -> None:
-        """Lists, the map and the filter are navigation, not a request for one thing."""
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_asset_fetch") as track:
+    def test_catalogue_navigation_is_recorded_by_route_name(self, client: TestClient, machine_lines) -> None:
+        """Lists, the map and the filter are reads too, each under its own name and without a query string."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
             for path in ("/specs", "/specs/map", "/plots/filter?plot=bar", "/libraries", "/llms-full.txt"):
                 client.get(path, headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
-        track.assert_not_called()
+        routes = [line["route"] for line in machine_lines.lines]
+        assert routes == ["specs_list", "specs_map", "plots_filter", "libraries", "llms_full"]
+        assert all("spec_id" not in line for line in machine_lines.lines)
+        assert not any("plot=bar" in raw for raw in machine_lines.raw)
+
+    def test_a_browser_reading_the_api_writes_nothing(self, client: TestClient, machine_lines) -> None:
+        """The SPA fetches the same routes; a person's read is not a machine's."""
+        browser = {"User-Agent": "Mozilla/5.0 (X11; Linux) AppleWebKit/537.36 Chrome/150.0 Safari/537.36"}
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            for path in ("/specs/bar-basic", "/specs/bar-basic/seaborn/code", "/libraries", "/stats"):
+                client.get(path, headers=browser)
+        assert machine_lines.raw == []
 
     def test_seo_home_canonical_ignores_filter_params(self, client: TestClient) -> None:
         """Filter params must not produce a self-canonicalising copy of the home page.
@@ -1189,6 +1208,11 @@ class TestSeoProxyRouter:
         assert "kept until you ask to delete it" in response.text
         # The server logs sit in the EU (the `_Default` sink's europe-west4 bucket).
         assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
+        # The hosting sentence names what LegalPage.tsx's hosting row names, BigQuery included.
+        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands" in response.text
+        # The machine-read line, mirrored from the human page's "machine readers" row.
+        assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
+        assert "without IP address or user-agent, kept up to 180 days" in response.text
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
