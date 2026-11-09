@@ -2,55 +2,58 @@ library: letsplot
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:53:39Z'
-updated: '2026-05-11T03:58:10Z'
-generated_by: claude-haiku
-workflow_run: 25648938493
+updated: '2026-11-09T00:58:42Z'
+generated_by: claude-opus-5-5
+adopted_from: 205656846cb7a7fff63713ab2141a2f574b45c8f (205656846cb7a7fff63713ab2141a2f574b45c8f)
+workflow_run: 42542655549
 issue: 2442
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/letsplot/plot-dark.html
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - 'Both light and dark renders are visually compliant and readable with correct
-    theme backgrounds (#FAF8F1, #1A1A17)'
-  - Okabe-Ito brand green (#009E73) renders correctly in both themes with consistent
-    data colors
-  - Excellent text legibility at full resolution with explicitly set font sizes (24pt
-    title, 20pt labels, 16pt ticks)
-  - Realistic and appropriate data example (test scores with bimodal distribution)
-  - Proper density normalization with theoretical PDF overlay that is statistically
-    sound
-  - No overlap or visibility issues—all elements clearly distinguishable
+  - 'Density bars come straight from lets-plot''s computed stat (aes(y="..density..")),
+    so the bar areas sum to 1 by construction and the y axis reads as density: the
+    0.040 peak matches the fitted normal''s 1/(σ√2π) ≈ 0.0395 for σ = 10.1.'
+  - Contiguous bins with thin page-colored seams (color=PAGE_BG) keep the 25 bars
+    separable without gaps, in both themes.
+  - Normal fit drawn over the bars in the high-contrast INK token, identified by a
+    legend entry that carries the fitted μ and σ, inset in the empty upper-right corner
+    on the elevated surface.
+  - 'The bimodal exam-score mixture (main group plus a high-performer cluster near
+    88) makes the spec''s goodness-of-fit use case visible: the bars rise above the
+    normal curve at 85–90 and fall below it at 80–85.'
+  - 'Clean theme threading: PAGE_BG, INK, INK_SOFT, RULE and ELEVATED_BG drive every
+    chrome element, the x grid is removed for the bar chart and the y grid kept at
+    15 % ink, and y ticks share one fixed precision.'
+  - Native lets-plot HTML export alongside the PNG gives hover tooltips on bars and
+    the curve in the interactive view.
   weaknesses:
-  - Code does not read ANYPLOT_THEME environment variable; saves to plot.png instead
-    of plot-{THEME}.png pattern (CQ-05)
-  - 'Hardcoded colors (#306998 bar fill, white edges, #CCCCCC grid) instead of theme-adaptive
-    tokens (VQ-07, LM-01)'
-  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'' (SC-04)'
-  - 'No visual refinement: uses theme_minimal() with minimal customization (DE-02)'
-  - No design sophistication or visual hierarchy—configured defaults without intentional
-    design thinking (DE-01)
-  - 'Limited library mastery: doesn''t showcase letsplot-specific features or demonstrate
-    theme-adaptive styling patterns (LM-02)'
+  - 'Suggestion: the x-axis tick ''40'' sits close to the y-axis ''0.000'' label in
+    the lower-left corner; trimming the x expansion on the left (no data below 44)
+    would give the corner more air.'
+  - 'Suggestion: a thin dashed or slightly lighter rendering of the fit line could
+    separate the theoretical curve from the empirical bars a little more without losing
+    contrast.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface, consistent with #FAF8F1 requirement. Clean, professional appearance.
-      Chrome: Title "histogram-density · letsplot · anyplot.ai" in dark text (readable). X-axis label "Test Score", Y-axis label "Density" both clear and legible. Tick labels are dark and visible against light background. Grid lines are subtle light gray, not overwhelming.
-      Data: Histogram bars rendered in Okabe-Ito brand green (#009E73 - correct). White bar edges provide definition. Theoretical PDF overlay rendered as yellow/golden line (position 7 from Okabe-Ito). All elements clearly distinguishable.
-      Legibility verdict: PASS - all text sizes are appropriate and readable at full resolution. No text-on-text issues.
+      Background: warm off-white #FAF8F1 across plot and panel, 3200x1800 landscape.
+      Chrome: bold near-black title "histogram-density · python · letsplot · anyplot.ai" top-left at about 55 % width; x-axis title "Test score (points)", y-axis title "Density (per point)" in INK; tick labels 40–105 and 0.000–0.040 in dark grey INK_SOFT; subtle horizontal grid only; solid x-axis line. All readable.
+      Data: 25 contiguous brand-green #009E73 bars (alpha 0.9) with thin off-white seams, rising from 0 to a 0.040 peak at 72–77, a second bump near 88, empty bins near 48 and 53 in the left tail. A thick near-black normal-fit curve (μ = 76.1, σ = 10.1) overlays the bars. Legend inset top-right on an #FFFDF6 box: line sample + "Normal fit / μ = 76.1, σ = 10.1".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface, consistent with #1A1A17 requirement. Professional dark theme rendering.
-      Chrome: Title, axis labels, and tick labels all rendered in light text, clearly visible against dark background. Grid lines are subtle light-gray, appropriate for dark theme. No dark-on-dark failures observed.
-      Data: Histogram bars remain Okabe-Ito green (#009E73 - identical to light render, as required). Yellow PDF overlay line clearly visible. All data elements properly adapted to dark surface.
-      Legibility verdict: PASS - text is readable in both themes. Data colors are consistent between light and dark renders. No theme-adaptation failures detected in the rendered output.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, ticks in light grey, faint light grid lines; no dark-on-dark text anywhere. Legend box on #242420 with light text.
+      Data: bars in the identical #009E73 green with dark page-colored seams; the normal-fit curve flips to light ink and stays high-contrast. Data positions identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,69 +61,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all readable in both themes
+        comment: Title 16, axis titles 12, ticks 10 pt at 4x scale; readable in both
+          themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all fully readable
+        comment: No text collisions; legend sits in empty upper-right corner clear
+          of bars and curve
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars and PDF line optimally sized and visible
+        comment: Bars clearly visible with page-colored seams; fit line 1.4 thick;
+          legend line sample matches the curve in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; Okabe-Ito palette CVD-safe
+        comment: Single green series plus ink curve; strong luminance contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins and appropriate canvas utilization
+        comment: 3200x1800 canvas; title ~55 % width; balanced axis labels; nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Test Score'', ''Density'''
+        comment: '''Test score (points)'' and ''Density (per point)'' with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Rendered output correct (green #009E73, correct backgrounds) but
-          code doesn''t implement theme-adaptive colors or read ANYPLOT_THEME'
+        passed: true
+        comment: 'Series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults but no custom design or intentional hierarchy
+        passed: true
+        comment: 'Beyond baseline: fitted parameters set in the legend entry on the
+          elevated surface, fixed tick precision derived from the curve peak, clear
+          type hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Uses theme_minimal() with basic text sizing; no spine removal or
-          grid refinement
+        passed: true
+        comment: Page-colored bin seams instead of outlines, x grid removed for bars
+          while y grid kept, legend inset into the empty corner
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed but no visual hierarchy or narrative emphasis
+        passed: true
+        comment: Bimodal data chosen so the high-performer cluster near 88 visibly
+          departs from the normal fit — a focal point for the goodness-of-fit reading
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -128,26 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram with PDF overlay
+        comment: Density histogram with optional theoretical PDF overlay the Notes
+          suggest
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Density histogram with ..density.. normalization and PDF overlay
-          present
+        comment: Density y axis, area sums to 1, contiguous consistent bins, contrasting
+          overlay identified by legend, 25 bins show skew/cluster/tails — all good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (score), Y-axis (Density) correctly mapped
+        comment: x = score, y = computed density; all data within axes; curve is an
+          exact pdf, no overshoot
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
+        passed: true
+        comment: Title in mandated format; legend entry reads as text for a reader
     data_quality:
       score: 15
       max: 15
@@ -157,21 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution showing main group and high performers
+        comment: Shows skew, a secondary cluster, sparse tails and bars above/below
+          the fit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral scenario: test scores'
+        comment: Exam scores of 400 students, capped at 100 — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values (0-100 range) and plausible distribution
+        comment: 'Checked: peak density 0.040 per point ≈ normal pdf peak 0.0395 for
+          σ = 10.1; densities come from the ..density.. stat, not placed values; scores
+          within 0–100'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,58 +195,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no functions/classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI
+        comment: Library stat computes the density; scipy.stats.norm.fit/pdf for the
+          fit; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png; doesn't read ANYPLOT_THEME
+        passed: true
+        comment: Saves plot-{THEME}.png at scale=4 and plot-{THEME}.html; current
+          lets-plot 4 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct ggplot() + geoms usage but doesn't leverage theme-adaptive
-          tokens
+        comment: Grammar-of-graphics layering, computed stat variable ..density..,
+          legend produced by mapping a constant to color with scale_color_manual
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage; could work in any ggplot2-based library
+        comment: scale_y_continuous(format=...) lets-plot format strings and native
+          interactive HTML export with tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T00:56:07Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - layer-composition
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - binning
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
