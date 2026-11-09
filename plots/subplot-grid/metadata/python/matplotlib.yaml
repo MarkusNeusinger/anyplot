@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: subplot-grid
 created: '2025-12-30T17:48:50Z'
-updated: '2026-11-09T00:40:47Z'
+updated: '2026-11-09T00:46:01Z'
 generated_by: claude-opus-5-5
 adopted_from: 077b271135867220bd50f03fbe3bfd476f130b27 (077b271135867220bd50f03fbe3bfd476f130b27)
 workflow_run: 42541080405
@@ -13,103 +13,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Four distinct plot types (line with moving average, signed-color volume bars,
-    return histogram, colour-mapped scatter) form one coherent single-stock dashboard,
-    so the cells read as related views of one scenario
-  - plt.subplots(2, 2, layout="constrained") with tuned layout-engine pads keeps plot
-    areas aligned along rows and columns with even gaps; no tick labels or axis titles
-    collide with a neighbour
-  - Colorbar is attached with fig.colorbar(points, ax=scatter_ax) so it sits directly
-    beside the one subplot it explains; legends stay inside their own cells
-  - TwoSlopeNorm(vcenter=0) centres the theme-adaptive imprint_div map on zero return,
-    and the volume bars reuse the semantic red for down days, linking panels
-  - 'Theme tokens threaded through every element: legend frames on ELEVATED_BG, colorbar
-    outline removed, INK/INK_SOFT text, both renders fully legible'
-  - Grid density chosen per panel (y-only for bars and histogram, both axes for the
-    scatter) and histogram headroom keeps its legend clear of the tallest bins
+  - Four distinct plot types (line with moving average, up/down-coloured volume bars,
+    return histogram, volume-vs-return scatter) read as one coherent stock dashboard
+  - Shared x-axis on the top row via Axes.sharex shows both cells on the same 0-100
+    trading-day scale while the bottom row keeps independent axes, demonstrating both
+    modes the spec asks for
+  - Constrained layout with tuned pads aligns every plot area along rows and columns
+    with even gaps; the colourbar sits directly beside the scatter it explains
+  - Diverging return colour uses imprint_div with a theme-adaptive midpoint and TwoSlopeNorm
+    centred on zero; outlined markers keep near-zero points visible in both themes
+  - Theme tokens threaded through titles, labels, ticks, spines, grid, legend frames
+    and colourbar; both renders fully legible
   weaknesses:
-  - 'SC-02 (both): the Notes bullet ''Support both shared axes (for comparison) and
-    independent axes'' is not shown — all four subplots use independent axes, even
-    the two top panels that plot the same Trading day 1–100 x-variable → link the
-    two Trading-day panels with a shared x-axis (e.g. sharex for that row) and keep
-    the other cells independent. Likely cause: plt.subplots(2, 2, ...) without sharex/sharey.'
-  - 'VQ-01 (both): legend text at 7.5 pt and colorbar tick labels at 7 pt fall below
-    the 8 pt baseline of the library prompt and blur in the 400 px thumbnail of the
-    2×2 grid → 8 pt (+0.5 to +1 pt). Likely cause: legend(fontsize=7.5) calls and
-    cbar.ax.tick_params(labelsize=7).'
-  - 'Suggestion: up days are green in the volume panel but blue on the imprint_div
-    scatter; a sentence-level note or matching legend wording could make the two encodings
-    of the same up/down signal easier to connect.'
-  - 'Suggestion: grid dimensions are literals in plt.subplots(2, 2); named NROWS/NCOLS
-    constants would make the configurable layout the Notes mention more visible.'
+  - 'Suggestion: up days are green in the volume bars but blue on the scatter''s imprint_div
+    colourbar; a sign-coloured scatter in the same green/red as the bars would keep
+    one colour meaning across the grid.'
+  - 'Suggestion: volume is generated independently of returns, so the ''Volume vs
+    return size'' cell shows no relationship; tying volume to the absolute return
+    in the data would give that panel something to show.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across figure and all four axes.
-      Chrome: bold suptitle "subplot-grid · python · matplotlib · anyplot.ai" centred (~54% of width); bold left-aligned subplot titles "Stock price", "Trading volume", "Return distribution", "Volume vs return size"; axis titles (Trading day, Price (USD), Volume (thousand shares), Daily return (%), Trading days, Absolute daily return (%)) in dark ink, tick labels in soft dark grey; subtle grid; top/right spines removed. All readable.
-      Data: top-left green #009E73 close-price line with dashed purple #C475FD 20-day MA and framed legend; top-right 100 volume bars green (up) / red #AE3030 (down) with two-column legend; bottom-left green histogram of daily returns with grey zero line and dashed purple mean line (-0.16%), legend top-right; bottom-right scatter of volume vs absolute return coloured by signed return on red–off-white–blue imprint_div with a colorbar "Daily return (%)" beside it. Two-by-two grid evenly spaced and aligned.
+      Chrome: bold dark suptitle "subplot-grid · python · matplotlib · anyplot.ai"; left-aligned bold panel titles (Stock price, Trading volume, Return distribution, Volume vs return size); dark axis titles with units, soft-ink tick labels, subtle grid, top/right spines removed; legend frames on elevated off-white. All readable.
+      Data: 2x2 grid. Top-left green #009E73 close line with purple #C475FD dashed 20-day MA. Top-right 100 volume bars, green up days / matte red #AE3030 down days, shared 0-100 trading-day x scale with top-left. Bottom-left green return histogram with soft-ink zero line and purple dashed mean (-0.16%). Bottom-right scatter of volume vs absolute return coloured by signed return via imprint_div (red-offwhite-blue) with colourbar beside it.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 on figure and axes.
-      Chrome: title, subplot titles and axis labels in light ink, tick labels in light grey, legend frames on the elevated dark surface with light text; no dark-on-dark text anywhere.
-      Data: identical green/purple/red data colours as the light render; the imprint_div midpoint flips to the dark page colour so near-zero scatter points are dark fills, still outlined in INK_SOFT and visible; brand green reads well.
+      Background: warm near-black #1A1A17.
+      Chrome: suptitle, panel titles and axis titles in light ink, ticks in light soft ink, grid subtle, legend frames dark elevated with light text, colourbar ticks and label light. No dark-on-dark text.
+      Data: identical green, purple and red series colours to the light render; the imprint_div midpoint flips to the dark page colour, and the light marker outlines keep near-zero scatter points visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; legend 7.5 pt and colorbar ticks
-          7 pt below the 8 pt baseline (defect line)
+        comment: All sizes explicit (suptitle 12, panel titles 10 bold, labels 9,
+          ticks/legends 8); readable in both themes, title ~53% of width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; histogram headroom keeps the legend clear of
-          bins and reference lines
+        comment: No text collisions; legends sit in headroom (volume ylim x1.25, histogram
+          ylim x1.3) clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines, bars, histogram bins and outlined scatter markers all visible
-          in both themes; legend glyphs match marks
+        comment: Lines 1.6-1.8 pt, 100 thin bars, scatter markers with INK_SOFT outline
+          stay visible even at the page-coloured midpoint of imprint_div; legend glyphs
+          match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic green/red differ strongly in lightness; diverging red–blue
-          map is CVD-safe
+        comment: 'Up/down green #009E73 vs matte red #AE3030 is the style guide''s
+          finance semantic, with a clear luminance gap; MA is dashed, not hue-only'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800, constrained layout, aligned panels, even gaps, nothing
-          clipped
+        comment: Constrained layout fills the 3200x1800 canvas; plot areas align on
+          rows and columns, even gaps
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on every axis and colorbar
+        comment: 'Every axis titled with units: Price (USD), Volume (thousand shares),
+          Daily return (%)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD, semantic red for down days,
-          imprint_div with theme-adaptive midpoint, correct backgrounds'
+        comment: 'First series #009E73, MA #C475FD, down days semantic #AE3030, continuous
+          return via imprint_div with theme-adaptive midpoint; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
       score: 12
       max: 20
@@ -119,24 +111,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear three-level typographic hierarchy (suptitle, bold left-aligned
-          panel titles, axis labels) beyond the baseline
+        comment: Clear three-level type hierarchy (bold suptitle, left-aligned bold
+          panel titles, soft-ink ticks) and semantic up/down colour reused across
+          panels
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Per-panel grid choice, tuned constrained-layout pads, colorbar outline
-          and tick marks removed, legend headroom on the histogram
+        comment: Grid axis chosen per panel (y-only for line/bar/hist, both for scatter),
+          outline-free colourbar with zero-length ticks, tuned constrained-layout
+          pads, legend headroom via ylim, integer histogram ticks
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Up/down colouring links volume bars to the return panels; story is
-          coherent but no strong focal point
+        comment: Up/down colouring links volume to price moves and the mean-vs-zero
+          lines expose the slightly negative mean return; the scatter panel shows
+          no relationship, so the dashboard's story thins out there
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,27 +139,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Regular 2×2 subplot grid with a different plot type in each cell
+        comment: 2x2 subplot grid with four different plot types (line, bar, histogram,
+          scatter)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Titles per cell, consistent spacing, colorbar beside its cell met;
-          shared axes from the Notes not shown (defect line)
+        comment: Configurable grid via plt.subplots(2, 2); shared x on the top row,
+          independent axes below; per-cell titles; colourbar beside its subplot; all
+          characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All marks at their data values; axes show all data
+        comment: Marks at their data values; shared top-row axes both 0-100; all data
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend entries readable (Close, 20-day MA,
-          Up day, Down day, Zero return, Mean)
+        comment: Title 'subplot-grid · python · matplotlib · anyplot.ai'; legends
+          Close / 20-day MA, Up day / Down day, Zero return / Mean -0.16% are reader
+          text
     data_quality:
       score: 15
       max: 15
@@ -174,21 +173,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Line, bar, histogram and scatter with differing scales and units
-          show the plot type's mixed-cell nature
+        comment: Shows shared and independent axes, four plot types, differing ranges
+          and data amounts per cell
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral single-stock dashboard, the spec's own example
+        comment: Financial dashboard of one stock over 100 trading days, the spec's
+          own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price ~80–110 USD, daily returns within ±6%, volumes 8–86 thousand
-          shares are plausible; no Check values in the Notes
+        comment: 'Checked: price 78-110 USD, daily returns within about ±6%, volume
+          8-86 thousand shares, mean -0.16% computed from returns (not placed); 20-day
+          MA starts at day 20 as a rolling window must'
     code_quality:
       score: 10
       max: 10
@@ -216,14 +217,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: pct_change and rolling for derived series, one styling loop over
-          axes.flat
+        comment: pandas pct_change/rolling and ax.hist compute everything; shared
+          styling loop, no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at default bbox
+        comment: Saves plot-{THEME}.png, current API (layout='constrained', ncols=)
     library_mastery:
       score: 7
       max: 10
@@ -233,19 +234,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes API throughout, plt.subplots with layout="constrained", get_layout_engine().set
-          for pads, fig.colorbar(ax=)
+        comment: Axes methods throughout, plt.subplots unpacking, Axes.sharex, fig.colorbar(ax=...),
+          get_layout_engine().set for spacing
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: TwoSlopeNorm centring, constrained-layout engine tuning, Patch proxy
-          legend, MaxNLocator(integer=True)
-  verdict: REJECTED
+        comment: TwoSlopeNorm centring the diverging cmap on zero, constrained-layout
+          engine tuning, custom Patch legend handles, MaxNLocator(integer=True)
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
-  rendered_at: '2026-11-09T00:37:42Z'
+  rendered_at: '2026-11-09T00:42:48Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -257,10 +258,9 @@ impl_tags:
   - data-generation
   - explicit-figure
   dataprep:
-  - cumulative-sum
   - rolling-window
   - binning
   styling:
-  - custom-colormap
+  - publication-ready
   - edge-highlighting
   - grid-styling
