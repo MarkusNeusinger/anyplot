@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -28,6 +28,7 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Constants
 ARROW_REACH = 0.85  # longest loading arrow spans this share of the largest score distance from the origin
 NEAR_ANGLE = np.deg2rad(12)  # arrows closer than this in direction get their labels split above and below
+LABEL_LIFT = 5  # extra vertical clearance (points) for split labels, keeping them off points and the PC2 = 0 line
 
 # Columns: set these to your table's column names
 MEASUREMENTS = ["Sepal length (cm)", "Sepal width (cm)", "Petal length (cm)", "Petal width (cm)"]  # role: features
@@ -82,16 +83,18 @@ for i, measurement in enumerate(table.columns):
     near = np.abs(gaps) < NEAR_ANGLE
     va = "center" if not near.any() else ("bottom" if (gaps[near] > 0).all() else "top")
     direction = tips[i] / np.hypot(*tips[i])
+    lift = {"center": 0, "bottom": LABEL_LIFT, "top": -LABEL_LIFT}[va]
     ax.annotate(
         measurement,
         xy=tips[i],
-        xytext=direction * 6,
+        xytext=direction * 6 + np.array([0, lift]),
         textcoords="offset points",
         ha="left" if direction[0] >= 0 else "right",
         va=va,
         fontsize=8,
         color=INK,
         path_effects=[patheffects.withStroke(linewidth=2.5, foreground=PAGE_BG)],
+        bbox={"boxstyle": "round,pad=0.25", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.85},
         zorder=4,
     )
 
