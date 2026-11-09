@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:24:09Z'
-updated: '2026-11-09T13:04:42Z'
+updated: '2026-11-09T13:09:45Z'
 generated_by: claude-opus
 workflow_run: 42621383919
 issue: 3485
@@ -12,40 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Native Vega-Lite xOffset encoding groups the lollipops side by side, with paddingInner/paddingOuter
-    giving clearly wider gaps between regions than within them
-  - Stems and markers come from one shared encoded base layered as mark_rule + mark_circle,
-    with y2=alt.datum(0) anchoring every stem to a shared zero baseline on an untruncated
-    axis
-  - Regions sorted by total score, with the x-axis title stating the sort
-  - Page-coloured marker outline separates each dot cleanly from its stem in both
-    themes
-  - Theme tokens thread through all chrome; both renders are fully readable and data
-    colours are identical
-  - HTML output carries tooltips for region, quarter and score
+  - Native xOffset encoding builds the side-by-side groups from one shared base chart;
+    paddingInner=0.35 on the category scale and paddingOuter=0.6 on the offset scale
+    make the gap between regions clearly wider than within them
+  - Stems are mark_rule layers with y2=alt.datum(0), so every lollipop starts from
+    the shared zero baseline on an untruncated 0-110 axis
+  - Regions are sorted by total revenue (North, West, East, South), computed from
+    the data with groupby, and the x-axis title says so
+  - Markers carry a page-colored outline that separates each dot cleanly from its
+    stem in both themes
+  - Theme tokens are threaded through title, axes, grid and the legend frame; both
+    renders are fully legible and the Imprint colors are identical across themes
+  - Tooltips with readable titles add value inspection in the HTML output
   weaknesses:
-  - 'DQ-02 (both): the value is labelled only ''Performance Score'', which names no
-    concrete measure, so the regional scenario reads as generic → a concrete, named
-    metric (e.g. ''Customer Satisfaction Index'' or ''Net Promoter Score'') with values
-    on its real scale. Likely cause: the SCORE column name and the value list.'
-  - 'Suggestion: the boxed legend sits far above the plot with a wide empty band below
-    it; a lighter or unboxed legend closer to the plot would tighten the layout.'
-  - 'Suggestion: a direct label on the leading region''s peak quarter could give the
-    chart a focal point.'
+  - 'Suggestion: the boxed legend sits left-aligned under a centered title; anchoring
+    it to the plot''s right edge or dropping the frame would balance the header.'
+  - 'Suggestion: the lower half of the plot is empty grid by necessity of the zero
+    baseline; a lighter grid (fewer y ticks, e.g. every 20) would let the marker heights
+    read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
-      Chrome: centred bold title "lollipop-grouped · python · altair · anyplot.ai" in dark ink; y-axis title "Performance Score", x-axis title "Region (sorted by total performance score)"; tick labels 0-110 and North/West/East/South in dark grey; subtle horizontal grid; boxed horizontal legend "Quarter" top-left on an elevated off-white fill. All readable.
-      Data: four region groups, each with three lollipops (Q1 2024 #009E73 green, Q2 2024 #C475FD purple, Q3 2024 #4467A3 blue); thin stems from 0 to circular markers with a page-coloured ring. North 83/101/101, West 85/94/94, East 88/85/90, South 74/76/80.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: centered bold title "lollipop-grouped · python · altair · anyplot.ai" in dark ink; y-axis "Revenue ($M)" 0-110 with ticks every 10 and subtle horizontal grid; x-axis "Region (sorted by total revenue)" with North, West, East, South; boxed horizontal legend "Quarter" top-left on an elevated fill. All text dark on light and readable.
+      Data: four groups of three lollipops each: thin stems from the zero baseline to circular markers; Q1 2024 #009E73 green, Q2 2024 #C475FD purple, Q3 2024 #4467A3 blue, same order in every group; wider gaps between groups than within.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and axis titles in light ink, tick labels in light grey, faint grid, legend box on #242420 with light outline and text. No dark-on-dark text.
-      Data: identical colours and positions to the light render; only chrome flipped; brand green clearly visible.
+      Chrome: title and axis titles in light ink, tick labels in soft light grey, grid subtle but visible, legend box on #242420 with a light frame. No dark-on-dark text.
+      Data: identical green/purple/blue series colors and positions as the light render; markers outlined in the page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -57,72 +55,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 16, axis titles 12, labels 10 at scale
-          4); every text element readable in both themes
+        comment: Explicit font sizes; title, axis titles, ticks and legend readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; neighbouring markers within a group stay separate
+        comment: No text collisions; tied North Q2/Q3 markers are side by side, not
+          overlapping
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 sparse lollipops with prominent 220-size markers and thin but
-          visible stems; legend glyphs match the marks in both themes
+        comment: 12 sparse lollipops with prominent 220-size markers; legend glyphs
+          match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, purple and blue are CVD-distinguishable; no red-green pairing
+        comment: Green/purple/blue series distinguishable under CVD; no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, balanced proportions, nothing cut off; canvas gate
-          passed
+        comment: Exact 3200x1800, nothing clipped, balanced axis label and tick sizes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Readable axis titles; the x title states the sort order
+        comment: Revenue ($M) with unit; descriptive region axis title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette in canonical order, first series #009E73, backgrounds
-          #FAF8F1 / #1A1A17, chrome flips correctly'
+        comment: 'Imprint order starting at #009E73; correct backgrounds in both themes'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean style-guide baseline; nothing beyond it
+        passed: true
+        comment: Page-colored marker halos separating dots from stems; x-axis title
+          that states the sort; ticks removed for a quieter frame
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Page-coloured ring around each marker detaches it from its stem;
-          tuned paddingInner/paddingOuter give clearly wider gaps between groups than
-          within
+        passed: true
+        comment: Tuned paddingInner/paddingOuter for a deliberate within/between-group
+          spacing; x grid off, y grid only
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed; the sort is what the Notes ask for, no further hierarchy
-          chosen
+        passed: true
+        comment: Sorting is what the Notes ask; no further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Grouped lollipop chart, nothing added
+        comment: Grouped lollipop chart, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems from a shared zero baseline, circular markers, side-by-side
-          offset, legend, categories sorted by total, same series order in every group
+        comment: Thin stems, circular markers, side-by-side offset, legend, sorted
+          categories; all four 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value axis starts at 0 and covers all data; marks at their values
+        comment: Zero baseline, untruncated axis, marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'lollipop-grouped · python · altair · anyplot.ai'; legend titled
-          Quarter with readable entries
+        comment: Mandated title format; legend 'Quarter' with readable entries
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -162,22 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 regions x 3 quarters, rank swaps between groups (East Q2 dips),
-          ties visible
+        comment: Within-group comparison, rank swaps (East Q2 dip) and differing totals
+          all shown
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Neutral regional scenario, but 'Performance Score' names no concrete
-          measure (defect line)
+        comment: Quarterly revenue by sales region, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 74-101 on a 0-110 axis are plausible for an index; no Check
-          values in the spec
+        comment: 74-101 $M per region-quarter is sensible; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -193,7 +188,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Deterministic literal data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -205,13 +200,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Shared base chart layered for stems and markers; no hand-rolled computation
+        comment: Shared base chart layered; no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: plot-{THEME}.png with pad-only block and plot-{THEME}.html; Altair
+          6 API
     library_mastery:
       score: 6
       max: 10
@@ -221,18 +217,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: One shared encoded base layered into mark_rule + mark_circle, y2=alt.datum(0)
-          for the baseline, sort list driving the category order
+        comment: Shared base encoding reused by layered marks, alt.datum(0) for y2,
+          type= with escaped fields
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Vega-Lite xOffset grouping and HTML tooltips; nothing else distinctive
-  verdict: REJECTED
+        passed: true
+        comment: Vega-Lite xOffset encoding with its own scale padding for grouping
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
-  rendered_at: '2026-11-09T13:01:57Z'
+  rendered_at: '2026-11-09T13:06:52Z'
 impl_tags:
   dependencies:
   - pillow
@@ -241,9 +237,7 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
-  dataprep:
   - groupby-aggregation
+  dataprep: []
   styling:
-  - publication-ready
-  - minimal-chrome
+  - edge-highlighting
