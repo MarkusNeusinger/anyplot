@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -33,21 +33,26 @@ FULL_KT = 10
 PENNANT_KT = 50
 
 # Columns: set these to your table's column names
-X_POS = "X Position (grid units)"  # role: x
-Y_POS = "Y Position (grid units)"  # role: y
+X_POS = "Longitude (°)"  # role: x
+Y_POS = "Latitude (°N)"  # role: y
 U_WIND = "U Wind (kt)"  # role: u
 V_WIND = "V Wind (kt)"  # role: v
 
 # Data: replace this block with your own table, for example df = pd.read_csv("winds.csv")
+# Surface stations over the US Plains around a deep low, steered by a weak westerly flow
 np.random.seed(42)
-x_grid, y_grid = np.meshgrid(np.linspace(0, 10, 6), np.linspace(0, 8, 5))
-u = np.random.uniform(-30, 30, x_grid.size)
-v = np.random.uniform(-30, 30, x_grid.size)
-u[[7, 26]] = [0.8, -0.5]  # two calm stations
-v[[7, 26]] = [-1.0, 1.2]
-u[[16, 22]] = [-48.0, 41.0]  # two stations in a strong jet
-v[[16, 22]] = [32.0, -38.0]
-df = pd.DataFrame({X_POS: x_grid.ravel(), Y_POS: y_grid.ravel(), U_WIND: u, V_WIND: v})
+lon, lat = np.meshgrid(np.arange(-103.0, -88.0, 2.0), np.arange(31.0, 44.0, 2.0))
+lon_c, lat_c = -97.0, 38.39  # low-pressure center, placed so the station just north of it is calm
+v_max, r_max, westerly = 50.0, 3.0, 10.0  # peak rotation (kt), its radius (°), steering flow (kt)
+dx, dy = lon - lon_c, lat - lat_c
+r = np.hypot(dx, dy)
+v_rot = np.where(r < r_max, v_max * r / r_max, v_max * r_max / np.maximum(r, 1e-9))
+# Counterclockwise rotation (Northern Hemisphere cyclone) with a 10° inflow toward the center
+inflow = np.deg2rad(10)
+ex, ey = dx / np.maximum(r, 1e-9), dy / np.maximum(r, 1e-9)
+u = v_rot * (-np.cos(inflow) * ey - np.sin(inflow) * ex) + westerly + np.random.normal(0, 0.8, r.shape)
+v = v_rot * (np.cos(inflow) * ex - np.sin(inflow) * ey) + np.random.normal(0, 0.8, r.shape)
+df = pd.DataFrame({X_POS: lon.ravel(), Y_POS: lat.ravel(), U_WIND: u.ravel(), V_WIND: v.ravel()})
 
 # Plot: reads only df and the constants above
 obs = df.dropna(subset=[X_POS, Y_POS, U_WIND, V_WIND])
@@ -121,6 +126,9 @@ p = figure(
     min_border_top=110,
     min_border_right=60,
 )
+# Fit the auto ranges tightly to the barb extent; match_aspect still keeps the angles true
+p.x_range.range_padding = 0.03
+p.y_range.range_padding = 0.03
 
 p.multi_line(xs="xs", ys="ys", source=ColumnDataSource({"xs": line_xs, "ys": line_ys}), line_width=5, line_color=BRAND)
 p.patches(
