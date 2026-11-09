@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -13,7 +13,6 @@ from matplotlib.textpath import TextToPath
 from plotnine import (
     aes,
     coord_cartesian,
-    element_blank,
     element_rect,
     element_text,
     geom_text,
@@ -21,6 +20,7 @@ from plotnine import (
     labs,
     scale_size_identity,
     theme,
+    theme_void,
 )
 
 
@@ -166,17 +166,14 @@ plot = (
     + scale_size_identity()
     + coord_cartesian(xlim=(0, PANEL_W), ylim=(0, PANEL_H), expand=False)
     + labs(title="wordcloud-basic · python · plotnine · anyplot.ai")
+    + theme_void()
     + theme(
         figure_size=(8, 4.5),
+        plot_margin=0.015,
         plot_title=element_text(size=12, ha="center", weight="bold", color=INK, margin={"b": 6}),
         plot_title_position="plot",
         panel_background=element_rect(fill=PAGE_BG, color=None),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_blank(),
-        panel_grid_minor=element_blank(),
-        axis_text=element_blank(),
-        axis_title=element_blank(),
-        axis_ticks=element_blank(),
     )
 )
 
