@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
 Library: plotnine 0.15.9 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -136,17 +136,16 @@ cells["xc"] = (cells["xmin"] + cells["xmax"]) / 2
 cells["yc"] = (cells["ymin"] + cells["ymax"]) / 2
 
 
-def label_ink(hex_color):
-    """Dark or light label text, whichever reads better on the rectangle's fill."""
-    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
-    lum = sum(
+# Label ink per fill: dark text on light fills, white on dark ones (WCAG relative luminance)
+luminance_of = {
+    fill: sum(
         k * (c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
-        for k, c in zip((0.2126, 0.7152, 0.0722), (r, g, b), strict=True)
+        for k, c in zip((0.2126, 0.7152, 0.0722), (int(fill[i : i + 2], 16) / 255 for i in (1, 3, 5)), strict=True)
     )
-    return "#1A1A17" if lum > 0.25 else "#FFFFFF"
-
-
-cells["ink"] = cells[DEPARTMENT].map(fill_of).map(label_ink)
+    for fill in fill_of.values()
+}
+ink_of = {dept: "#1A1A17" if luminance_of[fill] > 0.25 else "#FFFFFF" for dept, fill in fill_of.items()}
+cells["ink"] = cells[DEPARTMENT].map(ink_of)
 cells["label"] = cells[COST_CENTER].astype(str) + "\n$" + cells[BUDGET].map("{:,.0f}".format) + "K"
 labeled = cells[cells[BUDGET] >= MIN_LABEL_SHARE * cells[BUDGET].sum()]
 
