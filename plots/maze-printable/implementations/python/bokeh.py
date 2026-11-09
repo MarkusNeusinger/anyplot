@@ -1,27 +1,40 @@
 """ anyplot.ai
 maze-printable: Printable Maze Puzzle
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 71/100 | Updated: 2026-05-16
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.plotting import figure, output_file, save
+from bokeh.io import output_file, save
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Maze generation using DFS (guarantees single solution)
-np.random.seed(42)
-width, height = 25, 25
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Initialize maze grid (0 = wall, 1 = passage)
-maze = np.zeros((height * 2 + 1, width * 2 + 1), dtype=int)
+# Imprint palette: start takes position 1 (brand green), goal position 2
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# DFS maze generation
-visited = np.zeros((height, width), dtype=bool)
+# Data: maze parameters — change the grid size or the seed for a new puzzle
+MAZE_WIDTH = 25  # cells horizontally
+MAZE_HEIGHT = 25  # cells vertically
+SEED = 42
+
+# Plot: carve the maze with a depth-first search (a spanning tree: exactly one route)
+np.random.seed(SEED)
+maze = np.zeros((MAZE_HEIGHT * 2 + 1, MAZE_WIDTH * 2 + 1), dtype=int)  # 0 = wall, 1 = passage
+visited = np.zeros((MAZE_HEIGHT, MAZE_WIDTH), dtype=bool)
 stack = [(0, 0)]
 visited[0, 0] = True
 maze[1, 1] = 1
-
 directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 while stack:
@@ -29,9 +42,8 @@ while stack:
     neighbors = []
     for dy, dx in directions:
         ny, nx = cy + dy, cx + dx
-        if 0 <= ny < height and 0 <= nx < width and not visited[ny, nx]:
+        if 0 <= ny < MAZE_HEIGHT and 0 <= nx < MAZE_WIDTH and not visited[ny, nx]:
             neighbors.append((ny, nx, dy, dx))
-
     if neighbors:
         ny, nx, dy, dx = neighbors[np.random.randint(len(neighbors))]
         visited[ny, nx] = True
@@ -41,97 +53,94 @@ while stack:
     else:
         stack.pop()
 
-# Collect wall segments
-wall_xs = []
-wall_ys = []
-wall_widths = []
-wall_heights = []
+# Interior walls as segments along the cell edges (cell row 0 is the top row)
+x0, y0, x1, y1 = [], [], [], []
+for row in range(MAZE_HEIGHT):
+    for col in range(MAZE_WIDTH):
+        top = MAZE_HEIGHT - row
+        if col < MAZE_WIDTH - 1 and maze[row * 2 + 1, col * 2 + 2] == 0:  # wall to the east
+            x0.append(col + 1)
+            y0.append(top - 1)
+            x1.append(col + 1)
+            y1.append(top)
+        if row < MAZE_HEIGHT - 1 and maze[row * 2 + 2, col * 2 + 1] == 0:  # wall to the south
+            x0.append(col)
+            y0.append(top - 1)
+            x1.append(col + 1)
+            y1.append(top - 1)
 
-cell_size = 80
-wall_thickness = 8
+# Outer boundary, open at the entrance (top-left cell) and the exit (bottom-right cell)
+border_xs = [[1, MAZE_WIDTH, MAZE_WIDTH], [MAZE_WIDTH - 1, 0, 0]]
+border_ys = [[MAZE_HEIGHT, MAZE_HEIGHT, 0], [0, 0, MAZE_HEIGHT]]
 
-maze_h, maze_w = maze.shape
-
-for row in range(maze_h):
-    for col in range(maze_w):
-        if maze[row, col] == 0:
-            x = col * cell_size
-            y = (maze_h - 1 - row) * cell_size
-            wall_xs.append(x + cell_size / 2)
-            wall_ys.append(y + cell_size / 2)
-            wall_widths.append(cell_size + wall_thickness / 2)
-            wall_heights.append(cell_size + wall_thickness / 2)
-
-# Create figure with small margin for the outer wall
-total_w = maze_w * cell_size
-total_h = maze_h * cell_size
-margin = cell_size / 2  # Small margin to show outer wall
-
+margin = 0.8  # empty space around the maze, in cells
+span = max(MAZE_WIDTH, MAZE_HEIGHT) + 2 * margin
+title = "maze-printable · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=4800,
-    title="maze-printable · bokeh · pyplots.ai",
-    x_range=(-margin, total_w + margin),
-    y_range=(-margin, total_h + margin),
+    width=2400,
+    height=2400,
+    title=title,
+    x_range=(MAZE_WIDTH / 2 - span / 2, MAZE_WIDTH / 2 + span / 2),
+    y_range=(MAZE_HEIGHT / 2 - span / 2, MAZE_HEIGHT / 2 + span / 2),
     tools="",
     toolbar_location=None,
-    match_aspect=True,
+    min_border_top=180,
+    min_border_bottom=20,
+    min_border_left=100,
+    min_border_right=100,
 )
 
-# White background
-p.background_fill_color = "white"
-p.border_fill_color = "white"
+p.segment(x0=x0, y0=y0, x1=x1, y1=y1, line_color=INK, line_width=9, line_cap="square")
+p.multi_line(xs=border_xs, ys=border_ys, line_color=INK, line_width=16, line_cap="square", line_join="miter")
+
+# Start and goal markers in the entrance and exit cells
+start_x, start_y = 0.5, MAZE_HEIGHT - 0.5
+goal_x, goal_y = MAZE_WIDTH - 0.5, 0.5
+p.scatter([start_x], [start_y], marker="circle", size=62, fill_color=IMPRINT_PALETTE[0], line_color=INK, line_width=3)
+p.scatter([goal_x], [goal_y], marker="square", size=56, fill_color=IMPRINT_PALETTE[1], line_color=INK, line_width=3)
+p.text(
+    [start_x, goal_x],
+    [start_y, goal_y],
+    text=["S", "G"],
+    text_font_size="30pt",
+    text_font_style="bold",
+    text_color="#1A1A17",
+    text_align="center",
+    text_baseline="middle",
+)
+
+# Style: no axes, grid or frame — position is construction here
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 p.outline_line_color = None
-
-# Hide axes and grid
-p.xaxis.visible = False
-p.yaxis.visible = False
-p.xgrid.visible = False
-p.ygrid.visible = False
-
-# Draw walls as rectangles
-p.rect(x=wall_xs, y=wall_ys, width=wall_widths, height=wall_heights, fill_color="#000000", line_color=None)
-
-# Start/Goal markers at first and last passage cells
-start_col, start_row = 1, 1
-end_col, end_row = maze_w - 2, maze_h - 2
-
-start_x = start_col * cell_size + cell_size / 2
-start_y = (maze_h - 1 - start_row) * cell_size + cell_size / 2
-goal_x = end_col * cell_size + cell_size / 2
-goal_y = (maze_h - 1 - end_row) * cell_size + cell_size / 2
-
-# Draw markers with labels
-p.scatter([start_x], [start_y], size=55, fill_color="#306998", line_color="white", line_width=4, marker="circle")
-p.scatter([goal_x], [goal_y], size=55, fill_color="#FFD43B", line_color="#333333", line_width=4, marker="circle")
-
-p.text(
-    [start_x],
-    [start_y],
-    text=["S"],
-    text_font_size="28pt",
-    text_font_style="bold",
-    text_color="white",
-    text_align="center",
-    text_baseline="middle",
-)
-p.text(
-    [goal_x],
-    [goal_y],
-    text=["G"],
-    text_font_size="28pt",
-    text_font_style="bold",
-    text_color="#333333",
-    text_align="center",
-    text_baseline="middle",
-)
-
-# Title styling
-p.title.text_font_size = "36pt"
-p.title.text_color = "#333333"
+p.styles = {"background-color": PAGE_BG}  # the page shows through the frame's anti-aliased edge
+p.axis.visible = False
+p.grid.visible = False
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 p.title.align = "center"
 
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save
+output_file(f"plot-{THEME}.html", title=title)
 save(p)
+
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
