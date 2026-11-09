@@ -228,17 +228,19 @@ async def _send_plausible_event(user_agent: str, client_ip: str, name: str, url:
 
     Args:
         user_agent: Original User-Agent header
-        client_ip: Client IP for geolocation
+        client_ip: Client IP for geolocation; empty when the request carried no
+            public address, and then no X-Forwarded-For is sent at all
         name: Event name
         url: Page URL
         props: Event properties
     """
+    headers = {"User-Agent": user_agent, "Content-Type": "application/json"}
+    if client_ip:
+        headers["X-Forwarded-For"] = client_ip
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             await client.post(
-                PLAUSIBLE_ENDPOINT,
-                headers={"User-Agent": user_agent, "X-Forwarded-For": client_ip, "Content-Type": "application/json"},
-                json={"name": name, "url": url, "domain": DOMAIN, "props": props},
+                PLAUSIBLE_ENDPOINT, headers=headers, json={"name": name, "url": url, "domain": DOMAIN, "props": props}
             )
     except Exception as e:
         # warning (not debug) so prod outages of the Plausible pipeline are

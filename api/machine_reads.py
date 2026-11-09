@@ -330,7 +330,9 @@ def is_hop_path(path: str) -> bool:
     """A path nginx fetches from the API for the site: the prerendered pages and the two generated machine files.
 
     On these, and only these, the API reads what nginx put on the hop (`X-Prerender-Bot-Category`,
-    `X-Prerender-Source`, `X-Forwarded-Host`), and leaves a 5xx line to nginx.
+    `X-Prerender-Source`, `X-Forwarded-Host`), and leaves a 5xx line to nginx. The hop passes the edge, so a direct
+    caller can send the same three headers; it can only move its own line between closed buckets (see the
+    residuals in docs/reference/machine-readers.md), and an nginx-stamped secret on the hop would close it.
     """
     return is_prerender_path(path) or path in ("/sitemap.xml", "/llms-full.txt")
 
@@ -338,6 +340,12 @@ def is_hop_path(path: str) -> bool:
 def is_mcp_path(path: str) -> bool:
     """The MCP endpoint, which `MachineReadMcpMiddleware` writes per JSON-RPC request."""
     return path == "/mcp" or path.startswith("/mcp/")
+
+
+WRITTEN_SCOPE_KEY = "anyplot.machine_read"
+"""Set on the request's ASGI scope once the MCP middleware wrote a line for it. The scope is one dict from the
+outer HTTP middleware down to the mounted MCP app (Starlette's router updates it in place for the mount), so the
+HTTP middleware sees the mark and never writes a second line for the same request."""
 
 
 def route_of(path: str) -> tuple[Surface, Route, dict[str, str]]:
@@ -478,7 +486,10 @@ def classify(request: Request, status: int) -> MachineRead | None:
     still written.
     """
     path = request.url.path
-    if is_mcp_path(path) and status < 400:
+    # The status rule alone is not enough: an error answer after the JSON-RPC chain ran (a 4xx the MCP SDK
+    # sends once the middleware wrote its line) carries the mark. The mark alone is not enough either: in
+    # streaming mode the response starts before the handler finished, so a 200 may arrive unmarked.
+    if is_mcp_path(path) and (status < 400 or request.scope.get(WRITTEN_SCOPE_KEY)):
         return None
     headers = request.headers
     agent = detect_ai_agent(headers.get("user-agent", ""))
@@ -609,5 +620,6 @@ class MachineReadMcpMiddleware(Middleware):
             line = mcp_line(context, request, status)
             if line is not None:
                 write(line)
+                request.scope[WRITTEN_SCOPE_KEY] = True
         except Exception as exc:
             warn.warning("machine read failed: %s", type(exc).__name__)

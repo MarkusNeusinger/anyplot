@@ -60,7 +60,12 @@ def visitor_ip(request: Request) -> str:
     2. The leftmost PUBLIC `x-forwarded-for` entry. A scanner forging a private
        or reserved address at the front of the list (`10.0.0.9, …`) is skipped
        rather than handed to Plausible as the visitor.
-    3. The socket peer.
+    3. The socket peer, if it is public. Behind Cloud Run it is the front end's
+       private or loopback address, which Plausible would drop the event for.
+
+    The empty string when none of the three is a public address: the event then
+    goes without an `X-Forwarded-For` rather than with an address that is not
+    the visitor's, and Plausible sees only the API's own address.
     """
     cf_ip = request.headers.get("cf-connecting-ip", "").strip()
     if _is_public_ip(cf_ip):
@@ -69,7 +74,8 @@ def visitor_ip(request: Request) -> str:
         candidate = entry.strip()
         if _is_public_ip(candidate):
             return candidate
-    return request.client.host if request.client else ""
+    peer = request.client.host if request.client else ""
+    return peer if _is_public_ip(peer) else ""
 
 
 def _is_public_ip(value: str) -> bool:

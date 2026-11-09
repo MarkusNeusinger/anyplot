@@ -34,7 +34,8 @@ Whoever answers the request writes its line:
 - **The MCP server** writes one line per JSON-RPC request (`MachineReadMcpMiddleware` in
   `api/machine_reads.py`, registered in `api/mcp/server.py`). The HTTP middleware skips an answered `/mcp/`
   request and writes only one the transport refused (a 4xx or 5xx before any JSON-RPC request ran), and only
-  for a crawler.
+  for a crawler. Once the MCP middleware wrote a line, it marks the request's ASGI scope, which the mounted app
+  shares with the HTTP middleware, so an error answer after the JSON-RPC chain ran is never written twice.
 
 A request is a machine's by one of three signs:
 
@@ -73,7 +74,7 @@ field, never the value.
 | `client` | `claude`, `python`, `node`, `curl`, `other` | MCP lines only: the user agent's family |
 | `surface` | `page`, `shell`, `code`, `spec`, `og`, `mcp`, `machine_file`, `api`, `other` | `page` is a prerender-path read; `shell` the SPA shell nginx served |
 | `route` | a closed name per path, such as `spec_detail`, `code`, `og_spec`, `robots`, or `mcp` | `PAGE_ROUTES` and `API_ROUTES` in `api/machine_reads.py`, `$machine_route` in `app/nginx.conf` |
-| `spec_id` | `^[a-z0-9]+(?:-[a-z0-9]+)*$`, at most 80 characters | API only, and only for a served answer (2xx or 304) |
+| `spec_id` | `^[a-z0-9]+(?:-[a-z0-9]+)*$`, at most 80 characters | The API's lines only, HTTP and MCP alike: on an HTTP line for a served answer (2xx or 304), on an MCP line under the `tool` rule below; nginx never writes it |
 | `language` | `python`, `r`, `julia`, `javascript` | Same rule as `spec_id` |
 | `library` | one of the 15 catalogue libraries | Same rule as `spec_id` |
 | `host` | `anyplot.ai`, `www.anyplot.ai`, `python.anyplot.ai`, `api.anyplot.ai`, `other` | The host the reader asked |
@@ -123,8 +124,12 @@ crawler came through the edge) and `X-Forwarded-Host` (which site host it asked)
 
 Two residuals are known:
 
-- **A direct caller of `api.anyplot.ai` on a hop path** can send its own `X-Prerender-Bot-Category` and be
-  counted as verified. The paths are internal; nothing but nginx uses them. If the numbers ever look wrong, an
+- **A direct caller of `api.anyplot.ai` on a hop path** can send all three hop headers itself. nginx's hop
+  goes through the edge (`https://api.anyplot.ai`), so the API can't tell the hop from such a caller. With
+  `X-Prerender-Bot-Category` the caller is counted as verified, with `X-Prerender-Source: synthetic` it hides
+  itself from the live counts, and with `X-Forwarded-Host` it picks one of the four site hosts. Each moves a line
+  between closed buckets and never writes a value outside the closed sets or the catalogue, so the privacy
+  invariant holds. The paths are internal; nothing but nginx uses them. If the numbers ever look wrong, an
   nginx-stamped shared secret on the hop closes it.
 - **The apex Worker** (`anyplot.ai/api/*`, `infra/cloudflare/anyplot-api-proxy.js`) forwards the incoming
   headers, and a Worker subrequest skips the zone's Transform Rules. The Worker deletes

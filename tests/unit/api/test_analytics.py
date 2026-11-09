@@ -243,15 +243,33 @@ class TestTrackOgImage:
         with patch("api.analytics.asyncio.create_task", mock_create_task):
             track_og_image(request, page="home")
 
-    def test_fallback_to_client_host(self, mock_create_task: MagicMock) -> None:
-        """Should fallback to client.host when X-Forwarded-For not present."""
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("peer", "forwarded"),
+        [
+            # Behind Cloud Run the peer is the front end's private address: no header, not a wrong one.
+            ("10.0.0.1", None),
+            ("127.0.0.1", None),
+            # A public peer (a direct caller) is the visitor.
+            ("84.75.12.9", "84.75.12.9"),
+        ],
+    )
+    async def test_falls_back_to_a_public_peer_only(self, peer: str, forwarded: str | None) -> None:
+        """Without a usable header the socket peer is the visitor only when it is a public address."""
         request = MagicMock()
         request.headers = {"user-agent": "Twitterbot/1.0"}
         request.client = MagicMock()
-        request.client.host = "10.0.0.1"
+        request.client.host = peer
 
-        with patch("api.analytics.asyncio.create_task", mock_create_task):
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
             track_og_image(request, page="home")
+            await asyncio.sleep(0)
+
+            headers = mock_client.post.call_args[1]["headers"]
+            assert headers.get("X-Forwarded-For") == forwarded
+            assert ("X-Forwarded-For" in headers) is (forwarded is not None)
 
     def test_handles_missing_client(self, mock_create_task: MagicMock) -> None:
         """Should handle missing client gracefully."""
@@ -486,12 +504,13 @@ class TestVisitorIpValidation:
             # Documentation (TEST-NET), loopback, CGNAT, link-local, unique-local
             # and unspecified addresses are not public either; neither is multicast,
             # which `is_global` alone would let through.
-            ({"x-forwarded-for": "203.0.113.7"}, "127.0.0.1"),
+            ({"x-forwarded-for": "203.0.113.7"}, ""),
             ({"x-forwarded-for": "100.64.0.1, 169.254.1.1, fd00::1, fe80::1, ::1, 0.0.0.0, 84.75.12.9"}, "84.75.12.9"),
             ({"x-forwarded-for": "224.0.0.1, 84.75.12.9"}, "84.75.12.9"),
-            # nothing usable anywhere: fall back to the socket peer
-            ({"x-forwarded-for": "nonsense"}, "127.0.0.1"),
-            ({}, "127.0.0.1"),
+            # Nothing usable anywhere, and the socket peer (127.0.0.1 here, Cloud
+            # Run's front end in production) is not public either: no address.
+            ({"x-forwarded-for": "nonsense"}, ""),
+            ({}, ""),
         ],
     )
     def test_takes_the_first_public_address(self, headers: dict[str, str], expected: str) -> None:

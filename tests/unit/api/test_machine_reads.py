@@ -7,7 +7,7 @@ import logging
 import re
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import mcp_types as mt
 import pytest
@@ -507,6 +507,88 @@ class TestMcpMiddleware:
         """An in-process client is not a machine reading the catalogue over the network."""
         assert await self._call(_context("tools/list")) == "ok"
         assert machine_lines.raw == []
+
+
+MCP_HEADERS = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}
+
+
+def _rpc(method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {"jsonrpc": "2.0", "id": 1, "method": method, "params": params or {}}
+
+
+class TestThroughTheMountedMcpApp:
+    """The real app with the MCP app mounted: one JSON-RPC request is one line, whichever writer owns it."""
+
+    @pytest.fixture
+    def client(self):
+        # The context manager runs the lifespan, which starts the MCP session manager.
+        with TestClient(app) as test_client:
+            yield test_client
+
+    def test_a_tool_that_raises_writes_only_the_mcp_line(self, client, machine_lines) -> None:
+        """The SDK answers the tool's error as a JSON-RPC error with HTTP 200, so the HTTP writer stays out."""
+        response = client.post(
+            "/mcp/",
+            headers=MCP_HEADERS | {"User-Agent": GOOGLEBOT},
+            json=_rpc(
+                "tools/call",
+                {"name": "get_implementation", "arguments": {"spec_id": "box-basic", "library": "seaborn"}},
+            ),
+        )
+        assert response.status_code == 200
+        [line] = machine_lines.lines
+        assert (line["surface"], line["rpc"], line["tool"], line["status"]) == (
+            "mcp",
+            "tools_call",
+            "get_implementation",
+            500,
+        )
+        assert {"spec_id", "library"}.isdisjoint(line)
+
+    def test_a_refused_transport_request_writes_only_the_http_line(self, client, machine_lines) -> None:
+        response = client.get("/mcp/", headers={"Accept": "text/html", "User-Agent": GOOGLEBOT})
+        assert response.status_code >= 400
+        [line] = machine_lines.lines
+        assert (line["surface"], line["route"], line["status"]) == ("mcp", "mcp", response.status_code)
+        assert "rpc" not in line
+
+    def test_a_successful_tool_call_writes_one_line(self, client, machine_lines) -> None:
+        session = AsyncMock()
+        libraries = AsyncMock()
+        libraries.get_all.return_value = []
+        with (
+            patch("api.mcp.server.is_db_configured", return_value=True),
+            patch("api.mcp.server.get_mcp_db_session", AsyncMock(return_value=session)),
+            patch("api.mcp.server.LibraryRepository", return_value=libraries),
+        ):
+            response = client.post(
+                "/mcp/",
+                headers=MCP_HEADERS | {"User-Agent": "Claude-User/1.0"},
+                json=_rpc("tools/call", {"name": "list_libraries", "arguments": {}}),
+            )
+        assert response.status_code == 200
+        [line] = machine_lines.lines
+        assert (line["rpc"], line["tool"], line["status"], line["assistant"]) == (
+            "tools_call",
+            "list_libraries",
+            200,
+            "claude",
+        )
+
+    def test_the_mcp_apps_mark_reaches_the_outer_middleware(self, client, machine_lines) -> None:
+        """The HTTP writer reads the mark from its own request's scope; that only works if it is the same dict."""
+        seen: list[dict[str, Any]] = []
+        real_record = machine_reads.record
+
+        def keep_scope(request: Request, status: int) -> None:
+            seen.append(request.scope)
+            real_record(request, status)
+
+        with patch.object(machine_reads, "record", side_effect=keep_scope):
+            client.post("/mcp/", headers=MCP_HEADERS | {"User-Agent": GOOGLEBOT}, json=_rpc("tools/list"))
+        assert len(machine_lines.lines) == 1
+        [outer_scope] = seen
+        assert outer_scope.get(machine_reads.WRITTEN_SCOPE_KEY) is True
 
 
 class TestTheViews:

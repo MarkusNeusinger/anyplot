@@ -787,13 +787,18 @@ class TestSeoProxyRouter:
         """Machine files are recorded since the machine-read lines replaced the bot site, as their own surface:
         which crawler reads robots.txt, and how often, is the answer to "does it follow the rules"."""
         googlebot = {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}
-        statuses = [
-            client.get("/robots.txt", headers=googlebot).status_code,
-            client.get("/llms.txt", headers=googlebot, follow_redirects=False).status_code,
-        ]
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            statuses = [
+                client.get("/robots.txt", headers=googlebot).status_code,
+                client.get("/sitemap.xml", headers=googlebot).status_code,
+                client.get("/llms.txt", headers=googlebot, follow_redirects=False).status_code,
+            ]
+        # The sitemap is a hop path, so a 5xx would be nginx's line; without a database it still answers.
+        assert statuses[1] < 500
         assert [(line["surface"], line["route"], line["status"]) for line in machine_lines.lines] == [
             ("machine_file", "robots", statuses[0]),
-            ("machine_file", "llms", statuses[1]),
+            ("machine_file", "sitemap", statuses[1]),
+            ("machine_file", "llms", statuses[2]),
         ]
 
     def test_an_assistant_reading_one_implementation_s_code_is_a_code_read(
