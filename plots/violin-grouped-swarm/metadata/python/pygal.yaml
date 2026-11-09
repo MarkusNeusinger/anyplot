@@ -2,53 +2,56 @@ library: pygal
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:47:55Z'
-updated: '2026-05-18T03:29:43Z'
-generated_by: claude-haiku
-workflow_run: 26011551604
+updated: '2026-11-09T12:16:41Z'
+generated_by: claude-opus
+workflow_run: 42582350358
 issue: 3529
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Excellent visual quality in both light and dark themes with proper theme adaptation
-  - Clear differentiation between Novice and Expert groups with readable legend
-  - Sophisticated KDE computation and swarm layout algorithm showing library mastery
-  - Realistic, neutral data context showing natural variation across task complexity
-    and expertise levels
-  - All text, markers, and violin shapes perfectly readable and well-spaced
-  - Proper transparency (α=0.4) allows swarm points to show through violins clearly
+  - Violins are built from scipy's gaussian_kde and drawn as closed polygons in a
+    single interrupted pygal XY series per group (allow_interruptions with None breaks),
+    so the legend shows exactly one entry per group with a swatch matching the translucent
+    violin fill
+  - 'Translucent fills (opacity 0.45) with a solid outline in the group hue keep every
+    swarm point visible in both themes, and Novice/Expert keep the same Imprint colors
+    (#009E73, #C475FD) in every task category'
+  - Swarm points sit exactly at their response-time values and spread sideways only,
+    scaled to the local violin width so they stay inside their own violin, centered
+    on the dodged group position
+  - 'Theme tokens are threaded fully through the Style object: warm #FAF8F1 / #1A1A17
+    surfaces, INK titles and ticks, INK_MUTED guides; both renders are fully legible'
+  - Plausible response-time scenario (3 task types x 2 expertise levels, 40 observations
+    each) matching the spec example, with the expected widening and right-shift for
+    complex tasks and novices
+  - Native pygal HTML output keeps hover tooltips on every swarm point for the interactive
+    detail view
   weaknesses:
-  - 'Output format: saves to ''plot.png'' instead of ''plot-light.png''/''plot-dark.png'''
-  - Title format missing language identifier — should be 'violin-grouped-swarm · Python
-    · pygal · anyplot.ai'
-  - Title contains typo 'pyplots.ai' instead of 'anyplot.ai'
-  - No theme-aware environment variable handling (ANYPLOT_THEME not read for background/text
-    colors)
-  - 'Code color definitions (#306998 Python Blue, #FFD43B Yellow) don''t match rendered
-    output (Okabe-Ito green/orange)'
+  - 'Suggestion: the bottom legend sits flush left under the y-axis; centering it
+    under the plot area would balance it with the centered x-axis title.'
+  - 'Suggestion: the empty band between 0 and about 120 ms could be trimmed by starting
+    the value axis nearer the data minimum.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface, approximately #FAF8F1, provides excellent contrast
-      Chrome: Title "violin-grouped-swarm · pygal · anyplot.ai" clearly visible in dark text; axis labels "Response Time (ms)" and "Task Type" readable; category labels "Simple", "Medium", "Complex" distinct; tick marks show 0-2000ms range with clear numeric labels
-      Data: First series (Novice) renders in teal/green color (consistent with Okabe-Ito #009E73); Expert group in orange/tan; violin distributions show clear shape differences across task types; swarm points overlaid as darker dots within violins, all visible; spatial offset between grouped violins (Novice left, Expert right) prevents overlap
-      Legend: "Novice" and "Expert" labels at bottom, clearly visible
-      Layout: Plot fills ~60-70% of canvas with balanced margins; generous whitespace
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "violin-grouped-swarm · python · pygal · anyplot.ai" centered at top (~62% width), y-axis "Response Time (ms)" with ticks 0-2200, x-axis "Task Type" with Simple / Medium / Complex, dashed horizontal guides in muted ink, bottom-left legend Novice / Expert. All text dark and clearly readable.
+      Data: per task, two side-by-side mirrored violins (Novice #009E73 green, Expert #C475FD lavender) with translucent fills and solid outlines; 40 swarm dots per violin in the matching hue, spread sideways within the violin outline. Violins do not touch. Novice distributions are higher and wider, Complex/Novice reaching ~2000 ms.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface, approximately #1A1A17, maintains high contrast
-      Chrome: Title, axis labels, and tick labels rendered in light/off-white text (equivalent adaptation); all easily readable against dark surface; grid lines subtle and visible
-      Data: Teal/green violins (Novice) and orange violins (Expert) IDENTICAL in color to light render — only chrome theme-adapted; swarm points clearly visible as darker dots; distributions and shapes match light render exactly
-      Layout: Identical spatial arrangement to light render
-      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored and readable; data colors preserved perfectly between themes
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink, guides muted but visible; no dark-on-dark text.
+      Data: identical hues (#009E73 and #C475FD) and identical geometry to the light render; only the chrome flips. Swarm dots stand out against the translucent fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,77 +59,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly sized: 84pt title, 54pt labels, 48pt major labels,
-          all readable in both themes'
+        comment: Explicit font sizes (title 66, labels 56, legend 48); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend well-positioned at bottom with
-          2-column layout
+        comment: No text collisions; swarm dots stay distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All violins and swarm points clearly visible; density-appropriate
-          sizing (dots_size=8 for 40 points per group)
+        comment: Small dots fit narrow grouped violins and stay visible over translucent
+          fills; legend swatches match the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; Okabe-Ito palette; CVD-safe
+        comment: Green vs lavender is CVD-safe with good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect balance: plot ~60-70% canvas, margins balanced, nothing
-          cut off'
+        comment: 3200x1800, balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Response Time (ms)'' and ''Task Type'''
+        comment: Response Time (ms) with unit, Task Type
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Rendered colors appear correct (Okabe-Ito green + orange, proper
-          theme chrome), but title has typo 'pyplots.ai' instead of 'anyplot.ai' and
-          missing 'Python' language identifier
+        passed: true
+        comment: 'First group #009E73, second #C475FD in Imprint order; theme-correct
+          backgrounds'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library defaults with explicit font sizing, but no
-          exceptional design flourishes beyond defaults
+        passed: true
+        comment: Translucent fill paired with a solid outline in the same hue gives
+          each violin a crisp edge beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Library defaults with minimal customization; subtle grid present
-          but no explicit spine removal or advanced refinement
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: 'Above default: clear visual hierarchy through color; shows how task
-          complexity and expertise affect response time; good focal points but not
-          exceptional emphasis'
+        passed: true
+        comment: Swarm spread scaled to the local KDE width keeps every dot inside
+          its violin; x guides off, one legend entry per group
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,28 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin plot with swarm overlay
+        comment: Grouped violins with swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distinct colors, transparency α=0.4, swarm
-          overlay, adequate spacing (group_offset=0.35)'
+        comment: 'Distinct group colors + legend, alpha 0.45 fills, small matching-hue
+          dots, spacing between violins, dodged swarms: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Task Type (Simple, Medium, Complex); Y-axis: Response Time
-          0-2000ms; Color: Group (Novice/Expert) — all correct'
+        comment: Points at their values; only categorical sideways offsets
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels correct; Title missing 'Python' language identifier
-          and contains typo 'pyplots.ai' instead of 'anyplot.ai'
+        passed: true
+        comment: Mandated title format; legend Novice / Expert
     data_quality:
       score: 15
       max: 15
@@ -165,24 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows ALL aspects: 3 task types, 2 expertise levels, clear distribution
-          variation, individual swarm points reveal raw data'
+        comment: Different widths, skew and shifts across both factors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real scenario: response times across task complexity and expertise
-          levels; neutral, professional context; values plausible (100-2000ms)'
+        comment: Response times by task type and expertise, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times factually correct; distributions realistic (higher
-          variance for complex tasks, faster expert responses)
+        comment: 150-2000 ms plausible; 40 obs per cell within 20-150; no Check values
+          in Notes
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -190,60 +184,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → helpers → chart → output; KDE and swarm
-          helpers justified'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set on line 13
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, Style imported; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: KDE and swarm layout are appropriate complexity; no fake functionality;
-          but color definitions don't match rendered output
+        passed: true
+        comment: KDE via gaussian_kde; swarm layout is layout, not a written-out available
+          call
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves to ''plot.png'' and ''plot.html'' instead of ''plot-{THEME}.png''
-          and ''plot-{THEME}.html'''
+        passed: true
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses pygal.XY chart, custom Style, chart.add() correctly; but doesn't
-          read ANYPLOT_THEME or use theme-adaptive color approach from library guide
+        passed: true
+        comment: Style object for all tokens, XY chart with per-series stroke/fill/show_dots
+          overrides, x_labels dicts for category positions
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses custom KDE computation (Silverman's rule) and swarm layout algorithm;
-          distinctive but not fully leveraging library's interactive/export capabilities
+        passed: true
+        comment: allow_interruptions with None breaks to draw several polygons as
+          one legend entry; native SVG/HTML tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T08:09:09Z'
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - scipy
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - kde
   styling:

@@ -2,50 +2,57 @@ library: bokeh
 language: python
 specification_id: line-3d-trajectory
 created: '2026-01-07T16:28:39Z'
-updated: '2026-05-16T08:56:38Z'
-generated_by: claude-haiku
-workflow_run: 25957737439
+updated: '2026-11-09T12:09:01Z'
+generated_by: claude-opus
+workflow_run: 42612256740
 issue: 3182
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/bokeh/plot-dark.html
-quality_score: 94
+quality_score: 84
 review:
   strengths:
-  - Excellent technical execution with correct 3D isometric projection and proper
-    rotation matrices
-  - All visual quality criteria met perfectly (30/30) with clear legibility in both
-    light and dark themes
-  - Complete spec compliance with all required features present and working correctly
-  - Proper theme-adaptive styling with explicit color tokens ensuring correct backgrounds
-    and text colors
-  - Viridis gradient effectively encodes time progression and reveals trajectory evolution
-  - Scientific data choice (Lorenz attractor) demonstrates domain understanding and
-    real-world applicability
-  - Combines static PNG output with interactive HTML for comprehensive presentation
-  - Expert library mastery with idiomatic Bokeh patterns and distinctive features
-    well-leveraged
+  - 'A real oblique 3D view (elevation 20°, azimuth 55°) built from a projection matrix:
+    the X and Y floor edges and the vertical Z edge are drawn with ticks in the original
+    units, and tick labels and axis titles point away from the data onto empty canvas'
+  - The 2,000-point Lorenz trajectory is drawn as sequential segments colored by time
+    through a LinearColorMapper on the imprint_seq ramp (green to blue), with a ColorBar
+    titled 'Time (s)'; both lobes and the initial transient read clearly as smooth
+    curves
+  - 'Library-native interactivity: an invisible scatter layer with hover_fill_color
+    and a HoverTool reports time, x, y and z in original units in the HTML version'
+  - Theme tokens are threaded through every element (title, axis lines, ticks, labels,
+    color bar); both renders are fully legible and the data colors are identical between
+    themes
   weaknesses:
-  - Title format includes descriptive prefix not in strict spec-id · library · anyplot.ai
-    format (cosmetic issue only)
+  - 'VQ-05 (both): the hidden 2D axes still draw a dashed screen-space grid and an
+    outline frame across the plot area; those lines correspond to none of the three
+    drawn 3D axes and read as false reference lines behind the projection → remove
+    the grid and the frame. Likely cause: p.xgrid/p.ygrid grid_line_color = INK and
+    p.outline_line_color = INK_SOFT kept after p.xaxis/p.yaxis.visible = False.'
+  - 'VQ-03 (both): the trajectory is drawn at line_width=4 with alpha 0.85 on the
+    3200 px canvas, so the strands thin to hairlines in the 400 px thumbnail → about
+    6 px (+2 px), keeping the alpha so close loops stay traceable. Likely cause: p.segment(line_width=4).'
+  - 'Suggestion: solve_ivp from scipy.integrate with a dense t_eval would replace
+    the hand-written Euler loop and give a more accurate trajectory.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correctly rendered
-      Chrome: Title bold 44pt at top (fully readable), axis labels "X (state)", "Y (state)", "Z (state)" in bold 36pt (clearly visible), color bar with "Time (s)" title 32pt major labels 24pt (all readable). Grid lines subtle (10% alpha, dashed). All text dark-colored against light background.
-      Data: Lorenz attractor trajectory with 1500 connected points. Viridis color gradient from dark blue through green to bright yellow shows time progression (0-15 seconds). 3D axes with custom arrow indicators. Hover scatter points (every 10th point) visible but subtle.
-      Legibility verdict: PASS - All text perfectly readable, excellent contrast, no overlapping elements.
+      Background: warm off-white #FAF8F1, with a faint dashed screen-space grid and a thin grey outline frame left over from the hidden 2D axes.
+      Chrome: bold title "Lorenz Attractor · line-3d-trajectory · python · bokeh · anyplot.ai" top left at about 65 % of the width; drawn 3D axes in dark grey: Y (state) along the left floor edge (ticks 20, 0, -20), X (state) along the right floor edge (ticks -10, 0, 10, 20), Z (state) vertical on the right (ticks 0, 20, 40), with bold axis titles. The color bar on the right runs 0-10 with the italic title "Time (s)". All text is dark and readable.
+      Data: one continuous Lorenz trajectory of 2,000 points: the outer green transient spirals into the two lobes, and the color shifts along the path from brand green #009E73 (t=0) to blue #4467A3 (t=10). Lines are about 4 px with slight transparency; the loops are individually traceable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correctly rendered
-      Chrome: Title light-colored at top (fully readable). Axis labels light-gray in 36pt (clearly visible). Color bar title and major labels light-colored (all readable). Grid lines subtle and visible. All text light-colored (#F0EFE8 primary, #B8B7B0 secondary) against dark background.
-      Data: Identical to light render - same trajectory, same viridis gradient progression (data colors unchanged), same axes and arrows, same hover points. Only chrome has adapted for dark theme.
-      Legibility verdict: PASS - All text perfectly readable in dark mode, no dark-on-dark failures, data colors identical to light render, excellent contrast maintained.
+      Background: warm near-black #1A1A17 with the same faint dashed grid and outline frame.
+      Chrome: title and axis titles in light ink, tick labels and axis lines in light grey (INK_SOFT), color bar labels light; no dark-on-dark text anywhere.
+      Data: the trajectory colors are identical to the light render (green to blue imprint_seq); only the chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,50 +60,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly sized: title 44pt, axis labels 36pt, color
-          bar 32pt/24pt. All readable in both themes.'
+        comment: Title 50pt, axis titles 40pt, ticks 30pt, color bar 34-42pt; all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements. Title, axes, color bar all well-positioned.
+        comment: No text collisions; tick labels sit outward from the axes, clear
+          of the path
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 1500 points with line_width=3, alpha=0.85 perfectly visible. Gradient
-          progression clear. Axes and arrows visible.
+        passed: false
+        comment: 4 px lines thin to hairlines in the thumbnail (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis256 is CVD-safe and perceptually uniform. Good contrast in
-          both themes.
+        comment: Green-to-blue sequential ramp, CVD-safe, good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 4800x2700 landscape. Plot 60-70% of canvas. Balanced margins. Nothing
-          cut off.
+        passed: false
+        comment: A leftover screen-space grid and outline frame from the hidden 2D
+          axes (defect line); 3200x1800 canvas, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels descriptive with context. Color bar labeled with units.
+        comment: X/Y/Z (state) and Time (s) are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous. Backgrounds exactly #FAF8F1/#1A1A17.
-          Data colors identical across themes.'
+        comment: 'imprint_seq ramp #009E73 -> #4467A3; correct backgrounds in both
+          themes'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -104,24 +110,25 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Custom 3D projection with rotation matrices. Custom arrows. Mathematically
-          sophisticated but mechanical rather than artistic.
+        comment: Custom 3D axis frame with nice-number ticks in original units and
+          outward-facing labels, a clear typographic hierarchy (bold axis titles over
+          lighter ticks)
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Hidden axes. Subtle grid. Custom styling. Refined color bar. High
-          polish.
+        passed: false
+        comment: Ticks and labels placed perpendicular to each axis on the side away
+          from the data, Z axis at the far X edge clear of the path, round line caps;
+          held back by the leftover grid
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Lorenz attractor scientifically significant. Gradient shows time
-          progression. Butterfly structure reveals dynamics.
+        passed: false
+        comment: Time gradient as the Notes suggest; no further hierarchy chosen
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,28 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D line plot for trajectory visualization.
+        comment: 3D line trajectory in an oblique projection
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X, Y, Z coordinates connected sequentially. Color encoding for time.
-          Interactive hover tooltips.
+        comment: Continuous sequential line, all three axes labeled at an oblique
+          angle, time gradient with a named color bar, width and alpha for overlapping
+          strands
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X, Y, Z properly mapped via projection. Data normalized. Full range
-          visible.
+        comment: Every point projected from its x, y, z values; ticks in original
+          units
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title has descriptive prefix. Should be strict: spec-id · library
-          · anyplot.ai format. Color bar serves as legend.'
+        passed: true
+        comment: Correct title with a descriptive prefix; color bar titled Time (s)
     data_quality:
       score: 15
       max: 15
@@ -160,21 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete trajectory with multiple loops and butterfly structure.
-          Time progression visible.
+        comment: Smooth curves, crossing and tightly wound loops, the time progression
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is real, scientifically significant, neutral, educational.
+        comment: Lorenz attractor, the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard Lorenz parameters. Data normalized correctly. 1500 points
-          over 15 seconds is smooth.
+        comment: Standard sigma=10, rho=28, beta=8/3; x about -20..20, z 0..50 as
+          expected for the attractor; t 0-10 s
     code_quality:
       score: 10
       max: 10
@@ -184,62 +190,72 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save. No functions/classes needed.
+        comment: Linear script; _lerp_hex is the helper the bokeh library prompt prescribes
+          for imprint_seq
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42). Fully deterministic.
+        comment: Deterministic integration
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No extraneous dependencies.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured. 3D projection justified. No fake UI elements.
+        comment: Projection and tick placement are needed because bokeh has no 3D;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming. Modern Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per the
+          library prompt
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: figure(), multi_line(), scatter(). ColumnDataSource. ColorBar + LinearColorMapper.
-          HoverTool. Expert patterns.
+        passed: false
+        comment: ColumnDataSource throughout, segment glyph with a field transform
+          through LinearColorMapper, ColorBar, LabelSet for ticks
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: HoverTool with custom tooltips. ColorBar for continuous. multi_line()
-          with vector colors. HTML export.
+        passed: false
+        comment: Invisible hover scatter with hover_fill_color plus a HoverTool showing
+          original x/y/z/time
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T12:05:38Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - 3d-projection
   - colorbar
   - hover-tooltips
   - html-export
+  - 3d-projection
+  - custom-axes
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - normalization
+  - numerical-integration
   styling:
-  - publication-ready
+  - gradient-fill
   - alpha-blending
+  - publication-ready
