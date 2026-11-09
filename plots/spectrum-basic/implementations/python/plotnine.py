@@ -1,7 +1,7 @@
 """ anyplot.ai
 spectrum-basic: Frequency Spectrum Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: pending | Updated: 2026-05-14
+Library: plotnine 0.15.8 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
 
 import os
