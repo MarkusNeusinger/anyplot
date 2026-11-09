@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -36,20 +36,20 @@ CLADE = "Clade"  # role: extra
 df = pd.DataFrame(
     [
         ("Primates", None, 0.05, None),
-        ("Prosimians", "Primates", 0.03, "Prosimians"),
-        ("Lorisoids", "Prosimians", 0.02, "Prosimians"),
-        ("Galago", "Lorisoids", 0.14, "Prosimians"),
-        ("Tarsier", "Lorisoids", 0.14, "Prosimians"),
-        ("Lemur", "Prosimians", 0.10, "Prosimians"),
-        ("Simians", "Primates", 0.03, None),
-        ("Monkeys", "Simians", 0.04, "Monkeys"),
-        ("New World Monkeys", "Monkeys", 0.03, "Monkeys"),
-        ("Spider Monkey", "New World Monkeys", 0.05, "Monkeys"),
-        ("Capuchin", "New World Monkeys", 0.04, "Monkeys"),
-        ("Old World Monkeys", "Monkeys", 0.02, "Monkeys"),
-        ("Baboon", "Old World Monkeys", 0.04, "Monkeys"),
-        ("Rhesus Macaque", "Old World Monkeys", 0.04, "Monkeys"),
-        ("Apes", "Simians", 0.02, "Apes"),
+        ("Strepsirrhines", "Primates", 0.04, "Strepsirrhines"),
+        ("Galago", "Strepsirrhines", 0.13, "Strepsirrhines"),
+        ("Lemur", "Strepsirrhines", 0.11, "Strepsirrhines"),
+        ("Haplorhines", "Primates", 0.02, None),
+        ("Tarsier", "Haplorhines", 0.17, "Tarsiers"),
+        ("Simians", "Haplorhines", 0.04, None),
+        ("New World Monkeys", "Simians", 0.03, "New World Monkeys"),
+        ("Spider Monkey", "New World Monkeys", 0.05, "New World Monkeys"),
+        ("Capuchin", "New World Monkeys", 0.04, "New World Monkeys"),
+        ("Catarrhines", "Simians", 0.02, None),
+        ("Old World Monkeys", "Catarrhines", 0.03, "Old World Monkeys"),
+        ("Baboon", "Old World Monkeys", 0.04, "Old World Monkeys"),
+        ("Rhesus Macaque", "Old World Monkeys", 0.04, "Old World Monkeys"),
+        ("Apes", "Catarrhines", 0.02, "Apes"),
         ("Asian Apes", "Apes", 0.03, "Apes"),
         ("Gibbon", "Asian Apes", 0.03, "Apes"),
         ("Orangutan", "Asian Apes", 0.02, "Apes"),
