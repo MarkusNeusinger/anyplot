@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: seaborn 0.13.2 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-09
+Quality: 86/100 | Updated: 2026-11-09
 """
 
 import os

@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: subplot-mosaic
 created: '2025-12-31T10:56:16Z'
-updated: '2026-11-09T07:14:07Z'
+updated: '2026-11-09T07:19:37Z'
 generated_by: claude-opus
 workflow_run: 42577154147
 issue: 3002
@@ -12,53 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - 'plt.subplot_mosaic("AAB;CCD;EFG") with height_ratios builds a clear hierarchy:
-    the spanning revenue overview (A) is the largest panel, the wide channel bar chart
-    (C) second, and the three small metric panels sit in the shortest row'
-  - Five different seaborn plot types (lineplot, scatterplot, barplot with estimator="sum",
-    histplot, boxplot) each suit their panel's shape, and every panel carries a left-aligned
-    bold title whose size steps down with the panel size (10/9/8 pt)
-  - Spanning panels are flush with the panels below them and the constrained layout
-    keeps spacing even; no tick label or axis title runs into a neighbor in either
-    render
-  - EngFormatter (12k, 400k) and ConciseDateFormatter with per-panel maxticks keep
-    the dense dashboard readable
-  - 'Theme tokens threaded through sns.set_theme rc: both renders have correct backgrounds
-    and fully readable chrome'
+  - 'plt.subplot_mosaic(''AAB;CCD;EFG'') with height_ratios=[1.35, 1, 0.85] gives
+    a clear size hierarchy: the wide revenue time series (A) is the largest panel,
+    the bar chart (C) spans two columns, and the narrow and bottom panels hold supporting
+    views'
+  - 'Spanning panels are flush with the panels they span: constrained layout aligns
+    the left axis edges of A, C and E and the right edges of A, C and F, with even
+    gaps throughout'
+  - Six different plot types (line, scatter, bar, histogram, box) each matched to
+    its panel shape, every panel titled and axis-labelled with units
+  - Panel title sizes step down with panel size (10/9/8 pt, bold, left-aligned), making
+    the hierarchy readable in the typography as well as the geometry
+  - Channel colors are the same Imprint positions in the bar chart (C) and the box
+    plot (G), so the two channel panels read as one encoding
+  - 'Idiomatic seaborn on a tidy long table: barplot(estimator=''sum'', errorbar=None)
+    aggregates per channel directly from df, hue=CHANNEL with palette sliced from
+    the data and legend=False'
+  - Theme tokens threaded through sns.set_theme rc; both renders are theme-correct
+    with identical data colors
   weaknesses:
-  - 'VQ-07 (both): the bar and box fills are not the Imprint hexes — Online renders
-    #148A6A instead of #009E73 and Retail #C186EC instead of #C475FD — and the histogram
-    green differs between themes (#3FB492 light vs #067C5B dark) because it is translucent
-    over the page → exact Imprint fills, identical in both themes. Likely cause: seaborn''s
-    default saturation=0.75 in barplot/boxplot (pass saturation=1) and histplot''s
-    default alpha=0.75 (pass alpha=1).'
-  - 'VQ-06 (both): panel F''s y-axis title "Per conversion" names no quantity or unit
-    → "Revenue per conversion ($)" or "Order value ($)". Likely cause: order_value
-    = "Per conversion".'
-  - 'VQ-01 (both): tick labels in the bottom-row panels E, F, G and the "2024-Apr"
-    offset text are set to 6 pt (about 33 px on the 3200 px canvas, about 4 px at
-    a 400 px mobile width) and blur when scaled down → about 7 pt (+1 pt). Likely
-    cause: tick_params(labelsize=6 if small …) and offset_text set_size(6).'
-  - 'Suggestion: an empty ''.'' cell in the mosaic would also exercise the gap feature
-    the Notes allow.'
+  - 'VQ-01 (both): the bottom-row panels (E, F, G) set tick labels and axis titles
+    at 7 pt, the smallest text on the canvas, and they blur at a ~400 px mobile width
+    → about 8 pt (+1 pt) to match the style-guide tick size. Likely cause: tick_params(labelsize=7
+    if small …) and label.set_size(7 if small …).'
+  - 'VQ-05 (both): the y-axis titles ''Response time (ms)'' on G and ''Total revenue
+    ($)'' on C are longer than their axes and run past the axis top and bottom → shorter
+    labels that fit the axis height (for example ''ms'' with the panel title naming
+    the measure, or ''Revenue ($)''). Likely cause: G inherits the RESPONSE column
+    name and C''s set_ylabel prefixes ''Total''.'
+  - 'Suggestion: the ConciseDateFormatter offset text ''2024-Apr'' under A, E and
+    F suggests the data is April only; a plain ''2024'' offset (offset_formats) would
+    read more naturally for a Jan–Apr span.'
+  - 'Suggestion: the layout fills every cell; an empty ''.'' cell, which the Notes
+    allow, would show off the mosaic''s gap support.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 (sampled 250,248,241).
-      Chrome: bold suptitle "subplot-mosaic · python · seaborn · anyplot.ai" centered at ~55% width; seven panels in a 3x3 mosaic — "Total daily revenue" (A, spans two columns, tallest row), "Marketing ROI" scatter (B), "Revenue by channel" bar chart (C, spans two columns), "Response times" histogram (D), and bottom row "Daily conversions", "Revenue per conversion" lines and "Response time by channel" boxplot. Dark ink titles and labels, soft-ink ticks, subtle y grid, top/right spines removed. All text readable; bottom-row ticks at 6 pt are small.
-      Data: single-series panels in green; bars and boxes in Online/Retail/Partner/Direct = green/purple/blue/ochre, but desaturated (Online bar #148A6A rather than #009E73); histogram translucent green (#3FB492).
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 across the figure and all axes, no pure white.
+      Chrome: bold title "subplot-mosaic · python · seaborn · anyplot.ai" centered on top; seven bold left-aligned panel titles stepping down 10/9/8 pt; dark ink axis labels and INK_SOFT tick labels, all readable; subtle horizontal grid; top/right spines removed.
+      Data: mosaic AAB;CCD;EFG. A (wide, tallest row): green #009E73 total daily revenue line rising from ~12k to ~18k, Jan–Apr 2024. B: green scatter of marketing spend vs conversions (~400 translucent points, positive trend). C (wide): four bars per channel — Online #009E73, Retail #C475FD, Partner #4467A3, Direct #BD8233. D: green histogram of response times, right-skewed. Bottom row: E daily conversions line, F revenue per conversion line (both green), G box plot of response time per channel in the same channel colors as C. Spanning panels align flush with the panels below.
+      Legibility verdict: PASS (bottom-row 7 pt text is small but readable at full size)
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 (sampled 26,26,23).
-      Chrome: same layout; titles and axis titles in light ink, ticks in light soft ink, grid subtle. No dark-on-dark text anywhere.
-      Data: lines, scatter and bars identical to light (bars #148A6A both themes); histogram fill shifts to #067C5B because of its alpha over the dark page, so it is not identical to the light render.
+      Background: warm near-black #1A1A17 across figure and axes, no pure black.
+      Chrome: title, panel titles and axis labels in light ink #F0EFE8, ticks in #B8B7B0, spines light grey; grid subtle; no dark-on-dark text anywhere; box whiskers and medians in light INK_SOFT and visible.
+      Data: colors identical to the light render (green lines/scatter/histogram, Imprint channel colors in C and G); scatter edges switch to the page color only.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,51 +70,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicit and readable in both themes; bottom-row ticks
-          and offset text at 6 pt blur at mobile width (defect line)
+        comment: Readable in both themes; bottom-row tick labels and axis titles at
+          7 pt blur at mobile width (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions between or within panels
+        comment: No text collisions; scatter overlap handled with alpha and page-colored
+          edges
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths scale with panel size; 400-point scatter at s=10, alpha
-          0.55 with page outline keeps points distinguishable
+        comment: Markers and lines sized for density; no legends needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Categories also labeled on the x axis; no red-green sole signal
+        comment: Imprint colors with good contrast; channel identity also on the x-axis
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800, constrained layout with even gaps, spanning panels flush,
-          nothing cut off
+        comment: 3200x1800, even spacing; y-titles on C and G longer than their axes
+          (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Panel F y label 'Per conversion' has no quantity or unit (defect
-          line); others descriptive with units
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Imprint order and theme chrome correct, but bar/box fills desaturated
-          by seaborn's saturation=0.75 and the histogram's alpha makes its green differ
-          between themes (defect line)
+        passed: true
+        comment: 'Single series #009E73, channels in canonical Imprint order, correct
+          backgrounds both themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -118,23 +120,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Panel-title sizes step down with panel size (10/9/8 pt), left-aligned
-          bold titles, EngFormatter and ConciseDateFormatter typography beyond the
-          baseline
+        comment: Panel title sizes graded 10/9/8 pt with panel size, bold left-aligned
+          titles
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tuned constrained-layout pads, ConciseDateFormatter and EngFormatter
+          on the money axes, per-panel tick density via MaxNLocator
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Tuned constrained-layout pads and per-panel tick density (maxticks
-          6 vs 3, MaxNLocator 5 vs 4)
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: true
-        comment: Hierarchy follows the Notes' requirement; no further focal point
-          chosen
+        comment: Channel colors linked between the bar chart and box plot, so the
+          Partner channel's low revenue and high latency read together
     spec_compliance:
       score: 15
       max: 15
@@ -144,26 +145,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True string-defined mosaic via plt.subplot_mosaic('AAB;CCD;EFG')
+        comment: Mosaic layout via subplot_mosaic string pattern
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Spanning panels, largest panel holds primary data, consistent spacing,
-          mixed plot types, each panel titled; empty cell is optional
+        comment: String pattern with spanning, consistent spacing, size hierarchy,
+          different plot types; empty cell optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their data values in every panel
+        comment: All marks at their data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legends N/A (categories on axes)
+        comment: Correct mandated title; no legend needed (channels named on the x-axis)
     data_quality:
       score: 15
       max: 15
@@ -173,20 +174,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Column and row spanning, three size tiers, five plot types
+        comment: Spanning panels, varying sizes and aspect ratios, six plot types
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Online store dashboard by sales channel, neutral
+        comment: Online store dashboard, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: ~15k daily revenue / ~300 conversions gives the ~$50 per
-          conversion shown in F; response times 20-200 ms plausible'
+        comment: Daily revenue 12k-18k, order value $35-95, response times 20-210
+          ms plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -214,13 +215,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Aggregation via estimator='sum' and groupby; styling loops compact
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches
+        comment: Saves plot-{THEME}.png, no bbox_inches tight, current API
     library_mastery:
       score: 6
       max: 10
@@ -230,30 +231,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes-level seaborn functions on tidy df into subplot_mosaic axes,
-          hue=palette with legend=False
+        comment: Axes-level seaborn on a tidy df with ax=, hue with data-sliced palette
+          and legend=False
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: barplot estimator='sum' aggregating the long table on the fly
-  verdict: REJECTED
+        passed: false
+        comment: barplot estimator='sum' aggregates the long table directly; histplot
+          and boxplot linecolor
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
-  rendered_at: '2026-11-09T07:11:12Z'
+  rendered_at: '2026-11-09T07:16:55Z'
 impl_tags:
   dependencies: []
   techniques:
-  - subplot-mosaic
-  - multi-panel
-  - custom-tick-formatting
+  - subplots
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
-  - groupby-aggregation
+  - time-series
   - binning
+  - cumulative-sum
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
