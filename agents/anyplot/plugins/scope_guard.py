@@ -25,6 +25,13 @@
   picks another, like every reply; `policy.refusal`: English, German, French, Spanish,
   Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English for every
   other language); the run ends there, at the first turn;
+* an `other_library` verdict for a message that names only libraries the assistant
+  adapts here, in any common form (`d3`, `chart js`, `mui x`, `Makie.jl`, one table in
+  `core/library_names.py`), goes on as `in_scope`, with a `served_library_in_scope`
+  attribution line after the judge's (`served_library_request`): the judge refused
+  "erstell das bitte mal in d3" and "d3.js" and let only "D3.js" through (live session
+  of 2026-11-08). A message that also names an unserved catalogue library or a tool
+  outside the catalogue keeps the judge's verdict, and no other verdict is lifted;
 * the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is judged
   as notes that came with a table: a `<pasted_table>` block before the message names the
   spec's title and the table's column names on one bounded line, never a cell
@@ -115,6 +122,8 @@ from google.adk.events.event_actions import EventActions
 from google.adk.models.llm_request import LlmRequest
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
+
+from core.library_names import named_tools
 
 from ..language import offer
 from ..language_detect import mismatch
@@ -328,6 +337,19 @@ def judge_input(message_text: str, context: str, earlier: Sequence[str] = (), ta
     return "\n".join(parts)
 
 
+def served_library_request(text: str, served: Sequence[str]) -> bool:
+    """Whether a message names libraries the assistant adapts here, in any common form, and nothing outside them.
+
+    The judge read "erstell das bitte mal in d3" and "d3.js" as `other_library` and only "D3.js", the display name its
+    rubric lists, as a library it adapts (live session of 2026-11-08). The names come from one table
+    (`core.library_names`): any case, `.js`, `.jl` and the separators left open, the well-known short forms. A message
+    that also names a catalogue library not served here, or a tool outside the catalogue ("port this D3 plot to
+    Vega-Lite"), stays the judge's, and so does one that names no library ("chart", "do it anyway").
+    """
+    named = named_tools(text)
+    return bool(named.libraries) and named.libraries <= set(served) and not named.outside
+
+
 def _replaced(event: Event, text: str) -> Event:
     """The root's final reply event with `text` in place of its reply, as the output guard stores and sends it.
 
@@ -401,6 +423,11 @@ class ScopeGuardPlugin(BasePlugin):
             judge_output=verdict.output_tokens,
             **({"strikes": strikes} if strikes is not None else {}),
         )
+        if verdict.verdict == "other_library" and served_library_request(text, settings.libraries):
+            # A library the user may switch to, written in another form than the rubric's display name: the judge's
+            # verdict had it been spelled that way. Only `other_library` is lifted; an attack stays one.
+            attribution("scope_guard", ledger, verdict="served_library_in_scope")
+            verdict = verdict.model_copy(update={"verdict": "in_scope"})
         if verdict.verdict in PASTE_NOTE_PASSES and ledger.paste_note and ledger.paste_table:
             # The note came with the data it is about: the root reads it beside the table. A statistic's name in it
             # reads as a request for figures, a question about the table as general advice; an attack stays refused.
