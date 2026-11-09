@@ -10,4 +10,4 @@
   axis letter alone is no label either. While the session holds data, a list
   needs three pairs; on a fresh page two still count (`Apples 7, Pears 12`).
   A table typed into the box over data now gets the same "replaces your data
-  (N rows, no .undo())" line as an attachment before it goes.
+  (N rows, no .undo())" line as an attachment before it goes. (#13035)
