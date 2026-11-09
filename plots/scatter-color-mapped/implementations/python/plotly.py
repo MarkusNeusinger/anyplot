@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-color-mapped: Color-Mapped Scatter Plot
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -34,7 +34,7 @@ np.random.seed(42)
 n_points = 150
 longitude = np.random.uniform(-120, -70, n_points)
 latitude = np.random.uniform(25, 50, n_points)
-temperature = 40 - 0.6 * (latitude - 25) + np.random.randn(n_points) * 5
+temperature = 68 - 2.0 * (latitude - 25) + np.random.randn(n_points) * 4
 df = pd.DataFrame({LONGITUDE: longitude, LATITUDE: latitude, TEMPERATURE: temperature})
 
 # Plot: reads only df and the constants above
