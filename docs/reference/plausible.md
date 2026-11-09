@@ -318,8 +318,11 @@ Both maps name a client by its own token: a crawler's name, a headless
 browser, an HTTP library, or an empty user agent. Neither matches a browser's
 user agent, whatever its version, because a farm that wears one shares it with
 real visitors, and nginx would drop their events without anyone seeing it.
-Such a farm is answered at the Cloudflare edge instead, where a person who gets
-caught sees a challenge and can pass it: see "Security rules" in
+Such a farm's traffic from hosting networks is challenged at the Cloudflare
+edge instead, where a person who gets caught sees the challenge and can pass
+it. Its traffic through residential addresses is deliberately left alone,
+because those addresses are shared with people, so that share can still reach
+the dashboard. See "Security rules" in
 [`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
 `tests/unit/api/test_analytics_event_proxy.py` fails if a browser's user agent
 loses its events, and it carries the shapes farms have worn.

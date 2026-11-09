@@ -7,8 +7,9 @@ still gets every page; only its event is dropped, and the 202 mirrors Plausible'
 retry. That makes a too-wide entry silent: real visitors vanish from the dashboard with no error anywhere.
 
 So no map that feeds this decision may match a browser's user agent, whatever the browser's version. A crawler
-farm that wears a browser's user agent shares it with real visitors, so it is answered at the Cloudflare edge
-(infra/cloudflare/README.md, "Security rules"), where a person who gets caught sees a challenge and can pass it.
+farm that wears a browser's user agent shares it with real visitors, so its hosting-network traffic is challenged
+at the Cloudflare edge (infra/cloudflare/README.md, "Security rules"), where a person who gets caught sees the
+challenge and can pass it.
 The browser list below carries the shapes such farms have worn, Windows 10 Chrome 103 to 138 and Windows and
 macOS Chrome 148 to 150, so a browser-shaped entry cannot come back unnoticed.
 
