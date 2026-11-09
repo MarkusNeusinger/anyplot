@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 88/100 | Updated: 2026-11-09
@@ -43,7 +43,7 @@ series = pd.DataFrame({DATE: dates, VALUE: base_trend + seasonal + noise})
 events = pd.DataFrame(
     {
         EVENT_DATE: pd.to_datetime(["2024-02-15", "2024-05-01", "2024-07-20", "2024-09-10", "2024-11-25"]),
-        EVENT_LABEL: ["Product Launch", "Feature Update", "Server Upgrade", "API v2 Release", "Mobile App Launch"],
+        EVENT_LABEL: ["Pricing Change", "Feature Update", "Server Upgrade", "API v2 Release", "Mobile App Launch"],
     }
 )
 df = pd.concat([series, events], ignore_index=True)
