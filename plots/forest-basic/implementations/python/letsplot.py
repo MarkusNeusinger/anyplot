@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -31,13 +31,14 @@ POOLED_LABEL = "Pooled estimate"
 
 # Columns: set these to your table's column names
 STUDY = "Study"  # role: study
-EFFECT = "Log Odds Ratio"  # role: effect_size
+EFFECT = "Log Odds Ratio of 6-month Smoking Abstinence"  # role: effect_size
 CI_LOWER = "CI lower"  # role: ci_lower
 CI_UPPER = "CI upper"  # role: ci_upper
 WEIGHT = "Weight (%)"  # role: weight
 
 # Data: replace this block with your own table, for example df = pd.read_csv("meta_analysis.csv")
-# Meta-analysis of clinical trials comparing treatment vs control
+# Meta-analysis of ten randomized trials of nicotine patch vs placebo patch for smoking cessation;
+# the effect is the log odds ratio of biochemically verified abstinence at 6 months (> 0 favours the patch)
 df = pd.DataFrame(
     {
         STUDY: [
