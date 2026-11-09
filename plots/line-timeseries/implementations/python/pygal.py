@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-timeseries: Time Series Line Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -6,7 +6,6 @@ Quality: 82/100 | Updated: 2026-11-09
 
 import os
 import random
-from datetime import datetime, timedelta
 
 import pandas as pd
 import pygal
@@ -29,12 +28,13 @@ PRICE = "Stock Price (USD)"  # role: value
 
 # Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 random.seed(42)
+trading_days = pd.bdate_range("2024-01-01", "2024-12-31")
 price = 150.0
 prices = []
-for _ in range(365):
-    price = max(100, price + random.gauss(0.1, 2.5))
+for _ in trading_days:
+    price = max(100, price + random.gauss(0.15, 3.0))
     prices.append(round(price, 2))
-df = pd.DataFrame({DATE: [datetime(2024, 1, 1) + timedelta(days=i) for i in range(365)], PRICE: prices})
+df = pd.DataFrame({DATE: trading_days, PRICE: prices})
 
 # Plot
 custom_style = Style(
@@ -54,6 +54,8 @@ custom_style = Style(
     legend_font_size=44,
     value_font_size=36,
     stroke_width=5,
+    stroke_opacity="1",
+    stroke_opacity_hover="1",
 )
 
 # A true date axis: each point sits at its own timestamp, labels and guides at calendar month starts
