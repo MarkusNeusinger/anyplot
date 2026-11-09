@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -85,6 +85,7 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     colors=(INK_SOFT, INK_MUTED, *(IMPRINT_PALETTE[i] for i in range(len(phases))), INK, INK_SOFT),
     value_colors=(None, None, *(None for _ in phases), INK, INK_SOFT),
+    opacity="1",  # legend swatches match the solid markers they explain
     title_font_size=title_size,
     label_font_size=44,
     major_label_font_size=44,
