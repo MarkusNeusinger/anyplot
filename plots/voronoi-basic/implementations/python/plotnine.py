@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -38,16 +38,17 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 BOX_PAD = 0.12  # bounding box margin around the seeds, as a share of their spread
 
 # Columns: set these to your table's column names
-X = "X Coordinate"  # role: x
-Y = "Y Coordinate"  # role: y
+EASTING = "Easting (km)"  # role: x
+NORTHING = "Northing (km)"  # role: y
 
-# Data: replace this block with your own table, for example df = pd.read_csv("facilities.csv")
+# Data: replace this block with your own table, for example df = pd.read_csv("cell_towers.csv")
+# 20 cell-tower sites on a 10 km city grid; each cell is the area that tower serves
 np.random.seed(42)
-n_points = 20
-df = pd.DataFrame({X: np.random.uniform(1, 9, n_points), Y: np.random.uniform(1, 9, n_points)})
+n_towers = 20
+df = pd.DataFrame({EASTING: np.random.uniform(1, 9, n_towers), NORTHING: np.random.uniform(1, 9, n_towers)})
 
 # Plot: reads only df and the constants above
-seeds = df[[X, Y]].dropna().to_numpy(dtype=float)
+seeds = df[[EASTING, NORTHING]].dropna().to_numpy(dtype=float)
 n_seeds = len(seeds)
 pad_x = BOX_PAD * np.ptp(seeds[:, 0])
 pad_y = BOX_PAD * np.ptp(seeds[:, 1])
@@ -98,13 +99,13 @@ for i in range(n_seeds):
                 clipped.append(curr)
         polygon = clipped
     for vx, vy in polygon:
-        polygon_rows.append({"cell": i, X: vx, Y: vy, "fill": IMPRINT_PALETTE[slot[i]]})
+        polygon_rows.append({"cell": i, EASTING: vx, NORTHING: vy, "fill": IMPRINT_PALETTE[slot[i]]})
 cells = pd.DataFrame(polygon_rows)
 
 plot = (
-    ggplot(cells, aes(x=X, y=Y))
+    ggplot(cells, aes(x=EASTING, y=NORTHING))
     + geom_polygon(aes(group="cell", fill="fill"), color=PAGE_BG, size=0.8)
-    + geom_point(df, aes(x=X, y=Y), fill=INK, color=PAGE_BG, size=3, stroke=0.8, shape="o")
+    + geom_point(df, aes(x=EASTING, y=NORTHING), fill=INK, color=PAGE_BG, size=3, stroke=0.8, shape="o")
     + scale_fill_identity()
     + coord_fixed(ratio=1.0, xlim=(x_min, x_max), ylim=(y_min, y_max), expand=False)
     + labs(title="voronoi-basic · python · plotnine · anyplot.ai")
