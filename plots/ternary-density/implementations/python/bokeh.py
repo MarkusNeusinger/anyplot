@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, Label, LinearColorMapper
+from bokeh.palettes import interp_palette
 from bokeh.plotting import figure
 from scipy.stats import gaussian_kde
 from selenium import webdriver
@@ -25,11 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette: imprint_seq (brand green -> blue) as a 256-stop ramp for the density
-SEQ_LOW, SEQ_HIGH = np.array([0x00, 0x9E, 0x73]), np.array([0x44, 0x67, 0xA3])
-IMPRINT_SEQ256 = [
-    "#{:02X}{:02X}{:02X}".format(*np.round(SEQ_LOW + (SEQ_HIGH - SEQ_LOW) * t).astype(int))
-    for t in np.linspace(0, 1, 256)
-]
+IMPRINT_SEQ256 = interp_palette(("#009E73", "#4467A3"), 256)
 
 # Columns: set these to your table's column names
 SAND = "Sand"  # role: component_a
@@ -70,19 +67,25 @@ kde = gaussian_kde(np.vstack([x_data, y_data]), bw_method="scott")
 density = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
 density = np.where(inside, density / density[inside].max(), np.nan)
 
+# Equal data units per pixel on both axes keep the triangle equilateral and centred in the frame
+W, H = 3200, 1800
+BORDER_TOP, BORDER_BOTTOM, BORDER_SIDE = 110, 40, 40
+FRAME_W, FRAME_H = W - 2 * BORDER_SIDE, H - BORDER_TOP - BORDER_BOTTOM
+y_lo, y_hi = -0.12, H_TRI + 0.1
+x_half = (y_hi - y_lo) * FRAME_W / FRAME_H / 2
+
 p = figure(
-    width=3200,
-    height=1800,
+    width=W,
+    height=H,
     title="Sediment Composition · ternary-density · python · bokeh · anyplot.ai",
-    x_range=(-0.32, 1.32),
-    y_range=(-0.12, H_TRI + 0.1),
-    match_aspect=True,
+    x_range=(0.5 - x_half, 0.5 + x_half),
+    y_range=(y_lo, y_hi),
     tools="",
     toolbar_location=None,
-    min_border_top=110,
-    min_border_bottom=40,
-    min_border_left=40,
-    min_border_right=60,
+    min_border_top=BORDER_TOP,
+    min_border_bottom=BORDER_BOTTOM,
+    min_border_left=BORDER_SIDE,
+    min_border_right=BORDER_SIDE,
 )
 p.xaxis.visible = False
 p.yaxis.visible = False
@@ -147,6 +150,8 @@ for f in [0.2, 0.4, 0.6, 0.8]:
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=50,
+    height=1100,
+    location=(FRAME_W - 560, (FRAME_H - 1100) / 2),
     title="Relative density",
     title_text_font_size="32pt",
     title_text_color=INK,
@@ -159,7 +164,7 @@ color_bar = ColorBar(
     title_standoff=20,
     padding=30,
 )
-p.add_layout(color_bar, "right")
+p.add_layout(color_bar)
 
 p.title.text_font_size = "50pt"
 p.title.text_color = INK
@@ -170,7 +175,6 @@ p.title.align = "center"
 output_file(f"plot-{THEME}.html")
 save(p)
 
-W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
