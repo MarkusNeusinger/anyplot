@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-09
@@ -6,6 +6,7 @@ Quality: 89/100 | Updated: 2026-05-09
 
 import os
 
+import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
@@ -13,6 +14,7 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
+    geom_label,
     geom_polygon,
     geom_rect,
     geom_text,
@@ -23,301 +25,153 @@ from lets_plot import (
     scale_x_continuous,
     scale_y_continuous,
     theme,
-    theme_minimal,
+    theme_void,
 )
 from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
 
-# Theme-adaptive colors
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-4)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Voter migration data across three election cycles
-elections = ["2016", "2020", "2024"]
-parties = ["Democrats", "Republicans", "Independents", "Non-Voters"]
+# Columns: set these to your table's column names
+SNAPSHOT = "Snapshot"  # role: time_point
+NEXT_SNAPSHOT = "Next snapshot"  # role: extra
+PLAN = "Plan"  # role: category
+NEXT_PLAN = "Next plan"  # role: extra
+ACCOUNTS = "Accounts (thousands)"  # role: value
+MOVED = "Accounts moved (thousands)"  # role: flow
 
-# Initial distribution in 2016 (millions of voters)
-initial_2016 = {"Democrats": 65, "Republicans": 63, "Independents": 8, "Non-Voters": 95}
+# Data: replace this block with your own table, for example df = pd.read_csv("plan_transitions.csv")
+plans = ["Annual plan", "Monthly plan", "Free trial", "Inactive"]
+moves_first = [[58, 3, 2, 2], [5, 54, 2, 2], [3, 2, 2, 1], [15, 12, 4, 64]]
+moves_second = [[72, 4, 3, 2], [3, 63, 2, 3], [4, 3, 2, 1], [6, 8, 3, 52]]
+rows = []
+for (start, end), moves in [(("Jan 2024", "Jul 2024"), moves_first), (("Jul 2024", "Jan 2025"), moves_second)]:
+    for i, source in enumerate(plans):
+        for j, target in enumerate(plans):
+            rows.append({SNAPSHOT: start, NEXT_SNAPSHOT: end, PLAN: source, NEXT_PLAN: target, MOVED: moves[i][j]})
+df = pd.DataFrame(rows)
 
-# Flows from 2016 to 2020 (from_party -> to_party: millions)
-flows_2016_2020 = [
-    ("Democrats", "Democrats", 58),
-    ("Democrats", "Republicans", 3),
-    ("Democrats", "Independents", 2),
-    ("Democrats", "Non-Voters", 2),
-    ("Republicans", "Democrats", 5),
-    ("Republicans", "Republicans", 54),
-    ("Republicans", "Independents", 2),
-    ("Republicans", "Non-Voters", 2),
-    ("Independents", "Democrats", 3),
-    ("Independents", "Republicans", 2),
-    ("Independents", "Independents", 2),
-    ("Independents", "Non-Voters", 1),
-    ("Non-Voters", "Democrats", 15),
-    ("Non-Voters", "Republicans", 12),
-    ("Non-Voters", "Independents", 4),
-    ("Non-Voters", "Non-Voters", 64),
-]
+# Plot: reads only df and the constants above
+flows = df.dropna(subset=[SNAPSHOT, NEXT_SNAPSHOT, PLAN, NEXT_PLAN, MOVED])
+snapshots = list(pd.unique(pd.concat([flows[SNAPSHOT], flows[NEXT_SNAPSHOT]]).astype(str)))
+categories = list(pd.unique(pd.concat([flows[PLAN], flows[NEXT_PLAN]]).astype(str)))
+rank = {name: k for k, name in enumerate(categories)}
+colors = {name: IMPRINT_PALETTE[k % len(IMPRINT_PALETTE)] for k, name in enumerate(categories)}
 
-# Flows from 2020 to 2024 (from_party -> to_party: millions)
-flows_2020_2024 = [
-    ("Democrats", "Democrats", 72),
-    ("Democrats", "Republicans", 4),
-    ("Democrats", "Independents", 3),
-    ("Democrats", "Non-Voters", 2),
-    ("Republicans", "Democrats", 3),
-    ("Republicans", "Republicans", 63),
-    ("Republicans", "Independents", 2),
-    ("Republicans", "Non-Voters", 3),
-    ("Independents", "Democrats", 4),
-    ("Independents", "Republicans", 3),
-    ("Independents", "Independents", 2),
-    ("Independents", "Non-Voters", 1),
-    ("Non-Voters", "Democrats", 6),
-    ("Non-Voters", "Republicans", 8),
-    ("Non-Voters", "Independents", 3),
-    ("Non-Voters", "Non-Voters", 52),
-]
+# Block heights: the larger of a block's incoming and outgoing totals, so both band stacks fit inside it
+outgoing = flows.groupby([flows[SNAPSHOT].astype(str), flows[PLAN].astype(str)], sort=False)[MOVED].sum()
+incoming = flows.groupby([flows[NEXT_SNAPSHOT].astype(str), flows[NEXT_PLAN].astype(str)], sort=False)[MOVED].sum()
+outgoing.index.names = incoming.index.names = [SNAPSHOT, PLAN]
+totals = pd.concat([outgoing, incoming], axis=1).max(axis=1)
+nodes = totals.rename(ACCOUNTS).reset_index()
+nodes = nodes.assign(order=nodes[PLAN].map(rank)).sort_values("order", kind="stable")
 
-# Calculate totals at each time point
-totals_2016 = initial_2016.copy()
-totals_2020 = dict.fromkeys(parties, 0)
-for _, to_party, val in flows_2016_2020:
-    totals_2020[to_party] += val
+# Layout in a unit square: columns spread evenly, blocks stacked with a fixed gap
+x_positions = dict(zip(snapshots, np.linspace(0.14, 0.86, len(snapshots)), strict=True))
+node_width = 0.032
+node_gap = 0.025
+column_max = nodes.groupby(SNAPSHOT, sort=False)[ACCOUNTS].sum().max()
+unit = (0.86 - node_gap * (len(categories) - 1)) / column_max
 
-totals_2024 = dict.fromkeys(parties, 0)
-for _, to_party, val in flows_2020_2024:
-    totals_2024[to_party] += val
+nodes["xmin"] = nodes[SNAPSHOT].map(x_positions) - node_width / 2
+nodes["xmax"] = nodes[SNAPSHOT].map(x_positions) + node_width / 2
+nodes["height"] = nodes[ACCOUNTS] * unit
+nodes["ymax"] = 0.91 - nodes.groupby(SNAPSHOT, sort=False)["height"].cumsum() + nodes["height"]
+nodes["ymax"] -= nodes.groupby(SNAPSHOT, sort=False).cumcount() * node_gap
+nodes["ymin"] = nodes["ymax"] - nodes["height"]
+block_top = nodes.set_index([SNAPSHOT, PLAN])["ymax"]
 
-time_totals = [totals_2016, totals_2020, totals_2024]
-
-# Layout parameters
-x_positions = [0.15, 0.5, 0.85]
-node_width = 0.03
-node_gap = 0.02
-total_flow = sum(totals_2016.values())
-
-# Colors for parties - Okabe-Ito palette (positions 1-4)
-party_colors = {
-    "Democrats": IMPRINT[0],
-    "Republicans": IMPRINT[1],
-    "Independents": IMPRINT[2],
-    "Non-Voters": IMPRINT[3],
-}
-
-
-# Calculate node positions at each time point
-def calculate_node_positions(totals, x_pos):
-    positions = {}
-    y_offset = 0.05
-    for party in parties:
-        height = totals.get(party, 0) / total_flow * 0.85
-        positions[party] = {"y0": y_offset, "y1": y_offset + height, "x": x_pos}
-        y_offset += height + node_gap
-    return positions
-
-
-node_positions = [
-    calculate_node_positions(totals_2016, x_positions[0]),
-    calculate_node_positions(totals_2020, x_positions[1]),
-    calculate_node_positions(totals_2024, x_positions[2]),
-]
-
-# Build flow polygons between time points
-flow_data = []
-
-
-def add_flows(flows, time_idx, src_positions, tgt_positions, x_left, x_right):
-    src_offsets = dict.fromkeys(parties, 0)
-    tgt_offsets = dict.fromkeys(parties, 0)
-
-    for from_party, to_party, val in flows:
-        flow_height = val / total_flow * 0.85
-
-        src_y0 = src_positions[from_party]["y0"] + src_offsets[from_party]
-        src_y1 = src_y0 + flow_height
-        src_offsets[from_party] += flow_height
-
-        tgt_y0 = tgt_positions[to_party]["y0"] + tgt_offsets[to_party]
-        tgt_y1 = tgt_y0 + flow_height
-        tgt_offsets[to_party] += flow_height
-
-        n_points = 40
-        x_vals_top = []
-        y_vals_top = []
-        x_vals_bottom = []
-        y_vals_bottom = []
-
-        for i in range(n_points + 1):
-            t = i / n_points
-            x = x_left + t * (x_right - x_left)
-            ease = t * t * (3 - 2 * t)
-            y_top = src_y1 + ease * (tgt_y1 - src_y1)
-            y_bottom = src_y0 + ease * (tgt_y0 - src_y0)
-
-            x_vals_top.append(x)
-            y_vals_top.append(y_top)
-            x_vals_bottom.append(x)
-            y_vals_bottom.append(y_bottom)
-
-        x_polygon = x_vals_top + x_vals_bottom[::-1]
-        y_polygon = y_vals_top + y_vals_bottom[::-1]
-
-        # Use destination party for coloring to show where voters went
-        flow_id = f"t{time_idx}_{from_party}_{to_party}"
-        flow_color_key = f"{from_party}_{to_party}"
-        for x, y in zip(x_polygon, y_polygon, strict=False):
-            flow_data.append(
-                {
-                    "x": x,
-                    "y": y,
-                    "flow_id": flow_id,
-                    "flow_color": flow_color_key,
-                    "from_party": from_party,
-                    "to_party": to_party,
-                }
-            )
-
-
-# Add flows for 2016->2020
-add_flows(
-    flows_2016_2020,
-    0,
-    node_positions[0],
-    node_positions[1],
-    x_positions[0] + node_width / 2,
-    x_positions[1] - node_width / 2,
+# Bands: stack each flow inside its source block by target order and inside its target block by source order
+flows = flows.assign(
+    src=flows[SNAPSHOT].astype(str),
+    dst=flows[NEXT_SNAPSHOT].astype(str),
+    src_cat=flows[PLAN].astype(str),
+    dst_cat=flows[NEXT_PLAN].astype(str),
+    width=flows[MOVED] * unit,
 )
+flows["src_rank"] = flows["src_cat"].map(rank)
+flows["dst_rank"] = flows["dst_cat"].map(rank)
+flows = flows.sort_values(["src", "src_rank", "dst_rank"], kind="stable")
+flows["src_top"] = [block_top[key] for key in zip(flows["src"], flows["src_cat"], strict=True)]
+flows["src_top"] -= flows.groupby(["src", "src_cat"], sort=False)["width"].cumsum() - flows["width"]
+flows = flows.sort_values(["dst", "dst_rank", "src_rank"], kind="stable")
+flows["dst_top"] = [block_top[key] for key in zip(flows["dst"], flows["dst_cat"], strict=True)]
+flows["dst_top"] -= flows.groupby(["dst", "dst_cat"], sort=False)["width"].cumsum() - flows["width"]
 
-# Add flows for 2020->2024
-add_flows(
-    flows_2020_2024,
-    1,
-    node_positions[1],
-    node_positions[2],
-    x_positions[1] + node_width / 2,
-    x_positions[2] - node_width / 2,
-)
-
-df_flows = pd.DataFrame(flow_data)
-
-# Build node rectangles
-node_rects = []
-for time_idx, positions in enumerate(node_positions):
-    for party in parties:
-        pos = positions[party]
-        node_rects.append(
+t = np.linspace(0, 1, 41)
+ease = t * t * (3 - 2 * t)
+band_parts = []
+for band_id, flow in enumerate(flows.itertuples(index=False)):
+    x_left = x_positions[flow.src] + node_width / 2
+    x_right = x_positions[flow.dst] - node_width / 2
+    xs = x_left + t * (x_right - x_left)
+    top = flow.src_top + ease * (flow.dst_top - flow.src_top)
+    band_parts.append(
+        pd.DataFrame(
             {
-                "xmin": pos["x"] - node_width / 2,
-                "xmax": pos["x"] + node_width / 2,
-                "ymin": pos["y0"],
-                "ymax": pos["y1"],
-                "party": party,
-                "time_idx": time_idx,
+                "x": np.concatenate([xs, xs[::-1]]),
+                "y": np.concatenate([top, (top - flow.width)[::-1]]),
+                "band": band_id,
+                PLAN: flow.dst_cat,
             }
         )
-
-df_nodes = pd.DataFrame(node_rects)
-
-# Build labels
-labels = []
-
-# Time point labels (column headers)
-for i, election in enumerate(elections):
-    labels.append({"x": x_positions[i], "y": 0.96, "label": election, "type": "header", "hjust": 0.5})
-
-# Party labels at first column (left side)
-for party in parties:
-    pos = node_positions[0][party]
-    labels.append(
-        {
-            "x": x_positions[0] - node_width - 0.02,
-            "y": (pos["y0"] + pos["y1"]) / 2,
-            "label": party,
-            "type": "party_left",
-            "hjust": 1,
-        }
     )
+bands = pd.concat(band_parts, ignore_index=True)
 
-# Value labels at last column (right side)
-for party in parties:
-    pos = node_positions[2][party]
-    val = totals_2024[party]
-    labels.append(
-        {
-            "x": x_positions[2] + node_width + 0.02,
-            "y": (pos["y0"] + pos["y1"]) / 2,
-            "label": f"{party}\n({val}M)",
-            "type": "party_right",
-            "hjust": 0,
-        }
-    )
+# Labels at every block: left of the first column, right of every other column
+nodes["label"] = nodes[PLAN] + " · " + nodes[ACCOUNTS].map(lambda v: f"{v:,.0f}k")
+nodes["label_y"] = (nodes["ymin"] + nodes["ymax"]) / 2
+first = nodes[nodes[SNAPSHOT] == snapshots[0]].assign(label_x=lambda d: d["xmin"] - 0.012)
+others = nodes[nodes[SNAPSHOT] != snapshots[0]].assign(label_x=lambda d: d["xmax"] + 0.008)
+headers = pd.DataFrame({"x": list(x_positions.values()), "y": 0.975, "label": snapshots})
 
-df_labels = pd.DataFrame(labels)
-
-# Create the plot - flows colored by destination to show where voters went
+title = "alluvial-basic · python · letsplot · anyplot.ai"
 plot = (
     ggplot()
-    + geom_polygon(
-        aes(x="x", y="y", group="flow_id", fill="to_party"), data=df_flows, alpha=0.55, color="white", size=0.1
+    + geom_polygon(aes(x="x", y="y", group="band", fill=PLAN), data=bands, alpha=0.55, color=PAGE_BG, size=0.15)
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill=PLAN), data=nodes, color=INK_SOFT, size=0.4
     )
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="party"), data=df_nodes, color=INK, size=1)
-    + geom_text(
-        aes(x="x", y="y", label="label"),
-        data=df_labels[df_labels["type"] == "header"],
-        size=18,
-        hjust=0.5,
-        fontface="bold",
-        color=INK,
-    )
-    + geom_text(
-        aes(x="x", y="y", label="label"),
-        data=df_labels[df_labels["type"] == "party_left"],
-        size=13,
-        hjust=1,
-        color=INK_SOFT,
-    )
-    + geom_text(
-        aes(x="x", y="y", label="label"),
-        data=df_labels[df_labels["type"] == "party_right"],
-        size=12,
+    + geom_text(aes(x="x", y="y", label="label"), data=headers, size=6, fontface="bold", color=INK)
+    + geom_text(aes(x="label_x", y="label_y", label="label"), data=first, size=4, hjust=1, color=INK_SOFT)
+    + geom_label(
+        aes(x="label_x", y="label_y", label="label"),
+        data=others,
+        size=4,
         hjust=0,
         color=INK_SOFT,
+        fill=PAGE_BG,
+        alpha=0.85,
+        label_size=0,
+        label_padding=0.15,
     )
-    + scale_fill_manual(
-        values={
-            "Democrats": party_colors["Democrats"],
-            "Republicans": party_colors["Republicans"],
-            "Independents": party_colors["Independents"],
-            "Non-Voters": party_colors["Non-Voters"],
-        }
-    )
-    + labs(title="alluvial-basic · letsplot · pyplots.ai")
-    + theme_minimal()
+    + scale_fill_manual(values=colors)
+    + scale_x_continuous(limits=[0, 1], expand=[0, 0])
+    + scale_y_continuous(limits=[0, 1], expand=[0, 0])
+    + labs(title=title)
+    + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=28, face="bold", color=INK),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=round(16 * min(1.0, 67 / len(title))), face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         legend_position="none",
     )
-    + scale_x_continuous(limits=[-0.05, 1.05])
-    + scale_y_continuous(limits=[-0.02, 1.02])
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save as HTML for interactivity
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
