@@ -185,7 +185,7 @@ class TestSessionContext:
         assert text.splitlines() == [
             "Session (set by the server):",
             "- Plot: spec scatter-basic, library matplotlib",
-            "- Language: the default, English",
+            "- Language: the default, English; the user picked no other",
             "- Libraries to switch to (switch_plot): seaborn",  # the server's own ids (`AGENT_LIBRARIES`)
             "- Dataset: none yet; the user pastes it into the message box, or generate_data computes it from a formula, "
             "or run_data_code from the user's code",
@@ -206,9 +206,9 @@ class TestSessionContext:
         assert "<plot_language>" not in text  # the plot follows the session language: one fence says it
 
     async def test_a_plot_in_another_language_is_named_in_its_own_fence(self, services: Services) -> None:
-        """Live test of 2026-11-01: after a German plot, an English message records `en` for the replies; the plot
-        stays German, and the block says so, so the root neither rewrites nor apologises for it."""
-        state = opened_state(**language_delta("en", "detected"))
+        """Live test of 2026-11-01: after a German plot the replies went English; the plot stays German, and the
+        block says so, so the root neither rewrites nor apologises for it."""
+        state = opened_state(**language_delta("en", "offer"))
         result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
         rendered = CodeVersion(
             number=1,
@@ -237,7 +237,7 @@ class TestSessionContext:
         ]
 
     async def test_an_instruction_shaped_plot_language_stands_only_inside_its_fence(self, services: Services) -> None:
-        state = opened_state(**language_delta("en", "detected"), **{PLOT_LANGUAGE: LANGUAGE_CANARY})
+        state = opened_state(**language_delta("en", "chosen"), **{PLOT_LANGUAGE: LANGUAGE_CANARY})
 
         text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
 

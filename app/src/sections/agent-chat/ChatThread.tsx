@@ -74,6 +74,7 @@ import { countOf } from 'src/sections/agent-chat/countOf';
 import { FoldedData } from 'src/sections/agent-chat/FoldedData';
 import { HoldReadingPosition, REPLY_ATTRIBUTE } from 'src/sections/agent-chat/HoldReadingPosition';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
+import { LanguageOfferLine } from 'src/sections/agent-chat/LanguageOfferLine';
 import {
   ANSWER_LABEL,
   ANSWER_LABEL_SPOKEN,
@@ -174,6 +175,8 @@ interface ChatThreadProps {
    * without it the thread shows no decisions.
    */
   decisions?: ThreadDecisions;
+  /** The `.switch()` of a language line (`LanguageOfferLine`); without it the line has no button. */
+  onAcceptLanguage?: (offerId: number) => Promise<void>;
 }
 
 /** What the remembered decisions' list needs from the page (`RememberedProps`). */
@@ -401,6 +404,15 @@ function Item({
             />
           )}
         </Box>
+      );
+    case 'language_offer':
+      return (
+        <LanguageOfferLine
+          item={item}
+          current={props.state.plotLanguage.language}
+          busy={sessionBusy(props.state)}
+          onAccept={props.onAcceptLanguage}
+        />
       );
     case 'plot_failed':
       return (

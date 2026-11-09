@@ -1,12 +1,13 @@
 """The session language, the language of the root's replies, and the plot language, the language of the plot's text.
 
-Owner decision of 2026-10-12. A session starts in English (`en`, source `default`),
-whatever the browser's locale. A paste before any typed message sets the language its
-notes or column names are written in (source `pasted`, `pasted_language`; owner request of
-2026-10-14). The session's first in-scope typed message records the
-language the scope judge names for it (source `detected`), also over `pasted`; a choice through
-`PUT /v1/sessions/{sid}/language` or the root's `set_language` tool sets it for good
-(source `chosen`), and detection never writes over a choice.
+The page is English, so a session starts in English (`en`, source `default`), whatever the
+browser's locale, and stays in it until the user picks another language. A pick is the chip at the top, a request in
+the chat (the root's `set_language` tool) or an accepted offer. When the scope judge names
+another language for a typed message, or for the notes or column names of a paste, the page
+offers it once (`offer`): one line with a button. Ignoring the line keeps everything as it is.
+Accepting goes through `PUT /v1/sessions/{sid}/language` with `via: offer` (source `offer`).
+The chip and `set_language` set source `chosen`, which is final: no offer comes after it.
+Detection never sets the language itself.
 
 Owner decision of 2026-11-01: the plot's text keeps its language. The first plot is written
 in the session language; every later version keeps the language of the session's latest
@@ -24,6 +25,7 @@ delta that sets the language (`session_state.language_delta`) lives next to the 
 """
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -32,10 +34,19 @@ LANGUAGE_PATTERN = r"^[A-Za-z][A-Za-z -]{0,39}$"
 """A language name or code: a letter, then up to 39 letters, spaces or hyphens (ASCII only)."""
 LANGUAGE_RE = re.compile(LANGUAGE_PATTERN)
 MAX_LANGUAGE_CHARS = 40
-LanguageSource = Literal["default", "pasted", "detected", "chosen"]
-SOURCES: frozenset[str] = frozenset(("default", "pasted", "detected", "chosen"))
-PASTE_OVERWRITES: frozenset[str] = frozenset(("default", "pasted"))
-"""The sources a paste may write over: nothing the user typed or chose."""
+LanguageSource = Literal["default", "chosen", "offer"]
+SOURCES: frozenset[str] = frozenset(("default", "chosen", "offer"))
+"""`default`: nobody picked yet (English). `chosen`: the chip or a request in the chat, final. `offer`: the user
+accepted the page's offer of a language the judge named for a message or a paste."""
+LEGACY_SOURCES: frozenset[str] = frozenset(("pasted", "detected"))
+"""The sources detection wrote before 2026-11-08; a session that still holds one reads it as `default`."""
+OfferBasis = Literal["message", "data"]
+"""What an offer's language was found in: a typed message, or a paste's notes or column names."""
+MIN_ENGLISH_OFFER_WORDS = 3
+"""An `en` verdict offers English only for a message of at least this many words: the judge also answers `en` for a
+message without a clear language, such as `sin x`."""
+MAX_OFFERED = 12
+"""The most languages a session records as offered (`session_state.LANGUAGE_OFFERED`)."""
 LanguageTarget = Literal["both", "plot", "replies"]
 LANGUAGE_TARGETS: frozenset[str] = frozenset(("both", "plot", "replies"))
 """What the root's `set_language` sets (`applies_to`): the replies, the plot's text, or both."""
@@ -160,20 +171,45 @@ def is_valid(value: str) -> bool:
     return bool(LANGUAGE_RE.fullmatch(value))
 
 
-def pasted_language(source: str, notes_lang: str | None, header_lang: str | None) -> str | None:
-    """The session language a paste sets (source `pasted`), or None to keep the current one.
+def read_source(value: object) -> LanguageSource:
+    """A stored language source as the session reads it: one of `SOURCES`, else `default` (a legacy one too)."""
+    if value == "chosen":
+        return "chosen"
+    if value == "offer":
+        return "offer"
+    return "default"
 
-    Only while nothing the user typed or chose set it (`PASTE_OVERWRITES`): the scope
-    judge's `lang` for the notes kept around the table first, else the dataset judge's
-    `lang` for the column names. Both judges answer `en` for text without a clear language
-    (`temperature_2m_max`, `x, y`), so `en` is no signal and keeps what is there: an
-    English paste after a German one leaves `de`, and the default is English anyway.
+
+def offer(language: str, source: str, offered: Sequence[str], lang: str | None, words: int | None = None) -> str | None:
+    """The language to offer the user for a judge's `lang`, in its stored form, or None for no offer.
+
+    `language` and `source` are the session's, `offered` the languages it offered before
+    (`session_state.LANGUAGE_OFFERED`). `words` is the word count of a typed message, None for a
+    paste's notes or column names. There is no offer after a pick (`chosen`, final), for an invalid
+    code, for the session language itself, for a language offered before (each language comes
+    once), or once `MAX_OFFERED` languages were offered. The judges answer `en` for text without a
+    clear language (`sin x`, `temperature_2m_max`, `x, y`), so `en` is offered only for a message
+    of at least `MIN_ENGLISH_OFFER_WORDS` words, never for data. It can come only after the user
+    accepted another language: the chat may offer English back, once.
     """
-    if source not in PASTE_OVERWRITES:
+    if source == "chosen" or not lang or not is_valid(lang) or same_language(lang, language):
         return None
+    seen = {canonical(item) for item in offered}
+    if canonical(lang) in seen or len(seen) >= MAX_OFFERED:
+        return None
+    if canonical(lang) == DEFAULT_LANGUAGE and (words is None or words < MIN_ENGLISH_OFFER_WORDS):
+        return None
+    return normalise(lang)
+
+
+def data_offer(
+    language: str, source: str, offered: Sequence[str], notes_lang: str | None, header_lang: str | None
+) -> str | None:
+    """The language a paste offers (`offer` with no word count): the notes' `lang` first, else the column names'."""
     for lang in (notes_lang, header_lang):
-        if lang and lang != DEFAULT_LANGUAGE and is_valid(lang):
-            return normalise(lang)
+        found = offer(language, source, offered, lang)
+        if found is not None:
+            return found
     return None
 
 

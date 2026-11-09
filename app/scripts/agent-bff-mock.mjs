@@ -43,12 +43,13 @@
  * `done` carries the session's `bindings` and `data_confirmed`, as the service
  * syncs them after a run, `language` (`{language, source}`, the session
  * language) and `dataset` after a turn that changed the data.
- * `PUT .../language` (the header's language chip) validates `{language}` like
- * the BFF (`^[A-Za-z][A-Za-z -]{0,39}$` on the value as sent, no other field),
- * stores it in the service's normalised form (a known name or endonym of the
- * ten common languages as its code, a two-letter value in lower case, anything
- * else as typed) with the source `chosen`, answers `{language, source}`, and
- * `409 run_active` while a turn runs.
+ * `PUT .../language` (the header's language chip, or an offer's `.switch()`)
+ * validates `{language, via?}` like the BFF (`^[A-Za-z][A-Za-z -]{0,39}$` on the
+ * value as sent, `via` `header` or `offer`, no other field), stores it in the
+ * service's normalised form (a known name or endonym of the ten common languages
+ * as its code, a two-letter value in lower case, anything else as typed) with
+ * the source `chosen`, or `offer` for an accepted offer, answers
+ * `{language, source}`, and `409 run_active` while a turn runs.
  * `GET .../bundle?include_data=&version=` (the page's `.save()`) answers the
  * session's feedback case from the mock's state, with the agents service's
  * top-level keys (the transcript of the turns, every version's code, result and
@@ -113,20 +114,19 @@
  * ("Beispieldaten", "random numbers with 3 categories") answers `422 data_request`:
  * the page sends either to the chat, or asks to shorten code over 2,000 characters.
  *
- * The session language in miniature: every session starts at `en`/`default`.
- * A paste whose notes or column names read German sets `de` (`pasted`) while
- * nothing typed or chosen has, and the dataset answer carries
- * `language: {language, source}`.
- * The first typed message that is not refused sets it (`detected`, the scope
- * judge's job in the service): `de` when it reads German (an umlaut or ß, or a
- * word such as "bitte", "und", "die", "mach", "zeichne", "beschriftung"), `en`
- * otherwise, but an English one only from three words on ("sin x" keeps the
- * default); a later message never changes it. "labels in german" or
- * "beschriftung auf englisch" (english, german, french, spanish; deutsch,
- * englisch, französisch, spanisch) is the root's `set_language`: `chosen`,
- * which detection never overrides, and a reply; when the session has a plot,
- * the refinement below follows. A question ("…?") in a German session gets the
- * German reply.
+ * The session language in miniature: every session starts at `en`/`default`
+ * and stays there until the user picks another. A paste whose notes or column
+ * names read German, or a typed message that is not refused and reads German
+ * (an umlaut or ß, or a word such as "bitte", "und", "die", "mach", "zeichne",
+ * "beschriftung"), offers German once: the dataset answer or the turn's `done`
+ * carries `language: {language, source, offer: {language, basis}}`. After the
+ * user took German (`PUT .../language` with `via: offer`, source `offer`), an
+ * English message of three words or more offers English back, once. "labels in
+ * german", "beschriftung auf englisch" or "auf deutsch bitte" (english, german,
+ * french, spanish; deutsch, englisch, französisch, spanisch) is the root's
+ * `set_language`: `chosen`, after which nothing is offered, and a reply; when
+ * the session has a plot, the refinement below follows. A question ("…?") in a
+ * German session gets the German reply.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
@@ -1180,6 +1180,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   // What the turn changed (`done.turn`, the service's `stream.turn_outcome`): `answer` until a path
   // names its change; `null` for a refusal or an error, whose `done` carries none, as a stop's.
   let turn = 'answer';
+  // The language the scope judge found in the typed message, offered with `done` (`offerLanguage`).
+  let turnOffer = null;
   try {
     send('ready', { v: 'anyplot/1', run_id: log.runId });
     // Pretend `QUEUE_START - 1` other turns wait ahead of this one.
@@ -1212,7 +1214,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       const needsData =
         /stock price|unemployment rate/.test(lower) && !(session.summaryPending && session.dataset);
       if (typeof body.text === 'string' && !outOfScope && !needsData) {
-        detectLanguage(session, text);
+        turnOffer = offerLanguage(session, text, text.trim().split(/\s+/).length);
       }
       const asked = outOfScope || needsData ? null : requestedLanguage(lower);
       if (asked) {
@@ -1559,7 +1561,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       tokens: 18734,
       bindings: session.bindings,
       data_confirmed: session.confirmed,
-      language: { language: session.language, source: session.languageSource },
+      language: languageBody(session, turnOffer),
       ...(session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {}),
       ...(session.changed ? { dataset: session.changed } : {}),
       ...(turn && !session.cancelled && !closed ? { turn } : {}),
@@ -1741,29 +1743,33 @@ function normaliseLanguage(value) {
 const GERMAN = /[äöüß]|\b(bitte|und|der|die|das|mit|zeichne|beschriftung|mach)\b/i;
 
 /**
- * The scope judge's `lang` for the session's first accepted typed message, once:
- * `de` for German, else `en`, which counts only from three words on (the judge
- * also answers `en` when it cannot tell, so "sin x" keeps the default).
+ * The service's `language.offer`, in miniature: the judges' `lang` (`de` for German text,
+ * else `en`) never sets the session language, it is offered once, as `{language, basis}`,
+ * and recorded as offered. `words` is a typed message's word count, `null` for a paste's
+ * notes and column names. Nothing after a pick (`chosen`), nothing for the session's own
+ * language or one offered before, and `en` only for a message of three words or more (the
+ * judge also answers `en` when it cannot tell, so "sin x" offers nothing), never for data.
  */
-function detectLanguage(session, text) {
-  // A language from the pasted data yields to the first typed message, as in the service.
-  if (session.languageSource !== 'default' && session.languageSource !== 'pasted') return;
+function offerLanguage(session, text, words) {
+  if (session.languageSource === 'chosen') return null;
   const code = GERMAN.test(text) ? 'de' : 'en';
-  if (code === 'en' && text.trim().split(/\s+/).length < 3) return;
-  session.language = code;
-  session.languageSource = 'detected';
+  if (code === session.language || session.languageOffered.includes(code)) return null;
+  if (code === 'en' && (words === null || words < 3)) return null;
+  session.languageOffered.push(code);
+  return { language: code, basis: words === null ? 'data' : 'message' };
 }
 
 /**
- * The service's `pasted_language`, in miniature: a paste before any typed message or
- * choice sets `de` (source `pasted`) when its text (the notes and the column names)
- * reads German; anything else is no signal and leaves the current language.
+ * The session language as the service answers it, `{language, source}`, with `offer` while it
+ * holds: never after a pick (the root's `set_language` may have made one in the same turn) and
+ * never for the language the session has now.
  */
-function pastedLanguage(session, text) {
-  if (session.languageSource !== 'default' && session.languageSource !== 'pasted') return;
-  if (!GERMAN.test(text)) return;
-  session.language = 'de';
-  session.languageSource = 'pasted';
+function languageBody(session, offer) {
+  const body = { language: session.language, source: session.languageSource };
+  if (offer && session.languageSource !== 'chosen' && offer.language !== session.language) {
+    body.offer = offer;
+  }
+  return body;
 }
 
 const ASKED_LANGUAGES = {
@@ -1777,11 +1783,15 @@ const ASKED_LANGUAGES = {
   spanisch: ['es', 'Spanish'],
 };
 
-/** "labels in german", "beschriftung auf englisch": the root's `set_language` request, or `null`. */
+/**
+ * "labels in german", "beschriftung auf englisch", "auf deutsch bitte": the root's
+ * `set_language` request, or `null`.
+ */
 function requestedLanguage(lower) {
   const match =
     lower.match(/\blabels? in (english|german|french|spanish)\b/) ??
-    lower.match(/\bbeschriftung (?:bitte )?auf (deutsch|englisch|französisch|spanisch)/);
+    lower.match(/\bbeschriftung (?:bitte )?auf (deutsch|englisch|französisch|spanisch)/) ??
+    lower.match(/^\s*auf (deutsch|englisch|französisch|spanisch)(?: bitte)?\W*$/);
   if (!match) return null;
   const [code, name] = ASKED_LANGUAGES[match[1]];
   return { code, name };
@@ -2606,9 +2616,11 @@ async function route(req, res) {
       transcript: [],
       // The quick feedback per result version: the latest submission, with its case id.
       feedback: {},
-      // The session language: English by default, whatever the browser's locale.
+      // The session language: English by default, whatever the browser's locale, and the
+      // languages offered so far (each comes once).
       language: 'en',
       languageSource: 'default',
+      languageOffered: [],
       // Opened by the admin's `.plot_all()` (`source: fanout`): the only kind of session a copy may go into.
       fanout: body.source === 'fanout',
       // The plot memory (`{id, kind, target, text, expect, turn}`, oldest first), its next id, the
@@ -2765,7 +2777,7 @@ async function route(req, res) {
     session.confirmed = false; // a new dataset is unchecked
     newData(session); // the session's next number, no history
     session.summaryPending = true; // the first turn on it summarizes it: the action, or the note
-    pastedLanguage(session, text);
+    const dataOffer = offerLanguage(session, text, null);
     return json(
       res,
       200,
@@ -2776,7 +2788,7 @@ async function route(req, res) {
         ...(tables ? { tables, table } : {}),
         columns_changed: columnsChanged,
         roles: SPECS[session.specId].roles,
-        language: { language: session.language, source: session.languageSource },
+        language: languageBody(session, dataOffer),
       },
       ref
     );
@@ -2831,6 +2843,7 @@ async function route(req, res) {
     newData(session); // the fan-out session's first version, 1
     session.language = origin.language;
     session.languageSource = origin.languageSource;
+    session.languageOffered = [...origin.languageOffered]; // the page's offers stand: a copy never offers
     return json(
       res,
       200,
@@ -2887,15 +2900,28 @@ async function route(req, res) {
   }
   if (method === 'PUT' && rest === '/language') {
     if (session.active) return fail(res, 409, 'run_active', ref);
-    // The BFF's strict body: `language` only, matched as sent (a leading space is a 422).
-    const extra = body && typeof body === 'object' && Object.keys(body).some(k => k !== 'language');
+    // The BFF's strict body: `language` and `via` (`header` or `offer`), matched as sent.
+    const extra =
+      body &&
+      typeof body === 'object' &&
+      Object.keys(body).some(k => k !== 'language' && k !== 'via');
     const value = typeof body?.language === 'string' ? body.language : '';
-    if (extra || !LANGUAGE_RE.test(value)) return fail(res, 422, 'invalid', ref);
+    const via = body?.via ?? 'header';
+    if (extra || !LANGUAGE_RE.test(value) || !['header', 'offer'].includes(via)) {
+      return fail(res, 422, 'invalid', ref);
+    }
     session.language = normaliseLanguage(value);
-    session.languageSource = 'chosen';
+    // An accepted offer keeps a pick final: `offer` only while the user picked none.
+    session.languageSource =
+      via === 'offer' && session.languageSource !== 'chosen' ? 'offer' : 'chosen';
     // With data, the `.to_long()` offer recomputed in the new language, as the service answers it.
     const offer = session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {};
-    return json(res, 200, { language: session.language, source: 'chosen', ...offer }, ref);
+    return json(
+      res,
+      200,
+      { language: session.language, source: session.languageSource, ...offer },
+      ref
+    );
   }
   if (method === 'POST' && rest === '/dataset/convert') {
     // The renderer reads the file in production; here the first bytes pick a canned answer. A zip is a

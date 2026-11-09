@@ -21,7 +21,8 @@
   refusal, `needs_data` (a request for data the service would have to fetch) with
   the fixed `needs_data` refusal, and `other_library` (this plot in another library or
   language) with the fixed `other_library` answer, a pointer to the catalogue, each in
-  the language the judge names (`policy.refusal`: English, German, French, Spanish,
+  the session language, whatever language the message is in (English until the user
+  picks another, like every reply; `policy.refusal`: English, German, French, Spanish,
   Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English for every
   other language); the run ends there, at the first turn;
 * the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is judged
@@ -51,17 +52,16 @@
   `AGENT_SESSION_CLOSE_WARNING` the counted refusal one before it carries the fixed
   `close_warning` suffix. The strikes above are per user and day and count `attack`
   only; this count is per session and needs no state of its own;
-* the judge's `lang` for the session's first in-scope typed message becomes the
-  session language with the source `detected` (`session_state.LANGUAGE`, the replies'
-  language; a plot the session already has keeps its own, `session_state.plot_language`), unless one
-  is set: a later message never changes it, a choice (`chosen`) never yields to it, a
-  refused message never sets it, and an `en` verdict counts only for a message of at
-  least three words, because the judge also answers `en` for a message without a clear
-  language (`sin x` keeps the default, and the next typed message is judged again). A
-  language derived from the pasted data (source `pasted`) counts as unset here: the
-  first typed message's language replaces it. The write is a content-free state event appended after the judge's line and the refusal
-  branch; it never raises, so a failed write is one `language_write_failed` line and the
-  accepted message still goes through;
+* the judge's `lang` for an in-scope typed message never sets the session language:
+  when it names another language, the page offers it
+  once (`language.offer`), and the user's click on the offer sets it. There is no offer
+  after a pick (`chosen`), for a language offered before, for a refused message, or for
+  an `en` verdict on a message under three words, because the judge also answers `en`
+  for a message without a clear language (`sin x`). The offer is recorded as
+  `session_state.LANGUAGE_OFFERED` in a content-free state event after the judge's line
+  and the refusal branch, and kept on the ledger (`RequestLedger.language_offer`), which
+  the turn's `done` carries. The write never raises, so a failed one is a
+  `language_offer_failed` line, and the accepted message still goes through without an offer;
 * with `AGENT_KEEP_REFUSALS`, a refused message's text and verdict go into the
   session's bounded refusal ring (`services.RefusalStore`), which only the feedback
   bundle shows; the attribution line never carries the text.
@@ -116,13 +116,13 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
-from ..language import DEFAULT_LANGUAGE
+from ..language import offer
 from ..language_detect import mismatch
 from ..models import JudgeUnavailable, JudgeVerdict
 from ..output_guard import MAX_MESSAGE_CHARS, reply_length, reply_too_long, sanitize
 from ..policy import fence, fixed_replies, refusal, refusals, scope_rubric
 from ..services import KeptRefusal, get_services
-from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
+from ..session_state import SPEC_ID, offered_delta, read_session
 from ..settings import get_settings
 from .budget import book_response
 from .ledger import RequestLedger, attribution, budget_allows, day_refusal, finish_name, judge_budget_tokens, ledger_for
@@ -142,9 +142,6 @@ MAX_USER_CONTEXT_CHARS = 1_500
 """The earlier user turns the judge sees: the last three, 500 characters each, 1,500 in all (about 400 tokens)."""
 ROOT_AGENT = "anyplot"
 USER_AUTHOR = "user"
-MIN_ENGLISH_DETECTION_WORDS = 3
-"""An `en` verdict records the session language only for a message of at least this many words:
-the judge also answers `en` for a message without a clear language, such as `sin x`."""
 HALT_AUTHOR = "model"
 """ADK's author of the event a `before_run_callback` halt emits: the fixed refusal or the outage text."""
 PASTE_NOTE_PASSES = frozenset({"needs_data", "out_of_scope"})
@@ -391,7 +388,8 @@ class ScopeGuardPlugin(BasePlugin):
         ledger.book_judge(verdict.input_tokens, verdict.output_tokens, verdict.tokens)
         ledger.budget_tokens += weighted
         services.usage.add_tokens(user, weighted)
-        ledger.lang = verdict.lang
+        # `ledger.lang` stays the session language's: a refusal follows the session, never the message, so a German
+        # message in an English session gets the English refusal, as every reply there is English.
         strikes = services.usage.add_strike(user, text) if verdict.verdict == "attack" else None
         attribution(
             "scope_guard",
@@ -422,53 +420,56 @@ class ScopeGuardPlugin(BasePlugin):
                 )
             code = refusal_code(verdict.verdict)
             shown = code
-            text_out = refusal(code, verdict.lang)
+            text_out = refusal(code, ledger.lang)
             counted = counted_codes(settings.other_library_counts)
             if code in counted:
                 count = scope_refusals(invocation_context.session.events, counted) + 1
                 if count >= settings.session_refusals:
                     shown = SESSION_CLOSED  # the route refuses every later turn of the session before the judge
-                    text_out = refusal(SESSION_CLOSED, verdict.lang)
+                    text_out = refusal(SESSION_CLOSED, ledger.lang)
                     attribution("scope_guard", ledger, verdict=SESSION_CLOSED, refusals=count)
                 elif settings.session_close_warning and count == settings.session_refusals - 1:
                     # The live test of 2026-10-14 closed a session without warning: the refusal before the closing
                     # one says so, in a fixed suffix of the same language.
-                    text_out = f"{text_out} {refusal(CLOSE_WARNING, verdict.lang)}"
+                    text_out = f"{text_out} {refusal(CLOSE_WARNING, ledger.lang)}"
                     attribution("scope_guard", ledger, verdict=CLOSE_WARNING, refusals=count)
             ledger.refuse(shown, text_out)
             return _withheld(code)
-        await self._detect(invocation_context, ledger, verdict, text)
+        await self._offer(invocation_context, ledger, verdict, text)
         return None
 
     @staticmethod
-    async def _detect(
+    async def _offer(
         invocation_context: InvocationContext, ledger: RequestLedger, verdict: JudgeVerdict, text: str
     ) -> bool:
-        """The session's first in-scope typed message sets the session language, once (`detected`).
+        """An in-scope typed message in another language than the session's makes the page offer it, once.
 
-        Called only for an accepted message, after the judge's attribution line, so the
-        attack strike and the refusal never depend on it. Never raises: the message is
-        already accepted and booked, so a failed state write (a DELETE racing the turn, a
-        store outage) is a log line, not a refusal. ADK applies the delta to the session's
-        state in place, so the root's session block of this very turn names the language.
+        Called only for an accepted message, after the judge's attribution line, so the attack
+        strike and the refusal never depend on it. It records the language as offered and keeps
+        the offer on the ledger for the turn's `done`; the session language stays as it is. Never
+        raises: the message is already accepted and booked, so a failed state write (a DELETE
+        racing the turn, a store outage) is a log line and no offer, never a refusal.
         """
         session = invocation_context.session
-        if session.state.get(LANGUAGE_SOURCE) in ("detected", "chosen"):
-            return False
-        if verdict.lang == DEFAULT_LANGUAGE and len(text.split()) < MIN_ENGLISH_DETECTION_WORDS:
-            return False  # "English or unclear": the next typed message gets its chance
-        event = Event(
-            invocation_id=invocation_context.invocation_id,
-            author=USER_AUTHOR,
-            actions=EventActions(state_delta=language_delta(verdict.lang, "detected")),
-        )
         try:
+            view = read_session(session.state)
+            if view is None:
+                return False
+            found = offer(view.language, view.language_source, view.language_offered, verdict.lang, len(text.split()))
+            if found is None:
+                return False
+            event = Event(
+                invocation_id=invocation_context.invocation_id,
+                author=USER_AUTHOR,
+                actions=EventActions(state_delta=offered_delta(view.language_offered, found)),
+            )
             await invocation_context.session_service.append_event(session=session, event=event)
         except Exception as exc:
-            logger.warning("language detection failed: %s", type(exc).__name__)
-            attribution("scope_guard", ledger, verdict="language_write_failed")
+            logger.warning("language offer failed: %s", type(exc).__name__)
+            attribution("scope_guard", ledger, verdict="language_offer_failed")
             return False
-        attribution("scope_guard", ledger, verdict="language_detected", lang=verdict.lang)
+        ledger.language_offer = (found, "message")
+        attribution("scope_guard", ledger, verdict="language_offer", lang=found, basis="message")
         return True
 
     async def on_event_callback(self, *, invocation_context: InvocationContext, event: Event) -> Event | None:
