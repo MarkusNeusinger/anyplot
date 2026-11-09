@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -12,6 +12,7 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.ticker import FuncFormatter
 
 
 # Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
@@ -47,7 +48,8 @@ mixtures = {
 }
 frames = []
 for endpoint, components in mixtures.items():
-    times = np.concatenate([np.random.exponential(scale=s, size=int(n_points * f)) for s, f in components])
+    # Every request pays a ~5 ms network round trip before the exponential service time
+    times = 5 + np.concatenate([np.random.exponential(scale=s, size=int(n_points * f)) for s, f in components])
     frames.append(pd.DataFrame({ENDPOINT: endpoint, RESPONSE_TIME: times}))
 df = pd.concat(frames, ignore_index=True)
 
@@ -92,7 +94,10 @@ ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 ax.set_xlabel(ENDPOINT, fontsize=10, color=INK)
 ax.set_ylabel(RESPONSE_TIME, fontsize=10, color=INK)
 ax.set_xticks(positions, names)
-ax.set_ylim(bottom=min(0, df[RESPONSE_TIME].min()))
+# Log value axis spreads the right-skewed lower tail; a linear axis would crush it into slivers near 0
+if df[RESPONSE_TIME].min() > 0:
+    ax.set_yscale("log")
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.tick_params(axis="x", length=0)
 ax.spines["top"].set_visible(False)
@@ -121,7 +126,9 @@ handles.append(
         label="Outliers",
     )
 )
-leg = ax.legend(handles=handles, loc="upper left", fontsize=8, title="Letter values", title_fontsize=8)
+leg = ax.legend(
+    handles=handles, loc="center left", bbox_to_anchor=(1.01, 0.5), fontsize=8, title="Letter values", title_fontsize=8
+)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
