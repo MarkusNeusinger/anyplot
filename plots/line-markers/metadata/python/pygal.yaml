@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-markers
 created: '2025-12-30T10:38:14Z'
-updated: '2026-11-09T12:41:03Z'
+updated: '2026-11-09T12:46:57Z'
 generated_by: claude-opus
 workflow_run: 42618042050
 issue: 2599
@@ -12,59 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - 'Each series gets its own marker style through pygal''s per-value `node` style
-    overrides: filled dots for Sensor A, hollow rings for Sensor B and dashed rings
-    for Sensor C. Together with the Imprint colors the three series stay distinct.'
-  - Markers are sized for 12 sparse points (r=15 against a 5 px line), so every observation
-    stands out from its line without the markers taking over the chart.
-  - 'Theme tokens reach the title, axis titles, tick labels and legend text. All text
-    reads cleanly on #FAF8F1 and #1A1A17, and the data colors are the same in both
-    renders.'
-  - 'Native interactivity in the HTML output: value_formatter gives one-decimal tooltips
-    for each point.'
+  - Each series gets its own marker shape and fill treatment (filled circle, hollow
+    square, filled triangle), as the Notes ask, so the series can be told apart by
+    shape and fill as well as by color
+  - Uses pygal's add_xml_filter hook to redraw both the data dots and the legend boxes
+    as each series' shape, so the legend glyphs match the marks exactly in both themes
+  - Filled markers carry a page-colored outline and hollow markers a page-colored
+    fill, so every marker stands clear of its line and of crossing lines
+  - Theme tokens are wired through a single Style object; chrome flips cleanly between
+    light and dark while the Imprint data colors stay identical
+  - The HTML output keeps pygal's native hover tooltips, with values formatted to
+    one decimal place by value_formatter
   weaknesses:
-  - 'VQ-07 (both): the y-guide grid lines are drawn near-black (#111110 in light,
-    #010101 in dark) instead of the theme ink at about 15 % opacity. On #1A1A17 they
-    are almost invisible (dark on dark), and on #FAF8F1 they stand out more than a
-    subtle grid should → rgba(26,26,23,0.15) light / rgba(240,239,232,0.15) dark.
-    Likely cause: Style() sets no guide_stroke_color / major_guide_stroke_color, so
-    pygal falls back to its default dark guide stroke.'
-  - 'SC-02 (both): all three series use circle markers that differ only in fill and
-    outline (filled, ring, dashed ring). The Notes and the spec''s characteristic
-    bullet ask for a different marker shape per series → give each series its own
-    shape (for example circle, square, triangle) and keep the filled/unfilled treatment
-    as an extra distinction. Likely cause: pygal Line dots are circles only; a custom
-    marker needs the per-value node/SVG override (or a Style/CSS change), not just
-    stroke and fill.'
-  - 'VQ-03 (both): the legend shows solid color squares for every series, so it does
-    not show the hollow and dashed-ring treatments that tell Sensor B and C apart
-    on the chart → the legend glyphs should match each series'' marker treatment.
-    Likely cause: pygal draws legend boxes from the series color only; the per-value
-    node styles never reach the legend.'
-  - 'DQ-02 (both): the series are labelled ''Sensor A'', ''Sensor B'', ''Sensor C'',
-    which reads as generic → name concrete sensors or sites (for example ''Greenhouse'',
-    ''Warehouse'', ''Rooftop''). Likely cause: the SENSORS label list.'
-  - 'Suggestion: the legend spreads over three wide columns far below the ''Month''
-    title. A tighter legend set closer to the plot would close the empty band at the
-    bottom.'
+  - 'DQ-02 (both): the Greenhouse series peaks in April (27.3 °C) and bottoms out
+    in Sep–Nov (about 15 °C), which is out of phase with any greenhouse season and
+    reads as a generic sine wave → shift the seasonal phase so the warm peak falls
+    in Jun–Aug. Likely cause: sin(x_values * np.pi / 6) peaks at x = 3 (Apr).'
+  - 'Suggestion: drop or mute the y-axis line pygal draws at the Jan position, which
+    runs through the first markers.'
+  - 'Suggestion: narrow the bottom legend so its three entries sit closer together
+    under the plot instead of spread across the full width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: title "line-markers · python · pygal · anyplot.ai" centered at top (~40% width); y-axis title "Temperature (°C)", x-axis title "Month"; y ticks 13.0–27.0, x ticks Jan–Dec; legend at bottom with three color squares (Sensor A/B/C). All text is dark ink and readable. Horizontal dotted y-guides are near-black (#111110), stronger than a subtle grid.
-      Data: three lines with a marker on every month. Sensor A in #009E73 with filled dots, Sensor B in #C475FD with hollow rings, Sensor C in #4467A3 with dashed rings. Sensor A peaks at about 27.3 in Apr and falls to about 15 in Sep; Sensor B dips to about 12.3 in Aug; Sensor C rises to about 25.3 in Nov. A and B coincide near Oct.
+      Background: warm off-white #FAF8F1 across the canvas and plot area.
+      Chrome: title "line-markers · python · pygal · anyplot.ai" centered at the top (~42% of the width), y-axis title "Temperature (°C)", x-axis title "Month", month tick labels Jan–Dec and y tick labels 13.0–27.0, all dark ink and clearly readable; dashed horizontal grid subtle; legend at the bottom in three columns.
+      Data: three series of 12 monthly points each. Greenhouse is #009E73 with filled circles, Warehouse is #C475FD with hollow squares, Server Room is #4467A3 with filled triangles. Every marker sits on its value, the lines cross several times, and the Greenhouse circle and Warehouse square touch in Oct (permitted).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, tick labels and legend text in light ink, all readable, no dark-on-dark text. The dotted y-guides are drawn near-black (#010101) and almost vanish on the dark surface.
-      Data: line and marker colors identical to the light render (#009E73, #C475FD, #4467A3); the inner fills of the rings follow the page color. Brand green stays clearly visible.
-      Legibility verdict: PASS (text). The grid is nearly invisible: chrome defect, not a text defect.
+      Chrome: title, axis titles, tick labels and legend text are light ink (#F0EFE8) and fully readable; grid subtle but visible; no dark-on-dark text.
+      Data: the same marker colors, shapes and fills as the light render; the hollow squares are filled with the dark page color. Brand green reads well, and the blue triangles are still clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -72,34 +57,34 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 66, axis titles and ticks 44; all text readable in both themes
-          and at thumbnail size
+        comment: Explicit font sizes (title 66, labels 44); every text element readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the A/B coincidence at Oct is permitted by the
-          spec
+        comment: No text collisions; the Oct marker contact where series cross is
+          permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Markers well sized for 12 sparse points, but legend squares do not
-          show the ring/dashed marker treatments (defect line)
+        passed: true
+        comment: 12 sparse points per series with prominent ~38 px markers on 5 px
+          lines; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue Imprint colors plus fill treatment; CVD-safe
+        comment: Green/purple/blue plus distinct shapes and fills; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; balanced axis titles; nothing cut off
+        comment: 3200x1800, balanced proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,35 +93,36 @@ review:
         comment: Temperature (°C) with units; Month
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Imprint order correct, backgrounds correct; grid guides near-black
-          instead of 15% theme ink, nearly invisible in dark (defect line)
+        passed: true
+        comment: 'Imprint palette in canonical order starting #009E73; correct theme
+          backgrounds'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Style-guide baseline; nothing beyond it
+        passed: true
+        comment: Style-guide baseline typography and palette, nothing beyond
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Y-only grid and removed x-guides meet the grid rule, nothing beyond
+        passed: true
+        comment: Page-colored halos on filled markers and page-filled hollow markers
+          keep the markers clear of crossing lines; round line caps and joins
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; no focal point chosen beyond the Notes
+        comment: Data displayed with no chosen focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,26 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line plot with markers on every point
+        comment: Line plot with markers at every point
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Markers visible and proportional; filled vs unfilled used; but no
-          different marker shapes per series as the Notes ask (defect line)
+        passed: true
+        comment: Visible markers, a different shape per series, marker size in proportion
+          to the line, filled vs unfilled distinction
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their values, x in month order, all data in range
+        comment: Markers centered on their values, no nudging; the axis shows all
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend labels match series
+        comment: Correct mandated title; legend labels are the site names
     data_quality:
       score: 14
       max: 15
@@ -173,21 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three series, crossings, sparse points where each marker matters
+        comment: Three series that cross, with filled and hollow markers
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
-        passed: false
-        comment: Monthly temperature readings are plausible and neutral, but 'Sensor
-          A/B/C' labels read as generic (defect line)
+        passed: true
+        comment: Site temperatures are plausible, but the Greenhouse seasonal phase
+          peaks in April (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12-27 °C monthly readings with seasonal sine plus noise; sensible;
-          no Check values in spec
+        comment: Indoor temperatures of 12–27 °C are sensible; the spec has no Check
+          values
     code_quality:
       score: 10
       max: 10
@@ -197,7 +184,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Linear zones; the only function is the xml-filter callback that pygal's
+          add_xml_filter API requires
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,43 +203,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; marker styles as a constant table
+        comment: pygal has no per-series marker shapes; the filter is the minimal
+          route
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html, current pygal 3 API
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Style object for all tokens, stroke_style dict with round caps/joins,
-          value_formatter, legend_at_bottom_columns
+        passed: true
+        comment: Style object, legend_at_bottom_columns, value_formatter, stroke_style
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Per-value node dicts (style, r) for per-series marker treatments,
-          a pygal-specific override; native HTML tooltips
-  verdict: REJECTED
+        passed: true
+        comment: add_xml_filter SVG post-processing for custom marker shapes and legend
+          glyphs; native HTML tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T12:38:07Z'
+  rendered_at: '2026-11-09T12:44:11Z'
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - custom-markers
+  - custom-legend
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - theme-adaptive
   - edge-highlighting
