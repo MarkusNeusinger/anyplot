@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: violin-box
 created: '2025-12-30T11:26:52Z'
-updated: '2026-11-09T07:52:07Z'
+updated: '2026-11-09T07:59:20Z'
 generated_by: claude-opus
 workflow_run: 42581069129
 issue: 2646
@@ -12,47 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/python/bokeh/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Mirrored KDE violins with a narrow box (±0.08 of the category spacing) centred
-    inside each one; the violin shape stays visible on both sides of every box in
-    both themes
-  - Violins built natively on bokeh's categorical offset coordinates ((method, offset)
-    tuples) for patch, quad and segment, so each glyph sits exactly on its category
-    without a numeric x workaround
-  - Tails end one bandwidth past each group's data range and the shared value axis
-    is not forced to zero, so the four groups compare directly
-  - 'Data covers the plot type''s range: a symmetric group, a tight group with outliers
-    at both ends, a wide group and a bimodal group whose second mode shows clearly
-    in the violin'
-  - Box outline, median and whiskers use the INK / INK_SOFT tokens, so they flip correctly
-    and stand out against the violin fill in both renders; outliers are hollow page-coloured
-    circles at their true values
+  - Violins are drawn in nested categorical-offset coordinates ((method, offset) tuples),
+    the native bokeh way to place a shape around a factor without a numeric x axis
+  - The box (alpha 0.9) is layered over the translucent violin (alpha 0.6) with an
+    ink outline and a thick ink median, so the box, median and whiskers stand out
+    against the violin fill in both themes
+  - 'The data shows four contrasting shapes, the case a violin-box plot exists for:
+    symmetric (Lecture), outliers at both ends (Flipped Classroom), wide spread (Self-Study)
+    and bimodal (Peer Tutoring), on a 0-100 score scale'
+  - Outliers come from the 1.5 x IQR whisker rule and are drawn at their values as
+    hollow page-colored circles with an ink outline, readable in both themes
+  - Theme tokens are applied to every chrome element; only the y grid is kept, at
+    alpha 0.10, and the x grid is removed on the categorical axis
   weaknesses:
-  - 'DQ-02 (both): the groups are labelled "Method A" … "Method D", which reads as
-    an abstract placeholder → name real study methods (for example Lecture, Flipped
-    Classroom, Self-Study, Peer Tutoring). Likely cause: the STUDY_METHOD label list.'
-  - 'DQ-03 (both): test scores reach about 101.5 (Method A) and 109 (Method B) on
-    what is otherwise a 0–100 score scale → keep every value at or below 100 (−9 at
-    the top). Likely cause: unclipped np.random.normal draws for method_a and method_b.'
-  - 'Suggestion: the four-line density loop (lines 121–124) could be scipy.stats.gaussian_kde(values,
-    bw_method=bandwidth / values.std(ddof=1)) evaluated on y_grid.'
-  - 'Suggestion: a HoverTool on the outlier and box glyphs would show the exact quartiles
-    and outlier values in the HTML view.'
-  - 'Suggestion: the legend swatches show only the first group''s green; a neutral
-    swatch would describe the encoding for all four groups.'
+  - 'CQ-04 (code): the Gaussian KDE is written out by hand (Silverman bandwidth plus
+    a per-point exp loop, the bandwidth and density lines of the violin loop) → `scipy.stats.gaussian_kde(values)(y_grid)`,
+    with the same tail grid. Likely cause: a hand-rolled density loop instead of the
+    available SciPy call.'
+  - 'SC-04 (both): the element legend draws its ''Distribution (KDE)'' and ''IQR (Q1–Q3)''
+    swatches in Lecture''s #009E73, so the key reads as if it described only the first
+    group, while the purple, blue and ochre violins have no matching glyph → glyphs
+    that do not belong to one group (for example neutral INK_SOFT proxy renderers),
+    or no legend, since the axis already names the groups. Likely cause: LegendItem
+    renderers=[violin_renderer] / [box_renderer] taken from the first loop iteration.'
+  - 'Suggestion: cut the violin tails at the 0–100 score bounds, so Self-Study and
+    Flipped Classroom do not show density above 100 points.'
+  - 'Suggestion: a slightly smaller outlier marker in the dense Peer Tutoring cluster
+    near 49–53 points would keep the stacked circles apart.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across plot and border; legend box on the elevated #FFFDF6 surface with a soft outline.
-      Chrome: bold title "violin-box · python · bokeh · anyplot.ai" top-left (~43 % of width), italic axis titles "Study Method" / "Test Score", tick labels 20–100 and Method A–D in dark grey; only horizontal grid lines, very subtle. All text readable.
-      Data: four violins in Imprint order — #009E73 (Method A), #C475FD (B), #4467A3 (C), #BD8233 (D) at 0.6 alpha with same-colour outlines; narrow box (denser fill, dark outline), thick dark median line, thin grey whiskers with caps; hollow outlier circles (A: ~40, ~94.5, ~101.5; B: 48, 52, ~109; C: ~16; D: a cluster ~49–53 and 38/40/42). Method D's bimodal shape (main mode ~80, second ~55) is clear. Legend at right: Distribution (KDE), IQR (Q1–Q3), Median, Outliers.
+      Background: warm off-white #FAF8F1 on the canvas and the plot area; legend box in the elevated #FFFDF6 with a thin INK_SOFT border, placed outside the plot on the right.
+      Chrome: bold dark title "violin-box · python · bokeh · anyplot.ai" (about 44 % of the width), italic axis titles "Test Score" (y) and "Study Method" (x), dark-grey tick labels 20–100 and four category names; a faint horizontal grid only. All text is readable.
+      Data: four violins in Imprint order — Lecture #009E73 (first), Flipped Classroom #C475FD, Self-Study #4467A3, Peer Tutoring #BD8233 — at alpha 0.6, each with a narrow, more opaque box from Q1 to Q3 with a black outline, a thick black median line, grey whiskers with caps, and hollow outlier circles at their values. Peer Tutoring is clearly bimodal (about 80 and 55); Self-Study is wide, with a tail down to about 11; tails reach about 103–105 at the top.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; legend box on #242420.
-      Chrome: title and axis titles in near-white, ticks in light grey; grid subtle but visible; no dark-on-dark text anywhere.
-      Data: violin, box and outlier colours identical to the light render (violins look deeper on the dark surface due to alpha); box outlines, medians and whiskers flip to light ink and stand out clearly against the fills.
+      Background: warm near-black #1A1A17; legend box in #242420 with a light border.
+      Chrome: title and axis titles in light #F0EFE8, ticks and legend text in #B8B7B0; the grid is subtle but visible. No dark-on-dark text anywhere.
+      Data: the same four palette colors as in the light render (they read darker over the dark page because of the alpha); box outlines and median lines flip to light ink, whiskers to light grey, outlier circles have a dark fill and a light outline. Brand green #009E73 is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,72 +64,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (50/42/34 pt), readable in both themes and at thumbnail
-          size
+        comment: Title 50pt, axis titles 42pt, ticks and legend 34pt; readable in
+          both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend sits outside the data area
+        comment: No text collisions; outlier circles stay distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, medians, whiskers and outliers visible against the violin
-          fills in both themes; legend glyphs visible
+        comment: Violins, boxes, medians, whiskers and outliers all clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Groups are separated by position as well as colour; Imprint colours
-          CVD-safe
+        comment: Imprint hues with outlines; groups are also named on the axis
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing clipped
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Readable axis titles 'Study Method' / 'Test Score'
+        comment: '''Test Score'' and ''Study Method'' are reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint order with #009E73 first; correct page backgrounds in both
-          themes'
+        comment: 'First group #009E73, canonical Imprint order, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: true
-        comment: Style-guide baseline
+        passed: false
+        comment: Layered alpha (violin 0.6 vs box 0.9) with an ink box outline and
+          a heavier median gives a clear element hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Vertical grid dropped for the categorical axis and a two-level alpha
-          (0.6 violin / 0.9 box) layering chosen for this chart
+        passed: false
+        comment: 'Grid density chosen for the chart: x grid removed on the categorical
+          axis, y grid only at alpha 0.10'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: true
-        comment: Data displayed, no focal hierarchy chosen beyond the Notes
+        passed: false
+        comment: Four contrasting distribution shapes (symmetric, outliers, wide,
+          bimodal) guide the comparison
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,28 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Violin with embedded box plot
+        comment: Mirrored violin with a centered embedded box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Centred box, median, quartiles, whiskers, outliers; all four 'A good
-          version shows' bullets met
+        comment: Box centered, median, quartiles, whiskers, KDE visible around a narrow
+          box, outliers at their values; shared value axis not forced to zero; tails
+          end one bandwidth past the data
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Outliers at their values; shared axis not forced to zero
+        comment: Marks at their data values; all data on the axis
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Mandated title; legend entries readable
+        passed: false
+        comment: Title correct; the element legend's swatches use only Lecture's green
+          (defect line)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -166,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Symmetric, tight, wide and bimodal groups with outliers
+        comment: Skew, bimodality, a wide spread and outliers at both ends
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Groups labelled Method A–D read as placeholders (defect line)
+        comment: Test scores by teaching method, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Checked the y axis: scores reach ~101.5 and ~109 on a 0–100 scale
-          (defect line); quartiles computed with np.percentile'
+        comment: Scores 0-100, clipped to the scale; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,46 +203,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Hand-written KDE is a four-line loop, a suggestion only
+        passed: false
+        comment: Hand-rolled Gaussian KDE where scipy.stats.gaussian_kde is available
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium, Bokeh 3 API
+        comment: plot-{THEME}.png and .html via Selenium as the library prompt prescribes
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Categorical offset coordinates (factor, offset) for patch/quad/segment;
-          explicit Legend/LegendItem model
+        passed: false
+        comment: Nested categorical offsets ((factor, offset) tuples) for patch, quad
+          and segment coordinates; ColumnDataSource for the outliers
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        comment: Explicit Legend model with LegendItems assembled from renderers and
+          placed outside the frame via add_layout(..., 'right')
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T07:49:12Z'
+  rendered_at: '2026-11-09T07:56:16Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - custom-legend
   - layer-composition
+  - custom-legend
+  - patches
   - html-export
   patterns:
   - data-generation
@@ -248,7 +253,7 @@ impl_tags:
   - columndatasource
   dataprep:
   - kde
-  - statistical-summary
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
