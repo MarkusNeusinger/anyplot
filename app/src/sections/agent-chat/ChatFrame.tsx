@@ -8,21 +8,26 @@
  *
  * The section is the chat's landmark ("Chat") and takes a dropped file anywhere on it, which
  * becomes the message box's attachment (`useChatAttachment.ts`); the opening, ineligible and
- * error states render in the same frame without one. The tab label is decoration and hidden
- * from screen readers, since the section's name says what it is.
+ * error states render in the same frame without one. The tab label's path is decoration and
+ * hidden from screen readers, since the section's name says what it is; the mood the page puts
+ * after it (`● quiet`, `LoadMood.tsx`) is an element of its own beside it, a status region.
  *
  * The status line is the plot button's description (`STATUS_LINE_ID`); it changes with every
  * step line, so it is no live region itself. The hidden polite region beside it (`StepStatus`)
- * reads out the step when it changes, and that a paste is being read. At its end stand the
- * actions besides the step's own: `.stop()`, `.start_over()` and `.feedback()`.
+ * reads out the step when it changes, and that a paste is being read. While a plot is drawn the
+ * line counts its time (`drawing your plot · 0:42 · usually 1–3 min`): the clock is hidden from
+ * screen readers, so the description never reads it. At its end stand the actions besides the
+ * step's own: `.stop()`, `.start_over()` and `.feedback()`.
  */
 
 import { useLayoutEffect, useRef } from 'react';
 
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { START_OVER_HELP } from 'src/sections/agent-chat/messages';
+import { RunClock } from 'src/sections/agent-chat/RunClock';
 import {
   STATUS_LINE_ID,
   type StatusLineText,
@@ -33,6 +38,7 @@ import {
   frameRuleSx,
   frameSx,
   labelSx,
+  PHONE_QUERY,
   statusActionSx,
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
@@ -44,6 +50,8 @@ export const FRAME_TAB = '~/anyplot.ai/agent';
 export interface ChatFrameProps {
   /** The header row: the spec's title, the library and the language, and the admin's `⋯`. */
   header: React.ReactNode;
+  /** After the tab label's path on the top border: the service's mood (`LoadMood`), or nothing. */
+  mood?: React.ReactNode;
   children: React.ReactNode;
   /** A file dragged over the chat and dropped on it; left out while no session is open. */
   onDragEnter?: (event: React.DragEvent) => void;
@@ -52,7 +60,7 @@ export interface ChatFrameProps {
   onDrop?: (event: React.DragEvent) => void;
 }
 
-export function ChatFrame({ header, children, ...drop }: ChatFrameProps) {
+export function ChatFrame({ header, mood = null, children, ...drop }: ChatFrameProps) {
   return (
     <Box
       component="section"
@@ -60,9 +68,10 @@ export function ChatFrame({ header, children, ...drop }: ChatFrameProps) {
       {...drop}
       sx={{ ...frameSx, display: 'flex', flexDirection: 'column', gap: CHAT_SECTION_GAP }}
     >
+      {/* One label on the top border: the path, hidden from screen readers, and the mood after it,
+          which a screen reader reads as a status of its own. */}
       <Box
-        aria-hidden
-        data-testid="chat-frame-tab"
+        data-testid="chat-frame-label"
         sx={{
           ...labelSx,
           position: 'absolute',
@@ -76,7 +85,10 @@ export function ChatFrame({ header, children, ...drop }: ChatFrameProps) {
           whiteSpace: 'nowrap',
         }}
       >
-        {FRAME_TAB}
+        <span aria-hidden data-testid="chat-frame-tab">
+          {FRAME_TAB}
+        </span>
+        {mood}
       </Box>
       {header}
       <FrameRule />
@@ -134,6 +146,9 @@ export function StatusLine({
   focusAfterStop,
 }: StatusLineProps) {
   const actions = stop || startOver || onFeedback;
+  // Read at the first render, so a phone never shows the long words first.
+  const narrow = useMediaQuery(PHONE_QUERY, { noSsr: true });
+  const run = line.run;
   return (
     <>
       <Box
@@ -161,7 +176,17 @@ export function StatusLine({
           <Box component="span" aria-hidden sx={{ color: colors.primary }}>
             {'>>> '}
           </Box>
-          {line.text}
+          {run ? (
+            // While a plot is drawn: its words, its clock (hidden from the description) and how
+            // long a plot usually takes; on a phone `drawing · 0:42 · usually 1–3 min`.
+            <>
+              {`${line.head} · ${narrow ? run.short : run.words}`}
+              {run.clockFrom !== null && <RunClock from={run.clockFrom} prefix=" · " />}
+              {run.tail ? ` · ${run.tail}` : ''}
+            </>
+          ) : (
+            line.text
+          )}
         </Box>
         {actions && (
           <Box

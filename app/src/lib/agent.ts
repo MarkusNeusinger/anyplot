@@ -132,6 +132,82 @@ export interface AgentStatus {
   enabled: boolean;
 }
 
+/** The day caps the agents service counts users at (`ledger.LIMIT_KINDS`). */
+export const LIMIT_KINDS = [
+  'tokens',
+  'runs',
+  'data_runs',
+  'messages',
+  'pastes',
+  'conversions',
+  'locked_out',
+] as const;
+
+/**
+ * The answer of the admin lane's `GET /budget`, the agents service's usage book of the day:
+ * counts and times only. The debug page's "today" line and the chat's admin meters read it.
+ */
+export interface AgentBudget {
+  since: string;
+  started_at: string;
+  resets_at: string;
+  paused: boolean;
+  tokens: number;
+  budget_tokens: number;
+  usd: number | null;
+  budget_usd: number | null;
+  users: number;
+  users_at_limit: number;
+  limits: Record<string, number>;
+}
+
+const count = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+
+const amount = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+
+const instant = (value: unknown): string | null =>
+  typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
+
+/** A record of counts under `keys`, 0 for a key it lacks or holds no count under. */
+export const countsOf = (value: unknown, keys: readonly string[]): Record<string, number> => {
+  const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  return Object.fromEntries(keys.map(key => [key, count(record[key])]));
+};
+
+/** `/budget`'s answer as the page reads it; `null` for one without its times. */
+export function readBudget(body: unknown): AgentBudget | null {
+  if (!body || typeof body !== 'object') return null;
+  const record = body as Record<string, unknown>;
+  const since = instant(record.since);
+  const started = instant(record.started_at);
+  const resets = instant(record.resets_at);
+  if (!since || !started || !resets) return null;
+  return {
+    since,
+    started_at: started,
+    resets_at: resets,
+    paused: record.paused === true,
+    tokens: count(record.tokens),
+    budget_tokens: count(record.budget_tokens),
+    usd: amount(record.usd),
+    budget_usd: amount(record.budget_usd),
+    users: count(record.users),
+    users_at_limit: count(record.users_at_limit),
+    limits: countsOf(record.limits, LIMIT_KINDS),
+  };
+}
+
+/**
+ * The share of the day budget spent, in whole percent: the weighted tokens against their budget,
+ * which the service's day pause is measured on (`ledger.py`). `null` without a budget. The one
+ * share both the debug page and the chat's admin meter show, so they never disagree.
+ */
+export function budgetShare(budget: AgentBudget): number | null {
+  return budget.budget_tokens > 0 ? Math.round((budget.tokens / budget.budget_tokens) * 100) : null;
+}
+
 export interface Eligibility {
   eligible: boolean;
   status: string;
@@ -289,12 +365,21 @@ export interface Binding {
 }
 
 /**
- * How the session language was set: `default` (nobody yet, English), `pasted`
- * (the notes or the column names of a paste before any typed message),
- * `detected` (the session's first typed message), `chosen` (the header's chip
- * or a request in the chat). Only `chosen` is final.
+ * How the session language was set: `default` (nobody yet, English), `chosen` (the header's
+ * chip or a request in the chat, final: no language is offered after it), `offer` (the user
+ * took the thread's offer of a language found in a message or a paste).
  */
-export type LanguageSource = 'default' | 'pasted' | 'detected' | 'chosen';
+export type LanguageSource = 'default' | 'chosen' | 'offer';
+
+/**
+ * A language the server offers, found in a typed message (`message`) or in a paste's notes or
+ * column names (`data`): the thread shows it once, with `.switch()`; ignored, nothing changes.
+ */
+export interface LanguageOffer {
+  /** The stored form: a code for a known language (`de`), any other as the judge named it. */
+  language: string;
+  basis: 'message' | 'data';
+}
 
 /**
  * The session language: the assistant's replies and every text in the plot.
@@ -414,10 +499,16 @@ export interface DatasetParsed {
    */
   original_version?: number;
   /**
-   * The paste's answer only: the session language after it, which a paste
-   * before any typed message or choice sets from the language of its notes or
-   * column names (`pasted`). Read it through `plotLanguage`; absent from an
-   * older server.
+   * The paste's answer only: the data replaces data, and a column a binding of the replaced
+   * data used is not in it. The page then shows the remembered decisions, which every next
+   * plot still applies, on the new data's chapter line with `.forget_all()`; only the user
+   * clears them. Read as true only when it is `true`; absent from an older server.
+   */
+  columns_changed?: unknown;
+  /**
+   * The paste's answer only: the session language, with `offer` when the notes or the
+   * column names are in another language the page has not been offered yet. Read it
+   * through `plotLanguage` and `languageOffer`; absent from an older server.
    */
   language?: unknown;
 }
@@ -595,6 +686,11 @@ export interface PlotResult {
    * is unknown then, never empty. A session without memory sends two empty lists.
    */
   memory?: VersionMemory;
+  /**
+   * Only on the plot of "plot the new data" (`plot_new_data`): where it started, which the card's
+   * label names. Absent for every other plot, from an older server, and for an unknown value.
+   */
+  new_data?: NewDataBase;
 }
 
 export interface ThemeRendered {
@@ -831,17 +927,38 @@ export function caseListQuery(query: CaseListQuery): string {
  * The page's own chat turns: `summarize_data` asks the assistant for the step-1
  * summary of the stored data, `example_data` for example data to try the plot
  * (`.example_data()`, before any data), `create_plot` starts step 2 (the fresh
- * plot from the catalogue code, also `.start_over()`), and `carry_plot` makes
+ * plot from the catalogue code, also `.start_over()`), `carry_plot` makes
  * the plot in the library the user switched to, with the plot memory's
- * decisions. None of them passes the scope judge, so none sets the session
- * language, which the first typed message does: `.example_data()` as typed
- * words would keep a German visitor in English.
+ * decisions, and `plot_new_data` is "plot the new data" after a data change or
+ * a paste, which the server starts from the latest plot when the data comes
+ * from its paste with its bindings, else from the catalogue code (the plot's
+ * `new_data` says which). None of them passes the scope judge, so none sets the
+ * session language, which the first typed message does: `.example_data()` as
+ * typed words would keep a German visitor in English.
  */
-export type TurnAction = 'create_plot' | 'carry_plot' | 'summarize_data' | 'example_data';
+export type TurnAction =
+  'create_plot' | 'carry_plot' | 'plot_new_data' | 'summarize_data' | 'example_data';
 
 /** Whether a turn of this kind is a plot run from the start: its path shows up front, it has no in-progress line. */
-export const isPlotAction = (kind: string): boolean =>
-  kind === 'create_plot' || kind === 'carry_plot';
+export const isPlotAction = (
+  kind: string
+): kind is 'create_plot' | 'carry_plot' | 'plot_new_data' =>
+  kind === 'create_plot' || kind === 'carry_plot' || kind === 'plot_new_data';
+
+/**
+ * Where "plot the new data" started (the plot's `new_data`): `previous`, the library's latest
+ * version, or why it started from the catalogue plot instead.
+ */
+export type NewDataBase =
+  'previous' | 'other_paste' | 'other_data' | 'bindings_changed' | 'kept_note' | 'no_plot';
+const NEW_DATA_BASES: ReadonlySet<string> = new Set<NewDataBase>([
+  'previous',
+  'other_paste',
+  'other_data',
+  'bindings_changed',
+  'kept_note',
+  'no_plot',
+]);
 
 /** The body of `POST .../messages`: the user's words or one of the page's actions. */
 export type TurnBody = { text: string } | { action: TurnAction };
@@ -1260,6 +1377,17 @@ export function attachmentFilename(header: string | null): string | null {
 
 export const agentApi = {
   status: (token: string) => agentJson<AgentStatus>('/status', token),
+  /**
+   * The day's usage book (`GET /budget`), the admin meters' share; the admin lane only, since the
+   * public lane has no such route: a call with `PUBLIC_LANE` rejects without a request. An answer
+   * without its times rejects too.
+   */
+  budget: async (token: string): Promise<AgentBudget> => {
+    if (laneOf(token) === 'public') throw new AgentApiError(404, 'not_found');
+    const budget = readBudget(await agentJson<unknown>('/budget', token));
+    if (!budget) throw new AgentApiError(502, 'upstream');
+    return budget;
+  },
   eligibility: (token: string, spec: string, library: string, signal?: AbortSignal) =>
     agentJson<Eligibility>(
       `/eligibility?spec=${encodeURIComponent(spec)}&library=${encodeURIComponent(library)}`,
@@ -1424,20 +1552,35 @@ export const agentApi = {
       body: JSON.stringify(bindings),
     }),
   /**
-   * The chat header's chip: the session language with the source `chosen`, which
-   * detection never overrides. Answers the stored form (`English` comes back as
-   * `en`); an answer the page cannot read falls back to the value as sent.
-   * `409 run_active` while a turn or a render runs, `422 invalid` for a value
-   * outside `LANGUAGE_PATTERN`. On a session with data the answer also carries
-   * `suggestion`, the `.to_long()` offer with its new column names in the new
-   * language (or `null`), so the data panel's card follows the language.
+   * A pick of the session language: the chat header's chip (source `chosen`, which ends
+   * every offer), or with `via` `offer` the `.switch()` of an offer line (source `offer`).
+   * Answers the stored form (`English` comes back as `en`); an answer the page cannot
+   * read falls back to the value as sent. `409 run_active` while a turn or a render
+   * runs, `422 invalid` for a value outside `LANGUAGE_PATTERN`. On a session with data
+   * the answer also carries `suggestion`, the `.to_long()` offer with its new column
+   * names in the new language (or `null`), so the data panel's card follows the language.
+   * The chip sends no `via`: a server from before the field refuses an unknown key with
+   * `422`, and an offer's pick then goes once more without it, as the chip's would.
    */
-  setLanguage: async (token: string, sid: string, language: string): Promise<LanguageAnswer> => {
-    const answer = await agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
-      method: 'PUT',
-      body: JSON.stringify({ language }),
-    });
-    const applied = plotLanguage(answer) ?? { language, source: 'chosen' as const };
+  setLanguage: async (
+    token: string,
+    sid: string,
+    language: string,
+    via?: 'offer'
+  ): Promise<LanguageAnswer> => {
+    const put = (body: Record<string, string>) =>
+      agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+    const answer = await (via ? put({ language, via }) : put({ language })).catch(
+      (err: unknown) => {
+        if (via && err instanceof AgentApiError && err.status === 422) return put({ language });
+        throw err;
+      }
+    );
+    const sent: LanguageSource = via === 'offer' ? 'offer' : 'chosen';
+    const applied = plotLanguage(answer) ?? { language, source: sent };
     return isRecord(answer) && 'suggestion' in answer
       ? { ...applied, suggestion: longSuggestion(answer.suggestion) }
       : applied;
@@ -1662,6 +1805,11 @@ export type AgentEvent =
       type: 'step';
       step: PipelineStep;
       attempt: number | null;
+      /**
+       * The most rounds the run may make (`max_attempts`, the service's `AGENT_MAX_ATTEMPTS`), so
+       * the page counts `try 2 of 2` from the server; `null` from a server without it.
+       */
+      maxAttempts: number | null;
       /** On `repairing`: how the round before it ended. */
       previous: Round | null;
     }
@@ -1687,11 +1835,16 @@ export type AgentEvent =
        */
       dataset: DatasetChanged | null;
       /**
-       * The session language after the run (the first typed message or the
-       * assistant's `set_language` may have set it); `null` when the server sent
-       * none (a refused turn, a gone session, an older server).
+       * The session language after the run (the assistant's `set_language` may
+       * have set it); `null` when the server sent none (a refused turn, a gone
+       * session, an older server).
        */
       language: PlotLanguage | null;
+      /**
+       * The language the server offers for the turn's typed message (`language.offer`),
+       * or `null` for none: never after a pick, and never the session's own.
+       */
+      languageOffer: LanguageOffer | null;
       /**
        * The `.to_long()` offer after the run, its new column names in the
        * session language, which the turn may have changed: `null` for none,
@@ -1775,20 +1928,37 @@ function bindingList(value: unknown): Binding[] | null {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
 
-const LANGUAGE_SOURCES = new Set<string>(['default', 'pasted', 'detected', 'chosen']);
+const LANGUAGE_SOURCES = new Set<string>(['default', 'chosen', 'offer']);
+/** The sources a server from before the offer sends (`pasted`, `detected`, its detection): nobody's pick. */
+const LEGACY_SOURCES = new Set<string>(['pasted', 'detected']);
 
 /**
  * The session language of a `done` event, the dataset route's or the language
  * route's answer, or `null`: an object whose `language` matches
- * `LANGUAGE_PATTERN` and whose `source` is one of the four. The chip shows it
- * as it comes, so anything else is dropped whole.
+ * `LANGUAGE_PATTERN` and whose `source` is one of the three (a legacy one reads
+ * as `default`, nobody's pick). The chip shows it as it comes, so anything else
+ * is dropped whole.
  */
 export function plotLanguage(value: unknown): PlotLanguage | null {
   if (!isRecord(value)) return null;
   const { language, source } = value;
   if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;
-  if (typeof source !== 'string' || !LANGUAGE_SOURCES.has(source)) return null;
+  if (typeof source !== 'string') return null;
+  if (LEGACY_SOURCES.has(source)) return { language, source: 'default' };
+  if (!LANGUAGE_SOURCES.has(source)) return null;
   return { language, source: source as LanguageSource };
+}
+
+/**
+ * The offer a session language body carries (`{language, source, offer}`), or `null`: an
+ * `offer` whose `language` matches `LANGUAGE_PATTERN` and whose `basis` is `message` or `data`.
+ */
+export function languageOffer(value: unknown): LanguageOffer | null {
+  if (!isRecord(value) || !isRecord(value.offer)) return null;
+  const { language, basis } = value.offer;
+  if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;
+  if (basis !== 'message' && basis !== 'data') return null;
+  return { language, basis };
 }
 
 /** A switch answer's `target`, or `null` for anything but two non-empty strings. */
@@ -2023,6 +2193,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         type: 'step',
         step: d.step as PipelineStep,
         attempt: isInt(d.attempt) ? d.attempt : null,
+        maxAttempts: isInt(d.max_attempts) && d.max_attempts >= 1 ? d.max_attempts : null,
         previous:
           isInt(d.attempt) && d.attempt > 1
             ? toRound({
@@ -2054,6 +2225,9 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
             ? d.rounds.map(toRound).filter((round): round is Round => round !== null)
             : [],
           ...(memory ? { memory } : {}),
+          ...(typeof d.new_data === 'string' && NEW_DATA_BASES.has(d.new_data)
+            ? { new_data: d.new_data as NewDataBase }
+            : {}),
         },
       };
     }
@@ -2080,6 +2254,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         dataConfirmed: typeof d.data_confirmed === 'boolean' ? d.data_confirmed : null,
         dataset: datasetChanged(d.dataset),
         language: plotLanguage(d.language),
+        languageOffer: languageOffer(d.language),
         ...('suggestion' in d ? { suggestion: longSuggestion(d.suggestion) } : {}),
         switch: chatSwitch(d.switch),
         ...(d.turn !== undefined && d.turn !== null ? { turn: turnOf(d.turn) } : {}),

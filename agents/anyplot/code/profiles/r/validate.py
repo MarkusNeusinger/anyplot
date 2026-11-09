@@ -117,7 +117,7 @@ SECURITY rules (rule ids in parentheses):
 ADAPTATION rules, with the Python profile's ids: exactly one `df <- load_user_data()`
 (`placeholder-count`) and `load_user_data` nowhere else (`placeholder-use`); no random
 draws (`rng`: `rnorm`, `rpois` and the other `r*` draws, `MASS::mvrnorm`; `set.seed`,
-`sample`, `runif` and `jitter` stay allowed for jitter and subsampling); no data from
+`sample`, `runif` and `jitter` stay allowed for jitter, never to sample the rows); no data from
 memory (`literal-data`: a `c(...)` with more than `MAX_LITERAL_NUMBERS` numbers, `data()`,
 a built-in dataset of `DATASETS` read by name; `dataset-package`: `library()` or `pkg::` of
 gapminder or palmerpenguins, owner decision of 2026-10-29); the palette prefix kept

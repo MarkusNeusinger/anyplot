@@ -38,7 +38,10 @@
  * of its turn) is in `answers`. Nothing is read from the text: a trailing `?` makes no question.
  *
  * The remembered decisions stand on one chapter's line (`decisionsAt`): the latest plot chapter's,
- * where the next plot takes them over, and before the first plot the latest chapter's.
+ * where the next plot takes them over, and before the first plot the latest chapter's. After a
+ * paste whose columns are not the ones the latest plot drew (`DataSnapshot.columnsChanged`), the
+ * new data chapter's line holds them until the next plot (`decisionsEarlier`), where the user sees
+ * them before that plot takes them over and can forget them (owner decision of 2026-11-08).
  *
  * Folds: an older data version (a `data_stub`, `FoldedData.tsx`) and every plot card but the
  * latest version's fold to one line; the live data card stays open. A data version's number is
@@ -47,7 +50,8 @@
  */
 
 import type { ChatItem } from 'src/hooks/useAgentSession';
-import { isPlotAction } from 'src/lib/agent';
+import { isPlotAction, type NewDataBase } from 'src/lib/agent';
+import { NEW_DATA_FRESH_LABEL } from 'src/sections/agent-chat/messages';
 
 /** What a chapter is about: the data (step 1) or the plot (step 2). */
 export type ChapterKind = 'data' | 'plot';
@@ -86,6 +90,13 @@ export interface ThreadModel {
   answers: ReadonlySet<number>;
   /** The chapter whose line holds the remembered decisions (`Chapter.index`); 0 without one. */
   decisionsAt: number;
+  /**
+   * The line that holds them is a data chapter after the latest plot whose paste has other
+   * columns than the data that plot drew (`DataSnapshot.columnsChanged`): the decisions came from
+   * the earlier plot, still apply, and the line offers `.forget_all()` (owner decision of
+   * 2026-11-08). The next plot opens a plot chapter, which takes them over as usual.
+   */
+  decisionsEarlier: boolean;
 }
 
 /** The DOM id of a typed turn's bubble, the target of a jump to it (`ChapterLine.tsx`). */
@@ -169,27 +180,37 @@ export function cutRequest(text: string): string {
 /**
  * What each plot version answered, for its card's label (`plot v2 · matplotlib · title in
  * German`), by version: the typed request of the turn that made it, cut to 40 characters;
- * `.start_over()` for a plot that button made; `first plot` for the first plot of its library
- * that no request asked for; else `null`, and the label names the version and the library only.
- * `libraryOf` gives a version's library.
+ * `.start_over()` for a plot that button made; for "plot the new data" where it started
+ * (`newDataOf`, the plot's `new_data`: `new data on v3` from the library's version before it,
+ * `NEW_DATA_FRESH_LABEL` from the catalogue plot); `first plot` for the first plot of its
+ * library that no request asked for; else `null`, and the label names the version and the library
+ * only. `libraryOf` gives a version's library.
  */
 export function plotSummaries(
   items: readonly ChatItem[],
-  libraryOf: (version: number) => string | undefined
+  libraryOf: (version: number) => string | undefined,
+  newDataOf: (version: number) => NewDataBase | undefined = () => undefined
 ): Map<number, string | null> {
   const summaries = new Map<number, string | null>();
-  const plotted = new Set<string>();
+  // The latest version of each library so far: the one "plot the new data" changed.
+  const latestIn = new Map<string, number>();
   for (const turn of turnsOf(items)) {
     const opener = turn[0];
     for (const item of turn) {
       if (item.kind !== 'plot') continue;
       const library = libraryOf(item.version);
+      const before = library !== undefined ? latestIn.get(library) : undefined;
+      const newData = newDataOf(item.version);
       let summary: string | null = null;
       if (opener.kind === 'user') summary = cutRequest(opener.text);
       else if (opener.kind === 'action' && opener.label === START_OVER_LABEL) {
         summary = START_OVER_LABEL;
-      } else if (library !== undefined && !plotted.has(library)) summary = 'first plot';
-      if (library !== undefined) plotted.add(library);
+      } else if (newData === 'previous' && before !== undefined) summary = `new data on v${before}`;
+      else if (newData !== undefined && newData !== 'previous' && newData !== 'no_plot') {
+        // From the catalogue plot: another paste or table, other bindings, or a first-plot note.
+        summary = NEW_DATA_FRESH_LABEL;
+      } else if (library !== undefined && before === undefined) summary = 'first plot';
+      if (library !== undefined) latestIn.set(library, item.version);
       summaries.set(item.version, summary);
     }
   }
@@ -214,6 +235,8 @@ export function threadModel(
   const chapters: Chapter[] = [];
   const rows: ThreadRow[] = [];
   const answers = new Set<number>();
+  // The chapters that hold a paste whose columns are not the ones the plot before it drew.
+  const changed = new Set<number>();
   const latest = latestPlot(items);
   for (const turn of turnsOf(items)) {
     // A turn that shows an error or a refusal is no question, also when a later read of a cut
@@ -249,6 +272,9 @@ export function threadModel(
       ) {
         chapter.dataVersions.push(item.snapshot.n);
       }
+      if ((item.kind === 'data' || item.kind === 'data_stub') && item.snapshot?.columnsChanged) {
+        changed.add(chapter.index);
+      }
       if (item.kind === 'plot') chapter.plotVersions.push(item.version);
       if (item.kind === 'switch') chapter.switches += 1;
       const folded = item.kind === 'data_stub' || (item.kind === 'plot' && item.version < latest);
@@ -259,5 +285,18 @@ export function threadModel(
   // below a newer card, when a table read from text waited meanwhile and `.use()` took it.
   for (const chapter of chapters) chapter.dataVersions.sort((a, b) => a - b);
   const plotAt = [...chapters].reverse().find(chapter => chapter.kind === 'plot')?.index;
-  return { rows, chapters, answers, decisionsAt: plotAt ?? chapters.length };
+  // A paste after the latest plot whose columns are not the ones that plot drew: the new data's
+  // line takes the decisions until the next plot, which they would otherwise reach unseen.
+  const earlierAt =
+    plotAt === undefined ? undefined : chapters.find(c => c.index > plotAt && changed.has(c.index));
+  if (earlierAt) {
+    return { rows, chapters, answers, decisionsAt: earlierAt.index, decisionsEarlier: true };
+  }
+  return {
+    rows,
+    chapters,
+    answers,
+    decisionsAt: plotAt ?? chapters.length,
+    decisionsEarlier: false,
+  };
 }

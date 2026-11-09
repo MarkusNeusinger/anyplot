@@ -2,139 +2,133 @@ library: letsplot
 language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:08:23Z'
-updated: '2026-05-18T23:08:42Z'
-generated_by: claude-sonnet
-workflow_run: 26064537269
+updated: '2026-11-09T08:58:40Z'
+generated_by: claude-opus
+workflow_run: 42587842149
 issue: 3625
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Interactive tooltips using letsplot's layer_tooltips() with city name, population,
-    and region — idiomatic use of the library's strongest feature
-  - Custom continent polygon basemap built with geom_polygon provides geographic context
-    without external geodata dependencies
-  - Proper area-based bubble scaling with scale_size(range=[4,28]) and a well-formatted
-    size legend showing Population (M)
-  - 30 real-world cities across 6 continents with accurate population values; excellent
-    geographic spread and size variation
-  - Good transparency (alpha=0.65) handles bubble overlap, coord_fixed preserves accurate
-    geographic proportions
+  - scale_size_area(max_size=17) maps population to bubble area with zero at zero,
+    so Tokyo (37.4 M) reads as about twice the area of Mexico City (21.8 M), as the
+    Notes ask
+  - 'Bubbles are sorted largest-first so smaller cities sit on top: Osaka stays visible
+    inside Tokyo''s bubble and Rio stays distinct next to Sao Paulo, with alpha 0.65
+    translucency'
+  - The basemap is drawn from theme tokens (LAND, COAST, inland seas in PAGE_BG),
+    so it is clearly quieter than the bubbles in both themes
+  - Separate size and Region legends, with override_aes giving neutral INK_SOFT reference
+    circles at the data alpha and uniform color swatches
+  - Native layer_tooltips with the city name as title plus population and region lines
+    in the HTML output
+  - coord_fixed(ratio=1.55) gives the map a sensible mid-latitude aspect that fills
+    the 16:9 canvas
   weaknesses:
-  - 'Color palette is non-Okabe-Ito: uses [''#306998'', ''#DC2626'', ''#2CA02C'',
-    ''#9467BD'', ''#FFD43B'', ''#17BECF''] — ''#306998'' (Python Blue) is explicitly
-    forbidden; must use OKABE_ITO = [''#009E73'', ''#D55E00'', ''#0072B2'', ''#CC79A7'',
-    ''#E69F00'', ''#56B4E9''] with scale_color_manual(values=OKABE_ITO)'
-  - 'No theme-adaptive Chrome: ANYPLOT_THEME env var is never read; plot_background
-    is hardcoded to ''#F8F8F8'' (should be ''#FAF8F1'' light / ''#1A1A17'' dark);
-    grid color ''#D0D0D0'' is hardcoded; text colors not set from INK/INK_SOFT tokens'
-  - 'Wrong output filenames: saves as ''plot.png'' / ''plot.html'' — must use f''plot-{THEME}.png''
-    and f''plot-{THEME}.html'' where THEME = os.getenv(''ANYPLOT_THEME'', ''light'')'
-  - Title in code is 'World City Populations · bubble-map-geographic · letsplot ·
-    pyplots.ai' — wrong domain ('pyplots.ai' should be 'anyplot.ai') and missing 'python
-    ·' before 'letsplot'
-  - Grid is somewhat heavy — both horizontal and vertical major gridlines at full
-    opacity on the map; a map basemap would benefit from reduced grid opacity or x-axis
-    only gridlines
+  - 'Suggestion: the smallest bubbles (Dubai 3.5 M, Berlin 3.6 M) shrink to dots of
+    a few pixels in the 400 px thumbnail; a slightly larger max_size would keep them
+    more present without breaking area proportionality.'
+  - 'Suggestion: a thin page-colored outline on the bubbles (shape=21 with a fill
+    mapping) would separate the Tokyo/Osaka and Sao Paulo/Rio overlaps more crisply.'
+  - 'Suggestion: the hand-traced coastlines are coarse (the Arabian Peninsula and
+    the Mediterranean are blocky); a finer outline set would make the basemap read
+    more like a map.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Light gray — appears to be around #F8F8F8 (code-set), slightly cool rather than the required warm #FAF8F1; acceptable visually.
-      Chrome: Title "World City Populations · bubble-map-geographic · python · letsplot · anyplot.ai" is bold and clearly readable (dark text on light background). Axis labels "Longitude" and "Latitude" are readable. Tick labels (-180 to 180 longitude, -60 to 80 latitude) are readable at the rendered size. Grid lines are visible but moderately heavy — both horizontal and vertical lines cover the full map area.
-      Data: Continent polygons rendered in light gray (#E5E5E5) provide geographic context. Bubbles are colored by region: Asia appears in green/teal, S. America in orange, N. America in blue, Africa in red, Europe in pink/purple, Oceania in light blue. Sizes span from small dots (~3.5M) to large circles (~37.4M Tokyo). Asian cluster (Tokyo, Delhi, Shanghai, Beijing) dominates with largest bubbles in the eastern portion. Alpha=0.65 handles overlap well. Size legend on right shows "Population (M)" with reference circles at 5, 10, 20, 30. Region legend clearly labeled.
-      Legibility verdict: PASS — all text elements readable against light background.
+      Background: warm off-white #FAF8F1 page and panel; land in a slightly darker beige (#E8E5DA) with thin grey-taupe coastlines; Black and Caspian Seas cut out in the page color.
+      Chrome: title "bubble-map-geographic · python · letsplot · anyplot.ai" top-left in dark ink, about 54 % of the width; axis titles "Longitude (°)" / "Latitude (°)" and ticks (-150..150, -60..60) in dark/soft ink; faint grid lines; two framed legends on the right on an elevated background: "Population (M)" with grey reference circles 10/20/30, and "Region" with six colored dots. All text readable.
+      Data: 30 world cities as translucent bubbles (alpha 0.65), area by population; Asia #009E73 (first series), S. America #C475FD, N. America #4467A3, Africa #BD8233, Europe #AE3030, Oceania #2ABCCD. Largest bubble Tokyo, with Osaka drawn on top; dense cluster over South and East Asia. Smallest bubbles (Dubai, Berlin) are small dots but visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Dark near-black background — appears consistent with ~#1A1A17. Continent polygons render as dark gray/charcoal (letsplot appears to auto-adapt polygon fills). The overall dark render looks properly themed despite the code hardcoding #F8F8F8 for background.
-      Chrome: Title visible with light-colored text against dark background. Axis labels and tick labels appear light-colored and readable. Grid lines visible as subtle lighter lines on dark surface.
-      Data: Bubble colors are identical to the light render — Asia green/teal, S. America orange, N. America blue, Africa red, Europe pink/purple, Oceania light blue. The Okabe-Ito brand green #009E73 is NOT the first series color (code uses non-compliant palette #306998 as first value). Size and region legends visible on dark background.
-      Legibility verdict: PASS — text appears readable in dark render, no dark-on-dark failures visible. However, the code does not implement explicit theme-adaptive Chrome tokens, which is a code quality concern.
+      Background: warm near-black #1A1A17; land in #2A2A26 with muted coastlines, still quieter than the bubbles.
+      Chrome: title, axis titles, ticks and legend text in light ink (#F0EFE8 / #B8B7B0), all clearly readable; no dark-on-dark text; legends framed on #242420.
+      Data: the same six palette colors at the same alpha as the light render; only the chrome and basemap flip. Brand green Asia bubbles stand out well; the Europe red and the N. America blue are darker against the dark land but clearly distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26pt, axis 20pt, ticks 16pt,
-          legend 18/14pt); readable in both renders; missing theme-adaptive color
-          tokens
+        comment: Explicit sizes (title 16, axis 12, ticks 10, legend 10/11); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor bubble overlap in dense Asian cluster (Tokyo/Shanghai/Delhi
-          area); all text readable
+        comment: No text collisions; bubble overlaps (Tokyo/Osaka, Sao Paulo/Rio)
+          are permitted and handled with alpha and draw order
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bubbles clearly visible; good alpha=0.65; range [4,28] spans
-          small to large well
+        comment: Bubbles are prominent for 30 points; the smallest ones are still
+          visible; legend glyphs are visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Non-Okabe-Ito palette includes #DC2626 (red) and #2CA02C (green)
-          which may be confused under deuteranopia'
+        comment: Imprint categorical colors, distinct hues, good contrast against
+          land in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout; coord_fixed with xlim=[-180,180] ylim=[-60,80]
-          shows complete world map; legend well-positioned
+        comment: 3200x1800; the map fills the panel, legends sit at the right, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels Longitude/Latitude; title descriptive (in
-          rendered image)
+        comment: Longitude (°) / Latitude (°) with units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses #306998 (Python Blue — explicitly forbidden); full custom non-Okabe-Ito
-          palette; background hardcoded #F8F8F8 not theme-adaptive #FAF8F1/#1A1A17'
+        passed: true
+        comment: 'First series Asia = #009E73, canonical Imprint order; #FAF8F1 /
+          #1A1A17 backgrounds; theme-correct chrome'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Geographic polygon basemap adds sophistication; clean layout; non-compliant
-          palette limits score
+        comment: Theme-derived land, coast and inland-sea tokens make a cohesive,
+          quiet basemap in both themes; legends on an elevated surface
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: theme_minimal used; minor grid; grid somewhat heavy (full crosshatch
-          on map); no spine removal
+        comment: Inland seas cut in the page color and a coastline weight chosen so
+          the basemap sits below the data
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Size encoding effectively shows global population distribution; region
-          color adds context; viewer naturally notices Asian population dominance
+        passed: false
+        comment: The data is displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,30 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic bubble map with geom_point sized by population
-          value
+        comment: Geographic bubble map with the optional category color
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Size legend, alpha transparency, geographic basemap, tooltips, scale_size
-          for area encoding, minimum size via range start
+        comment: 'Area scaling, size legend, alpha 0.65, coastline basemap, tooltips,
+          smaller bubbles on top, separate category legend: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on x, latitude on y, population as size, region as color;
-          coord_fixed preserves geographic proportions
+        comment: Bubbles sit at their lon/lat; no displacement
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Code title has wrong domain 'pyplots.ai' (should be 'anyplot.ai')
-          and missing 'python ·' before library name; rendered image shows correct
-          title (discrepancy); region legend labels correct
+        comment: Correct title format; legend titles 'Population (M)' and 'Region'
+          are readable
     data_quality:
       score: 15
       max: 15
@@ -175,24 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 30 cities, 6 regions, population range 3.5-37.4M; good size variation,
-          geographic spread across all continents
+        comment: Wide value range (3.5-37.4 M), dense and sparse regions, overlaps,
+          six categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world city populations; neutral geographic data; factually accurate
-          major city locations
+        comment: Real world metro populations, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values in millions, accurate relative sizes; Tokyo as
-          largest (37.4M) is factually correct
+        comment: Plausible metro population values in millions; coordinates checked
+          for Tokyo, NYC, Sydney and Lagos
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -200,61 +190,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → basemap construction → plot → save; no
-          functions/classes'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present; data is fully deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; noqa annotations appropriate for star import
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; continent polygon construction is verbose
-          but necessary; no fake UI
+        comment: The coastline constants are data, not a reimplemented call; the rest
+          is concise
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as 'plot.png'/'plot.html' — must be f'plot-{THEME}.png' / f'plot-{THEME}.html';
-          ANYPLOT_THEME env var never read
+        passed: true
+        comment: Saves plot-{THEME}.png and .html with the current API
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct letsplot grammar (ggplot + geom layers + scales + theme);
-          but missing ANYPLOT_THEME pattern and wrong ggsave filename pattern
+        comment: Grammar layering with scale_size_area, guides(override_aes), coord_fixed
+          with limits
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses layer_tooltips() with .title()/.line() structured format — letsplot-specific
-          interactive feature; geom_polygon basemap layered under geom_point is distinctive
+        passed: false
+        comment: layer_tooltips with .title()/.line() formatting and tooltips='none'
+          on the basemap layers
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T08:55:25Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
+  - grid-styling

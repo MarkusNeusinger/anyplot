@@ -10,7 +10,10 @@ first-plot note (`pipeline.take_pending_request`): it starts from the new librar
 rewrite apply), takes its standing decisions from the memory (or, with an empty memory, from the
 source lineage's requests in `Carry.requests`), renders in the carried theme when the user asked
 for it, and checks the carried texts. A shipped run in the target clears the carry; one that ships
-nothing keeps it for the next.
+nothing keeps it for the next. A new data version (a paste, a change, `.to_long()`, an undo) drops it,
+as it drops the kept first-plot note (owner decision of 2026-11-08): its texts and theme came from a
+plot of the data before. A switch after the data changed carries only the asked theme of such a plot,
+never its texts or requests (`source_plot`).
 
 The switch answer (`SwitchSummary`) says how much would carry and whether the target already
 has a plot. Switching back to a library with an older version would resume a stale lineage,
@@ -54,7 +57,8 @@ def _library(value: str) -> str:
 
 
 CARRY = "anyplot.carry"
-"""The carry of the latest switch (`Carry`), or None; written by the switch route, cleared by a shipped run."""
+"""The carry of the latest switch (`Carry`), or None; written by the switch route, cleared by a shipped run and by
+every new data version (`opening.IngestedDataset.state_delta`, `dataset_versions`)."""
 
 
 class Target(BaseModel):
@@ -110,15 +114,22 @@ class SourcePlot:
     requests: list[str]
 
 
-def source_plot(version: CodeVersion | None) -> SourcePlot | None:
-    """What a carry reads of the source's latest rendered version, or None without one."""
+def source_plot(version: CodeVersion | None, data_version: int | None = None) -> SourcePlot | None:
+    """What a carry reads of the source's latest rendered version, or None without one.
+
+    When the version drew another data version than `data_version`, the session's current one, only its theme
+    carries: its texts and requests were written for that data, and a new data version drops them as it drops a
+    carry made before it, while the theme the user asked for is no fact of the data, as "plot the new data" keeps it
+    too (owner decisions of 2026-11-08). The plot memory, which only the user clears, still carries (`carry_for`).
+    """
     if version is None:
         return None
+    same_data = data_version is None or version.drew(data_version)
     return SourcePlot(
         theme=version.theme,
         theme_asked=version.theme_asked,
-        expected_texts=list(version.expected_texts),
-        requests=list(version.requests),
+        expected_texts=list(version.expected_texts) if same_data else [],
+        requests=list(version.requests) if same_data else [],
     )
 
 

@@ -51,15 +51,33 @@ data is no table of observations (`spec_roles.spec_shape`: a matrix, a network, 
 event dates of an annotated line, a patient's measurements beside the reference curves, a base value); and a column
 filled in at most one row, which is such a single value whatever the spec. The counts are the profile's empty cells
 per column, each exact; no total is claimed, since one row may miss two values.
+
+The rule for a repeated key that reaches a plot run, owner decision of 2026-11-09 (`key_aggregate`): the adapter,
+asked by its prompt to draw every row, still averaged such rows per key in its code (2 of 2 measured runs), so the
+server combines them first, as a data step of its own (`repeated_keys.combine_repeated_key`): the `aggregate` that
+`prepare_data` makes, by the key's columns (`RepeatedKey.columns`, at most `prepare.MAX_KEYS`) of every other bound
+column, stored as the next data version, announced with its counts (`combined_line`) and undone with `.undo()`.
+
+* Which function. A keyed spec draws a measurement per key (a bar's height, a line's value, a cell's colour, a
+  price): `mean`. A spec in `SUM_SPECS` draws parts of a whole or counts that add up (a slice, a stacked segment, a
+  tile, a funnel stage, a Pareto count, a waterfall change): `sum`. A role bound to a column of counts is summed
+  with the rest; `count` never fits, since it counts rows and drops the bound column.
+* When the server combines nothing. A spec in `UNREDUCED_SPECS`, whose measures need several functions (a candle's
+  first, highest, lowest and last price; a zone's minutes beside its bounds; a value beside its goal; an estimate
+  beside its interval, whose averaged bounds bound nothing); a spec with a
+  bound `SEPARATE_ROLES` role, whose list lies beside the rows; a key of more than `prepare.MAX_KEYS` columns; and a
+  bound column besides the key that holds no numbers. The binding warning stands then, and the root offers the step.
 """
 
 import math
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, replace
+from typing import Literal
 
 from core.spec_roles import DataRole, spec_shape
 
 from ..schemas import MAX_CHANGE_CHARS, ColumnProfile
+from .prepare import MAX_AGGREGATE_COLUMNS, MAX_KEYS
 
 
 KEY_ROLES: dict[str, frozenset[str]] = {
@@ -189,6 +207,82 @@ MARK_KINDS: frozenset[str] = frozenset({"numeric", "datetime"})
 """The kinds of a required role whose empty cell leaves a row without its mark (`left_out_line`)."""
 LEFT_OUT_HEAD = "The plot draws no mark where a value is missing: "
 """The server's line in "what changed" for rows without a value to draw, before its counts per role."""
+COMBINED_HEAD = "Rows that share a key were combined in data version "
+"""The server's line in "what changed" for a repeated key it combined before the run, before the version's number."""
+
+SUM_SPECS: frozenset[str] = frozenset(
+    {
+        # Parts of a whole: the slices, rings, tiles and stacked segments of rows that share a key add up.
+        "pie-basic",
+        "donut-basic",
+        "donut-nested",
+        "treemap-basic",
+        "sunburst-basic",
+        "marimekko-basic",
+        "bar-stacked",
+        "bar-stacked-labeled",
+        "bar-stacked-percent",
+        "area-stacked",
+        "area-stacked-percent",
+        "streamgraph-basic",
+        # Counts and amounts per key, and changes that add up to a total.
+        "bar-pareto",
+        "bar-spine",
+        "funnel-basic",
+        "pictogram-basic",
+        "waterfall-basic",
+    }
+)
+"""The keyed specs whose rows that share a key add up to one mark (`key_aggregate`: `sum`); every other one draws a
+measurement per key, and its rows are averaged (`mean`)."""
+
+UNREDUCED_SPECS: frozenset[str] = frozenset(
+    {
+        # Prices: a period's first, highest, lowest and last price take four functions, and the volume a fifth.
+        "candlestick-basic",
+        "candlestick-volume",
+        "ohlc-bar",
+        "indicator-ichimoku",
+        "point-and-figure-basic",
+        # A measure beside a bound, a goal, a total or a scope change of another kind.
+        "bar-heart-rate-zones",
+        "dot-matrix-proportional",
+        "gauge-activity-rings",
+        "burndown-sprint",
+        # An estimate beside its interval or its spread: the mean of the bounds is no bound of the mean.
+        "area-stacked-confidence",
+        "bar-error",
+        "bar-feature-importance",
+        "bar-permutation-importance",
+        "coefficient-confidence",
+        "line-confidence",
+        "point-basic",
+        "range-interval",
+    }
+)
+"""The keyed specs whose measures no single function combines: the server leaves their repeated key to the user's
+data step (`key_aggregate` returns None), and the binding warning stands."""
+
+How = Literal["mean", "sum"]
+
+
+@dataclass(frozen=True)
+class KeyAggregate:
+    """The `aggregate` operation the server makes for a repeated key: its key columns (`by`), value columns and
+    function, and the operation as `prepare_data` takes it (`operation`)."""
+
+    by: tuple[str, ...]
+    values: tuple[str, ...]
+    how: How
+
+    @property
+    def operation(self) -> dict[str, object]:
+        """The operation in `prepare.Aggregate`'s form: `column` for one value column, `columns` for several."""
+        values: dict[str, object] = (
+            {"column": self.values[0]} if len(self.values) == 1 else {"columns": list(self.values)}
+        )
+        return {"op": "aggregate", "by": list(self.by), **values, "how": self.how}
+
 
 Held = tuple[str, DataRole, ColumnProfile]
 """A valid binding: its binding name (`y1` for a family member), its role and its column's profile."""
@@ -343,3 +437,52 @@ def left_out_line(held: Sequence[Held], spec_id: str, roles: Sequence[DataRole],
 
 def _rows(count: int) -> str:
     return "row without" if count == 1 else "rows without"
+
+
+VALUE_DTYPES: frozenset[str] = frozenset({"integer", "number"})
+"""The profile types of the value columns an aggregate of a repeated key averages or sums."""
+
+
+def key_aggregate(held: Sequence[Held], repeated: RepeatedKey, spec_id: str) -> KeyAggregate | None:
+    """The `aggregate` that combines the rows sharing `repeated`'s key, or None when the server combines nothing (the
+    module docstring has the rule): by the key's columns, of every other bound column, each once, in binding order.
+
+    `held` are the valid bindings (`bindings.valid_bindings`), so every bound column the plot reads survives the
+    aggregate under its name and the bindings carry over; the columns nothing binds leave with it, as the aggregate's
+    own change line counts.
+    """
+    if spec_id in UNREDUCED_SPECS or len(repeated.columns) > MAX_KEYS:
+        return None
+    separate = SEPARATE_ROLES.get(spec_id, frozenset())
+    if any(role.name in separate for _, role, _ in held):
+        return None
+    keys = set(repeated.columns)
+    values: list[str] = []
+    for _, _, column in held:
+        if column.name in keys or column.name in values:
+            continue
+        if column.dtype not in VALUE_DTYPES:
+            return None  # a label, a date or a flag beside the key: no function of `mean` and `sum` keeps it
+        values.append(column.name)
+    if not values or len(values) > MAX_AGGREGATE_COLUMNS:
+        return None
+    return KeyAggregate(by=repeated.columns, values=tuple(values), how="sum" if spec_id in SUM_SPECS else "mean")
+
+
+_COMBINED_VERBS: dict[How, str] = {"mean": "averaged", "sum": "summed"}
+
+
+def combined_line(aggregate: KeyAggregate, rows: int, groups: int, version: int) -> str:
+    """The server's change line for a repeated key it combined: `Rows that share a key were combined in data version
+    2: averaged 'Reading' over 27 rows into 9, one per 'Length'`, at most `MAX_CHANGE_CHARS`. The value columns are
+    counted instead of named when there are more than two or their names would not fit; key names too long to fit
+    end in `…`, so the counts and the version always stand."""
+    verb = _COMBINED_VERBS[aggregate.how]
+    by = " and ".join(f"'{name}'" for name in aggregate.by)
+    named = " and ".join(f"'{name}'" for name in aggregate.values)
+    counted = f"{len(aggregate.values)} column{'s' if len(aggregate.values) != 1 else ''}"
+    for values in ([named] if len(aggregate.values) <= 2 else []) + [counted]:
+        line = f"{COMBINED_HEAD}{version}: {verb} {values} over {rows:,} rows into {groups:,}, one per {by}"
+        if len(line) <= MAX_CHANGE_CHARS:
+            return line
+    return line[: MAX_CHANGE_CHARS - 1] + "…"

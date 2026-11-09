@@ -72,6 +72,7 @@ from .session_state import (
     CatalogueSnapshot,
     SessionView,
 )
+from .switch import CARRY
 
 
 MAX_DATASET_HISTORY = 5
@@ -376,11 +377,14 @@ def undo_version(
 
 
 def _delta(dataset_id: str, bindings: list[Binding], history: list[str], version: int) -> dict[str, Any]:
-    """The state of a new current version; a kept plot note (`PENDING_REQUEST`) was written for the data before it."""
+    """The state of a new current version; a kept plot note (`PENDING_REQUEST`) and a switch's carry (`CARRY`, the
+    texts, theme and requests of a plot of the data before it) were written for the data before it, so both go
+    (owner decision of 2026-11-08: the carry drops with every new data version, as the note does)."""
     return {
         DATASET_ID: dataset_id,
         BINDINGS: [binding.model_dump() for binding in bindings],
         DATASET_HISTORY: history,
         DATASET_VERSION: version,
         **PENDING_CLEARED,
+        CARRY: None,
     }

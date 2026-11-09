@@ -17,6 +17,19 @@
       "column": "Test Score"
     }
   ],
+  "before_operations": [
+    [
+      {
+        "op": "aggregate",
+        "by": [
+          "Subject",
+          "Grade Level"
+        ],
+        "column": "Test Score",
+        "how": "mean"
+      }
+    ]
+  ],
   "expected": "accepted",
   "tags": [
     "bar",

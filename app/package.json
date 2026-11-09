@@ -47,7 +47,7 @@
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
     "@vitejs/plugin-react-swc": "^4.3.3",
-    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/coverage-v8": "^5.1.0",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-perfectionist": "^5.13.0",
@@ -61,6 +61,6 @@
     "vite": "8.3.5",
     "vite-plugin-checker": "^0.14.5",
     "vite-plugin-compression2": "^2.5.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }

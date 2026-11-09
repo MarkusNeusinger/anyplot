@@ -2,52 +2,51 @@ library: seaborn
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:48:14Z'
-updated: '2026-05-11T03:44:46Z'
-generated_by: claude-haiku
-workflow_run: 25648682436
+updated: '2026-11-09T11:06:59Z'
+generated_by: claude-opus
+workflow_run: 42604914730
 issue: 2442
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 86
 review:
   strengths:
-  - Realistic bimodal data effectively demonstrates density histogram value
-  - Clear visual distinction between histogram bars and KDE line through color and
-    form
-  - Proper probability density normalization; area under histogram equals 1
-  - Excellent text legibility in both light and dark themes
-  - Good grid refinement with subtle styling
+  - 'Native seaborn statistics: histplot(stat=''density'') normalizes bar area to
+    1 and kdeplot(cut=0) overlays a density curve on the same scale without manual
+    computation'
+  - Bimodal two-cohort test-score data makes skew, two clusters and thin tails visible
+    at a well-chosen 25 bins
+  - Page-colored bar outlines separate the bins crisply in both themes while keeping
+    the bars contiguous
+  - Theme tokens threaded through set_theme rc; both renders fully legible with identical
+    data colors
   weaknesses:
-  - Histogram uses legacy Python Blue (#306998) instead of brand green (#009E73) -
-    violates Okabe-Ito palette requirement
-  - Code shows 'pyplots.ai' in title but should be 'anyplot.ai'
-  - Code doesn't implement theme-aware pattern (ANYPLOT_THEME environment variable
-    and plot-{THEME}.png output)
+  - 'VQ-06 (both): the y-axis label reads ''Probability Density'' without a unit,
+    although a density''s unit follows from the x axis → ''Probability Density (per
+    point)''. Likely cause: ax.set_ylabel("Probability Density").'
+  - 'Suggestion: the Notes suggest a theoretical PDF; a fitted normal-mixture curve
+    (scipy.stats.norm) would show goodness of fit instead of a second empirical estimate.'
+  - 'Suggestion: list the histogram before the KDE in the legend so its order matches
+    the drawing order.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle borders
-      Chrome: Title "histogram-density · seaborn · anyplot.ai" in dark text, axis labels "Test Score (points)" and "Probability Density" with units, tick labels clearly visible
-      Data: Histogram bars in teal/turquoise with white edges (25 bins), orange KDE line overlay, bimodal distribution with two peaks visible
-      Grid: Subtle dashed lines with alpha=0.3
-      Legend: Upper left, clearly readable with "Density Histogram" and "Kernel Density Estimate (KDE)" labels
-      Legibility verdict: PASS - All elements clearly readable against light background
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title "histogram-density · python · seaborn · anyplot.ai" centered in dark ink (~51% width); x label "Test Score (points)", y label "Probability Density", soft-ink ticks 30-100 and 0.000-0.035; subtle horizontal grid; top/right spines removed; legend upper left on elevated background. All text readable.
+      Data: 25 contiguous #009E73 bars (alpha 0.75, page-colored outlines) rising from zero, bimodal with peaks near 67 and 85 and a dip near 75, thin left tail to ~33; purple #C475FD KDE curve (2.5 lw) on the same density scale, ending at the data range.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with appropriate contrast
-      Chrome: Title text rendered in light color and readable, axis labels and tick labels in light text, all clearly visible on dark surface
-      Data: Histogram bars maintain identical teal color to light render (confirming proper data-color consistency across themes), orange KDE line unchanged
-      Grid: Dashed lines visible with proper contrast on dark surface
-      Legend: Light-colored text, clearly readable, labels identical to light render
-      Legibility verdict: PASS - No dark-on-dark failures. All text and data elements are readable. Theme adaptation working correctly.
-
-    Both renders PASS legibility requirements with identical data colors across themes (only chrome/background adapted).
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis labels in light ink, tick labels in light soft ink, grid subtle, legend on #242420 with light text and outline. No dark-on-dark text.
+      Data: identical green bars and purple KDE to the light render; bar outlines now near-black, keeping bin separation. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,77 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable; font sizes explicitly set (title 24pt, labels
-          20pt, ticks 16pt)
+        comment: Explicit font sizes (title 12, labels 10, ticks/legend 8); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend well-positioned without obscuring
-          data
+        comment: Legend sits upper left over the near-empty low tail; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars and KDE line clearly visible and appropriately sized
-          for data density
+        comment: Bars at alpha 0.75 with page-colored outlines, KDE at 2.5 lw; legend
+          glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between teal and orange; CVD-safe differentiation beyond
-          hue alone
+        comment: Green bars vs purple curve differ in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization; plot fills 60-70% with balanced margins
+        comment: 3200x1800, balanced margins, title about half the width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: x label has units; y label 'Probability Density' carries no unit
+          (defect line)
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Test Score (points)'' and ''Probability
-          Density'''
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: 'Histogram uses #306998 (legacy Python Blue) instead of #009E73 (Okabe-Ito
-          brand green). KDE uses #FFD43B (position 7, acceptable). Backgrounds are
-          correct for both themes. Data colors identical across light/dark.'
+        comment: 'Bars #009E73, curve #C475FD (Imprint 1-2); backgrounds #FAF8F1 /
+          #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults but uses non-compliant color palette (Python
-          official colors vs Okabe-Ito). No distinctive design sophistication or custom
-          palette.
+        passed: true
+        comment: 'Clear weight hierarchy: translucent bars as ground, heavier purple
+          KDE as figure; title in medium weight'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Dashed grid with custom alpha=0.3 shows thoughtful refinement. L-shaped
-          spines acceptable. Whitespace adequate.
+        comment: Page-colored bar outlines give crisp bin separation in both themes;
+          y-only grid behind the bars
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Excellent data choice showing bimodal distribution (two student performance
-          groups). KDE overlay supports interpretation. Clear visual hierarchy on
-          double-peak structure.
+        comment: Bimodal two-cohort data chosen so the overlay makes the two peaks
+          and the dip at ~75 the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram with stat='density' normalization
+        comment: Density histogram with stat='density'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density normalization, KDE overlay, proper probability density display
-          all present
+        comment: Density y axis, area sums to 1, contiguous consistent bins from zero,
+          overlay curve on the same scale in contrasting style with legend, 25 bins
+          fit n=500
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Test Score (continuous), Y-axis: Probability Density. Full
-          data range visible (0-100).'
+        comment: Full data range shown; KDE cut=0 stays within the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Rendered images show correct format 'histogram-density · seaborn
-          · anyplot.ai'. Legend labels correct.
+        comment: Title matches the mandated format; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -166,24 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution demonstrates key density histogram feature.
-          Full distribution spectrum displayed.
+        comment: Skew, two clusters and thin tails all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores with two student groups (average and high performers)
-          is realistic, neutral, and comprehensible
+        comment: Test scores of two performance groups, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Values factually sound: group means (65, 85), spreads (10, 5), sample
-          sizes (300, 200) are proportionally realistic'
+        comment: Scores clipped to 0-100; densities ~0.03 consistent with a ~65-point
+          range (area 1). No Check values in the Notes
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -191,56 +183,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → plot → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: matplotlib.pyplot, numpy, seaborn'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity; no over-engineering
-          or fake functionality
+        comment: Density and KDE computed by seaborn; nothing hand-rolled
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves as 'plot.png' but should save as f'plot-{THEME}.png' with
-          ANYPLOT_THEME environment variable per seaborn.md. Pipeline handles rendering
-          twice, but code doesn't implement pattern.
+        passed: true
+        comment: Saves plot-{THEME}.png without bbox_inches; current 0.13 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Proper seaborn high-level API: sns.histplot with stat=''density'',
-          sns.kdeplot overlay, matplotlib figure setup is standard'
+        comment: data=df with column constants, histplot(stat='density'), kdeplot(cut=0),
+          despine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: Uses sns.kdeplot() which is seaborn-specific, but this is standard
-          usage rather than creative or advanced application of library capabilities
+        passed: true
+        comment: Uses seaborn's built-in density normalization and KDE estimation
+          (cut=0) instead of manual computation
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T11:03:47Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
@@ -249,4 +242,5 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling

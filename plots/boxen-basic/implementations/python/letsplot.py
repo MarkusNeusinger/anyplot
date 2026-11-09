@@ -1,7 +1,7 @@
 """ anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-17
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-09
 """
 
 import os
@@ -11,6 +11,8 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
+    element_line,
     element_rect,
     element_text,
     geom_point,
@@ -22,6 +24,7 @@ from lets_plot import (
     labs,
     scale_fill_manual,
     scale_x_continuous,
+    scale_y_log10,
     theme,
     theme_minimal,
 )
@@ -36,127 +39,118 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Generate realistic response times for different server endpoints
+# Imprint palette; the quantile levels are ordered, so they take steps of imprint_seq
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
+
+# Constants
+MAX_LEVELS = 6  # deepest letter value drawn, however large the sample
+MAX_TINT = 0.6  # the deepest level mixes this share of white into its ramp step
+MIN_LEVELS = 2
+BOX_HALF_WIDTH = 0.4  # half width of the quartile box, in category units
+WIDTH_DECAY = 0.85  # each deeper level is this share of the previous width
+X_MIN, X_MAX, Y_MIN, Y_MAX = "x_min", "x_max", "y_min", "y_max"
+X_POS, X_END, Y_POS = "x", "xend", "y"
+LEVEL = "Quantile Range"
+
+# Columns: set these to your table's column names
+ENDPOINT = "Server Endpoint"  # role: category
+RESPONSE_TIME = "Response Time (ms)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("response_times.csv")
 np.random.seed(42)
-endpoints = ["API Gateway", "Auth Service", "Database", "Cache Layer"]
 n_per_group = 2000
-
-data = []
 distributions = {
-    "API Gateway": {"base": 45, "scale": 20, "skew": 0.5},
-    "Auth Service": {"base": 80, "scale": 35, "skew": 0.8},
-    "Database": {"base": 120, "scale": 50, "skew": 1.2},
-    "Cache Layer": {"base": 8, "scale": 5, "skew": 0.3},
+    "API Gateway": {"base": 45, "scale": 20},
+    "Auth Service": {"base": 80, "scale": 35},
+    "Database": {"base": 120, "scale": 50},
+    "Cache Layer": {"base": 8, "scale": 5},
 }
-
-for endpoint in endpoints:
-    d = distributions[endpoint]
+frames = []
+for endpoint, d in distributions.items():
     values = np.random.exponential(d["scale"], n_per_group) + d["base"]
     slow_idx = np.random.choice(n_per_group, size=int(n_per_group * 0.05), replace=False)
     values[slow_idx] = values[slow_idx] * np.random.uniform(2, 5, len(slow_idx))
-    data.extend([(endpoint, v) for v in values])
+    frames.append(pd.DataFrame({ENDPOINT: endpoint, RESPONSE_TIME: values}))
+df = pd.concat(frames, ignore_index=True)
 
-df = pd.DataFrame(data, columns=["endpoint", "response_time"])
+# Plot: reads only df and the constants above
+clean = df.dropna(subset=[ENDPOINT, RESPONSE_TIME])
+groups = list(clean[ENDPOINT].unique())
 
-# Letter value names and colors for legend (deepest at bottom for intuitive ordering)
-level_names = ["50%", "75%", "87.5%", "93.75%", "96.875%", "98.4%", "99.2%", "99.6%"]
-level_colors = ["#306998", "#4A7FA8", "#6490B8", "#7EA1C8", "#98B2D8", "#B2C3E8", "#CCD4F8", "#E6E5FF"]
+box_rows, median_rows, outlier_rows = [], [], []
+n_levels = 0
+for x_pos, group in enumerate(groups):
+    values = np.sort(clean.loc[clean[ENDPOINT] == group, RESPONSE_TIME].to_numpy(dtype=float))
+    k = int(np.clip(int(np.log2(len(values))) - 1, MIN_LEVELS, MAX_LEVELS))
+    n_levels = max(n_levels, k)
 
-# Compute letter values and construct plot data inline
-box_data = []
-median_data = []
-outlier_data = []
-max_k = 0
-
-x_positions = {endpoint: i for i, endpoint in enumerate(endpoints)}
-
-for endpoint in endpoints:
-    group_data = df[df["endpoint"] == endpoint]["response_time"].values
-    sorted_vals = np.sort(group_data)
-    n = len(sorted_vals)
-
-    # Number of letter values based on data size
-    k = int(np.log2(n)) - 1
-    k = max(2, min(k, 8))
-    max_k = max(max_k, k)
-
-    x_pos = x_positions[endpoint]
-
-    # Calculate letter values and build boxes
+    # Letter values: level i spans the quantiles 0.5**(i + 2) and 1 - 0.5**(i + 2)
     for i in range(k):
-        depth = 0.5 ** (i + 1)
-        lower_q = depth
-        upper_q = 1 - depth
-
-        lower_val = np.percentile(sorted_vals, lower_q * 100)
-        upper_val = np.percentile(sorted_vals, upper_q * 100)
-
-        half_width = 0.4 * (0.85**i)
-        box_data.append(
+        depth = 0.5 ** (i + 2)
+        half_width = BOX_HALF_WIDTH * WIDTH_DECAY**i
+        box_rows.append(
             {
-                "x_min": x_pos - half_width,
-                "x_max": x_pos + half_width,
-                "y_min": lower_val,
-                "y_max": upper_val,
-                "level": level_names[i],
-                "endpoint": endpoint,
+                X_MIN: x_pos - half_width,
+                X_MAX: x_pos + half_width,
+                Y_MIN: np.quantile(values, depth),
+                Y_MAX: np.quantile(values, 1 - depth),
+                LEVEL: i,
             }
         )
 
-    # Calculate median line
-    median = np.median(sorted_vals)
-    median_data.append({"x": x_pos - 0.38, "xend": x_pos + 0.38, "y": median, "endpoint": endpoint})
+    median_rows.append({X_POS: x_pos - BOX_HALF_WIDTH, X_END: x_pos + BOX_HALF_WIDTH, Y_POS: np.median(values)})
 
-    # Calculate outliers beyond deepest letter value
-    deepest_depth = 0.5**k
-    deepest_lower = np.percentile(sorted_vals, deepest_depth * 100)
-    deepest_upper = np.percentile(sorted_vals, (1 - deepest_depth) * 100)
-    outliers = sorted_vals[(sorted_vals < deepest_lower) | (sorted_vals > deepest_upper)]
+    deepest = 0.5 ** (k + 1)
+    low, high = np.quantile(values, deepest), np.quantile(values, 1 - deepest)
+    outlier_rows.extend({X_POS: x_pos, Y_POS: v} for v in values[(values < low) | (values > high)])
 
-    for o in outliers:
-        outlier_data.append({"x": x_pos, "y": o, "endpoint": endpoint})
+# Level names give the share of observations each box spans; colors step along imprint_seq
+# and lighten toward the tails, so neighbouring levels differ in hue and in shade
+level_names = [f"{100 * (1 - 0.5 ** (i + 1)):.4g}%" for i in range(n_levels)]
+start, end = (np.array([int(c[j : j + 2], 16) for j in (1, 3, 5)]) for c in IMPRINT_SEQ)
+steps = np.linspace(0, 1, n_levels) if n_levels > 1 else np.zeros(1)
+level_colors = [
+    "#{:02X}{:02X}{:02X}".format(
+        *np.round((start + t * (end - start)) * (1 - MAX_TINT * t) + 255 * MAX_TINT * t).astype(int)
+    )
+    for t in steps
+]
 
-box_df = pd.DataFrame(box_data)
-median_df = pd.DataFrame(median_data)
-outlier_df = pd.DataFrame(outlier_data) if outlier_data else pd.DataFrame(columns=["x", "y", "endpoint"])
+# Deepest (narrowest, tallest) boxes first, so each wider inner box stays on top
+box_df = pd.DataFrame(box_rows).sort_values(LEVEL, ascending=False, kind="stable")
+box_df[LEVEL] = box_df[LEVEL].map(dict(enumerate(level_names)))
+median_df = pd.DataFrame(median_rows)
+outlier_df = pd.DataFrame(outlier_rows, columns=[X_POS, Y_POS])
 
-# Plot
 plot = (
     ggplot()
-    + geom_rect(
-        aes(xmin="x_min", xmax="x_max", ymin="y_min", ymax="y_max", fill="level"),
-        data=box_df,
-        alpha=0.9,
-        color=INK_SOFT,
-        size=0.5,
-    )
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="y"), data=median_df, color="#FFD43B", size=3)
-    + scale_fill_manual(
-        values=dict(zip(level_names[:max_k], level_colors[:max_k], strict=False)), name="Quantile Range"
-    )
-    + scale_x_continuous(breaks=[0, 1, 2, 3], labels=endpoints)
-    + labs(x="Server Endpoint", y="Response Time (ms)", title="boxen-basic · letsplot · anyplot.ai")
+    + geom_rect(aes(xmin=X_MIN, xmax=X_MAX, ymin=Y_MIN, ymax=Y_MAX, fill=LEVEL), data=box_df, color=INK_SOFT, size=0.4)
+    + geom_segment(aes(x=X_POS, xend=X_END, y=Y_POS, yend=Y_POS), data=median_df, color=INK, size=1.2)
+    + scale_fill_manual(values=dict(zip(level_names, level_colors, strict=True)), breaks=level_names, name=LEVEL)
+    + scale_x_continuous(breaks=list(range(len(groups))), labels=groups)
+    + scale_y_log10()
+    + labs(x=ENDPOINT, y=RESPONSE_TIME, title="boxen-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major=element_rect(color="transparent"),
-        panel_grid_minor=element_rect(color="transparent"),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        axis_line=element_text(color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
+        panel_grid_major=element_blank(),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Add outliers if present
 if not outlier_df.empty:
-    plot = plot + geom_point(aes(x="x", y="y"), data=outlier_df, color="#DC2626", size=2, alpha=0.6)
+    plot = plot + geom_point(aes(x=X_POS, y=Y_POS), data=outlier_df, color=INK_SOFT, size=1.8, alpha=0.6)
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

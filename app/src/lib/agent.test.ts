@@ -7,6 +7,7 @@ import {
   ANONYMOUS_ID_KEY,
   anonymousId,
   browserLocale,
+  budgetShare,
   caseListQuery,
   codeArtifact,
   convertAnswer,
@@ -14,6 +15,7 @@ import {
   hasPage,
   isPlotAction,
   laneOf,
+  languageOffer,
   longSuggestion,
   parseAgentEvent,
   plotMemory,
@@ -21,6 +23,7 @@ import {
   PUBLIC_LANE,
   publicLaneOpen,
   publicRoute,
+  readBudget,
   renderedThemes,
   sizeBucket,
   switchCarry,
@@ -48,8 +51,21 @@ describe('parseAgentEvent', () => {
       type: 'step',
       step: 'repairing',
       attempt: 2,
+      maxAttempts: null,
       previous: null,
     });
+  });
+
+  it("reads the run's round cap from a step, never a cap that is no count", () => {
+    const cap = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('status', { step: 'adapting', attempt: 1, max_attempts: value })
+      );
+      return event?.type === 'step' ? event.maxAttempts : 'none';
+    };
+    expect(cap(2)).toBe(2);
+    expect(cap(3)).toBe(3);
+    for (const wrong of [0, -1, 1.5, '2', null]) expect(cap(wrong)).toBeNull();
   });
 
   it('reads how the round before a repair ended, and drops an outcome it does not know', () => {
@@ -194,6 +210,7 @@ describe('parseAgentEvent', () => {
       dataConfirmed: null,
       dataset: null,
       language: null,
+      languageOffer: null,
       switch: null,
     });
   });
@@ -242,6 +259,28 @@ describe('parseAgentEvent', () => {
     ).toMatchObject({ result: expect.not.objectContaining({ memory: expect.anything() }) });
   });
 
+  it('reads where "plot the new data" started, and no field for any other value', () => {
+    const base = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('plot', { status: 'ok', attempts: 1, artifacts: [], version: 2, new_data: value })
+      );
+      return event?.type === 'plot' ? event.result.new_data : 'not a plot';
+    };
+    for (const value of [
+      'previous',
+      'other_paste',
+      'other_data',
+      'bindings_changed',
+      'kept_note',
+      'no_plot',
+    ]) {
+      expect(base(value)).toBe(value);
+    }
+    expect(base('renamed')).toBeUndefined();
+    expect(base(null)).toBeUndefined();
+    expect(base(undefined)).toBeUndefined();
+  });
+
   it("reads done's switch the user asked for in the chat, and drops one the page cannot make", () => {
     const done = (value: unknown) => parseAgentEvent(raw('done', { switch: value }));
     expect(done({ library: 'seaborn', plot: true })).toMatchObject({
@@ -281,6 +320,7 @@ describe('parseAgentEvent', () => {
       dataConfirmed: false,
       dataset: null,
       language: null,
+      languageOffer: null,
       switch: null,
     });
     expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
@@ -294,9 +334,9 @@ describe('parseAgentEvent', () => {
       const event = parseAgentEvent(raw('done', { llm_calls: 1, language: value }));
       return event?.type === 'done' ? event.language : 'not done';
     };
-    expect(language({ language: 'de', source: 'detected' })).toEqual({
+    expect(language({ language: 'de', source: 'offer' })).toEqual({
       language: 'de',
-      source: 'detected',
+      source: 'offer',
     });
     expect(language({ language: 'Klingon', source: 'chosen', extra: 1 })).toEqual({
       language: 'Klingon',
@@ -306,9 +346,14 @@ describe('parseAgentEvent', () => {
       language: 'en',
       source: 'default',
     });
+    // An older server's detection: its sources read as nobody's pick.
     expect(language({ language: 'de', source: 'pasted' })).toEqual({
       language: 'de',
-      source: 'pasted',
+      source: 'default',
+    });
+    expect(language({ language: 'de', source: 'detected' })).toEqual({
+      language: 'de',
+      source: 'default',
     });
     // The chip shows the value as it comes: anything else is dropped whole.
     expect(language({ language: 'a/b', source: 'chosen' })).toBeNull();
@@ -319,6 +364,29 @@ describe('parseAgentEvent', () => {
     expect(language('de')).toBeNull();
     expect(language(['de', 'chosen'])).toBeNull();
     expect(language(undefined)).toBeNull();
+  });
+
+  it("reads done's language offer, and drops one outside the pattern or the bases", () => {
+    const offer = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('done', { language: { language: 'en', source: 'default', offer: value } })
+      );
+      return event?.type === 'done' ? event.languageOffer : 'not done';
+    };
+    expect(offer({ language: 'de', basis: 'message' })).toEqual({
+      language: 'de',
+      basis: 'message',
+    });
+    expect(offer({ language: 'sv', basis: 'data', extra: 1 })).toEqual({
+      language: 'sv',
+      basis: 'data',
+    });
+    expect(offer({ language: 'de', basis: 'guess' })).toBeNull();
+    expect(offer({ language: 'de\nSYSTEM', basis: 'message' })).toBeNull();
+    expect(offer({ basis: 'message' })).toBeNull();
+    expect(offer('de')).toBeNull();
+    expect(offer(undefined)).toBeNull();
+    expect(languageOffer(undefined)).toBeNull();
   });
 
   it('drops a malformed binding list whole and a step state that is not a boolean', () => {
@@ -842,6 +910,31 @@ describe('the public lane', () => {
     });
   });
 
+  it('asks the day budget on the admin lane only, and reads its share once for both views', async () => {
+    const answer = {
+      since: '2026-11-09T00:00:00Z',
+      started_at: '2026-11-08T22:00:00Z',
+      resets_at: '2026-11-10T00:00:00Z',
+      paused: false,
+      tokens: 620_000,
+      budget_tokens: 1_000_000,
+    };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(answer), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    // The public lane has no `/budget`: no request goes.
+    await expect(agentApi.budget(PUBLIC_LANE)).rejects.toMatchObject({ code: 'not_found' });
+    expect(fetchMock).not.toHaveBeenCalled();
+    const budget = await agentApi.budget('');
+    expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toMatch(/\/debug\/agent\/budget$/);
+    expect(budget).toMatchObject({ tokens: 620_000, budget_tokens: 1_000_000, usd: null });
+    expect(budgetShare(budget)).toBe(62);
+    expect(budgetShare({ ...budget, budget_tokens: 0 })).toBeNull();
+    // An answer without its times is no budget.
+    expect(readBudget({ ...answer, since: 'soon' })).toBeNull();
+    fetchMock.mockImplementationOnce(async () => new Response('{}', { status: 200 }));
+    await expect(agentApi.budget('')).rejects.toMatchObject({ code: 'upstream' });
+  });
+
   it('tells the lanes apart by the credential, and no header can carry the public one', () => {
     expect(laneOf(PUBLIC_LANE)).toBe('public');
     expect(laneOf('')).toBe('admin');
@@ -1092,6 +1185,50 @@ describe('agentFetch', () => {
       code: 'run_active',
       ref: 'r-l',
     });
+  });
+
+  it('sends an offer’s pick with via, and once more without it to a server from before the field', async () => {
+    const bodies: unknown[] = [];
+    let strict = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string) as Record<string, string>;
+        bodies.push(body);
+        // A strict body from before `via`: the unknown key is a 422.
+        if (strict && 'via' in body) {
+          return new Response(JSON.stringify({ detail: 'invalid', ref: 'r-v' }), { status: 422 });
+        }
+        return new Response(
+          JSON.stringify({ language: 'de', source: 'via' in body ? 'offer' : 'chosen' }),
+          { status: 200 }
+        );
+      })
+    );
+    await expect(agentApi.setLanguage('', 'S1', 'de', 'offer')).resolves.toEqual({
+      language: 'de',
+      source: 'offer',
+    });
+    expect(bodies).toEqual([{ language: 'de', via: 'offer' }]);
+
+    strict = true;
+    bodies.length = 0;
+    await expect(agentApi.setLanguage('', 'S1', 'de', 'offer')).resolves.toEqual({
+      language: 'de',
+      source: 'chosen',
+    });
+    expect(bodies).toEqual([{ language: 'de', via: 'offer' }, { language: 'de' }]);
+    // The chip's pick never retries: a 422 there is the value's.
+    bodies.length = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        bodies.push(JSON.parse(init.body as string));
+        return new Response(JSON.stringify({ detail: 'invalid', ref: 'r-x' }), { status: 422 });
+      })
+    );
+    await expect(agentApi.setLanguage('', 'S1', 'x/y')).rejects.toMatchObject({ status: 422 });
+    expect(bodies).toHaveLength(1);
   });
 
   it('sends the delete with keepalive when the page goes away', async () => {

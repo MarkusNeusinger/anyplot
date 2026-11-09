@@ -2,47 +2,48 @@ library: plotly
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T10:56:37Z'
-updated: '2026-05-16T01:12:10Z'
-generated_by: claude-haiku
-workflow_run: 25948558128
+updated: '2026-11-09T12:17:10Z'
+generated_by: claude-opus
+workflow_run: 42614636945
 issue: 2997
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Both light and dark renders perfectly readable with proper theme adaptation
-  - Excellent text legibility with explicitly set font sizes across hierarchy
-  - Smart alternating annotation heights prevent overlap
-  - Event markers and vertical lines clearly mark occurrences without obscuring main
-    data
-  - Realistic stock market scenario demonstrates spec effectively
-  - Clean KISS code structure with proper reproducibility
+  - 'All seven events get a dashed vertical line at their own date in the second Imprint
+    color (#C475FD), clearly distinct from the solid #009E73 price line in both themes'
+  - Labels alternate between two heights (0.93 / 0.83 paper) inside a y-range headroom
+    computed from the data, so no label covers the price line or a neighbouring label,
+    and each dashed line ends just below its own label
+  - 'Label boxes use ELEVATED_BG with an event-colored border, threading theme tokens
+    through the annotations so they read cleanly on both #FAF8F1 and #1A1A17'
+  - Diamond markers at each event's intersection with the series show the price on
+    the event day; plotly hovertemplates carry the event name, date and price in the
+    HTML
+  - Mixes data x-coordinates with paper y-coordinates on add_shape/add_annotation,
+    the idiomatic plotly way to anchor event markers independent of the value axis
   weaknesses:
-  - 'Source code shows hardcoded line color #306998 instead of Okabe-Ito #009E73 (palette
-    compliance violation)'
-  - 'Annotation text uses fixed #333333 instead of theme-adaptive INK token'
-  - Code doesn't read ANYPLOT_THEME env var; uses hardcoded template and plot_bgcolor
-  - Output filenames hardcoded as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
-  - Design Excellence is functional but not publication-exceptional
-  - Data storytelling relies mainly on annotations; visual emphasis techniques could
-    strengthen narrative
+  - 'Suggestion: the ''Event'' legend entry shows a wide gap between its diamond and
+    its label; a legend itemwidth or a shorter entry would tighten the key.'
+  - 'Suggestion: event label text at 10 px could go to 11 px for the 400 px thumbnail,
+    the boxes have room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme
-      Chrome: Title, axis labels, tick labels all dark text, clearly readable; grid lines subtle and visible
-      Data: Green/teal stock price line (width 4px) clearly visible; yellow/gold event markers (#FFD43B) and dashed event lines mark 7 events; alternating-height annotation boxes with dark text on yellow background, all readable
-      Legibility verdict: PASS — all elements readable, no dark-on-light or light-on-light issues
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "line-annotated-events · python · plotly · anyplot.ai" centered at ~44 % width in dark ink; axis titles "Date" and "Stock Price (USD)" dark; tick labels (Jan–Nov 2024, 90–120) in soft dark grey; subtle horizontal grid only; left and bottom axis lines; horizontal legend top right ("Stock Price (USD)" green line, "Event" purple diamond). All readable.
+      Data: one solid #009E73 price line over 252 business days (~86–116 USD); seven dashed #C475FD vertical lines at the event dates with purple diamonds where they meet the series; seven white-filled, purple-bordered label boxes (Q4 Earnings, Product Launch, Q1 Earnings, Expansion Announced, Q2 Earnings, Partnership Deal, Q3 Earnings) alternating between two heights in the headroom above the series, no overlaps.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme
-      Chrome: Title, axis labels in light text; tick labels in soft light gray; grid lines subtle at correct opacity; all text clearly readable against dark surface
-      Data: Stock price line is identical green color to light render (correct theme-independence); event markers and dashed lines identical yellow to light render (only chrome adapted, not data colors); annotation text readable in yellow boxes
-      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data colors consistent between themes
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, axis titles in light ink #F0EFE8; tick labels light grey; grid subtle; legend text light grey. No dark-on-dark text.
+      Data: identical colors to the light render (#009E73 line, #C475FD dashed lines and diamonds); label boxes switch to the #242420 elevated surface with light text and the same purple border.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,71 +54,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 40px, labels 36px, ticks 28px;
-          perfectly readable in both renders
+        comment: Explicit font sizes (16/12/10); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; alternating annotation heights prevent conflicts
+        comment: Alternating label heights in reserved headroom; no label touches
+          the line or another label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width optimized, marker size appropriate, all elements clearly
-          visible
+        comment: 2.5 px line suits 252 points; dashed event lines visible but lighter
+          than the data line; legend glyphs match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; green and yellow are CVD-safe and distinguishable
+        comment: Green vs purple plus solid vs dashed; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend well-positioned
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Stock Price USD, Date)
+        comment: Date / Stock Price (USD) with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Rendered output shows Okabe-Ito green for primary line; yellow event
-          markers; correct theme backgrounds; readable text both themes
+        comment: 'First series #009E73, events Imprint position 2; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Professional clean styling; yellow event indicators provide hierarchy;
-          alternating labels thoughtful but design functional not exceptional
+        passed: true
+        comment: Elevated-surface label boxes with event-colored borders form a consistent
+          annotation style beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Good grid styling, clean layout, refined spines; could push further
-          for publication polish
+        passed: true
+        comment: Data-derived headroom band for labels, dashed lines terminating just
+          below their label, vertical grid dropped so event lines own the x-direction
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Plot shows event-price correlation; annotations guide attention;
-          could strengthen with visual emphasis techniques
+        passed: true
+        comment: Diamonds at each event's price let the reader read the level on the
+          event day (e.g. the jump around Q3 Earnings)
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line plot with event markers; correct type and subtypes
+        comment: Line with vertical event lines, markers and labels as described
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Vertical lines, markers, text labels all present
+        comment: Vertical lines, distinct dashed color, non-overlapping labels via
+          alternating heights, a key; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time series X, price Y; all data visible
+        comment: Dates on x, price on y, full range shown, markers at their data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Mandated title; legend labels readable
     data_quality:
       score: 15
       max: 15
@@ -155,21 +157,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full year stock data with realistic volatility; 7 diverse events
+        comment: Seven unevenly spaced events, mix of earnings and corporate events,
+          some on calm stretches, one before a jump
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock prices with earnings, launches, deals; neutral business scenario
+        comment: Neutral stock-price year with quarterly earnings dates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible price range ($85-120), realistic volatility
+        comment: 252 business days, prices ~86-116 USD from a plausible daily return
+          model; earnings at late Jan/Apr/Jul/Oct; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,50 +181,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → figure → save; no unnecessary abstraction
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean readable structure; no fake functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Source shows plot.png; should be plot-{THEME}.png per library guide
+        passed: true
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Good use of add_trace, add_shape, add_annotation; could leverage
-          more advanced patterns
+        passed: true
+        comment: go.Figure with add_shape/add_annotation using mixed xref='x'/yref='paper'
+          coordinates
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: Uses shape annotations and hover templates (Plotly-specific) but
-          fairly standard overall
+        passed: true
+        comment: Custom hovertemplates naming the event, date and price in the HTML
+          output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-09T12:14:30Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -229,7 +236,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - time-series
-  styling: []
+  - cumulative-sum
+  styling:
+  - publication-ready

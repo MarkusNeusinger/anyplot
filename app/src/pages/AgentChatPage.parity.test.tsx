@@ -142,6 +142,37 @@ const QUESTION = 'what is on x?';
 let memory: { id: string; kind: string; target: null; text: string; expect: null; turn: number }[];
 /** The memory has no room left (`State.full`). */
 let full: boolean;
+/**
+ * A plot turn that stays in flight, so its working line can be compared: it waits in the run
+ * queue, it draws its second try, or its stream is cut and the page reads it again; null for a
+ * turn that runs through.
+ */
+let held: 'queued' | 'drawing' | 'cut' | null;
+/** The page's clock, the same for every lane, so the run clocks and `ready in` agree. */
+const NOW = Date.UTC(2026, 10, 9, 12, 0, 0);
+
+/** A turn's stream that stays open after `events`, as a run in flight does; `cut` breaks it. */
+function heldStream(events: [string, unknown][], cut = false) {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          new TextEncoder().encode(
+            events
+              .map(
+                ([event, data], index) =>
+                  `id: R1.${index + 1}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+              )
+              .join('')
+          )
+        );
+        // Once the events are read: an error clears what the stream still holds.
+        if (cut) setTimeout(() => controller.error(new TypeError('network error')), 50);
+      },
+    }),
+    { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+  );
+}
 /** Two decisions remembered before the session's first plot here (another library's, say). */
 const DECIDED = [
   {
@@ -235,9 +266,27 @@ function stubFetch() {
           carry: { decisions: 2, newer: 2, target_has_plot: false, from_plot: true, offer: true },
         });
       }
+      // `.stop()` reaches the server; the run ends at its next step, which never comes here.
+      if (sub === '/cancel' && method === 'POST') return new Response(null, { status: 204 });
+      // The read of a cut turn: still waiting for the network.
+      if (sub === '/turn') return new Promise<Response>(() => undefined);
       if (sub === '/messages') {
         const body = JSON.parse(String(init.body)) as { action?: string; text?: string };
         if (body.text === EXPIRING) return json(404, { detail: 'session_expired', ref: 'r-gone' });
+        if (held && body.action === 'create_plot') {
+          const ready: [string, unknown] = ['ready', { v: 'anyplot/1', run_id: 'R1' }];
+          if (held === 'queued') {
+            return heldStream([ready, ['status', { step: 'queued', position: 2, waiting: 3 }]]);
+          }
+          const steps: [string, unknown][] = [
+            ['status', { step: 'adapting', attempt: 1, max_attempts: 2 }],
+            [
+              'status',
+              { step: 'repairing', attempt: 2, max_attempts: 2, outcome: 'review', findings: 1 },
+            ],
+          ];
+          return heldStream([ready, ...steps], held === 'cut');
+        }
         if (body.action === 'summarize_data') {
           return sse([
             ['message', { text: SUMMARY }],
@@ -321,6 +370,15 @@ async function pasteTable() {
   await turnEnded();
 }
 
+/** The table, then a click on `.create_plot()`, whose turn may stay in flight (`held`). */
+async function clickCreate() {
+  await pasteTable();
+  const create = screen.getByRole('button', { name: 'Create plot' });
+  await waitFor(() => expect(create).not.toHaveAttribute('aria-disabled'));
+  fireEvent.click(create);
+  await screen.findByRole('button', { name: 'Stop' });
+}
+
 /** The table, then one `.create_plot()`: the first plot ships. */
 async function plotOnce() {
   await pasteTable();
@@ -358,6 +416,8 @@ interface State {
   decided?: boolean;
   /** The memory has no room left: its cap is the entries it holds. */
   full?: boolean;
+  /** The plot turn stays in flight (`held`); every turn runs through unless said. */
+  held?: 'queued' | 'drawing' | 'cut';
   /** The admins compared with the visitor; both unless said. */
   compare?: readonly Exclude<Who, 'visitor'>[];
 }
@@ -586,13 +646,76 @@ const STATES: Record<string, State> = {
       await screen.findByText(/^error · not_enabled/);
     },
   },
-  // The day budget spent: the pause note above the composer, from the lane's own `/status`.
-  paused: {
+  // The day budget spent: the tab rests until the reset, from the lane's own `/status`.
+  resting: {
     open: 'ok',
     paused: true,
     reach: async () => {
       await waitFor(() => expect(screen.getByLabelText('Message')).toBeEnabled());
-      await screen.findByText(/paused/);
+      await waitFor(() =>
+        expect(screen.getByTestId('load-mood')).toHaveTextContent(/resting until/)
+      );
+    },
+  },
+  // A plot on its second try, with the server's cap: the working line and the footer with the
+  // clock, at the page's fixed time.
+  'drawing with its clock': {
+    open: 'ok',
+    held: 'drawing',
+    reach: async () => {
+      await clickCreate();
+      await waitFor(() =>
+        expect(screen.getByTestId('working-line')).toHaveTextContent(
+          /^drawing your plot · try 2 of 2 · 0:00$/
+        )
+      );
+      expect(screen.getByTestId('data-step')).toHaveTextContent(/· 0:00 · usually 1–3 min$/);
+    },
+  },
+  // The own run in the queue: the working line says where, the tab only `busy`.
+  'with the own run queued': {
+    open: 'ok',
+    held: 'queued',
+    reach: async () => {
+      await clickCreate();
+      await waitFor(() =>
+        expect(screen.getByTestId('working-line')).toHaveTextContent(/^waiting · you are 2nd$/)
+      );
+      expect(screen.getByTestId('load-mood')).toHaveTextContent(/busy$/);
+    },
+  },
+  // The stream was cut mid-run: the page reads the rest again.
+  reconnecting: {
+    open: 'ok',
+    held: 'cut',
+    reach: async () => {
+      await clickCreate();
+      await waitFor(() =>
+        expect(screen.getByTestId('working-line')).toHaveTextContent(
+          /^connection lost · reconnecting…$/
+        )
+      );
+    },
+  },
+  // `.stop()` pressed mid-run: the run ends after its step.
+  stopping: {
+    open: 'ok',
+    held: 'drawing',
+    reach: async () => {
+      await clickCreate();
+      await screen.findByText(/try 2 of 2/);
+      fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+      await waitFor(() =>
+        expect(screen.getByTestId('working-line')).toHaveTextContent(/^stopping after this step…$/)
+      );
+    },
+  },
+  // A shipped card keeps the run's clock, at the page's fixed time.
+  'with a card ready in': {
+    open: 'ok',
+    reach: async () => {
+      await plotOnce();
+      expect(screen.getByTestId('result-summary')).toHaveTextContent(/^ready in 0:00 · /);
     },
   },
   // A turn that finds the session gone: the error in the thread, with its reload.
@@ -711,6 +834,7 @@ async function pageFor(who: Who, state: string): Promise<string> {
   plots = 0;
   memory = STATES[state].decided ? DECIDED.map(entry => ({ ...entry })) : [];
   full = STATES[state].full ?? false;
+  held = STATES[state].held ?? null;
   stubFetch();
   renderPage();
   await STATES[state].reach();
@@ -760,10 +884,13 @@ async function pageFor(who: Who, state: string): Promise<string> {
 beforeEach(() => {
   URL.createObjectURL = vi.fn(() => 'blob:mock');
   URL.revokeObjectURL = vi.fn();
+  // One fixed time for both lanes, so a run's clock and a card's `ready in` read alike.
+  vi.spyOn(Date, 'now').mockReturnValue(NOW);
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe('AgentChatPage lane parity', () => {
