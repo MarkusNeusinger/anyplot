@@ -132,44 +132,60 @@ def test_a_theme_token_picks_fixed_values_and_a_data_dependent_conditional_is_no
     assert [token.name for token in find_regions(code).theme_tokens] == ["INK", "BANDS", "EDGE", "IS_DARK", "LATE"]
 
 
+def literal_container(node: ast.expr) -> bool:
+    """A list, tuple or dict of literals only (`[0.30, 0.22]`, `{"a": 1}`), nested or signed; no name inside."""
+    if isinstance(node, ast.Constant):
+        return True
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub | ast.UAdd):
+        return literal_container(node.operand)
+    if isinstance(node, ast.List | ast.Tuple):
+        return all(literal_container(element) for element in node.elts)
+    if isinstance(node, ast.Dict):
+        return all(key is not None and literal_container(key) for key in node.keys) and all(
+            literal_container(value) for value in node.values
+        )
+    return False
+
+
+def plain_theme_value(node: ast.expr, names: set[str]) -> bool:
+    """A value read from literals and `names` alone (`THEME` and the file's tokens): constants and containers of
+    them, those names, comparisons, conditional expressions and a sign or `not`. Nothing a token rule could
+    reasonably refuse."""
+    if literal_container(node):
+        return True
+    if isinstance(node, ast.Name):
+        return node.id in names
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub | ast.UAdd | ast.Not):
+        return plain_theme_value(node.operand, names)
+    if isinstance(node, ast.IfExp):
+        return all(plain_theme_value(part, names) for part in (node.test, node.body, node.orelse))
+    if isinstance(node, ast.Compare):
+        return all(plain_theme_value(part, names) for part in (node.left, *node.comparators))
+    return False
+
+
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
-def test_every_catalogue_theme_conditional_but_the_listed_ones_is_a_token() -> None:
-    """Measured on 2026-10-10: 2,745 theme-testing assignments in the 650 matplotlib and seaborn files, one of them
-    data-dependent; on 2026-10-25, 5,438 in the 1,296 files of the four libraries, five of them (a colour taken from
-    a palette index or another plot colour, a tuple of channel arithmetic, a list of layers); on 2026-10-26, 8,020
-    in the 1,946 files of the six libraries, eleven of them (lets-plot adds two `flavor_*()` calls, a theme call, a
-    tile set and two colours read from constants that test no theme); on 2026-10-31, in the 2,596 files of the eight
-    libraries, seventeen (plotly and bokeh add a label text, four label colours and a tile provider)."""
-    narrowed = []
+def test_every_plain_catalogue_theme_conditional_is_a_token() -> None:
+    """Every module-level assignment that tests the theme and reads only literals, `THEME` and the file's tokens is
+    a token itself, so a narrower token rule fails here. The theme conditionals that stay plot code read something
+    more: a palette index, another plot colour, channel arithmetic, a list of layers, a `flavor_*()` call, a tile
+    set, a label text built from data (17 in the eight libraries on 2026-10-31, from box-basic's matplotlib
+    `_tight_text_color` to slope-basic's bokeh label colours). Their list moved with every library added and moves
+    with every regeneration, so the test holds the rule instead; the unit tests above keep the refused shapes."""
+    found = 0
     for path in CATALOGUE_FILES:
         code = path.read_text(encoding="utf-8")
         tree = ast.parse(code)
         tokens = {token.name for token in find_regions(code, tree, library=path.stem).theme_tokens}
+        found += bool(tokens)
         for stmt in tree.body:
             if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name):
                 name = stmt.targets[0].id
-                if name != "THEME" and value_tests_theme(stmt.value) and name not in tokens:
-                    narrowed.append(f"{path.parts[-4]}/{path.name}:{name}")
+                if name != "THEME" and value_tests_theme(stmt.value):
+                    plain = plain_theme_value(stmt.value, {"THEME"} | tokens)
+                    assert name in tokens or not plain, f"{path.parts[-4]}/{path.name}:{name}"
 
-    assert narrowed == [
-        "box-basic/matplotlib.py:_tight_text_color",
-        "energy-level-atomic/plotnine.py:BALMER_LABEL_COLOR",
-        "heatmap-cohort-retention/plotnine.py:RULE",
-        "slope-basic/altair.py:layers",
-        "span-basic/altair.py:WARNING_LABEL_COLOR",
-        "bar-tornado-sensitivity/letsplot.py:flavor",
-        "column-stratigraphic/letsplot.py:flavor",
-        "heatmap-loss-triangle/letsplot.py:base_flavor",
-        "ks-test-comparison/letsplot.py:ribbon_color",
-        "map-tile-background/letsplot.py:map_tiles",
-        "nyquist-basic/letsplot.py:PM_LABEL_TEXT",
-        "psychrometric-basic/plotly.py:RH_LABEL",
-        "burndown-sprint/bokeh.py:SCOPE_ANNOTATION_CLR",
-        "map-tile-background/bokeh.py:tile_provider",
-        "scatter-hr-diagram/bokeh.py:SPECTRAL_LABEL_COLORS",
-        "slope-basic/bokeh.py:LABEL_INCREASE_COLOR",
-        "slope-basic/bokeh.py:LABEL_DECREASE_COLOR",
-    ]
+    assert 2 * found > len(CATALOGUE_FILES), found  # theme tokens are the rule, not the exception
 
 
 @pytest.mark.parametrize(
