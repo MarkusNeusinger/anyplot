@@ -7,7 +7,7 @@
   broke them: flowmap-origin-destination's ggplot2 file (#12862) dropped the `maps` package, and
   map-marker-clustered's bokeh file (#12859) saves `curdoc()` and screenshots the figure's element. Main never ran
   these tests, because a merge that changes only implementation files skips pytest, so every Python PR inherited
-  the failure. The tests now check each file:
+  the failure (#12877). The tests now check each file:
   - a ggplot2 file is blocked exactly when its spec is a map spec or the SECURITY profile flags it, and the
     sweep's counts, eligible share and Markdown row follow from those files;
   - the R SECURITY profile flags no file or rule beyond the known ones, and every `library()` of an unavailable
