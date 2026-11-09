@@ -1,71 +1,103 @@
 """ anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-12
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-09
 """
 
+import os
+
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
-# Data - Market share evolution for tech product categories
-years = ["2018", "2019", "2020", "2021", "2022", "2023", "2024"]
-smartphones = [42, 40, 38, 36, 35, 33, 32]
-laptops = [28, 27, 26, 25, 24, 23, 22]
-tablets = [18, 19, 20, 21, 21, 22, 22]
-wearables = [8, 10, 12, 14, 16, 18, 20]
-accessories = [4, 4, 4, 4, 4, 4, 4]
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Custom style for large canvas
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#3CB371", "#FF6B6B", "#9B59B6"),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    opacity=0.85,
-    opacity_hover=0.95,
-    transition="250ms ease-in",
+# Imprint palette: all eight positions in canonical order, one per category
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+YEAR = "Year"  # role: time
+DEVICE = "Device category"  # role: category
+UNITS = "Units sold (millions)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("device_sales.csv")
+years = [2018, 2019, 2020, 2021, 2022, 2023, 2024]
+market_size = [2100, 2200, 2000, 2300, 2200, 2400, 2500]  # all devices sold that year, million units
+share_percent = {
+    "Smartphones": [60, 59, 57, 56, 55, 54, 53],
+    "Laptops": [10, 10, 11, 10, 9, 9, 9],
+    "Tablets": [14, 14, 15, 14, 14, 13, 13],
+    "Wearables": [10, 11, 11, 14, 16, 18, 19],
+    "Accessories": [6, 6, 6, 6, 6, 6, 6],
+}
+df = pd.DataFrame(
+    [
+        (year, device, share * size / 100)
+        for device, shares in share_percent.items()
+        for year, share, size in zip(years, shares, market_size, strict=True)
+    ],
+    columns=[YEAR, DEVICE, UNITS],
 )
 
-# Create stacked area chart with percentage mode
+# Plot: normalise each time point to 100 % of its total
+table = df.pivot_table(index=YEAR, columns=DEVICE, values=UNITS, aggfunc="sum", sort=False)
+percent = table.div(table.sum(axis=1), axis=0) * 100
+
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    colors=IMPRINT_PALETTE,
+    guide_stroke_color=RULE,
+    major_guide_stroke_color=RULE,
+    guide_stroke_dasharray="none",
+    major_guide_stroke_dasharray="none",
+    title_font_size=66,
+    label_font_size=48,
+    major_label_font_size=48,
+    legend_font_size=48,
+    value_font_size=36,
+    opacity=1,
+    opacity_hover=1,
+    stroke_width=3,
+)
+
 chart = pygal.StackedLine(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="area-stacked-percent · pygal · pyplots.ai",
-    x_title="Year",
-    y_title="Market Share (%)",
+    title="area-stacked-percent · python · pygal · anyplot.ai",
+    x_title=YEAR,
+    y_title="Share of total (%)",
     fill=True,
     stack_from_top=False,
+    range=(0, 100),
+    include_x_axis=True,
+    y_labels=[0, 20, 40, 60, 80, 100],
+    value_formatter=lambda share: f"{share:.0f}%",
     show_y_guides=True,
     show_x_guides=False,
-    y_labels_major_every=2,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=len(percent.columns),
+    legend_box_size=40,
     truncate_legend=-1,
-    legend_at_bottom=False,
-    legend_box_size=30,
-    margin=50,
-    spacing=40,
-    dots_size=8,
-    stroke_style={"width": 3},
+    dots_size=6,
+    spacing=24,
+    margin=40,
 )
 
-# Set x-axis labels
-chart.x_labels = years
+chart.x_labels = [str(year) for year in percent.index]
+for device in percent.columns:
+    chart.add(str(device), [None if pd.isna(share) else float(share) for share in percent[device]])
 
-# Add data series (values already sum to 100% each year)
-chart.add("Smartphones", smartphones)
-chart.add("Laptops", laptops)
-chart.add("Tablets", tablets)
-chart.add("Wearables", wearables)
-chart.add("Accessories", accessories)
-
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
