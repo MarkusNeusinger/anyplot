@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -24,9 +24,9 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 # Columns: set these to your table's column names
 REGION = "Region"  # role: category
 QUARTER = "Quarter"  # role: series
-SCORE = "Performance Score"  # role: value
+SCORE = "Revenue ($M)"  # role: value
 
-# Data: replace this block with your own table, for example df = pd.read_csv("performance.csv")
+# Data: replace this block with your own table, for example df = pd.read_csv("revenue.csv")
 df = pd.DataFrame(
     {
         REGION: ["North"] * 3 + ["South"] * 3 + ["East"] * 3 + ["West"] * 3,
@@ -48,7 +48,7 @@ base = alt.Chart(df).encode(
     x=alt.X(
         REGION.translate(ESCAPE),
         type="nominal",
-        title=f"{REGION} (sorted by total {SCORE.lower()})",
+        title=f"{REGION} (sorted by total {SCORE.split(' (')[0].lower()})",
         sort=region_order,
         scale=alt.Scale(paddingInner=0.35, paddingOuter=0.2),
         axis=alt.Axis(labelAngle=0),
