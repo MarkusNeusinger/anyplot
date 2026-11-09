@@ -67,7 +67,7 @@ from .memory import MemoryKind
 from .plugins.ledger import RequestLedger, StepUsage, salted
 
 # One closed vocabulary with each `schemas.Round`, which a feedback case carries.
-from .schemas import GateId, SandboxFailure
+from .schemas import GateId, NewDataBase, SandboxFailure
 
 
 if TYPE_CHECKING:
@@ -223,9 +223,11 @@ MissingBucket = Literal["none", "lt5", "5_30", "gt30"]
 SpecFit = Literal["direct", "needs_reshape", "missing_role", "incompatible"]
 
 TurnKind = Literal["plot", "prep", "formula", "code", "example", "talk", "refused", "error"]
-TurnAction = Literal["text", "create_plot", "carry_plot", "summarize_data", "example_data"]
+TurnAction = Literal["text", "create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"]
 """`carry_plot` (2026-11-02): the page's "plot in <library> with your decisions" after a switch (`switch.py`).
-`example_data`: the page's `.example_data()`, the example data a session without data asks for in one click."""
+`plot_new_data` (2026-11-08): the page's "plot the new data", from the latest version or the catalogue plot
+(`pipeline.new_data_base`). `example_data`: the page's `.example_data()`, the example data a session without data
+asks for in one click."""
 ToolName = Literal[
     "get_dataset_profile",
     "get_spec_brief",
@@ -601,7 +603,12 @@ class PipelineRun(_Event):
     library's catalogue code with the user's decisions (2026-11-02)."""
     fresh: bool = False
     """The run was the page's `.create_plot()` or `.start_over()`: the catalogue code again, no carry, the memory
-    applied."""
+    applied; also "plot the new data" from the catalogue plot."""
+    new_data: NewDataBase | None = None
+    """Where the page's "plot the new data" started (`pipeline.new_data_base`): `previous`, or the closed reason it
+    started from the catalogue plot (`other_paste`, `other_data`, `bindings_changed`, `kept_note`, `no_plot`); None
+    for every other run. It
+    counts how often the latest version is the base, the measurement a rename-aware guard would wait for."""
     memory_entries: Count = 0
     """The plot memory's entries the run handed the adapter and the reviewer as standing decisions."""
     remembered: Count = 0

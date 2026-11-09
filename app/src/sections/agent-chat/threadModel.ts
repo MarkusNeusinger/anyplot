@@ -50,7 +50,8 @@
  */
 
 import type { ChatItem } from 'src/hooks/useAgentSession';
-import { isPlotAction } from 'src/lib/agent';
+import { isPlotAction, type NewDataBase } from 'src/lib/agent';
+import { NEW_DATA_FRESH_LABEL } from 'src/sections/agent-chat/messages';
 
 /** What a chapter is about: the data (step 1) or the plot (step 2). */
 export type ChapterKind = 'data' | 'plot';
@@ -179,27 +180,37 @@ export function cutRequest(text: string): string {
 /**
  * What each plot version answered, for its card's label (`plot v2 · matplotlib · title in
  * German`), by version: the typed request of the turn that made it, cut to 40 characters;
- * `.start_over()` for a plot that button made; `first plot` for the first plot of its library
- * that no request asked for; else `null`, and the label names the version and the library only.
- * `libraryOf` gives a version's library.
+ * `.start_over()` for a plot that button made; for "plot the new data" where it started
+ * (`newDataOf`, the plot's `new_data`: `new data on v3` from the library's version before it,
+ * `NEW_DATA_FRESH_LABEL` from the catalogue plot); `first plot` for the first plot of its
+ * library that no request asked for; else `null`, and the label names the version and the library
+ * only. `libraryOf` gives a version's library.
  */
 export function plotSummaries(
   items: readonly ChatItem[],
-  libraryOf: (version: number) => string | undefined
+  libraryOf: (version: number) => string | undefined,
+  newDataOf: (version: number) => NewDataBase | undefined = () => undefined
 ): Map<number, string | null> {
   const summaries = new Map<number, string | null>();
-  const plotted = new Set<string>();
+  // The latest version of each library so far: the one "plot the new data" changed.
+  const latestIn = new Map<string, number>();
   for (const turn of turnsOf(items)) {
     const opener = turn[0];
     for (const item of turn) {
       if (item.kind !== 'plot') continue;
       const library = libraryOf(item.version);
+      const before = library !== undefined ? latestIn.get(library) : undefined;
+      const newData = newDataOf(item.version);
       let summary: string | null = null;
       if (opener.kind === 'user') summary = cutRequest(opener.text);
       else if (opener.kind === 'action' && opener.label === START_OVER_LABEL) {
         summary = START_OVER_LABEL;
-      } else if (library !== undefined && !plotted.has(library)) summary = 'first plot';
-      if (library !== undefined) plotted.add(library);
+      } else if (newData === 'previous' && before !== undefined) summary = `new data on v${before}`;
+      else if (newData !== undefined && newData !== 'previous' && newData !== 'no_plot') {
+        // From the catalogue plot: another paste or table, other bindings, or a first-plot note.
+        summary = NEW_DATA_FRESH_LABEL;
+      } else if (library !== undefined && before === undefined) summary = 'first plot';
+      if (library !== undefined) latestIn.set(library, item.version);
       summaries.set(item.version, summary);
     }
   }

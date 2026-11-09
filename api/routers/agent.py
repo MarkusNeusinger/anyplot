@@ -182,9 +182,21 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "message": frozenset({"text"}),
     # `version` is the agents service's number of the stored version (ok and needs_attention only), and `memory`
     # (`{kept, added}`, plot memory entry ids) the decisions that version stands on, only with it;
-    # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid.
+    # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid; `new_data`
+    # where "plot the new data" started (`previous`, or a closed reason for the catalogue plot), only on its plot.
     "plot": frozenset(
-        {"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "memory", "rounds"}
+        {
+            "status",
+            "reason",
+            "attempts",
+            "artifacts",
+            "changes",
+            "residual_defects",
+            "version",
+            "memory",
+            "rounds",
+            "new_data",
+        }
     ),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
@@ -637,9 +649,11 @@ class Binding(_StrictBody):
 class MessageBody(_StrictBody):
     text: Text | None = None
     # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
-    # switched to with the decisions made so far; `summarize_data` asks the assistant for the step-1 summary;
-    # `example_data` asks it for example data (`.example_data()`), which, unlike typed words, sets no session language.
-    action: Literal["create_plot", "carry_plot", "summarize_data", "example_data"] | None = None
+    # switched to with the decisions made so far; `plot_new_data` is "plot the new data" after a data change, from the
+    # latest plot when the agents service's guard allows it; `summarize_data` asks the assistant for the step-1
+    # summary; `example_data` asks it for example data (`.example_data()`), which, unlike typed words, sets no session
+    # language.
+    action: Literal["create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"] | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:

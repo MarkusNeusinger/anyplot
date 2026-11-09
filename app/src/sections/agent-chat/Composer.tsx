@@ -45,6 +45,7 @@ import {
   ATTACHMENT_PLACEHOLDER,
   describeDataFailure,
   ERROR_TEXT,
+  NEW_DATA_HELP,
   NEW_DATA_PLOT,
   NO_DATA_PLACEHOLDER,
   servicePausedText,
@@ -130,8 +131,9 @@ export interface PlotButtonState {
   /** The confirmation the click starts with is in flight: the button says it works on it. */
   confirming: boolean;
   /**
-   * The click starts from the catalogue plot although the library has one (the data or the
-   * bindings changed since): the button names what that keeps as part of its description.
+   * The click may start from the catalogue plot although the library has one (the data or the
+   * bindings changed since): the button names what that keeps as part of its description, and
+   * `plot the new data` also when it changes the latest plot instead (`NEW_DATA_HELP`).
    */
   fresh: boolean;
 }
@@ -476,7 +478,8 @@ export function Composer(props: ComposerProps) {
       </Box>
       {plot.fresh && (
         <Box component="span" id={PLOT_HELP_ID} sx={visuallyHiddenSx}>
-          {START_OVER_HELP}
+          {/* `plot the new data` may change the latest plot instead (`plot_new_data`). */}
+          {plot.kind === 'new_data' ? NEW_DATA_HELP : START_OVER_HELP}
         </Box>
       )}
       {confirmError && !step2 && (

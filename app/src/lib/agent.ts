@@ -610,6 +610,11 @@ export interface PlotResult {
    * is unknown then, never empty. A session without memory sends two empty lists.
    */
   memory?: VersionMemory;
+  /**
+   * Only on the plot of "plot the new data" (`plot_new_data`): where it started, which the card's
+   * label names. Absent for every other plot, from an older server, and for an unknown value.
+   */
+  new_data?: NewDataBase;
 }
 
 export interface ThemeRendered {
@@ -846,17 +851,38 @@ export function caseListQuery(query: CaseListQuery): string {
  * The page's own chat turns: `summarize_data` asks the assistant for the step-1
  * summary of the stored data, `example_data` for example data to try the plot
  * (`.example_data()`, before any data), `create_plot` starts step 2 (the fresh
- * plot from the catalogue code, also `.start_over()`), and `carry_plot` makes
+ * plot from the catalogue code, also `.start_over()`), `carry_plot` makes
  * the plot in the library the user switched to, with the plot memory's
- * decisions. None of them passes the scope judge, so none sets the session
- * language, which the first typed message does: `.example_data()` as typed
- * words would keep a German visitor in English.
+ * decisions, and `plot_new_data` is "plot the new data" after a data change or
+ * a paste, which the server starts from the latest plot when the data comes
+ * from its paste with its bindings, else from the catalogue code (the plot's
+ * `new_data` says which). None of them passes the scope judge, so none sets the
+ * session language, which the first typed message does: `.example_data()` as
+ * typed words would keep a German visitor in English.
  */
-export type TurnAction = 'create_plot' | 'carry_plot' | 'summarize_data' | 'example_data';
+export type TurnAction =
+  'create_plot' | 'carry_plot' | 'plot_new_data' | 'summarize_data' | 'example_data';
 
 /** Whether a turn of this kind is a plot run from the start: its path shows up front, it has no in-progress line. */
-export const isPlotAction = (kind: string): boolean =>
-  kind === 'create_plot' || kind === 'carry_plot';
+export const isPlotAction = (
+  kind: string
+): kind is 'create_plot' | 'carry_plot' | 'plot_new_data' =>
+  kind === 'create_plot' || kind === 'carry_plot' || kind === 'plot_new_data';
+
+/**
+ * Where "plot the new data" started (the plot's `new_data`): `previous`, the library's latest
+ * version, or why it started from the catalogue plot instead.
+ */
+export type NewDataBase =
+  'previous' | 'other_paste' | 'other_data' | 'bindings_changed' | 'kept_note' | 'no_plot';
+const NEW_DATA_BASES: ReadonlySet<string> = new Set<NewDataBase>([
+  'previous',
+  'other_paste',
+  'other_data',
+  'bindings_changed',
+  'kept_note',
+  'no_plot',
+]);
 
 /** The body of `POST .../messages`: the user's words or one of the page's actions. */
 export type TurnBody = { text: string } | { action: TurnAction };
@@ -2106,6 +2132,9 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
             ? d.rounds.map(toRound).filter((round): round is Round => round !== null)
             : [],
           ...(memory ? { memory } : {}),
+          ...(typeof d.new_data === 'string' && NEW_DATA_BASES.has(d.new_data)
+            ? { new_data: d.new_data as NewDataBase }
+            : {}),
         },
       };
     }

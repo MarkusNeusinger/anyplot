@@ -748,6 +748,9 @@ function AgentChat({
   // the latest version: with an empty box there is nothing to update. On data or bindings
   // changed since, and with a switch's offer, it plots with an empty box too.
   const plotNeedsText = plotKind === 'update' && step2 && !carry;
+  // What a plot click starts without text of its own, also the plot after the box's data was read:
+  // the switch's offer, else "plot the new data" (`plot_new_data`), else the catalogue plot.
+  const plotStart = carry ? 'carry' : plotKind === 'new_data' ? 'new_data' : 'create';
   const plotText = draft.trim();
   // Text over the cap is never cut and never goes, also not as a plot's request.
   const plotActive =
@@ -780,9 +783,12 @@ function AgentChat({
     carry: carry ? { library: carry.target.library, decisions: carryCount } : null,
     lockedLibraries: chatLocked ? libraries.length : null,
   });
-  // `.start_over()` at the status line's end: once the confirmed data has a plot here, and after
-  // a switch's offer, the plot from the catalogue code without the carry.
-  const startOverShown = !plotAll && ((step2 && hasPlot) || carryCount > 0);
+  // `.start_over()` at the status line's end: once the confirmed data has a plot here, after a
+  // switch's offer, and beside `plot the new data` when the library has a plot, which that button
+  // may change for the new data: the plot from the catalogue code is one click away instead of
+  // after a run.
+  const startOverShown =
+    !plotAll && ((step2 && hasPlot) || carryCount > 0 || (plotKind === 'new_data' && hasPlot));
   // The chat's own feedback before the first plot: `.feedback()` at the status line's end opens
   // its form above the line. Not while a turn runs, which may still bring the plot; a sent
   // record stays in view. A library switch alone is no conversation to report.
@@ -1008,14 +1014,19 @@ function AgentChat({
    * them are what the plot takes, so data that is not confirmed yet is confirmed first; a
    * refusal stops here and shows under the composer, and nothing is plotted. Then the plot
    * starts: the box's text, when the button takes it (`withText`, the plot button), goes as the
-   * turn that makes the plot with that request, else the catalogue plot (`create_plot`) or the
-   * switch's offer (`carry_plot`), under `label`, the button as it read, which the thread shows
-   * for the turn. The confirmation's busy state and the session's own guards hold back a second
+   * turn that makes the plot with that request, else the catalogue plot (`create_plot`), the
+   * switch's offer (`carry_plot`) or "plot the new data" (`plot_new_data`, which the server
+   * starts from the latest plot when its guard allows it), under `label`, the button as it read,
+   * which the thread shows for the turn. The confirmation's busy state and the session's own guards hold back a second
    * click, also one before the state caught up. The button stays where it is, inert while the
    * plot runs, so the focus stays on it. A table typed into the box never comes here: it is data,
    * which the click reads first (`sendAndPlot`).
    */
-  const startPlot = async (kind: 'create' | 'carry', withText: boolean, label: string) => {
+  const startPlot = async (
+    kind: 'create' | 'carry' | 'new_data',
+    withText: boolean,
+    label: string
+  ) => {
     if (!canCreate) return;
     const text = withText ? draft.trim() : '';
     // The turn would refuse it after the box let go of it: nothing confirms, nothing is lost.
@@ -1027,8 +1038,10 @@ function AgentChat({
       // (a limit, the capacity, the network) shows it there with the error: nothing is lost.
       setDraft(current => (current.trim() === text ? '' : current));
       void session.sendMessage(text);
+    } else if (kind === 'carry') {
+      void session.carryPlot(label);
     } else {
-      void (kind === 'carry' ? session.carryPlot(label) : session.createPlot(label));
+      void (kind === 'new_data' ? session.plotNewData(label) : session.createPlot(label));
     }
   };
   // The one click's chain reads the page from here after its awaits: its plot is this render's
@@ -1037,7 +1050,7 @@ function AgentChat({
     state,
     plotAll,
     attachment: !!attachment,
-    plot: () => void startPlot(carry ? 'carry' : 'create', false, plotButtonLabel(state)),
+    plot: () => void startPlot(plotStart, false, plotButtonLabel(state)),
   };
 
   /**
@@ -1120,8 +1133,9 @@ function AgentChat({
    * The plot button. `.plot_all()` opens the fan-out; with data in the box the click reads it and
    * plots it once it reads clean (`sendAndPlot`); `.update_plot() →` on a current plot sends the
    * box's text as Enter does; every other click plots, with the box's text as the request: the
-   * switch's offer with the remembered decisions when there is one (`carry_plot`), else the
-   * catalogue plot. The thread names the turn as the button read.
+   * switch's offer with the remembered decisions when there is one (`carry_plot`), else `plot the
+   * new data` (`plot_new_data`) after a data change or a paste, else the catalogue plot. The
+   * thread names the turn as the button read.
    */
   const handlePlot = (event: React.MouseEvent) => {
     cancelChain();
@@ -1137,7 +1151,7 @@ function AgentChat({
       handleSend();
       return;
     }
-    void startPlot(carry ? 'carry' : 'create', true, plotButtonLabel(state));
+    void startPlot(plotStart, true, plotButtonLabel(state));
   };
 
   /**
