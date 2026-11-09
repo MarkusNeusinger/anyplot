@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -78,8 +78,7 @@ df = pd.DataFrame(
 ranked = df.sort_values(IMPORTANCE, ascending=False).reset_index(drop=True)
 norm = Normalize(vmin=ranked[IMPORTANCE].min(), vmax=ranked[IMPORTANCE].max())
 bar_colors = {name: imprint_seq(norm(value)) for name, value in zip(ranked[FEATURE], ranked[IMPORTANCE], strict=True)}
-spread = np.fmax(ranked[STD], 0)
-bar_end = ranked[IMPORTANCE] + spread
+bar_end = ranked[IMPORTANCE] + ranked[STD]
 x_max = bar_end.max() * 1.15
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
@@ -109,7 +108,7 @@ ax.errorbar(
 
 # Importance values just past the end of each error bar
 for i, (value, end) in enumerate(zip(ranked[IMPORTANCE], bar_end, strict=True)):
-    ax.text(end + x_max * 0.01, i, f"{value:.3f}", va="center", ha="left", fontsize=7, color=INK_SOFT)
+    ax.text(end + x_max * 0.01, i, f"{value:.3f}", va="center", ha="left", fontsize=8, color=INK_SOFT)
 
 # Style
 title = "bar-feature-importance · python · seaborn · anyplot.ai"
