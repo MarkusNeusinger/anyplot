@@ -2,124 +2,104 @@ library: pygal
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:29Z'
-updated: '2026-10-08T03:14:02Z'
-generated_by: claude-sonnet
-workflow_run: 37721166626
+updated: '2026-11-09T00:34:18Z'
+generated_by: claude-opus-5-5
+adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
+workflow_run: 42540024958
 issue: 4675
-language_version: 3.13.15
+language_version: 3.14.10
 library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-connected-temporal/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - 'Temporal direction is readable at a glance: an imprint_seq gradient from #009E73
-    to #4467A3 across five eras, bracketed by an oversized red start (▶ 1980) and
-    blue end (2023) marker'
-  - Year labels are threaded to the INK token through an inline SVG style, so they
-    read light-on-dark in the dark render and dark-on-light in the light render
-  - Three-tier marker hierarchy (12 px path markers, 20 px key years, 26 px start/end)
-    with a 5 px round-capped path keeps every observation visible
-  - Plausible demographic-transition data (fertility 5.5→2.8, urbanization 29→63 %)
-    with a migration stall that makes the path double back and a pronatalist rebound
-    that reverses it
-  - 'Idiomatic pygal: XY chart with per-point value/label/color dicts, per-series
-    stroke_style overrides and native hover tooltips in the HTML output'
+  - Path drawn in strict year order with straight segments and a marker at every observation,
+    so the 2000-2004 reversal visibly doubles back and crosses itself
+  - Five-step imprint_seq gradient from brand green to blue, explained by a one-row
+    era legend, makes the direction of time readable at a glance in both themes
+  - Enlarged start and end markers plus six time labels placed on the clear side of
+    the path, none touching a marker, segment or another label
+  - Uses pygal's print_labels on value dicts with an inline CSS anchor rule for the
+    time labels, and keeps native SVG tooltips in the HTML output
   weaknesses:
-  - 'VQ-02, SC-02 (both): the ''1990'' year label is printed on the path, covering
-    the 1991 and 1992 markers and the segment between them at about 41–42 % / 4.65;
-    the ''2020'' label covers the 2021 marker at about 61 % / 3.0, and ''2010'' and
-    the ''▶'' glyph touch the path → every year label clear of the path and the markers
-    by at least 10 px (C3). Likely cause: pygal print_labels draws each label at a
-    fixed down-right offset from its point, which is the direction this path runs;
-    shorten the label offset side or attach the labels to points where the path turns
-    away.'
-  - 'SC-03 (both): the ''● 2023'' end label draws a solid ink-colored dot at about
-    63.8 % / 2.77, below and right of the real 2023 marker at 63 % / 2.87, so the
-    plot shows an extra observation where there is none → drop the ''●'' glyph from
-    the label text (label ''2023''). Likely cause: label string ''● 2023'' on the
-    End series.'
-  - 'VQ-01, VQ-05 (both): the y tick ''5.6'' renders about 1.3× larger than the other
-    y tick labels and gets its own lighter guide → all y ticks at one size. Likely
-    cause: y_labels_major_count=8 promotes 5.6 to a major label, drawn at a different
-    size from the minor ticks (label_font_size=56 vs major_label_font_size=44); set
-    y_labels_major_count to cover every tick or make the two sizes equal.'
-  - 'CQ-01 (code): _patch_label_colors (lines 170–178) wraps a single re.sub in a
-    function with a nested closure, used once → inline the substitution at the call
-    site. Likely cause: helper-function structure.'
-  - 'Suggestion: placing key-year labels at the 2000–2003 stall and the 2015–2017
-    rebound instead of round decades would tie the labels to the turns the path shows.'
+  - 'Suggestion: the middle eras (1989–1997, 1998–2006) are close teal steps, so the
+    direction inside the self-crossing loop is hard to follow; a small arrowhead on
+    a segment of the loop would make it explicit.'
+  - 'Suggestion: a small gap between each legend swatch and its text would make the
+    bottom legend breathe.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: Title "Fertility vs Urbanization · scatter-connected-temporal · python · pygal · anyplot.ai" in dark ink, ~68 % of width. Axis titles "Urban Population (% of total)" and "Fertility Rate (births per woman)" dark and readable; x ticks 30 %–60 %, y ticks 2.8–6.0 (the 5.6 tick is drawn larger than the rest). Dashed muted guides. Bottom legend in 3 columns, 8 entries, all readable.
-      Data: 44 annual points 1980–2023 joined by a 5 px path running from upper-left (29 %, 5.53) to lower-right (63 %, 2.87), colored in five eras from #009E73 to #4467A3. Hairpin around 45 % / 3.9–4.1 (2000–2003 stall) and a bump to 3.25 near 57 % (2015–2017 rebound). Amber #DDCC77 dots with labels 1990, 2000, 2010, 2020; red #AE3030 start dot with "▶ 1980", blue end dot with "● 2023". The 1990 and 2020 labels sit on the path/markers; the "●" glyph draws a black dot off the path next to the end marker.
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "Fertility vs Urbanization · scatter-connected-temporal · python · pygal · anyplot.ai" in dark ink at the top, about 68 % of the width; x-axis "Urban population (% of total)" with ticks 28%-60%, y-axis "Fertility rate (births per woman)" with ticks 3.6-5.4; subtle grid in both directions; bottom legend of five era swatches 1980–1988 … 2016–2023. All readable.
+      Data: 44 markers joined by straight segments in year order, coloured in five steps from brand green #009E73 (1980s) to blue #4467A3 (2016–2023); enlarged start marker at 29 %/5.47 and end marker at 58 %/3.52; the path falls steadily, doubles back around 41–46 % / 4.1–4.4 (2000–2004 reversal) and shows a rebound peak at about 52.5 %/3.95. Labels 1980 (start), 1989, 1997, 2006, 2014, 2023 (end) sit clear of the path.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17.
-      Chrome: Title, axis titles, tick labels and legend text all in light ink and readable; guides subtle dark-dashed. No dark-on-dark text: year labels and the ▶/● glyphs render light.
-      Data: Path, era colors, amber key-year dots, red start and blue end markers identical to the light render; only chrome flipped. The brand green first era reads clearly.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks, legend and time labels in light ink; grid subtle but visible; no dark-on-dark text.
+      Data: era colours, markers and path identical to the light render; brand green start reads clearly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit; title, axis titles, ticks, year labels and
-          legend read clearly in both themes (year labels patched to INK). The y tick
-          '5.6' renders noticeably larger than its siblings (defect line).
+        comment: Font sizes set explicitly (ticks 46, legend 44, time labels 44, title
+          scaled to its length); all text reads clearly in both themes and survives
+          the 400 px thumbnail
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: '''1990'' label sits on the path over two markers, ''2020'' over
-          a marker, ''2010'' and the ''▶'' glyph touch the path (defect line).'
+        passed: true
+        comment: The six time labels sit clear of the path, the markers and each other;
+          the self-crossing loop of 1997-2006 is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 44 points with 12 px markers, 5 px path, 20 px key-year and 26 px
-          start/end dots; legend swatches match the marks in both themes.
+        comment: 44 points with 10 px markers on a 5 px line, enlarged start and end
+          markers; the legend swatches match the era colours in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential path, amber and red anchors are distinct; no
-          red-green-only signal.
+        comment: Green-to-blue single-hue ramp, no red-green signal; direction also
+          carried by the start/end labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800, title ~68 % width, margins clear the end label. Unbalanced
-          y tick sizes (5.6 oversized with its own guide) (defect line).
+        comment: 3200x1800, title about 68 % of the width, balanced axis titles, legend
+          in one bottom row, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Urban Population (% of total)'' and ''Fertility Rate (births per
-          woman)'' — descriptive with units.'
+        comment: '''Urban population (% of total)'' and ''Fertility rate (births per
+          woman)'' carry their units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First era #009E73, imprint_seq interpolation to #4467A3, amber #DDCC77
-          key years; #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes.'
+        comment: 'Eras in five steps of imprint_seq (#009E73 to #4467A3), first step
+          brand green; backgrounds #FAF8F1 / #1A1A17; data colours identical across
+          themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -127,26 +107,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Three-tier marker hierarchy (12/20/26 px) separating path, key years
-          and start/end bookends, round line caps/joins — a deliberate typographic
-          and mark hierarchy above the baseline.
+        comment: Title font size derived from the title length, '%' and one-decimal
+          tick formatters, a calm hierarchy between the large endpoint markers and
+          the small path markers
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: 'Style-guide baseline: dashed muted guides, bottom legend; label
-          placement on the path and legend swatches butting their text show no refinement
-          beyond it.'
+        passed: true
+        comment: Time labels placed on the side of the path that keeps them clear,
+          legend laid out as one row of eras matching the path order
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Oversized red start and blue end markers frame the journey as a focal
-          pair; the 2000–2003 hairpin and 2015–2017 rebound read in the path.
+        comment: Enlarged start and end markers give the path two anchors, and the
+          era legend turns the gradient into readable periods; beyond that the data
+          is displayed without a chosen focal point
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -154,30 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected scatter on pygal.XY, chronological straight segments, markers
-          at every year.
+        comment: Connected scatter with a temporal path, nothing unasked added
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chronological connection, key-year labels, start/end, light-to-dark
-          gradient and visible markers present; C3 (labels clear of path and markers)
-          missed for 1990/2020 (defect line).
+        comment: Chronological straight segments, markers at every point, start/end
+          and key years labelled, light-to-dark gradient along time; all four 'A good
+          version shows' bullets met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: X/Y correct and full range shown, but the '● 2023' label draws a
-          solid ink dot off the path that reads as an extra observation (defect line).
+        comment: Path sorted by year, never by x, no smoothing; marks sit at their
+          values, only the text labels are offset; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: '''Fertility vs Urbanization · scatter-connected-temporal · python
-          · pygal · anyplot.ai''; legend entries match eras, key years, start, end.'
+          · pygal · anyplot.ai''; legend entries are readable year ranges'
     data_quality:
       score: 15
       max: 15
@@ -187,59 +166,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Path shows a direction trend, a hairpin double-back (2000–2003) and
-          a reversal (2015–2017) — the plot type's features.
+        comment: 'Long monotone stretch, a reversal that doubles back and crosses
+          itself, and a late rebound peak: the path shows the plot type''s range'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Fertility rate vs urbanization of an emerging economy 1980–2023:
-          plausible, neutral demographic story.'
+        comment: 'Fertility against urbanisation for an unnamed emerging economy,
+          1980-2023: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TFR 5.5→2.8 births per woman and urban share 29 %→63 % read off the
-          axes; plausible for a demographic transition. No Check values in the spec.
+        comment: 'Urban share 29-58 %, fertility 5.5 to 3.5 births per woman over
+          44 years: plausible magnitudes; no Check values in the spec'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: _lerp_hex is the library prompt's endorsed helper; _patch_label_colors
-          with a nested closure adds a second function (defect line).
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, re, sys, cairosvg, numpy, pygal, Style all used.
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Era loop and per-point dicts are compact; no fake UI, nothing a named
-          call replaces.
+        comment: The label-placement loop has no pygal equivalent; the colour interpolation
+          follows the library prompt's endorsed manual ramp
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png via cairosvg of the patched SVG, plot-{THEME}.html
-          via render_to_file.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png with the Pygal 3 API
     library_mastery:
       score: 6
       max: 10
@@ -249,19 +226,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with per-series stroke/dots_size/stroke_style overrides
-          and per-point value/label/color dicts — high-level pygal idioms.
+        comment: pygal.XY with one series per era, x_value_formatter/value_formatter,
+          legend_at_bottom_columns, per-series dots_size and stroke flags
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: print_labels with per-point label text and pygal's native hover tooltips
-          in the HTML output.
+        comment: Time labels via print_labels on value dicts with an inline CSS rule
+          for their anchor; native SVG tooltips in the HTML
   verdict: APPROVED
   model: claude-opus-5-5
-  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-54d55755be
-  rendered_at: '2026-10-08T03:09:01Z'
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T00:31:12Z'
 impl_tags:
   dependencies: []
   techniques:

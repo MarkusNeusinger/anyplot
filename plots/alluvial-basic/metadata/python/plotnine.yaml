@@ -2,47 +2,62 @@ library: plotnine
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:36:55Z'
-updated: '2026-05-09T01:26:51Z'
-generated_by: claude-haiku
-workflow_run: 25587204413
+updated: '2026-11-09T01:49:49Z'
+generated_by: claude-opus
+workflow_run: 42546275854
 issue: 1878
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 74
+quality_score: 86
 review:
   strengths:
-  - Correct alluvial diagram structure with proper temporal progression
-  - Good use of Okabe-Ito palette with consistent category colors
-  - Excellent theme adaptation with readable text in both light and dark renders
-  - Proper flow visualization using transparency to show overlapping transitions
-  - Clear labeling of time points and categories on both sides
-  - Appropriate data scale and feature coverage for the alluvial-basic specification
+  - 'Block heights and band widths are exact: every block''s value is the outflow
+    (or, at Q4, the inflow) of its tier, and the data conserves flow, so Q2 Basic
+    = 43k both in and out, Q3 Premium = 27k both in and out, each quarter totalling
+    100k'
+  - Bands leave and enter their blocks at running offsets, so every band attaches
+    flush to its source and target block with no gaps or overshoot; the smoothstep
+    easing gives clean S-curves
+  - Block labels choose dark or light ink per fill by WCAG contrast, so Basic and
+    Standard read in near-black and Premium in off-white in both themes
+  - 'Band alpha is tuned per theme (0.5 light, 0.7 dark), keeping translucent bands
+    saturated enough on #1A1A17 while overlaps stay distinguishable'
+  - Page-colored block outlines cleanly separate blocks from the bands that touch
+    them; theme_void plus a subtitle that states both encodings replaces axes and
+    legend
+  - 'Idiomatic grammar layering: geom_polygon with a group aesthetic for bands, geom_rect
+    for blocks, scale_color_identity for per-row label ink, coord_cartesian(expand=False)
+    for exact framing'
   weaknesses:
-  - 'CRITICAL: Code/image mismatch - plotnine.py file contains different title (''Voter
-    Migration ... pyplots.ai'') and labels (''Democrats/Republicans/Independent'',
-    ''2016/2018/2020/2022'') than shown in generated images (correct title, ''Basic/Standard/Premium'',
-    ''Q1/Q2/Q3/Q4'') - code must be verified to produce shown outputs'
-  - Minimal aesthetic sophistication - functional but plain visual design
-  - No distinctive visual refinement beyond required transparency and borders
-  - Generic alluvial layout without custom flourishes or visual emphasis techniques
+  - 'VQ-07 (both): the plan tiers Basic, Standard, Premium are ordered categories
+    but are colored with categorical positions 1–3 (#009E73, #C475FD, #4467A3), so
+    the lavender middle tier breaks the tier order → three ordered steps of imprint_seq
+    from #009E73 through its midpoint to #4467A3, in tier order. Likely cause: fill_colors
+    = dict(zip(tiers, IMPRINT_PALETTE)).'
+  - 'Suggestion: the subtitle reads ''Subscribers (thousands) … subscribers moving
+    (thousands)'' with inconsistent capitalization from SUBSCRIBERS vs MOVED.lower();
+    lower-casing both would read more evenly.'
+  - 'Suggestion: the block labels at size 6.5 are the smallest text on the canvas
+    and nearly vanish in the 400 px thumbnail; slightly wider blocks would leave room
+    for a larger label.'
+  - 'Suggestion: the hex parsing in the srgb dict could use matplotlib.colors.to_rgb
+    instead of the manual int(c[i:i+2], 16) slicing.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface.
-      Chrome: Title "alluvial-basic · plotnine · anyplot.ai" rendered in dark text (INK color), centered and readable. Axis labels absent (appropriate for alluvial diagram). Year labels (Q1, Q2, Q3, Q4) positioned at bottom in dark text, clearly legible. Category labels (Basic, Standard, Premium) on left and right sides in dark text, readable against light background.
-      Data: Three categories shown in Okabe-Ito colors (green #009E73 for Basic, orange #D55E00 for Standard, blue #0072B2 for Premium). Flows rendered as curved ribbons with 50% transparency, showing transitions between categories across 4 time points. Node rectangles with white borders contain count values (45, 43, 41, 14, etc.). All data elements clearly distinguishable from light background.
-      Legibility verdict: PASS - all text readable, no light-on-light conflicts.
+      Background: warm off-white #FAF8F1, no axes, no grid (theme_void).
+      Chrome: bold near-black left-aligned title "alluvial-basic · python · plotnine · anyplot.ai" (~52% of width), soft-grey subtitle explaining that block height = subscribers (thousands) per plan tier and band width = subscribers moving to the next quarter; bold column headers Q1 2025 … Q4 2025 above each column. All readable.
+      Data: four columns of three stacked blocks — Basic (#009E73), Standard (#C475FD), Premium (#4467A3) — labelled with tier and value (Basic 50k→43k→36k→31k, Standard 35k→37k→37k→35k, Premium 15k→20k→27k→34k). Translucent bands (alpha 0.5) colored by source tier connect neighbouring columns, widths proportional to flow; thick self-flows plus thin cross-tier bands that cross. Block labels dark on green/lavender, off-white on blue.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface.
-      Chrome: Same title in light text (INK color #F0EFE8), readable against dark background. Year labels in light text, clearly legible. Category labels in light text, properly visible. No dark-on-dark failures detected - all text is light-colored against dark background.
-      Data: Data colors identical to light render (same Okabe-Ito green, orange, blue) - only chrome has flipped per spec requirements. Flows and nodes maintain same structure and values. White-bordered rectangles still provide definition on dark surface.
-      Legibility verdict: PASS - all text readable, proper theme adaptation, no text-on-background collisions.
-
-    Note: Critical discrepancy found between code and images. Code file specifies title "Voter Migration · alluvial-basic · plotnine · pyplots.ai" and labels "Democrats/Republicans/Independent" + "2016/2018/2020/2022", but images show correct title and labels "Basic/Standard/Premium" + "Q1/Q2/Q3/Q4". This indicates code/image mismatch requiring verification.
+      Background: warm near-black #1A1A17.
+      Chrome: title and column headers in off-white, subtitle in light grey; no dark-on-dark text anywhere.
+      Data: identical block fills to the light render (#009E73, #C475FD, #4467A3); bands at alpha 0.7 read as deeper green, purple and slate blue but stay distinguishable where they cross; block labels keep the same contrast-chosen inks.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -53,70 +68,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes, font sizes appropriate
+        comment: All sizes set explicitly; title, subtitle, headers and block labels
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Flow ribbons overlap intentionally (expected for alluvial), minor
-          deduction for visual density
+        comment: No text collides with text or bands; block labels sit inside their
+          blocks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and nodes clearly visible with appropriate transparency
+        comment: Blocks and bands clear in both themes; hair-thin bands are permitted
+          by the spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used, CVD-safe, good contrast
+        comment: Label ink chosen by WCAG contrast per fill; categories also named
+          on every block
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, generous margins, well-proportioned layout
+        comment: 3200x1800, balanced margins, headers aligned over columns, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and category/time labels present and correct in images
+        comment: No axes; subtitle states both encodings with units (thousands)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Okabe-Ito positions 1-3 used, backgrounds correct (#FAF8F1 light,
-          #1A1A17 dark), both renders theme-correct'
+        comment: Backgrounds and chrome correct; ordered plan tiers use categorical
+          positions instead of imprint_seq steps (defect line)
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Functional but plain - no custom visual refinements beyond required
-          styling
+        passed: true
+        comment: 'Beyond baseline: contrast-chosen label ink per fill, bold column
+          headers as a typographic tier, subtitle used as the encoding key'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Good use of transparency (alpha=0.5), white borders for definition,
-          minimal chrome approach
+        comment: 'Beyond baseline: page-colored block outlines separating blocks from
+          bands, per-theme band alpha, bands flush to block edges, exact framing with
+          expand=False'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Temporal progression clear, color consistency aids category tracking,
-          visual hierarchy present
+        passed: false
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram showing category transitions over time
+        comment: Correct basic alluvial diagram, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: time points (4), categories (3), values, flows'
+        comment: Chronological columns, consistent tier colors, flow-proportional
+          bands, transparency, headers and labels at every block
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=temporal progression, Y=category stack, width=flow magnitude, color=category
-          identity
+        comment: Block heights equal tier values, band widths equal flows, bands attached
+          to source and target blocks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Images show correct title format and legend with proper labels
+        comment: Mandated title; categories labelled directly on blocks, so no legend
+          needed
     data_quality:
       score: 15
       max: 15
@@ -155,23 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of alluvial type: temporal progression, category
-          transitions, flow magnitudes, multiple stages'
+        comment: Stable self-flows, cross-tier transitions both ways, blocks growing
+          and shrinking
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible tier transition data with realistic value ranges (3-50
-          per transition)
+        comment: Neutral SaaS subscription-tier migration across 2025 quarters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible entity counts and flow magnitudes with good visual variety
+        comment: 'Checked flow conservation: each block''s inflow equals its outflow
+          (e.g. Q2 Basic 43k, Q3 Premium 27k), each quarter totals 100k'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,63 +200,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with no unnecessary abstraction
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded, no randomness
+        comment: Deterministic hard-coded flow matrix
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL ISSUE: Code/image mismatch - plotnine.py file does not
-          match generated images (title and labels differ)'
+        passed: true
+        comment: Band geometry has no plotnine equivalent; complexity appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at 3200x1800 with current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Proper ggplot2/plotnine grammar: ggplot() + geoms + theme, aes()
-          for aesthetics'
+        comment: 'Grammar layering beyond the mandate: geom_polygon with group aesthetic,
+          scale_color_identity for per-row ink, coord_cartesian(expand=False)'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Good use of custom geom_polygon for alluvial geometry, coord_cartesian
-          for fixed aspect
-    score_caps_applied: false
-    total_score: 74
-    max_score: 100
-  verdict: REJECTED
+        passed: false
+        comment: scale_color_identity and group-aesthetic polygons are ggplot-grammar
+          idioms; otherwise generic
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T01:46:15Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
+  - bezier-curves
   patterns:
-  - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

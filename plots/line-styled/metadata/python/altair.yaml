@@ -2,53 +2,60 @@ library: altair
 language: python
 specification_id: line-styled
 created: '2025-12-30T10:38:24Z'
-updated: '2026-05-12T07:38:22Z'
-generated_by: claude-haiku
-workflow_run: 25719664719
+updated: '2026-11-09T00:58:43Z'
+generated_by: claude-opus-5-5
+adopted_from: 671573dfa41f9e5747d3222d7dd509e8c3f3d2d3 (671573dfa41f9e5747d3222d7dd509e8c3f3d2d3)
+workflow_run: 42542254993
 issue: 2598
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - Excellent text legibility with explicitly set font sizes across all elements
-  - Perfect layout balance and canvas utilization (70-80% fill)
-  - Clear line style differentiation (solid, dashed, dotted, dash-dot) - core feature
-    well-executed
-  - 'Strong code quality: clean structure, reproducible, idiomatic Altair usage'
-  - Theme-adaptive chrome working correctly in both light and dark renders
-  - Realistic, neutral data context (product revenue tracking)
-  - No text overlap or element visibility issues
+  - All four standard styles (solid, dashed, dotted, dash-dot) are mapped through
+    a native strokeDash encoding with a custom scale range, so the series stay distinguishable
+    in monochrome while Imprint color rides on top
+  - Color and strokeDash share one field, title and sort, so Vega-Lite merges them
+    into a single legend whose stroke swatches (symbolType stroke, symbolSize 1600)
+    are long enough to show each full pattern
+  - One strokeWidth for every series, with the dot length set equal to the line width
+    so dots render as square dots and stay recognizable along the whole line in both
+    themes
+  - Theme tokens threaded through title, axes and an elevated legend panel; both renders
+    are fully legible and the data colors are identical
+  - Temporal x axis with month-abbreviation labels and tooltips with readable titles
+    add value in the HTML output
   weaknesses:
-  - 'VQ-07: First series uses #306998 (Python Blue) instead of required #009E73 (Okabe-Ito
-    brand green); entire categorical palette is custom hexes instead of Okabe-Ito
-    canonical order'
-  - 'SC-04: Title contains typo ''pyplots.ai'' instead of ''anyplot.ai'''
-  - 'CQ-05: Code saves to plot.png instead of plot-{THEME}.png per specification'
-  - Missing theme-adaptation code pattern - doesn't use os.getenv(ANYPLOT_THEME) or
-    implement INK/INK_SOFT tokens
-  - Generic data labels (Product A/B/C/D) instead of meaningful series names
-  - 'DE-03: No visual storytelling - data displayed but lacks visual hierarchy or
-    emphasis to guide viewer to insights'
+  - 'DQ-02 (both): the station offsets ignore the elevations the labels state: Pine
+    Ridge at 1,850 m runs only about 6 °C colder than Harbor Point at 10 m, where
+    a typical lapse rate of about 6.5 °C/km gives about 12 °C (−6 °C), so a reader
+    who checks the labels sees implausible numbers → offsets roughly proportional
+    to elevation (for example about −12 °C for Pine Ridge, −6 °C for Elk Plateau).
+    Likely cause: the offset list [0, -6, 5, -3] in the data block.'
+  - 'Suggestion: a few more points per series (weekly instead of monthly values) would
+    sit inside the spec''s recommended 50–500 points and show the patterns over longer
+    runs.'
+  - 'Suggestion: a slightly wider inner view (the library prompt''s 620 px landscape
+    width) would fill the empty space under the legend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1, not pure white
-      Chrome: Title "line-styled · altair · pyplots.ai" centered and clearly visible in dark text; Y-axis label "Revenue ($)" and X-axis label "Month" positioned correctly; all tick labels (Jan-Dec, revenue values) fully readable against light background
-      Data: 4 lines with distinct styles (solid, dashed, dotted, dash-dot) and custom colors (blue #306998, yellow #FFD43B, teal #48A9A6, coral #E76F51); legend on right shows clear style/color mappings; all lines visible with no overlap
-      Legibility verdict: PASS - All text readable and well-sized
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: bold dark title "line-styled · python · altair · anyplot.ai" centered above the plot; y-axis "Temperature (°C)" from −5 to 35 with subtle horizontal gridlines; x-axis "Month" with Jan–Dec labels, no vertical grid; dark-grey tick labels; legend "Weather Station" on the right in an elevated off-white panel with a thin rule border. All text readable.
+      Data: four monthly temperature lines — Harbor Point solid #009E73, Pine Ridge dashed #C475FD, Sun Valley dotted #4467A3, Elk Plateau dash-dot #BD8233 — same stroke width; dots, dashes and dash-dots clearly recognizable; lines cross around Sep–Oct. Legend swatches show the full patterns.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm dark approximately #1A1A17, not pure black
-      Chrome: Title visible in light text; axis labels and tick labels all light-colored and clearly readable against dark surface; no dark-on-dark failures; legend box has appropriate dark background
-      Data: Data line colors identical to light render (blue, yellow, teal, coral) - correct theme-invariant behavior for data colors; only chrome (background, text, grid) changes between themes
-      Legibility verdict: PASS - All text readable against dark surface with no readability failures
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels light grey, gridlines subtle light at low opacity, legend panel in a slightly elevated dark grey with a light rule border. No dark-on-dark text.
+      Data: colors and dash patterns identical to the light render; the blue dotted line is the lowest-contrast series but remains clearly visible; brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,72 +63,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable
+        comment: Explicit font sizes; all text readable in both themes and at thumbnail
+          size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels distinct and readable
+        comment: No text collisions; line crossings are permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line styles clearly visible; well-adapted to 4-series density; strokeWidth=4
-          ensures visibility
+        comment: 2.5 px lines with clear patterns; legend swatches long enough for
+          the full pattern in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; line styles provide redundancy beyond color
+        comment: Line style carries identity; color is redundant and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent utilization (70-80% fill); balanced margins; legend well-positioned
+        comment: Canvas 3200x1800; balanced labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Revenue in $)
+        comment: Temperature (°C) and Month, descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'FAILURE: First series #306998 (Python Blue) instead of #009E73;
-          palette is custom hexes not Okabe-Ito'
+        passed: true
+        comment: 'First series #009E73, Imprint order, correct backgrounds in both
+          themes'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults with custom palette; lacks publication-ready
-          polish
+        passed: true
+        comment: Elevated legend panel with rule border and station names carrying
+          elevation context, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Grid properly styled (opacity 0.3, dash [2,2]); good detail; view
-          border removed
+        passed: true
+        comment: Dash geometry tuned to the stroke width (dot length = line width)
+          and round joins keep the patterns crisp
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy; lacks emphasis to guide viewer
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,30 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chart type; all 4 line styles present and distinct
+        comment: Styled multi-series line plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple series with line styles; legend shows mapping; all requirements
-          met
+        comment: Solid/dashed/dotted/dash-dot, consistent width, legend with full-pattern
+          swatches, monochrome-distinguishable — all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (months) and Y-axis (revenue) correctly encoded; all data
-          visible
+        comment: Month on x, temperature on y, lines in x order, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title typo: ''pyplots.ai'' instead of ''anyplot.ai''; legend labels
-          generic'
+        passed: true
+        comment: Mandated title format; legend title and entries are readable station
+          names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: seasonal variation, series differences, full
-          month range'
+        comment: Four series covering all standard styles, with crossings
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real scenario (product revenue); neutral context; comprehensible
+        comment: Weather stations are plausible, but the offsets ignore the stated
+          elevations (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values ($0-$90K) plausible; proportions realistic
+        comment: Seasonal −2 to 35 °C range is sensible; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -183,33 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions or classes
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas; all consumed
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake functionality
+        comment: melt + one encoded mark; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png; should be plot-{THEME}.png per specification
+        passed: true
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,21 +223,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses mark_line, encode, configure_* correctly; high-level API
+        comment: Tidy melt into declarative encodings, strokeDash scale with explicit
+          domain/range, temporal axis with tickCount month
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses strokeDash effectively (distinctive to Altair); but core feature,
-          not beyond
+        comment: Vega-Lite legend merging of color and strokeDash on one field with
+          stroke-type symbols
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T00:55:46Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  - wide-to-long
+  dataprep:
+  - time-series
   styling:
+  - publication-ready
   - grid-styling

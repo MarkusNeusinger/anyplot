@@ -2,121 +2,141 @@ library: seaborn
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T00:04:01Z'
-updated: '2026-05-13T17:32:12Z'
-generated_by: claude-haiku
-workflow_run: 25814195366
+updated: '2026-11-09T01:31:12Z'
+generated_by: claude-opus-5-5
+adopted_from: c882ea10530b3cf9e7659804da27d774102d3fc7 (c882ea10530b3cf9e7659804da27d774102d3fc7)
+workflow_run: 42545069493
 issue: 2501
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 63
+quality_score: 87
 review:
   strengths:
-  - Correct parallel categories structure with proper ribbon-based flow visualization
-  - Five-dimensional dataset showing complex relationships clearly
-  - Good label placement avoiding overlap
-  - Realistic Titanic-based data generation
-  - Legend effectively shows class color mapping
+  - 'Axis bars are drawn by seaborn itself: the melted table goes through sns.histplot(x=''dimension'',
+    hue=''segment'', multiple=''stack'', shrink=0.46), so every segment''s length
+    is that category''s count without any hand-placed rectangles'
+  - 'Passenger class is treated as an ordered category: First/Second/Third take ordered
+    steps of the Imprint sequential ramp (#009E73 to #4467A3), and that color carries
+    through every axis gap to Outcome'
+  - Only the first axis is colored, and the other four use a neutral INK_SOFT tone,
+    so the class colors on the Class segments name the ribbons without needing a legend
+  - Barycenter ordering of the later axes (Male above Female, Senior/Adult/Child,
+    Cherbourg/Southampton/Queenstown) keeps ribbon crossings low, as the Notes suggest
+  - 'Theme-aware details: ribbon alpha rises to 0.8 on the dark page so the hues hold,
+    segment labels switch between page color and fixed light ink, and page-colored
+    separators split the segments'
+  - Ribbons are cubic Bezier PathPatches stacked by class inside each segment, so
+    every band's width equals its observation count and starts and ends flush with
+    the bar edges
   weaknesses:
-  - Category labels unreadable in dark theme due to hardcoded text colors without
-    theme adaptation
-  - Using seaborn colorblind palette instead of required Okabe-Ito palette
-  - No theme-adaptive styling - doesn't read ANYPLOT_THEME or use sns.set_theme()
-    with theme-dependent rc parameters
-  - Category rectangle color hardcoded dark gray without theme adaptation
-  - Output file saved as plot.png instead of plot-{THEME}.png
-  - Title contains typo (pyplots.ai instead of anyplot.ai)
-  - Generic styling with no design refinement
+  - 'DQ-03 (both): the Titanic-style data lets most passengers survive. The Outcome
+    axis shows Survived at about 55 % (about 275 of 500), while the real Titanic survival
+    rate the scenario borrows was about 38 %. Target: about 38 % (−17 points). Likely
+    cause: the base survival_chance of 0.3 plus the class, sex and child bonuses averages
+    about 0.56. Lower the base to about 0.12.'
+  - 'Suggestion: ''Southampton'' fills its 7.5 pt segment label almost edge to edge
+    on the Embarked bar. A slightly smaller label size, or a slightly wider BAR_WIDTH,
+    would give it breathing room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title, dimension labels, category labels all rendered in dark text on light surface - fully readable. Dark gray category rectangles with white edges clearly visible.
-      Data: Ribbons colored with green, orange, and blue showing flow relationships. Category bars properly sized proportional to frequency.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: the title "parallel-categories-basic · python · seaborn · anyplot.ai" is in dark ink at the top. The five dimension names (Class, Sex, Age group, Embarked, Outcome) head their axes in dark ink. There are no spines, ticks or grid. Category labels are page-colored inside the dark INK_SOFT segment bars and light inside the colored Class segments. All are readable.
+      Data: the Class axis has First (#009E73 green), Second (teal, the midpoint of the ramp) and Third (#4467A3 blue) segments. Translucent Bezier ribbons in those three colors flow through Sex (Male/Female), Age group (Senior/Adult/Child), Embarked (Cherbourg/Southampton/Queenstown) and Outcome (Lost/Survived), and braid more densely toward the later axes. Survived is the larger Outcome segment.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title and dimension headers render in light text and are readable. CRITICAL FAILURE: Category labels (Male, Female, Senior, Adult, Child, Southampton, Cherbourg, Queenstown, Survived, Lost) appear in dark gray text on dark background - unreadable (dark-on-dark failure). Category rectangles dark gray blending with background.
-      Data: Ribbon colors identical to light render (green, orange, blue properly maintained).
-      Legibility verdict: FAIL - category labels unreadable due to lack of theme-adaptive text coloring
+      Background: warm near-black #1A1A17.
+      Chrome: the title and the dimension names are light (#F0EFE8). The axis bars are light gray (#B8B7B0) with dark page-colored category labels, and the Class segments keep light labels. No text is dark on dark.
+      Data: the class colors are identical to the light render (green, teal, blue). The ribbons are denser (alpha 0.8) and keep their hue on the dark page. The layout is identical.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 15
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Category labels unreadable in dark render due to hardcoded text colors
-          without theme adaptation
+        passed: true
+        comment: Title 12 pt, dimension names 10 pt, segment labels 7.5 pt, all explicitly
+          set. All readable in both themes, with page-colored labels on the INK_SOFT
+          bars and light ink on the class colors
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor ribbon overlap; labels well-positioned
+        comment: Labels sit inside their segments where no ribbon runs. No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Dark rectangles blend with dark background; visibility compromised
-          on dark theme
+        passed: true
+        comment: Ribbons are visible at alpha 0.65 (light) and 0.8 (dark). Hair-thin
+          rare ribbons are permitted by the spec
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Using seaborn colorblind palette instead of Okabe-Ito; colors are
-          accessible but wrong source
+        passed: true
+        comment: Green-teal-blue ramp differs in luminance as well as hue. No red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions and canvas usage
+        comment: 3200x1800 canvas, so the canvas gate passed. Balanced five-axis layout
+          and no overflow. The title fills about 58 % of the width
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Title contains typo: pyplots.ai should be anyplot.ai'
+        passed: true
+        comment: Dimension names are reader text (Class, Sex, Age group, Embarked,
+          Outcome)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Not using Okabe-Ito palette; no theme-adaptive background or chrome
-          colors
+        passed: true
+        comment: 'Ordered class levels use steps of imprint_seq with the green pole
+          on First. The backgrounds are #FAF8F1 and #1A1A17, and the chrome is theme-correct
+          in both renders'
     design_excellence:
-      score: 6
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic styling with hardcoded colors; default seaborn appearance
+        passed: true
+        comment: 'Raised for color restraint beyond the baseline: only the source
+          axis is colored and the other axes are neutral INK_SOFT. Label ink is chosen
+          per bar'
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 4
         max: 6
-        passed: false
-        comment: No spine customization, no grid styling, minimal refinement
+        passed: true
+        comment: Raised for page-colored segment separators, ribbons flush with bar
+          edges, labels inside segments, dimension names as top ticks, and theme-specific
+          ribbon alpha
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Visualization effectively shows flow and relationships
+        comment: The neutral axes leave class color as the single thread, so the class-to-outcome
+          skew is readable. No further hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -124,27 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel categories with ribbons and dimensions
+        comment: A true parallel categories plot with no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple dimensions, proportional ribbons, category bars, labels
+        comment: Width-proportional ribbons, color by the first dimension, crossing-reducing
+          order, five named axes with share-proportional segments. All 'A good version
+          shows' bullets are met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Proper mapping; ribbon width proportional to count
+        comment: Segments and ribbons are stacked to the exact counts. ylim 0..total
+          shows all data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Has title (with typo) and legend; palette colors incorrect
+        passed: true
+        comment: The title matches the mandated format. The colored Class segments
+          name the ribbon colors, which the spec allows instead of a legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -152,21 +176,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete parallel categories with 5 dimensions
+        comment: Five dimensions with 2-3 levels each. Shows splitting, merging, crossings
+          and rare thin flows
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Titanic-style dataset, realistic and neutral
+        comment: Titanic-style passenger data, the spec's own example, with real port
+          names
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 500 samples, 3-8 categories per dimension
+        comment: Checked the class split (25/25/50, close to the real 24/21/55) and
+          the port shares (70/20/10, plausible). The survival majority of about 55
+          % contradicts the real event's about 38 % (defect line)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,60 +202,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean procedural code, no unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Ribbon stacking needs this bookkeeping. No library call replaces
+          it
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight', using
+          the current seaborn 0.13 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses matplotlib patches, but misses seaborn's theme-adaptive guidance
+        passed: true
+        comment: Raised for tidy melt plus histplot stacking with hue_order and a
+          palette dict, sns.set_theme rc and sns.despine. The ribbons fall back to
+          matplotlib, as they must
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Custom Path objects are distinctive, but not leveraging seaborn mastery
-  verdict: REJECTED
+        comment: Raised for using histplot's multiple='stack' and shrink to build
+          the categorical axis bars
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T01:28:21Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - annotations
-  - patches
   - bezier-curves
+  - patches
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - wide-to-long
   - groupby-aggregation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

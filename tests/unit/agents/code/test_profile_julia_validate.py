@@ -4,13 +4,15 @@ The refused snippets are the named bypasses of the design passes (`agentic/specs
 second opinions of 2026-10-24 and 2026-10-29) and the brief's list; each is refused by name or by shape.
 """
 
+import re
 from collections import Counter
 
 import pytest
 
+from agents.anyplot.code.profiles.julia.coupling import DATASET_PACKAGES
 from agents.anyplot.code.profiles.julia.normalise import normalise
 from agents.anyplot.code.profiles.julia.regions import find_regions
-from agents.anyplot.code.profiles.julia.validate import validate_adaptation, validate_security
+from agents.anyplot.code.profiles.julia.validate import PACKAGES, validate_adaptation, validate_security
 from agents.anyplot.code.validate import Finding
 
 from .conftest import JULIA_CATALOGUE_FILES, JULIA_CATALOGUE_NORMALISED, JULIA_WORKING, REPO_ROOT
@@ -422,26 +424,59 @@ def test_unreadable_code_is_a_finding(code: str, rule: str) -> None:
     assert [finding.rule for finding in validate_security(code)] == [rule]
 
 
-def test_catalogue_corpus() -> None:
-    """SECURITY over the 325 normalised files: findings in five, each for a real reason (2026-10-29)."""
-    flagged: dict[str, Counter[str]] = {}
-    for path in JULIA_CATALOGUE_FILES:
-        findings = validate_security(normalise(path.read_text(encoding="utf-8")))
-        if findings:
-            flagged[path.parts[-4]] = Counter(finding.rule for finding in findings)
+KNOWN_FINDINGS: dict[str, frozenset[str]] = {
+    **{spec: frozenset({"savefig-target"}) for spec in ("area-mountain-panorama", "bifurcation-basic", "scatter-lag")},
+    "map-tile-background": frozenset({"banned-import", "banned-name", "url-literal"}),
+    "qrcode-basic": frozenset({"banned-import", "url-literal"}),
+}
+"""The Makie files the SECURITY profile flags, each for a real reason (5 files on 2026-10-29): three save inside
+`with_theme(...) do` (`savefig-target`), map-tile-background downloads its tiles (`Downloads` and `PNGFiles`, a tile
+URL) and qrcode-basic loads QRCoders and encodes a URL. A regeneration may take a file off the list; a file on it for
+another rule, or one not on it, is a false refusal until shown otherwise."""
+COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
+"""A comment, and anything a `#` after a blank starts: dropping too much only weakens the plain reading below."""
+STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"')
+PACKAGE_LOAD = re.compile(r"^\s*(?:using|import)\s+([^\n:]+)", re.MULTILINE)
+"""A `using` or `import` statement up to its `:` (`using A, B`, `using Statistics: mean`): the packages it loads."""
 
-    assert sorted(flagged) == [
-        "area-mountain-panorama",
-        "bifurcation-basic",
-        "map-tile-background",
-        "qrcode-basic",
-        "scatter-lag",
+
+def loaded_packages(text: str) -> list[str]:
+    """Every package a `using` or `import` of `text` names, each by its root (`CairoMakie.Cairo` is CairoMakie)."""
+    return [
+        part.strip().split(".")[0].split()[0]
+        for statement in PACKAGE_LOAD.findall(text)
+        for part in statement.split(",")
+        if part.strip()
     ]
-    for spec in ("area-mountain-panorama", "bifurcation-basic", "scatter-lag"):
-        assert flagged[spec] == {"savefig-target": 2}  # the save inside with_theme(...) do
-    assert flagged["qrcode-basic"]["banned-import"] == 1  # QRCoders, outside the project
-    # Downloads and PNGFiles, each at its `using` and as the root of a call (`Downloads.download`, `PNGFiles.load`)
-    assert flagged["map-tile-background"]["banned-import"] == 4
+
+
+URL_TEXT = re.compile(
+    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
+)
+"""The profile's URL predicate (`_URL_IN_TEXT`, the Python profile's rule) restated, applied to each string literal:
+the test checks that every literal reaches it, the refused snippets above check the predicate itself."""
+WITH_THEME_SAVE = re.compile(r"^with_theme\(.*\)\s*do\b(?:.|\n)*?^\s+save\(", re.MULTILINE)
+"""A save inside a `with_theme(...) do` block, which is no statement of its own and so not the protected save."""
+
+
+def test_catalogue_corpus() -> None:
+    """SECURITY over every normalised Makie file: no file is flagged that `KNOWN_FINDINGS` does not name, or for a
+    rule it does not name; and a plain reading of the text decides the rest, so the profile still finds what is
+    there: each `using` or `import` of a package outside the project is a `banned-import` finding, each URL string a
+    `url-literal`, a save inside `with_theme(...) do` a `savefig-target`. Regenerations rewrite flagged files, so the
+    test holds these rules, not the list of a day; the refused snippets above keep each rule's reach."""
+    available = PACKAGES | DATASET_PACKAGES
+    for path in JULIA_CATALOGUE_FILES:
+        name = path.parts[-4]
+        normalised = normalise(path.read_text(encoding="utf-8"))
+        findings = Counter(finding.rule for finding in validate_security(normalised))
+        assert set(findings) <= KNOWN_FINDINGS.get(name, frozenset()), (name, findings)
+        text = COMMENT.sub("", normalised)
+        loads = [package for package in loaded_packages(text) if package not in available]
+        assert findings["banned-import"] >= len(loads), name
+        urls = [literal for literal in STRING.findall(text) if URL_TEXT.search(literal[1:-1])]
+        assert findings["url-literal"] >= len(urls), name
+        assert findings["savefig-target"] >= bool(WITH_THEME_SAVE.search(text)), name
 
 
 # --- ADAPTATION ------------------------------------------------------------------------------

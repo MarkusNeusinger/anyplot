@@ -2,57 +2,58 @@ library: seaborn
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:48:27Z'
-updated: '2026-05-11T07:49:31Z'
-generated_by: claude-haiku
-workflow_run: 25656464813
+updated: '2026-11-09T01:27:36Z'
+generated_by: claude-opus-5-5
+adopted_from: c882ea10530b3cf9e7659804da27d774102d3fc7 (c882ea10530b3cf9e7659804da27d774102d3fc7)
+workflow_run: 42544884029
 issue: 2441
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 72
+quality_score: 86
 review:
   strengths:
-  - Correct Kaplan-Meier implementation with proper step functions and confidence
-    intervals (95% CI via Greenwood formula)
-  - 'All required spec features present: two-group comparison, censored observation
-    marks, median survival annotation, clear legend'
-  - Excellent visual clarity in both light and dark renders—all text readable, no
-    overlapping elements
-  - Realistic clinical trial data with plausible survival curves showing meaningful
-    group difference
-  - Canvas utilization and layout well-balanced; annotation box positioned effectively
+  - The Kaplan-Meier estimate comes from scipy's stats.ecdf on stats.CensoredData,
+    with Greenwood confidence intervals from sf.confidence_interval(0.95). Nothing
+    is hand-rolled.
+  - The survival curves use the seaborn-native sns.lineplot(hue=..., estimator=None,
+    drawstyle='steps-post'). They are true right-continuous steps that start at 1.0
+    at time zero.
+  - The confidence bands are drawn with fill_between(step='post') at alpha 0.16, so
+    they step with their curves. Where the two arms overlap the blend stays distinguishable
+    in both themes.
+  - The censored observations are seaborn scatter '|' ticks at each censoring time
+    on the curve's height. They are small enough not to read as steps.
+  - Each median survival is marked by a group-colored drop line from the half-survival
+    reference line to the time axis, with its value labelled (16.9 vs 22.4 months).
+  - 'Every chrome element is threaded through the theme tokens, so both renders are
+    fully legible. Treatment is #009E73 and Control is the second Imprint position,
+    #C475FD.'
+  - The code is a clean column-role and data-block structure with a fixed seed and
+    only the imports it uses.
   weaknesses:
-  - 'CRITICAL: Source code contains hardcoded colors (#306998 Python Blue, #FFD43B
-    Python Yellow) that do not match Okabe-Ito palette or the output images; code
-    does not read ANYPLOT_THEME environment variable'
-  - Code does not implement theme-adaptive chrome as specified in seaborn library
-    rules (missing sns.set_theme with theme-dependent rc parameters, missing color
-    tokens like PAGE_BG/INK_SOFT)
-  - Code saves to 'plot.png' instead of 'plot-{THEME}.png' as required by seaborn
-    spec
-  - Annotation box uses hardcoded facecolor='white' instead of theme-adaptive ELEVATED_BG
-    token
-  - 'Code/output mismatch: generated images show correct colors and theme adaptation
-    but source code does not implement this—images must be from a different version'
-  - Grid styling uses sns.set_style('whitegrid') without theme-aware customization
+  - 'Suggestion: an at-risk table below the plot, aligned with the time axis, would
+    complete the clinical-trial reading the Notes allow.'
+  - 'Suggestion: a log-rank p-value placed as text clear of the curves (for example
+    scipy.stats.logrank) would quantify the gap between the arms.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle gray gridlines
-      Chrome: Title, X-axis label ("Time (months)"), Y-axis label ("Survival Probability"), and tick labels all clearly visible in dark text; annotation box with light background and border readable
-      Data: Two step-function survival curves—treatment (bluish-green, appears to be #009E73) shows better survival; control (orange, appears to be #E69F00 or #D55E00) shows worse outcomes. Confidence interval bands rendered as semi-transparent fills. Censored observations marked with tick marks. Median survival line at 0.5 with annotation. Legend in lower left clearly labels both groups.
-      Legibility verdict: PASS — all elements readable and well-positioned
+      Background: warm off-white #FAF8F1 across figure and axes.
+      Chrome: title "survival-kaplan-meier · python · seaborn · anyplot.ai" in dark ink at top center (~55% width); axis titles "Time since randomization (months)" and "Survival probability"; dark-grey tick labels 0–35 and 0.0–1.0; subtle horizontal-only grid; left and bottom spines only; framed legend "Study arm" upper right on elevated surface. All readable.
+      Data: Treatment step curve in #009E73 and Control in #C475FD, both starting at 1.0, flat between events with vertical drops; translucent stepped 95% CI bands (overlap blends grey-blue); short vertical censoring ticks on each curve, bunched near 36 months; dashed grey half-survival line at 0.5 with group-colored dotted drop lines at 16.9 (Control) and 22.4 (Treatment) months labelled "median 16.9" / "median 22.4" at the axis foot. Curves end above zero (≈0.41 and ≈0.24).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle light gridlines
-      Chrome: Title, axis labels, and tick labels clearly visible in light text; annotation box styling remains readable with proper contrast
-      Data: Survival curves maintain identical bluish-green and orange colors from light render (only chrome adapted, not data colors as required). Confidence bands, censored marks, and median line all visible with same structure as light render. Legend and annotations clearly readable.
-      Legibility verdict: PASS — all elements readable; colors correctly theme-invariant; no dark-on-dark text failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink; tick labels and median labels in light grey; legend frame on #242420 with light text; grid subtle but visible. No dark-on-dark text.
+      Data: identical #009E73 / #C475FD curves, bands, ticks and median lines as the light render; only chrome flipped. Bands remain distinguishable from the background and from each other.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,75 +61,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
-          perfectly readable in both themes'
+        comment: Style-guide sizes (12/10/8 pt) set explicitly; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend positioned outside plot area
+        comment: No text collisions; median labels clear of each other and the curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Survival curves, CI bands, censored marks all clearly visible and
-          well-sized
+        comment: 2.2 px steps, visible censor ticks, translucent bands; legend line
+          glyphs match curves
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and orange series have high contrast; Okabe-Ito palette is
-          CVD-safe
+        comment: Green vs lilac is CVD-safe and contrasts on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good balance but slight wasted space on right side of both renders
+        comment: 3200x1800; balanced margins, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units; title format correct
+        comment: Descriptive axis titles with units (months)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Images show correct Okabe-Ito colors (#009E73 treatment, orange control);
-          theme-adaptive chrome evident; however, source code does not implement this
-          correctly—code/output mismatch
+        comment: 'Treatment #009E73, Control #C475FD (Imprint order); correct theme
+          backgrounds'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library defaults; no custom design choices beyond
-          standard seaborn styling
+        passed: true
+        comment: 'Tiered ink hierarchy beyond baseline: legend title in INK over INK_SOFT
+          entries, medium-weight title, muted reference line'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Horizontal-only grid chosen for reading survival levels; drop lines
+          colored per group tie medians to their curves
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; grid visible but could be more subtle; uses
-          sns.set_style defaults
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: false
-        comment: Visual hierarchy present through color contrast (green vs orange)
-          and group separation; median survival annotation adds insight
+        comment: Median annotation is what the Notes suggest; no further focal hierarchy
+          chosen
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,30 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier survival plot with step functions
+        comment: Kaplan-Meier step survival plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: step function, 95% CI, censored marks,
-          group comparison, legend, median annotation'
+        comment: Steps from 1.0, stepped 95% CI bands, censor ticks on curve, two
+          colored groups with legend, median annotation at half-survival crossing
+          — all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes span full data range (0-38 months, 0-1.05
-          probability)
+        comment: Time on x, survival on y; all data shown; ticks at censoring times
+          and curve height
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format 'survival-kaplan-meier · seaborn · anyplot.ai' correct;
-          legend labels match but styling could be polished
+        passed: true
+        comment: Mandated title format; legend 'Study arm' with Treatment/Control
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -167,89 +166,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: two groups, censoring, confidence intervals,
-          event times, varying survival probabilities'
+        comment: Events and censoring in both arms, diverging curves, crossings of
+          half survival, curves ending above zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial scenario (treatment vs control groups) is realistic
-          and neutral; transparent about synthetic data
+        comment: Neutral two-arm clinical trial, 36-month follow-up
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Proportions plausible (treatment median ~22 months, control ~17 months)
-          but synthetic data; values are within expected ranges
+        passed: true
+        comment: 150 patients, probabilities 0–1, medians 16.9/22.4 months computed
+          from the estimate (first time S<=0.5); no Check values in spec
     code_quality:
-      score: 4
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Includes kaplan_meier() function (adds complexity) but justified
-          for domain logic
+        passed: true
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib, numpy, pandas, seaborn)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL ISSUE: Code contains hardcoded colors that don''t match
-          output; missing required theme-adaptive styling; annotation box facecolor
-          hardcoded to ''white'''
+        passed: true
+        comment: KM and Greenwood CI from scipy.stats.ecdf; nothing written out that
+          a call computes
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png' as specified; code/output
-          mismatch suggests stale file
+        passed: true
+        comment: Saves plot-{THEME}.png at 400 dpi without bbox tight; current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Uses ax.step(), ax.fill_between(), ax.scatter() correctly but does
-          not follow seaborn theme-adaptation pattern from library spec
+        passed: true
+        comment: Long-form DataFrame fed to sns.lineplot/scatterplot with hue, palette
+          dict, estimator=None
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Custom Kaplan-Meier estimator function is domain-specific but not
-          a seaborn distinctive feature; seaborn-specific features (set_theme, theme-adaptive
-          rc) not utilized
+        comment: sns.move_legend and sns.despine; drawstyle passthrough on lineplot
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T01:24:42Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - annotations
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
+  - publication-ready
