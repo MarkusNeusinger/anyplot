@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-line: Polar Line Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -34,7 +34,7 @@ RADIUS_LABEL = "Wind speed (m/s)"  # what the radius measures, shared by every s
 
 # Columns: set these to your table's column names
 HOUR = "Hour of day"  # role: theta
-DAYS = ["Day 1", "Day 2"]  # role: radius
+DAYS = ["12 Mar 2025", "13 Mar 2025"]  # role: radius
 
 # Data: replace this block with your own table, for example df = pd.read_csv("wind.csv")
 np.random.seed(42)
