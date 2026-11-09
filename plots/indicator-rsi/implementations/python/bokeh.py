@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-rsi: RSI Technical Indicator Chart
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-09
@@ -52,20 +52,21 @@ returns[60:75] = np.random.normal(-0.015, 0.01, 15)  # downtrend pushes RSI low
 returns[95:105] = np.random.normal(0.018, 0.01, 10)  # another uptrend
 price = 100 * np.exp(np.cumsum(returns))
 
-# Wilder-smoothed RSI over the lookback period
-delta = np.diff(price)
-gains = np.where(delta > 0, delta, 0)
-losses = np.where(delta < 0, -delta, 0)
-avg_gain = np.zeros(len(price))
-avg_loss = np.zeros(len(price))
-avg_gain[LOOKBACK] = np.mean(gains[:LOOKBACK])
-avg_loss[LOOKBACK] = np.mean(losses[:LOOKBACK])
-for i in range(LOOKBACK + 1, len(price)):
-    avg_gain[i] = (avg_gain[i - 1] * (LOOKBACK - 1) + gains[i - 1]) / LOOKBACK
-    avg_loss[i] = (avg_loss[i - 1] * (LOOKBACK - 1) + losses[i - 1]) / LOOKBACK
-rs = np.divide(avg_gain, avg_loss, out=np.zeros_like(avg_gain), where=avg_loss != 0)
-rsi = 100 - (100 / (1 + rs))
-df = pd.DataFrame({DATE: dates[LOOKBACK:], RSI: rsi[LOOKBACK:]})
+# Wilder-smoothed RSI: seeded with the simple mean of the first lookback, then an EWM with alpha = 1/lookback
+delta = pd.Series(price).diff().iloc[1:]
+gains, losses = delta.clip(lower=0), -delta.clip(upper=0)
+avg_gain = (
+    pd.concat([pd.Series([gains.iloc[:LOOKBACK].mean()]), gains.iloc[LOOKBACK:]])
+    .ewm(alpha=1 / LOOKBACK, adjust=False)
+    .mean()
+)
+avg_loss = (
+    pd.concat([pd.Series([losses.iloc[:LOOKBACK].mean()]), losses.iloc[LOOKBACK:]])
+    .ewm(alpha=1 / LOOKBACK, adjust=False)
+    .mean()
+)
+rsi = 100 - 100 / (1 + avg_gain / avg_loss)
+df = pd.DataFrame({DATE: dates[LOOKBACK:], RSI: rsi.to_numpy()})
 
 # Plot: reads only df and the constants above
 source = ColumnDataSource(df)
