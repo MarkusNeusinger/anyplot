@@ -2,53 +2,52 @@ library: altair
 language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:54:41Z'
-updated: '2026-05-18T07:04:01Z'
-generated_by: claude-haiku
-workflow_run: 26017583477
+updated: '2026-11-09T01:56:02Z'
+generated_by: claude-opus
+workflow_run: 42546644723
 issue: 3549
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Excellent visual quality with all text readable in both light and dark themes
-  - 'Perfect spec compliance: stacked areas with confidence bands and all required
-    features'
-  - 'Strong color treatment: correct Okabe-Ito palette with flawless theme adaptation
-    across both renders'
-  - 'Realistic and neutral data: renewable energy scenario with plausible values and
-    comprehensive feature coverage'
-  - 'Idiomatic Altair usage: proper layering, encoding, and configuration patterns'
-  - Proper confidence band visualization showing varying uncertainty across series
+  - Stacking is computed once with a groupby cumsum, and each band is that series'
+    own interval moved onto its stack base. Bands therefore stay symmetric around
+    their stacked edge and follow the same stack order at every quarter.
+  - 'Three layers built from one shared base (stacked area via y/y2, band area via
+    y/y2, full-colour edge line) combined with alt.layer: an idiomatic Vega-Lite grammar
+    composition.'
+  - Monotone interpolation smooths the edges without spline overshoot, so curves never
+    show values the data does not have.
+  - Temporal axis formatted as %Y-Q%q gives quarter labels for readers. The x grid
+    is off and the y grid is subtle.
+  - 'Library-native interactivity: .interactive() zoom/pan plus tooltips on the edge
+    lines carrying quarter, source, value and both bounds in the HTML output.'
+  - A theme-correct legend card (elevated background, soft stroke) whose two-line
+    title names the series and says the bands are symmetric 90% intervals. Data colours
+    are identical in both themes.
   weaknesses:
-  - Design Excellence limited to well-configured defaults without exceptional aesthetic
-    innovation
-  - 'Visual refinement minimal: opacity tuning and grid styling present but minimal
-    customization beyond library defaults'
-  - 'Data storytelling lacks emphasis: composition and uncertainty clearly displayed
-    but no highlight of key insights or strong focal points'
-  - 'Code reproducibility concern: rendered output colors and title suggest implementation
-    file may be stale compared to pipeline output'
+  - 'Suggestion: in the dark render the Solar band above the blue edge (#4467A3 at
+    0.3 opacity on #1A1A17) is quite dim; a slightly higher band opacity for dark
+    would give the top band more presence.'
+  - 'Suggestion: the legend title''s second line ''band: 90% interval (symmetric)''
+    could read as a sentence-case phrase (''Bands: 90% interval, symmetric'').'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and not pure white
-      Chrome: Title, axis labels (Quarter, Energy Consumption (TWh)), tick labels all rendered in dark text and clearly readable
-      Data: Stacked areas for Hydro (green #009E73), Wind (orange #D55E00), Solar (light blue #0072B2); confidence bands visible with 0.25 opacity around each series
-      Legend: "Energy Source" title with Hydro, Wind, Solar labels - all readable
-      Legibility verdict: PASS - All elements clearly visible and readable
+      Background: warm off-white #FAF8F1 throughout, padded to 3200x1800.
+      Chrome: bold dark title "area-stacked-confidence · python · altair · anyplot.ai" anchored left, with a soft grey subtitle about quarterly renewable energy and 90% prediction intervals. The y axis "Energy consumption (TWh)" runs 0–450 and the x axis "Quarter" has ticks 2020-Q2…2024-Q2. The y grid is subtle and there is no x grid. A legend card on the right reads "Energy source / band: 90% interval (symmetric)", with Hydro, Wind and Solar swatches. All text is dark and readable.
+      Data: three stacked layers. Hydro (#009E73) sits on the zero baseline at about 120 TWh, Wind (#C475FD) above it, and Solar (#4467A3) on top, rising to about 400 TWh. Each layer has a full-colour edge line at its stacked top. A semi-transparent band of the same hue straddles each edge: Hydro is narrow (±8), Wind ±20, and Solar widens from ±10 to ±30. The bands overlap neighbouring layers but stay visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and not pure black
-      Chrome: Title, axis labels, tick labels all rendered in light text and clearly readable against dark background - no "dark on dark" failures
-      Data: Stacked areas identical in color to light render (green, orange, blue) - confirming proper color consistency; confidence bands equally visible
-      Legend: Displays with proper light-colored text on dark background, fully readable
-      Legibility verdict: PASS - All elements clearly visible with proper theme adaptation
-
-    Both renders demonstrate perfect theme-readiness checks. Data colors are identical between light and dark (confirming Okabe-Ito compliance). Only chrome elements (background, text color, grid) properly adapt to theme while data colors remain constant.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and legend title in light ink, with ticks and subtitle in soft light grey. The legend card is on a slightly elevated dark fill with a light stroke, and the grid is subtle. No dark-on-dark text anywhere.
+      Data: the same three hues and opacities as the light render; only the chrome flipped. Edge lines stand out clearly. The Solar band above the top edge is dimmer against the dark page but still visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,75 +58,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly sized: title 28px, labels 20px, ticks 16px;
-          perfectly readable in both light and dark themes'
+        comment: Explicit font sizes; title, subtitle, ticks and legend readable in
+          both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels fully readable and well-spaced
+        comment: No text collisions; band overlap between layers is permitted by the
+          spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked areas, confidence bands, and color differentiation all clearly
-          visible; opacity (0.25 bands, 0.75 areas) properly adapted
+        comment: Edge lines at 2.5 px stand out; bands visible in both themes; legend
+          swatches match the layer fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast between layers; alpha
-          blending allows layer visibility without obscuring
+        comment: Green, lavender and blue are well separated and CVD-safe; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas; balanced margins; legend well-positioned;
-          good whitespace utilization
+        comment: 3200x1800; balanced plot area with legend at right; title about 50%
+          of the width; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Quarter'' (descriptive); Y-axis: ''Energy Consumption
-          (TWh)'' (with units)'
+        comment: '''Energy consumption (TWh)'' and ''Quarter'': descriptive, with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light: background #FAF8F1, text dark; Dark: background #1A1A17,
-          text light; data colors identical (green #009E73, orange #D55E00, blue #0072B2)
-          across both renders; proper theme-adaptive chrome'
+        comment: 'Imprint order #009E73, #C475FD, #4467A3; backgrounds #FAF8F1 / #1A1A17;
+          theme-correct chrome'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Professional appearance with well-configured Okabe-Ito defaults;
-          minimal customization beyond requirements
+        passed: true
+        comment: 'A left-anchored title with a soft-ink subtitle forms a typographic
+          hierarchy, and the legend sits on an elevated card: decisions beyond the
+          baseline'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Opacity tuning (0.25 and 0.75) and subtle grid present; some customization
-          but mostly library defaults
+        passed: true
+        comment: 'Axis ticks removed, x grid off and only the y grid kept, monotone
+          interpolation for clean edges: refinement beyond the spine and grid rules'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Energy composition and growth trends clearly shown; confidence bands
-          communicate uncertainty; lacks strong visual emphasis on key insights
+        comment: Displays the data as the spec asks; no hierarchy chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with confidence bands
+        comment: Stacked area with confidence bands; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stacking, confidence bands, multiple series
-          (Hydro/Wind/Solar), legend, time axis'
+        comment: Distinct colours with lighter semi-transparent bands (0.3), consistent
+          stack order, symmetric bands labelled as such, and a legend naming the series
+          and the bands; every 'A good version shows' bullet is visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: quarters (time); Y-axis: cumulative energy consumption;
-          proper stacking order'
+        comment: Stack base and top come from a cumsum; bands centred on each stacked
+          edge; monotone curves do not overshoot; full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''area-stacked-confidence · altair · Python · anyplot.ai'';
-          Legend: ''Energy Source'' with proper category labels'
+        comment: Mandated title format exact; legend title and entries are readable
+          text
     data_quality:
       score: 15
       max: 15
@@ -168,23 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three energy sources, growth trends, varying
-          uncertainty bands'
+        comment: Three series with distinct band widths, and the Solar band widens
+          over time; the stacking, banding and overlap are all exhibited
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Renewable energy forecast scenario is real, comprehensible, and neutral
+        comment: 'Quarterly renewable energy consumption by source with prediction
+          intervals: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible TWh values (50-200 range); proportions realistic for renewable
-          energy domain
+        comment: Hydro about 120, Wind 80–130, Solar 50–150 TWh per quarter is plausible
+          for a large economy; there are no check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,61 +194,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → chart creation → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: altair, numpy, pandas'
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code structure is clean; concern: rendered output colors and title
-          suggest code file may be stale compared to pipeline output'
+        passed: true
+        comment: Manual cumsum stacking is needed because the bands are shifted onto
+          the stack base; nothing a shorter call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct PNG and HTML outputs generated with proper scale factor
+        comment: Saves plot-{THEME}.png and .html with the pad-to-target block; current
+          Altair 6 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of alt.Chart(), mark_area(), proper encoding patterns,
-          alt.layer() composition, configure_*() styling
+        comment: A shared base chart with layered marks via y/y2 encodings, alt.layer,
+          typed escaped fields, and temporal axis formatting with %q
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses alt.Y2() for confidence bands and Vega-Lite encoding (distinctive
-          to Altair); interactive HTML export; could explore more Altair-specific
-          capabilities
-    summary:
-      total_score: 87
-      max_score: 100
-      verdict: APPROVED
-      threshold_met: true
-      attempt: 4
-      review_stage: Review 4/3
+        comment: Vega-Lite interpolate='monotone' and the quarter time format; tooltips
+          and interactive zoom are the mandated baseline
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T01:49:53Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
@@ -255,5 +254,6 @@ impl_tags:
   - data-generation
   dataprep:
   - cumulative-sum
+  - time-series
   styling:
   - alpha-blending
