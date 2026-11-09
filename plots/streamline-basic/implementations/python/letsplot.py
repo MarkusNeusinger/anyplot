@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 streamline-basic: Basic Streamline Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09

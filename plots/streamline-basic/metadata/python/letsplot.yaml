@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: streamline-basic
 created: '2025-12-31T00:17:19Z'
-updated: '2026-11-09T07:10:50Z'
+updated: '2026-11-09T07:17:01Z'
 generated_by: claude-opus
 workflow_run: 42576722240
 issue: 2861
@@ -15,46 +15,48 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamlin
 quality_score: 81
 review:
   strengths:
-  - Streamlines are integrated properly with scipy.integrate.solve_ivp (RK45, dense
-    output, terminal events for leaving the domain and closing the loop), so the eight
-    vortex loops are smooth, closed and never cross
-  - 'Speed is encoded along each line with the imprint_seq gradient (#009E73 to #4467A3),
-    and the color bar is titled Field Strength; its 0.3 to 2.8 range matches |v| =
-    r for the seeded radii'
-  - coord_cartesian limits come from the data and the panel aspect, so x and y share
-    one unit length and the circles render as true circles
-  - 'Theme tokens carry through every chrome element: text, grid and legend frame
-    read correctly on both #FAF8F1 and #1A1A17'
-  - 'Idiomatic lets-plot grammar: one geom_path with a group aesthetic over a tidy
-    long table, plus ggsave at scale=4 for the PNG and the interactive HTML'
+  - Streamlines are integrated with scipy.integrate.solve_ivp (RK45, dense output)
+    with terminal events for leaving the domain and closing a loop, so the eight vortex
+    loops are smooth closed circles without kinks, zigzags or crossings in both renders
+  - 'Color encodes speed along every line with the imprint_seq two-stop gradient (#009E73
+    → #4467A3) and a color bar titled ''Speed (m/s)'', as the Notes allow; the inner
+    loop at r ≈ 0.3 m is green and the outer loop at r ≈ 2.8 m blue, matching u =
+    -y, v = x at 1 rad/s'
+  - coord_cartesian limits are derived from the data and the panel aspect so x and
+    y share one unit length and the circles render as true circles
+  - 'Theme tokens are threaded through every chrome element: warm off-white and near-black
+    page, INK title and axis titles, INK_SOFT ticks, ELEVATED_BG color-bar panel;
+    all text readable in both themes'
+  - geom_path grouped by streamline keeps the native lets-plot tooltip on each line
+    in the HTML output
   weaknesses:
-  - 'VQ-05 (both): the equal-aspect vortex fills only the middle ~55 % of the landscape
-    panel, so x runs to ±5 while the data ends at ±3 and about 40 % of the plot area
-    is empty grid → a square canvas, ggsize(600, 600) with scale=4 (2400 × 2400),
-    where the ±3 field fills the panel. Likely cause: ggsize(800, 450) together with
-    PANEL_ASPECT = 1.67 widening the x limits.'
-  - 'VQ-06, DQ-02 (both): the axis and color bar titles ''X Position'', ''Y Position''
-    and ''Field Strength'' carry no units and no physical context, so the field reads
-    as an abstract math example → name a concrete flow with units, for example ''x
-    (m)'', ''y (m)'' and ''Speed (m/s)'' for a rotating fluid vortex. Likely cause:
-    the column constants X, Y and the ''Field Strength'' column name.'
-  - 'Suggestion: sparse direction arrows along a few loops would show that the vortex
-    turns counter-clockwise, which the static render does not reveal.'
+  - 'SC-02 (both): all eight seeds lie on the positive x-axis between 0.3 m and 2.79
+    m, so the four corners of the 6 m × 6 m domain (radius 3 to 4.24 m, about a fifth
+    of the area) carry no streamline although the field is defined there → seeds that
+    also reach the corner region so partial arcs that end at the domain edge trace
+    the field across the whole domain (+1 to +3 seeds beyond r = 3 m, for example
+    along the diagonal). Likely cause: SEED_SPAN = (0.1, 0.93) of the half-width on
+    a single horizontal seed line.'
+  - 'Suggestion: sparse direction arrows along the loops (the spec allows them) would
+    show the counter-clockwise sense of rotation, which the static render does not
+    convey.'
+  - 'Suggestion: varying line width with speed (allowed by the Notes) would reinforce
+    the green-to-blue speed gradient.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the plot and panel.
-      Chrome: title "streamline-basic · python · letsplot · anyplot.ai" in dark ink top-left (~46 % of the width); axis titles "X Position" and "Y Position" in dark ink; tick labels -5..5 and -3..3 in INK_SOFT gray; subtle major and minor grid; color bar titled "Field Strength" (0.5 to 2.5 ticks) on an elevated off-white legend box. All text readable.
-      Data: eight concentric, closed circular streamlines centered at the origin (radii ~0.28 to 2.8), each colored by speed along the imprint_seq gradient from brand green #009E73 (inner) to blue #4467A3 (outer). Smooth, evenly spaced, no crossings. Equal aspect leaves empty grid left and right of the field.
+      Background: warm off-white #FAF8F1 across canvas and panel; the color-bar panel sits on the slightly lighter elevated surface.
+      Chrome: title "streamline-basic · python · letsplot · anyplot.ai" top left in dark ink, about 62 % of the width; axis titles "x (m)" and "y (m)" in dark ink; tick labels -3…3 (x) and -3.5…3.5 (y) in soft dark grey; subtle major and minor grid; color bar titled "Speed (m/s)" with ticks 0.5–2.5. All readable.
+      Data: eight concentric closed circular streamlines centred at the origin, radii about 0.3 to 2.8 m, evenly spaced; color runs from brand green #009E73 (inner) to blue #4467A3 (outer) by speed. Corners of the domain beyond r = 3 m are empty. Equal aspect, circles are round.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and axis titles in light ink, tick labels in light gray, grid subtle but visible, legend box on #242420 with light text. No dark-on-dark text.
-      Data: identical circles and identical green-to-blue gradient as in the light render; only the chrome flips. Brand green reads well.
+      Background: warm near-black #1A1A17; color-bar panel on the slightly lighter #242420 surface.
+      Chrome: title and axis titles in light ink, tick labels in light soft grey, grid subtle but visible; no dark-on-dark text.
+      Data: the same eight circles with identical green-to-blue speed colors; only chrome flipped. Brand green inner loop clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,72 +64,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (16/12/10 pt); readable in both themes and at thumbnail
-          size
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10); readable in
+          both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; lines are evenly separated
+        comment: No text collisions; streamlines never cross
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1.2-width paths at alpha 0.9 stand out clearly on both backgrounds;
-          color bar visible
+        comment: Lines at size 1.2 clearly visible on both backgrounds; color-bar
+          gradient visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp, CVD-safe, good contrast
+        comment: Green-to-blue sequential ramp, CVD-safe, good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: About 40 % of the landscape panel is empty grid beside the equal-aspect
-          vortex (defect line)
+        passed: true
+        comment: 2400x2400 square canvas, equal aspect, nothing cut off, title at
+          about 62 % width
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive but without units (defect line)
+        passed: true
+        comment: '''x (m)'', ''y (m)'', ''Speed (m/s)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq #009E73 to #4467A3; correct #FAF8F1 and #1A1A17 backgrounds'
+        comment: 'imprint_seq #009E73 → #4467A3 for speed; correct theme backgrounds'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
+        passed: true
         comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Data-derived equal-unit coord_cartesian limits make the loops true
-          circles
+        comment: The spine and grid rules met; default minor grid kept
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Speed gradient shown as the Notes allow; no hierarchy chosen beyond
-          the Notes
+        comment: Data displayed; the speed gradient is the Notes' optional encoding,
+          no hierarchy chosen beyond it
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic streamline plot; no quiver, background field or callouts
+        comment: Streamline plot of a single vector field, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Smooth non-crossing curves, balanced density, speed color with a
-          named color bar; arrows optional and not drawn
+        comment: 'Smooth non-crossing lines, balanced density, speed color with named
+          color bar met; ''started across the whole domain'' missed: corners beyond
+          r = 3 m untraced (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Paths are integrated from the field; marks sit at their values
+        comment: Lines sit on the integrated trajectories; x/y on equal units
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; color bar named
+        comment: Mandated title; color bar titled 'Speed (m/s)'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -164,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the vortex structure with closed loops and speed variation
+        comment: Vortex topology with speed varying radially is shown; arrows and
+          width are optional
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: The spec's vortex example, but the labels carry no physical context
-          (defect line)
+        passed: true
+        comment: Rigid-body rotation in a 6 m tank at 1 rad/s, the spec's own example,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: for u = -y, v = x the speed equals the radius; the color
-          bar runs from ~0.3 to ~2.8, matching the inner and outer radii'
+        comment: 'Checked: speed = r at 1 rad/s; inner loop r ≈ 0.3 m reads ≈ 0.3
+          m/s, outer r ≈ 2.79 m reads ≈ 2.8 m/s at the top of the color bar'
     code_quality:
       score: 10
       max: 10
@@ -188,66 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; the defs are callbacks the solve_ivp API requires
+        comment: Zoned script; the defs are callbacks solve_ivp requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic field
+        comment: Deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses solve_ivp and LinearNDInterpolator; lets-plot has no streamline
-          geom
+        comment: Integration delegated to solve_ivp and interpolation to scipy.interpolate;
+          no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: false
-        comment: Tidy long table with a group aesthetic on geom_path, coord_cartesian
-          and ggsave scale
+        passed: true
+        comment: 'Standard grammar: geom_path with group, scale_color_gradient, coord_cartesian,
+          theme'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
         comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T07:08:08Z'
+  rendered_at: '2026-11-09T07:14:07Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
-  - html-export
+  - custom-colormap
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - interpolation
-  - ode-integration
   styling:
-  - custom-colormap
-  - alpha-blending
-  - publication-ready
+  - minimal-chrome
