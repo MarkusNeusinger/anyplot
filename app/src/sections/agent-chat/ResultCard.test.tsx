@@ -279,14 +279,14 @@ describe('ResultCard', () => {
   it('sizes the image box to the loaded PNG, footer strip included', () => {
     renderCard();
     const box = screen.getByTestId('result-image-box');
-    expect(getComputedStyle(box).aspectRatio).toBe('3200/1864');
+    expect(getComputedStyle(box).aspectRatio).toBe('3200 / 1864');
 
     const image = screen.getByAltText('Adapted plot, version 2, light theme');
     Object.defineProperty(image, 'naturalWidth', { value: 2400 });
     Object.defineProperty(image, 'naturalHeight', { value: 2448 });
     fireEvent.load(image);
 
-    expect(getComputedStyle(box).aspectRatio).toBe('2400/2448');
+    expect(getComputedStyle(box).aspectRatio).toBe('2400 / 2448');
   });
 
   it('copies the PNG with the Clipboard API', async () => {
@@ -615,7 +615,7 @@ describe('ResultCard', () => {
       const frame = await screen.findByTitle('Interactive plot, version 2, light theme');
       expect(frame.style.width).toBe('1232px');
       expect(getComputedStyle(screen.getByTestId('result-image-box')).aspectRatio).toBe(
-        '1232/1232'
+        '1232 / 1232'
       );
     });
 
