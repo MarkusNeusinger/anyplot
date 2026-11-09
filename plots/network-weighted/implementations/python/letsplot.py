@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-08
+Quality: 88/100 | Updated: 2026-11-09
 """
 
 import os
@@ -25,20 +25,21 @@ EDGE_WIDTH = (0.6, 5.0)  # line size of the lightest and the heaviest edge
 EDGE_ALPHA = 0.55  # translucent edges keep crossings readable
 NODE_SIZE = (7.0, 15.0)  # point size of the node with the least and the most total trade
 LAYOUT_STEPS = 400  # Fruchterman-Reingold iterations with a linear cooling schedule
+EDGE_CLEARANCE = 0.4  # a node closer than this share of the ideal spacing k to a foreign edge is pushed off it
 
 # Columns: set these to your table's column names
 SOURCE = "Source"  # role: edges
-TARGET = "Target"  # role: edges
+TARGET = "Target"  # role: extra
 WEIGHT = "Trade volume (billion USD)"  # role: weight
 
 # Data: replace this block with your own edge list, for example df = pd.read_csv("trade.csv")
 edge_list = [
-    ("USA", "China", 550),
+    ("USA", "China", 580),
     ("USA", "Germany", 180),
     ("USA", "Japan", 220),
     ("USA", "UK", 140),
-    ("USA", "Canada", 380),
-    ("USA", "Mexico", 420),
+    ("USA", "Canada", 760),
+    ("USA", "Mexico", 840),
     ("USA", "India", 95),
     ("USA", "S.Korea", 130),
     ("China", "Germany", 200),
@@ -79,11 +80,15 @@ tgt = edges[TARGET].map(index_of).to_numpy()
 weights = edges[WEIGHT].to_numpy(dtype=float)
 
 # Weighted Fruchterman-Reingold layout: every pair repels with k²/d, every edge attracts with
-# w·d²/k, so a heavy trade link pulls its two countries together; the step shrinks each round
+# w·d²/k, so a heavy trade link pulls its two countries together; the step shrinks each round.
+# In the second half a node is also pushed off any edge it does not belong to, so no edge
+# runs hidden under a third country.
 rng = np.random.default_rng(42)
 pos = rng.uniform(-1, 1, size=(n_nodes, 2))
 k = np.sqrt(4.0 / n_nodes)
 w_rel = np.sqrt(weights / weights.max())  # square root keeps the heaviest pairs from collapsing
+node_ids = np.arange(n_nodes)[:, None]
+foreign = (node_ids != src) & (node_ids != tgt)  # node i is not an endpoint of edge e
 for step in range(LAYOUT_STEPS):
     delta = pos[:, None, :] - pos[None, :, :]
     dist = np.maximum(np.linalg.norm(delta, axis=2), 0.01)
@@ -93,6 +98,13 @@ for step in range(LAYOUT_STEPS):
     pull = edge_delta * (w_rel * edge_dist / k)[:, None]
     np.add.at(disp, src, -pull)
     np.add.at(disp, tgt, pull)
+    if step >= LAYOUT_STEPS // 2:
+        seg = -edge_delta
+        along = ((pos[:, None, :] - pos[src]) * seg).sum(axis=2) / np.maximum((seg**2).sum(axis=1), 1e-9)
+        off = pos[:, None, :] - (pos[src] + np.clip(along, 0, 1)[:, :, None] * seg)
+        gap = np.maximum(np.linalg.norm(off, axis=2), 0.01)
+        push = np.where(foreign & (gap < EDGE_CLEARANCE * k), k**2 / gap**2, 0.0)
+        disp += (off * push[:, :, None]).sum(axis=1)
     temperature = 0.1 * (1 - step / LAYOUT_STEPS) + 0.002
     length = np.maximum(np.linalg.norm(disp, axis=1), 1e-9)
     pos += disp / length[:, None] * np.minimum(length, temperature)[:, None]
