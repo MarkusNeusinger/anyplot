@@ -1,52 +1,82 @@
 """ anyplot.ai
 histogram-density: Density Histogram
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-11
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
-# Data - Generate realistic test scores with bimodal distribution
-np.random.seed(42)
-# Create bimodal distribution (two groups of students with different means)
-group1 = np.random.normal(loc=65, scale=10, size=300)  # Average performers
-group2 = np.random.normal(loc=85, scale=5, size=200)  # High performers
-test_scores = np.concatenate([group1, group2])
-# Clip to realistic test score range
-test_scores = np.clip(test_scores, 0, 100)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Imprint palette: histogram bars take position 1, the KDE curve position 2
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Plot density histogram
-sns.histplot(
-    test_scores,
-    stat="density",
-    bins=25,
-    color="#306998",
-    alpha=0.7,
-    edgecolor="white",
-    linewidth=1.5,
-    ax=ax,
-    kde=False,
-    label="Density Histogram",
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
 
-# Add KDE overlay for smooth density estimate (seaborn feature)
-sns.kdeplot(test_scores, ax=ax, color="#FFD43B", linewidth=4, label="Kernel Density Estimate (KDE)")
+# Columns: set these to your table's column names
+TEST_SCORE = "Test Score (points)"  # role: values
 
-# Style and labels
-ax.set_xlabel("Test Score (points)", fontsize=20)
-ax.set_ylabel("Probability Density", fontsize=20)
-ax.set_title("histogram-density · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+np.random.seed(42)
+group1 = np.random.normal(loc=65, scale=10, size=300)  # Average performers
+group2 = np.random.normal(loc=85, scale=5, size=200)  # High performers
+df = pd.DataFrame({TEST_SCORE: np.clip(np.concatenate([group1, group2]), 0, 100)})
 
-# Legend
-ax.legend(fontsize=14, loc="upper left")
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+sns.histplot(
+    data=df,
+    x=TEST_SCORE,
+    stat="density",
+    bins=25,
+    color=IMPRINT_PALETTE[0],
+    alpha=0.75,
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
+    ax=ax,
+    label="Density histogram",
+)
+sns.kdeplot(
+    data=df, x=TEST_SCORE, cut=0, ax=ax, color=IMPRINT_PALETTE[1], linewidth=2.5, label="Kernel density estimate (KDE)"
+)
+
+# Style
+title = "histogram-density · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=round(12 * min(1.0, 67 / len(title))), fontweight="medium", color=INK)
+ax.set_xlabel(TEST_SCORE, fontsize=10)
+ax.set_ylabel("Probability Density", fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.yaxis.grid(True, linewidth=0.8)
+ax.set_axisbelow(True)
+sns.despine(ax=ax)
+ax.legend(fontsize=8, loc="upper left")
+
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
