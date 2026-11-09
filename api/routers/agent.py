@@ -57,6 +57,7 @@ from api.agent_cases import (
     BundleError,
     CaseBucket,
     CaseRound,
+    CaseTurns,
     GcsCaseBucket,
     NoChatData,
     Submission,
@@ -1873,7 +1874,9 @@ class CaseDetail(CaseItem):
     (`snapshot_library_version`). `rounds` are the case's version's rounds, `session_versions`
     the versions the session held and `last_run` how its latest plot run ended, so a case on
     the chat, which holds no version, still says whether a plot existed or the run failed; the
-    three are empty or null for a manifest from before the agents service sent them.
+    three are empty or null for a manifest from before the agents service sent them. `turns` is
+    the session's turn record (`api.agent_cases.CaseTurns`): each turn's tool calls and guard
+    verdicts as closed codes, null for a manifest from before the agents service kept one.
     """
 
     expired: bool
@@ -1890,6 +1893,7 @@ class CaseDetail(CaseItem):
     rounds: list[CaseRoundOut]
     session_versions: int | None
     last_run: CaseLastRunOut | None
+    turns: CaseTurns | None
     siblings: list[str]
 
 
@@ -2037,6 +2041,7 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
             rounds=[],
             session_versions=None,
             last_run=None,
+            turns=None,
             siblings=siblings,
         )
     detail = manifest_detail(manifest, row.result_version)
@@ -2069,6 +2074,7 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
             if detail.last_run is not None
             else None
         ),
+        turns=detail.turns,
         siblings=siblings,
     )
 

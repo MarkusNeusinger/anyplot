@@ -450,6 +450,54 @@ class ManifestDetail:
     """How many versions the session held when the case was sent; None for a manifest from before it was kept."""
     last_run: CaseLastRun | None = None
     """How the session's latest plot run ended; None before any run, or for a manifest from before it was kept."""
+    turns: CaseTurns | None = None
+    """The session's turn record; None for a manifest from before the agents service kept one."""
+
+
+@dataclass(frozen=True)
+class CaseToolCall:
+    """One root tool call of a turn (the agents' `turn_record.RecordedCall`): its name, the guards' verdict, what it
+    did, and the code of its answer."""
+
+    tool: str
+    verdict: str
+    outcome: str
+    code: str | None
+
+
+@dataclass(frozen=True)
+class CaseGuardLine:
+    """One turn hook's verdict (the agents' `turn_record.GuardLine`)."""
+
+    guard: str
+    verdict: str
+
+
+@dataclass(frozen=True)
+class CaseTurn:
+    """One chat turn as the case's turn record keeps it (the agents' `turn_record.TurnRecord`): closed codes and counts
+    only. Turn N is the transcript's N-th user line; a turn refused before the scope judge has none and shares the
+    next turn's number."""
+
+    turn: int
+    action: str
+    kind: str
+    refusal: str | None
+    error: str | None
+    tools: tuple[CaseToolCall, ...]
+    tools_dropped: int
+    guards: tuple[CaseGuardLine, ...]
+    guards_dropped: int
+    prep_ops: tuple[str, ...]
+    prep_ops_dropped: int
+
+
+@dataclass(frozen=True)
+class CaseTurns:
+    """The bundle's `turns`: the latest turns in turn order, and how many older ones the ring no longer held."""
+
+    records: tuple[CaseTurn, ...]
+    dropped: int
 
 
 def _list(value: Any) -> list[Any]:
@@ -536,6 +584,126 @@ def _last_run(value: Any) -> CaseLastRun | None:
     )
 
 
+# The turn record's closed vocabularies (`agents/anyplot/turn_record.py`), pinned equal by a test like the rounds'.
+# A value outside its set reads `other`, so an entry stays countable and no text reaches the view.
+TURN_ACTIONS = frozenset("text create_plot carry_plot plot_new_data summarize_data example_data other".split())
+TURN_KINDS = frozenset("plot prep formula code example talk refused error".split())
+TURN_REFUSALS = frozenset(
+    "out_of_scope needs_data other_library unsupported_content locked_out session_closed budget service_paused"
+    " rate_limited daily_limit other".split()
+)
+TURN_ERRORS = frozenset("guard_unavailable capacity run_limit deadline no_reply internal cancelled other".split())
+TURN_TOOLS = frozenset(
+    "get_dataset_profile get_spec_brief get_current_code set_bindings set_language keep_plot_request forget"
+    " switch_plot prepare_data query_data generate_data run_data_code plot_pipeline other".split()
+)
+CALL_VERDICTS = frozenset(
+    "allowed tool_not_allowed invalid_arguments url_or_path_not_allowed plot_as_confirmed one_pipeline_per_turn"
+    " switch_requested data_changed_this_turn summary_turn plot_already_run too_many_data_runs too_many_prepare_calls"
+    " too_many_generate_calls too_many_query_calls budget internal unknown".split()
+)
+CALL_OUTCOMES = frozenset("ok changed kept shipped failed not_ready unconfirmed error refused unfinished".split())
+CALL_CODES = frozenset(
+    "budget busy capacity code_error daily_limit data_changed_this_turn data_refused data_unconfirmed deadline"
+    " empty_result error guard_unavailable incomplete_bindings internal invalid_arguments invalid_bindings invalid_code"
+    " invalid_expression invalid_language invalid_operation invalid_operations invalid_range invalid_result"
+    " library_unavailable memory_full no_dataset no_numbers one_pipeline_per_turn other other_paste plot_already_run"
+    " plot_as_confirmed plot_type_switch_unavailable render result_too_large run_active run_failed run_limit"
+    " same_library session_not_open summary_turn switch_requested timeout too_large too_many_data_runs"
+    " too_many_generate_calls too_many_points too_many_prepare_calls too_many_query_calls too_wide tool_not_allowed"
+    " type_mismatch unavailable undefined unknown_column unknown_entry unknown_version unparseable"
+    " unsupported_operation url_or_path_not_allowed validation version_not_kept".split()
+)
+TURN_GUARDS = frozenset(
+    "scope_guard output_guard empty_reply reply_language shipped_reply plot_button budget_exempt budget_halt queue"
+    " session_closed message_limit".split()
+)
+GUARD_VERDICTS = frozenset(
+    "in_scope out_of_scope needs_data other_library unsupported_content locked_out service_paused budget"
+    " guard_unavailable paste_note_rescues_spent paste_note_in_scope session_closed close_warning"
+    " served_library_in_scope language_offer language_offer_failed language_detected language_write_failed"
+    " not_offered reply_too_long shortened reply_cut reasked empty_kept no_reply mismatch reask_failed error dropped"
+    " kept asked exempt rate_limited daily_limit started expired withdrawn run_limit full other".split()
+)
+PREP_OPS = frozenset(
+    "rename drop_columns drop_rows set_type aggregate sort pivot_longer pivot_wider classify derive make_date"
+    " row_number date_number split extract strip replace compute diff rolling blank keep_rows unsupported".split()
+)
+# The record's own bounds (`turn_record.MAX_KEPT_TURNS` and the `MAX_RECORD_*`), read again here.
+_MAX_TURNS = 50
+_MAX_TURN_TOOLS = 32
+_MAX_TURN_GUARDS = 24
+_MAX_TURN_PREP_OPS = 16
+
+
+def _closed(value: Any, allowed: frozenset[str]) -> str:
+    return value if isinstance(value, str) and value in allowed else "other"
+
+
+def _closed_or_none(value: Any, allowed: frozenset[str]) -> str | None:
+    return None if value is None else _closed(value, allowed)
+
+
+def _bounded(items: list[Any], bound: int, dropped: Any, *, latest: bool = False) -> tuple[list[Any], int]:
+    """The first `bound` of `items`, or with `latest` the last, and the record's own count of what its bound left out
+    plus what this one leaves out."""
+    kept = items[-bound:] if latest else items[:bound]
+    return kept, (_count(dropped) or 0) + len(items) - len(kept)
+
+
+def _turn(item: dict[str, Any], number: int) -> CaseTurn:
+    calls, calls_dropped = _bounded(
+        [call for call in _list(item.get("tools")) if isinstance(call, dict)],
+        _MAX_TURN_TOOLS,
+        item.get("tools_dropped"),
+    )
+    lines, lines_dropped = _bounded(
+        [line for line in _list(item.get("guards")) if isinstance(line, dict)],
+        _MAX_TURN_GUARDS,
+        item.get("guards_dropped"),
+        latest=True,
+    )
+    ops, ops_dropped = _bounded(_list(item.get("prep_ops")), _MAX_TURN_PREP_OPS, item.get("prep_ops_dropped"))
+    return CaseTurn(
+        turn=number,
+        action=_closed(item.get("action"), TURN_ACTIONS),
+        kind=_closed(item.get("kind"), TURN_KINDS),
+        refusal=_closed_or_none(item.get("refusal"), TURN_REFUSALS),
+        error=_closed_or_none(item.get("error"), TURN_ERRORS),
+        tools=tuple(
+            CaseToolCall(
+                tool=_closed(call.get("tool"), TURN_TOOLS),
+                verdict=_closed(call.get("verdict"), CALL_VERDICTS),
+                outcome=_closed(call.get("outcome"), CALL_OUTCOMES),
+                code=_closed_or_none(call.get("code"), CALL_CODES),
+            )
+            for call in calls
+        ),
+        tools_dropped=calls_dropped,
+        guards=tuple(
+            CaseGuardLine(
+                guard=_closed(line.get("guard"), TURN_GUARDS), verdict=_closed(line.get("verdict"), GUARD_VERDICTS)
+            )
+            for line in lines
+        ),
+        guards_dropped=lines_dropped,
+        prep_ops=tuple(_closed(op, PREP_OPS) for op in ops),
+        prep_ops_dropped=ops_dropped,
+    )
+
+
+def _turns(value: Any) -> CaseTurns | None:
+    """The bundle's turn record as a case shows it: None when the bundle has none (a case from before the agents
+    service kept one). A record without a turn number is left out, any other value outside its vocabulary reads
+    `other`, and each list keeps the record's own bound."""
+    if not isinstance(value, dict):
+        return None
+    items = [item for item in _list(value.get("records")) if isinstance(item, dict)]
+    records = [_turn(item, number) for item in items if (number := _count(item.get("turn"))) is not None]
+    kept, dropped = _bounded(records, _MAX_TURNS, value.get("dropped"), latest=True)
+    return CaseTurns(records=tuple(kept), dropped=dropped)
+
+
 def manifest_detail(manifest: dict[str, Any], result_version: int) -> ManifestDetail:
     """Read the bundle a manifest keeps, defensively: it is the agents service's shape, not this module's.
 
@@ -573,6 +741,7 @@ def manifest_detail(manifest: dict[str, Any], result_version: int) -> ManifestDe
         rounds=_rounds(result.get("rounds")),
         session_versions=_count(session.get("versions")),
         last_run=_last_run(session.get("last_run")),
+        turns=_turns(bundle.get("turns")),
     )
 
 

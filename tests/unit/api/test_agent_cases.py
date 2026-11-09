@@ -21,8 +21,12 @@ from api.agent_cases import (
     BundleError,
     CaseConflict,
     CaseFile,
+    CaseGuardLine,
     CaseLastRun,
     CaseRound,
+    CaseToolCall,
+    CaseTurn,
+    CaseTurns,
     FeedbackCase,
     GcsCaseBucket,
     NoChatData,
@@ -448,7 +452,83 @@ def test_manifest_detail_shows_only_closed_codes() -> None:
 def test_manifest_detail_of_an_older_manifest_has_no_rounds_or_run() -> None:
     detail = manifest_detail(_case().manifest, 3)
 
-    assert (detail.rounds, detail.session_versions, detail.last_run) == ((), None, None)
+    assert (detail.rounds, detail.session_versions, detail.last_run, detail.turns) == ((), None, None, None)
+
+
+PREP_TURN = {
+    "turn": 2,
+    "action": "text",
+    "kind": "prep",
+    "refusal": None,
+    "error": None,
+    "tools": [
+        {"tool": "prepare_data", "verdict": "allowed", "outcome": "error", "code": "invalid_operations"},
+        {"tool": "plot_pipeline", "verdict": "plot_as_confirmed", "outcome": "refused", "code": None},
+    ],
+    "tools_dropped": 0,
+    "guards": [{"guard": "scope_guard", "verdict": "in_scope"}, {"guard": "output_guard", "verdict": "reply_cut"}],
+    "guards_dropped": 1,
+    "prep_ops": ["derive"],
+    "prep_ops_dropped": 0,
+}
+
+
+def test_manifest_detail_reads_the_turn_record() -> None:
+    manifest = {"bundle": {"turns": {"records": [PREP_TURN], "dropped": 4}}}
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns == CaseTurns(
+        records=(
+            CaseTurn(
+                turn=2,
+                action="text",
+                kind="prep",
+                refusal=None,
+                error=None,
+                tools=(
+                    CaseToolCall("prepare_data", "allowed", "error", "invalid_operations"),
+                    CaseToolCall("plot_pipeline", "plot_as_confirmed", "refused", None),
+                ),
+                tools_dropped=0,
+                guards=(CaseGuardLine("scope_guard", "in_scope"), CaseGuardLine("output_guard", "reply_cut")),
+                guards_dropped=1,
+                prep_ops=("derive",),
+                prep_ops_dropped=0,
+            ),
+        ),
+        dropped=4,
+    )
+    # A session whose turns all left the ring, or that ran none, still has a record.
+    assert manifest_detail({"bundle": {"turns": {"records": []}}}, 0).turns == CaseTurns(records=(), dropped=0)
+
+
+def test_manifest_detail_closes_the_turn_record_to_its_vocabularies() -> None:
+    """Whatever the bundle holds, a value outside the record's vocabularies reads `other`, never as text."""
+    noisy = {
+        **PREP_TURN,
+        "action": "Zürich",
+        "kind": None,
+        "refusal": "the column Zürich",
+        "tools": [{"tool": "zurich", "verdict": 3, "code": "KeyError: 'Zürich'"}, "call"],
+        "guards": [{"guard": "scope_guard", "verdict": "zurich"}] * 30,
+        "prep_ops": ["derive", "Zürich"],
+        "tools_dropped": "two",
+    }
+    manifest = {"bundle": {"turns": {"records": [noisy, {"action": "text"}, "turn"], "dropped": None}}}
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns is not None and turns.dropped == 0
+    (only,) = turns.records
+    assert (only.action, only.kind, only.refusal, only.error) == ("other", "other", "other", None)
+    assert only.tools == (CaseToolCall("other", "other", "other", "other"),)
+    assert only.tools_dropped == 0
+    # The latest 24 verdicts, the earlier ones counted with the record's own.
+    assert only.guards == (CaseGuardLine("scope_guard", "other"),) * 24
+    assert only.guards_dropped == 1 + 6
+    assert only.prep_ops == ("derive", "other")
+    assert manifest_detail({"bundle": {"turns": "none"}}, 0).turns is None
 
 
 def test_gcs_download_returns_the_objects_bytes(monkeypatch) -> None:

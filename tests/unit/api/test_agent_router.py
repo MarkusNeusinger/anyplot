@@ -1987,6 +1987,25 @@ ROUNDS = [
     },
 ]
 """The rounds of the bundle's version: a crash in the first, a shipped repair the review found an overlap in."""
+TURNS = {
+    "records": [
+        {
+            "turn": 1,
+            "action": "create_plot",
+            "kind": "plot",
+            "refusal": None,
+            "error": None,
+            "tools": [{"tool": "plot_pipeline", "verdict": "allowed", "outcome": "shipped", "code": None}],
+            "tools_dropped": 0,
+            "guards": [{"guard": "shipped_reply", "verdict": "dropped"}],
+            "guards_dropped": 0,
+            "prep_ops": [],
+            "prep_ops_dropped": 0,
+        }
+    ],
+    "dropped": 0,
+}
+"""The bundle's turn record: the page's plot action, whose reply lost its confirm sentence."""
 
 
 def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "dark"), data_csv: str | None = None):
@@ -2006,6 +2025,7 @@ def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "da
             {"role": "user", "text": "log scale on y"},
             {"role": "assistant", "text": "Done."},
         ],
+        "turns": TURNS,
         "versions": [
             {
                 "number": number,
@@ -2836,6 +2856,7 @@ class TestCases:
             "turn": 2,
             "rounds": ROUNDS,
         }
+        assert body["turns"] == TURNS
         assert cases.downloads == [case_object(CASE_ID, "manifest.json")]
 
     def test_detail_diffs_against_the_catalogue_without_the_export_header(self, client, cases, rows, catalogue) -> None:
@@ -2892,6 +2913,7 @@ class TestCases:
             "config",
             "session_versions",
             "last_run",
+            "turns",
         ):
             assert body[field] is None, field
         assert (body["residual_defects"], body["changes"], body["bindings"], body["rounds"]) == ([], [], [], [])
