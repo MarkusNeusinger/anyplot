@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: parallel-categories-basic
 created: '2025-12-30T21:54:55Z'
-updated: '2026-11-09T13:54:35Z'
+updated: '2026-11-09T14:00:21Z'
 generated_by: claude-opus
 workflow_run: 42628491518
 issue: 2501
@@ -12,50 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Every axis is named and divided into category segments whose lengths are proportional
-    to the order shares, with gaps between segments.
-  - Ribbon widths come from the summed Orders at both ends, and each ribbon keeps
-    its Category hue across all four axes; the 'Category:' legend names the coloring
-    dimension.
-  - Category order follows the data's first appearance, which is natural here (Completed
-    → Returned → Cancelled). The plot has no annotation layers, reference lines or
-    highlights.
-  - Theme tokens are threaded through the pygal Style and every custom SVG element,
-    so both renders are theme-correct with identical data hues.
-  - The plausible e-commerce order-flow scenario (Category → Distribution → Payment
-    → Outcome) uses 4 dimensions with 3–4 categories each.
+  - Segment lengths and ribbon widths are both computed from the Orders totals (dim_totals,
+    flow_value / category total), so every axis reads as a share of the same 5,750
+    orders and the ribbons stack exactly into their segments at both ends
+  - Ribbons are colored by the first dimension (Category) and keep that Imprint hue
+    across all three gaps, split per category at every axis via the three-key groupby,
+    with an explicit 'Category:' legend naming the coloring dimension
+  - 'Theme handling is complete: PAGE_BG, INK, INK_SOFT and INK_MUTED drive pygal''s
+    Style and every hand-written SVG element, and the ribbon opacity is tuned per
+    theme (0.45 light, 0.62 dark) so ribbons stay legible on both surfaces'
+  - Category labels sit in reserved lanes (label_lanes) right of axes 2-4 and left
+    of axis 1, so no label collides with a ribbon in either render
+  - Realistic, neutral e-commerce order-flow scenario (product category, distribution
+    channel, payment method, outcome) with plausible counts and rare Returned/Cancelled
+    paths
   weaknesses:
-  - 'VQ-02 (both): the right-side category labels of axes 2–4 (Wholesale, Retail,
-    Debit Card, Digital Wallet, Direct) are printed over the ribbon bands that leave
-    those segments, and only a page-colored halo separates them → keep the labels
-    clear of the ribbons, e.g. by widening the band gap at each label or by shortening
-    the ribbon start. Likely cause: label_x = x + bar_width / 2 + 20 places the text
-    inside the ribbon band span band_x0 … band_x1.'
-  - 'VQ-03 (dark): the Home & Garden #4467A3 ribbons at fill-opacity 0.45 blend to
-    a dull navy close to the #1A1A17 page, the weakest ribbons in the render → raise
-    the ribbon opacity on dark (about 0.6–0.65, +0.15 to +0.2). Likely cause: the
-    fixed fill-opacity="0.45" on the ribbon paths for both themes.'
-  - 'Suggestion: the HTML embeds the SVG through <object> without any hover; a <title>
-    per ribbon (category path and count) would give native browser tooltips for path
-    tracing.'
+  - 'VQ-05 (both): ribbons leaving Distribution and Payment start about 270-330 px
+    right of the axis bars (past the label lane), so their origin floats detached
+    from the segment they come from while the incoming ribbons touch the bars → start
+    the outgoing ribbons at the bar edge and keep the labels clear another way (shorter
+    label lane, labels left of the bar, or smaller label_pad). Likely cause: band_x0
+    adds label_lanes[dim_idx] for dim_idx > 0.'
+  - 'Suggestion: pygal''s own interactive output is unused; the HTML only embeds the
+    static SVG, so per-ribbon <title> elements would give the HTML view the path tracing
+    the Notes mention.'
+  - 'Suggestion: the legend entries are spaced at chart_width / 4, leaving wide empty
+    runs between the four swatches; a tighter spacing would read as one unit.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: monospace mandated title centered (~70% width); bold dark dimension headers Category/Distribution/Payment/Outcome; category labels dark with page-colored halo; legend "Category:" with four swatches — all readable
-      Data: Category segments in #009E73 (Electronics), #C475FD, #4467A3, #BD8233; other axes muted ink #6B6A63; ribbons in Category hue at 0.45 opacity, widths proportional to orders
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: monospace title "parallel-categories-basic · python · pygal · anyplot.ai" centered at top (~70% width); bold dark dimension headers Category, Distribution, Payment, Outcome; dark category labels (Electronics, Clothing, Home & Garden, Sports; Direct, Wholesale, Retail; Credit Card, Debit Card, Digital Wallet; Completed, Returned, Cancelled) all readable; bottom legend "Category:" with four swatches. No grid (none needed).
+      Data: first axis segments in Imprint #009E73, #C475FD, #4467A3, #BD8233; other axes in muted gray #6B6A63; translucent ribbons in the same four hues through all three gaps, widths proportional to counts; thin ribbons into Returned/Cancelled. Ribbons from Distribution and Payment start ~300 px right of the bars, past the label lanes.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: title, headers and labels in light ink, legend text soft light grey; no dark-on-dark text
-      Data: identical Imprint hues on segments, swatches and ribbons; axes 2–4 light grey; Home & Garden blue ribbons dim against the dark page
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, dimension headers and category labels in light ink, legend text in soft light gray; all readable, no dark-on-dark text.
+      Data: identical Imprint hues on the first axis and legend; ribbons at higher opacity read as deeper tones of the same hues; other axes in light muted gray #A8A79F. Brand green clearly visible. Same layout and same detached ribbon starts as light.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,40 +63,41 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (66 title, 56 headers, 44 labels); readable in both
-          themes
+        comment: Title 66, headers 56 bold, labels and legend 44 px; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Category labels of axes 2–4 sit over ribbon bands, readable only
-          through the halo (defect line)
+        passed: true
+        comment: Labels sit in reserved lanes; no text collides with ribbons or other
+          text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Home & Garden ribbons low-contrast on the dark page at opacity 0.45
-          (defect line)
+        passed: true
+        comment: Segments and ribbons clearly visible; legend swatches match the marks
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct Imprint hues, no red-green reliance
+        comment: Imprint hues distinguishable, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing clipped
+        comment: Outgoing ribbons from Distribution and Payment start detached from
+          their bars (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Dimension names readable as headers
+        comment: Dimension headers are reader-facing names
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -113,21 +114,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bold dimension headers over haloed category labels; only the first
-          axis carries hue
+        comment: 'Bold dimension headers over muted-gray axes, only the first axis
+          in hue: a clear typographic and color hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Ribbons stacked by target then source hue inside each segment; outer-axis
-          labels placed outside
+        comment: Page-colored separators between segments and per-theme ribbon opacity;
+          the detached ribbon starts keep it from more
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Muted grey axes 2–4 focus the eye on the colored Category flow
+        comment: Muted later axes let the colored ribbons carry the category flow
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Parallel categories with ribbons, no extra layers
+        comment: Parallel categories with ribbons; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional segments and ribbons, color by first dimension, natural
-          order
+        comment: Named axes with share-proportional segments, count-proportional ribbons,
+          coloring by first dimension with legend, layout-set order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Widths derived from summed counts at both ends
+        comment: Segments and ribbons computed from counts and stacked exactly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; 'Category:' legend matches the ribbon colors
+        comment: Mandated title; legend names the Category dimension
     data_quality:
       score: 15
       max: 15
@@ -166,19 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 dimensions, 3–4 categories, splits and merges, rare paths
+        comment: 4 dimensions, 3-4 categories each, crossings, splits and rare paths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: E-commerce order flow, neutral
+        comment: Neutral e-commerce order flow
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Order counts 35–480 per path; no Check values in spec
+        comment: Plausible order counts; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -206,13 +207,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Custom SVG needed: pygal has no parallel-categories type'
+        comment: pygal has no parallel-categories chart, so the SVG overlay is warranted
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/.html/.svg
+        comment: plot-{THEME}.png and .html
     library_mastery:
       score: 4
       max: 10
@@ -222,30 +223,29 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Default: pygal Style/canvas, geometry as custom SVG'
+        comment: Style object carries theme tokens; pygal serves as themed canvas
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        passed: true
-        comment: Nothing beyond the mandated Style usage
-  verdict: REJECTED
+        passed: false
+        comment: nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T13:51:51Z'
+  rendered_at: '2026-11-09T13:57:28Z'
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
   - bezier-curves
   - custom-legend
+  - annotations
   - html-export
-  - layer-composition
   patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
   - groupby-aggregation
+  - iteration-over-groups
+  dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
