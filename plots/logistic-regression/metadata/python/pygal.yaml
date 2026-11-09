@@ -2,48 +2,51 @@ library: pygal
 language: python
 specification_id: logistic-regression
 created: '2026-01-09T23:32:39Z'
-updated: '2026-05-18T08:47:24Z'
-generated_by: claude-haiku
-workflow_run: 26022543980
+updated: '2026-11-09T13:05:49Z'
+generated_by: claude-opus
+workflow_run: 42620560092
 issue: 3550
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - Excellent theme adaptation with readable text in both light and dark renders
-  - 'All specification requirements met: curve, CI bounds, threshold line, jittered
-    data points'
-  - Professional typography and sizing for 4800×2700px canvas
-  - Effective visual hierarchy with logistic curve as focal point
-  - Correct Okabe-Ito palette implementation across all data series
-  - Clean code with deterministic data generation via seed
+  - Real statsmodels Logit fit with a 95% CI built on the logit scale and mapped through
+    expit, so the band stays inside 0–1 and widens toward the sparse ends
+  - 'Clear stroke hierarchy via pygal inline CSS: 7 px fit over a 0.18-opacity band
+    with a thin outline, a subordinate 3.5 px dashed threshold across the full x range'
+  - Class points jittered only along y at their exact x values, 0.6 fill opacity so
+    dense stretches read darker, in Imprint positions 2 and 3 identical across themes
+  - 'Theme tokens threaded through the pygal Style: all chrome readable on both #FAF8F1
+    and #1A1A17'
+  - Native pygal HTML output keeps per-point tooltips for inspection
   weaknesses:
-  - 'Title format error on line 86: missing language identifier ''python'' and wrong
-    domain (''pyplots.ai'' instead of ''anyplot.ai'')'
+  - 'VQ-06 (both): the x-axis title ''Biomarker Level'' names no unit, so the 0–100
+    scale reads as unitless → name the unit, e.g. ''Biomarker Level (ng/mL)''. Likely
+    cause: the BIOMARKER column constant.'
+  - 'Suggestion: the CI on the logit scale could come from model.get_prediction(design,
+    which="linear") instead of the hand-written einsum on lines 48–49.'
+  - 'Suggestion: a fitted-coefficient or accuracy annotation, which the Notes allow,
+    could state the model''s midpoint.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - PASS
-      Chrome: Title and axis labels in dark text (#1A1A17), clearly readable. Y-axis labeled "Probability of Disease" (0-1 range), X-axis labeled "Biomarker Level" (0-100 range). Tick labels visible and properly positioned. - PASS
-      Data: Green logistic fit curve (Okabe-Ito #009E73) with dashed confidence interval bounds (same green). Orange/vermillion data points (Class 0, Okabe-Ito #D55E00) clustered around y≈0. Blue data points (Class 1, Okabe-Ito #0072B2) clustered around y≈1. Muted-tone horizontal threshold line at y=0.5. - PASS
-      Grid: Subtle, light gray grid visible on both axes. Does not dominate the plot. - PASS
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "logistic-regression · python · pygal · anyplot.ai" centered at top in dark ink; y-axis title "Probability of Disease", x-axis title "Biomarker Level"; ticks 0–1 by 0.1 and 0–100 by 10, dark and readable; dotted muted x and y guides; legend at the bottom in three columns (95% CI, Logistic fit, Threshold (p = 0.5), Negative (0), Positive (1)).
+      Data: green #009E73 S-curve (thick) rising from ~0.01 at x=0 to ~0.99 at x=100 inside a light green 95% CI band that widens toward the ends; grey dashed threshold at 0.5 across the full x range; purple #C475FD negative points jittered around 0, blue #4467A3 positive points jittered around 1, semi-transparent.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - PASS
-      Chrome: Title and axis labels in light text (#F0EFE8), clearly visible against dark background. No dark-on-dark failures. Tick labels properly positioned and readable. - PASS
-      Data: Green logistic fit curve identical to light render (#009E73). Orange and blue data points maintain identical colors (positions 2 and 3 of Okabe-Ito). Dashed CI bounds in green. Threshold line visible in muted tone. - PASS
-      Grid: Subtle gray grid remains visible without competing with data. - PASS
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink, all readable; no dark-on-dark text; guides subtle but visible.
+      Data: same colors as light — green curve and band (band reads as a dark translucent green), light-grey dashed threshold, purple and blue class points; brand green clearly visible.
       Legibility verdict: PASS
-
-    Both renders pass theme-readability check. Data colors are identical between renders (only chrome adapted). Excellent contrast in both themes.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,46 +54,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes and colors properly themed; readable in both renders
+        comment: Title 66, axis titles and ticks 44, legend 44 source px; all text
+          readable in both themes, ticks still legible at 400 px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Data points jittered effectively; no major overlaps or collisions
+        comment: No text collisions; point overlap in the class rows is handled with
+          0.6 fill opacity
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curve, CI bounds, threshold, and data points all clearly visible
+        comment: 150 points at dots_size 11 are clearly visible; fit at 7 px dominates,
+          band and threshold subordinate; legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; adequate contrast
+        comment: Purple vs blue classes plus green fit are CVD-distinguishable; classes
+          also separated by y position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions; nothing cut off; generous whitespace
+        comment: 3200x1800, plot area fills the canvas, title ~60% width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with semantic context
+        passed: false
+        comment: x-axis 'Biomarker Level' carries no unit (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); both renders theme-correct'
+        comment: 'Fit and band #009E73, classes Imprint positions 2 and 3 (#C475FD,
+          #4467A3), threshold in INK_MUTED; backgrounds #FAF8F1 / #1A1A17; data colors
+          identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -98,23 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional custom Style with theme-adaptive colors and typography;
-          somewhat minimalist
+        comment: 'Deliberate stroke hierarchy beyond the baseline: fit 7 px, threshold
+          3.5 px, band outline 1.5 px with an 0.18 fill'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid; clean layout; could benefit from spine refinement
+        comment: Grid and spine rules met (default dotted x and y guides); nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear hierarchy with logistic curve as focal point; CI and threshold
-          provide context
+        comment: Data displayed as the Notes require; no hierarchy chosen beyond them
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,26 +131,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct logistic regression XY scatter
+        comment: Logistic curve with CI band, jittered binary points and threshold
+          line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: Y-only jitter, distinct class colors, smooth solid prominent curve,
+          semi-transparent 95% CI band, dashed 0.5 line across the full x range, alpha
+          0.6 points, y axis 'Probability of Disease' 0-1; all five 'A good version
+          shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct; full data range shown
+        comment: Points at their exact x values, jitter only along y as the spec asks;
+          band encloses curve at every x
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format incorrect: missing ''python'' language identifier and
-          uses ''pyplots.ai'' instead of ''anyplot.ai'''
+        passed: true
+        comment: Title 'logistic-regression · python · pygal · anyplot.ai'; legend
+          entries readable (95% CI, Logistic fit, Threshold (p = 0.5), Negative (0),
+          Positive (1))
     data_quality:
       score: 15
       max: 15
@@ -151,19 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All logistic regression aspects shown
+        comment: Class overlap in the middle, outliers on the other side, band widening
+          toward the ends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medical diagnosis context is realistic and neutral
+        comment: Medical diagnostic biomarker scenario, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Biomarker and probability ranges appropriately scaled
+        comment: 'Checked: curve crosses 0.5 near x~49, matching the generating midpoint
+          50; probabilities and CI stay within 0-1 as expit of a fitted statsmodels
+          Logit'
     code_quality:
       score: 10
       max: 10
@@ -173,31 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code; no unnecessary functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) and default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Fit by statsmodels Logit, CI from its covariance; band as one closed
+          polygon
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API
     library_mastery:
       score: 6
       max: 10
@@ -207,20 +226,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY and custom Style with theme tokens
+        comment: pygal.XY with per-series fill/show_dots/stroke_style options and
+          xrange/range; Style object for all tokens
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Standard usage; stroke_style dasharray for CI bounds appropriate
-          but not particularly distinctive
-  verdict: REJECTED
+        comment: pygal's inline CSS injection (css=[..., 'inline:...']) for per-series
+          stroke widths and dot opacity; native interactive SVG tooltips in the HTML
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T13:02:54Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
+  - scipy
   techniques:
+  - confidence-band
+  - reference-lines
+  - custom-legend
   - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  dataprep:
+  - regression
+  - jitter
+  styling:
+  - alpha-blending
+  - custom-css
