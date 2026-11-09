@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:53:44Z'
-updated: '2026-11-09T17:11:06Z'
+updated: '2026-11-09T17:16:43Z'
 generated_by: claude-opus
 workflow_run: 42660733974
 issue: 1012
@@ -12,43 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Word size follows frequency monotonically from Python (95) at about 50 pt down
-    to Redis (6) at 10 pt, so the most frequent terms are plainly the largest and
-    the smallest words stay readable in both renders
-  - The spiral layout fills the whole panel with uniform 5 pt clearance; no word touches
-    another or the canvas edge, and the adaptive shrink of the size span (size_span
-    *= 0.92 until all words fit) keeps every word in the cloud
-  - 'Placement and sizes are precomputed and then mapped through the grammar: geom_text
-    with aes(size=..., angle=...) and scale_size_identity(), so rotation is an aesthetic
-    rather than a per-label loop'
-  - 'Preprocessed vocabulary: each term once, common words lowercase, acronyms (AI,
-    API, AWS) and proper nouns (Python, Docker, Kubernetes) in their usual case'
-  - 'Theme tokens threaded correctly: title in INK on #FAF8F1 / #1A1A17, words in
-    Imprint #009E73 identical in both renders, no axes or grid'
+  - Word size maps frequency through aes(size=...) with scale_size_identity, so Python
+    (95) is plainly the largest and the range runs down to a still-readable Redis
+    (6) in both themes
+  - The spiral layout shrinks the size range until all 29 words fit, so the cloud
+    fills the 16:9 panel with consistent clearance and no word touches, overlaps or
+    is cut off at the edge
+  - 'Preprocessed vocabulary as the Notes ask: common words in lowercase, acronyms
+    (AI, API, AWS) and proper nouns (Python, Docker, Kubernetes) in their usual case,
+    no stop words, no duplicate spellings'
+  - 'Decorative single Imprint green #009E73 reads on both #FAF8F1 and #1A1A17; only
+    the title ink flips between themes'
+  - theme_void plus coord_cartesian(expand=False) removes axes and grid, as a layout-positioned
+    word cloud requires; geom_text maps both size and angle as aesthetics
   weaknesses:
-  - 'CQ-04 (code): lines 175-179 blank the panel grid, axis text, axis titles and
-    ticks one element at a time with five element_blank() entries → start from theme_void()
-    and add only the background and title overrides in theme(). Likely cause: building
-    the chrome-free theme by hand instead of using plotnine''s theme_void().'
-  - 'Suggestion: a second Imprint color for one category (for example tools vs. concepts)
-    with a small key could add information without crowding the cloud, as the Notes
-    allow.'
-  - 'Suggestion: a slightly larger minimum size (about 11-12 pt) would keep Redis
-    and GraphQL crisper in the 400 px thumbnail.'
+  - 'Suggestion: "machine" and "learning" appear as two separate words; keeping the
+    phrase "machine learning" as one term would read more like a survey theme'
+  - 'Suggestion: the top-left and top-right corners stay a little emptier than the
+    centre; a slightly tighter spiral step or a few more mid-frequency terms would
+    even out the fill'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, 3200x1800; no axes, ticks or grid.
-      Chrome: bold title "wordcloud-basic · python · plotnine · anyplot.ai" centered at the top in near-black ink, about 56% of the width; fully readable.
-      Data: 29 technology terms all in Imprint green #009E73; Python largest at the center, then data, machine, learning, AI (vertical), cloud, API, database; every fifth word vertical (AI, DevOps, development, Azure, deployment). Smallest words Redis, GraphQL, Terraform, Kubernetes small but readable. No word touches another or the edge.
+      Background: warm off-white #FAF8F1 across the whole canvas, no axes or grid (theme_void).
+      Chrome: bold near-black title "wordcloud-basic · python · plotnine · anyplot.ai" centered at the top, about 56 % of the width; fully readable.
+      Data: 29 words, all in Imprint green #009E73. Python is largest at the centre, with machine, data, learning, cloud, database and a vertical AI around it; mid-size words (security, automation, analytics, API, a vertical DevOps and development) form a ring; small words (Terraform, GraphQL, Redis, Kubernetes, Azure) fill the edges. Every fifth word is rotated 90°. No word overlaps or touches another and none is cut off at the canvas edge; the smallest word, Redis, is still readable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink #F0EFE8, clearly readable; no dark-on-dark text anywhere.
-      Data: identical layout and identical #009E73 word color to the light render; green reads well on the dark surface, smallest words still readable.
+      Chrome: title flips to light ink #F0EFE8 and is clearly readable; no dark-on-dark text.
+      Data: identical layout and identical #009E73 word color to the light render; green reads well on the dark surface, smallest words still legible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,68 +56,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt bold, words 10 to about 50 pt; all readable in both themes
+        comment: Title 12 pt bold, words 10 pt and up; all readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 5 pt clearance box per word; no word covers or touches another
+        comment: Rectangle collision test with 5 pt padding; no word touches another
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 29 words visible; smallest at 10 pt
+        comment: Size range from Redis to Python clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single decorative color with good contrast on both surfaces; no color-only
+        comment: Single decorative color with high contrast on both surfaces; no color-only
           signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, cloud fills the panel evenly, nothing clipped
+        comment: 3200x1800; cloud fills the panel; nothing clipped; small corner gaps
+          are permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'N/A: no axes for a word cloud; title present'
+        comment: N/A for axes (layout-positioned type); title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 words, #FAF8F1 / #1A1A17 backgrounds, chrome flips correctly'
+        comment: '#009E73 words, #FAF8F1/#1A1A17 backgrounds, theme-correct title
+          ink'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Style-guide baseline: one color, one weight, hierarchy by size only'
+        comment: Size range auto-fit so the cloud fills the 16:9 panel, giving a clear
+          typographic hierarchy from center to edges
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised: size span shrinks adaptively so the cloud fills the panel
-          with uniform 5 pt clearance instead of floating in it'
+        comment: Consistent 5 pt clearance between all words and a spiral stretched
+          to the panel aspect so whitespace is even
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Data displayed; largest-first spiral puts Python at the center, which
-          is the algorithm rather than a chosen focal point
+        passed: false
+        comment: Size alone carries the hierarchy; no further focal choice
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic word cloud, no unasked layers
+        comment: Basic word cloud, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Size by frequency, layout-placed words without axes, preprocessed
-          text, decorative color, basic variant only: all good-version bullets met'
+        comment: 'All good-version bullets met: size by frequency, layout placement
+          without axes, preprocessed text, decorative color, basic variant only'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; size maps linearly to frequency
+        comment: Size maps frequency; position is layout (exempt)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend N/A for decorative color
+        comment: Mandated title format; no legend needed for decorative color (N/A)
     data_quality:
       score: 15
       max: 15
@@ -160,22 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide frequency range (6-95), rotated words, mixed-case acronyms and
-          proper nouns
+        comment: 29 words with a wide frequency range and some rotated words
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology survey terms, plausible and neutral
+        comment: Technology survey terms, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 29 words within the 20-200 range; frequencies plausible counts
+        comment: Frequencies 6-95 plausible for survey counts; no Check values in
+          spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -183,13 +182,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: No functions or classes; linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic layout
+        comment: Fully deterministic data and layout
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -198,20 +197,20 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Five element_blank() lines (175-179) that theme_void() replaces (defect
-          line); hand-rolled spiral is justified since wordcloud is not installed
-          for plotnine
+        passed: true
+        comment: Spiral layout is needed since plotnine has no word-cloud stat and
+          wordcloud is outside the compute-with list; text metrics via matplotlib
+          non-plotting utility
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 3200x1800 with current API
+        comment: Saves plot-{THEME}.png at 400 dpi, 8x4.5 in
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -219,24 +218,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised: precomputed sizes mapped through scale_size_identity() and
-          coord_cartesian(expand=False) to pin the panel to the layout coordinates'
+        comment: 'Grammar-of-graphics layering: geom_text with size and angle mapped
+          as aesthetics, scale_size_identity, coord_cartesian(expand=False), theme_void'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: 'Raised: rotation mapped as the angle aesthetic of geom_text, a grammar-of-graphics
-          idiom'
-  verdict: REJECTED
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
-  rendered_at: '2026-11-09T17:08:12Z'
+  rendered_at: '2026-11-09T17:14:07Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - annotations
-  patterns: []
+  techniques: []
+  patterns:
+  - data-generation
   dataprep:
   - normalization
   styling:
