@@ -29,18 +29,18 @@ describe('LanguageChip', () => {
     expect(chip()).toHaveAccessibleName('Reply language: English, default. Change');
 
     rerender(
-      <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
+      <LanguageChip value={{ language: 'de', source: 'offer' }} disabled={false} onSet={onSet} />
     );
     expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
-    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, detected. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, chosen from the offer. Change');
     expect(chip()).toBeEnabled();
     expect(chip()).toHaveAttribute('aria-haspopup', 'dialog');
 
     rerender(
-      <LanguageChip value={{ language: 'de', source: 'pasted' }} disabled={false} onSet={onSet} />
+      <LanguageChip value={{ language: 'de', source: 'chosen' }} disabled={false} onSet={onSet} />
     );
     expect(chip()).toHaveTextContent(/^Deutsch ▾$/);
-    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, from data. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: Deutsch, chosen. Change');
     expect(chip()).toHaveAttribute(
       'title',
       "language of the replies: Deutsch · a choice here also sets the next plot's text"
@@ -75,7 +75,7 @@ describe('LanguageChip', () => {
     const { rerender } = render(<LanguageChip value={EN} disabled={false} onSet={onSet} />);
     expect(screen.getByRole('status')).toHaveTextContent('');
     rerender(
-      <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
+      <LanguageChip value={{ language: 'de', source: 'offer' }} disabled={false} onSet={onSet} />
     );
     expect(screen.getByRole('status')).toHaveTextContent('reply language: Deutsch');
   });
@@ -84,7 +84,7 @@ describe('LanguageChip', () => {
     const user = userEvent.setup();
     const onSet = vi.fn(async () => undefined);
     render(
-      <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
+      <LanguageChip value={{ language: 'de', source: 'offer' }} disabled={false} onSet={onSet} />
     );
 
     await user.click(chip());
@@ -136,7 +136,7 @@ describe('LanguageChip', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('asks nothing for the language already chosen, but makes a detected one final', async () => {
+  it('asks nothing for the language already chosen, but makes an offered one final', async () => {
     const user = userEvent.setup();
     const onSet = vi.fn(async () => undefined);
     const { rerender } = render(
@@ -147,8 +147,9 @@ describe('LanguageChip', () => {
     expect(onSet).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
+    // The same language taken from an offer: a pick here makes it final, so no offer comes after it.
     rerender(
-      <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
+      <LanguageChip value={{ language: 'de', source: 'offer' }} disabled={false} onSet={onSet} />
     );
     await user.click(chip());
     await user.click(within(dialog()).getByRole('button', { name: /German/ }));

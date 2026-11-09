@@ -94,10 +94,9 @@ PLOT_LANGUAGE_HEADING = (
 """The heading over the plot language, which the session block names only where it differs from the session language
 (owner decision of 2026-11-01: a follow-up message in another language no longer rewrites the plot's text)."""
 LANGUAGE_SOURCE_LINES: dict[str, str] = {
-    "default": "- Language: the default, English",
-    "pasted": "- Language: detected from the user's pasted data (the notes around the table or its column names)",
-    "detected": "- Language: detected from the user's first message",
+    "default": "- Language: the default, English; the user picked no other",
     "chosen": "- Language: chosen by the user (in the chat header, or asked of you)",
+    "offer": "- Language: chosen by the user (the page offered it after a message or data in it)",
 }
 """The session block's line on how the language was set. A production case of 2026-10-12
 (`20261012T211551Z-bcc5bcf1`): with the bare word `chosen` and a heading that called the
