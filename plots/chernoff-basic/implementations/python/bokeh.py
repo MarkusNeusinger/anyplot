@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: bokeh 3.10.1 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-09
+Quality: 86/100 | Updated: 2026-11-09
 """
 
 import os

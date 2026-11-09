@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:00:13Z'
-updated: '2026-11-09T01:08:25Z'
+updated: '2026-11-09T01:16:20Z'
 generated_by: claude-opus-5-5
 adopted_from: ebeec892e34b79a7acc23e43968831382a4addc7 (ebeec892e34b79a7acc23e43968831382a4addc7)
 workflow_run: 42543463138
@@ -13,109 +13,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - The 12 faces are drawn as vectorized bokeh glyphs (ellipse, circle, segment, multi_line,
-    text) from one ColumnDataSource, so every face uses the same feature set and the
-    faces differ visibly from sector to sector (wide, smiling Tech faces; narrow,
-    frowning Energy faces)
-  - Each variable is min-max scaled to 0-1 before mapping, and every feature stays
-    recognizable as part of a face at both ends of its range
-  - The feature key below the grid and the italic direction note make the faces decodable,
-    and a centered horizontal Legend model above the grid explains the color by sector
-    that the Notes allow
-  - 'Theme tokens carry through to every element: dark pupils on light eye whites
-    in both themes, INK features on the alpha-0.3 sector fills, and readable INK_SOFT
-    labels on both backgrounds'
-  - A HoverTool on the face renderers shows each company's raw metric values in the
-    HTML view, so the raw data is available alongside the normalized glyphs
-  - 'The Imprint palette runs in canonical order (Tech #009E73, Retail #C475FD, Energy
-    #4467A3) and the data colors are identical in both renders'
+  - Every observation is one face built from the same six features, each driven by
+    one min-max-scaled variable, so the twelve companies differ visibly and stay recognizable
+    as faces at both ends of every range (smallest Retail faces still hold eyes, brows,
+    nose and mouth inside the outline)
+  - A two-line key below the grid names the variable behind each facial feature, and
+    an italic caption states the direction of every mapping, so the faces can be decoded
+    without the HTML
+  - 'Faces colored by sector in canonical Imprint order (Tech #009E73, Retail #C475FD,
+    Energy #4467A3) with a frameless horizontal legend in the top band; data colors
+    are identical in both renders while eye whites, pupils and feature strokes flip
+    with the theme tokens'
+  - 'Idiomatic vectorized bokeh: all faces of a sector in one ellipse renderer, all
+    eyes, brows, noses and mouths drawn for every face at once from one ColumnDataSource
+    (segment, multi_line with list columns), and the key stacked as Title layouts
+    below the frame'
+  - HoverTool on the face renderers shows the company, sector and all six raw metric
+    values in the HTML view
   weaknesses:
-  - 'SC-02 (both): eyebrow tilt varies with Revenue Growth (brow_tilt from s_width)
-    and nose width varies with Profit Margin (nose_w from s_height), but the key names
-    only four features, so two visible feature changes are not decoded and each of
-    those variables drives two features → make the brows and nose constant, or give
-    each its own variable and key entry. Likely cause: lines 99 and 106 reuse s_width
-    and s_height.'
-  - 'DQ-03 (code): every metric is a share drawn as range × 100, giving Tech profit
-    margins of 50–90 %, Tech revenue growth of 60–100 % and market shares of 50–90
-    % for each of four Energy companies (the shares sum well past 100 %) → per-metric
-    ranges in plausible units (for example profit margin 5–30 %, revenue growth −5–40
-    %, market share 2–25 %). Likely cause: the profiles dict in lines 47–51 and the
-    shared ×100 in line 54.'
-  - 'DQ-02 (both): the faces are labelled ''Tech #1'' … ''Energy #4'', which read
-    as generic placeholders → plausible fictional company names. Likely cause: the
-    f"{sector} #{k}" label in line 56.'
-  - 'Suggestion: with five or more variables (the spec''s typical range is 5–15),
-    more features such as eye spacing or nose length could carry their own data and
-    make the faces easier to tell apart.'
+  - 'VQ-01 (both): the italic direction caption at the bottom is set at 26 pt in INK_SOFT,
+    the smallest text on the canvas and clearly smaller than the 30 pt key it explains;
+    it blurs first when the image is scaled down → about 30 pt (+4 pt), the key''s
+    size. Likely cause: Title(..., text_font_size="26pt") of the caption.'
+  - 'Suggestion: anchor each company label to its own face''s bottom edge (cy − rh)
+    instead of a fixed offset, so the small Retail and Energy faces do not float far
+    above their names.'
+  - 'Suggestion: break the long italic caption into two shorter lines so it sits in
+    the same column width as the key.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, no white seams.
-      Chrome: bold dark title "chernoff-basic · python · bokeh · anyplot.ai" centered at the top (about 43 % of the width); a centered horizontal legend below it (Tech, Retail, Energy) in INK_SOFT; face labels "Tech #1" … "Energy #4" under each face; a dark key line at the bottom ("Face width: Revenue Growth (%) · Face height: Profit Margin (%) · Eye size: Customer Satisfaction (%) · Mouth curve: Market Share (%)") and an italic soft-gray direction note below it. No axes, no grid. All text is readable.
-      Data: a 4×3 grid of 12 Chernoff faces. Rows are Tech (#009E73 outline with a light-green fill, large, mostly smiling), Retail (#C475FD, smaller round faces, mixed mouths) and Energy (#4467A3, narrow tall ovals, mostly frowning). The faces have eye whites with dark pupils, dark eyebrows, a wedge nose and a parabolic mouth. Sizes, eyes and mouths differ visibly between faces.
+      Chrome: bold title "chernoff-basic · python · bokeh · anyplot.ai" centered at top in near-black INK; below it a frameless horizontal legend (Tech, Retail, Energy) with tinted ellipse swatches; company names in INK_SOFT under each face; a two-line key at the bottom ("Face width: Revenue Growth (%) · Face height: Profit Margin (%) · Eye size: Customer Satisfaction (score)" / "Mouth curve: Market Share (%) · Brow slant: Debt-to-Equity (ratio) · Nose width: R&D Spend (% of revenue)") and a smaller italic caption on the mapping directions. No axes, no grid. All text readable; caption is the smallest.
+      Data: 12 faces in a 4x3 grid, one row per sector: Tech faces in #009E73 outline with 0.3-alpha fill, Retail in #C475FD, Energy in #4467A3. Faces vary in width, height, eye size, brow slant, nose width and mouth curve (Nimbus Systems and Solvane Energy frown, Quantia Labs smiles). White eyes with dark pupils, near-black strokes for brows, nose, mouth.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, no seams.
-      Chrome: the title and key are light (#F0EFE8), and the labels, legend and note are a lighter gray (INK_SOFT #B8B7B0). Everything is clearly readable, with no dark-on-dark text.
-      Data: the outline colors are identical to the light render (#009E73, #C475FD, #4467A3); the alpha-0.3 fills read as dark tinted faces. The features flip to light ink, the eye whites stay light with dark pupils, and brand green stays clearly visible. Same geometry as the light render.
+      Chrome: title and key in light INK #F0EFE8, legend labels, company names and caption in light-grey INK_SOFT; no dark-on-dark text anywhere.
+      Data: same three outline/fill hues as light (fill reads darker because the 0.3 alpha blends with the dark page); eyes stay light with dark pupils, feature strokes flip to light ink and read clearly on the dark fills. Face geometry identical to light.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit sizes (50pt title, 34pt legend, 32pt labels, 30pt key, 26pt
-          note); readable in both themes
+        comment: Title, legend, labels and key readable in both themes; the 26 pt
+          italic caption is undersized next to the 30 pt key (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No collisions; labels sit clear below each face, even Tech #4''s
-          tall face'
+        comment: No text collides with faces or other text; legend clear of the top
+          row
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Features drawn with 3–5 px ink lines are clearly visible; legend
-          glyphs match the face fill and outline in both themes
+        comment: Face outlines 5 px, feature strokes 4-5 px, eyes and pupils visible
+          even in the smallest faces; legend swatches match the face fill and outline
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue are CVD-distinct, and row position and labels carry
-          the group too
+        comment: Green/purple/blue are CVD-distinguishable and sector is also carried
+          by the row
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced grid filling the canvas, title about 43 % of the width,
-          nothing clipped, canvas 3200x1800
+        comment: 3200x1800 exact; balanced grid, title band and key band, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No data axes by design (N/A); key entries are reader text with units
+        comment: No data axes by design; key names each variable with its unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint canonical order with #009E73 first; #FAF8F1/#1A1A17 backgrounds;
-          both themes correct'
+        comment: 'Imprint positions 1-3 in canonical order, first = #009E73; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -125,26 +118,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'A deliberate typographic hierarchy: bold INK title, INK key line,
-          INK_SOFT labels, an italic soft direction note; theme-aware eye whites/pupils'
+        comment: Clear typographic hierarchy (bold title, legend, names, upright key,
+          italic caption) and theme-aware eye whites/pupils chosen beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Aspect-corrected grid units so the faces are not distorted, a borderless
-          legend centered above, an outline matched to the page to hide the frame
-          seam
+        comment: Key entries joined with spaced middots and centered; frameless legend
+          set into the title band; aspect-corrected grid unit so ellipses keep their
+          proportions
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Sector profiles produce clearly recognizable clusters (expansive
-          smiling Tech and narrow frowning Energy faces), so the reader sees the group
-          difference immediately
+        comment: One row per sector makes the sector contrast (large Tech faces vs.
+          small Retail faces) the first thing the viewer reads
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,29 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Chernoff faces in a grid; color by group is allowed by the Notes;
-          no extra layers
+        comment: Chernoff faces; only the color by group the Notes allow, no extra
+          layers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Normalization, grid, labels and key are present, but the brow tilt
-          and nose width vary without key entries (defect line)
+        comment: Normalized 0-1 variables, six common feature mappings, grid layout,
+          group color with legend, key naming each variable; all five 'A good version
+          shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each feature follows its scaled value; grid position is layout
+        comment: Each scaled variable drives one feature monotonically; grid position
+          is layout only
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; the legend labels match the sectors
+        comment: Title in mandated format; legend entries are readable sector names
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -182,23 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Faces span the full range of each feature, with clusters and variation
-          within groups
+        comment: 12 observations x 6 variables; faces differ from each other and the
+          sector clusters show the pattern-finding purpose
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Company financial health is neutral and plausible, but the labels
-          ''Tech #1'' etc. read as generic (defect line)'
+        comment: Fictional companies with financial-health metrics, the spec's first
+          application; neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Checked the metric ranges in the profiles dict: the margins, growth
-          and market shares are implausibly high (defect line); no Check values in
-          the spec'
+        comment: Per-sector ranges are plausible (Tech margins 15-30 %, Retail 2-8
+          %, Energy D/E 0.8-2.0, Tech R&D 10-25 %); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -226,15 +219,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Vectorized feature geometry in pandas columns; no hand-rolled computation
-          that a call replaces
+        comment: Vectorized feature geometry in the DataFrame; no hand-rolled algorithm
+          an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium, the Bokeh
-          3 API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via the Selenium/CDP
+          pattern; current Bokeh 3 API
     library_mastery:
       score: 6
       max: 10
@@ -244,28 +237,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: One ColumnDataSource drives every glyph through column names; multi_line
-          for the variable-length mouths and noses; per-group renderers feed the Legend
+        comment: Column-driven glyphs on a ColumnDataSource, one renderer per group
+          with LegendItem, multi_line with list columns for noses and mouths
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: 'Bokeh layout models: Title annotations stacked ''below'' as the
-          key and a Legend placed ''above''; a HoverTool limited to the face renderers'
-  verdict: REJECTED
+        comment: Title annotations stacked in the 'below' layout slot as the key,
+          and a HoverTool with raw values in the HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T01:05:24Z'
+  rendered_at: '2026-11-09T01:13:31Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - patches
   - custom-legend
   - hover-tooltips
   - html-export
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   - columndatasource
@@ -273,4 +266,5 @@ impl_tags:
   dataprep:
   - normalization
   styling:
+  - minimal-chrome
   - alpha-blending
