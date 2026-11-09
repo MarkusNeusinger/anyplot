@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
 import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
-import { fireEvent, render, screen, userEvent } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt, userEvent } from 'src/test-utils';
 
 /** The composer's props with data in step 1, its plot button active, unless a case says otherwise. */
 function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
@@ -53,43 +53,6 @@ const attachment: Attachment = {
   error: null,
   readingLine: null,
 };
-
-/**
- * The declarations the page's style sheets give an element at a viewport width, in cascade order:
- * jsdom's `getComputedStyle` skips every `@media` block, and the sx breakpoints (`xs` too) all
- * compile into one, so the test applies their width conditions itself. The screen has a fine
- * pointer: a block on any other feature (`pointer: coarse`) never applies. Rules for a state the
- * element is not in (`:hover`, `::placeholder`) do not match it.
- */
-function styleAt(element: Element, width: number): Record<string, string> {
-  const fits = (media: string) =>
-    (media.match(/\([^)]*\)/g) ?? []).every(condition => {
-      const bound = /^\((min|max)-width:\s*([\d.]+)px\)$/.exec(condition);
-      if (!bound) return false;
-      return bound[1] === 'min' ? width >= Number(bound[2]) : width <= Number(bound[2]);
-    });
-  const matches = (selector: string) => {
-    try {
-      return element.matches(selector);
-    } catch {
-      return false;
-    }
-  };
-  const declared: Record<string, string> = {};
-  const apply = (rules: CSSRuleList) => {
-    for (const rule of Array.from(rules)) {
-      if (rule instanceof CSSMediaRule) {
-        if (fits(rule.media.mediaText)) apply(rule.cssRules);
-      } else if (rule instanceof CSSStyleRule && matches(rule.selectorText)) {
-        for (const name of Array.from(rule.style)) {
-          declared[name] = rule.style.getPropertyValue(name);
-        }
-      }
-    }
-  };
-  for (const sheet of Array.from(document.styleSheets)) apply(sheet.cssRules);
-  return declared;
-}
 
 const exampleButton = () => screen.getByRole('button', { name: 'Make example data' });
 // The accessible names hold the visible words ("open", "example data") without the punctuation a
@@ -399,11 +362,11 @@ describe('Composer row by width', () => {
     for (const width of [600, 1440]) {
       expect(styleAt(field, width).flex).toBe('1 1 240px');
       expect(styleAt(plot, width).flex).toBe('0 0 auto'); // `none`, as the parser spells it
-      expect(styleAt(plot, width)['margin-left']).toBe('auto');
+      expect(styleAt(plot, width).marginLeft).toBe('auto');
       expect(styleAt(prompt, width).display).toBe('block');
     }
     // One size at every width: alone on its line, the plot button needs no smaller text.
-    expect(styleAt(plot, 390)['font-size']).toBe(styleAt(plot, 1440)['font-size']);
+    expect(styleAt(plot, 390).fontSize).toBe(styleAt(plot, 1440).fontSize);
     // The `↵` stays a touch screen's (`pointer: coarse`): hidden on this fine pointer at any width.
     expect(styleAt(screen.getByTestId('send-return'), 390).display).toBe('none');
   });

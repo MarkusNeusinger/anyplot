@@ -304,12 +304,12 @@ class TestImplReviewProvenance:
         merge = block[merge_start : block.index("exit 0", merge_start)]
         keep = block[block.index("exit 0", merge_start) :]
         assert '"$GATE_RECORD_MARKER"' in merge
-        assert "/tmp/anyplot-regen-merged.md" in merge
-        assert '"$GATE_RECORD_MARKER"' in keep[: keep.index("} > /tmp/anyplot-regen-kept.md")]
+        assert '"$RUNNER_TEMP/anyplot-regen-merged.md"' in merge
+        assert '"$GATE_RECORD_MARKER"' in keep[: keep.index('} > "$RUNNER_TEMP/anyplot-regen-kept.md"')]
 
     def test_merge_path_comment_never_blocks_the_merge(self):
         block = _code_only(_regen_block(_step("impl-review.yml", "Add verdict label and take action")["run"]))
-        comment = block.index('gh pr comment "$PR_NUM" --body-file /tmp/anyplot-regen-merged.md')
+        comment = block.index('gh pr comment "$PR_NUM" --body-file "$RUNNER_TEMP/anyplot-regen-merged.md"')
         dispatch = block.index("gh workflow run impl-merge.yml")
         assert comment < dispatch
         line_start = block.rindex("\n", 0, comment)
@@ -452,7 +452,7 @@ class TestReviewWriteback:
     def test_the_kept_comment_carries_the_stored_review_line(self):
         block = _regen_block(_step("impl-review.yml", "Add verdict label and take action")["run"])
         keep = block[block.index("# keep: close the PR") :]
-        comment = keep[: keep.index("} > /tmp/anyplot-regen-kept.md")]
+        comment = keep[: keep.index('} > "$RUNNER_TEMP/anyplot-regen-kept.md"')]
         assert 'echo "$STORED"' in comment
         assert comment.index('cat "$SUMMARY_FILE"') < comment.index('echo "$STORED"')
         assert "the live code and the production images are unchanged" in comment
