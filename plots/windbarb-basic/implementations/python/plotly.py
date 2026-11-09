@@ -56,10 +56,11 @@ positions = stations[[LON, LAT]].to_numpy(dtype=float)
 distances = cdist(positions, positions) + np.diag(np.full(len(positions), np.inf))
 spacing = np.median(distances.min(axis=1))  # typical distance from a station to its nearest neighbour
 
-# Barb geometry in data units, scaled to the station spacing so neighbours stay apart
-staff = 0.62 * spacing
+# Barb geometry in data units, scaled to the station spacing: a staff of half the spacing
+# leaves clear room between neighbouring barbs whose feathers lean toward each other
+staff = 0.5 * spacing
 feather = 0.4 * staff  # full barb and pennant height; a half barb is half of it
-step = 0.17 * staff  # distance between feathers along the staff, about three stroke widths
+step = 0.17 * staff  # distance between feathers along the staff, over twice the stroke width
 flag_base = 0.22 * staff
 slant = 0.35  # feathers lean toward the staff's outer end, as drawn on synoptic charts
 row_step = 0.8 * staff
