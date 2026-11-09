@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -66,10 +66,23 @@ chart = (
             title=None,
             sort=None,
             scale=alt.Scale(domain=[RAW_LABEL, ROLLING_LABEL], range=IMPRINT_PALETTE),
-            legend=alt.Legend(orient="top-left", offset=8, padding=6, cornerRadius=3, symbolStrokeWidth=3),
+            legend=alt.Legend(orient="top-left", offset=8, padding=6, cornerRadius=3),
         ),
-        strokeWidth=alt.condition(alt.datum[SERIES] == ROLLING_LABEL, alt.value(3), alt.value(1.2)),
-        opacity=alt.condition(alt.datum[SERIES] == ROLLING_LABEL, alt.value(1.0), alt.value(0.55)),
+        # Same field as color, so Vega-Lite merges these into one legend whose swatches match the lines
+        strokeWidth=alt.StrokeWidth(
+            SERIES,
+            type="nominal",
+            title=None,
+            sort=None,
+            scale=alt.Scale(domain=[RAW_LABEL, ROLLING_LABEL], range=[1.2, 3]),
+        ),
+        opacity=alt.Opacity(
+            SERIES,
+            type="nominal",
+            title=None,
+            sort=None,
+            scale=alt.Scale(domain=[RAW_LABEL, ROLLING_LABEL], range=[0.55, 1.0]),
+        ),
         tooltip=[
             alt.Tooltip(DATE.translate(ESCAPE), type="temporal", title=DATE, format="%Y-%m-%d"),
             alt.Tooltip(SERIES, type="nominal", title=SERIES),
