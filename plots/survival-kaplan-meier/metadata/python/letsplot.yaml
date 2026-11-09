@@ -2,46 +2,61 @@ library: letsplot
 language: python
 specification_id: survival-kaplan-meier
 created: '2025-12-29T22:47:49Z'
-updated: '2026-05-11T07:51:37Z'
-generated_by: claude-haiku
-workflow_run: 25657089705
+updated: '2026-11-09T12:17:18Z'
+generated_by: claude-opus
+workflow_run: 42578041701
 issue: 2441
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/python/letsplot/plot-dark.html
-quality_score: 94
+quality_score: 82
 review:
   strengths:
-  - All required Kaplan-Meier features correctly implemented (step functions, 95%
-    confidence intervals, censored observation marks)
-  - Excellent visual clarity in both light and dark renders with proper theme adaptation
-  - 'Strong data storytelling: clear group comparison with Treatment showing better
-    survival than Control'
-  - Idiomatic lets-plot usage with proper ggplot2-style grammar of graphics
-  - Clean, reproducible code with well-structured helper functions for KM estimation
-  - Correct Okabe-Ito palette usage with brand green (#009E73) as first series
-  - Proper theme-adaptive styling with correct background colors and readable text
-    in both themes
+  - Survival estimates come from statsmodels SurvfuncRight (product-limit estimate
+    with Greenwood SE) instead of a hand-written estimator, and the 95% band is built
+    from that SE
+  - The confidence band is turned into a true step ribbon (each bound held until the
+    next event time), so the bands step with their curves instead of interpolating
+    diagonally between event times
+  - Censoring ticks sit at their censoring time and at the curve height there, using
+    '+' marks at size 2.5 that stay clearly smaller than the steps
+  - 'Theme tokens threaded through every chrome element: warm #FAF8F1 / #1A1A17 page,
+    INK title and axis titles, INK_SOFT ticks and legend text, elevated legend box;
+    both renders read cleanly'
+  - 'Treatment in brand green #009E73 and Control in #C475FD (Imprint positions 1-2),
+    identical across themes; overlapping bands at alpha 0.2 blend into a distinguishable
+    third tone'
+  - The data block uses column constants and a drop-in df, so the plot code adapts
+    to a user's own table; the last estimate is held to the end of follow-up so the
+    censored tail shows
+  - lets-plot layered grammar with geom_ribbon + geom_step + geom_point sharing one
+    color/fill mapping produces a single combined legend; the HTML export keeps lets-plot's
+    native hover tooltips
   weaknesses:
-  - 'Minor: Grid styling uses INK_MUTED color directly rather than transparent overlay
-    recommended by style guide (acceptable but not optimal)'
-  - 'Library Mastery: fairly standard lets-plot application without distinctive customizations
-    unique to the library'
+  - 'Suggestion: the y-axis tick labels mix ''0'' and ''1'' with one-decimal values
+    (''0.9'', ''0.8''); a fixed format such as scale_y_continuous(format=''.1f'')
+    or percent labels would read more evenly.'
+  - 'Suggestion: scale_y_continuous(limits=[0, 1]) types the bounds; probability is
+    bounded by definition, but deriving or leaving the limits automatic would follow
+    the library prompt''s ''never typed numbers'' convention literally.'
+  - 'Suggestion: the Notes allow a median-survival annotation, an at-risk table and
+    a log-rank p-value; one of them, e.g. the median crossing at 0.5, would give the
+    comparison a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "survival-kaplan-meier · letsplot · pyplots.ai" and axis labels "Time (months)" / "Survival Probability" clearly readable in dark text. Tick labels legible. Legend clearly labeled "Group" with color swatches.
-      Data: Treatment group in teal (#009E73 - brand green), Control group in vermillion (#D55E00). Step functions show discrete event times. Semi-transparent confidence interval ribbons around each curve (teal and orange shades). Censored observations marked with plus signs.
-      Legibility verdict: PASS - All elements readable with excellent contrast and visibility
+      Background: warm off-white, consistent with #FAF8F1; legend box on the slightly lighter elevated surface with a soft outline.
+      Chrome: title "survival-kaplan-meier · python · letsplot · anyplot.ai" top-left in dark ink at ~56% of the width; axis titles "Time (months)" and "Survival Probability" in dark ink; tick labels 0-35 (step 5) and 0-1 (step 0.1) in soft dark gray; major and minor grid lines subtle; all readable.
+      Data: two Kaplan-Meier step curves - Treatment in #009E73 green, Control in #C475FD purple - both starting at 1.0 at time 0, dropping vertically at event times, Treatment ending around 0.32 and Control around 0.03 at 36 months (censored tails). Each curve carries a translucent stepped 95% CI band (alpha 0.2); the bands overlap into a gray-blue tone between ~2 and ~14 months and widen toward the right. '+' censoring ticks sit on the curves (bunched near 13, 20, 23, 28 months and at 36). Legend "Group" at the right with Treatment / Control swatches.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title and axis labels readable in light text against dark background. Tick labels clearly visible. Legend text properly adapted for dark theme. No dark-on-dark text collisions.
-      Data: Treatment and Control colors identical to light render (teal and orange), confirming proper color consistency between themes. Step functions and ribbons clearly visible. Censored marks properly visible. Grid lines subtle and visible without competing with data.
-      Legibility verdict: PASS - All elements readable with proper contrast; no theme-adaptation failures detected
+      Background: warm near-black, consistent with #1A1A17; legend box on the elevated #242420 surface.
+      Chrome: title and axis titles in light ink, tick labels and legend text in light gray; grid lines subtle but visible; no dark-on-dark text anywhere.
+      Data: identical to the light render - same green #009E73 and purple #C475FD curves, ticks and bands; bands read as dark green / dark purple tints with the overlap still distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,75 +67,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark themes; font sizes
-          (title 24pt, axis_title 20pt, axis_text 16pt) appropriately scaled
+        comment: All sizes explicit (title 16, axis titles 12, ticks 10, legend 10/11);
+          readable in both themes and at thumbnail width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clean spacing throughout title, axes, legend
+        comment: No text collisions; overlapping CI bands stay distinguishable through
+          alpha 0.2
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step functions, confidence ribbons, and censored observation marks
-          all clearly distinguishable
+        comment: Step lines at size 1.0 clear; '+' censoring ticks visible but smaller
+          than steps; legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (teal #009E73 and vermillion #D55E00) provides
-          excellent contrast and colorblind safety'
+        comment: Green vs purple differ in hue and luminance; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape format (4800x2700) well-proportioned; good use of canvas
-          with adequate margins
+        comment: 3200x1800; plot fills most of the canvas, legend adjacent at right,
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec ID, library, source; axes descriptive with units
-          (months, probability)
+        comment: '''Time (months)'' with unit; ''Survival Probability'' is unitless
+          by nature'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; backgrounds correct (#FAF8F1
-          light, #1A1A17 dark); both renders theme-compliant'
+        comment: '#009E73 first, #C475FD second; correct page colors and theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional Okabe-Ito palette and correct visualization choice for
-          KM curves; fairly standard styling without exceptional customization
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          sizes), nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: false
-        comment: 'Uses theme_minimal() appropriately; minor: grid uses INK_MUTED color
-          instead of transparent overlay per style guide'
+        comment: Subtle grid and minimal chrome as the style guide asks; major and
+          minor grid kept at library density, nothing chosen beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: 'Excellent: clear visual hierarchy with Treatment vs Control divergence;
-          confidence intervals and censored marks add realism; guides viewer to compare
-          groups'
+        passed: false
+        comment: The two groups are displayed clearly but no focal point or hierarchy
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier survival curves using step functions for discrete
-          event times
+        comment: Kaplan-Meier step function per group
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All specified: step curves, 95% CI ribbons (Greenwood formula),
-          censored observation marks (plus signs), group legend'
+        comment: Step function from 1.0 at time 0, stepped 95% CI bands, censoring
+          ticks on the curve, distinct colors with legend; optional median/at-risk/p-value
+          not drawn (allowed)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: time 0-36 months; Y-axis: survival probability 0-1; color:
-          group (Treatment/Control)'
+        comment: Time on x, survival on y; ticks at their censoring time and curve
+          height; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'survival-kaplan-meier · letsplot · pyplots.ai'; legend
-          correctly identifies groups
+        comment: Mandated title format; legend 'Group' with Treatment / Control
     data_quality:
       score: 15
       max: 15
@@ -162,22 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both groups, confidence intervals, censored observations; sample
-          size 160 (80 per group) within spec (50-1000)
+        comment: Events, random and administrative censoring, widening bands, censored
+          tails above zero, two clearly separated groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial data realistic; hazard rates create plausible treatment
-          effect; 20% additional censoring realistic
+        comment: Clinical trial treatment vs control over 36 months follow-up
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Time 0-36 months reasonable for medical trials; survival probability
-          0-1 correct; axis ranges appropriate
+        comment: 'Checked: hazards 0.04 / 0.08 per month give exponential medians
+          ~17 / ~9 months; render crosses 0.5 near 18.5 (Treatment) and ~11 (Control),
+          consistent with sampling and censoring; both curves start at 1.0 and bands
+          stay in [0,1]'
     code_quality:
       score: 10
       max: 10
@@ -187,61 +201,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: data generation → KM calculation → visualization;
-          appropriate helper functions'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, shutil, numpy, pandas, lets_plot); all
-          used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or simulated interactivity; readable
-          pandas/numpy operations
+        comment: KM estimate and SE from statsmodels SurvfuncRight; the step-ribbon
+          expansion has no library call that computes it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: plot-{THEME}.png, plot-{THEME}.html; handles lets-plot
-          subdirectory; uses current API'
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html; current
+          lets-plot 4 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent ggplot2-style grammar: aes() mappings, geom_step/ribbon/point,
-          scale_color_manual, theme with element_* functions'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Good use of lets-plot (interactive HTML export via ggsave, ggsize,
-          theme system); fairly standard application without exceptional customization
+        comment: Correct layered grammar with shared color/fill scales; nothing beyond
+          the usual patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic grammar-of-graphics usage; no lets-plot-specific feature
+          (e.g. custom layer_tooltips) beyond defaults
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T07:28:04Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
   techniques:
   - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - minimal-chrome
