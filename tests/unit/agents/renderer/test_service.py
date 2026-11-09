@@ -73,7 +73,7 @@ def auth(token: str = GOOD) -> dict[str, str]:
 
 
 async def until(condition: Callable[[], bool], timeout_s: float = 5.0) -> None:
-    """Wait until the requests under test reached `condition`: a fixed sleep is a guess that a loaded machine
+    """Wait until the requests under test reach `condition`: a fixed sleep is a guess that a loaded machine
     overruns, and a page replay that arrives after its build starts a second one."""
     async with asyncio.timeout(timeout_s):
         while not condition():
