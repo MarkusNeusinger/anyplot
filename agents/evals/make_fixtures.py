@@ -84,13 +84,20 @@ library, and the cases need no change once the file is eligible.
 | `renamed` | the base data with other headers: German with umlauts, units and punctuation, or snake_case |
 | `x10` | the base data with every measured value multiplied by 10 (catches literal axis limits) |
 | `n12` | 12 rows |
-| `n5000` | 5,000 rows; for bar, heatmap and pie these are raw records the plot must aggregate |
+| `n5000` | 5,000 rows; for bar, heatmap and pie these are raw records that the data step aggregates per key first (`before_operations`) |
 | `date` | the base data with a `DD.MM.YYYY` date column and an ISO date column: the plot's own time axis where the spec has one (`line-basic`, `area-basic`, `line-timeseries`), otherwise two unbound columns the adaptation must leave alone |
 | `decimal-comma` | the base data as semicolon-separated text with decimal commas and `DD.MM.YYYY` dates |
 
 The base data, which `renamed`, `x10`, `date` and `decimal-comma` share, is not a case
 of its own. Every generated case expects `accepted`: each dataset is one a user could
-paste for that spec. No real people, organisations or politics: stores, products,
+paste for that spec. The raw records of `n5000` for `bar-grouped`, `heatmap-basic` and
+`pie-basic` repeat their keys (5,000 rows over 6 to 168 keys), and the plot draws every
+row it gets (owner decision of 2026-11-08: a change of the rows goes only through the data
+step). So these 45 cases take the step the root offers on the repeated-key warning before
+the plot, a `prepare_data` `aggregate` per key (the mean score and response time, the sum of
+the amounts), which the harness stores as the next data version (`before_operations`,
+`matrix.store_data_steps`); they keep testing a large paste, and the plot draws one mark
+per key from the aggregated table. Until 2026-11-09 the plot code aggregated them itself. No real people, organisations or politics: stores, products,
 customers and stations are invented.
 
 **The smoke cases.** The tag `smoke` marks one case per spec, cycling through the
@@ -220,8 +227,10 @@ class SpecFixture:
     """`extra`: two unbound date columns; `x`: the numeric x column becomes a date; `native`: the spec's date column."""
     date_names: tuple[str, str]
     """The `DD.MM.YYYY` column (for `x`, the new x column) and the ISO column of the `date` perturbation."""
-    aggregates: bool = False
-    """Whether `n5000` holds raw records the plot must aggregate (one mark per group, not per row)."""
+    aggregate: Literal["mean", "sum"] | None = None
+    """How the data step combines the raw records of `n5000` per key before the plot (`before_operations`: an
+    `aggregate` by the key columns of the value column), for a spec that draws one mark per key; None draws every
+    row as it is."""
     to_date: ToDate | None = None
     """For `date_mode="x"`: the date of one x value."""
 
@@ -468,7 +477,7 @@ SPECS: tuple[SpecFixture, ...] = (
         {"Subject": "Fach", "Grade Level": "Jahrgangsstufe", "Test Score": "Punkte (Ø)"},
         "extra",
         ("Exam Date", "Graded On"),
-        aggregates=True,
+        aggregate="mean",
     ),
     SpecFixture(
         "histogram-basic",
@@ -499,7 +508,7 @@ SPECS: tuple[SpecFixture, ...] = (
         {"Weekday": "Wochentag", "Hour": "Stunde", "Response Time (min)": "Antwortzeit Ø (min)"},
         "extra",
         ("Week Of", "Exported On"),
-        aggregates=True,
+        aggregate="mean",
     ),
     SpecFixture(
         "area-basic",
@@ -531,7 +540,7 @@ SPECS: tuple[SpecFixture, ...] = (
         {"Expense Category": "Ausgabenposten", "Amount (CHF)": "Betrag CHF"},
         "extra",
         ("Booking Date", "Imported On"),
-        aggregates=True,
+        aggregate="sum",
     ),
     SpecFixture(
         "line-timeseries",
@@ -656,7 +665,7 @@ def _tags(spec: SpecFixture, perturbation: str, columns: list[Column], smoke: bo
         tags.append("small")
     elif perturbation == "n5000":
         tags.append("large")
-        if spec.aggregates:
+        if spec.aggregate:
             tags.append("aggregation")
     elif perturbation == "date":
         tags += ["dd.mm.yyyy", "iso-date", "unbound-dates" if spec.date_mode == "extra" else "date-axis"]
@@ -695,6 +704,7 @@ def render_cases() -> dict[str, str]:
             data = to_csv(columns, delimiter)
             _check_limits(spec, perturbation, columns, data)
             bindings = [{"role": column.role, "column": column.name} for column in columns if column.role]
+            steps = data_steps(spec, perturbation, columns)
             for library in LIBRARIES:
                 case = {
                     "spec_id": spec.spec_id,
@@ -702,6 +712,7 @@ def render_cases() -> dict[str, str]:
                     "locale": "de" if perturbation in ("renamed", "decimal-comma") else "en",
                     "perturbation": perturbation,
                     "bindings": bindings,
+                    **({"before_operations": steps} if steps else {}),
                     "expected": "accepted",
                     "tags": _tags(spec, perturbation, columns, _is_smoke(index, spec.spec_id, library, perturbation)),
                     "source": f"{SOURCE} (seed {spec.seed}, {perturbation})",
@@ -710,6 +721,17 @@ def render_cases() -> dict[str, str]:
                 files[f"{directory}/case.json"] = json.dumps(case, indent=2, ensure_ascii=False) + "\n"
                 files[f"{directory}/data.csv"] = data
     return files
+
+
+def data_steps(spec: SpecFixture, perturbation: str, columns: list[Column]) -> list[list[dict[str, object]]]:
+    """The case's `before_operations`: for the raw records of an `n5000` case whose spec draws one mark per key, the
+    `aggregate` the root offers on the repeated-key warning (by the bound key columns, of the bound value column),
+    since the plot draws every row it gets; none for any other case."""
+    if perturbation != "n5000" or spec.aggregate is None:
+        return []
+    keys = [column.name for column in columns if column.role and not column.measure]
+    (value,) = (column.name for column in columns if column.role and column.measure)
+    return [[{"op": "aggregate", "by": keys, "column": value, "how": spec.aggregate}]]
 
 
 def _check_limits(spec: SpecFixture, perturbation: str, columns: list[Column], data: str) -> None:

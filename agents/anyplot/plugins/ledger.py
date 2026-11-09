@@ -300,6 +300,10 @@ class RequestLedger:
     last_calls: dict[str, CallFacts] = field(default_factory=dict)
     dataset_changes: list[str] = field(default_factory=list)
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
+    data_step: tuple[str, str] | None = None
+    """The dataset id and the announcement of the repeated key a plot run of this invocation combined
+    (`repeated_keys.combine_repeated_key`), so a run ADK re-runs on resume, which finds the key combined already,
+    announces the step all the same."""
     example_data: bool = False
     """A `run_data_code` call of this invocation stored example data the user asked for (`source_language` `example`):
     the `chat_turn` line's `kind` is `example`."""
