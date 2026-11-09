@@ -117,9 +117,11 @@ class TestFixtures:
         # counted `aggregate`. And one that asks for a data change and its plot in one message (`change_and_plot`),
         # after the summary: the change is the turn's answer, and the plot waits for the user's check. Since
         # 2026-11-09, two summaries of the layouts code reads (`layout`): a web table copied one cell per line and an
-        # inline list of pairs, the owner's live cases in invented data.
-        assert len(cases) == 105
+        # inline list of pairs, the owner's live cases in invented data. And the change request that the pair list
+        # read as new data the same day (`change_request`): the root changes no data for it.
+        assert len(cases) == 106
         assert sorted(item.id for item in cases if "layout" in item.tags) == [
+            "de-wunsch-achsen-bis",
             "en-summary-inline-pairs",
             "en-summary-web-table-cell-lines",
         ]

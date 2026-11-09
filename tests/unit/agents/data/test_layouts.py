@@ -4,18 +4,28 @@ All data here is invented. The page routes the same shapes as data (`routeInput.
 `routeInput.cases.json` hold the two sides together (`tests/unit/agents/test_route_cases.py`).
 """
 
+import json
+from pathlib import Path
+
 import pytest
 
 from agents.anyplot.data.layouts import (
+    LOWERCASE_WISH_WORDS,
+    MIN_PAIRS_WITH_DATA,
     MISSING_TOKENS,
+    WISH_WORDS,
     cell_kind,
     cell_lines_table,
     is_pair,
+    is_wish,
     pair_list_table,
     read_layout,
 )
-from agents.anyplot.data.parse import MISSING_VALUES, parse_dataset
+from agents.anyplot.data.parse import MISSING_VALUES, ParseError, parse_dataset
 from agents.anyplot.data.transcribe import looks_like_free_text
+
+
+WISH_WORDS_FILE = Path(__file__).resolve().parents[4] / "app" / "src" / "sections" / "agent-chat" / "wishWords.json"
 
 
 WEB_TABLE = (
@@ -161,6 +171,53 @@ class TestPairList:
 
     def test_a_header_of_pairs_is_no_header(self) -> None:
         assert is_pair("Hund 7") and is_pair("a: 7") and not is_pair("Umsatz") and not is_pair("16:9")
+
+
+class TestChangeRequests:
+    """The live regression of 2026-11-09: a change request in words replaced a table with two `label`/`value` rows."""
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "x bis 2030, y bis 60",
+            "y-Achse 0 bis 3500, Linie 2500",
+            "Titel 2026, Schrift 14",
+            "y max 60, x max 2030",
+            "x 2030, y 60",  # an axis letter alone is no label
+            "x=1, y=2, z=3",
+            "Schriftgröße 14, Breite 800",
+        ],
+    )
+    def test_a_change_request_is_no_pair_list(self, text: str) -> None:
+        assert pair_list_table(text) is None
+        assert pair_list_table(text, min_pairs=MIN_PAIRS_WITH_DATA) is None
+        with pytest.raises(ParseError):
+            parse_dataset(text)
+
+    def test_a_name_with_a_capital_is_no_wish(self) -> None:
+        assert not is_wish("Max 7, Lisa 5, Tim 2") and is_wish("y max 60")
+        layout = pair_list_table("Max 7, Lisa 5, Tim 2", min_pairs=MIN_PAIRS_WITH_DATA)
+        assert layout is not None and len(layout.rows) == 3
+
+    def test_a_wish_word_counts_only_as_a_whole_word(self) -> None:
+        assert is_wish("y-Achse 0") and is_wish("5 bis 7") and is_wish("Ändere")
+        assert not is_wish("Tobias 7, Bismarck 3") and not is_wish("Linienbus 4")
+
+    def test_while_the_session_holds_data_a_list_takes_three_pairs(self) -> None:
+        assert pair_list_table("Apples 7, Pears 12") is not None
+        assert pair_list_table("Apples 7, Pears 12", min_pairs=MIN_PAIRS_WITH_DATA) is None
+        assert pair_list_table("Apples 7, Pears 12, Plums 5", min_pairs=MIN_PAIRS_WITH_DATA) is not None
+        assert read_layout("Hund 7\nKatze 3", min_pairs=MIN_PAIRS_WITH_DATA) is None
+
+    def test_the_web_table_is_read_whatever_its_header_says(self) -> None:
+        """`min–max` in a header is no wish there: the one-cell-per-line reading takes no wish veto."""
+        assert read_layout(WEB_TABLE, min_pairs=MIN_PAIRS_WITH_DATA) is not None
+
+    def test_the_wish_words_are_the_pages(self) -> None:
+        shared = json.loads(WISH_WORDS_FILE.read_text(encoding="utf-8"))
+
+        assert tuple(shared["words"]) == WISH_WORDS
+        assert tuple(shared["lowercase_only"]) == LOWERCASE_WISH_WORDS
 
 
 class TestParseDataset:

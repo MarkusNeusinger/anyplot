@@ -9,6 +9,7 @@ interface RouteCase {
   repeat?: number;
   route: 'data' | 'message' | null;
   rule: string;
+  has_data?: boolean;
 }
 
 const cases = shared.cases as RouteCase[];
@@ -17,9 +18,34 @@ describe('routeInput', () => {
   it.each(cases.map(item => [item.id, item.rule, item] as const))(
     'routes case %i by rule %s',
     (_id, _rule, item) => {
-      expect(routeInput(item.text.repeat(item.repeat ?? 1))).toBe(item.route);
+      const text = item.text.repeat(item.repeat ?? 1);
+      expect(routeInput(text, { hasData: item.has_data ?? false })).toBe(item.route);
     }
   );
+
+  it('keeps a change request in words a message, while there is data and on a fresh page', () => {
+    // The live regression of 2026-11-09: these replaced a table with two `label`/`value` rows.
+    for (const text of [
+      'x bis 2030, y bis 60',
+      'y-Achse 0 bis 3500, Linie 2500',
+      'Titel 2026, Schrift 14',
+      'y max 60, x max 2030',
+    ]) {
+      expect(routeInput(text, { hasData: true })).toBe('message');
+      expect(routeInput(text)).toBe('message');
+    }
+    // `Max` with a capital is a name; `max` as written is a wish.
+    expect(routeInput('Max 7, Lisa 5, Tim 2', { hasData: true })).toBe('data');
+  });
+
+  it('asks three pairs of a list while there is data, two on a fresh page', () => {
+    expect(routeInput('Apples 7, Pears 12')).toBe('data');
+    expect(routeInput('Apples 7, Pears 12', { hasData: true })).toBe('message');
+    expect(routeInput('Apples 7, Pears 12, Plums 5', { hasData: true })).toBe('data');
+    // A web table copied one cell per line is no pair list: the rule for pairs never holds it back.
+    const web = ['runs · mean · min–max', 'North', '214', '87.3', '58–99', 'South', '198', '84.9'];
+    expect(routeInput([...web, '61–97'].join('\n\n'), { hasData: true })).toBe('data');
+  });
 
   it('reads a newline inside a quoted cell as part of the cell, and an escaped quote as a quote', () => {
     // Without logical rows the quoted line break would make four rows of two fields and one of one.
@@ -60,7 +86,9 @@ describe('routeInput', () => {
   });
 
   it('reads pairs of one form with a number each, and keeps a ratio, a time and a single pair a message', () => {
-    expect(routeInput('x=1, y=2, z=3')).toBe('data');
+    expect(routeInput('a=1, b=2, c=3')).toBe('data');
+    // An axis letter alone is no label: `x=1, y=2` sets the axes.
+    expect(routeInput('x=1, y=2, z=3')).toBe('message');
     expect(routeInput('2024: 7\n2025: 9')).toBe('data');
     // Two forms in one list are no list.
     expect(routeInput('a:7, b=12')).toBe('message');

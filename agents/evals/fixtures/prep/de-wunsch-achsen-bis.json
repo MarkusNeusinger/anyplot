@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Jahr,Wert\n2020,31\n2021,38\n2022,42\n2023,47\n2024,51\n",
+  "message": "x bis 2030, y bis 60",
+  "expected_operations": [],
+  "locale": "de",
+  "spec_id": "line-basic",
+  "tags": ["no_tool", "layout", "change_request"]
+}
