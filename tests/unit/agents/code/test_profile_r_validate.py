@@ -524,7 +524,11 @@ STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\'')
 label holding `<<-` is not read as a call or an assignment."""
 LIBRARY_CALL = re.compile(r"^\s*(?:library|require)\(\s*[\"']?([A-Za-z][A-Za-z0-9.]*)[\"']?\s*\)", re.MULTILINE)
 SUPER_ASSIGNMENT = re.compile(r"<<-|->>")
-URL_STRING = re.compile(r"[\"'](?:https?|ftp)://")
+URL_TEXT = re.compile(
+    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
+)
+"""The profile's URL predicate (`_URL_IN_TEXT`, the Python profile's rule) restated, applied to each string literal:
+the test checks that every literal reaches it, the refused snippets above check the predicate itself."""
 CALL_NAME = re.compile(r"(?<![\w.:$@])([A-Za-z][A-Za-z0-9._]*)\s*\(")
 
 
@@ -545,6 +549,7 @@ def test_catalogue_corpus() -> None:
         bare = COMMENT.sub("", STRING.sub('""', THEME_STATEMENT_LINE.sub("", normalised)))
         imports = [package for package in LIBRARY_CALL.findall(text) if package not in available]
         assert findings["banned-import"] >= len(imports), name
-        assert findings["url-literal"] >= len(URL_STRING.findall(text)), name
+        urls = [literal for literal in STRING.findall(text) if URL_TEXT.search(literal[1:-1])]
+        assert findings["url-literal"] >= len(urls), name
         assert findings["banned-statement"] >= len(SUPER_ASSIGNMENT.findall(bare)), name
         assert findings["banned-name"] >= len([call for call in CALL_NAME.findall(bare) if denied(call)]), name
