@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -34,6 +34,8 @@ LEVEL_COLORS = [
     "#{:02X}{:02X}{:02X}".format(*np.round(SEQ_START + (SEQ_END - SEQ_START) * t).astype(int))
     for t in np.linspace(0, 1, len(LEVEL_NAMES))
 ]
+# Fading opacity with depth adds a lightness step, so neighbouring levels stay apart on the short ramp
+LEVEL_ALPHAS = np.linspace(1.0, 0.4, len(LEVEL_NAMES))
 
 # Columns: set these to your table's column names
 ENDPOINT = "API Endpoint"  # role: category
@@ -45,7 +47,7 @@ samples = {
     "API Auth": np.concatenate(
         [np.random.exponential(50, 4000) + 20, np.random.normal(200, 30, 800), np.random.uniform(400, 600, 200)]
     ),
-    "API Users": np.concatenate([np.random.normal(80, 25, 4500), np.random.uniform(180, 300, 500)]),
+    "API Users": np.concatenate([np.random.gamma(10, 8, 4500), np.random.uniform(180, 300, 500)]),
     "API Orders": np.concatenate([np.random.lognormal(4, 0.5, 4800), np.random.uniform(300, 500, 200)]),
     "API Search": np.concatenate([np.random.gamma(3, 30, 4600), np.random.uniform(350, 550, 400)]),
 }
@@ -83,15 +85,21 @@ for cat_idx, category in enumerate(categories):
     lowers = np.quantile(values, LEVEL_TAILS)
     uppers = np.quantile(values, 1 - LEVEL_TAILS)
 
-    # Draw from the deepest level inward, so the quartile box sits on top
-    for level_idx in reversed(range(len(LEVEL_NAMES))):
+    # Each level beyond the quartiles is drawn as the two bands it adds outside the previous box,
+    # so translucent levels never stack on top of each other
+    for level_idx in range(len(LEVEL_NAMES)):
         half = width_factors[level_idx] / 2
+        if level_idx == 0:
+            bottoms, tops = [lowers[0]], [uppers[0]]
+        else:
+            bottoms = [lowers[level_idx], uppers[level_idx - 1]]
+            tops = [lowers[level_idx - 1], uppers[level_idx]]
         box = ColumnDataSource(
             data={
-                "left": [cat_idx + 0.5 - half],
-                "right": [cat_idx + 0.5 + half],
-                "bottom": [lowers[level_idx]],
-                "top": [uppers[level_idx]],
+                "left": [cat_idx + 0.5 - half] * len(bottoms),
+                "right": [cat_idx + 0.5 + half] * len(bottoms),
+                "bottom": bottoms,
+                "top": tops,
             }
         )
         level_renderers[level_idx].append(
@@ -102,7 +110,7 @@ for cat_idx, category in enumerate(categories):
                 top="top",
                 source=box,
                 fill_color=LEVEL_COLORS[level_idx],
-                fill_alpha=1.0,
+                fill_alpha=LEVEL_ALPHAS[level_idx],
                 line_color=PAGE_BG,
                 line_width=3,
             )
@@ -134,8 +142,9 @@ quantile_labels = [
     f"{name} ({100 * t:.3g}–{100 * (1 - t):.3g}%)" for name, t in zip(LEVEL_NAMES, LEVEL_TAILS, strict=True)
 ]
 legend_items = [LegendItem(label="Median", renderers=median_renderers)]
+# One representative renderer per level: a swatch is drawn once per renderer, which would stack the alpha
 legend_items += [
-    LegendItem(label=label, renderers=renderers)
+    LegendItem(label=label, renderers=renderers[:1])
     for label, renderers in zip(quantile_labels, level_renderers, strict=True)
 ]
 legend_items.append(LegendItem(label="Outliers", renderers=outlier_renderers))
