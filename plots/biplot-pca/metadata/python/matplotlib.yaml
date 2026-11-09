@@ -2,12 +2,12 @@ library: matplotlib
 language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:17:48Z'
-updated: '2026-05-17T17:36:04Z'
-generated_by: claude-haiku
-workflow_run: 25997636311
+updated: '2026-11-09T08:33:30Z'
+generated_by: claude-opus
+workflow_run: 42584880958
 issue: 3417
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/matplotlib/plot-dark.png
 preview_html_light: null
@@ -15,47 +15,38 @@ preview_html_dark: null
 quality_score: 83
 review:
   strengths:
-  - Perfect visual quality in both renders with no text overlap or visibility issues
-  - 'Proper theme adaptation: warm off-white/near-black backgrounds with readable
-    light and dark text'
-  - 'Complete spec compliance: all PCA biplot features present (scores, loadings,
-    variance percentages, legends)'
-  - 'Excellent color accessibility: Okabe-Ito palette (teal, orange, blue) with strong
-    contrast in both themes'
-  - 'Well-designed data: Iris dataset is realistic, neutral, and demonstrates clear
-    cluster separation with variable importance'
-  - 'Proper variance explained percentages on axes (PC1: 73.0%, PC2: 2.8%)'
-  - Careful label positioning with manual offsets prevents overlap while maintaining
-    readability
-  - Good marker sizing and transparency (s=150, alpha=0.7) optimized for data density
+  - Loadings scaled by one common factor (ARROW_REACH of the largest score distance),
+    so relative arrow lengths follow the loadings and the arrows span the score cloud
+  - Equal aspect with adjustable='datalim' keeps arrow directions geometrically true
+  - Angle-aware label placement splits the near-parallel Petal width / Petal length
+    labels above and below their tips, so each name stays attributable
+  - Explained variance in the axis labels comes straight from pca.explained_variance_ratio_
+    (73.0 % / 22.9 %)
+  - Theme tokens threaded through every chrome element; both renders read cleanly
   weaknesses:
-  - 'Design could be more sophisticated: uses well-configured defaults without custom
-    styling or visual hierarchy'
-  - Missing spine removal for cleaner L-shaped frame (top/right spines should be hidden)
-  - Manual label offset positioning is somewhat verbose; could leverage matplotlib's
-    TextBbox or other positioning utilities
-  - Generic visualization approach without distinctive matplotlib features (could
-    use Path objects, custom artists, or advanced annotation styling)
-  - No explicit grid refinement beyond basic alpha=0.3 styling
+  - 'VQ-02 (both): the 85 %-opaque page-colored label boxes of ''Petal width (cm)''
+    and ''Petal length (cm)'' sit on the Virginica cluster at PC1 ≈ 1.8–2.9 and hide
+    several score points (around (1.9, 0.4), (2.3, 0.45), (2.9, 0.4) and (1.85, −0.15))
+    → no label box may cover a data mark; drop the bbox and keep only the stroke halo,
+    or a fully transparent box. Likely cause: the bbox={... ''alpha'': 0.85} on the
+    arrow-label annotate, on top of the withStroke path effect.'
+  - 'Suggestion: the unit circle the Notes suggest is optional; a correlation-scaled
+    circle would give the arrow lengths a reference.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels ("PC1 (73.0%)", "PC2 (2.8%)"), tick labels all clearly visible with dark text
-      Data: Setosa (teal #009E73), Versicolor (orange #D55E00), Virginica (blue #0072B2) - Okabe-Ito compliant
-      Loading arrows: Four vectors with labels (Sepal Length, Sepal Width, Petal Length, Petal Width) - all readable, no overlap
-      Legend: Properly positioned with species names
-      Legibility verdict: PASS - All text readable, excellent contrast, proper sizing
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: title "biplot-pca · python · matplotlib · anyplot.ai" in dark ink at the top (~60 % width); x label "PC1 (73.0% of variance)", y label "PC2 (22.9% of variance)"; tick labels -3..3 in soft ink; subtle grid; muted crosshair at PC1 = 0 and PC2 = 0; left and bottom spines only. Legend "Species" lower right in a light elevated frame. All text readable.
+      Data: 150 score points — Setosa #009E73 on the left (PC1 ≈ -2.5), Versicolor #C475FD and Virginica #4467A3 overlapping on the right. Four dark-ink arrows from the origin: Sepal width up-left (long), Sepal length up-right, Petal width and Petal length nearly parallel along +PC1, each labeled at its tip (Petal width above, Petal length below). The label boxes of the petal labels cover a few Virginica points.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels all clearly visible with light text - no dark-on-dark failures
-      Data: Colors identical to light render (teal, orange, blue maintained) - proper theme consistency
-      Loading arrows: Same positions and visibility as light render
-      Legend: Light text on dark background, fully readable
-      Legibility verdict: PASS - All text readable, no theme-adaptation failures, excellent contrast
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels in light ink, tick labels in soft light ink, subtle grid, legend frame on #242420 with light text. No dark-on-dark text.
+      Data: identical point colors to the light render (green, purple, blue); arrows switch to light ink #F0EFE8; arrow labels light with dark halo/box. Virginica blue is darker against the background but clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,77 +54,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Perfectly readable in both light and dark renders.
+        comment: Explicit sizes (title 12, axis labels 10, ticks/arrow labels/legend
+          8 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Custom offset positioning prevents all label overlap. All text fully
-          readable.
+        passed: false
+        comment: The opaque label boxes of 'Petal width (cm)' and 'Petal length (cm)'
+          sit on Virginica score points and hide them (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (s=150, alpha=0.7) and arrows (scale 2.5) perfectly adapted
-          to data density. All elements clearly visible.
+        comment: 150 points at s=60, alpha 0.75 with page-colored outline; arrows
+          lw 1.6 in ink; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (teal, orange, blue) provides excellent contrast
-          and CVD safety. No red-green sole signal.
+        comment: Green/purple/blue Imprint positions are CVD-distinguishable; arrows
+          in high-contrast ink
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins. Legend well integrated.
-          Perfect layout balance.
+        comment: 2400x2400 square canvas, equal aspect, balanced margins, title ~60%
+          width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include component names and variance percentages (e.g.,
-          'PC1 (73.0%)'). Fully descriptive.
+        comment: '''PC1 (73.0% of variance)'' / ''PC2 (22.9% of variance)''; feature
+          names carry units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito colors verified (#009E73, #D55E00, #0072B2). Backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark). Both renders theme-correct with proper
-          text colors.'
+        comment: 'Imprint positions 1-3 in canonical order, first #009E73; #FAF8F1
+          / #1A1A17 backgrounds; theme-correct chrome in both renders'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured library defaults with functional color use. No custom
-          palette, intentional hierarchy, or publication-ready sophistication.
+        passed: true
+        comment: 'Style-guide baseline: clean type hierarchy and palette, nothing
+          decided beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Arrows styled with custom arrowstyle and 2.5lw. Markers have white
-          edges. Grid subtle but present. Top/right spines not removed.
+        passed: true
+        comment: 'Beyond baseline: muted origin crosshair at alpha 0.6, ticks with
+          zero length, and angle-aware label split (above/below) for near-parallel
+          arrows'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data clearly displayed (three iris species clusters). Loading arrows
-          show variable importance. No special emphasis or visual hierarchy beyond
-          coloring by group.
+        passed: true
+        comment: Data displayed clearly; no focal point or hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -143,30 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PCA biplot with observation scores (scatter) and loading
-          vectors (arrows). PC1 vs PC2 displayed.
+        comment: 'PCA biplot: scores as points plus loading arrows from the origin'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: observation scores colored by group, loading
-          arrows with variable labels, origin reference lines, variance percentages
-          on axes.'
+        comment: PC1 vs PC2, colored scores with legend, one arrow per variable from
+          origin, each labeled at its tip, one common scale factor, variance % in
+          axis labels; unit circle optional and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned to PC1/PC2. Axes limits appropriate. All data
-          visible.
+        comment: Scores at their PCA coordinates, no jitter; equal aspect keeps arrow
+          directions true
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'biplot-pca · matplotlib · anyplot.ai' correctly formatted.
-          Legend properly labeled with species names.
+        comment: Title 'biplot-pca · python · matplotlib · anyplot.ai'; legend titled
+          'Species' with Setosa/Versicolor/Virginica
     data_quality:
       score: 15
       max: 15
@@ -176,24 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Iris dataset shows all four features. Three species with distinct
-          distributions demonstrated.
+        comment: Shows correlated (petal pair), separate (sepal width) loadings, clustered
+          and overlapping groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is real, well-known scientific benchmark. Neutral, comprehensible
-          context.
+        comment: Iris dataset, as the spec suggests; neutral and real
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values factually correct. Proportions match reality. Proper standardization
-          applied.
+        comment: Standardized Iris PCA gives 73.0% / 22.9% explained variance, computed
+          via PCA, matches known values (72.96 / 22.85)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,66 +189,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data load → PCA → plot → save.
-          No unnecessary functions.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Iris dataset and StandardScaler deterministic. PCA produces consistent
-          output.
+        comment: Deterministic built-in dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: matplotlib, sklearn components. All used.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Code is clean but manual label offset positioning is verbose. Theme
-          handling and color palette could be more robust.
+        passed: true
+        comment: PCA and scaling via sklearn; no fake UI; label logic purposeful
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves output files. Current matplotlib API (3.10.9). No deprecated
-          functions.
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses matplotlib's high-level API (scatter, annotate, grid, legend).
-          Manual loop-based label positioning is somewhat low-level.
+        passed: true
+        comment: Axes methods, ax.annotate with arrowprops for loadings, set_aspect('equal',
+          adjustable='datalim'), offset-points label placement
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Generic usage without distinctive matplotlib features. Could leverage
-          Path objects, custom artists, or advanced annotation techniques.
-    score_caps_applied: []
-  verdict: REJECTED
+        passed: true
+        comment: patheffects.withStroke halos on labels; annotate textcoords='offset
+          points'
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T08:30:52Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
   patterns:
   - dataset-loading
   - iteration-over-groups
   dataprep:
   - pca
+  - normalization
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
