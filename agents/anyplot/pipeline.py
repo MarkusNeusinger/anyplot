@@ -152,6 +152,7 @@ from .data.fidelity import left_out_line
 from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
+from .dataset_versions import original_number
 from .grounding import (
     EXPECT_LINE_ID,
     UNVERIFIED_LINE,
@@ -734,6 +735,14 @@ def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason 
     return True
 
 
+def plot_shows_replaced_data(services: Services, session_id: str, view: SessionView) -> bool:
+    """Whether the library's latest plot drew data that a later paste replaced (`CodeVersion.earlier_data`): it is no
+    plot of the current data, so a wish for the plot of the new data is a first-plot note (owner decision of
+    2026-11-08), kept by `keep_plot_request` and by a blocked run whatever base the root chose."""
+    latest = services.versions.latest_rendered(session_id, target=view.target)
+    return latest is not None and latest.earlier_data(original_number(services.datasets, session_id, view))
+
+
 def hold_request(state: Any, args: PipelineArgs) -> None:
     """Keep a first plot's `change_request` for the next run, joined to one kept already (`merged_request`).
 
@@ -776,6 +785,11 @@ def stop_not_ready(
     Both the run and ToolSafety's refusal before it end here: a call after the turn's own data change
     (`data_changed_this_turn`) or on the summary turn of an unconfirmed paste (`summary_turn`) keeps the wish and
     leaves the same records as a run that found the data unconfirmed."""
+    if args.base == "previous" and view is not None and plot_shows_replaced_data(get_services(), ctx.session.id, view):
+        # A change of a plot of data a later paste replaced is the first plot of the new data: the live eval of
+        # 2026-11-08 had the root send the title pasted with the new data as a change of the old plot, on data not
+        # confirmed yet, which a change of an existing version never keeps.
+        args = args.model_copy(update={"base": "catalogue"})
     kept = keep_pending_request(ctx.state, args, reason)
     if kept:
         ledger.kept_note = args  # held for the bindings and data this turn ends with
@@ -1600,6 +1614,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             requests=standing_requests([*run.user_requests, run.change_request]),
             expected_texts=list(run.expected_texts),
             turn=ledger_for(ctx.invocation_id).turn,
+            data_version=run.dataset.number,
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )

@@ -149,8 +149,9 @@
  * `carryOffer` holds the offer of the plot in the new library with the plot
  * memory's decisions (`carryPlot`, the action `carry_plot`); from the menu the
  * run waits for the user's click. The offer ends once a plot in that library
- * ships, whatever turn shipped it, or with the next switch, whose answer
- * brings its own offer or none. `createPlot` stays the fresh plot without the
+ * ships, whatever turn shipped it, with the next switch, whose answer
+ * brings its own offer or none, or with a new data version (a paste, a change,
+ * an undo), for which the server drops its carry too. `createPlot` stays the fresh plot without the
  * decisions (`.create_plot()`, `.start_over()`). The plot memory is the
  * server's list of the decisions a plot takes over (`memory`): the hook reads
  * it after every turn's `done` (a shipped run adds entries, the assistant's
@@ -449,6 +450,12 @@ export interface DataSnapshot {
   /** Up to 20 data rows (the header is `profile.columns[].name`). */
   preview: string[][];
   profile: DatasetProfile;
+  /**
+   * A paste whose answer said a column the replaced data was plotted by is not in it
+   * (`columns_changed`): its chapter line holds the remembered decisions until the next plot,
+   * with `.forget_all()` (`threadModel`'s `decisionsEarlier`).
+   */
+  columnsChanged?: true;
 }
 
 /**
@@ -920,8 +927,9 @@ export interface AgentSessionState {
   libraryBusy: boolean;
   /**
    * After a switch whose answer offered it: the plot in this library with the
-   * plot memory's decisions. A shipped plot in that library or the next switch
-   * ends it.
+   * plot memory's decisions. A shipped plot in that library, the next switch or
+   * a new data version (a paste, a change, an undo, which drop the server's carry
+   * too) ends it.
    */
   carryOffer: CarryOffer | null;
   /** The plot memory as the server last listed it; `null` until a list arrived, or from a server without one. */
@@ -1300,6 +1308,9 @@ function withDataVersion(
     undoError: null,
     toLongBusy: false,
     toLongError: null,
+    // The server dropped the switch's carry with the new version: it was taken from a plot of the
+    // data before (owner decision of 2026-11-08).
+    carryOffer: null,
   };
 }
 
@@ -1440,6 +1451,8 @@ function snapshotOf(
     changes: next.dataChange?.kind === 'changed' ? next.dataChange.changes : [],
     preview: parsed.preview,
     profile: parsed.profile,
+    // Only a paste's answer names it; a change, an undo or a copy never carries it.
+    ...(parsed.columns_changed === true ? { columnsChanged: true as const } : {}),
   };
 }
 
@@ -1712,6 +1725,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           // And it starts over: a loss named for the data before it is not its own. A paste
           // that drops a confirmation the user had given is named by `agentReducer`.
           confirmLoss: null,
+          // The server dropped the switch's carry with the paste, as with every new data version.
+          carryOffer: null,
         },
         parseChange(state, action),
         action.chip
