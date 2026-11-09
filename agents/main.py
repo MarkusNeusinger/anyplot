@@ -19,7 +19,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, with `offer: {language, basis: "data"}` when the notes or the column names are in another language the page has not been offered yet and the user picked none, which the page offers once, `language.data_offer`), stored as the first version of new data under the session's next number (`version`, also `original_version`; `can_undo` false: the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget), `429 service_paused`, `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
-| `PUT /v1/sessions/{sid}/language` | `{language, via?}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`; `via`: `header`, the chip and the default, or `offer`, the button on an offer line) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), and the plot's; source `chosen` from the chip, which ends every offer, `offer` from an offer while the user picked none; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern, or another `via`) |
+| `PUT /v1/sessions/{sid}/language` | `{language, via?}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`; `via`: `header`, the chip and the default, or `offer`, the button on an offer line) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), and the plot's; source `chosen` from the chip, which ends every offer, `offer` from an offer while the user picked none, with the content-free `language_offer` telemetry line (`via`, the language as a closed code); `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern, or another `via`) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
@@ -1636,6 +1636,7 @@ async def _ingest_paste(
         attribution("data_language", ledger, lang=offered, basis="notes" if offered == notes_lang else "headers")
     await runtime.write_state(session, delta)
     language = _language_body(current, (offered, "data") if offered is not None else None)
+    _telemetry_offer(ledger, language)
     return JSONResponse(
         {
             "preview": parsed.preview,
@@ -1948,7 +1949,9 @@ async def put_bindings(
 
 
 @app.put("/v1/sessions/{sid}/language", dependencies=v1_dependencies)
-async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep) -> JSONResponse:
+async def put_language(
+    sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep, rid: RequestId
+) -> JSONResponse:
     """The user's pick: the session language and the plot's, from the chip (`via: header`) or an offer (`via: offer`).
 
     The chip sets the source `chosen`, which is final: no language is offered after it, and the root's
@@ -1972,6 +1975,13 @@ async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: 
     # An offer accepted after a pick (a button another tab still showed) sets the language and keeps the pick final.
     source: LanguageSource = "offer" if body.via == "offer" and current.language_source != "chosen" else "chosen"
     await runtime.write_state(session, {**language_delta(value, source), PLOT_LANGUAGE: value})
+    telemetry.write(
+        telemetry.LanguageOffer,
+        _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid), current, session),
+        attempt=f"{body.via}:{rid}",
+        via=body.via,
+        language=telemetry.plot_language(value),
+    )
     answer: dict[str, Any] = {"language": value, "source": source}
     view = read_session(session.state)
     stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
@@ -2276,6 +2286,21 @@ def _language_body(view: SessionView, offer: tuple[str, str] | None = None) -> d
     return body
 
 
+def _telemetry_offer(ledger: RequestLedger | None, body: dict[str, Any]) -> None:
+    """The `language_offer` line (`via: shown`) for a language body that carries an offer to the page: content-free,
+    the language as a closed code. One per offer, since each language is offered once per session."""
+    offer = body.get("offer")
+    if ledger is None or not isinstance(offer, dict):
+        return
+    telemetry.write(
+        telemetry.LanguageOffer,
+        ledger,
+        attempt=f"shown:{ledger.request_id}",
+        via="shown",
+        language=telemetry.plot_language(offer["language"]),
+    )
+
+
 async def _session_sync(
     runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
 ) -> dict[str, Any]:
@@ -2305,6 +2330,7 @@ async def _session_sync(
         "data_confirmed": view.data_confirmed,
         "language": _language_body(view, ledger.language_offer if ledger is not None else None),
     }
+    _telemetry_offer(ledger, payload["language"])
     stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
     if stored is not None:
         # The wide-table offer in the session language after the turn: `set_language` may have changed it, and the

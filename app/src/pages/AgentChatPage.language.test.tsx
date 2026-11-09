@@ -149,7 +149,6 @@ describe('AgentChatPage language chip', () => {
     expect(puts[0].headers['X-Anyplot-Client']).toBe('agent-chat/1');
     // A choice is the user's own: the thread stays quiet.
     expect(screen.queryByTestId('language-offer')).not.toBeInTheDocument();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_language', { via: 'header' });
   });
 
   it('shows the server form of a typed language and refuses one outside the pattern', async () => {
@@ -209,7 +208,6 @@ describe('AgentChatPage language chip', () => {
       'until then everything stays English',
       'the menu at the top changes it any time',
     ]);
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_language', { via: 'shown' });
     expect(puts).toEqual([]);
   });
 
@@ -233,7 +231,10 @@ describe('AgentChatPage language chip', () => {
     );
     // The button is gone: its focus moved to the line, never to the page.
     expect(screen.getByTestId('language-offer')).toHaveFocus();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_language', { via: 'offer' });
+    // The server counts the offers and the picks; the page's analytics sends nothing about them.
+    expect(
+      analytics.trackEvent.mock.calls.filter(([name]) => String(name).includes('language'))
+    ).toEqual([]);
   });
 
   it('closes an open offer when the user picks at the top instead', async () => {

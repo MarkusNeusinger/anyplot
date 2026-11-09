@@ -614,6 +614,43 @@ async def test_the_turn_records_the_language_as_the_turn_left_it(
     assert "Swedish" not in json.dumps(telemetry_lines(caplog))
 
 
+async def test_the_language_offers_and_picks_write_content_free_lines(
+    client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`language_offer`: one line per offer the page is sent (`shown`, from a paste or a typed message), per offer
+    taken (`offer`) and per pick in the header (`header`), the language as a closed code and nothing else."""
+    from agents.anyplot.models import JudgeVerdict
+
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", {"root": [{"text": "Sure."}, {"text": "Okay."}]})
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="fr")] + [JudgeVerdict(verdict="in_scope", lang="de")] * 2
+    sid = await open_session(client)
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "x,y\n1,2\n2,3\n"})
+    assert pasted.json()["language"]["offer"] == {"language": "fr", "basis": "data"}
+    for text in (f"Mach es {MESSAGE_CANARY}", "Und noch einmal"):  # the second offers nothing: German came once
+        assert (await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": text})).is_success
+
+    for body in ({"language": "de", "via": "offer"}, {"language": "Swedish"}):
+        assert (await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json=body)).status_code == 200
+
+    lines = lines_of(caplog, "language_offer")
+    assert [(line["via"], line["language"]) for line in lines] == [
+        ("shown", "fr"),
+        ("shown", "de"),
+        ("offer", "de"),
+        ("header", "other"),
+    ]
+    # The envelope's keys and the event's own: nothing else reaches the line.
+    assert {key for line in lines for key in line} == {
+        *telemetry._Envelope.model_fields,
+        "schema",
+        "event",
+        "via",
+        "language",
+    } - {"schema_"}
+    assert "Swedish" not in json.dumps(lines) and MESSAGE_CANARY not in json.dumps(lines)
+
+
 @pytest.mark.parametrize(
     ("language", "code"),
     [("en", "en"), ("Deutsch", "de"), ("German", "de"), ("JA", "ja"), ("Polski", "pl"), ("sv", "other"), (None, None)],
@@ -971,6 +1008,7 @@ async def test_the_run_prompt_hashes_are_the_bundle_hashes(
         (telemetry.PipelineRun, "pipeline_runs"),
         (telemetry.ChatTurn, "chat_turns"),
         (telemetry.PlotSwitch, "plot_switches"),
+        (telemetry.LanguageOffer, "language_offers"),
     ],
 )
 def test_every_field_has_its_typed_column_in_the_views(event: type[telemetry._Event], view: str) -> None:

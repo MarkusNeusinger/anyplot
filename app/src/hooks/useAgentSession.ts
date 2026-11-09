@@ -3565,8 +3565,8 @@ export function useAgentSession({
    * form (`English` comes back as `en`). Nothing starts without a session or while
    * anything else is in flight, which the server would refuse with `409 run_active`. A
    * failure keeps the old value and rejects with an `AgentApiError` for the caller's
-   * failure line; a 401 or 403 also shows the sign-in notice. `agent_language` counts
-   * the picks by where they came from.
+   * failure line; a 401 or 403 also shows the sign-in notice. The server's usage
+   * telemetry counts the offers and the picks (`language_offer`); the page sends nothing.
    */
   const pickLanguage = useCallback(
     async (language: string, offerId?: number): Promise<void> => {
@@ -3579,7 +3579,6 @@ export function useAgentSession({
         const via = offerId !== undefined ? 'offer' : undefined;
         const { suggestion, ...applied } = await agentApi.setLanguage(token, sid, language, via);
         safeDispatch({ type: 'language_done', plotLanguage: applied, offerId });
-        trackEvent('agent_language', { via: via ?? 'header' });
         // The offer's new column names follow the language: the card shows what `.to_long()` applies.
         if (suggestion !== undefined) safeDispatch({ type: 'suggestion_sync', suggestion });
       } catch (err) {
@@ -3590,7 +3589,7 @@ export function useAgentSession({
         languageRef.current = false;
       }
     },
-    [token, safeDispatch, handleFailure, trackEvent, busy]
+    [token, safeDispatch, handleFailure, busy]
   );
 
   /** The chip's choice (`pickLanguage` without an offer line). */
@@ -3605,17 +3604,6 @@ export function useAgentSession({
     },
     [pickLanguage]
   );
-
-  // Every offer line the thread shows counts once (`agent_language{via: shown}`), whatever
-  // brought it, a turn's `done` or a paste's answer: the share of offers taken is `offer` over it.
-  const shownOffersRef = useRef(0);
-  useEffect(() => {
-    for (const item of state.items) {
-      if (item.kind !== 'language_offer' || item.id <= shownOffersRef.current) continue;
-      shownOffersRef.current = item.id;
-      trackEvent('agent_language', { via: 'shown' });
-    }
-  }, [state.items, trackEvent]);
 
   // ---------------------------------------------------------------- feedback
 

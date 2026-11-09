@@ -640,8 +640,23 @@ class Outcome(_Event):
     reaction: Reaction | None = None
 
 
-AnyEvent = DataInput | ChatTurn | PipelineRun | PlotSwitch | Outcome
-EVENTS: tuple[str, ...] = ("data_input", "chat_turn", "pipeline_run", "plot_switch", "outcome")
+LanguageVia = Literal["shown", "offer", "header"]
+"""How a `language_offer` line came about: `shown`, the server sent the page an offer of a language it found in a
+typed message or a paste (`language.offer`); `offer`, the user took one with its `.switch()`; `header`, the user
+picked a language in the chat header's menu (`PUT /v1/sessions/{sid}/language`)."""
+
+
+class LanguageOffer(_Event):
+    """The session language's offers and picks (since 2026-11-08): the share of offers taken is `offer` over `shown`."""
+
+    event: Literal["language_offer"] = "language_offer"
+    via: LanguageVia
+    language: PlotLanguage
+    """The offered or picked language as a closed code (`plot_language`), never the value itself."""
+
+
+AnyEvent = DataInput | ChatTurn | PipelineRun | PlotSwitch | Outcome | LanguageOffer
+EVENTS: tuple[str, ...] = ("data_input", "chat_turn", "pipeline_run", "plot_switch", "outcome", "language_offer")
 
 
 class _Envelope(_Event):

@@ -3795,14 +3795,13 @@ describe('useAgentSession: session language', () => {
     expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'default' });
     // The line comes under the reply of the turn whose message was German.
     expect(lastItem(result.current.state.items)).toMatchObject(offerItem('de', 'message'));
-    expect(trackEvent).toHaveBeenCalledWith('agent_language', { via: 'shown' });
-    expect(trackEvent.mock.calls.filter(([name]) => name === 'agent_language')).toHaveLength(1);
 
     // Ignored: the next German turn keeps English, and the line is not shown again.
     await act(() => result.current.sendMessage('Und die y-Achse?'));
     expect(offerLines(result.current.state.items)).toHaveLength(1);
     expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'default' });
-    expect(trackEvent.mock.calls.filter(([name]) => name === 'agent_language')).toHaveLength(1);
+    // The server counts the offers (`language_offer`): the page sends no analytics event for them.
+    expect(trackEvent.mock.calls.filter(([name]) => String(name).includes('language'))).toEqual([]);
 
     // "Auf Deutsch bitte": the assistant's `set_language` is a pick, which closes the open line.
     done = { llm_calls: 1, language: { language: 'de', source: 'chosen' } };
@@ -3851,13 +3850,12 @@ describe('useAgentSession: session language', () => {
       ...offerItem('de', 'message', 'accepted'),
       plot: false, // no plot on screen: the first plot comes in German
     });
-    expect(trackEvent).toHaveBeenCalledWith('agent_language', { via: 'offer' });
     // A line once taken is no offer any more: a second click asks nothing.
     await act(() => result.current.acceptLanguage(line.id));
     expect(calls.filter(call => call.path.endsWith('/language'))).toHaveLength(1);
   });
 
-  it('closes every open offer when the chip picks, and counts the pick as the header’s', async () => {
+  it('closes every open offer when the chip picks', async () => {
     const routes = baseRoutes();
     const offered = { language: 'en', source: 'default', offer: { language: 'fr', basis: 'data' } };
     routes['POST /sessions/S1/dataset'] = () => json(200, { ...DATASET, language: offered });
@@ -3875,7 +3873,6 @@ describe('useAgentSession: session language', () => {
     expect(offerLines(result.current.state.items)).toEqual([
       expect.objectContaining(offerItem('fr', 'data', 'closed')),
     ]);
-    expect(trackEvent).toHaveBeenCalledWith('agent_language', { via: 'header' });
   });
 });
 

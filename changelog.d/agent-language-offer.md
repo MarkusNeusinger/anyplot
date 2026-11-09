@@ -14,5 +14,8 @@
   language it offered. The page is English, so a visitor who never asked for
   German should not get German replies; the offer replaces the
   `# reply language: de` notice, which repeated for every paste and first
-  message. Plausible counts the offers and the picks as
-  `agent_language{via: shown|offer|header}`. (#12865)
+  message. The agents service's content-free usage telemetry counts the offers
+  and the picks as the `language_offer` event (`via`: `shown`, `offer` or
+  `header`, and the language as a closed code); the page sends no Plausible
+  event for them, since most chat sessions are the owner's and the Plausible
+  dashboard is public. (#12865)
