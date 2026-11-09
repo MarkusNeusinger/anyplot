@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -20,6 +20,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
+    scale_color_identity,
     scale_fill_manual,
     theme,
     theme_void,
@@ -35,7 +36,10 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette: all eight positions, one per plan tier in data order
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
-BLOCK_TEXT = "#1A1A17"  # labels sit on the fixed Imprint block fills, so they stay dark in both themes
+BAND_ALPHA = (
+    0.5 if THEME == "light" else 0.7
+)  # translucent bands fade toward a dark page, so they need more opacity there
+LABEL_INKS = ("#1A1A17", "#F0EFE8")  # block labels sit on the fixed fills, so they use whichever ink contrasts more
 
 # Columns: set these to your table's column names
 QUARTER = "Quarter"  # role: time_point
@@ -69,6 +73,21 @@ stages = pd.unique(pd.concat([flows[QUARTER], flows[NEXT_QUARTER]])).tolist()
 tiers = pd.unique(pd.concat([flows[PLAN], flows[NEXT_PLAN]])).tolist()
 fill_colors = dict(zip(tiers, IMPRINT_PALETTE, strict=False))  # tiers past the eighth fall back to the muted anchor
 
+# Label ink per tier: WCAG relative luminance of the block fill and of both inks, then the higher contrast ratio
+srgb = {
+    c: np.array([int(c[i : i + 2], 16) for i in (1, 3, 5)]) / 255 for c in [*IMPRINT_PALETTE, INK_MUTED, *LABEL_INKS]
+}
+lum = {
+    c: np.where(v <= 0.04045, v / 12.92, ((v + 0.055) / 1.055) ** 2.4) @ [0.2126, 0.7152, 0.0722]
+    for c, v in srgb.items()
+}
+dark_ink, light_ink = LABEL_INKS
+fill_lum = {tier: lum[fill_colors.get(tier, INK_MUTED)] for tier in tiers}
+label_inks = {
+    tier: dark_ink if (fl + 0.05) / (lum[dark_ink] + 0.05) >= (lum[light_ink] + 0.05) / (fl + 0.05) else light_ink
+    for tier, fl in fill_lum.items()
+}
+
 # Block value: what leaves a block, or what arrives in it at the last time point
 outflow = flows.groupby([QUARTER, PLAN], sort=False)[MOVED].sum()
 inflow = flows.groupby([NEXT_QUARTER, NEXT_PLAN], sort=False)[MOVED].sum()
@@ -99,6 +118,7 @@ for i, stage in enumerate(stages):
                 "ymin": y_top - value,
                 "ymax": y_top,
                 "label": f"{tier}\n{value:,.0f}k",
+                "label_color": label_inks[tier],
             }
         )
         y_top -= value + gap
@@ -137,11 +157,12 @@ bands = pd.concat(band_parts, ignore_index=True)
 header_y = tallest * 1.04
 plot = (
     ggplot()
-    + geom_polygon(bands, aes(x="x", y="y", group="band", fill=PLAN), alpha=0.5, color=None)
+    + geom_polygon(bands, aes(x="x", y="y", group="band", fill=PLAN), alpha=BAND_ALPHA, color=None)
     + geom_rect(nodes, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill=PLAN), color=PAGE_BG, size=0.6)
     + geom_text(
-        nodes, aes(x="x", y="label_y", label="label"), color=BLOCK_TEXT, size=6.5, fontweight="bold", lineheight=1.1
+        nodes, aes(x="x", y="label_y", label="label", color="label_color"), size=6.5, fontweight="bold", lineheight=1.1
     )
+    + scale_color_identity()
     + annotate(
         "text", x=range(len(stages)), y=header_y, label=stages, color=INK, size=9, fontweight="bold", va="bottom"
     )
