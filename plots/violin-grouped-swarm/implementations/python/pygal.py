@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-09
@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pygal
 from pygal.style import Style
+from scipy.stats import gaussian_kde
 
 
 # Theme tokens
@@ -42,38 +43,6 @@ df = pd.DataFrame(rows)
 
 
 # Plot: reads only df and the constants above
-def compute_kde(values, grid):
-    """Gaussian KDE with Silverman's rule bandwidth."""
-    n = len(values)
-    std = np.std(values)
-    iqr = np.percentile(values, 75) - np.percentile(values, 25)
-    spread = min(std, iqr / 1.34) if iqr > 0 else std
-    bandwidth = 0.9 * spread * n ** (-0.2) if spread > 0 else 1.0
-    density = np.exp(-0.5 * ((grid[:, None] - values[None, :]) / bandwidth) ** 2).sum(axis=1)
-    return density / (n * bandwidth * np.sqrt(2 * np.pi))
-
-
-def compute_swarm_positions(values, center_x, width):
-    """Spread points sideways within value bins so they do not stack."""
-    order = np.argsort(values)
-    positions = np.full(len(values), center_x, dtype=float)
-    sorted_values = values[order]
-    value_span = sorted_values[-1] - sorted_values[0]
-    bin_height = value_span / 15 if value_span > 0 else 1.0
-    bins = []
-    bin_start = sorted_values[0]
-    for idx, v in zip(order, sorted_values, strict=True):
-        if not bins or v - bin_start > bin_height:
-            bins.append([])
-            bin_start = v
-        bins[-1].append(idx)
-    for members in bins:
-        offsets = np.linspace(-width / 2, width / 2, len(members)) if len(members) > 1 else [0.0]
-        for idx, off in zip(members, offsets, strict=True):
-            positions[idx] = center_x + off
-    return positions
-
-
 tasks = df[TASK].dropna().unique().tolist()
 levels = df[LEVEL].dropna().unique().tolist()
 slot = 0.9 / len(levels)
@@ -92,14 +61,26 @@ for i, task in enumerate(tasks):
         v_min, v_max = values.min(), values.max()
         padding = (v_max - v_min) * 0.15 if v_max > v_min else max(abs(v_max) * 0.05, 1.0)
         grid = np.linspace(v_min - padding, v_max + padding, n_grid)
-        density = compute_kde(values, grid)
+        if np.ptp(values) > 0 and len(values) > 1:
+            density = gaussian_kde(values, bw_method="silverman")(grid)
+        else:
+            density = np.exp(-0.5 * ((grid - v_min) / padding) ** 2)
         density = density / density.max() * half_width
 
         left = [(center_x - d, y) for y, d in zip(grid, density, strict=True)]
         right = [(center_x + d, y) for y, d in zip(grid[::-1], density[::-1], strict=True)]
         violins[level].append(left + right + [left[0]])
 
-        swarm_x = compute_swarm_positions(values, center_x, width=half_width * 0.7)
+        # Swarm: points in the same value bin spread sideways, scaled to the local violin width
+        bin_edges = np.linspace(v_min, v_max, 16)
+        bin_ids = np.digitize(values, bin_edges[1:-1])
+        swarm_x = np.full(len(values), center_x)
+        for b in np.unique(bin_ids):
+            members = np.flatnonzero(bin_ids == b)
+            members = members[np.argsort(values[members])]
+            local_half = np.interp(values[members].mean(), grid, density) * 0.75
+            if len(members) > 1:
+                swarm_x[members] = center_x + np.linspace(-local_half, local_half, len(members))
         swarms[level].append(list(zip(swarm_x.tolist(), values.tolist(), strict=True)))
 
 # Series order: per group, one violin series then one swarm series
@@ -115,8 +96,8 @@ custom_style = Style(
     colors=tuple(series_colors),
     title_font_size=66,
     label_font_size=56,
-    major_label_font_size=44,
-    legend_font_size=44,
+    major_label_font_size=56,
+    legend_font_size=48,
     value_font_size=36,
     opacity=0.45,
     opacity_hover=0.6,
@@ -134,7 +115,8 @@ chart = pygal.XY(
     y_title=RESPONSE,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=len(levels),
+    legend_at_bottom_columns=max(len(levels), 8),
+    legend_box_size=40,
     stroke=True,
     fill=True,
     dots_size=0,
@@ -143,6 +125,7 @@ chart = pygal.XY(
     range=(0, top),
     xrange=(x_lo, x_hi),
     margin=50,
+    margin_bottom=110,
 )
 
 # One interrupted series per group keeps the legend to one entry per group. pygal
