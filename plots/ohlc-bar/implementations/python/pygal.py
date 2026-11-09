@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -56,7 +56,7 @@ df = pd.DataFrame(
 # Plot: reads only df and the constants above
 dates = pd.to_datetime(df[DATE])
 label_every = max(1, len(df) // 9)
-date_labels = [{"label": dates.iloc[i].strftime("%b %d"), "value": i} for i in range(0, len(df), label_every)]
+date_labels = [{"label": dates.iloc[i].strftime("%b %d"), "value": i + 1} for i in range(0, len(df), label_every)]
 x_title = f"{DATE} ({dates.min():%b %Y} – {dates.max():%b %Y})"
 
 custom_style = Style(
@@ -98,13 +98,14 @@ chart = pygal.XY(
     margin_bottom=40,
     x_labels=date_labels,
     x_labels_major_every=1,
+    xrange=(0.5 - TICK_WIDTH, len(df) + 0.5 + TICK_WIDTH),
 )
 
 # Each bar: vertical line (low to high), open tick to the left, close tick to the right
 up_bars = []
 down_bars = []
 for i, (o, h, lo, c) in enumerate(df[[OPEN, HIGH, LOW, CLOSE]].itertuples(index=False, name=None)):
-    x = float(i)
+    x = float(i + 1)  # 1-based, so pygal's x=0 axis line stays outside the padded range
     bar_points = [
         (x, lo),
         (x, h),
