@@ -2,49 +2,54 @@ library: altair
 language: python
 specification_id: line-filled
 created: '2025-12-30T11:22:20Z'
-updated: '2026-05-12T17:23:13Z'
-generated_by: claude-haiku
-workflow_run: 25749687148
+updated: '2026-11-09T12:31:52Z'
+generated_by: claude-opus
+workflow_run: 42616342597
 issue: 2643
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/python/altair/plot-dark.html
-quality_score: 72
+quality_score: 85
 review:
   strengths:
-  - Clean, readable layout with good proportions
-  - Semi-transparent gradient fill emphasizes area magnitude
-  - Realistic website traffic data with clear trend
-  - Both light and dark renders are legible
-  - Proper axis labels with sensible scales
+  - A single mark_area with line={...} draws the fill and the stroke together, so
+    the line sits on top of the fill in its own color (#009E73) and the fill reads
+    at fillOpacity=0.35, inside the Notes' 0.3-0.5 range
+  - The value axis is pinned to zero with alt.Scale(zero=True), so the filled height
+    stays proportional to visitors; interpolate='linear' keeps the line on the 30
+    daily values with no spline overshoot
+  - Gridlines stay visible through the fill in both themes, and only the y grid is
+    drawn (configure_axisX(grid=False)), which suits a chart read along the value
+    axis
+  - Theme tokens are threaded through the title, axis titles, labels, domain and grid,
+    so both renders are fully readable and the brand green is identical across them
+  - 'Library-native interactivity in the HTML: escaped-field tooltips with a '',.0f''
+    visitor format, plus .interactive() zoom and pan'
+  - Plausible website-traffic scenario (growth trend + weekly cycle + noise) with
+    a seed and readable column constants (Day of month, Daily visitors)
   weaknesses:
-  - 'Code doesn''t implement theme-adaptive colors per altair.md spec - uses hardcoded
-    #306998 instead of environment-driven palette'
-  - 'Data color should be #009E73 (Okabe-Ito brand green), not #306998'
-  - Missing 'import os' for ANYPLOT_THEME environment variable
-  - Saves to 'plot.png' instead of 'plot-{THEME}.png' - breaks theme-aware file naming
-  - Doesn't use .configure_axis/view/title() with INK/INK_SOFT/PAGE_BG tokens for
-    theme adaptation
-  - Code shows 'pyplots.ai' in title but rendered image shows 'anyplot.ai' - code/image
-    discrepancy
+  - 'Suggestion: the mandated title fills only about 32 % of the plot width at fontSize
+    16; a slightly larger title would give the header more presence.'
+  - 'Suggestion: the x scale starts at day 1 with nice=False, so the first tick label
+    is 2; a tick at 1 would anchor the start of the month.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface, appears to be #FAF8F1
-      Chrome: Title "line-filled · altair · anyplot.ai" is clearly visible in dark text. X-axis labeled "Day of Month" (0-30), Y-axis labeled "Daily Visitors" (0-9000). All labels readable with good contrast against light background.
-      Data: Filled area with semi-transparent gradient from teal/blue color (#306998 per code, though should be #009E73). Line on top in darker shade. Data shows 30-day visitor trend with clear pattern.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas (chart centered, padded with PAGE_BG).
+      Chrome: centered title "line-filled · python · altair · anyplot.ai" in near-black; y-axis title "Daily visitors" and x-axis title "Day of month" in dark ink; tick labels 0–9,000 (comma-formatted) and 2–30 in soft dark gray; subtle horizontal gridlines every 1,000; y and x domain lines in INK_SOFT; no x grid. All readable.
+      Data: one #009E73 line (about 2.5 px stroke at the base scale) joining 30 daily values that rise from about 5,900 to about 8,700 with a weekly wave; the area from the line down to the zero baseline is filled in the same green at about 35 % opacity, and the gridlines show through it.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface, appears to be #1A1A17
-      Chrome: Title, axis labels, and tick labels all visible in light text. No dark-on-dark failures detected. Grid lines subtle but visible.
-      Data: Identical teal/blue fill and line colors to light render (correct: data colors should be identical across themes). Data visualization clear and readable.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink #F0EFE8, tick labels in light gray #B8B7B0, gridlines subtle but visible, domain lines light gray. No dark-on-dark text anywhere.
+      Data: the same #009E73 line and the same 35 % green fill (it reads as a deep green over the dark page); the data colors match the light render, and only the chrome flips. Gridlines remain visible through the fill.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -52,67 +57,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark renders
+        comment: Font sizes are set explicitly (title 16, axis titles 12, labels 10
+          at scale 4); all text is readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, no overlapping elements
+        comment: No text collisions; one series, so no data-mark overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line and fill both clearly visible and distinguishable
+        comment: The 2.5 px line clearly dominates the 35 % fill; no legend needed
+          for a single series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between elements and background
+        comment: A single green hue, high contrast on both surfaces; no color-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced whitespace, nothing cut off
+        comment: 3200x1800 exactly, chart centered with balanced margins, nothing
+          clipped, axis labels balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with appropriate font sizes
+        comment: Readable axis titles 'Day of month' and 'Daily visitors'; the unit
+          is implicit in the count
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses #306998 instead of #009E73 (Okabe-Ito first color). Backgrounds
-          appear correct but color non-compliance is critical.'
+        passed: true
+        comment: 'Single series in Imprint #009E73; backgrounds are #FAF8F1 and #1A1A17;
+          chrome is theme-correct'
     design_excellence:
-      score: 7
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Basic gradient implementation, uses blue instead of brand green,
-          no custom palette thinking
+        comment: The style-guide baseline, cleanly executed; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: No spine removal, grid present but could be more refined
+        comment: 'A grid density chosen for this chart: the y grid only, the x grid
+          off, ticks off, view stroke off'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clear trend visible but no special emphasis or focal point created
+        comment: The data is displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,26 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled line plot/area chart
+        comment: A filled line (area) plot for a single series, with no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill with visible line, correct representation
+        comment: 'Semi-transparent fill (0.35), the line on top in the same color,
+          a zero baseline included in the axis, gridlines visible through the fill,
+          linear interpolation: every Notes and ''A good version shows'' bullet is
+          met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (Day) and Y (Visitors) correctly encoded, axes show all data
+        comment: X=day, Y=visitors; linear interpolation, so no overshoot; all 30
+          points are inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Rendered image shows correct title format 'line-filled · altair ·
-          anyplot.ai'
+        comment: The title matches the mandated format; a legend is N/A for a single
+          series
     data_quality:
       score: 15
       max: 15
@@ -151,21 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete daily visitor dataset with realistic variation
+        comment: 'Shows the magnitude, a trend, dips and peaks: every aspect of a
+          filled line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic data is plausible and neutral
+        comment: 'Daily website visitors over a month: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Visitor values (5000-8000) are sensible for daily website traffic
+        comment: About 4,700 to 8,700 visitors a day is sensible; the spec has no
+          Check values, and the axis 0–9,000 covers the data
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,61 +189,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear implementation, no unnecessary abstractions
+        comment: A flat script with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas), but missing 'import os'
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcodes colors instead of using theme-adaptive pattern. Violates
-          altair.md specification for ANYPLOT_THEME environment variable handling.
+        passed: true
+        comment: Appropriate complexity; no hand-rolled computation
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'. Doesn't use f-strings
-          with environment variable.
+        passed: true
+        comment: Saves plot-{THEME}.png (padded to target) and plot-{THEME}.html with
+          the current Altair 6 API
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Draws the fill and the overlaid stroke in one mark through mark_area(line={...}),
+          not with two layered marks; uses typed, escaped encodings and configure_*
+          chrome
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic Chart API usage correct, but doesn't follow altair.md configure
-          patterns for theme-adaptive styling
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Gradient fill is a distinctive feature but implementation is basic
-    score_caps:
-      applied: false
-      note: No caps triggered. VQ-02 and VQ-03 both > 0. VQ-07 = 0 but no specific
-        cap in table.
-  verdict: REJECTED
+        comment: Vega-Lite's declarative tooltip with a d3 number format, and .interactive()
+          zoom and pan in the HTML
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T12:29:16Z'
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - gradient-fill
   - alpha-blending
+  - grid-styling
