@@ -1,6 +1,8 @@
 """Tests for agents/anyplot/code/profiles/julia/regions.py: the catalogue conventions in Makie code."""
 
 import ast
+import re
+from collections import Counter
 
 import pytest
 
@@ -174,19 +176,50 @@ def test_a_save_inside_a_block_is_no_protected_save() -> None:
     assert find_regions(code).save is None
 
 
-def test_catalogue_corpus() -> None:
-    """Every catalogue file has the theme statement; all but three save at the top level (with_theme)."""
-    counts = {"theme": 0, "save": 0, "imprint": 0, "both markers": 0, "columns": 0, "tokens": 0}
-    for path in JULIA_CATALOGUE_FILES:
-        regions = find_regions(normalise(path.read_text(encoding="utf-8")))
-        counts["theme"] += regions.theme is not None
-        counts["save"] += regions.save is not None and regions.save.standard_target
-        counts["imprint"] += regions.imprint is not None
-        counts["both markers"] += regions.data_marker is not None and regions.plot_marker is not None
-        counts["columns"] += bool(regions.columns)
-        counts["tokens"] += len(regions.theme_tokens)
+LITERAL_TOKEN = re.compile(
+    r'^(?:const )?([A-Z][A-Z0-9_]*)\s*=\s*THEME == "(?:light|dark)" \? (?:colorant)?"[^"\n]*" : (?:colorant)?"[^"\n]*"\s*$'
+)
+"""A theme token of the plainest shape, `const PAGE_BG = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"`."""
+TOP_LEVEL_SAVE = re.compile(r"^save\(", re.MULTILINE)
+"""A save at column 0; a save inside `with_theme(...) do` is indented and no statement of its own."""
+IMPRINT_LINE = re.compile(r"^(?:const )?(?:IMPRINT|IMPRINT_PALETTE)\s*=", re.MULTILINE)
+DATA_LINE = re.compile(r"^# (?:--- )?Data\b")
+PLOT_LINE = re.compile(r"^# (?:--- )?Plot\b")
+COLUMN_LINE = re.compile(r'^(?:const )?([A-Z][A-Z0-9_]*)\s*=\s*"[^"\n]*"\s*# role: \w+\s*$')
 
-    assert counts == {"theme": 325, "save": 322, "imprint": 196, "both markers": 218, "columns": 0, "tokens": 1213}
+
+def test_catalogue_corpus() -> None:
+    """The conventions of every normalised Makie file, each found where the file's text has it and only there: the
+    theme statement, a protected save with the standard target exactly where the file saves at the top level, the
+    Imprint palette, the markers, the column constants and the theme tokens. The counts of a day (325 files on
+    2026-10-29: 322 top-level saves, the other 3 inside `with_theme(...) do`; the palette in 196, both markers in
+    218, column constants in none, 1,213 tokens) move with every regeneration, so each detection is held to a plain
+    reading of the text instead."""
+    found: Counter[str] = Counter()
+    for path in JULIA_CATALOGUE_FILES:
+        code = normalise(path.read_text(encoding="utf-8"))
+        lines = code.splitlines()
+        name = path.parts[-4]
+        regions = find_regions(code)
+        assert regions.theme is not None, name
+        assert (regions.save is not None) == bool(TOP_LEVEL_SAVE.search(code)), name
+        assert regions.save is None or regions.save.standard_target, name
+        assert (regions.imprint is not None) == bool(IMPRINT_LINE.search(code)), name
+        tokens = {token.name for token in regions.theme_tokens}
+        assert {m.group(1) for line in lines if (m := LITERAL_TOKEN.match(line))} <= tokens, name
+        for marker, word, canonical in (
+            (regions.data_marker, "Data", DATA_LINE),
+            (regions.plot_marker, "Plot", PLOT_LINE),
+        ):
+            assert marker is not None or not any(canonical.match(line) for line in lines), (name, word)
+            assert marker is None or re.match(rf"#.*\b{word}\b", lines[marker.line - 1]), (name, word)
+            found[word] += marker is not None
+        assert {m.group(1) for line in lines if (m := COLUMN_LINE.match(line))} <= {c.name for c in regions.columns}
+        found["tokens"] += bool(tokens)
+        found["imprint"] += regions.imprint is not None
+        found["save"] += regions.save is not None
+
+    assert all(found[kind] for kind in ("tokens", "imprint", "Data", "Plot", "save")), found
 
 
 def test_module_imports_stay_inside_the_core_boundary() -> None:

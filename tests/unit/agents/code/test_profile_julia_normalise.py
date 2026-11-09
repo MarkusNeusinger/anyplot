@@ -1,7 +1,6 @@
 """Tests for agents/anyplot/code/profiles/julia/normalise.py: Makie catalogue code to the exact canvas."""
 
 import re
-from collections import Counter
 
 import pytest
 
@@ -256,29 +255,54 @@ def test_code_with_syntax_problems_is_left_alone() -> None:
     assert report.notes[0].startswith("syntax: ")
 
 
-def test_catalogue_corpus() -> None:
-    """All 325 files: idempotent, parse after normalising, one title each, and the canvas as J1's sweep rendered it."""
-    changes: Counter[str] = Counter()
-    canvases: Counter[tuple[int, int] | None] = Counter()
-    notes: Counter[str] = Counter()
-    for path in JULIA_CATALOGUE_FILES:
-        report = normalise_report(path.read_text(encoding="utf-8"))
-        assert normalise(report.code) == report.code, path
-        assert syntax_problems(Source(report.code, "julia").tree) == [], path
-        changes.update(re.sub(r"\d+", "N", change) for change in report.changes)
-        notes.update(
-            note.split(":", 1)[0] + ": " + note.rsplit(";", 1)[0].split(": ", 1)[-1][:20] for note in report.notes
-        )
-        canvases[measure_canvas(report.code).pixels] += 1
-
-    assert changes == {
-        "removed the catalogue header at lines N-N": 325,
-        "emptied the catalogue title at line N": 325,
-        "renamed the Figure's deprecated resolution keyword to size at line N": 122,
-        'saved "plot-$(THEME).png" in the working directory instead of next to the script at line N': 4,
+KNOWN_CHANGES = frozenset(
+    {
+        "removed the catalogue header",
+        "emptied the catalogue title",
+        "renamed the Figure's deprecated resolution keyword to size",
+        'saved "plot-$(THEME).png" in the working directory instead of next to the script',
     }
-    assert canvases == {(3200, 1800): 250, (2400, 2400): 69, None: 6}
-    assert sum(notes.values()) == 6
+)
+"""The normaliser's rewrites of a Makie file (module docstring), by their change line without its line numbers."""
+HEADER = re.compile(r"^# anyplot\.ai\b")
+CATALOGUE_TITLE = re.compile(r'"[^"\n]*· anyplot\.ai"')
+RESOLUTION = re.compile(r"\bFigure\([^()]*(?:\([^()]*\)[^()]*)*\bresolution\s*=")
+"""`Figure(...; resolution = ...)`, the keyword Makie 0.21 deprecated for `size`."""
+SCRIPT_DIR_SAVE = re.compile(r"^save\(\s*joinpath\(\s*@__DIR__", re.MULTILINE)
+CANVASES = frozenset({(3200, 1800), (2400, 2400)})
+
+
+def test_catalogue_corpus() -> None:
+    """Every Makie file normalises idempotently, parses after normalising and carries only the known rewrites, and a
+    plain reading of the text decides which apply: the header goes exactly where the file starts with one, every
+    catalogue title is emptied and none survives, a `resolution` keyword of a `Figure` call is renamed exactly
+    where the file has one and none survives, and a save next to the script moves to the working directory. The
+    canvas is 3200x1800 or 2400x2400, or there is none exactly where the normaliser leaves a note. The counts of a
+    day (325 files on 2026-10-29: 122 renamed keywords, 4 moved saves, 250 landscape, 69 square and 6 unmeasured
+    canvases) move with every regeneration, so the test holds these rules instead."""
+    canvases: set[tuple[int, int] | None] = set()
+    for path in JULIA_CATALOGUE_FILES:
+        text = path.read_text(encoding="utf-8")
+        name = path.parts[-4]
+        report = normalise_report(text)
+        assert normalise(report.code) == report.code, name
+        assert syntax_problems(Source(report.code, "julia").tree) == [], name
+        kinds = {re.sub(r" at lines? [\d-]+$", "", change) for change in report.changes}
+        assert kinds <= KNOWN_CHANGES, (name, report.changes)
+        assert ("removed the catalogue header" in kinds) == bool(HEADER.match(text)), name
+        assert "emptied the catalogue title" in kinds or not CATALOGUE_TITLE.search(text), name
+        assert not HEADER.match(report.code) and not CATALOGUE_TITLE.search(report.code), name
+        renamed = "renamed the Figure's deprecated resolution keyword to size" in kinds
+        assert renamed == bool(RESOLUTION.search(text)) and not RESOLUTION.search(report.code), name
+        moved = 'saved "plot-$(THEME).png" in the working directory instead of next to the script' in kinds
+        assert moved or not SCRIPT_DIR_SAVE.search(text), name
+        assert not SCRIPT_DIR_SAVE.search(report.code), name
+        canvas = measure_canvas(report.code).pixels
+        assert canvas in CANVASES or canvas is None, (name, canvas)
+        assert (canvas is None) == bool(report.notes), (name, report.notes)
+        canvases.add(canvas)
+
+    assert CANVASES <= canvases, canvases  # both orientations are in use
 
 
 def test_the_normalised_title_is_the_only_title() -> None:

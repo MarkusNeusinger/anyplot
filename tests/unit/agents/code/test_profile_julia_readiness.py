@@ -1,14 +1,18 @@
 """Tests for agents/anyplot/code/profiles/julia/readiness.py and coupling.py: blocked, coupled or clean."""
 
 import ast
+import re
 from collections import Counter
 
 import pytest
 
-from agents.anyplot.code.profiles.julia.coupling import coupling, structure_reasons
-from agents.anyplot.code.profiles.julia.normalise import normalise
+from agents.anyplot.code.profiles.julia.coupling import coupling, is_layout_complete, structure_reasons
+from agents.anyplot.code.profiles.julia.normalise import measure_canvas, normalise
 from agents.anyplot.code.profiles.julia.readiness import scan
+from agents.anyplot.code.profiles.julia.regions import find_regions
+from agents.anyplot.code.profiles.julia.validate import validate_security
 from agents.anyplot.schemas import MAX_NOTE_CHARS as MAX_REASON_CHARS
+from core.spec_roles import MAP_SPECS
 
 from .conftest import JULIA_CATALOGUE_FILES, JULIA_CATALOGUE_NORMALISED, REPO_ROOT, source
 
@@ -144,31 +148,42 @@ def test_structure_reasons_of_a_good_file_are_empty() -> None:
     assert structure_reasons(JULIA_CATALOGUE_NORMALISED) == []
 
 
+BLOCKING = frozenset({"map-spec", "library-disabled", "syntax", "security", "no-theme", "savefig-target"})
+"""The reason categories of `blocked` (`readiness.scan`); a clean or coupled file carries none of them."""
+COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
+ARROWS_CALL = re.compile(r"(?<![\w.!])arrows!?\(")
+"""A call of `arrows!` or `arrows`, the Makie 0.24 calls that render with a deprecation warning (not `arrows2d!`)."""
+
+
 def test_catalogue_corpus() -> None:
-    """The split over the 325 normalised Makie files on 2026-10-29: none clean (no file has column constants),
-    308 coupled, 17 blocked: the 13 map specs, qrcode-basic (QRCoders) and the three saves inside with_theme."""
+    """Every normalised Makie file is classified, and each class keeps its meaning while the catalogue changes. The
+    counts of a day (325 files on 2026-10-29: none clean, since no file has column constants; 308 coupled, 17 blocked;
+    data-block in 308, deprecated-api in 16) move with every regeneration, so the test holds rules: a file is blocked
+    exactly when its spec is a map spec, the SECURITY profile flags it or its structure fails; a clean file has no
+    reason; a coupled file has no blocking reason and one hint per reason but the `canvas:` one, which appears
+    exactly where the normaliser could not measure the canvas, the `data-block` hint exactly when its layout is
+    incomplete, and the `deprecated-api` hint exactly when its code calls `arrows!` or `arrows`; coupled and blocked
+    files both occur."""
     statuses: Counter[str] = Counter()
-    blocked: dict[str, str] = {}
-    categories: Counter[str] = Counter()
     for path in JULIA_CATALOGUE_FILES:
         spec = path.parts[-4]
-        readiness = scan(normalise(path.read_text(encoding="utf-8")), spec_id=spec, enabled_libraries=ENABLED)
+        normalised = normalise(path.read_text(encoding="utf-8"))
+        readiness = scan(normalised, spec_id=spec, enabled_libraries=ENABLED)
+        categories = [reason.split(":", 1)[0] for reason in readiness.reasons]
         statuses[readiness.status] += 1
+        must_block = spec in MAP_SPECS or bool(validate_security(normalised)) or bool(structure_reasons(normalised))
+        assert (readiness.status == "blocked") == must_block, (spec, readiness.reasons)
+        assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints), spec
         if readiness.status == "blocked":
-            blocked[spec] = readiness.reasons[0].split(":", 1)[0]
-        categories.update(reason.split(":", 1)[0] for reason in readiness.reasons)
-        assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints)
+            continue
+        assert not set(categories) & BLOCKING, (spec, readiness.reasons)
+        assert len(readiness.hints) == len([category for category in categories if category != "canvas"]), spec
+        assert ("canvas" in categories) == (measure_canvas(normalised).note is not None), spec
+        assert (readiness.status == "clean") == (not readiness.reasons), spec
+        assert ("data-block" in categories) == (not is_layout_complete(find_regions(normalised))), spec
+        assert ("deprecated-api" in categories) == bool(ARROWS_CALL.search(COMMENT.sub("", normalised))), spec
 
-    assert statuses == {"coupled": 308, "blocked": 17}
-    assert Counter(blocked.values()) == {"map-spec": 13, "security": 4}
-    assert {spec for spec, reason in blocked.items() if reason == "security"} == {
-        "qrcode-basic",
-        "area-mountain-panorama",
-        "bifurcation-basic",
-        "scatter-lag",
-    }
-    assert categories["data-block"] == 308
-    assert categories["deprecated-api"] == 16
+    assert sum(statuses.values()) == len(JULIA_CATALOGUE_FILES) and {"coupled", "blocked"} <= set(statuses)
 
 
 @pytest.mark.parametrize("spec_id", ["biplot-pca", "contour-decision-boundary"])
