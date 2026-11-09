@@ -30,6 +30,24 @@ from agents.evals.import_case import (
 
 BUNDLE_FILE = Path(__file__).with_name("session_bundle.json")
 DATA = "Stunden,Punkte\n1.5,52\n2.0,58\n3.5,71\n"
+TURNS = {
+    "records": [
+        {
+            "turn": 1,
+            "action": "create_plot",
+            "kind": "plot",
+            "refusal": None,
+            "error": None,
+            "tools": [{"tool": "plot_pipeline", "verdict": "allowed", "outcome": "shipped", "code": None}],
+            "tools_dropped": 0,
+            "guards": [{"guard": "queue", "verdict": "started"}, {"guard": "budget_exempt", "verdict": "exempt"}],
+            "guards_dropped": 0,
+            "prep_ops": [],
+        }
+    ],
+    "dropped": 0,
+}
+"""The bundle's record of its turns (`agents/anyplot/turn_record.py`), invented for these tests."""
 
 
 @pytest.fixture
@@ -53,12 +71,22 @@ def _bundle_file(tmp_path: Path, bundle: dict, name: str = "anyplot-session-AbCd
     return path
 
 
-def _case_dir(tmp_path: Path, *, reaction: str = "thumbs_down", version: int = 2, include_data: bool = True) -> Path:
-    """A case directory exactly as the BFF's feedback route stores it (`api/agent_cases.py`)."""
+def _case_dir(
+    tmp_path: Path,
+    *,
+    reaction: str = "thumbs_down",
+    version: int = 2,
+    include_data: bool = True,
+    turns: dict | None = None,
+) -> Path:
+    """A case directory exactly as the BFF's feedback route stores it (`api/agent_cases.py`); `turns`, the record of
+    each turn, as a bundle since 2026-11-09 carries it."""
     from api.agent_cases import Submission
     from api.agent_cases import build_case as build_stored_case
 
     bundle = _bundle()
+    if turns is not None:
+        bundle["turns"] = turns
     bundle["versions"] = [item for item in bundle["versions"] if item["number"] == version]
     if not include_data:
         for item in bundle["versions"]:
@@ -133,6 +161,17 @@ class TestFromABundleFile:
         assert main([str(_bundle_file(tmp_path, {"transcript": []}, "other.json"))]) == 1
         assert "not a session bundle" in capsys.readouterr().err
         assert not promoted.exists()
+
+    def test_a_bundle_with_the_turn_record_imports_as_before(self, tmp_path, promoted) -> None:
+        """The bundle's `turns` (the record of each turn) is nothing the importer reads, from a file or a case."""
+        for name, bundle in (("plain", _bundle()), ("recorded", {**_bundle(), "turns": TURNS})):
+            folder = tmp_path / name
+            folder.mkdir()
+            assert main([str(_bundle_file(folder, bundle)), "--id", f"file-{name}"]) == 0
+            assert main([str(_case_dir(folder, turns=TURNS if name == "recorded" else None)), "--id", name]) == 0
+
+        assert _written(promoted / "file-plain") == _written(promoted / "file-recorded")
+        assert _written(promoted / "plain") == _written(promoted / "recorded")
 
     def test_the_library_is_the_versions_after_a_library_switch(self, tmp_path) -> None:
         bundle = _bundle()
