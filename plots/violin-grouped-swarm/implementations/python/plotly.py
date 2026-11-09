@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -48,7 +48,7 @@ tasks = df[TASK].unique()
 levels = df[EXPERTISE].unique()
 slot = 0.8 / len(levels)
 step = slot / 14
-bin_height = (df[RESPONSE_TIME].max() - df[RESPONSE_TIME].min()) / 45
+bin_height = (df[RESPONSE_TIME].max() - df[RESPONSE_TIME].min()) / 70
 
 fig = go.Figure()
 for j, level in enumerate(levels):
@@ -72,11 +72,29 @@ for j, level in enumerate(levels):
         )
     )
 
-    # Swarm: points that share a value band stack outward from the violin's center, alternating sides
+    # Violin half-width at each point: Plotly's Silverman KDE; the violins of one trace share a scale,
+    # so the trace's highest density peak spans width / 2
+    density_at = pd.Series(0.0, index=rows.index)
+    peak = 0.0
+    for _, values in rows.groupby(TASK)[RESPONSE_TIME]:
+        spread = min(values.std(), (values.quantile(0.75) - values.quantile(0.25)) / 1.349)
+        bandwidth = max(1.059 * spread * len(values) ** -0.2, 1e-9)
+        grid = np.linspace(values.min(), values.max(), 200)
+        kernel = np.exp(-0.5 * ((grid[:, None] - values.to_numpy()) / bandwidth) ** 2)
+        density = kernel.sum(axis=1) / (len(values) * bandwidth)
+        density_at[values.index] = np.interp(values, grid, density)
+        peak = max(peak, density.max())
+    local_half = slot * 0.46 * density_at / peak
+
+    # Swarm: points that share a value band stack outward from the violin's center, alternating sides,
+    # with the row spacing shrunk where needed so the widest point stays inside the violin outline
     band = ((rows[RESPONSE_TIME] - df[RESPONSE_TIME].min()) // bin_height).astype(int)
-    rank = rows.assign(band=band).sort_values(RESPONSE_TIME).groupby([TASK, "band"]).cumcount()
+    ordered = rows.assign(band=band).sort_values(RESPONSE_TIME)
+    rank = ordered.groupby([TASK, "band"]).cumcount()
     half = (rank + 1) // 2
-    fit = np.minimum(step, slot * 0.36 / half.groupby(rows[TASK]).transform("max").clip(lower=1))
+    row = [ordered[TASK], ordered["band"]]
+    room = local_half.reindex(ordered.index).groupby(row).transform("min") * 0.75
+    fit = np.minimum(step, room / half.groupby(row).transform("max").clip(lower=1))
     swarm_offset = half * np.where(rank % 2 == 0, 1, -1) * fit
 
     fig.add_trace(
