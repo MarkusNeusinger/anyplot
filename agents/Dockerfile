@@ -36,23 +36,20 @@ COPY pyproject.toml uv.lock README.md ./
 # distribution's metadata (`importlib.metadata.version("anyplot")`).
 RUN uv venv && uv sync --frozen --extra agents
 
-# tree-sitter-language-pack 0.13.0 bundles about 170 compiled grammars, 184 MB
-# installed, so that nothing is downloaded at run time. The service reads only the
-# grammars of its code profiles (`GRAMMARS` in agents/anyplot/code/treesitter.py:
-# R and Julia, 0.6 MB and 2.7 MB, and since JS-3 JavaScript and TSX for the five
-# JavaScript libraries, 0.5 MB and 1.6 MB; each later profile adds its own here), so every
-# other one goes, `typescript` (TypeScript without JSX) among them, and the build fails
-# when a kept grammar no longer loads. The pack's own imports (tree_sitter_c_sharp, _yaml,
-# _embedded_template) stay: it imports them on load.
-# tests/unit/agents/code/test_treesitter.py ties this list to `GRAMMARS`.
+# tree-sitter-language-pack 1.x ships no grammars: its `get_language` downloads the
+# release's bundle of about 370 (23 MB) on first use, which the service must never do. So
+# the build fetches the bundle here, into a cache that is thrown away (the pack checks the
+# bundle's sha256 and size against the release manifest), and keeps only the grammars of
+# the code profiles (`GRAMMARS` in agents/anyplot/code/treesitter.py: R, Julia, JavaScript
+# and TSX, 6.2 MB; each later profile adds its own here). The runtime stage loads them from
+# a read-only directory. tests/unit/agents/code/test_treesitter.py ties this list to
+# `GRAMMARS`.
 ARG TREE_SITTER_GRAMMARS="r julia javascript tsx"
-RUN bindings=.venv/lib/python3.14/site-packages/tree_sitter_language_pack/bindings \
-    && for library in "$bindings"/*.so; do \
-         grammar="$(basename "$library")"; \
-         case " $TREE_SITTER_GRAMMARS " in *" ${grammar%%.*} "*) ;; *) rm "$library" ;; esac; \
-       done \
-    && .venv/bin/python -c "import sys, tree_sitter_language_pack as pack; [pack.get_language(g) for g in sys.argv[1:]]" \
-         $TREE_SITTER_GRAMMARS
+RUN TREE_SITTER_LANGUAGE_PACK_CACHE_DIR=/tmp/tree-sitter-cache .venv/bin/python -c \
+         "import sys, tree_sitter_language_pack as pack; pack.download(sys.argv[1:])" $TREE_SITTER_GRAMMARS \
+    && mkdir tree-sitter-grammars \
+    && cp /tmp/tree-sitter-cache/tree-sitter-language-pack/v*/libs/* tree-sitter-grammars/ \
+    && rm -rf /tmp/tree-sitter-cache
 
 
 FROM python:3.14-slim
@@ -63,6 +60,14 @@ WORKDIR /app
 RUN useradd -m -u 1000 appuser
 
 COPY --from=builder --chown=appuser:appuser /app/.venv ./.venv
+
+# The grammars stay root's, so the service reads them and cannot change them. treesitter.py
+# loads them through the pack's `LanguageRegistry`, which reads only this directory and
+# never downloads. The pack has no run-time switch for its downloader, so its manifest URL
+# names a file that does not exist: any other call that would download fails instead.
+COPY --from=builder /app/tree-sitter-grammars ./tree-sitter-grammars
+ENV TREE_SITTER_LANGUAGE_PACK_LIBS_DIR=/app/tree-sitter-grammars
+ENV TREE_SITTER_LANGUAGE_PACK_MANIFEST_URL=file:///nonexistent/tree-sitter-manifest.json
 
 # The source tree, not a wheel: the service reads files next to its modules, and
 # package data is not in a wheel. Each COPY keeps the repository's relative path,
@@ -104,10 +109,11 @@ RUN .venv/bin/python -m compileall -q agents core
 # adapters of the default libraries only, so the check composes one adapter instruction per
 # language with a runtime (`policy.RUNTIME_PROMPTS`: matplotlib for Python, ggplot2 for R, Makie
 # for Julia, Chart.js for JavaScript), which reads that language's runtime prompt and the
-# library rules. None of it needs credentials or makes a network call.
+# library rules. Every tree-sitter grammar loads from the baked directory, as at the
+# service's start. None of it needs credentials or makes a network call.
 # tests/unit/agents/test_image.py runs this command and holds it against every file the
 # service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.highlights_prompt('julia'); policy.highlights_prompt('javascript'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('plotly'); policy.adapter_instruction('bokeh'); policy.adapter_instruction('ggplot2'); policy.adapter_instruction('makie'); policy.adapter_instruction('chartjs')"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot.code import treesitter; treesitter.check_grammars(); from agents.anyplot import policy, scoring;policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.highlights_prompt('julia'); policy.highlights_prompt('javascript'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('plotly'); policy.adapter_instruction('bokeh'); policy.adapter_instruction('ggplot2'); policy.adapter_instruction('makie'); policy.adapter_instruction('chartjs')"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

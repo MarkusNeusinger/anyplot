@@ -169,6 +169,7 @@ from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot import telemetry
+from agents.anyplot.code import treesitter
 from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste, request_for_chat
 from agents.anyplot.data.parse import (
@@ -775,6 +776,9 @@ def get_runtime() -> Runtime:
 
 @contextlib.asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # A missing tree-sitter grammar stops the start, never a request: the service does not download one.
+    treesitter.check_grammars()
+
     async def sweeper() -> None:
         while True:
             await asyncio.sleep(SWEEP_INTERVAL_S)

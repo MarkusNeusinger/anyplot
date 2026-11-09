@@ -41,6 +41,9 @@ This document contains comprehensive project documentation for AI agents working
 # Install dependencies (uses uv - fast Python package manager)
 uv sync --all-extras
 
+# Fetch the agents' tree-sitter grammars once per pack version (the tests and the service load them)
+uv run python -m tools.tree_sitter_grammars
+
 # Start backend API
 uv run uvicorn api.main:app --reload --port 8000
 

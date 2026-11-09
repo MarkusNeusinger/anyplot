@@ -877,7 +877,10 @@ served.
   segfault at the next collection), so the code indexes the point and a test refuses the
   attribute form. `agents/Dockerfile` keeps only the grammars the profiles load
   (`TREE_SITTER_GRAMMARS`, R alone; 184 MB down to 0.6 MB), and a test ties that list to
-  `GRAMMARS`. The renderer image does not install the `agents` extra.
+  `GRAMMARS`. The renderer image does not install the `agents` extra. Superseded on
+  2026-11-09 (#12943): the pack moved to 1.x, whose grammars `agents/Dockerfile` fetches at
+  build time into a read-only directory; the service loads them through a registry that
+  never downloads, and stops at its start when one is missing.
 - **Regions and normaliser** (`code/profiles/r/`). The protected regions are the exact
   theme statement (its default pinned to `"light"`), 1,322 theme tokens, the palette, the
   final `ggsave` with `sprintf("plot-%s.png", THEME)` and `ragg::agg_png`, the placeholder
