@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-09
@@ -27,6 +27,7 @@ from lets_plot import (
     labs,
     layer_tooltips,
     scale_fill_gradient,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -105,12 +106,13 @@ plot = (
         label_format=".3f",
         hjust=0,
         nudge_y=bars["error_high"].max() * 0.012,
-        size=3.6,
+        size=4.5,
         color=INK_SOFT,
     )
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
     + coord_flip()
     + scale_fill_gradient(low=IMPRINT_SEQ[0], high=IMPRINT_SEQ[1], guide="none")
+    + scale_y_continuous(expand=[0.1, 0])  # room for the value label past the longest error bar
     + labs(x=FEATURE, y=IMPORTANCE_MEAN, title="bar-permutation-importance · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
