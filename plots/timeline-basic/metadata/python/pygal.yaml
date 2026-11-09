@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: timeline-basic
 created: '2025-12-29T22:48:52Z'
-updated: '2026-11-09T07:42:09Z'
+updated: '2026-11-09T07:48:40Z'
 generated_by: claude-opus
 workflow_run: 42579795263
 issue: 2443
@@ -12,100 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Markers sit at their true dates on a pygal DateLine axis, so the uneven gaps (Apr
-    25 to Jun 15 versus Sep 10 to Oct 20) read as real elapsed time; no marker is
-    moved to make room for labels
-  - Labels alternate above and below the axis and cycle two connector lengths, so
-    Project Kickoff/Architecture Design and Alpha Release/User Acceptance clear each
-    other without displacing any marker
-  - 'Two-tier label typography: event name in INK, date in INK_SOFT directly beneath,
-    giving each event a clear name-then-date hierarchy'
-  - Theme tokens threaded through the pygal Style (background, plot_background, foreground,
-    value_colors), so both renders are readable with identical Imprint phase colors
-  - 'Idiomatic pygal: DateLine with x_value_formatter for month ticks, per-point print_labels
-    for event text, allow_interruptions with None separators to draw all connectors
-    as one series, and library-native hover tooltips in the HTML output'
-  - The Data block ends in a tidy df with role-named column constants; everything
-    below reads only df, so the chart adapts to a user's milestone table
+  - Event markers sit at their true dates on a single horizontal DateLine axis, so
+    the uneven gaps (e.g. the long Apr–Jun stretch) read as real time between milestones
+  - Labels alternate above and below the axis with two connector lengths, so even
+    the close Jan 15 / Feb 10 pair never collides
+  - 'Two-tier label typography: event name in INK, its short date in INK_SOFT directly
+    beneath/above, giving each stem a clear hierarchy'
+  - 'Phases colored in canonical Imprint order (Planning #009E73 first) with a bottom
+    legend whose solid swatches match the markers in both themes'
+  - Theme tokens threaded through pygal's Style, so all chrome flips cleanly while
+    data colors stay identical
+  - 'Native pygal interactivity: per-point labels feed the HTML tooltips, and allow_interruptions
+    with None separators draws all connectors as one series'
   weaknesses:
-  - 'VQ-03 (both): the legend swatches render at reduced opacity and do not match
-    the full-opacity markers they explain (Planning swatch pale green on light, dull
-    dark green on dark, versus the solid #009E73 dots) → draw the legend rects at
-    full opacity like the dots. Likely cause: pygal''s default Style opacity (.7)
-    applied to the legend rects; set opacity=''1'' in the Style or add ''.legend rect{fill-opacity:1}''
-    to the inline CSS.'
-  - 'Suggestion: add a small gap between each legend swatch and its label; the text
-    currently starts flush against the square.'
-  - 'Suggestion: a little more vertical air between the ''Milestone date'' axis title
-    and the legend row would separate the two.'
+  - 'VQ-01 (both): the event names, the chart''s primary content, render at 38 px,
+    smaller than the 44 px month ticks, and shrink to about 5 px in the 400 px thumbnail
+    → at least 44 px (+6 px). Likely cause: value_label_font_size=38.'
+  - 'VQ-05 (both): the short x-axis title ''Milestone date'' renders at about 57 px,
+    noticeably larger than the 44 px tick labels, and the bottom legend sits only
+    about 20 px below it, so axis title and legend crowd the bottom edge → axis title
+    at about 44–48 px (−10 px) with more clearance above the legend. Likely cause:
+    pygal draws x_title at title_font_size (computed 57), and margin=60 leaves no
+    gap between x_title and the bottom legend.'
+  - 'Suggestion: center the five legend entries under the axis instead of spreading
+    them in fixed left-aligned columns across the full width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: title "Software Project Milestones · timeline-basic · python · pygal · anyplot.ai" in dark ink, about 83% of the width, fully visible; month ticks "Jan 2024" ... "Nov 2024" in dark text along the bottom; x-axis title "Milestone date"; legend row at the bottom (Planning, Design, Development, Testing, Deployment). No y-axis, no grid, no frame line. All text readable.
-      Data: a thin grey horizontal time axis with 8 circular markers at their dates; thin grey connectors alternate up and down in two lengths; event names (dark) with dates (soft grey) at each connector end. Colors: Planning #009E73 (2 events), Design #C475FD, Development #4467A3 (2), Testing #BD8233 (2), Deployment #AE3030 — Imprint positions 1–5 in order. Legend swatches appear paler than the markers.
+      Background: warm off-white #FAF8F1, full canvas 3200x1800.
+      Chrome: title "Software Project Milestones · timeline-basic · python · pygal · anyplot.ai" in dark ink, ~83% of width, fully visible; month ticks Jan 2024–Nov 2024 along the bottom; x-axis title "Milestone date"; no y labels, no grid. All text dark on light and readable.
+      Data: thin gray horizontal axis line from Jan 15 to Oct 20 with 8 circular markers at their dates; gray stems alternate up/down with two lengths; each stem ends in the event name (ink) plus short date (soft ink). Markers colored by phase: Planning #009E73 (2), Design #C475FD, Development #4467A3 (2), Testing #BD8233 (2), Deployment #AE3030; legend at the bottom with matching solid swatches.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, tick labels, axis title, and legend text in light ink (#F0EFE8); date sub-labels in light grey. No dark-on-dark text anywhere; connectors and axis line in a muted grey, visible.
-      Data: marker colors identical to the light render (green, lavender, blue, ochre, red); only chrome flips. Legend swatches render darker/duller than the markers. Brand green clearly visible.
+      Chrome: title, event names, month ticks, axis title and legend text in light ink; dates in lighter-soft gray; stems and axis line in muted gray, all visible. No dark-on-dark text.
+      Data: marker and legend colors identical to the light render; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit sizes (title ~58, ticks/legend 44, labels 38); all text
-          readable in both themes
+        comment: All text readable in both themes; event names at 38 px are smaller
+          than ticks and small in the thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating sides plus two stem lengths keep every label clear of
-          its neighbours
+        comment: Alternating sides plus two stem lengths keep every label clear, including
+          the close Jan/Feb pair
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers prominent for 8 events; legend swatches drawn at reduced
-          opacity and do not match the markers (defect line)
+        comment: 8 sparse events with prominent 24 px markers; stems visible; legend
+          swatches solid and matching
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues distinct; category also stated by legend, no red-green
-          sole signal
+        comment: Five distinct Imprint hues plus legend and per-event text labels;
+          color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800, balanced use of the canvas, nothing overflows
+        comment: Canvas 3200x1800; x-axis title oversized relative to ticks and legend
+          crowded right under it (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Milestone date'' axis title, month-year ticks; no value axis is
-          expected'
+        comment: '''Milestone date'' axis title; month-year ticks; no value axis needed'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-5 in canonical order, first series #009E73,
-          correct backgrounds in both themes'
+        comment: 'Phases in canonical Imprint order starting #009E73; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
       score: 10
       max: 20
@@ -122,14 +120,14 @@ review:
         score: 3
         max: 6
         passed: true
-        comment: Plot frame line hidden via inline CSS, labels centered on their stems,
-          two cycling stem lengths for clean spacing
+        comment: Axis line trimmed to the event span, frame line hidden via inline
+          CSS, guides off, staggered stem lengths
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Events displayed in sequence; no hierarchy chosen beyond the Notes
+        comment: Data displayed clearly; no hierarchy beyond the Notes' phase coloring
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal event timeline with markers, labels and connectors; no
-          extra layers
+        comment: Horizontal event timeline with markers, stems and labels only; no
+          unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Alternating above/below labels, connectors, month date format, category
-          colors with legend: all Notes and good-version bullets met'
+        comment: Horizontal orientation, alternating labels, month/year date format,
+          category colors with legend; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Markers at their exact dates on a true date axis; only label offsets
+        comment: Markers at true dates on a DateLine axis; only label offsets (layout)
           vary
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title with descriptive prefix in the mandated format; legend names
-          the five phases
+        comment: Title prefix + mandated format; legend lists the five phases by name
     data_quality:
       score: 15
       max: 15
@@ -171,20 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Uneven spacing, multi-event categories, alternating labels all shown
+        comment: Uneven spacing, multiple categories, both label sides and stem levels
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software project milestones, neutral and plausible
+        comment: Plausible, neutral software project milestones
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 events over 10 months, within the spec's 5-50 range; no Check values
-          in the spec
+        comment: 8 events over ~9 months, within the 5–50 range; dates read off the
+          axis match the data
     code_quality:
       score: 10
       max: 10
@@ -212,8 +210,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Connectors drawn as one interrupted series; no hand-rolled algorithm
-          a call replaces
+        comment: Connectors as one interrupted series; label series is the pygal way
+          to place text
       - id: CQ-05
         name: Output & API
         score: 1
@@ -230,29 +228,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: DateLine with x_value_formatter, print_labels per-point labels, allow_interruptions
-          with None separators
+        comment: pygal.DateLine with xrange, x_value_formatter, allow_interruptions
+          and print_labels
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: pygal's inline CSS injection to hide the frame and re-anchor labels;
-          native hover tooltips in the HTML
-  verdict: REJECTED
+        comment: Inline CSS injection via css=[... 'inline:...'] and per-point label
+          dicts feeding pygal's HTML tooltips
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T07:37:02Z'
+  rendered_at: '2026-11-09T07:45:58Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
-  - hover-tooltips
+  - manual-ticks
   - html-export
+  - hover-tooltips
+  - layer-composition
   patterns:
   - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - minimal-chrome
