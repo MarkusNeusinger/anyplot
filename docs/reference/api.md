@@ -374,7 +374,7 @@ Reads the machine-read telemetry in BigQuery (`api/machine_reads_query.py`) for 
 }
 ```
 
-Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and neither is cached, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
+Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a `<project>.<dataset>` name, and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and neither is cached, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
 
 ### GET `/debug/machine-readers`
 
