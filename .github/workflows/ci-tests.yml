@@ -190,6 +190,12 @@ jobs:
         --no-install-package sortedcontainers --no-install-package wsproto --no-install-package websocket-client
         --no-install-package pysocks
 
+    # The agents' tree-sitter grammars: the pack ships none and the service never downloads one, so they are
+    # fetched once before the tests, as agents/Dockerfile fetches them at build time.
+    - name: Fetch the tree-sitter grammars
+      if: steps.check.outputs.should_test == 'true'
+      run: uv run --no-sync python -m tools.tree_sitter_grammars
+
     # Unit tests (mocked dependencies) and integration tests (SQLite in memory)
     # for every author; the e2e tests against real PostgreSQL are in test-e2e.
     - name: Run unit + integration tests with coverage

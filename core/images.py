@@ -350,8 +350,13 @@ def create_responsive_variants(
     basename = input_path.stem
 
     with Image.open(input_path) as src:
-        if src.mode in ("RGBA", "P"):
-            img = src.convert("RGB")
+        if src.mode in ("RGBA", "LA", "P"):
+            # A plain RGB conversion turns transparent pixels black, which showed as black bars
+            # beside a plot that paints only its panel. Lay the render on its theme's card surface.
+            surface = (DARK_THEME if basename.endswith("-dark") else LIGHT_THEME)["bg_surface"]
+            rgba = src.convert("RGBA")
+            img = Image.new("RGB", rgba.size, surface)
+            img.paste(rgba, mask=rgba.getchannel("A"))
         else:
             img = src.copy()
 

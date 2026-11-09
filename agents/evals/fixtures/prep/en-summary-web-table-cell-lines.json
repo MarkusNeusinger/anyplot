@@ -1,0 +1,8 @@
+{
+  "dataset_text": "runs · mean · min–max\n\nNorthwind\n\n214\n\n87.3\n\n58–99\n\nSouthgate\n\n198\n\n84.9\n\n61–97\n\nEastholm\n\n207\n\n90.1\n\n66–100\n\nWestbrook\n\n189\n\n82.6\n\n55–96\n\nruns\nmean\nmin–max",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["summary", "no_tool", "layout"]
+}

@@ -357,7 +357,7 @@ class TestPlugin:
         german = "Bestätige die Daten bitte noch mit `.confirm()`."
         model = FakeModel([f"{REPLIES['de']} {german}"])
         monkeypatch.setattr(reply_language, "root_model", lambda: model)
-        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}))
+        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "offer"}))
         first = response(types.Part(text=f"{REPLIES['en']} Now confirm your data with `.confirm()`."))
         language = ReplyLanguagePlugin()
         request = LlmRequest(model="m", contents=[types.Content(role="user", parts=[types.Part(text="x")])])

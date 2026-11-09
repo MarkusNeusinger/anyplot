@@ -88,12 +88,12 @@ jobs:
             CURRENT_LABELS=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")
 
             # If specification is in main, ensure correct labels
-            if echo "$CURRENT_LABELS" | grep -q "spec-request"; then
+            if grep -q "spec-request" <<< "$CURRENT_LABELS"; then
               echo "::notice::Removing spec-request label from #${ISSUE}"
               gh issue edit "$ISSUE" --remove-label "spec-request" 2>/dev/null || true
             fi
 
-            if ! echo "$CURRENT_LABELS" | grep -q "spec-ready"; then
+            if ! grep -q "spec-ready" <<< "$CURRENT_LABELS"; then
               echo "::notice::Adding spec-ready label to #${ISSUE}"
               gh issue edit "$ISSUE" --add-label "spec-ready" 2>/dev/null || true
             fi

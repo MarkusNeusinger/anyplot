@@ -284,7 +284,7 @@ describe('ChatThread', () => {
   });
 });
 
-describe('ChatThread in-progress line', () => {
+describe('ChatThread working line', () => {
   const run = (overrides: Partial<RunState> = {}): RunState => ({
     kind: 'summarize_data',
     steps: [],
@@ -305,25 +305,34 @@ describe('ChatThread in-progress line', () => {
     items,
     run: current,
   });
+  /** A reply's line height, resolved to pixels as a browser does: the bar for the working line. */
+  const replyLineHeight = () => {
+    const reply = renderThread(
+      inFlight([summaryPrompt, { id: 2, kind: 'assistant', text: 'Done.' }], null)
+    );
+    const lineHeight = getComputedStyle(screen.getByText('Done.')).lineHeight;
+    reply.unmount();
+    expect(lineHeight).toMatch(/^\d+(\.\d+)?px$/);
+    return lineHeight;
+  };
 
   it("holds the assistant's slot while the summary is written, as the log's last entry", () => {
+    const lineHeight = replyLineHeight();
     const state = inFlight([summaryPrompt], run());
     expect(pendingReply(state)).toBe('summarize_data');
     renderThread(state);
-    const pending = screen.getByTestId('pending-reply');
+    const pending = screen.getByTestId('working-line');
     expect(pending).toHaveTextContent(/^summarizing your data$/);
     // The site's loader beside the words, hidden from screen readers, which read the words.
     expect(within(pending).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByRole('log').lastElementChild).toBe(pending);
-    // As in the progress timeline the line hands over to: the loader first, the words after it,
-    // so the loader keeps its place when the timeline takes over.
+    // The loader first, the words after it, in the reply's line height: a turn that turns into
+    // plot work changes only the words, and the reply takes the line's place without a jump.
     expect(pending.firstElementChild).toContainElement(
       within(pending).getByTestId('loader-spinner')
     );
     expect(pending.lastElementChild).toHaveTextContent(/^summarizing your data$/);
-    // The section's gap above the timeline less the thread's own (2 - 1.5 spacing units of 8 px):
-    // the timeline's top lands where this line's top was.
-    expect(pending).toHaveStyle({ marginTop: '4px' });
+    expect(pending).toHaveStyle({ lineHeight });
   });
 
   it('gives way to the reply', () => {
@@ -333,13 +342,14 @@ describe('ChatThread in-progress line', () => {
     );
     expect(pendingReply(state)).toBeNull();
     renderThread(state);
-    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('working-line')).not.toBeInTheDocument();
   });
 
   it("holds the reply's slot below a run's card until the reply takes it, at the thread's gap", () => {
     const plotPrompt: ChatItem = { id: 1, kind: 'action', action: 'create_plot', library: 'x' };
     const card: ChatItem = { id: 2, kind: 'plot', version: 1 };
     const plotRun = run({ kind: 'create_plot', steps: [{ step: 'reviewing', attempt: 1 }] });
+    const lineHeight = replyLineHeight();
     // The card is in, the reply is still being written: one line says so, a notice between them
     // or not.
     for (const items of [
@@ -347,12 +357,12 @@ describe('ChatThread in-progress line', () => {
       [plotPrompt, card, { id: 3, kind: 'notice', text: 'memory full' } as ChatItem],
     ]) {
       const { unmount } = renderThread(inFlight(items, plotRun));
-      const pending = screen.getByTestId('pending-reply');
+      const pending = screen.getByTestId('working-line');
       expect(pending).toHaveTextContent(/^writing the reply$/);
       expect(screen.getByRole('log').lastElementChild).toBe(pending);
-      // No timeline follows a card: the line keeps the thread's gap alone, where the reply goes,
-      // one row of the reply's line height, so a one-line reply moves nothing below it.
-      expect(pending).toHaveStyle({ marginTop: '0px', flexDirection: 'row', lineHeight: '1.6' });
+      // The line keeps the thread's gap alone, where the reply goes, in the reply's line height,
+      // so a one-line reply moves nothing below it.
+      expect(pending).toHaveStyle({ lineHeight });
       unmount();
     }
     // The card of a run that failed gets its reply too.
@@ -383,10 +393,10 @@ describe('ChatThread in-progress line', () => {
   it('names a message turn, and a stop before any step', () => {
     const asked: ChatItem[] = [{ id: 1, kind: 'user', text: 'what is on x?' }];
     const { unmount } = renderThread(inFlight(asked, run({ kind: 'message' })));
-    expect(screen.getByTestId('pending-reply')).toHaveTextContent(/^working on your message$/);
+    expect(screen.getByTestId('working-line')).toHaveTextContent(/^working on your message$/);
     unmount();
     renderThread(inFlight(asked, run({ kind: 'message', stopping: true })));
-    expect(screen.getByTestId('pending-reply')).toHaveTextContent(/^stopping$/);
+    expect(screen.getByTestId('working-line')).toHaveTextContent(/^stopping…$/);
   });
 
   it('says a cut stream reconnects, also after the reply arrived, and gives way to a stop', () => {
@@ -396,36 +406,67 @@ describe('ChatThread in-progress line', () => {
     ];
     const reconnecting = run({ kind: 'message', reconnecting: true });
     const { unmount } = renderThread(inFlight(answered, reconnecting));
-    expect(screen.getByTestId('pending-reply')).toHaveTextContent(
+    expect(screen.getByTestId('working-line')).toHaveTextContent(
       /^connection lost · reconnecting…$/
     );
     unmount();
     expect(pendingReply(inFlight(answered, { ...reconnecting, stopping: true }))).toBeNull();
   });
 
-  it('leaves a plot run and a pipeline step to the progress timeline, and keeps a queue wait', () => {
-    const plotPrompt: ChatItem = {
-      id: 1,
-      kind: 'action',
-      action: 'create_plot',
-      library: 'matplotlib',
-    };
-    expect(pendingReply(inFlight([plotPrompt], run({ kind: 'create_plot' })))).toBeNull();
-    const asked: ChatItem[] = [{ id: 1, kind: 'user', text: 'log scale on y' }];
-    const queued = { step: 'queued' as const, attempt: null };
-    // The queue counter says where the turn waits; the line still says what it is.
-    expect(pendingReply(inFlight(asked, run({ kind: 'message', steps: [queued] })))).toBe(
-      'message'
-    );
-    expect(
-      pendingReply(
-        inFlight(asked, run({ kind: 'message', steps: [queued, { step: 'adapting', attempt: 1 }] }))
-      )
-    ).toBeNull();
-    // No run, no line.
-    expect(pendingReply(inFlight(asked, null))).toBeNull();
-    renderThread(inFlight([plotPrompt], run({ kind: 'create_plot' })));
-    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+  it('draws a plot run and a turn that reached a pipeline step on the same line, with its clock', () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 10, 9, 12) });
+    try {
+      const plotPrompt: ChatItem = {
+        id: 1,
+        kind: 'action',
+        action: 'create_plot',
+        library: 'matplotlib',
+      };
+      const startedAt = Date.now() - 42_000;
+      const { unmount } = renderThread(
+        inFlight([plotPrompt], run({ kind: 'create_plot', startedAt }))
+      );
+      const line = screen.getByTestId('working-line');
+      expect(line).toHaveTextContent(/^drawing your plot · 0:42$/);
+      expect(line).toHaveAttribute('data-kind', 'drawing');
+      expect(screen.getByRole('log').lastElementChild).toBe(line);
+      // One element, one place: the second try changes its words only.
+      expect(within(line).getByTestId('run-clock')).toHaveAttribute('aria-hidden', 'true');
+      unmount();
+      const asked: ChatItem[] = [{ id: 1, kind: 'user', text: 'log scale on y' }];
+      const queued = { step: 'queued' as const, attempt: null };
+      // The own turn in the queue: the line says where, and no clock runs while it waits.
+      const waiting = renderThread(
+        inFlight(
+          asked,
+          run({ kind: 'message', steps: [queued], queue: { position: 2, waiting: 4 }, startedAt })
+        )
+      );
+      expect(screen.getByTestId('working-line')).toHaveTextContent(/^waiting · you are 2nd$/);
+      expect(screen.queryByTestId('run-clock')).not.toBeInTheDocument();
+      waiting.unmount();
+      renderThread(
+        inFlight(
+          asked,
+          run({
+            kind: 'message',
+            steps: [
+              { step: 'adapting', attempt: 1 },
+              { step: 'repairing', attempt: 2 },
+            ],
+            maxAttempts: 2,
+            startedAt,
+          })
+        )
+      );
+      expect(screen.getByTestId('working-line')).toHaveTextContent(
+        /^drawing your plot · try 2 of 2 · 0:42$/
+      );
+      // No run, no line.
+      expect(pendingReply(inFlight(asked, null))).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -1274,6 +1315,57 @@ describe('ChatThread: questions and remembered decisions', () => {
     expect(lines[3].nextElementSibling).toBe(list);
     expect(list).toBeVisible();
     expect(forget).toHaveFocus();
+  });
+
+  it('holds the decisions on the new data line after a paste with other columns, with .forget_all()', async () => {
+    // Owner decision of 2026-11-08: the decisions of the earlier plot stand where the user looks
+    // before the next plot takes them over; one click forgets them all, and ignoring keeps them.
+    const user = userEvent.setup();
+    const props = decisionsProps();
+    const snapshot: DataSnapshot = {
+      n: 2,
+      change: 'paste',
+      summary: 'pasted',
+      label: 'data v2 · pasted',
+      rows: 3,
+      columns: 2,
+      sheet: null,
+      fileName: null,
+      changes: [],
+      preview: [['0.25', '1.003']],
+      profile: {
+        rows: 3,
+        columns: [
+          { name: 'Length (m)', dtype: 'number', missing: 0, unique: 3 },
+          { name: 'Period (s)', dtype: 'number', missing: 0, unique: 3 },
+        ],
+        source_format: 'csv',
+        decimal: '.',
+        warnings: [],
+      },
+      columnsChanged: true,
+    };
+    const items: ChatItem[] = [
+      { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' },
+      { id: 2, kind: 'assistant', text: 'Plot 1.' },
+      { id: 3, kind: 'paste', text: '▤ pendulum' },
+      { id: 4, kind: 'data', snapshot },
+    ];
+    render(thread(ready(items, { memory: MEMORY }), props));
+
+    const lines = screen.getAllByTestId('chapter-line');
+    expect(lines.map(line => line.dataset.chapter)).toEqual(['plot', 'data']);
+    expect(within(lines[0]).queryByTestId('decisions-toggle')).not.toBeInTheDocument();
+    expect(lines[1]).toHaveTextContent('# data·2 earlier decisions ▾·.forget_all()');
+    expect(screen.getByTestId('plot-memory')).not.toBeVisible();
+
+    await user.click(
+      within(lines[1]).getByRole('button', { name: 'Forget all earlier decisions' })
+    );
+    expect(props.onForgetAll).toHaveBeenCalledTimes(1);
+    expect(props.onAnnounce).toHaveBeenCalledWith('forgot every decision');
+    // The list opened for it: its progress and a failure show there.
+    expect(screen.getByTestId('plot-memory')).toBeVisible();
   });
 
   it('announces a removal through the page, outside the log, which loses the entry and gains nothing', async () => {

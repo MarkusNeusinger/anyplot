@@ -160,6 +160,7 @@ from agents.evals.matrix import (
     PROVIDER_DEFAULTS,
     AttributionCollector,
     parse_events,
+    store_data_steps,
 )
 from agents.evals.pricing import LOCATION_SURCHARGE, UnknownPrice, call_cost, judge_cost, price_of
 from agents.evals.scope import Pacer
@@ -1005,33 +1006,8 @@ class CaseRunner:
     async def _make_versions(self, user: str, sid: str, before: Sequence[Sequence[dict[str, Any]]]) -> None:
         """The case's earlier changes, each stored as the next data version as `prepare_data` stores one, with its
         change lines for the session block; no model call. `check_cases` applied them once already, so a refusal
-        here is a bug and raises."""
-        from agents.anyplot.data.prepare import PrepareArgs, apply_and_parse
-        from agents.anyplot.dataset_versions import push_version
-        from agents.anyplot.services import get_services
-        from agents.anyplot.session_state import read_session
-
-        store = get_services().datasets
-        for operations in before:
-            session = await self.runtime.session(user, sid)
-            view = read_session(session.state)
-            stored = store.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
-            if view is None or stored is None:
-                raise RuntimeError("the case's session has no data to change")
-            args = PrepareArgs.model_validate({"operations": list(operations)})
-            prepared, parsed = apply_and_parse(stored.as_parsed(), args.operations, language=view.language)
-            version = push_version(
-                store,
-                sid,
-                view,
-                parsed,
-                view.snapshot,
-                converted=prepared.converted,
-                row_numbers=prepared.row_numbers,
-                splits=prepared.splits,
-                changes=prepared.changes,
-            )
-            await self.runtime.write_state(session, version.delta)
+        here is a bug and raises (`matrix.store_data_steps`, which the matrix's data steps share)."""
+        await store_data_steps(self.runtime, user, sid, before)
 
     async def _start_version(self, user: str, sid: str, from_version: FromVersion | None) -> ParsedDataset | None:
         """The version the case's expected operations start from, as the store holds it before the turn: the one

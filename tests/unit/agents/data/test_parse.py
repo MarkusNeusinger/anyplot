@@ -487,11 +487,11 @@ class TestErrors:
         # `[{"a": {"nested": 1}}]` until it flattened nested objects into dotted columns (2026-10-15).
         assert error_code(text) == "unparseable"
 
-    @pytest.mark.parametrize(
-        "text", ["a,b\n", '"just a string"', "Hund 7 Katze 3 und Vogel 4", "Hund 7, Katze 3, Vogel 4\n"]
-    )
+    @pytest.mark.parametrize("text", ["a,b\n", '"just a string"', "Hund 7 Katze 3 und Vogel 4", "Hund, Katze, Vogel\n"])
     def test_text_with_no_table_in_it_has_its_own_code(self, text: str) -> None:
-        """A header line alone, prose, a list on one line: `no_table`, which the route hands to the transcriber."""
+        """A header line alone, prose, a list on one line: `no_table`, which the route hands to the transcriber.
+        A list of label/value pairs on one line (`Hund 7, Katze 3, Vogel 4`) is a table since 2026-11-09
+        (`layouts.py`, `TestLayouts`)."""
         assert error_code(text) == "no_table"
 
     def test_messages_never_quote_the_data(self) -> None:
@@ -965,7 +965,8 @@ class TestPythonLiterals:
         assert stand.csv == "Land,Wert\nA,1\nB,2\n"
         assert stand.profile.warnings == ["left out 1 line above the table (a title, notes or metadata)"]
         assert error_code("(siehe Anhang) Die Werte sind 3, 4 und 5") == "no_table"
-        assert parse_dataset("(x) Katze 3\n(y) Hund 7\n").csv == "(x) Katze 3\n(y) Hund 7\n"
+        # No literal either: label/value lines, which the pair list reads (`layouts.py`, since 2026-11-09).
+        assert parse_dataset("(x) Katze 3\n(y) Hund 7\n").csv == "label,value\n(x) Katze,3\n(y) Hund,7\n"
 
     def test_a_parenthesis_behind_an_assignment_or_a_bracket_stays_a_literal(self) -> None:
         # The assignment and `[` / `{` say "literal"; only a bare `(` is ambiguous enough to fall back.
@@ -2692,16 +2693,19 @@ class TestSpaceAlignedTables:
             "We measured 12 plants in 2024.  The tallest was 85 cm.\n"
             "In the second week 3 of them died.  The rest grew.\n"
             "Overall growth was about 4 cm per week, with 2 dry spells.\n",
-            # A list without a header: the transcriber reads it, as before.
-            "Hund 7\nKatze 3\nMaus 5\n",
-            "Hund     7\nKatze    3\nMaus     5\n",
             # Prose whose double spaces would make one aligned line: one data row is no table.
             "Results  of  2024\nWe  sold  12  units.\n",
         ],
     )
-    def test_prose_and_a_headerless_list_are_no_space_table(self, text: str) -> None:
+    def test_prose_is_no_space_table(self, text: str) -> None:
         assert sniff_delimiter(text)[0] is None
         assert len(parse_dataset(text).profile.columns) == 1
+
+    @pytest.mark.parametrize("text", ["Hund 7\nKatze 3\nMaus 5\n", "Hund     7\nKatze    3\nMaus     5\n"])
+    def test_a_headerless_label_value_list_is_no_space_table_but_a_pair_list(self, text: str) -> None:
+        """The transcriber read it until 2026-11-09; the pair list reads it by code since (`layouts.py`)."""
+        assert sniff_delimiter(text)[0] is None
+        assert parse_dataset(text).csv == "label,value\nHund,7\nKatze,3\nMaus,5\n"
 
     def test_a_real_delimiter_wins_over_spaces(self) -> None:
         assert sniff_delimiter("a, b, c\n1, 2, 3\n4, 5, 6\n7, 8, 9\n") == (",", "csv")

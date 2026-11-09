@@ -46,7 +46,8 @@
  * back, and carries the library menu (`LibraryChip`, `seaborn ▾`, since
  * 2026-11-02 in place of a pill per library: the libraries grouped by language), next to it the
  * session language chip (`LanguageChip`, `English ▾`): the language of the replies and of the
- * text in the plot, English until the first typed message or a choice sets another (the
+ * text in the plot, English until the user picks another there, in the chat or with the
+ * thread's `.switch()` on the offer of a language found in a message or a paste (the
  * thumbnail and both ⓘ stood in the row until the start item took them). For an admin, the
  * admin menu stands at the row's end (since
  * 2026-11-06, where the "⋯" menu with `.save()` stood): the fan-out toggle, `.save()` with its
@@ -93,10 +94,16 @@
  * `.stop()` while a run is in progress, `.start_over()` once the library has a
  * plot, and `.feedback()` before the first plot.
  *
- * Work in flight is never silent: a turn without pipeline steps holds an
- * in-progress line in the thread (`ChatThread`), the progress timeline below
- * it shows only what the line does not (a `create_plot` run, a queue position,
- * pipeline steps), and the data card says why its controls wait.
+ * Work in flight is never silent: one working line at the thread's foot says
+ * what the turn does now (`WorkingLine`: `drawing your plot · second try · 0:42`,
+ * `waiting · you are 3rd`, `summarizing your data`), for every turn and on both
+ * lanes; the status line at the frame's foot counts the same clock beside
+ * `usually 1–3 min`, and a shipped plot's card keeps it as `ready in 1:12`. The
+ * frame's tab says how the service is (`LoadMood`: `● quiet`, `● busy`, `●
+ * resting until 01:00`), from the one reader of `/status` (`useAgentStatus`),
+ * which reads again after each run and while the tab is visible. The run's
+ * progress grid and the admin meters are sections of the admin menu, and the
+ * data card says why its controls wait.
  *
  * The admin menu's `all 15 libraries` is the admin's test run, the fan-out (in the library
  * menu as `all` until 2026-11-06). While it is on, the library chip reads `all 15 libraries ▾`
@@ -168,6 +175,7 @@ import {
   sessionHoldsWork,
   useAgentSession,
 } from 'src/hooks/useAgentSession';
+import { loadMood, useAgentStatus } from 'src/hooks/useAgentStatus';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
@@ -176,6 +184,7 @@ import {
   type AgentLane,
   type AgentStatus,
   browserLocale,
+  budgetShare,
   DEFAULT_AGENT_LIBRARIES,
   MAX_MESSAGE_CHARS,
   PUBLIC_LANE,
@@ -183,7 +192,12 @@ import {
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
-import { AdminMenu, type AdminMode } from 'src/sections/agent-chat/AdminMenu';
+import {
+  AdminMenu,
+  AdminMeters,
+  type AdminMode,
+  AdminSection,
+} from 'src/sections/agent-chat/AdminMenu';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
@@ -195,6 +209,7 @@ import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
+import { LoadMood } from 'src/sections/agent-chat/LoadMood';
 import {
   attachmentWaitLine,
   CHAIN_READING_TEXT,
@@ -210,6 +225,7 @@ import {
   type ChainStep,
   chainStep,
   type ChainStop,
+  plotClick,
   sameStopMark,
   type StopMark,
   stopMark,
@@ -224,14 +240,12 @@ import {
   plotButtonKind,
   plotButtonLabel,
   runView,
-  showsTimeline,
   statusLine,
 } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
   labelSx,
   MASTHEAD_CLEARANCE,
-  smallText,
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
@@ -498,14 +512,25 @@ function AgentChat({
     previews: Record<string, ThemedPreviewSource>;
     data: string[];
   } | null>(null);
-  const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin), and the session whose
-  // confirmed data the open fan-out copies.
-  const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
-  // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
-  const [listsSettled, setListsSettled] = useState(false);
-  // The service's day budget is spent: until when (ISO), for the note above the composer.
-  const [pausedUntil, setPausedUntil] = useState<string | null>(null);
+  // The libraries the catalogue implements the spec in (null before its answer, or after it failed),
+  // and whether that answer is in.
+  const [implemented, setImplemented] = useState<string[] | null>(null);
+  const [specSettled, setSpecSettled] = useState(false);
+  // The lane's `/status`, its one reader (`useAgentStatus`): the enabled libraries and the run cap
+  // of its first answer, and the load the frame's tab shows as its mood, read again while the tab
+  // is visible and after each run.
+  const agentStatus = useAgentStatus({ token, lane, takeAdminStatus, running: !!state.run });
+  const libraries = useMemo(() => {
+    const base = agentStatus.libraries ?? [...DEFAULT_AGENT_LIBRARIES];
+    return implemented ? base.filter(lib => implemented.includes(lib)) : base;
+  }, [agentStatus.libraries, implemented]);
+  // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin).
+  const maxRuns = agentStatus.userMaxRuns ?? DEFAULT_USER_MAX_RUNS;
+  // Both answers are in (or failed): before that, the libraries and the limit are fallbacks.
+  const listsSettled = specSettled && agentStatus.settled;
+  // The admin meters' share of the day budget (`/budget`), read as the admin menu opens.
+  const [budgetPercent, setBudgetPercent] = useState<number | null>(null);
+  // The session whose confirmed data the open fan-out copies.
   const [fanOut, setFanOut] = useState<{
     sourceSession: string;
     upload?: DatasetUpload;
@@ -558,8 +583,9 @@ function AgentChat({
   const chainPage = useRef<{
     state: AgentSessionState;
     plotAll: boolean;
+    fanOut: boolean;
     attachment: boolean;
-    plot: () => void;
+    plot: (keyboard: boolean) => void;
   } | null>(null);
   // The chain waits for the next commit while the session settles: every commit lets it read on.
   const commitWaiters = useRef<(() => void)[]>([]);
@@ -581,21 +607,9 @@ function AgentChat({
   );
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
-  // catalogue API; the enabled libraries from the agents service. Both are best effort.
+  // catalogue API, best effort; the enabled libraries from the agents service (`useAgentStatus`).
   useEffect(() => {
     const controller = new AbortController();
-    let implemented: string[] | null = null;
-    let enabled: string[] | null = null;
-    const publish = () => {
-      if (controller.signal.aborted) return;
-      const base = enabled ?? [...DEFAULT_AGENT_LIBRARIES];
-      setLibraries(implemented ? base.filter(lib => implemented!.includes(lib)) : base);
-    };
-    let pending = 2;
-    const settle = () => {
-      pending -= 1;
-      if (pending === 0 && !controller.signal.aborted) setListsSettled(true);
-    };
     apiGet<{
       title: string;
       data?: string[];
@@ -607,45 +621,43 @@ function AgentChat({
         if (controller.signal.aborted) return;
         setTitle(spec.title);
         setReference({ previews: previewsByLibrary(spec.implementations), data: spec.data ?? [] });
-        implemented = spec.implementations.map(impl => impl.library_id);
-        publish();
+        setImplemented(spec.implementations.map(impl => impl.library_id));
       })
       .catch(() => undefined)
-      .finally(settle);
-    // The admin lane's first chat takes the answer of the admin check, which asked the same
-    // route a moment ago; every other chat asks.
-    const checked = lane === 'admin' ? takeAdminStatus() : null;
-    (checked ? Promise.resolve(checked) : agentApi.status(token))
-      .then(status => {
-        if (Array.isArray(status.libraries) && status.libraries.length) {
-          enabled = status.libraries;
-          publish();
-        }
-        if (typeof status.user_max_runs === 'number' && status.user_max_runs > 0) {
-          setMaxRuns(status.user_max_runs);
-        }
-        if (
-          status.paused === true &&
-          typeof status.resets_at === 'string' &&
-          Date.parse(status.resets_at) > Date.now()
-        ) {
-          setPausedUntil(status.resets_at);
-        }
-      })
-      .catch(() => undefined)
-      .finally(settle);
+      .finally(() => {
+        if (!controller.signal.aborted) setSpecSettled(true);
+      });
     return () => controller.abort();
-  }, [specId, token, lane, takeAdminStatus]);
+  }, [specId]);
 
-  // The pause ends with the service's new day: the note goes at that moment, without a reload.
+  // A `service_paused` refusal says the day budget is spent: the tab rests at once, until the
+  // reset the refusal names, without waiting for the next read. A data call's `429` does not:
+  // its own line says the same with the time, and the next read brings the mood.
+  const { markPaused } = agentStatus;
+  const pausedSeen = useRef(0);
   useEffect(() => {
-    if (!pausedUntil) return;
-    const timer = window.setTimeout(
-      () => setPausedUntil(null),
-      Math.max(0, Date.parse(pausedUntil) - Date.now())
-    );
-    return () => window.clearTimeout(timer);
-  }, [pausedUntil]);
+    for (let index = state.items.length - 1; index >= 0; index -= 1) {
+      const item = state.items[index];
+      if (item.id <= pausedSeen.current) break;
+      if (item.kind === 'refusal' && item.code === 'service_paused' && item.until) {
+        pausedSeen.current = item.id;
+        markPaused(item.until);
+        break;
+      }
+    }
+  }, [state.items, markPaused]);
+
+  // The admin meters, as the admin menu opens on the admin lane: the runs in flight through the
+  // one status reader (also during a run, when its answer feeds the meters alone), and the day
+  // budget's share. The public lane has no `/budget`, and neither has "view as visitor".
+  const { refresh: refreshStatus } = agentStatus;
+  const readMeters = useCallback(() => {
+    void refreshStatus();
+    agentApi
+      .budget(token)
+      .then(budget => setBudgetPercent(budgetShare(budget)))
+      .catch(() => undefined);
+  }, [refreshStatus, token]);
 
   // A refused admin call ends the admin hint, and the page falls back to the public lane with a
   // new session (`useAgentAdmin`); a refusal on the public lane says nothing about the admin.
@@ -689,7 +701,7 @@ function AgentChat({
   const step2 = inStep2(state);
   // A plot button may start on stored data once every required role is bound and nothing is in
   // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`). Data
-  // waiting in the box goes first instead (`sendsFirst`), never the data before it.
+  // waiting in the box goes first instead (`plotClick`), never the data before it.
   const canCreate =
     state.phase === 'ready' &&
     !!state.dataset &&
@@ -725,8 +737,8 @@ function AgentChat({
   const exampleActive =
     state.phase === 'ready' && !state.dataset && !state.transcription && !attachment && !busy;
   // What the box holds that the plot button sends before it plots (`plotChain.ts`): an
-  // attachment, or a table typed into the box. Not with the admin's fan-out, whose `.plot_all()`
-  // copies data already stored.
+  // attachment, or a table typed into the box. With the admin's `all` pressed too: the click
+  // reads it, and the fan-out copies it once it is stored and reads clean.
   const boxSends = useMemo(() => boxData(attachment, draft), [attachment, draft]);
   // New data in the box, or on its way after the click: the button names the plot it makes.
   const boxHoldsData = !!attachment || boxSends === 'typed' || chainView?.kind === 'reading';
@@ -734,26 +746,28 @@ function AgentChat({
   // own step-1 line and the thread name it by.
   const plotKind = plotButtonKind(state, plotAll, boxHoldsData);
   const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state, boxHoldsData);
-  // One click sends the box's data as Enter would, then plots once the reading comes back clean
-  // (owner decision of 2026-11-08), whenever nothing runs.
-  const sendsFirst =
-    boxSends !== null &&
-    plotKind !== 'all' &&
-    state.phase === 'ready' &&
-    !!state.sessionId &&
-    !busy &&
-    !fanOut;
   // `.update_plot() →` on confirmed data whose plot is current sends the box's text, a change of
   // the latest version: with an empty box there is nothing to update. On data or bindings
   // changed since, and with a switch's offer, it plots with an empty box too.
   const plotNeedsText = plotKind === 'update' && step2 && !carry;
+  // What a plot click starts without text of its own, also the plot after the box's data was read:
+  // the switch's offer, else "plot the new data" (`plot_new_data`), else the catalogue plot.
+  const plotStart = carry ? 'carry' : plotKind === 'new_data' ? 'new_data' : 'create';
   const plotText = draft.trim();
-  // Text over the cap is never cut and never goes, also not as a plot's request.
-  const plotActive =
-    plotKind === 'all'
-      ? canCreate && !fanOut
-      : sendsFirst ||
-        (canCreate && plotText.length <= MAX_MESSAGE_CHARS && (!plotNeedsText || plotText !== ''));
+  // What one click does now, the one rule for the button's state and its click (`plotClick`):
+  // data in the box goes first as Enter sends it, then plots once the reading comes back clean
+  // (owner decision of 2026-11-08), whenever Enter would send it; null while the button is inert.
+  const click = plotClick({
+    kind: plotKind,
+    box: boxSends,
+    open: state.phase === 'ready' && !!state.sessionId,
+    busy,
+    fanOut: !!fanOut,
+    locked: chatLocked,
+    canCreate,
+    needsText: plotNeedsText,
+    text: plotText,
+  });
   // The click starts from the catalogue plot although the library has one: data or bindings
   // changed since, or new data in the box, so the plot is made anew, with the remembered decisions.
   const plotFresh = hasPlot && (!step2 || boxHoldsData) && plotKind !== 'all';
@@ -762,12 +776,13 @@ function AgentChat({
   // column, a run), what to check, or what the click does.
   const status = statusLine(state, {
     action: plotAction,
-    // With data, the line says the attachment replaces it; it names the plot button that takes
-    // it along, unless only Enter sends it.
+    // With data, the line says the attachment replaces it; it names the plot button that reads
+    // and plots it, unless the button can only read it: with `all` while the fan-out's panel is
+    // open, or while the chip cannot go at all.
     attachmentLine: attachment
       ? attachmentWaitLine(
           state.dataset ? state.dataset.parsed.profile.rows : null,
-          boxSends === 'attachment' && plotKind !== 'all' ? plotAction : null
+          boxSends === 'attachment' && !(plotAll && fanOut) ? plotAction : null
         )
       : null,
     readingLine: chainView?.kind === 'reading' ? CHAIN_READING_TEXT : null,
@@ -779,9 +794,12 @@ function AgentChat({
     carry: carry ? { library: carry.target.library, decisions: carryCount } : null,
     lockedLibraries: chatLocked ? libraries.length : null,
   });
-  // `.start_over()` at the status line's end: once the confirmed data has a plot here, and after
-  // a switch's offer, the plot from the catalogue code without the carry.
-  const startOverShown = !plotAll && ((step2 && hasPlot) || carryCount > 0);
+  // `.start_over()` at the status line's end: once the confirmed data has a plot here, after a
+  // switch's offer, and beside `plot the new data` when the library has a plot, which that button
+  // may change for the new data: the plot from the catalogue code is one click away instead of
+  // after a run.
+  const startOverShown =
+    !plotAll && ((step2 && hasPlot) || carryCount > 0 || (plotKind === 'new_data' && hasPlot));
   // The chat's own feedback before the first plot: `.feedback()` at the status line's end opens
   // its form above the line. Not while a turn runs, which may still bring the plot; a sent
   // record stays in view. A library switch alone is no conversation to report.
@@ -790,9 +808,13 @@ function AgentChat({
     !state.run &&
     Object.keys(state.versions).length === 0;
   const feedbackShown = !!state.chatFeedback || (feedbackOpen && feedbackOffer);
-  // While a run's timeline stands below the thread, what the run sends into the thread waits
-  // for its plot, which takes the timeline's place (`runView`).
+  // While a plot is drawn, what the run sends into the thread waits for its card, so the user's
+  // prompt and the working line below it stay in view (`runView`).
   const view = runView(state);
+  // The service's mood on the frame's tab (`LoadMood`), from the last read, busy also while the
+  // own turn waits in the queue (where it stands is the working line's); none before an answer.
+  const ownQueued = state.run?.steps[state.run.steps.length - 1]?.step === 'queued';
+  const mood = loadMood(agentStatus.load, ownQueued);
   // The session's own state while nothing waits, so the thread's state changes only with it.
   const threadState = useMemo(
     () => (view.items === state.items ? state : { ...state, items: view.items }),
@@ -830,16 +852,19 @@ function AgentChat({
       return;
     }
     const text = draft.trim();
-    // Text over the cap is never cut: the counter is red and nothing goes until it fits.
-    if (!text || text.length > MAX_MESSAGE_CHARS || busy || chatLocked) return;
+    if (!text || busy || chatLocked) return;
     // A table in the box is data, as its paste would have been: the assistant reads no data from
-    // a message. It goes without a note, because the parser keeps the lines around it as notes.
-    const typed = attach.attachTyped(text);
-    setDraft('');
+    // a message. It goes without a note, because the parser keeps the lines around it as notes,
+    // and by the dataset's own limits, also when it is longer than a message (`boxData`).
+    const typed = boxSends === 'typed' ? attach.attachTyped(text) : null;
     if (typed) {
+      setDraft('');
       void sendAttachment(typed, '');
       return;
     }
+    // A message over the cap is never cut: the counter is red and nothing goes until it fits.
+    if (text.length > MAX_MESSAGE_CHARS) return;
+    setDraft('');
     void session.sendMessage(text);
   };
 
@@ -938,7 +963,7 @@ function AgentChat({
    * the user's next step ended (`cancelChain`), or a newer one, does nothing more; the page never
    * restores a chain, so a reload or a closed tab ends it with the session.
    */
-  const plotChain = async (sent: Attachment, ownNote?: string) => {
+  const plotChain = async (sent: Attachment, ownNote: string | undefined, keyboard: boolean) => {
     chainSeq.current += 1;
     const id = chainSeq.current;
     chainRef.current = id;
@@ -972,7 +997,7 @@ function AgentChat({
         chainRef.current = null;
         if (step.kind === 'plot' && page) {
           setChainView(null);
-          page.plot();
+          page.plot(keyboard);
         } else if (step.kind === 'stop' && step.stop && page) {
           setChainView({ kind: 'stopped', stop: step.stop, mark: stopMark(page.state) });
         } else {
@@ -990,16 +1015,19 @@ function AgentChat({
     }
   };
 
-  /** The plot button with data in the box: the attachment, or the table typed there, goes first. */
-  const sendAndPlot = () => {
+  /**
+   * The plot button with data in the box: the attachment, or the table typed there, goes first.
+   * `keyboard`: the click came from a key, so a fan-out's panel takes the focus when it opens.
+   */
+  const sendAndPlot = (keyboard: boolean) => {
     if (attachment) {
-      void plotChain(attachment);
+      void plotChain(attachment, undefined, keyboard);
       return;
     }
     const typed = attach.attachTyped(draft.trim());
     if (!typed) return;
     setDraft('');
-    void plotChain(typed, '');
+    void plotChain(typed, '', keyboard);
   };
 
   /**
@@ -1007,14 +1035,19 @@ function AgentChat({
    * them are what the plot takes, so data that is not confirmed yet is confirmed first; a
    * refusal stops here and shows under the composer, and nothing is plotted. Then the plot
    * starts: the box's text, when the button takes it (`withText`, the plot button), goes as the
-   * turn that makes the plot with that request, else the catalogue plot (`create_plot`) or the
-   * switch's offer (`carry_plot`), under `label`, the button as it read, which the thread shows
-   * for the turn. The confirmation's busy state and the session's own guards hold back a second
+   * turn that makes the plot with that request, else the catalogue plot (`create_plot`), the
+   * switch's offer (`carry_plot`) or "plot the new data" (`plot_new_data`, which the server
+   * starts from the latest plot when its guard allows it), under `label`, the button as it read,
+   * which the thread shows for the turn. The confirmation's busy state and the session's own guards hold back a second
    * click, also one before the state caught up. The button stays where it is, inert while the
    * plot runs, so the focus stays on it. A table typed into the box never comes here: it is data,
    * which the click reads first (`sendAndPlot`).
    */
-  const startPlot = async (kind: 'create' | 'carry', withText: boolean, label: string) => {
+  const startPlot = async (
+    kind: 'create' | 'carry' | 'new_data',
+    withText: boolean,
+    label: string
+  ) => {
     if (!canCreate) return;
     const text = withText ? draft.trim() : '';
     // The turn would refuse it after the box let go of it: nothing confirms, nothing is lost.
@@ -1026,19 +1059,12 @@ function AgentChat({
       // (a limit, the capacity, the network) shows it there with the error: nothing is lost.
       setDraft(current => (current.trim() === text ? '' : current));
       void session.sendMessage(text);
+    } else if (kind === 'carry') {
+      void session.carryPlot(label);
     } else {
-      void (kind === 'carry' ? session.carryPlot(label) : session.createPlot(label));
+      void (kind === 'new_data' ? session.plotNewData(label) : session.createPlot(label));
     }
   };
-  // The one click's chain reads the page from here after its awaits: its plot is this render's
-  // click on the plot button with an empty box, the switch's offer when there is one.
-  chainPage.current = {
-    state,
-    plotAll,
-    attachment: !!attachment,
-    plot: () => void startPlot(carry ? 'carry' : 'create', false, plotButtonLabel(state)),
-  };
-
   /**
    * A library picked in the menu. While the fan-out is on, any pick turns it
    * off: the library in use only that; another library switches as it would
@@ -1089,12 +1115,12 @@ function AgentChat({
    * library of the header at once; the server copies this session's confirmed version into each
    * library's session, so data that is not confirmed yet is confirmed first, as for
    * `.create_plot()`, and a refusal opens no panel. The upload and the bindings go along only
-   * for a server without the copy.
+   * for a server without the copy. `keyboard`: a key pressed the button, so the panel takes the
+   * focus when it opens.
    */
-  const handlePlotAll = async (event: React.MouseEvent) => {
+  const startPlotAll = async (keyboard: boolean) => {
     const sourceSession = state.sessionId;
     if (!canCreate || !sourceSession) return;
-    const keyboard = event.detail === 0;
     if (!state.dataConfirmed && !(await session.confirmData())) return;
     const upload = state.dataset?.upload;
     fanOutFocus.current = keyboard;
@@ -1104,6 +1130,17 @@ function AgentChat({
       bindings: state.bindings,
       libraries: [...libraries],
     });
+  };
+  // The one click's chain reads the page from here after its awaits: its plot is this render's
+  // click on the plot button with an empty box, the switch's offer when there is one, and with
+  // `all` pressed the fan-out.
+  chainPage.current = {
+    state,
+    plotAll,
+    fanOut: !!fanOut,
+    attachment: !!attachment,
+    plot: keyboard =>
+      void (plotAll ? startPlotAll(keyboard) : startPlot(plotStart, false, plotButtonLabel(state))),
   };
 
   /**
@@ -1116,27 +1153,22 @@ function AgentChat({
   };
 
   /**
-   * The plot button. `.plot_all()` opens the fan-out; with data in the box the click reads it and
-   * plots it once it reads clean (`sendAndPlot`); `.update_plot() →` on a current plot sends the
-   * box's text as Enter does; every other click plots, with the box's text as the request: the
-   * switch's offer with the remembered decisions when there is one (`carry_plot`), else the
-   * catalogue plot. The thread names the turn as the button read.
+   * The plot button, as `plotClick` decided for this render: with data in the box the click reads
+   * it and plots it once it reads clean (`sendAndPlot`), with `all` pressed in the fan-out;
+   * `.plot_all()` opens the fan-out; `.update_plot() →` on a current plot sends the box's text as
+   * Enter does; every other click plots, with the box's text as the request: the switch's offer
+   * with the remembered decisions when there is one (`carry_plot`), else `plot the new data`
+   * (`plot_new_data`) after a data change or a paste, else the catalogue plot. The thread names
+   * the turn as the button read.
    */
   const handlePlot = (event: React.MouseEvent) => {
     cancelChain();
-    if (plotKind === 'all') {
-      void handlePlotAll(event);
-      return;
-    }
-    if (sendsFirst) {
-      sendAndPlot();
-      return;
-    }
-    if (plotNeedsText) {
-      handleSend();
-      return;
-    }
-    void startPlot(carry ? 'carry' : 'create', true, plotButtonLabel(state));
+    // A key press clicks with no pointer: `detail` counts no clicks then.
+    const keyboard = event.detail === 0;
+    if (click === 'send_first') sendAndPlot(keyboard);
+    else if (click === 'plot_all') void startPlotAll(keyboard);
+    else if (click === 'send_text') handleSend();
+    else if (click === 'plot') void startPlot(plotStart, true, plotButtonLabel(state));
   };
 
   /**
@@ -1184,7 +1216,22 @@ function AgentChat({
             ]
           : []
       }
-    />
+      onOpen={admin.mode === 'admin' ? readMeters : undefined}
+    >
+      {/* The running turn's progress grid, the working line's detail, in the admin's and the
+          visitor's view alike; not after an expired admin session, whose menu says only that. */}
+      {admin.mode !== 'expired' && state.run && (
+        <AdminSection heading="progress of this turn">
+          <ProgressTimeline run={state.run} />
+        </AdminSection>
+      )}
+      {/* The meters on the admin lane only: the public lane has no `/budget`. */}
+      {admin.mode === 'admin' && (
+        <AdminSection heading="load · runs in flight, today's budget">
+          <AdminMeters runs={agentStatus.inFlight} share={budgetPercent} />
+        </AdminSection>
+      )}
+    </AdminMenu>
   );
 
   // A refusal on the admin lane falls back to the public lane (the effect above); in between,
@@ -1331,6 +1378,7 @@ function AgentChat({
             box's attachment. */}
         <ChatFrame
           header={headerRow}
+          mood={mood && <LoadMood mood={mood} />}
           onDragEnter={ready ? attach.handleDragEnter : undefined}
           onDragOver={ready ? attach.handleDragOver : undefined}
           onDragLeave={ready ? attach.handleDragLeave : undefined}
@@ -1349,6 +1397,7 @@ function AgentChat({
                 onTrack={trackEvent}
                 onOutcome={session.reportOutcome}
                 onSendFeedback={session.sendFeedback}
+                onAcceptLanguage={session.acceptLanguage}
                 start={
                   <StartItem
                     title={title ?? specId}
@@ -1420,40 +1469,6 @@ function AgentChat({
                 ref={tailRef}
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
               >
-                {/* At the foot, where a long thread keeps it in view: the queue position of a turn
-                without the progress timeline, whose first row says it for a plot run (one
-                position on screen). Out of the flow, at the right of the in-progress line above:
-                it comes with the queue and would otherwise push the composer down and back. */}
-                {state.run?.queue && !showsTimeline(state) && (
-                  <Box
-                    role="status"
-                    data-testid="queue-counter"
-                    aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
-                    sx={{
-                      // Where it would stand as the foot's first item, at its right edge, then lifted
-                      // by its own height and the chat's gap above the foot, into the line's row.
-                      position: 'absolute',
-                      alignSelf: 'flex-end',
-                      mt: -2,
-                      transform: 'translateY(-100%)',
-                      fontFamily: typography.mono,
-                      fontSize: smallText,
-                      color: 'var(--ink)',
-                      bgcolor: 'var(--bg-elevated)',
-                      border: '1px solid var(--rule)',
-                      borderRadius: 1,
-                      px: 1,
-                      py: 0.25,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    queue {state.run.queue.position}/{state.run.queue.waiting}
-                  </Box>
-                )}
-                {/* A turn without pipeline steps has its in-progress line in the thread instead; the
-                run's plot, once in the thread, takes the timeline's place. */}
-                {state.run && view.timeline && <ProgressTimeline run={state.run} />}
-
                 {/* The frame's second dashed rule: the thread above, the composer below. The thread
                     is never empty, since the start item stands first in it. */}
                 <FrameRule />
@@ -1511,15 +1526,15 @@ function AgentChat({
                   step2={step2}
                   hasPlot={hasPlot}
                   chatLocked={chatLocked}
+                  typedData={boxSends === 'typed'}
                   plot={{
                     kind: plotKind,
-                    active: plotActive,
+                    active: click !== null,
                     confirming: state.confirmBusy,
                     fresh: plotFresh,
                   }}
                   example={{ active: exampleActive }}
                   confirmError={state.confirmError}
-                  pausedUntil={pausedUntil}
                   onExampleData={() => void session.exampleData()}
                   onPlot={handlePlot}
                 />

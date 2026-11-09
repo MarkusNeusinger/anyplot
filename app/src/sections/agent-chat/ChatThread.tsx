@@ -22,7 +22,9 @@
  * The remembered decisions stand on the chapter line that holds them (`decisionsAt`): its `3
  * decisions ▾` unfolds the list (`Remembered`) as the row right after the line, a row of the same
  * flat list, so a newer chapter's line takes it over without remounting it. Its removals are
- * announced outside the log, by the page.
+ * announced outside the log, by the page. After a paste with other columns than the data the
+ * latest plot drew, the new data's line holds them until the next plot, as `3 earlier decisions ▾
+ * · .forget_all()` (`decisionsEarlier`).
  *
  * Versions: the live data card at the latest data version stays open in both steps, its label
  * `data v3 · made long · 48 rows × 4 cols`; every older data version folds to that label (`▸ data
@@ -41,10 +43,11 @@
  * The reply is then the first after the live card; held in view, its one scroll into view
  * (`followReply`) moves nothing.
  *
- * While a turn without pipeline steps waits for its reply, an in-progress line with the site's
- * loader holds the assistant's slot (`pendingReply` in `steps.ts`); the log's own polite live
- * region announces it once, and the reply takes its place. So does a plot run once its card is
- * in, below the card, while the reply to it is written (`writing the reply`).
+ * While a turn is in flight, the working line with the site's loader holds the assistant's slot
+ * at the thread's foot (`WorkingLine`, `workingLine` in `steps.ts`): `drawing your plot · 0:42`
+ * while a plot is drawn, the words of a turn without plot work until its reply, `writing the
+ * reply` below a run's card. The log's own polite live region reads its words as they change,
+ * never its clock, and the reply, or an error that ended the turn, takes its place.
  *
  * The page's own turns show as the button the user pressed (`.start_over()`, "plot in plotly with
  * your 3 decisions"), never as the action the page sends. The summary of the data after a paste
@@ -58,7 +61,6 @@ import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'rea
 
 import Box from '@mui/material/Box';
 
-import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import {
   type AgentSessionState,
   type ChatItem,
@@ -72,23 +74,28 @@ import { countOf } from 'src/sections/agent-chat/countOf';
 import { FoldedData } from 'src/sections/agent-chat/FoldedData';
 import { HoldReadingPosition, REPLY_ATTRIBUTE } from 'src/sections/agent-chat/HoldReadingPosition';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
+import { LanguageOfferLine } from 'src/sections/agent-chat/LanguageOfferLine';
 import {
   ANSWER_LABEL,
   ANSWER_LABEL_SPOKEN,
   ERROR_TEXT,
   localClock,
+  NEW_DATA_PLOT,
   PLOT_FAILED_TEXT,
   QUESTION_WORD,
-  RECONNECTING_TEXT,
   refusalLabel,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
-import { Remembered, RememberedCount } from 'src/sections/agent-chat/Remembered';
+import {
+  ForgetEarlier,
+  Remembered,
+  RememberedCount,
+  type RememberedHandle,
+} from 'src/sections/agent-chat/Remembered';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
-import { awaitsReply, type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
+import { runView, workingLine } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
-  CHAT_SECTION_GAP,
   CHAT_TEXT_MAX,
   inlineCodeSx,
   jumpTargetSx,
@@ -99,7 +106,8 @@ import {
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { plotSummaries, questionDomId, threadModel } from 'src/sections/agent-chat/threadModel';
-import { colors, fontSize, typography } from 'src/theme';
+import { WorkingLine } from 'src/sections/agent-chat/WorkingLine';
+import { colors, typography } from 'src/theme';
 
 /** A passage of a reply in backticks, on one line: code, a column or a button the reply names. */
 const INLINE_CODE = /`([^`\n]+)`/g;
@@ -127,20 +135,11 @@ function ReplyText({ text }: { text: string }) {
  */
 function actionText(item: Extract<ChatItem, { kind: 'action' }>): string {
   if (item.label) return item.label;
+  if (item.action === 'plot_new_data') return NEW_DATA_PLOT;
   return item.action === 'carry_plot'
     ? `plot in ${item.library} with your decisions`
     : `.${item.action}()`;
 }
-
-/** The in-progress line's words, beside the site's loader. */
-const PENDING_TEXT: Record<PendingReply, string> = {
-  summarize_data: 'summarizing your data',
-  example_data: 'making example data',
-  message: 'working on your message',
-  stopping: 'stopping',
-  reconnecting: RECONNECTING_TEXT,
-  writing: 'writing the reply',
-};
 
 interface ChatThreadProps {
   state: AgentSessionState;
@@ -167,6 +166,8 @@ interface ChatThreadProps {
    * without it the thread shows no decisions.
    */
   decisions?: ThreadDecisions;
+  /** The `.switch()` of a language line (`LanguageOfferLine`); without it the line has no button. */
+  onAcceptLanguage?: (offerId: number) => Promise<void>;
 }
 
 /** What the remembered decisions' list needs from the page (`RememberedProps`). */
@@ -395,6 +396,15 @@ function Item({
           )}
         </Box>
       );
+    case 'language_offer':
+      return (
+        <LanguageOfferLine
+          item={item}
+          current={props.state.plotLanguage.language}
+          busy={sessionBusy(props.state)}
+          onAccept={props.onAcceptLanguage}
+        />
+      );
     case 'plot_failed':
       return (
         <Box sx={{ ...textSx, borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
@@ -454,14 +464,22 @@ export function ChatThread(props: ChatThreadProps) {
   const numbers = Object.keys(versions).map(Number);
   const latestVersion = numbers.length ? Math.max(...numbers) : 0;
   const summaries = useMemo(
-    () => plotSummaries(items, version => versions[version]?.library),
+    () =>
+      plotSummaries(
+        items,
+        version => versions[version]?.library,
+        version => versions[version]?.result.new_data
+      ),
     [items, versions]
   );
   const { memoryTurn, memory } = props.state;
-  const { rows, chapters, answers, decisionsAt } = useMemo(
+  const { rows, chapters, answers, decisionsAt, decisionsEarlier } = useMemo(
     () => threadModel(items, memoryTurn),
     [items, memoryTurn]
   );
+  // The list's own `.forget_all()`, which the new data's line offers after a paste with other
+  // columns (`ForgetEarlier`): the list shows its progress and a failure, so it opens for it.
+  const rememberedRef = useRef<RememberedHandle>(null);
   const questions = useMemo(
     () => new Set(chapters.flatMap(chapter => chapter.questions)),
     [chapters]
@@ -475,10 +493,8 @@ export function ChatThread(props: ChatThreadProps) {
   const decisionsId = useId();
   const decisionsHandoffRef = useRef(false);
   const { decisions } = props;
-  const pending = pendingReply(props.state);
-  // Below a run's card no timeline follows: the line stands where the reply will, which takes
-  // its place without a jump.
-  const afterCard = awaitsReply(props.state);
+  const working = workingLine(props.state);
+  const drawing = runView(props.state).drawing;
   const waitingId = props.state.transcription
     ? [...items].reverse().find(item => item.kind === 'transcription')?.id
     : undefined;
@@ -525,6 +541,19 @@ export function ChatThread(props: ChatThreadProps) {
                       listId={decisionsId}
                       onToggle={() => setDecisionsOpen(open => !open)}
                       handoffRef={decisionsHandoffRef}
+                      earlier={decisionsEarlier}
+                    />
+                  ) : undefined
+                }
+                decisionsAction={
+                  holds && decisionsEarlier && decisions.onForgetAll ? (
+                    <ForgetEarlier
+                      memory={memory}
+                      disabled={decisions.disabled}
+                      onForgetAll={() => {
+                        setDecisionsOpen(true);
+                        rememberedRef.current?.forgetAll();
+                      }}
                     />
                   ) : undefined
                 }
@@ -546,6 +575,8 @@ export function ChatThread(props: ChatThreadProps) {
                 onForgetAll={decisions.onForgetAll}
                 fallbackFocusRef={decisions.fallbackFocusRef}
                 onAnnounce={decisions.onAnnounce}
+                earlier={decisionsEarlier}
+                handleRef={rememberedRef}
               />,
             ];
           }
@@ -583,41 +614,10 @@ export function ChatThread(props: ChatThreadProps) {
           ];
         })}
       </HoldReadingPosition>
-      {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
-          site's loader says it works; the log's live region reads the words alone. */}
-      {/* Laid out as the progress timeline is (`ProgressTimeline.tsx`): a turn that reaches a
-          pipeline step hands the line over to the timeline below the thread, and the loader must
-          stay where it is, only the text beside it changing. So the loader stands first, in a
-          box one line of the run's font tall, on a phone above the text; and the line keeps a
-          margin of the difference between the thread's gap and the gap above the timeline, so
-          the timeline's top lands where this line's top was. Below a run's card, while its reply
-          is written, no timeline follows: the line is the reply's first line instead, in the
-          thread's gap alone, one row at every width and of the reply's line height, so the reply
-          starts where it started and a one-line reply moves nothing below it. */}
-      {pending && (
-        <Box
-          data-testid="pending-reply"
-          sx={{
-            display: 'flex',
-            flexDirection: afterCard ? 'row' : { xs: 'column', sm: 'row' },
-            alignItems: 'flex-start',
-            gap: afterCard ? 1.5 : { xs: 1, sm: 1.5 },
-            fontFamily: typography.mono,
-            fontSize: fontSize.md,
-            lineHeight: afterCard ? bodyTextSx.lineHeight : undefined,
-            color: 'var(--ink-soft)',
-            mt: afterCard ? 0 : CHAT_SECTION_GAP - THREAD_GAP,
-          }}
-        >
-          <Box
-            component="span"
-            sx={{ display: 'flex', alignItems: 'center', '&::before': { content: '"\\200b"' } }}
-          >
-            <LoaderSpinner size="inline" />
-          </Box>
-          <Box sx={{ minWidth: 0 }}>{PENDING_TEXT[pending]}</Box>
-        </Box>
-      )}
+      {/* The assistant's slot, in its style, in softer ink: provisional until the reply. One
+          element from the turn's start to its end, so only its words change: the loader stays
+          where it is, and the reply takes its place in the thread's gap, in its line height. */}
+      {working && <WorkingLine line={working} drawing={drawing} />}
     </Box>
   );
 }

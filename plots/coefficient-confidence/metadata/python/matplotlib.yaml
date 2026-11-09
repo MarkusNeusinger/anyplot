@@ -2,47 +2,50 @@ library: matplotlib
 language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:47:40Z'
-updated: '2026-05-18T12:24:48Z'
-generated_by: claude-haiku
-workflow_run: 26032690620
+updated: '2026-11-09T09:48:47Z'
+generated_by: claude-opus
+workflow_run: 42595514683
 issue: 3576
-language_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Perfect visual quality with all text readable in both light and dark themes
-  - Correct Okabe-Ito palette (#009E73) with flawless theme-adaptive chrome
-  - Excellent data representation with clear significance distinction and null reference
-    line
-  - Professional appearance with well-proportioned markers, error bars, and subtle
-    grid
-  - Perfect specification compliance with all required features correctly implemented
-  - Realistic and neutral housing regression domain with plausible data
+  - Significance is double-encoded — brand green circles vs. the theme-adaptive muted
+    anchor with square markers — so the distinction survives grayscale and CVD, and
+    the legend names the rule ('95% CI excludes 0').
+  - The zero reference line is drawn in solid neutral ink at 1.2 px, clearly distinct
+    from the 15%-alpha x-grid in both themes, so intervals that graze zero (Crime
+    Rate Index) read immediately.
+  - Native ax.errorbar with asymmetric xerr, caps and a page-colored marker edge that
+    separates each estimate from its interval line; variables sorted by coefficient
+    with full names on the y-axis via ax.set_yticks(y_pos, labels).
+  - Significance flag is taken from the data column and only falls back to the zero-crossing
+    test where missing; the housing-price regression data shows positive, negative,
+    crossing and clearing intervals of varied width.
+  - Chrome is fully theme-adaptive (INK/INK_SOFT/ELEVATED_BG tokens); left spine and
+    tick marks removed for a clean dot-and-whisker layout.
   weaknesses:
-  - Source code lacks explicit theme handling (ANYPLOT_THEME, color tokens) despite
-    perfect theme rendering in outputs — code/render mismatch suggests file may be
-    outdated
-  - Design Excellence is adequate but generic, following configured defaults without
-    custom sophistication
-  - Library usage is standard with no distinctive matplotlib features beyond errorbar()
-    and custom legend
+  - 'Suggestion: legend glyphs could include a short interval line through the marker
+    (errorbar-style handle) so the key mirrors the plotted marks exactly.'
+  - 'Suggestion: a light row band or slightly larger y tick labels would help the
+    long variable names hold up in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17), perfectly readable against light background
-      Data: Green circles (#009E73) for significant coefficients, gray squares (#999999) for non-significant; yellow reference line at zero (#FFD43B) stands out
-      Legibility verdict: PASS - All text and data elements are clear and well-spaced
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: title "coefficient-confidence · python · matplotlib · anyplot.ai" in dark ink, ~57% of width; x-axis label "Coefficient Estimate (Standardized)"; ten y tick labels (Square Footage … Distance to City Center) in INK_SOFT gray; subtle vertical gridlines at 0.2 steps; solid near-black zero reference line spanning all rows; legend lower right on an elevated cream frame. All readable.
+      Data: horizontal dot-and-whisker rows sorted by coefficient; 5 significant coefficients as #009E73 circles with capped intervals (Square Footage 0.45 at top, Distance to City Center -0.32 at bottom), 5 non-significant as muted gray #6B6A63 squares whose intervals cross zero (Crime Rate Index just grazes it). No overlap, no clipping.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels in light text (#F0EFE8/#4A4A44 inverted), strong contrast against dark background, no dark-on-dark failures
-      Data: Green circles (#009E73) and gray squares identical to light render - data colors constant, only chrome flips
-      Legibility verdict: PASS - All text maintains excellent readability; yellow reference line visible on dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: title and x-axis label in light ink, tick labels in light gray (#B8B7B0), gridlines faint but visible, zero line in near-white #F0EFE8, legend frame dark elevated with light text. No dark-on-dark text anywhere.
+      Data: significant points/intervals identical #009E73 to the light render; non-significant marks flip to the dark muted anchor #A8A79F as the theme-adaptive muted token intends. Same layout and positions.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,73 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt)
-          — perfectly readable in both themes
+        comment: Explicit sizes (title 12, label 10, ticks/legend 8); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements fully visible with no collisions or readability
-          issues
+        comment: Legend in lower right sits clear of every interval; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (markersize=14) and error bars (elinewidth=3) optimally sized
-          and visible
+        comment: Markers size 7 with page-colored edge, 1.5 px intervals with caps;
+          legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Strong contrast between green (#009E73) and gray (#999999); CVD-safe
-          Okabe-Ito palette
+        comment: Green vs muted gray plus circle vs square — not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas with balanced margins; figsize=(16,9) well-utilized
+        comment: 3200x1800, balanced margins, title ~57% width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis label includes units: ''Coefficient Estimate (Standardized)'''
+        comment: 'Effect measure named: Coefficient Estimate (Standardized); y-axis
+          is self-describing variable names'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (correct); backgrounds #FAF8F1 (light) and
-          #1A1A17 (dark); theme-adaptive text throughout'
+        comment: '#009E73 first series, muted anchor for non-significant (its documented
+          role), neutral ink reference line, correct backgrounds'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Professional and well-configured, but resembles defaults without
-          exceptional innovation
+        passed: true
+        comment: 'Raised: redundant shape encoding (circle/square) alongside color,
+          page-colored marker halos separating estimate from whisker'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Spines removed, subtle grid; fairly standard refinement without distinctive
-          polish
+        passed: true
+        comment: 'Raised: left spine and tick marks removed so labels float beside
+          rows, tight ylim padding, x-only grid chosen for a value axis'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Good visual distinction through color/shape; yellow reference line
-          emphasizes null; good but not exceptional narrative
+        passed: true
+        comment: 'Raised: non-significant effects pushed back into the muted anchor
+          so the significant effects lead; legend states the CI rule'
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct coefficient plot with horizontal error bars
+        comment: Horizontal coefficient plot with CI whiskers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Vertical reference line, error bars, significance distinction, all
-          present
+        comment: Zero line full height, significance by color+marker with legend,
+          ordered by coefficient, effect-measure axis label, horizontal layout — all
+          Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis coefficients, Y-axis variables, all data visible
+        comment: Points at estimates, intervals from ci_lower to ci_upper, all data
+          in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match and descriptive
+        comment: Mandated title format; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -158,24 +162,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive/negative coefficients, significant/non-significant,
-          varying CI widths
+        comment: Positive and negative effects, intervals crossing and clearing zero,
+          varied widths, one borderline case
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price regression with realistic variable names; neutral and
-          plausible
+        comment: Housing-price regression predictors, as the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coefficients and standard errors factually sound for standardized
-          regression
+        comment: Standardized coefficients -0.32..0.45 with 1.96·SE intervals; checked
+          Crime Rate Index upper bound +0.007 (crosses zero → not significant) matches
+          the render
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -183,34 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: data → plot → save; no unnecessary functions'
+        comment: Flat script following the adaptable-code zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported; all used
+        comment: os, plt, np, pd, Line2D all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI or over-engineering
+        comment: Two errorbar calls in a loop; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as 'plot.png' not 'plot-{THEME}.png'; lacks theme handling
-          code despite perfect theme renders
+        passed: true
+        comment: Saves plot-{THEME}.png at default bbox; current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -218,23 +221,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.errorbar(), ax.axvline(), custom legend with Line2D; standard
-          but correct patterns
+        comment: 'Raised: ax.errorbar with asymmetric xerr and fmt markers, ax.set_yticks(positions,
+          labels), axvline reference'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Generic usage with no distinctive matplotlib features beyond errorbar()
+        passed: true
+        comment: 'Raised: Line2D proxy artists for a custom legend key'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T09:46:17Z'
 impl_tags:
   dependencies: []
   techniques:
+  - error-bars
+  - reference-line
   - custom-legend
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - sorting
   styling:
-  - edge-highlighting
+  - minimal-chrome
+  - publication-ready

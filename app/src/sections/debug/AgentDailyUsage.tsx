@@ -14,47 +14,23 @@
  * Each fetches on its own and fails to one muted line, like the section above.
  */
 
-import { useEffect, useState } from 'react';
-
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import { DEBUG_API_URL } from 'src/constants';
-import { fetchWithAuth } from 'src/lib/api';
+import { type AgentBudget, budgetShare, countsOf, LIMIT_KINDS, readBudget } from 'src/lib/agent';
 import { localClock } from 'src/sections/agent-chat/messages';
 import { formatUsd, formatUtc, timeAgo } from 'src/sections/debug/format';
-import { listMutedSx, listTextSx } from 'src/sections/debug/styles';
+import { listMutedSx, listTextSx, tableCellSx, tableHeadSx } from 'src/sections/debug/styles';
+import { useAnswer } from 'src/sections/debug/useAnswer';
 import { colors } from 'src/theme';
 
 // ============================================================================
 // Answers
 // ============================================================================
 
-/** The day caps the agents service counts users at (`ledger.LIMIT_KINDS`). */
-const LIMIT_KINDS = [
-  'tokens',
-  'runs',
-  'data_runs',
-  'messages',
-  'pastes',
-  'conversions',
-  'locked_out',
-] as const;
-
-/** The answer of `GET /debug/agent/budget`: counts and times only. */
-export interface AgentBudget {
-  since: string;
-  started_at: string;
-  resets_at: string;
-  paused: boolean;
-  tokens: number;
-  budget_tokens: number;
-  usd: number | null;
-  budget_usd: number | null;
-  users: number;
-  users_at_limit: number;
-  limits: Record<string, number>;
-}
+// The live answer of `GET /debug/agent/budget` (`AgentBudget`, `readBudget`) is the chat's too,
+// whose admin meters show the same share: both live in `src/lib/agent.ts`.
 
 /** The refusal codes the per-day table counts, in its order (`api/agent_usage.py` `LIMIT_CODES`). */
 const LIMIT_CODES = [
@@ -91,37 +67,6 @@ const count = (value: unknown): number =>
 const amount = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 
-const instant = (value: unknown): string | null =>
-  typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
-
-const counts = (value: unknown, keys: readonly string[]): Record<string, number> => {
-  const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
-  return Object.fromEntries(keys.map(key => [key, count(record[key])]));
-};
-
-/** The live answer as the line reads it; `null` for one without its times. */
-function readBudget(body: unknown): AgentBudget | null {
-  if (!body || typeof body !== 'object') return null;
-  const record = body as Record<string, unknown>;
-  const since = instant(record.since);
-  const started = instant(record.started_at);
-  const resets = instant(record.resets_at);
-  if (!since || !started || !resets) return null;
-  return {
-    since,
-    started_at: started,
-    resets_at: resets,
-    paused: record.paused === true,
-    tokens: count(record.tokens),
-    budget_tokens: count(record.budget_tokens),
-    usd: amount(record.usd),
-    budget_usd: amount(record.budget_usd),
-    users: count(record.users),
-    users_at_limit: count(record.users_at_limit),
-    limits: counts(record.limits, LIMIT_KINDS),
-  };
-}
-
 const STATUSES = new Set<string>(['ok', 'not_configured', 'unavailable']);
 
 /** The per-day answer as the table reads it; `null` for one without a known status. */
@@ -146,7 +91,7 @@ function readDaily(body: unknown): AgentUsageDaily | null {
           cost_usd: amount(row.cost_usd) ?? 0,
           fanout_cost_usd: amount(row.fanout_cost_usd) ?? 0,
           unpriced_calls: count(row.unpriced_calls),
-          limit_hits: counts(row.limit_hits, LIMIT_CODES),
+          limit_hits: countsOf(row.limit_hits, LIMIT_CODES),
           queue_wait_p95_ms: typeof wait === 'number' && wait >= 0 ? wait : null,
           queue_waits: count(row.queue_waits),
         };
@@ -177,35 +122,6 @@ function limitBreakdown(limits: Record<string, number>): string {
 // ============================================================================
 // Today, live
 // ============================================================================
-
-interface Answer<T> {
-  key: string;
-  value: T | null;
-}
-
-function useAnswer<T>(
-  url: string,
-  token: string,
-  reloadCounter: number,
-  read: (body: unknown) => T | null
-): T | null | undefined {
-  const key = `${url}\n${token}\n${reloadCounter}`;
-  const [answer, setAnswer] = useState<Answer<T> | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetchWithAuth(url, token)
-      .then(async response => (response.ok ? read(await response.json()) : null))
-      .catch(() => null)
-      .then(value => {
-        if (!cancelled) setAnswer({ key, value });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [url, token, key, read]);
-  // `undefined` while this key's answer is out.
-  return answer && answer.key === key ? answer.value : undefined;
-}
 
 export interface DayViewProps {
   /** The admin token of the page (`X-Admin-Token`), or `''` behind Cloudflare Access. */
@@ -242,8 +158,7 @@ export function AgentTodayLine({ token, reloadCounter }: DayViewProps) {
 }
 
 function TodayText({ budget }: { budget: AgentBudget }) {
-  const share =
-    budget.budget_tokens > 0 ? Math.round((budget.tokens / budget.budget_tokens) * 100) : null;
+  const share = budgetShare(budget);
   const spend =
     budget.usd !== null && budget.budget_usd !== null
       ? `${formatUsd(budget.usd)} of ${formatUsd(budget.budget_usd)}`
@@ -297,18 +212,6 @@ const DAILY_EMPTY: Record<'not_configured' | 'unavailable', string> = {
   unavailable: 'per-day numbers unavailable right now',
 };
 
-const cellSx = {
-  ...listTextSx,
-  px: 1,
-  py: 0.5,
-  borderBottom: '1px solid var(--rule)',
-  textAlign: 'right',
-  whiteSpace: 'nowrap',
-  fontVariantNumeric: 'tabular-nums',
-} as const;
-
-const headSx = { ...cellSx, fontWeight: 600, color: 'var(--ink-soft)' } as const;
-
 const COLUMNS = [
   'day (UTC)',
   'new chats',
@@ -356,7 +259,10 @@ export function AgentDailyTable({ token, reloadCounter }: DayViewProps) {
                       component="th"
                       key={column}
                       scope="col"
-                      sx={{ ...headSx, textAlign: index === 0 || index === 5 ? 'left' : 'right' }}
+                      sx={{
+                        ...tableHeadSx,
+                        textAlign: index === 0 || index === 5 ? 'left' : 'right',
+                      }}
                     >
                       {column}
                     </Box>
@@ -388,24 +294,24 @@ function DayRow({ day, today }: { day: UsageDay; today: boolean }) {
     day.unpriced_calls > 0 ? `${plural(day.unpriced_calls, 'model call')} without a price` : '';
   return (
     <Box component="tr">
-      <Box component="th" scope="row" sx={{ ...cellSx, textAlign: 'left', fontWeight: 400 }}>
+      <Box component="th" scope="row" sx={{ ...tableCellSx, textAlign: 'left', fontWeight: 400 }}>
         {day.date}
         {today ? ' · so far' : ''}
       </Box>
-      <Box component="td" sx={cellSx}>
+      <Box component="td" sx={tableCellSx}>
         {day.sessions.toLocaleString('en-US')}
       </Box>
-      <Box component="td" sx={cellSx}>
+      <Box component="td" sx={tableCellSx}>
         {day.plots_shipped.toLocaleString('en-US')}
       </Box>
-      <Box component="td" sx={cellSx} title={unpriced || undefined}>
+      <Box component="td" sx={tableCellSx} title={unpriced || undefined}>
         {formatUsd(day.cost_usd)}
         {unpriced ? '+' : ''}
       </Box>
-      <Box component="td" sx={{ ...cellSx, color: 'var(--ink-soft)' }}>
+      <Box component="td" sx={{ ...tableCellSx, color: 'var(--ink-soft)' }}>
         {formatUsd(day.fanout_cost_usd)}
       </Box>
-      <Box component="td" sx={{ ...cellSx, textAlign: 'left' }}>
+      <Box component="td" sx={{ ...tableCellSx, textAlign: 'left' }}>
         {hits.length === 0 ? (
           <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
             0
@@ -416,7 +322,7 @@ function DayRow({ day, today }: { day: UsageDay; today: boolean }) {
       </Box>
       <Box
         component="td"
-        sx={cellSx}
+        sx={tableCellSx}
         title={day.queue_waits > 0 ? `of ${plural(day.queue_waits, 'run')}` : undefined}
       >
         {day.queue_wait_p95_ms === null ? '—' : `${(day.queue_wait_p95_ms / 1000).toFixed(1)} s`}

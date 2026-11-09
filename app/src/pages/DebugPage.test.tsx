@@ -478,6 +478,10 @@ describe('DebugPage agent usage', () => {
 
   const ok = (body: unknown) => Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
 
+  /** The section's own window toggle: the machine readers section below has a 7d/30d pair too. */
+  const usageButton = (name: '7d' | '30d') =>
+    within(screen.getByRole('group', { name: 'Usage window' })).getByRole('button', { name });
+
   it('shows the tiles and the ranked lists of an ok answer', async () => {
     const fetchMock = stubFetch(() => ok(USAGE));
     render(<DebugPage />);
@@ -531,7 +535,7 @@ describe('DebugPage agent usage', () => {
     );
 
     answer = () => ok({ ...USAGE, status: 'unavailable' });
-    fireEvent.click(screen.getByRole('button', { name: '30d' }));
+    fireEvent.click(usageButton('30d'));
     await waitFor(() =>
       expect(screen.getByTestId('agent-usage-empty')).toHaveTextContent(
         'usage data unavailable right now'
@@ -539,7 +543,7 @@ describe('DebugPage agent usage', () => {
     );
 
     answer = () => Promise.reject(new TypeError('Failed to fetch'));
-    fireEvent.click(screen.getByRole('button', { name: '7d' }));
+    fireEvent.click(usageButton('7d'));
     await waitFor(() =>
       expect(screen.getByTestId('agent-usage-empty')).toHaveTextContent(
         'usage data unavailable right now'
@@ -556,13 +560,13 @@ describe('DebugPage agent usage', () => {
     render(<DebugPage />);
 
     expect(await screen.findByRole('group', { name: 'sessions' })).toHaveTextContent('12');
-    expect(screen.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true');
+    expect(usageButton('7d')).toHaveAttribute('aria-pressed', 'true');
 
-    fireEvent.click(screen.getByRole('button', { name: '30d' }));
+    fireEvent.click(usageButton('30d'));
     await waitFor(() =>
       expect(screen.getByRole('group', { name: 'sessions' })).toHaveTextContent('77')
     );
-    expect(screen.getByRole('button', { name: '30d' })).toHaveAttribute('aria-pressed', 'true');
+    expect(usageButton('30d')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('region', { name: 'Agent usage section' })).toHaveTextContent(
       'content-free telemetry · last 30 days'
     );
@@ -718,6 +722,253 @@ describe('DebugPage agent usage', () => {
     expect(await screen.findByTestId('agent-today-empty')).toHaveTextContent(
       'live numbers unavailable: the agents service did not answer'
     );
+  });
+});
+
+describe('DebugPage machine readers', () => {
+  const DETAIL = {
+    status: 'ok',
+    days: 7,
+    generated_at: '2026-11-09T13:50:00Z',
+    requests: 81,
+    verified: 50,
+    unverified: 31,
+    mcp_calls: 4,
+    synthetic: 10,
+    vendors: [
+      {
+        assistant: 'ahrefs',
+        kind: 'seo',
+        category: 'Search Engine Optimization',
+        requests: 25,
+        verified: 25,
+        unverified: 0,
+        pages: 3,
+        code: 0,
+        og: 2,
+        mcp: 0,
+        not_found: 1,
+        top_paths: [{ key: 'other', count: 6 }],
+      },
+      {
+        assistant: 'perplexity',
+        kind: 'index',
+        category: null,
+        requests: 27,
+        verified: 0,
+        unverified: 27,
+        pages: 14,
+        code: 8,
+        og: 5,
+        mcp: 0,
+        not_found: 0,
+        top_paths: [
+          { key: 'code icicle-basic/altair', count: 3 },
+          { key: 'spec_detail scatter-basic/python/matplotlib', count: 2 },
+        ],
+      },
+      {
+        assistant: 'other',
+        kind: 'unknown',
+        category: 'AI Crawler',
+        requests: 2,
+        verified: 2,
+        unverified: 0,
+        pages: 2,
+        code: 0,
+        og: 0,
+        mcp: 0,
+        not_found: 0,
+        top_paths: [],
+      },
+    ],
+    daily: [
+      {
+        date: '2026-11-09',
+        for_person: 0,
+        index_training: 16,
+        search: 4,
+        seo: 30,
+        other: 0,
+        unverified: 31,
+        mcp: 4,
+      },
+      {
+        date: '2026-11-08',
+        for_person: 1,
+        index_training: 0,
+        search: 0,
+        seo: 0,
+        other: 2,
+        unverified: 0,
+        mcp: 0,
+      },
+    ],
+  };
+
+  const ok = (body: unknown) => Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+
+  /** The page's own calls answered as above; the machine readers call by `answer`. */
+  function stubFetch(answer: (days: string) => Promise<unknown>) {
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/debug/machine-readers')) {
+        return answer(new URL(url).searchParams.get('days') ?? '');
+      }
+      if (url.includes('/debug/agent-usage/daily'))
+        return ok({ status: 'not_configured', rows: [] });
+      if (url.includes('/debug/agent-usage')) return ok({ status: 'not_configured' });
+      if (url.includes('/debug/agent/budget')) {
+        return Promise.resolve({ ok: false, json: () => ({}) });
+      }
+      if (url.includes('/debug/agent/cases')) {
+        return ok({ items: [], has_more: false });
+      }
+      if (url.includes('/debug/feedback/')) return ok([]);
+      return ok(mockDebugData);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  const section = () => screen.findByRole('region', { name: 'Machine readers section' });
+  const windowButton = (name: '7d' | '30d') =>
+    within(screen.getByRole('group', { name: 'Machine readers window' })).getByRole('button', {
+      name,
+    });
+
+  it('shows the tiles, the vendor matrix most requests first and the days', async () => {
+    const fetchMock = stubFetch(() => ok(DETAIL));
+    render(<DebugPage />);
+
+    const region = await section();
+    expect(await within(region).findByRole('group', { name: 'requests' })).toHaveTextContent('81');
+    expect(within(region).getByRole('group', { name: 'verified' })).toHaveTextContent(
+      '62%50 of 81'
+    );
+    expect(within(region).getByRole('group', { name: 'mcp calls' })).toHaveTextContent('4');
+    // Named vendors only: `other` is no vendor.
+    expect(within(region).getByRole('group', { name: 'vendors' })).toHaveTextContent(/^2vendors$/);
+    expect(region).toHaveTextContent('content-free request lines · last 7 days');
+    expect(region).toHaveTextContent('10 synthetic lines (smoke checks) left out');
+
+    const matrix = within(within(region).getByRole('group', { name: 'Machine readers by vendor' }));
+    const [head, first, second, third] = matrix.getAllByRole('row');
+    expect(head).toHaveTextContent(
+      'vendorkindcategoryrequestsverifiedunverifiedpagescodeogmcp404top path'
+    );
+    expect(first).toHaveTextContent(
+      '▸ perplexityindexunverified27027148500code icicle-basic/altair'
+    );
+    expect(second).toHaveTextContent('▸ ahrefsseoSearch Engine Optimization2525030201other');
+    expect(third).toHaveTextContent('otherunknownAI Crawler');
+    // A row without routes has nothing to open.
+    expect(matrix.getByRole('button', { name: 'other unknown: top routes' })).toBeDisabled();
+
+    const days = within(within(region).getByRole('group', { name: 'Machine reads per day' }));
+    const [dayHead, today, yesterday] = days.getAllByRole('row');
+    expect(dayHead).toHaveTextContent(
+      'day (UTC)for a personindex & trainingsearchseootherunverifiedmcp'
+    );
+    expect(today).toHaveTextContent('2026-11-09 · so far0164300314');
+    expect(yesterday).toHaveTextContent(/^2026-11-081000200$/);
+
+    const urls = fetchMock.mock.calls.map(call => call[0]);
+    expect(urls.filter(url => url.includes('/debug/machine-readers'))).toEqual([
+      expect.stringMatching(/\/debug\/machine-readers\?days=7$/),
+    ]);
+  });
+
+  it('opens a vendor row to its top routes', async () => {
+    stubFetch(() => ok(DETAIL));
+    render(<DebugPage />);
+
+    const toggle = await screen.findByRole('button', { name: 'perplexity index: top routes' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const routes = screen.getByRole('list', { name: 'perplexity index top routes' });
+    expect(
+      within(routes)
+        .getAllByRole('listitem')
+        .map(item => item.textContent)
+    ).toEqual(['3 · code icicle-basic/altair', '2 · spec_detail scatter-basic/python/matplotlib']);
+
+    fireEvent.click(toggle);
+    expect(screen.queryByRole('list', { name: 'perplexity index top routes' })).toBeNull();
+  });
+
+  it('says that the telemetry is not configured yet, without tiles', async () => {
+    stubFetch(() => ok({ ...DETAIL, status: 'not_configured', requests: 0, vendors: [] }));
+    render(<DebugPage />);
+
+    expect(await screen.findByTestId('machine-readers-empty')).toHaveTextContent(
+      'machine-read telemetry is not configured yet'
+    );
+    const region = await section();
+    expect(within(region).queryByRole('group', { name: 'requests' })).not.toBeInTheDocument();
+  });
+
+  it('says so for an empty window, a failed query, a failed request and an unreadable answer', async () => {
+    let answer: () => Promise<unknown> = () =>
+      ok({ ...DETAIL, requests: 0, verified: 0, unverified: 0, vendors: [] });
+    stubFetch(() => answer());
+    render(<DebugPage />);
+    expect(await screen.findByTestId('machine-readers-empty')).toHaveTextContent(
+      'no machine reads in this window'
+    );
+
+    answer = () => ok({ ...DETAIL, status: 'unavailable' });
+    fireEvent.click(windowButton('30d'));
+    await waitFor(() =>
+      expect(screen.getByTestId('machine-readers-empty')).toHaveTextContent(
+        'crawler numbers unavailable right now'
+      )
+    );
+
+    answer = () => Promise.reject(new TypeError('Failed to fetch'));
+    fireEvent.click(windowButton('7d'));
+    await waitFor(() =>
+      expect(screen.getByTestId('machine-readers-empty')).toHaveTextContent(
+        'crawler numbers unavailable right now'
+      )
+    );
+    // The rest of the page stays.
+    expect(screen.getAllByText('scatter-basic').length).toBeGreaterThan(0);
+  });
+
+  it('treats an answer without a known status as unavailable', async () => {
+    stubFetch(() => ok({ ...DETAIL, status: 'weird' }));
+    render(<DebugPage />);
+    expect(await screen.findByTestId('machine-readers-empty')).toHaveTextContent(
+      'crawler numbers unavailable right now'
+    );
+  });
+
+  it('fetches the 30-day window on its own toggle', async () => {
+    const fetchMock = stubFetch(days =>
+      ok({ ...DETAIL, days: Number(days), requests: days === '30' ? 900 : 81 })
+    );
+    render(<DebugPage />);
+
+    expect(await screen.findByRole('group', { name: 'requests' })).toHaveTextContent('81');
+    expect(windowButton('7d')).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(windowButton('30d'));
+    await waitFor(() =>
+      expect(screen.getByRole('group', { name: 'requests' })).toHaveTextContent('900')
+    );
+    expect(windowButton('30d')).toHaveAttribute('aria-pressed', 'true');
+    expect(await section()).toHaveTextContent('content-free request lines · last 30 days');
+    const urls = fetchMock.mock.calls
+      .map(call => call[0])
+      .filter(url => url.includes('/debug/machine-readers'));
+    expect(urls).toEqual([expect.stringMatching(/\?days=7$/), expect.stringMatching(/\?days=30$/)]);
+    // The agent usage toggle stays where it was.
+    expect(
+      within(screen.getByRole('group', { name: 'Usage window' })).getByRole('button', {
+        name: '7d',
+      })
+    ).toHaveAttribute('aria-pressed', 'true');
   });
 });
 

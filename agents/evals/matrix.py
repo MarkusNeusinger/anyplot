@@ -32,7 +32,9 @@ stopped (`stage`, the pipeline's `Stage`, and `stages` per attempt), the shipped
 the reviewed attempt, an `attempt_log` (per attempt: the adapter's outcome, finish
 reason, output tokens and plan shape, the check with its edit-failure kinds, the
 render gates and the review verdict), every model call's finish reason and tokens
-(`calls`, counted per agent kind in `finish_reasons`), the edit-failure kinds, how
+(`calls`, counted per agent kind in `finish_reasons`), every tool call per turn with the
+guards' verdict and whether it came without arguments (`tool_calls`, from the `tool` lines:
+the closed tool name and verdict, never an argument), the edit-failure kinds, how
 many edits a tolerant matching tier applied (`edit_tolerant`, by tier, also in a plan
 that another edit failed), and the module
 labels of the banned imports the validator refused (`banned_imports`: the longest
@@ -126,7 +128,7 @@ import subprocess
 import sys
 import time
 from collections import Counter
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -754,6 +756,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "reviewed_attempt": None,
         "attempt_log": [],
         "calls": [],
+        "tool_calls": [],
         "finish_reasons": {},
         "edit_failure_kinds": {},
         "edit_tolerant": {},
@@ -806,6 +809,21 @@ def _any_index(rule: str) -> str:
     location, _, kind = rule.rpartition(":")
     parts = ["*" if part.isdigit() else part for part in location.split(".")]
     return f"{'.'.join(parts)}:{kind}"
+
+
+def tool_entry(turn: int, line: dict[str, Any]) -> dict[str, Any]:
+    """One logged tool call of a turn, content-free: the tool's name (a root tool's, else `other`, since the model
+    writes the name), the guards' verdict (`ledger.GuardVerdict`) and whether it came without arguments, read from the
+    arguments' hash. A plot button's turn should open with `plot_pipeline` and no arguments."""
+    from agents.anyplot.plugins.ledger import argument_hash, guard_verdict
+    from agents.anyplot.plugins.tool_safety import recorded_name
+
+    return {
+        "turn": turn,
+        "tool": recorded_name(str(line.get("tool"))),
+        "verdict": guard_verdict(line.get("verdict")),
+        "no_args": line.get("args") == argument_hash({}),
+    }
 
 
 def _attempt_entry(record: dict[str, Any], attempt: int) -> dict[str, Any]:
@@ -894,6 +912,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
                     **{kind: _int(line.get(kind)) for kind in ("prompt", "cached", "candidates", "thoughts")},
                 }
             )
+        elif hook == "tool":
+            record["tool_calls"].append(tool_entry(record["turns"], line))
         elif hook in ("data_judge", "notes_judge", "scope_guard"):
             judge_in, judge_out = _int(line.get("judge_input")), _int(line.get("judge_output"))
             if not judge_in and not judge_out:
@@ -1067,6 +1087,39 @@ def shipped_shows(sid: str, number: Any) -> dict[str, Any] | None:
     return shows.model_dump(mode="json") if shows is not None else None
 
 
+async def store_data_steps(runtime: "Runtime", user: str, sid: str, steps: Sequence[Sequence[dict[str, Any]]]) -> None:
+    """Each step's `prepare_data` operations applied to the session's current data and stored as its next version,
+    with the change lines the session block shows, as the tool stores one; no model call. A case's data steps in the
+    matrix (`EvalCase.before_operations`) and a prep case's earlier changes (`prep.PrepCase.before_operations`) both
+    come this way. Their lists passed the `Operation` models already, so a refusal here is a fixture bug and raises."""
+    from agents.anyplot.data.prepare import PrepareArgs, apply_and_parse
+    from agents.anyplot.dataset_versions import push_version
+    from agents.anyplot.services import get_services
+    from agents.anyplot.session_state import read_session
+
+    store = get_services().datasets
+    for operations in steps:
+        session = await runtime.session(user, sid)
+        view = read_session(session.state)
+        stored = store.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+        if view is None or stored is None:
+            raise RuntimeError("the case's session has no data to change")
+        args = PrepareArgs.model_validate({"operations": list(operations)})
+        prepared, parsed = apply_and_parse(stored.as_parsed(), args.operations, language=view.language)
+        version = push_version(
+            store,
+            sid,
+            view,
+            parsed,
+            view.snapshot,
+            converted=prepared.converted,
+            row_numbers=prepared.row_numbers,
+            splits=prepared.splits,
+            changes=prepared.changes,
+        )
+        await runtime.write_state(session, version.delta)
+
+
 def version_facts(sid: str, number: Any) -> dict[str, Any] | None:
     """What `follow_up_checks` reads of the shipped version `number`: its code, plot language, theme, drawn texts
     and missed requested texts, from the in-process services; None for a version it does not hold."""
@@ -1160,6 +1213,8 @@ class CaseRunner:
     renders_dir: Path
     recorder: AttemptRecorder | None = None
     theme: str | None = None
+    runtime: "Runtime | None" = None
+    """The app's runtime, whose sessions a case's data steps change (`before_operations`)."""
 
     async def run(self, case: "EvalCase", repeat: int) -> dict[str, Any]:
         """One case and repeat, from opening the session to deleting it; never raises for a broken case."""
@@ -1205,6 +1260,10 @@ class CaseRunner:
             return
         if not await self._dataset(record, case, sid, headers("d")):
             return
+        if case.before_operations:
+            if self.runtime is None:
+                raise RuntimeError("a case with data steps needs the app's runtime")
+            await store_data_steps(self.runtime, user, sid, case.before_operations)
         if not await self._bindings(record, case, sid, headers("b")):
             return
         if not await self._confirm(record, sid, headers("c")):
@@ -1554,7 +1613,9 @@ async def _run_matrix(
     try:
         transport = httpx.ASGITransport(app=timed)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
-            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder, config.theme)
+            runner = CaseRunner(
+                client, timed, collector, settings, config.out / "renders", recorder, config.theme, runtime
+            )
             for index, (case, repeat) in enumerate(plan, start=1):
                 if config.budget_usd is not None and runs and total + costliest > config.budget_usd:
                     stopped = "budget"

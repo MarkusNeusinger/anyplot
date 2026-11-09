@@ -53,8 +53,9 @@ Seven decisions I made and hold the agents to, each with its reason and the code
   first; a separate renderer then runs the code in Cloud Run sandboxes (gVisor) with no network egress, no
   metadata server, and a read-only root filesystem, under a service account that holds no IAM role.
   ([renderer](agents/renderer/main.py), [validator](agents/anyplot/code/validate.py))
-- **Models choose, the server acts.** The assistant never writes data rows: it picks from a closed set of
-  typed operations, which the server applies with pandas and reports with counts. Guardrail plugins check
+- **Models choose, the server acts.** The assistant never hands the server data rows: it picks from a closed
+  set of typed operations, which the server applies with pandas and reports with counts, and example data
+  comes from formulas or a sandboxed snippet whose written-out values the validator caps. Guardrail plugins check
   every turn: a scope judge that fails closed, token and run budgets per request, user, network, and day,
   and a tool allowlist per agent. ([operations](agents/anyplot/data/prepare.py),
   [plugins](agents/anyplot/plugins/))
@@ -229,6 +230,10 @@ The server speaks Streamable HTTP only. Clients with native support connect to `
 the `mcp-remote` bridge. The legacy SSE endpoint (`https://api.anyplot.ai/sse/`) has been removed. For details, see
 [MCP server](docs/reference/mcp.md).
 
+Each MCP request is counted as one content-free line: the tool's name and any catalogue id it looked up, never its
+other arguments or its results. The [stats page](https://anyplot.ai/stats) shows how many arrived in the last 28
+days, beside the verified crawler reads per day; see [Machine readers](docs/reference/machine-readers.md).
+
 ## Tech stack
 
 | Area | Stack |
@@ -323,7 +328,8 @@ The project is under the MIT License; see [LICENSE](LICENSE). The JetBrains Mono
 - **Website**: [anyplot.ai](https://anyplot.ai)
 - **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/anyplot/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/anyplot/discussions)
-- **Analytics**: [public Plausible dashboard](https://plausible.io/anyplot.ai)
+- **Analytics**: [public Plausible dashboard](https://plausible.io/anyplot.ai) for people; machine readers (verified
+  crawlers, AI assistants, MCP) on the [stats page](https://anyplot.ai/stats), counted from content-free request lines
 
 ---
 

@@ -2,116 +2,129 @@ library: bokeh
 language: python
 specification_id: maze-printable
 created: '2026-01-07T20:28:48Z'
-updated: '2026-05-16T15:08:03Z'
-generated_by: claude-haiku
-workflow_run: 25964729163
+updated: '2026-11-09T13:29:50Z'
+generated_by: claude-opus
+workflow_run: 42624915242
 issue: 3232
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/python/bokeh/plot-dark.html
-quality_score: 71
+quality_score: 85
 review:
   strengths:
-  - Clean, high-contrast maze design optimized for printing
-  - Proper DFS maze generation algorithm guaranteeing single solution
-  - Clear start (top-left) and goal (bottom-right) marker positioning
-  - Excellent canvas utilization with balanced proportions
-  - Consistent data colors between light and dark renders
+  - Depth-first carving from a seeded stack builds a spanning tree, so the 25x25 maze
+    has exactly one route from S to G; the outer boundary is open only at the top
+    of the start cell and the bottom of the goal cell
+  - 'Clear line-weight hierarchy: 16 px outer boundary over 9 px interior walls, both
+    drawn in the INK token so walls are near-black on #FAF8F1 in light and near-white
+    on #1A1A17 in dark'
+  - 'Start and goal are told apart by shape as well as color and letter: a brand-green
+    #009E73 circle with S and a second-Imprint #C475FD square with G, both ink-outlined
+    and readable in both themes'
+  - Vectorized wall drawing with a single p.segment call for all interior walls plus
+    one p.multi_line for the boundary; square line caps make the corners join cleanly
+  - All chrome removed (axes, grid, outline, toolbar) with a square figure and equal
+    x/y ranges, so every cell is square and a margin of empty page surrounds the maze
   weaknesses:
-  - 'Palette violation: start marker uses #306998 (Python Blue) instead of Okabe-Ito
-    #009E73 for first series'
-  - 'Missing theme implementation: code doesn''t read ANYPLOT_THEME or use theme tokens
-    (INK, INK_SOFT, PAGE_BG)'
-  - 'Wrong output format: saves as plot.png instead of plot-light.png/plot-dark.png'
-  - 'Title typo: pyplots.ai should be anyplot.ai'
-  - 'Export method: uses deprecated export_png() instead of Selenium with headless
-    Chrome as specified in bokeh.md'
+  - 'Suggestion: the bottom margin (min_border_bottom=20, about 85 px below the boundary)
+    is narrower than the side margins; a few more pixels below the maze would balance
+    the frame for printing.'
+  - 'Suggestion: feeding the wall segments through a ColumnDataSource would follow
+    the library prompt''s data pattern.'
   image_description: |-
     Light render (plot-light.png):
-      Background: White/very light - should be #FAF8F1 warm off-white (requirement not met)
-      Chrome: Title in dark text readable; "S" and "G" labels readable; all text visible
-      Data: Black maze walls on light passages - excellent contrast for printing; start marker (blue #306998), goal marker (yellow #FFD43B)
-      Legibility verdict: PASS - all text readable, but colors are hardcoded not theme-adaptive
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas, no pure white.
+      Chrome: centered bold title "maze-printable · python · bokeh · anyplot.ai" in near-black ink at about 57 % of the width; no axes, ticks, grid or legend (permitted by the spec).
+      Data: 25x25 maze, near-black interior walls (~9 px) along the cell edges inside a heavier ~16 px boundary, open at the top of the top-left cell and the bottom of the bottom-right cell. Start: #009E73 circle with dark "S" in the top-left cell; goal: #C475FD square with dark "G" in the bottom-right cell. Even margin of empty page around the maze; nothing touches the canvas edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Dark gray/charcoal - should be #1A1A17 warm near-black (approximately correct)
-      Chrome: Title appears lighter for readability; "S" and "G" labels readable against markers
-      Data: Marker colors identical to light render (#306998 blue, #FFD43B yellow) - CORRECT data color consistency, but WRONG colors (not Okabe-Ito #009E73 for first series)
-      Legibility verdict: PASS - all text readable, but colors should be theme-aware
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title in light ink #F0EFE8, clearly readable; no dark-on-dark text.
+      Data: identical maze, walls flip to light ink for strong contrast; marker fills #009E73 and #C475FD are identical to the light render, outlines flip to light ink, the dark "S" and "G" letters remain readable on their fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: Readable but color hardcoded not adaptive
+        comment: 50pt title and 30pt bold S/G letters readable in both themes and
+          at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No text collisions; markers sit inside their cells clear of the walls
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible
+        comment: 9 px interior walls and 16 px boundary clearly visible, not hairline;
+          markers prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Non-Okabe-Ito colors
+        passed: true
+        comment: Walls at maximum ink contrast; start/goal differ by shape and letter,
+          not only color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions and margins
+        comment: Square 2400x2400 canvas, square cells, margin around the maze, title
+          well proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title
+        comment: N/A for axes (construction, no data axes); title present
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Wrong palette colors; backgrounds and text not theme-adaptive
+        passed: true
+        comment: 'Start #009E73, goal #C475FD (Imprint 1 and 2); backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 6
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic defaults
+        passed: true
+        comment: Deliberate line-weight hierarchy (16 px boundary vs 9 px walls) and
+          ink-outlined markers beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Minimal customization
+        passed: true
+        comment: Square line caps for clean joints, equal ranges keep cells square,
+          chrome fully removed
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: No visual hierarchy
+        passed: true
+        comment: Start and goal made the focal points by distinct shape (circle vs
+          square) as well as color and letter
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -119,25 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct maze puzzle
+        comment: Rectangular printable maze with straight walls along cell edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Start/goal markers present
+        comment: 'DFS single-solution maze, S and G marked, consistent wall thickness,
+          heavier boundary, margins, black-on-white light theme, passages wide enough
+          for a pen: all characteristic bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct layout
+        comment: Walls sit exactly on cell edges; openings at entrance and exit
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title typo: pyplots.ai should be anyplot.ai'
+        passed: true
+        comment: Title matches the mandated format; no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -147,21 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All maze features shown
+        comment: Full 25x25 maze with dead ends, long corridors, entrance and exit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Educational/recreational context
+        comment: Printable puzzle sheet, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25x25 grid appropriate
+        comment: 25x25 within the recommended 15-40 and matching the spec example;
+          checked that the boundary openings align with the S and G cells
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,31 +185,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Compact DFS carve and wall extraction; no available call replaces
+          it
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Wrong output format (plot.png vs plot-light.png)
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via the Selenium pattern;
+          current Bokeh 3 API
     library_mastery:
       score: 4
       max: 10
@@ -203,21 +221,28 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct but doesn't follow bokeh.md guidance
+        comment: Vectorized p.segment / p.multi_line / p.scatter / p.text glyphs;
+          plain lists instead of ColumnDataSource
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        passed: false
-        comment: Generic usage
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T13:26:59Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - manual-ticks
+  - annotations
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting

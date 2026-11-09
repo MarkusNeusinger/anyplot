@@ -128,6 +128,10 @@ SELECT
   -- shipped, and found the memory full. NULL before that day.
   LAX_BOOL(payload.carried) AS carried,
   LAX_BOOL(payload.fresh) AS fresh,
+  -- The page's "plot the new data" (2026-11-08): `previous` when it started from the latest version, else why it
+  -- started from the catalogue plot (`other_paste`, `other_data`, `bindings_changed`, `kept_note`, `no_plot`). NULL
+  -- for every other run.
+  JSON_VALUE(payload.new_data) AS new_data,
   LAX_INT64(payload.memory_entries) AS memory_entries,
   LAX_INT64(payload.remembered) AS remembered,
   LAX_BOOL(payload.memory_full) AS memory_full,
@@ -164,3 +168,13 @@ SELECT
   ) AS keeps
 FROM `anyplot.agent_telemetry.events`
 WHERE event = 'outcome';
+
+-- One row per offer of a language the server found in a typed message or a paste (`via` = 'shown'), per offer the
+-- user took (`offer`) and per pick in the chat header (`header`), since 2026-11-08; `language` is a closed code.
+CREATE OR REPLACE VIEW `anyplot.agent_telemetry.language_offers` AS
+SELECT
+  ts, source, session, spec_id, library, turn, idempotency_key, revision,
+  JSON_VALUE(payload.via) AS via,
+  JSON_VALUE(payload.language) AS language
+FROM `anyplot.agent_telemetry.events`
+WHERE event = 'language_offer';

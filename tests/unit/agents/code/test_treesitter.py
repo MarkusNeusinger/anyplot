@@ -1,9 +1,13 @@
 """Tests for agents/anyplot/code/treesitter.py: the pinned grammar, syntax problems, positions and R helpers."""
 
 import ast
+import os
 import re
+import subprocess
+import sys
 import tomllib
 from importlib.metadata import version
+from pathlib import Path
 from typing import cast
 
 import pytest
@@ -26,20 +30,83 @@ from agents.anyplot.code.treesitter import (
 from .conftest import R_CATALOGUE_FILES, REPO_ROOT, merged_specs
 
 
-def test_versions_are_pinned_in_the_agents_extra_and_installed() -> None:
-    """tree-sitter-language-pack 1.x downloads grammars at run time; 0.13.0 bundles them (owner, 2026-10-29)."""
+def test_versions_are_pinned_exactly_in_the_agents_extra_and_installed() -> None:
+    """A pack release changes the grammars the validators read, so both packages move only with the lock."""
     project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     agents = project["project"]["optional-dependencies"]["agents"]
     assert f"tree-sitter=={treesitter.TREE_SITTER_VERSION}" in agents
-    assert f"tree-sitter-language-pack=={treesitter.LANGUAGE_PACK_VERSION}" in agents
     assert version("tree-sitter") == treesitter.TREE_SITTER_VERSION
-    assert version("tree-sitter-language-pack") == treesitter.LANGUAGE_PACK_VERSION
+    assert f"tree-sitter-language-pack=={version('tree-sitter-language-pack')}" in agents
 
 
-def test_every_image_with_the_agents_extra_keeps_exactly_the_profiles_grammars() -> None:
-    """The pack bundles about 170 grammars (184 MB); an image that installs the `agents` extra prunes all but the
-    grammars the code profiles load (`GRAMMARS`), owner decision of 2026-10-29. A new profile adds its grammar to
-    `GRAMMARS` and to the image's `TREE_SITTER_GRAMMARS` together, or this fails."""
+def test_the_service_reads_grammars_only_through_the_registry_that_never_downloads() -> None:
+    """The pack's `get_language`, `get_parser`, `download`, `init` and `prefetch` fetch a missing grammar; its
+    `LanguageRegistry` loads from the grammar directory alone, so no module under agents/ uses anything else."""
+    allowed = {"LanguageRegistry", "LanguageNotFoundError"}
+    used: dict[str, set[str]] = {}
+    for path in (REPO_ROOT / "agents").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        names = used.setdefault(str(path.relative_to(REPO_ROOT)), set())
+        aliases = {
+            alias.asname or alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Import)
+            for alias in node.names
+            if alias.name == "tree_sitter_language_pack"
+        }
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("tree_sitter_language_pack"):
+                names |= {alias.name for alias in node.names}
+            elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in aliases:
+                names.add(node.attr)
+
+    assert used["agents/anyplot/code/treesitter.py"] == allowed
+    assert {path: sorted(names - allowed) for path, names in used.items() if names - allowed} == {}
+
+
+def test_a_missing_grammar_stops_the_start_without_a_download(tmp_path: Path) -> None:
+    """An empty grammar directory fails `check_grammars` on its first grammar, offline: nothing reaches a cache."""
+    cache = tmp_path / "cache"
+    environment = {
+        **os.environ,
+        treesitter.GRAMMARS_DIR_ENV: str(tmp_path / "grammars"),
+        "TREE_SITTER_LANGUAGE_PACK_CACHE_DIR": str(cache),
+        "TREE_SITTER_LANGUAGE_PACK_MANIFEST_URL": f"file://{tmp_path}/no-manifest.json",
+        "XDG_CACHE_HOME": str(cache),
+    }
+    (tmp_path / "grammars").mkdir()
+    started = subprocess.run(
+        [sys.executable, "-c", "from agents.anyplot.code import treesitter; treesitter.check_grammars()"],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+
+    assert started.returncode != 0
+    assert "RuntimeError: tree-sitter grammar 'r' is not in" in started.stderr
+    assert not cache.exists()
+
+
+def test_the_service_start_checks_every_grammar(monkeypatch: pytest.MonkeyPatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from agents import main
+
+    def missing() -> None:
+        raise RuntimeError("tree-sitter grammar 'r' is not in /nowhere")
+
+    monkeypatch.setattr(treesitter, "check_grammars", missing)
+    with pytest.raises(RuntimeError, match="grammar 'r'"), TestClient(main.app):
+        pass
+
+
+def test_every_image_with_the_agents_extra_bakes_exactly_the_profiles_grammars_read_only() -> None:
+    """An image that installs the `agents` extra fetches the grammars the code profiles load (`GRAMMARS`) at build
+    time, out of the 23 MB bundle, and serves them from a root-owned directory, with the pack's manifest URL on a
+    file that does not exist. A new profile adds its grammar to `GRAMMARS` and to `TREE_SITTER_GRAMMARS` together,
+    or this fails."""
     patterns = ("Dockerfile", "*/Dockerfile", "*/*/Dockerfile", "*/*.Dockerfile", "*/*/*.Dockerfile")
     dockerfiles = sorted(
         {
@@ -53,9 +120,15 @@ def test_every_image_with_the_agents_extra_keeps_exactly_the_profiles_grammars()
 
     assert REPO_ROOT / "agents" / "Dockerfile" in with_agents
     for path in with_agents:
-        match = re.search(r'^ARG TREE_SITTER_GRAMMARS="([^"]*)"$', path.read_text(encoding="utf-8"), re.MULTILINE)
-        assert match is not None, f"{path} installs the agents extra without pruning the grammars"
+        text = path.read_text(encoding="utf-8")
+        match = re.search(r'^ARG TREE_SITTER_GRAMMARS="([^"]*)"$', text, re.MULTILINE)
+        assert match is not None, f"{path} installs the agents extra without fetching the grammars"
         assert sorted(match.group(1).split()) == sorted(treesitter.GRAMMARS), path
+        assert 'pack.download(sys.argv[1:])" $TREE_SITTER_GRAMMARS' in text, path
+        copy = re.search(r"^COPY --from=builder /app/tree-sitter-grammars (\S+)$", text, re.MULTILINE)
+        assert copy is not None, f"{path} must copy the grammars without --chown, so they stay root's"
+        assert f"ENV {treesitter.GRAMMARS_DIR_ENV}=/app/{copy.group(1).removeprefix('./')}\n" in text, path
+        assert re.search(r"^ENV TREE_SITTER_LANGUAGE_PACK_MANIFEST_URL=file:///nonexistent/", text, re.MULTILINE)
 
 
 def test_only_the_served_grammars_load() -> None:
@@ -240,6 +313,9 @@ def test_module_imports_only_the_standard_library_and_tree_sitter() -> None:
         "math",
         "collections",
         "dataclasses",
+        "importlib",
+        "os",
+        "pathlib",
         "typing",
         "tree_sitter",
         "tree_sitter_language_pack",

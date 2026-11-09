@@ -253,7 +253,7 @@ class TestQuery:
     def test_prunes_to_the_window_before_it_deduplicates(self) -> None:
         sql = usage_sql(DATASET)
         assert sql.index("timestamp >= @since") < sql.index("QUALIFY ROW_NUMBER()")
-        assert "CURRENT_TIMESTAMP" not in sql  # the text stays byte-identical, so the result cache can answer
+        assert "CURRENT_TIMESTAMP" not in sql  # the window comes from `@since`, so the process cache keys hold
         assert "'live'" in sql and "LIMIT 5" in sql
 
     def test_a_save_is_no_keep_and_a_rejection_or_a_later_run_undoes_one(self) -> None:

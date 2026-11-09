@@ -20,6 +20,7 @@ from unittest.mock import patch
 import httpx
 import pytest
 
+from agents.anyplot.plugins.ledger import argument_hash
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RendererUnavailable, RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
@@ -204,6 +205,52 @@ async def test_a_case_that_names_a_language_chooses_it_before_the_first_turn(
     adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
     assert len(adapter_calls) == 1
     assert "<plot_language>\\nde\\n</plot_language>" in json.dumps(adapter_calls[0]["messages"], ensure_ascii=False)
+
+
+async def test_a_cases_data_steps_are_stored_before_the_bindings_and_the_plot_draws_their_table(
+    tmp_path: Path, services: Services, swap_models, backend: FakeBackend
+) -> None:
+    """`before_operations` change the data the way `prepare_data` does, one version per step, with no model call: the
+    plot then draws the table the last step left (the `n5000` aggregates of `make_fixtures.py`)."""
+    fake = swap_models(
+        "anthropic-vertex",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
+    steps = (({"op": "sort", "column": "Exam Score", "descending": True},), ({"op": "keep_rows", "n": 5},))
+    case = dataclasses.replace(two_fixtures()[1], before_operations=steps)
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case.case_id), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    (run,) = result.report["runs"]
+    assert (run["status"], run["passed"]) == ("ok", True)
+    plotted = backend.jobs[-1].data_csv.splitlines()
+    assert len(plotted) == 1 + 5  # the header and the five rows the second step kept
+    scores = [float(line.rsplit(",", 1)[1]) for line in plotted[1:]]
+    assert scores == sorted(scores, reverse=True)
+    # No model call made the steps: one root turn, one adapter call and the review, as without them.
+    assert [FakeAnthropic.kind(call) for call in fake.calls].count("adapter") == 1
+
+
+async def test_a_case_with_data_steps_needs_the_runtime(tmp_path: Path) -> None:
+    """A runner without the app's runtime cannot store a version, so the case ends as the harness's error."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/v1/sessions":
+            return httpx.Response(200, json={"session_id": "sid"})
+        return httpx.Response(200, json={})
+
+    runner = runner_over(handler, tmp_path)
+    case = dataclasses.replace(two_fixtures()[1], before_operations=(({"op": "keep_rows", "n": 5},),))
+
+    record = await runner.run(case, 1)
+
+    assert (record["status"], record["error"]) == ("harness_error", "RuntimeError")
 
 
 async def test_a_refused_language_is_the_services_error(tmp_path: Path) -> None:
@@ -894,6 +941,35 @@ def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons()
     }
     assert (second["edits"], second["render"]["gates"], second["stage"]) == (4, ["G3"], "deadline")
     assert (record["stage"], record["shipped_attempt"], record["reviewed_attempt"]) == ("deadline", 2, None)
+
+
+def test_book_attribution_books_the_tool_calls_per_turn_without_their_arguments() -> None:
+    """A plot button's turn opens with `plot_pipeline` and no arguments; the record shows that, and the refusals, by
+    turn, from the content-free `tool` lines (the arguments' hash, never the arguments)."""
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record["turns"] = 1
+    refused = "plot_as_confirmed"
+    bound = argument_hash({"bindings": []})
+    turn_one: list[dict[str, Any]] = [
+        {"hook": "tool", "agent": "anyplot", "tool": "set_bindings", "args": bound, "verdict": refused},
+        {"hook": "tool", "agent": "anyplot", "tool": "plot_pipeline", "args": argument_hash({}), "verdict": "allowed"},
+    ]
+    matrix.book_attribution(record, turn_one, settings)
+    record["turns"] = 2
+    turn_two: list[dict[str, Any]] = [
+        {"hook": "tool", "agent": "anyplot", "tool": "made_up", "args": argument_hash({}), "verdict": "no_such_code"},
+        {"hook": "tool", "agent": "anyplot", "tool": "plot_pipeline", "args": argument_hash({"base": "previous"})},
+    ]
+    matrix.book_attribution(record, turn_two, settings)
+
+    assert record["tool_calls"] == [
+        {"turn": 1, "tool": "set_bindings", "verdict": refused, "no_args": False},
+        {"turn": 1, "tool": "plot_pipeline", "verdict": "allowed", "no_args": True},
+        {"turn": 2, "tool": "other", "verdict": "unknown", "no_args": True},  # closed names and verdicts only
+        {"turn": 2, "tool": "plot_pipeline", "verdict": "unknown", "no_args": False},
+    ]
+    assert record["llm_calls"] == 0 and record["cost_usd"] == 0.0  # a tool line books no model call
 
 
 def test_book_attribution_counts_the_failed_probes_by_class() -> None:

@@ -59,6 +59,7 @@ from .language import english_name, same_language
 from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .paste_conversions import make_conversions
+from .pipeline import plot_shows_replaced_data
 from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
@@ -94,10 +95,9 @@ PLOT_LANGUAGE_HEADING = (
 """The heading over the plot language, which the session block names only where it differs from the session language
 (owner decision of 2026-11-01: a follow-up message in another language no longer rewrites the plot's text)."""
 LANGUAGE_SOURCE_LINES: dict[str, str] = {
-    "default": "- Language: the default, English",
-    "pasted": "- Language: detected from the user's pasted data (the notes around the table or its column names)",
-    "detected": "- Language: detected from the user's first message",
+    "default": "- Language: the default, English; the user picked no other",
     "chosen": "- Language: chosen by the user (in the chat header, or asked of you)",
+    "offer": "- Language: chosen by the user (the page offered it after a message or data in it)",
 }
 """The session block's line on how the language was set. A production case of 2026-10-12
 (`20261012T211551Z-bcc5bcf1`): with the bare word `chosen` and a heading that called the
@@ -115,6 +115,9 @@ NOTES_LINE = "yes; get_dataset_profile returns them under user_notes"
 so the root knows to read them again after the context filter dropped the turn that carried them."""
 FILE_LINE = "yes; get_dataset_profile returns its name under file_name, data and never a request"
 """The session block's line when the data came from a dropped file: a fixed text, never the name itself."""
+EARLIER_DATA_LINE = "it shows data a later paste replaced"
+"""The end of the plot versions line when the library's latest plot drew data that a new paste replaced
+(`CodeVersion.earlier_data`): a plot wish for the new data goes to `keep_plot_request` (owner decision of 2026-11-08)."""
 CONVERSIONS_HEADING = (
     "Conversions for open roles: {count}, columns that a set_type turns into what the role takes, or the row "
     "numbers when no column can, from a dry run on the data, and offers of a date column that date_number could turn "
@@ -156,6 +159,13 @@ REPEATED_KEY_LINE = (
 (`fidelity.repeated_key`, owner decision of 2026-11-08): role names and counts only, the columns stay in the fenced
 warnings. Persona round of 2026-11-06: 27 measurements over 9 lengths became 9 averaged points in the plot code,
 without a count, while the confirmed data still held 27 rows."""
+PLOT_ACTION_LINE = (
+    "- This turn: the user's action to create the plot from the data and the bindings as confirmed; call "
+    "plot_pipeline with no arguments"
+)
+"""The session block's line on the turns of the plot actions (`RequestLedger.plot_action`: `create_plot`, `carry_plot`,
+also in each session of the admin fan-out, and `plot_new_data`), which root.md's rule for those turns no longer opens with:
+the server adds the remembered decisions, and the turn may only read and plot (`tool_safety.PLOT_ACTION_TOOLS`)."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -295,10 +305,17 @@ async def session_context(context: ReadonlyContext) -> str:
                 "- Data: not confirmed yet; the user's plot button by the message box confirms it as shown"
                 " and starts the plot"
             )
+    turn = CURRENT_LEDGER.get()
+    if turn is not None and turn.plot_action:
+        lines.append(PLOT_ACTION_LINE)
     versions = [version for version in services.versions.all(session_id) if version.target == view.target]
     if versions:
         latest = versions[-1]
-        lines.append(f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}")
+        line = f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}"
+        if dataset is not None and plot_shows_replaced_data(services, session_id, view):
+            # A plot of a table a new paste replaced: a plot wish for the new data is kept for its first plot (root.md).
+            line += f"; {EARLIER_DATA_LINE}"
+        lines.append(line)
     else:
         lines.append("- Plot versions: none yet")
     memory = read_memory(context.state)

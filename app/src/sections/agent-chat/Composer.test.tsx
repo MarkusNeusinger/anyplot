@@ -1,11 +1,11 @@
 import { createRef } from 'react';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
 import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
-import { fireEvent, render, screen, userEvent } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt, userEvent } from 'src/test-utils';
 
 /** The composer's props with data in step 1, its plot button active, unless a case says otherwise. */
 function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
@@ -32,7 +32,6 @@ function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
     plot: { kind: 'create', active: true, confirming: false, fresh: false },
     example: { active: false },
     confirmError: null,
-    pausedUntil: null,
     onExampleData: vi.fn(),
     onPlot: vi.fn(),
     ...overrides,
@@ -54,43 +53,6 @@ const attachment: Attachment = {
   error: null,
   readingLine: null,
 };
-
-/**
- * The declarations the page's style sheets give an element at a viewport width, in cascade order:
- * jsdom's `getComputedStyle` skips every `@media` block, and the sx breakpoints (`xs` too) all
- * compile into one, so the test applies their width conditions itself. The screen has a fine
- * pointer: a block on any other feature (`pointer: coarse`) never applies. Rules for a state the
- * element is not in (`:hover`, `::placeholder`) do not match it.
- */
-function styleAt(element: Element, width: number): Record<string, string> {
-  const fits = (media: string) =>
-    (media.match(/\([^)]*\)/g) ?? []).every(condition => {
-      const bound = /^\((min|max)-width:\s*([\d.]+)px\)$/.exec(condition);
-      if (!bound) return false;
-      return bound[1] === 'min' ? width >= Number(bound[2]) : width <= Number(bound[2]);
-    });
-  const matches = (selector: string) => {
-    try {
-      return element.matches(selector);
-    } catch {
-      return false;
-    }
-  };
-  const declared: Record<string, string> = {};
-  const apply = (rules: CSSRuleList) => {
-    for (const rule of Array.from(rules)) {
-      if (rule instanceof CSSMediaRule) {
-        if (fits(rule.media.mediaText)) apply(rule.cssRules);
-      } else if (rule instanceof CSSStyleRule && matches(rule.selectorText)) {
-        for (const name of Array.from(rule.style)) {
-          declared[name] = rule.style.getPropertyValue(name);
-        }
-      }
-    }
-  };
-  for (const sheet of Array.from(document.styleSheets)) apply(sheet.cssRules);
-  return declared;
-}
 
 const exampleButton = () => screen.getByRole('button', { name: 'Make example data' });
 // The accessible names hold the visible words ("open", "example data") without the punctuation a
@@ -221,6 +183,21 @@ describe('Composer row', () => {
     expect(document.getElementById(help)).toHaveTextContent(
       'new from the catalogue plot; keeps your remembered decisions'
     );
+
+    // `plot the new data` may change the latest plot instead: its description says when.
+    rerender(
+      <Composer
+        {...composerProps({
+          hasPlot: true,
+          plot: { kind: 'new_data', active: true, confirming: false, fresh: true },
+        })}
+      />
+    );
+    const newData = screen.getByRole('button', { name: 'Plot the new data' });
+    const [, newDataHelp] = newData.getAttribute('aria-describedby')!.split(' ');
+    expect(document.getElementById(newDataHelp)).toHaveTextContent(
+      'your latest plot with the new data when it comes from the same paste with the same bindings, else new from the catalogue plot; keeps your remembered decisions'
+    );
   });
 
   it('never acts on an inert button, which keeps the keyboard focus', async () => {
@@ -314,6 +291,59 @@ describe('Composer row', () => {
   });
 });
 
+describe('Composer placeholder on a phone', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reads short where a browser cuts it without an ellipsis, and long on a wider screen', () => {
+    const placeholders = () => {
+      const states: Partial<ComposerProps>[] = [
+        { hasData: false },
+        {},
+        { step2: true },
+        { hasPlot: true },
+        { step2: true, hasPlot: true },
+        { attachment },
+      ];
+      return states.map(state => {
+        const { unmount } = render(<Composer {...composerProps(state)} />);
+        const text = screen.getByRole('textbox', { name: 'Message' }).getAttribute('placeholder');
+        unmount();
+        return text;
+      });
+    };
+    expect(placeholders()).toEqual([
+      'paste a table or drop a file',
+      'ask about your data, or say what the first plot should do',
+      'optional: what the first plot should do differently',
+      'ask about your data, or say what the next plot should do',
+      'ask for a change, e.g. log scale on y',
+      'add a note for this table, or press Enter',
+    ]);
+    // Below 600 px (owner, 2026-11-08): before the first plot, and once there is one.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: query === '(max-width: 599.95px)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        onchange: null,
+        dispatchEvent: vi.fn(),
+      }))
+    );
+    expect(placeholders()).toEqual([
+      'paste a table or drop a file',
+      'ask or say what to plot',
+      'ask or say what to plot',
+      'ask for a change',
+      'ask for a change',
+      'add a note for this table, or press Enter',
+    ]);
+  });
+});
+
 // The row's phone form starts below the theme's `sm` (600 px), the page's phone width
 // (`PHONE_QUERY` in styles.ts): 390 is the phone the owner checks, 599 and 600 the two sides of it.
 describe('Composer row by width', () => {
@@ -332,11 +362,11 @@ describe('Composer row by width', () => {
     for (const width of [600, 1440]) {
       expect(styleAt(field, width).flex).toBe('1 1 240px');
       expect(styleAt(plot, width).flex).toBe('0 0 auto'); // `none`, as the parser spells it
-      expect(styleAt(plot, width)['margin-left']).toBe('auto');
+      expect(styleAt(plot, width).marginLeft).toBe('auto');
       expect(styleAt(prompt, width).display).toBe('block');
     }
     // One size at every width: alone on its line, the plot button needs no smaller text.
-    expect(styleAt(plot, 390)['font-size']).toBe(styleAt(plot, 1440)['font-size']);
+    expect(styleAt(plot, 390).fontSize).toBe(styleAt(plot, 1440).fontSize);
     // The `↵` stays a touch screen's (`pointer: coarse`): hidden on this fine pointer at any width.
     expect(styleAt(screen.getByTestId('send-return'), 390).display).toBe('none');
   });

@@ -94,7 +94,9 @@ To check against **real** data, don't reach for the DB from a script
   at collection without `google-adk`. Sync once with what CI and the
   gates use: `uv sync --extra test --extra dev --extra typecheck --extra agents`
   (CI's "Run Tests" syncs `--extra test --extra agents`); mypy always
-  needs `--extra typecheck`.
+  needs `--extra typecheck`. The tree-sitter tests also need the grammars,
+  fetched once per pack version into the user cache:
+  `uv run python -m tools.tree_sitter_grammars`.
 - **The system `python3` is 3.12; the project and CI run 3.14**
   (`requires-python = ">=3.14"`). A repo script with 3.14 syntax, such
   as a PEP 758 `except A, B:` without parentheses, stops with

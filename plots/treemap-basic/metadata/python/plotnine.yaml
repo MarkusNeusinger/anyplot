@@ -2,120 +2,130 @@ library: plotnine
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:50:34Z'
-updated: '2026-05-05T22:53:16Z'
-generated_by: claude-haiku
-workflow_run: 25406195588
+updated: '2026-11-09T15:43:34Z'
+generated_by: claude-opus
+workflow_run: 42645426061
 issue: 766
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Correct treemap implementation with squarified layout algorithm proportioning
-    rectangles to values
-  - Readable in both light and dark themes with clear visual hierarchy
-  - Realistic, neutral budget allocation data with excellent hierarchical representation
-  - Clean, balanced layout with generous whitespace and no overlapping elements
-  - Rectangle size and color both aid understanding of budget distribution across
-    departments
+  - 'Squarified two-level layout: each department is one compact block tiled with
+    its cost centers, areas proportional to budget and no thin slivers (C1, C2)'
+  - 'Hierarchy shown through nesting depth: thick page-colored seams (size 2.2) between
+    department blocks, thin seams (0.5) between cost centers, readable in both themes'
+  - 'Label ink chosen per fill from WCAG relative luminance: dark text on green, cyan,
+    amber and purple, white on blue and red, so every label reads against its rectangle'
+  - 'Department order follows the data, so Engineering takes #009E73 and the remaining
+    departments follow the Imprint order; the legend uses guide_legend(override_aes)
+    to give the swatches page-colored edges matching the tiles'
+  - 'Grammar-of-graphics layering: two geom_rect layers with their own data frames
+    plus geom_text with scale_color_identity, on theme_void with coord_fixed and zero
+    expansion'
   weaknesses:
-  - 'Palette does not follow Okabe-Ito spec: uses custom colors (Python Blue, Yellow,
-    Teal, etc.) instead of starting with #009E73 (hard rule violation)'
-  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
-  - 'Text color hardcoded to black instead of theme-adaptive: does not read ANYPLOT_THEME
-    environment variable or use INK/INK_SOFT tokens'
-  - 'Output filename ''plot.png'' does not match API specification: should save to
-    f''plot-{THEME}.png'' and read environment variable'
+  - 'CQ-01 (code): a `def squarify(...)` helper function breaks the Imports → Data
+    → Plot → Save structure the rubric asks for → inline the layout as one loop over
+    a work list of (values, box) tiling jobs (the department level, then each department''s
+    cost centers). Likely cause: lines 70–100 define the squarified layout as a function
+    called once per level.'
+  - 'Suggestion: the legend text at 8 pt is the smallest text on the canvas; 9 pt
+    would match the legend title more closely.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified in style guide
-      Chrome: Title in dark text ("Budget Allocation by Department · treemap-basic · plotnine · pyplots.ai") centered at top; Department legend on right with clear labels; all text readable against light background
-      Data: Six department categories color-coded (Engineering=Python Blue, Marketing=Yellow, Sales=Teal, Operations=Coral, HR=Light Green, Finance=Plum); rectangle areas proportional to budget values ($80K-$450K); white borders separate rectangles; subcategory labels and dollar amounts displayed in dark text centered in each rectangle
-      Legibility verdict: PASS - All text is readable, though some text on darker rectangle backgrounds (dark green for Engineering, coral for Operations) has reduced contrast but remains legible at full resolution
+      Background: warm off-white #FAF8F1, legend on an elevated #FFFDF6 box with a thin INK_SOFT frame.
+      Chrome: bold centered title "treemap-basic · python · plotnine · anyplot.ai" in dark ink (~53% of width); legend title "Department" and entries Engineering, Marketing, Sales, Operations, HR, Finance clearly readable. No axes or grid.
+      Data: 12 cost-center rectangles in 6 department blocks tiling a 175×100 area: Engineering (#009E73: R&D $450K, Infrastructure $280K, QA $120K) on the left, Sales (#4467A3: Direct, Channel, Support) in the middle, HR (#AE3030 Recruiting), Operations (#BD8233 Facilities, Logistics), Finance (#2ABCCD Accounting) and Marketing (#C475FD Digital, Events) on the right. Thick page-colored gaps separate departments, thin ones separate cost centers. Every rectangle carries a bold two-line label (name + $value) — dark on light fills, white on blue/red.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified in style guide
-      Chrome: Title in light text (appears white), readable against dark background; Department legend on right with light text; all chrome elements clearly visible
-      Data: Rectangle fills are identical to light render (same category colors); white borders provide contrast; labels display in white/light text, readable against both dark background and colored rectangles
-      Legibility verdict: PASS - No dark-on-dark failures; all text is clearly distinguishable. Data colors identical to light render; only chrome (background, text, legend frame) adapts to dark theme as intended
+      Background: warm near-black #1A1A17, legend on #242420 with a light frame.
+      Chrome: title in light ink #F0EFE8, legend title light, entries in INK_SOFT — all readable, no dark-on-dark text.
+      Data: identical fills and layout to the light render; seams flip to the dark page color and still separate blocks and cells clearly. In-tile labels keep the same luminance-based ink, all readable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both renders; code hardcodes black instead of using theme-adaptive
-          tokens
+        comment: Explicit sizes; bold tile labels, title and legend readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; labels well-positioned in rectangle centers
+        comment: Every label sits inside its own rectangle; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles and labels visible; white borders provide clear separation
+        comment: All rectangles and seams visible; legend swatches match tile fills
+          in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors are distinct and CVD-safe but don't use Okabe-Ito palette
+        passed: true
+        comment: Luminance-based label ink gives strong contrast on every fill; categories
+          also labeled by name
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent 16:9 proportions with balanced margins and whitespace
+        comment: 3200x1800, treemap fills the panel with a balanced right legend;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
+        passed: true
+        comment: No axes by design (layout-positioned); legend title 'Department'
+          and labels with $K units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses custom palette instead of Okabe-Ito; first category should
-          be #009E73 not Python Blue'
+        passed: true
+        comment: 'Imprint in canonical order, first department #009E73, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Custom palette chosen but violates hard palette rules; default raised
-          minimally
+        passed: true
+        comment: 'Raised: per-fill label ink from WCAG luminance and bold two-line
+          name/value labels'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: White borders add definition; theme_void() is clean; generous whitespace
+        comment: 'Raised: zero-expand coord_fixed tiling, legend swatch edges matched
+          to the tile seams'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear hierarchy through rectangle size; color aids department identification
+        comment: 'Default: data displayed, no hierarchy chosen beyond the Notes'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,27 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap with squarified layout
+        comment: Basic nested treemap, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: categories, subcategories, values, colors,
-          labels, borders'
+        comment: Distinct department colors, labels on larger rectangles, subtle borders,
+          nesting depth via seam widths; all C bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value-to-area mapping correct; all data visible
+        comment: Areas proportional to budget; layout-positioned type
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct; title format correct except typo (pyplots.ai not
-          anyplot.ai)
+        passed: true
+        comment: Mandated title; legend 'Department' with readable entries in data
+          order
     data_quality:
       score: 15
       max: 15
@@ -153,54 +163,54 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full hierarchical structure with color coding, proportional sizing,
-          and labeled values
+        comment: Two levels, multi- and single-child departments, wide value range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation is realistic and neutral domain
+        comment: Company budget by department and cost center, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget ranges ($80K-$450K) plausible for company allocation
+        comment: Budgets $80K–$450K, total $2.3M; no Check values in Notes
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary abstractions; inline algorithm is necessary
+        passed: false
+        comment: def squarify helper function (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data and deterministic algorithm
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no clutter
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Squarified layout written out because squarify is not available for
+          plotnine; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'; doesn't read ANYPLOT_THEME
+        passed: true
+        comment: Saves plot-{THEME}.png at 3200x1800, current API
     library_mastery:
       score: 6
       max: 10
@@ -210,22 +220,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ggplot/aes/geoms idiomatically; missing theme-adaptive chrome
-          pattern
+        comment: 'Raised: layered geoms with per-layer data, theme_void, coord_fixed,
+          zero-expand scales'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: geom_rect for custom shapes is appropriate but techniques are standard
+        passed: true
+        comment: 'Raised: scale_color_identity for computed label ink, guide_legend(override_aes)'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T15:40:43Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   patterns:
-  - data-generation
-  - matrix-construction
+  - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

@@ -257,32 +257,233 @@ function isColumn(sample: string[]): boolean {
   return values.length >= 3 && values.every(row => isValue(row));
 }
 
+// --- Rule 12: a web table copied one cell per line (`agents/anyplot/data/layouts.py`) --------
+
+/** The fewest rows rules 12 and 13 read (`layouts.MIN_ROWS`). */
+const LAYOUT_MIN_ROWS = 2;
+/** The fewest blocks of a one-cell-per-line copy without a header line (`layouts.MIN_HEADERLESS_ROWS`). */
+const MIN_HEADERLESS_ROWS = 3;
+/** The most cells per row of a one-cell-per-line copy (`layouts.MAX_BLOCK`). */
+const MAX_BLOCK = 12;
+/** Two numbers joined by a hyphen or a dash, `60–97` (`layouts.RANGE`). */
+const RANGE = /^[+\-−]?\d[\d.,']*\s*[-–—]\s*[+\-−]?\d[\d.,']*$/;
+/** The parser's missing-value tokens (`layouts.MISSING_TOKENS`, `parse.MISSING_VALUES`). */
+const MISSING_TOKENS = new Set([
+  '-',
+  'NA',
+  'N/A',
+  'n/a',
+  'NaN',
+  'nan',
+  '-NaN',
+  '-nan',
+  'null',
+  'NULL',
+  'None',
+  '<NA>',
+  '#N/A',
+  '#N/A N/A',
+  '#NA',
+  '1.#IND',
+  '-1.#IND',
+  '1.#QNAN',
+  '-1.#QNAN',
+]);
+
+type CellKind = 'value' | 'range' | 'missing' | 'text';
+
+function cellKind(cell: string): CellKind {
+  const text = cell.trim();
+  if (MISSING_TOKENS.has(text)) return 'missing';
+  if (isValue(text)) return 'value';
+  return RANGE.test(text) ? 'range' : 'text';
+}
+
+/** A cell fills a place of the pattern by its kind, or as a missing token where a value goes. */
+function fits(kind: CellKind, expected: CellKind): boolean {
+  if (kind === expected) return true;
+  return kind !== 'text' && expected !== 'text' && (kind === 'missing' || expected === 'missing');
+}
+
+/** The rows of `size` cells from `start` that repeat one pattern, and the pattern (`layouts._run`). */
+function cellRun(kinds: CellKind[], start: number, size: number): [number, string] | null {
+  if (start >= kinds.length || kinds.slice(0, start).some(kind => kind !== 'text')) return null;
+  const pattern = kinds.slice(start, start + size);
+  if (pattern.length < size || pattern[0] !== 'text') return null;
+  if (!pattern.some(kind => kind === 'value' || kind === 'range')) return null;
+  let count = 0;
+  for (;;) {
+    const block = kinds.slice(start + count * size, start + (count + 1) * size);
+    if (block.length !== size || !block.every((kind, index) => fits(kind, pattern[index]))) break;
+    count += 1;
+  }
+  const rest = kinds.slice(start + count * size);
+  const least = start ? LAYOUT_MIN_ROWS : MIN_HEADERLESS_ROWS;
+  if (count < least || rest.length > size || rest.some(kind => kind !== 'text')) return null;
+  return [count, pattern.join(' ')];
+}
+
+/** Whether one pattern is the other repeated: the same reading (`layouts._repeats`). */
+function repeats(pattern: string, other: string): boolean {
+  const [short, long] = [pattern.split(' '), other.split(' ')].sort((a, b) => a.length - b.length);
+  if (long.length % short.length !== 0) return false;
+  return Array.from({ length: long.length / short.length }, () => short)
+    .flat()
+    .every((kind, index) => kind === long[index]);
+}
+
+/**
+ * Rule 12: a table a browser copied one cell per line, often with blank lines between them
+ * (`layouts.cell_lines_table`): blocks of 2 to 12 cells repeat one pattern of kinds (a value, a
+ * range such as `60–97`, a missing token in a value's place, text), each block starts with a text
+ * cell and holds a value or a range, at least two blocks under a header line and three without
+ * one; header lines above them and up to one block of text lines below them (the labels repeated
+ * at the table's foot). Two patterns that explain the same cells are ambiguous.
+ */
+function isCellLinesTable(text: string): boolean {
+  const cells = text
+    .split(/\r\n|\r|\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+  if (cells.length < 2 * LAYOUT_MIN_ROWS) return false;
+  const kinds = cells.map(cellKind);
+  const found: [number, number, string][] = [];
+  for (let size = 2; size <= MAX_BLOCK; size += 1) {
+    for (const start of new Set([0, 1, size - 1, size, size + 1])) {
+      const run = cellRun(kinds, start, size);
+      if (run) found.push([size, run[0], run[1]]);
+    }
+  }
+  if (found.length === 0) return false;
+  const most = Math.max(...found.map(([size, count]) => size * count));
+  const best = found.filter(([size, count]) => size * count === most);
+  const [, , pattern] = best.reduce((a, b) => (b[0] < a[0] ? b : a));
+  return best.every(([, , other]) => repeats(pattern, other));
+}
+
+// --- Rule 13: a list of label/value pairs (`layouts.pair_list_table`) ---------------------
+
+/** The most words of a `label value` pair's label (`layouts.MAX_LABEL_WORDS`). */
+const MAX_LABEL_WORDS = 3;
+const MAX_LABEL_CHARS = 40;
+const COLON_PAIR = /^([^:=;,\t]{1,40}?)\s*:(\s*)(\S.*)$/;
+const EQUALS_PAIR = /^([^:=;,\t]{1,40}?)\s*=\s*(\S.*)$/;
+const SPACE_PAIR = /^([^:=;,\t]*\S)\s+(\S+)$/;
+
+function isNumber(cell: string): boolean {
+  return /\d/.test(cell) && NUMBER.test(cell);
+}
+
+/** The form of one piece of a pair list, or null when it is no label with a number (`layouts._pair`). */
+function pairForm(piece: string): 'colon' | 'equals' | 'space' | null {
+  let match = COLON_PAIR.exec(piece);
+  if (match) {
+    const label = match[1].trim();
+    // `16:9`, `at 10:30`: a ratio or a clock time, never a label and its value (`Q1:5` is one).
+    const last = label.split(/\s+/).pop() ?? '';
+    if (label && isNumber(last) && !match[2]) return null;
+    return label && isNumber(match[3].trim()) ? 'colon' : null;
+  }
+  match = EQUALS_PAIR.exec(piece);
+  if (match) return match[1].trim() && isNumber(match[2].trim()) ? 'equals' : null;
+  match = SPACE_PAIR.exec(piece);
+  if (!match) return null;
+  const label = match[1].trim();
+  if (!/\p{L}/u.test(label) || label.split(/\s+/).length > MAX_LABEL_WORDS) return null;
+  if (label.length > MAX_LABEL_CHARS) return null;
+  return isNumber(match[2].trim()) ? 'space' : null;
+}
+
+/** A list's first line that names its two columns, `Monat Umsatz` (`layouts._pair_header`). */
+function pairHeader(line: string): boolean {
+  return line.split(/\s+/).length === 2 && !/[\d:=]/.test(line);
+}
+
+/**
+ * Rule 13: label/value pairs inline or one per line (`a:7,b:12,c:5`, `a=7; b=12`, `Apples 7,
+ * Pears 12`): split at `;` and line breaks first, then at `,` too, so a decimal comma survives
+ * another separator; every piece a pair of one form with a number as its value, at least two.
+ * A `label value` label holds a letter and at most three words, and a `label:value` label that
+ * ends in a number needs a space after the colon, so `16:9` and `at 10:30` are never pairs,
+ * while `Q1:5` and `2024: 7` are.
+ */
+function isPairList(text: string): boolean {
+  const stripped = text.trim();
+  for (const split of [/[;\n]/, /[,;\n]/]) {
+    let pieces = stripped
+      .split(split)
+      .map(piece => piece.trim())
+      .filter(Boolean);
+    if (stripped.includes('\n') && pieces.length > LAYOUT_MIN_ROWS && pairHeader(pieces[0])) {
+      pieces = pieces.slice(1);
+    }
+    if (pieces.length < LAYOUT_MIN_ROWS) continue;
+    // Every piece a pair of one form; the first piece that is not ends the look.
+    const form = pairForm(pieces[0]);
+    if (form && pieces.every(piece => pairForm(piece) === form)) return true;
+  }
+  return false;
+}
+
+// --- Rule 14: short text that looks like data, for the server's transcriber ---------------
+
+/** The fewest values of rule 14, and their least share of the words. */
+const MIN_LOOSE_VALUES = 3;
+const LOOSE_VALUE_SHARE = 0.5;
+/**
+ * Words of a plot wish or an instruction (English and German): a text with one of them is what
+ * the user meant to say, however many numbers it holds (`y from 0 to 100`).
+ */
+const WISH_WORDS =
+  /(?:^|[^\p{L}])(?:please|bitte|make|set|use|change|plot|show|draw|add|remove|colou?r|title|axis|axes|legend|log|scale|from|to|between|mach|mache|setze|zeig|zeige|zeichne|füge|ändere|achse|titel|von|bis)(?=$|[^\p{L}])/iu;
+const URL = /\bhttps?:\/\/|\bwww\./i;
+
+/**
+ * Rule 14: text the chat takes (at most `MAX_MESSAGE_CHARS`) that no rule above reads but that is
+ * mostly values: at least three, at least half its words, no question, no plot wish, no URL. The
+ * server's code reads it when it can, else its transcriber offers a table for `.use()` or
+ * `.discard()` (owner rule of 2026-11-09). Longer text goes only by a format rule.
+ */
+function looksLikeData(text: string): boolean {
+  if (text.length > MAX_MESSAGE_CHARS || URL.test(text) || /\?\s*$/m.test(text)) return false;
+  if (WISH_WORDS.test(text)) return false;
+  const words = text.split(/[\s,;]+/).filter(Boolean);
+  const values = words.filter(isValue).length;
+  return values >= MIN_LOOSE_VALUES && values >= LOOSE_VALUE_SHARE * words.length;
+}
+
 /**
  * The route of pasted text: `data` for a table or a file's text, `message` for text the user
  * meant as a message, `null` for nothing to route. The numbered rules follow the plan's routing
- * spec; `routeInput.cases.json` names the rule each case meets.
+ * spec; `routeInput.cases.json` names the rule each case meets. Text longer than the chat takes
+ * (rule 2) is data only by a format rule (3, 6 to 10, 12, 13), never by rule 14, so long prose
+ * stays in the box over the cap and never reaches a model as data (owner rule of 2026-11-09).
  */
 export function routeInput(text: string): InputRoute | null {
   // 1. Nothing but space.
   if (!text.trim()) return null;
-  // 2. Longer than the chat takes: no message, whatever it holds. Code over it gets its own
-  //    refusal from the dataset route, which asks to shorten it.
-  if (text.length > MAX_MESSAGE_CHARS) return 'data';
   const rows = logicalRows(text);
   // 3. JSON: one value with records, or one object per line.
   if (isJson(text, rows)) return 'data';
-  // 4. One line is a message: a formula, a request, a question.
-  if (rows.length < 2) return 'message';
-  // 5. Code stays a message, which the chat runs.
+  // 5. Code stays a message, which the chat runs; also over the cap, where the box says to shorten it.
   if (looksLikeCode(text)) return 'message';
-  const sample = rows.slice(0, SAMPLE_ROWS);
-  // 6. Signals a typed message never has: tabs on two rows, a Markdown separator row.
-  if (sample.filter(row => row.includes('\t')).length >= 2) return 'data';
-  if (sample.some(row => MARKDOWN_SEPARATOR.test(row))) return 'data';
-  // 7. to 10. A delimited, aligned, space-separated numeric or one-column table.
-  if (isDelimited(sample) || isAligned(sample) || isSpaceNumeric(sample) || isColumn(sample)) {
-    return 'data';
+  // 13. Label/value pairs, inline or one per line.
+  if (isPairList(text)) return 'data';
+  // 4. One line is a message (a formula, a request, a question), unless it is mostly values (14).
+  if (rows.length >= 2) {
+    const sample = rows.slice(0, SAMPLE_ROWS);
+    // 6. Signals a typed message never has: tabs on two rows, a Markdown separator row.
+    if (sample.filter(row => row.includes('\t')).length >= 2) return 'data';
+    if (sample.some(row => MARKDOWN_SEPARATOR.test(row))) return 'data';
+    // 7. to 10. A delimited, aligned, space-separated numeric or one-column table.
+    if (isDelimited(sample) || isAligned(sample) || isSpaceNumeric(sample) || isColumn(sample)) {
+      return 'data';
+    }
+    // 12. A web table copied one cell per line.
+    if (isCellLinesTable(text)) return 'data';
   }
+  // 14. Short text that is mostly values: the server reads it, or its transcriber offers a table.
+  if (looksLikeData(text)) return 'data';
   // 11. Anything else is what the user meant to say.
   return 'message';
 }

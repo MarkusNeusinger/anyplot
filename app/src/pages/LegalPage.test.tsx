@@ -79,6 +79,7 @@ describe('LegalPage', () => {
         'cleared by the next feedback after ten minutes; its salt dies with the server instance',
       ],
       ['assistant telemetry', 'up to 180 days'],
+      ['machine readers', 'up to 180 days'],
       ['feedback case files', '180 days'],
       ['feedback entries, case rows', 'until you ask to delete them'],
     ];
@@ -89,10 +90,10 @@ describe('LegalPage', () => {
     }
     // The label is the row's header, so a screen reader announces it before the figure.
     expect(screen.getByRole('rowheader', { name: 'feedback IP hash' })).toBeInTheDocument();
-    // Google Cloud, its logs included, runs in the EU region.
+    // Google Cloud, its logs and BigQuery included, runs in the EU region.
     expect(
       screen.getByText(
-        /Google Cloud \(Run, SQL, Storage, Logging\) in the Netherlands \(europe-west4\)/
+        /Google Cloud \(Run, SQL, Storage, Logging, BigQuery\) in the Netherlands \(europe-west4\)/
       )
     ).toBeInTheDocument();
     // The page states the current state only: no notes on what older entries still carry.
@@ -131,6 +132,13 @@ describe('LegalPage', () => {
     expect(screen.getByText(/with no cookie/)).toBeInTheDocument();
     expect(screen.getByText(/as its own controller, to improve the check/)).toBeInTheDocument();
     expect(screen.getByText(/and Cloudflare Turnstile.s own\s+item/)).toBeInTheDocument();
+    // The machine-read line, with the two things it never holds, under the anchor that
+    // /legal#machine-readers lands on. Every request is a line, verified or not, so the row
+    // claims no "verified only".
+    const machineReaders = document.getElementById('machine-readers');
+    expect(machineReaders).toHaveTextContent(/one content-free\s+line/);
+    expect(machineReaders).toHaveTextContent(/whether Cloudflare verified it/);
+    expect(machineReaders).toHaveTextContent(/no IP address, no user-agent/);
   });
 
   // The data assistant's section, each claim pinned with the qualifier that

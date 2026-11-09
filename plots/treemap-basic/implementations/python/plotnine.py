@@ -1,175 +1,193 @@
 """ anyplot.ai
 treemap-basic: Basic Treemap
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-05
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
 
+import os
+
 import pandas as pd
-from plotnine import aes, element_text, geom_rect, geom_text, ggplot, labs, scale_fill_manual, theme, theme_void
+from plotnine import (
+    aes,
+    coord_fixed,
+    element_blank,
+    element_rect,
+    element_text,
+    geom_rect,
+    geom_text,
+    ggplot,
+    guide_legend,
+    guides,
+    labs,
+    scale_color_identity,
+    scale_fill_manual,
+    scale_x_continuous,
+    scale_y_continuous,
+    theme,
+    theme_void,
+)
 
 
-# Data - Budget allocation by department
-data = {
-    "category": [
-        "Engineering",
-        "Engineering",
-        "Engineering",
-        "Marketing",
-        "Marketing",
-        "Sales",
-        "Sales",
-        "Sales",
-        "Operations",
-        "Operations",
-        "HR",
-        "Finance",
-    ],
-    "subcategory": [
-        "R&D",
-        "Infrastructure",
-        "QA",
-        "Digital",
-        "Events",
-        "Direct",
-        "Channel",
-        "Support",
-        "Logistics",
-        "Facilities",
-        "Recruiting",
-        "Accounting",
-    ],
-    "value": [450, 280, 120, 200, 80, 350, 180, 90, 150, 100, 130, 170],
-}
-df = pd.DataFrame(data)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Sort by value descending for better treemap layout
-df = df.sort_values("value", ascending=False).reset_index(drop=True)
+# Imprint palette: all eight positions, one per main category in data order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Squarified treemap layout algorithm (inline)
-values = df["value"].tolist()
-x, y, width, height = 0, 0, 100, 56.25  # 16:9 aspect ratio
-total = sum(values)
-rects = []
-remaining = list(enumerate(values))
-curr_x, curr_y = x, y
-curr_w, curr_h = width, height
+# Constants
+LAYOUT_W, LAYOUT_H = 175.0, 100.0  # treemap tiling area in layout units (fixed aspect, not data)
+MIN_LABEL_SHARE = 0.025  # rectangles below this share of the total stay unlabeled
+OTHER = "Other"  # catch-all block once the main categories outnumber the palette
+OTHER_FILL = "#6B6A63"  # Imprint muted anchor (other / rest), a fill shared by both themes
 
-while remaining:
-    # Decide layout direction (horizontal or vertical)
-    horizontal = curr_w >= curr_h
-    remaining_total = sum(v for _, v in remaining)
-    area_scale = (curr_w * curr_h) / remaining_total if remaining_total > 0 else 0
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: category
+COST_CENTER = "Cost center"  # role: subcategory
+BUDGET = "Budget (thousand USD)"  # role: value
 
-    best_row = []
-    best_ratio = float("inf")
+# Data: replace this block with your own table, for example df = pd.read_csv("budget.csv")
+df = pd.DataFrame(
+    {
+        DEPARTMENT: ["Engineering"] * 3 + ["Marketing"] * 2 + ["Sales"] * 3 + ["Operations"] * 2 + ["HR", "Finance"],
+        COST_CENTER: [
+            "R&D",
+            "Infrastructure",
+            "QA",
+            "Digital",
+            "Events",
+            "Direct",
+            "Channel",
+            "Support",
+            "Logistics",
+            "Facilities",
+            "Recruiting",
+            "Accounting",
+        ],
+        BUDGET: [450, 280, 120, 200, 80, 350, 180, 90, 150, 100, 130, 170],
+    }
+)
 
-    for i in range(1, len(remaining) + 1):
-        row = remaining[:i]
-        row_sum = sum(v for _, v in row)
-        row_area = row_sum * area_scale
 
-        if horizontal:
-            row_width = row_area / curr_h if curr_h > 0 else 0
-            ratios = []
-            for _, v in row:
-                rect_h = (v * area_scale / row_width) if row_width > 0 else 0
-                if rect_h > 0 and row_width > 0:
-                    ratio = max(row_width / rect_h, rect_h / row_width)
-                    ratios.append(ratio)
-        else:
-            row_height = row_area / curr_w if curr_w > 0 else 0
-            ratios = []
-            for _, v in row:
-                rect_w = (v * area_scale / row_height) if row_height > 0 else 0
-                if rect_w > 0 and row_height > 0:
-                    ratio = max(rect_w / row_height, row_height / rect_w)
-                    ratios.append(ratio)
-
-        if ratios:
-            max_ratio = max(ratios)
-            if max_ratio <= best_ratio:
-                best_ratio = max_ratio
-                best_row = row
-            else:
+# Plot: reads only df and the constants above
+def squarify(values, x, y, w, h):
+    """Squarified treemap layout: tile (x, y, w, h) with rectangles whose areas follow values (sorted descending)."""
+    rects = []
+    values = list(values)
+    scale = w * h / sum(values)
+    areas = [v * scale for v in values]
+    while areas:
+        side = min(w, h)
+        row, worst = [], float("inf")
+        for a in areas:
+            candidate = row + [a]
+            s = sum(candidate)
+            ratio = max(max(side * side * c / (s * s), s * s / (side * side * c)) for c in candidate)
+            if ratio > worst:
                 break
+            row, worst = candidate, ratio
+        thickness = sum(row) / side
+        offset = 0.0
+        for a in row:
+            length = a / thickness
+            if w >= h:
+                rects.append((x, y + offset, thickness, length))
+            else:
+                rects.append((x + offset, y, length, thickness))
+            offset += length
+        if w >= h:
+            x, w = x + thickness, w - thickness
+        else:
+            y, h = y + thickness, h - thickness
+        areas = areas[len(row) :]
+    return rects
 
-    if not best_row:
-        best_row = remaining[:1]
 
-    # Place the best row
-    row_sum = sum(v for _, v in best_row)
-    row_area = row_sum * area_scale
+leaves = df.dropna(subset=[DEPARTMENT, BUDGET]).loc[lambda d: d[BUDGET] > 0].copy()
+leaves[DEPARTMENT] = leaves[DEPARTMENT].astype(str)
+departments = leaves[DEPARTMENT].unique().tolist()
 
-    if horizontal:
-        row_width = row_area / curr_h if curr_h > 0 else 0
-        rect_y = curr_y
-        for idx, v in best_row:
-            rect_h = (v * area_scale / row_width) if row_width > 0 else 0
-            rects.append({"idx": idx, "x": curr_x, "y": rect_y, "dx": row_width, "dy": rect_h})
-            rect_y += rect_h
-        curr_x += row_width
-        curr_w -= row_width
-    else:
-        row_height = row_area / curr_w if curr_w > 0 else 0
-        rect_x = curr_x
-        for idx, v in best_row:
-            rect_w = (v * area_scale / row_height) if row_height > 0 else 0
-            rects.append({"idx": idx, "x": rect_x, "y": curr_y, "dx": rect_w, "dy": row_height})
-            rect_x += rect_w
-        curr_y += row_height
-        curr_h -= row_height
+# More departments than palette hues: the smallest fold into one muted "Other" block
+if len(departments) > len(IMPRINT_PALETTE):
+    sizes = leaves.groupby(DEPARTMENT, sort=False)[BUDGET].sum()
+    kept = set(sizes.nlargest(len(IMPRINT_PALETTE) - 1).index)
+    leaves[DEPARTMENT] = leaves[DEPARTMENT].where(leaves[DEPARTMENT].isin(kept), OTHER)
+    departments = [d for d in departments if d in kept] + [OTHER]
 
-    remaining = remaining[len(best_row) :]
+fill_of = {dept: OTHER_FILL if dept == OTHER else IMPRINT_PALETTE[i] for i, dept in enumerate(departments)}
+totals = leaves.groupby(DEPARTMENT, sort=False)[BUDGET].sum().sort_values(ascending=False)
 
-# Sort by original index
-rects.sort(key=lambda r: r["idx"])
-rects = [{"x": r["x"], "y": r["y"], "dx": r["dx"], "dy": r["dy"]} for r in rects]
+# Level 1: one block per department; level 2: its cost centers tiled inside that block
+blocks, cells = [], []
+for dept, (bx, by, bw, bh) in zip(totals.index, squarify(totals.values, 0, 0, LAYOUT_W, LAYOUT_H), strict=True):
+    blocks.append({DEPARTMENT: dept, "xmin": bx, "xmax": bx + bw, "ymin": by, "ymax": by + bh})
+    members = leaves[leaves[DEPARTMENT] == dept].sort_values(BUDGET, ascending=False)
+    for (_, row), (cx, cy, cw, ch) in zip(
+        members.iterrows(), squarify(members[BUDGET].values, bx, by, bw, bh), strict=True
+    ):
+        cells.append({**row.to_dict(), "xmin": cx, "xmax": cx + cw, "ymin": cy, "ymax": cy + ch})
 
-# Add rectangle coordinates to dataframe
-df["x"] = [r["x"] for r in rects]
-df["y"] = [r["y"] for r in rects]
-df["dx"] = [r["dx"] for r in rects]
-df["dy"] = [r["dy"] for r in rects]
+blocks = pd.DataFrame(blocks)
+cells = pd.DataFrame(cells)
+cells["xc"] = (cells["xmin"] + cells["xmax"]) / 2
+cells["yc"] = (cells["ymin"] + cells["ymax"]) / 2
 
-# Calculate rectangle bounds for geom_rect
-df["xmin"] = df["x"]
-df["xmax"] = df["x"] + df["dx"]
-df["ymin"] = df["y"]
-df["ymax"] = df["y"] + df["dy"]
 
-# Calculate center for labels
-df["xcenter"] = df["x"] + df["dx"] / 2
-df["ycenter"] = df["y"] + df["dy"] / 2
-
-# Create combined label with value
-df["label"] = df["subcategory"] + "\n$" + df["value"].astype(str) + "K"
-
-# Color palette for categories (Python Blue and Yellow first, then colorblind-safe)
-category_colors = {
-    "Engineering": "#306998",  # Python Blue
-    "Marketing": "#FFD43B",  # Python Yellow
-    "Sales": "#4ECDC4",  # Teal
-    "Operations": "#FF6B6B",  # Coral
-    "HR": "#95E1A3",  # Light green
-    "Finance": "#DDA0DD",  # Plum
+# Label ink per fill: dark text on light fills, white on dark ones (WCAG relative luminance)
+luminance_of = {
+    fill: sum(
+        k * (c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+        for k, c in zip((0.2126, 0.7152, 0.0722), (int(fill[i : i + 2], 16) / 255 for i in (1, 3, 5)), strict=True)
+    )
+    for fill in fill_of.values()
 }
+ink_of = {dept: "#1A1A17" if luminance_of[fill] > 0.25 else "#FFFFFF" for dept, fill in fill_of.items()}
+cells["ink"] = cells[DEPARTMENT].map(ink_of)
+cells["label"] = cells[COST_CENTER].astype(str) + "\n$" + cells[BUDGET].map("{:,.0f}".format) + "K"
+labeled = cells[cells[BUDGET] >= MIN_LABEL_SHARE * cells[BUDGET].sum()]
 
-# Create plot
+title = "treemap-basic · python · plotnine · anyplot.ai"
+title_size = round(12 * (67 / len(title) if len(title) > 67 else 1.0))
+
 plot = (
-    ggplot(df)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="category"), color="white", size=2)
-    + geom_text(aes(x="xcenter", y="ycenter", label="label"), size=12, color="black", fontweight="bold")
-    + scale_fill_manual(values=category_colors)
-    + labs(title="Budget Allocation by Department · treemap-basic · plotnine · pyplots.ai", fill="Department")
+    ggplot()
+    # Cost-center rectangles with thin page-colored seams
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill=DEPARTMENT), data=cells, color=PAGE_BG, size=0.5
+    )
+    # Department blocks drawn on top as thicker outlines: the hierarchy boundary
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), data=blocks, fill=None, color=PAGE_BG, size=2.2
+    )
+    + geom_text(
+        aes(x="xc", y="yc", label="label", color="ink"), data=labeled, size=6.5, fontweight="bold", lineheight=1.15
+    )
+    + scale_fill_manual(values=fill_of, limits=departments)
+    + scale_color_identity()
+    + scale_x_continuous(expand=(0, 0))
+    + scale_y_continuous(expand=(0, 0))
+    + coord_fixed(ratio=1)
+    + guides(fill=guide_legend(override_aes={"color": PAGE_BG}))
+    + labs(title=title, fill=DEPARTMENT)
     + theme_void()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", margin={"b": 20}),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=title_size, color=INK, weight="bold", ha="center", margin={"b": 8}),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        legend_key=element_blank(),
         legend_position="right",
+        legend_margin=6,
+        legend_key_spacing_y=3,
+        plot_margin=0.03,
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

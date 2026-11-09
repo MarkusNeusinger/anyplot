@@ -259,6 +259,38 @@ class TestAdminLaneFlow:
         assert not any(OTHER in line or HEADERS["X-Anyplot-User"] in line or "adm_" in line for line in raw)
 
 
+class TestTurnRecord:
+    async def test_the_same_turns_give_the_same_records_in_both_tiers(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        """Both lanes store their cases through one route, and the record has no tier branch: only a verdict that
+        is a limit could differ, and these turns meet none."""
+        root = [{"call": "get_dataset_profile", "args": {}}, {"text": "Two columns."}]
+        swap_models(
+            "gemini",
+            {
+                "root": [*root, {"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}] * 2,
+                "adapter": [{"json": SCATTER_PLAN}] * 2,
+                "reviewer": [{"json": VERDICT_OK}] * 2,
+            },
+        )
+        records = []
+        for user, headers in ((HEADERS["X-Anyplot-User"], ADMIN_HEADERS), (OTHER, headers_for(OTHER))):
+            sid = await open_session(client, user=user)
+            for body in ({"text": "Which columns?"}, {"action": "create_plot"}):
+                response = await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body)
+                assert response.status_code == 200, response.text
+            bundle = await client.get(f"/v1/sessions/{sid}/bundle?version=0", headers=headers)
+            records.append(bundle.json()["turns"])
+
+        admin, public = records
+        assert admin == public and len(admin["records"]) == 2
+        assert [call["tool"] for record in admin["records"] for call in record["tools"]] == [
+            "get_dataset_profile",
+            "plot_pipeline",
+        ]
+
+
 class TestLimitTelemetry:
     """Whether anyone waits long or comes close to a limit, without saying who (owner, 2026-11-01)."""
 

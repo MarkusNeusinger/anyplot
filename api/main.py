@@ -23,7 +23,7 @@ from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
-from api.analytics import classify_asset, track_asset_fetch, track_bot_fetch  # noqa: E402
+from api import machine_reads  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -220,7 +220,7 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # `@app.middleware` both wrap what is already there — so reading this file from
 # here down gives the order a request actually travels, in reverse:
 #
-#   security headers → cache headers → CORS → origin gate → bot counter → gzip → router
+#   security headers → cache headers → CORS → origin gate → machine reads → gzip → router
 #
 # (`HeadAsGetMiddleware`, `MCPTrailingSlashMiddleware` and
 # `ForwardedProtoMiddleware` wrap the whole app further out still; all three
@@ -230,11 +230,10 @@ app.add_exception_handler(Exception, generic_exception_handler)
 #
 # * The origin gate directly inside CORS, so a 403 from it still carries the
 #   headers a browser needs to read it as a 403 rather than as an opaque
-#   network error — and OUTSIDE the bot counter, so a refused request can never
-#   fire an outbound Plausible event. That second one is why the counter moved
-#   in here from outside CORS: `track_asset_fetch` fires per request for
-#   anything with a crawler user agent, so a caller on the direct `run.app` URL
-#   could otherwise turn each of its own refusals into one.
+#   network error — and OUTSIDE the machine-read writer, so a refused request
+#   can never write a line. A caller on the direct `run.app` URL with a crawler
+#   user agent would otherwise turn each of its own refusals into a counted
+#   read.
 # * The cache-header middleware stays OUTSIDE CORS, because its `setdefault`
 #   for the /og/ cards is what keeps CORSMiddleware's own header when the
 #   request came from an allowlisted origin — it has to run after CORS on the
@@ -247,35 +246,32 @@ app.add_exception_handler(Exception, generic_exception_handler)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
-# Record which AI or search agent requested which catalogue page.
+# Write one content-free line per request a crawler, an AI assistant or the
+# site's prerender hop makes (api/machine_reads.py, docs/reference/machine-readers.md).
 #
 # A middleware rather than a router dependency: a dependency runs BEFORE the
-# handler and cannot see the response, so every 404 was recorded as a
+# handler and cannot see the response, so every 404 would be recorded as a
 # successful read. The status matters — an assistant asking for a URL that no
-# longer exists is a signal worth keeping, it just is not a page view.
+# longer exists is a signal worth keeping, it just is not a page view. `/mcp/`
+# is skipped here and written per JSON-RPC request by the MCP server's own
+# middleware, so nothing is counted twice.
 @app.middleware("http")
-async def record_bot_fetch(request: Request, call_next):
-    """Report AI/search agent page requests and single-asset API reads to the bot site.
+async def record_machine_read(request: Request, call_next):
+    """Write the machine-read line of a request the API answered; a person's request writes nothing.
 
-    Requests, not reads: the status is recorded rather than filtered on, so a
-    404 is visible as a miss instead of counted as a page view. Page reads
-    (/seo-proxy) become `bot_fetch`; one implementation's code or one spec's
-    detail fetched through the API becomes `asset_fetch` — the list endpoints
-    and the machine files are not recorded.
+    Requests, not reads: the status is on the line rather than filtered on, so a
+    404 is visible as a miss instead of counted as a page view. Synchronous and
+    local: one `logger.info` to stdout, no task and no network call. A handler
+    that raises reaches the client as the registered handler's 500, built
+    outside this stack, so its line is written here as a 500 before the
+    exception travels on.
     """
-    response: Response = await call_next(request)
-    path = request.url.path
-    if path.startswith("/seo-proxy"):
-        # The public URL, never this router's internal prefix
-        track_bot_fetch(request, path.removeprefix("/seo-proxy") or "/", response.status_code)
-        return response
-    asset = classify_asset(path)
-    if asset is not None:
-        # `asset_type` is what was fetched (code · spec) — not the agent's
-        # `kind` (user_directed · index · …), which track_asset_fetch derives
-        # from the user agent itself.
-        asset_type, spec_id, library_id = asset
-        track_asset_fetch(request, asset=asset_type, spec=spec_id, library=library_id, status=response.status_code)
+    try:
+        response: Response = await call_next(request)
+    except Exception:
+        machine_reads.record(request, 500)
+        raise
+    machine_reads.record(request, response.status_code)
     return response
 
 

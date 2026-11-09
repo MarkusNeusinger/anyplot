@@ -182,9 +182,21 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "message": frozenset({"text"}),
     # `version` is the agents service's number of the stored version (ok and needs_attention only), and `memory`
     # (`{kept, added}`, plot memory entry ids) the decisions that version stands on, only with it;
-    # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid.
+    # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid; `new_data`
+    # where "plot the new data" started (`previous`, or a closed reason for the catalogue plot), only on its plot.
     "plot": frozenset(
-        {"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "memory", "rounds"}
+        {
+            "status",
+            "reason",
+            "attempts",
+            "artifacts",
+            "changes",
+            "residual_defects",
+            "version",
+            "memory",
+            "rounds",
+            "new_data",
+        }
     ),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
@@ -594,10 +606,12 @@ class SwitchLibraryBody(_StrictBody):
 
 
 class LanguageBody(_StrictBody):
-    # The chat header's language chip. The pattern runs on the value as sent, which is
+    # A pick of the session language: the chat header's chip (`via: header`, the default) or the button on the
+    # thread's line that offered a language (`via: offer`). The pattern runs on the value as sent, which is
     # forwarded untrimmed: a leading space is a 422 here as at the agents service, which
     # stores the normalised form and answers it.
     language: Annotated[str, Field(min_length=1, max_length=40, pattern=LANGUAGE_PATTERN)]
+    via: Literal["header", "offer"] = "header"
 
 
 class DatasetBody(_StrictBody):
@@ -635,9 +649,11 @@ class Binding(_StrictBody):
 class MessageBody(_StrictBody):
     text: Text | None = None
     # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
-    # switched to with the decisions made so far; `summarize_data` asks the assistant for the step-1 summary;
-    # `example_data` asks it for example data (`.example_data()`), which, unlike typed words, sets no session language.
-    action: Literal["create_plot", "carry_plot", "summarize_data", "example_data"] | None = None
+    # switched to with the decisions made so far; `plot_new_data` is "plot the new data" after a data change, from the
+    # latest plot when the agents service's guard allows it; `summarize_data` asks the assistant for the step-1
+    # summary; `example_data` asks it for example data (`.example_data()`), which, unlike typed words, sets no session
+    # language.
+    action: Literal["create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"] | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:
@@ -1389,8 +1405,8 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     text to read): `{preview, profile, bindings, warnings, context_lines, roles, language, file_name?, tables?,
     table?}`, stored (`tables`: one label per table when the text held two or more, `table` the one read;
     (`context_lines`: the notes pasted above or below the table that the assistant reads with the data;
-    `language`: the session language as `{language, source}`, source `pasted` when the notes' or the column
-    names' language set it before any typed message or choice); or, for free text the
+    `language`: the session language as `{language, source}`, with `offer: {language, basis}` when the notes or
+    the column names are in another language, which the page offers once); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
     model's reading that the page shows for confirmation and nothing stored. 413 above 1 MB of UTF-8;
     `422 formula` for text that asks for a formula, which the assistant computes in the chat instead,
@@ -1450,15 +1466,18 @@ async def put_bindings(
 
 @router.put("/sessions/{sid}/language")
 async def put_language(sid: SessionId, body: LanguageBody, ctx: Ctx, client: Client) -> Any:
-    """Set the session language for the replies and the plot text (the chat header's chip).
+    """Set the session language for the replies and the plot text (the chat header's chip, or an offer's button).
 
     The agents service answers `{language, source}`: the stored form (`English` comes back
-    as `en`, `Klingon` as typed) and the source `chosen`, which detection never overrides, plus, when the
-    session has data, `suggestion`: the `.to_long()` offer (or null) with its new column names in that language.
-    `409 run_active` while a turn or a render is in flight, `422 invalid` for a value the
-    agents service refuses.
+    as `en`, `Klingon` as typed) and the source, `chosen` from the chip, which ends every offer, or `offer`
+    from an offer's button, plus, when the session has data, `suggestion`: the `.to_long()` offer (or null)
+    with its new column names in that language. `409 run_active` while a turn or a render is in flight,
+    `422 invalid` for a value the agents service refuses.
     """
-    return await _call_upstream(client, ctx, "PUT", f"/sessions/{sid}/language", json_body={"language": body.language})
+    # `via` travels only for an offer: an agents service from before the field refuses an unknown key, and the chip,
+    # the default, must keep working whichever service deploys first.
+    payload = {"language": body.language, **({"via": body.via} if body.via != "header" else {})}
+    return await _call_upstream(client, ctx, "PUT", f"/sessions/{sid}/language", json_body=payload)
 
 
 @router.post("/sessions/{sid}/dataset/confirm")

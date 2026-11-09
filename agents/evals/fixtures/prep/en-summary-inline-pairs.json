@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Apples 7, Pears 12, Plums 5, Cherries 9",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "pie-basic",
+  "tags": ["summary", "no_tool", "layout"]
+}

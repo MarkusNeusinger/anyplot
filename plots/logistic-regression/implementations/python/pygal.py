@@ -1,150 +1,147 @@
 """ anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-18
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
 
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
+import statsmodels.api as sm
 from pygal.style import Style
+from scipy.special import expit
 
 
-# Theme-adaptive colors
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: fit and band take position 1, the classes follow in order
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Data - Medical diagnosis based on biomarker level
+# Constants
+THRESHOLD = 0.5  # default decision threshold of a binary classifier
+JITTER = 0.025  # half-width of the vertical jitter around 0 and 1
+
+# Columns: set these to your table's column names
+BIOMARKER = "Biomarker Level"  # role: x
+DISEASE = "Disease (0 = negative, 1 = positive)"  # role: y
+PROBABILITY = "Probability of Disease"  # role: probability
+CI_LOWER = "95% CI lower"  # role: ci_lower
+CI_UPPER = "95% CI upper"  # role: ci_upper
+
+# Data: medical diagnosis by biomarker level; replace with your own table, e.g. df = pd.read_csv("model.csv")
 np.random.seed(42)
 n_samples = 150
-
-# Generate biomarker levels (0-100 scale)
-biomarker_levels = np.concatenate(
-    [
-        np.random.normal(30, 15, n_samples // 2),  # Lower levels (mostly negative)
-        np.random.normal(70, 15, n_samples // 2),  # Higher levels (mostly positive)
-    ]
-)
+biomarker_levels = np.concatenate([np.random.normal(30, 15, n_samples // 2), np.random.normal(70, 15, n_samples // 2)])
 biomarker_levels = np.clip(biomarker_levels, 0, 100)
-
-# Generate binary outcomes with logistic probability
 true_probs = 1 / (1 + np.exp(-0.08 * (biomarker_levels - 50)))
-y = (np.random.random(n_samples) < true_probs).astype(int)
+outcome = (np.random.random(n_samples) < true_probs).astype(int)
 
-# Fit logistic regression using gradient descent
-X = (biomarker_levels - biomarker_levels.mean()) / biomarker_levels.std()
-b0, b1 = 0.0, 0.0
-learning_rate = 0.1
-for _ in range(1000):
-    z = b0 + b1 * X
-    p = 1 / (1 + np.exp(-np.clip(z, -500, 500)))
-    grad_b0 = np.mean(p - y)
-    grad_b1 = np.mean((p - y) * X)
-    b0 -= learning_rate * grad_b0
-    b1 -= learning_rate * grad_b1
+# Logistic regression; the 95% CI comes from the coefficient covariance on the logit scale
+design = sm.add_constant(biomarker_levels)
+model = sm.Logit(outcome, design).fit(disp=0)
+logit = design @ model.params
+logit_se = np.sqrt(np.einsum("ij,jk,ik->i", design, model.cov_params(), design))
+df = pd.DataFrame(
+    {
+        BIOMARKER: biomarker_levels,
+        DISEASE: outcome,
+        PROBABILITY: expit(logit),
+        CI_LOWER: expit(logit - 1.96 * logit_se),
+        CI_UPPER: expit(logit + 1.96 * logit_se),
+    }
+)
 
-# Generate smooth curve for predictions
-x_curve = np.linspace(0, 100, 100)
-x_curve_norm = (x_curve - biomarker_levels.mean()) / biomarker_levels.std()
-y_proba = 1 / (1 + np.exp(-np.clip(b0 + b1 * x_curve_norm, -500, 500)))
+# Plot: pygal takes plain (x, y) lists, built from df
+curve = df.dropna(subset=[BIOMARKER, PROBABILITY]).sort_values(BIOMARKER)
+band = curve.dropna(subset=[CI_LOWER, CI_UPPER])
+band_pts = list(zip(band[BIOMARKER], band[CI_UPPER], strict=True)) + list(
+    zip(band[BIOMARKER][::-1], band[CI_LOWER][::-1], strict=True)
+)
+x_min, x_max = curve[BIOMARKER].min(), curve[BIOMARKER].max()
+x_pad = (x_max - x_min) * 0.04
 
-# Confidence interval (approximate using binomial SE)
-se = np.sqrt(y_proba * (1 - y_proba) / n_samples) * 1.5
-ci_lower = np.clip(y_proba - 1.96 * se, 0, 1)
-ci_upper = np.clip(y_proba + 1.96 * se, 0, 1)
+obs_all = df.dropna(subset=[BIOMARKER, DISEASE])
+outcome_row = obs_all[DISEASE].astype(float).round().clip(0, 1)  # the outcome is binary: one row per class
+classes = sorted(outcome_row.unique())
+rng = np.random.default_rng(7)
 
-# Jitter y values for visibility
-y_jittered = y + np.random.uniform(-0.025, 0.025, n_samples)
+# Series colors in add order: band, fit, threshold, then one palette position per class
+series_colors = (IMPRINT_PALETTE[0], IMPRINT_PALETTE[0], INK_MUTED) + tuple(
+    IMPRINT_PALETTE[1 + i] for i in range(len(classes))
+)
 
-# Custom style for large canvas with theme-adaptive colors
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    colors=series_colors,
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+    opacity=0.6,
+    opacity_hover=0.9,
+    stroke_opacity=1,
+    stroke_opacity_hover=1,
 )
 
-# Create XY chart
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="logistic-regression · pygal · pyplots.ai",
-    x_title="Biomarker Level",
-    y_title="Probability of Disease",
-    show_dots=True,
-    stroke=True,
+    title="logistic-regression · python · pygal · anyplot.ai",
+    x_title=BIOMARKER,
+    y_title=PROBABILITY,
     show_x_guides=True,
     show_y_guides=True,
-    dots_size=8,
-    stroke_style={"width": 4},
     range=(0, 1.05),
-    xrange=(-5, 105),
+    xrange=(x_min - x_pad, x_max + x_pad),
     explicit_size=True,
     legend_at_bottom=True,
-    legend_box_size=28,
+    legend_box_size=36,
     truncate_legend=-1,
     print_values=False,
+    # Per-series widths go in CSS because the style's .reactive rule outranks stroke_style;
+    # the band is one closed polygon with a light fill so points and grid show through
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        "inline:.serie-0 .reactive{fill-opacity:0.18 !important;stroke-width:1.5 !important}"
+        " .serie-1 .reactive{stroke-width:7 !important} .serie-2 .reactive{stroke-width:3.5 !important}",
+        # graph.css pins .dot to full opacity; class dots get 0.6 so piled-up stretches read darker
+        "inline:" + ", ".join(f".serie-{3 + i} .dot" for i in range(len(classes))) + "{fill-opacity:0.6 !important}",
+    ],
 )
 
-# Add logistic regression curve (main feature) - Okabe-Ito position 1 (green)
-curve_points = [(float(x_curve[i]), float(y_proba[i])) for i in range(len(x_curve))]
-chart.add("Logistic Fit", curve_points, stroke_style={"width": 5}, dots_size=0, show_dots=False, color=IMPRINT[0])
-
-# Add confidence interval bounds - lighter/dashed variations
-ci_upper_pts = [(float(x_curve[i]), float(ci_upper[i])) for i in range(0, len(x_curve), 2)]
-ci_lower_pts = [(float(x_curve[i]), float(ci_lower[i])) for i in range(0, len(x_curve), 2)]
+chart.add("95% CI", band_pts, fill=True, show_dots=False)
+chart.add("Logistic fit", list(zip(curve[BIOMARKER], curve[PROBABILITY], strict=True)), show_dots=False)
 chart.add(
-    "95% CI Upper",
-    ci_upper_pts,
-    stroke_style={"width": 2, "dasharray": "8,4"},
-    dots_size=0,
+    f"Threshold (p = {THRESHOLD:g})",
+    [(x_min, THRESHOLD), (x_max, THRESHOLD)],
     show_dots=False,
-    color=IMPRINT[0],
+    stroke_style={"dasharray": "18,10"},
 )
-chart.add(
-    "95% CI Lower",
-    ci_lower_pts,
-    stroke_style={"width": 2, "dasharray": "8,4"},
-    dots_size=0,
-    show_dots=False,
-    color=IMPRINT[0],
-)
+for cls in classes:
+    obs = obs_all[outcome_row == cls]
+    y_jit = cls + rng.uniform(-JITTER, JITTER, len(obs))
+    chart.add(
+        f"{'Positive' if cls else 'Negative'} ({cls:g})",
+        list(zip(obs[BIOMARKER], y_jit, strict=True)),
+        stroke=False,
+        dots_size=11,
+    )
 
-# Add decision threshold line (y = 0.5)
-threshold_pts = [(0.0, 0.5), (100.0, 0.5)]
-chart.add(
-    "Threshold (p=0.5)",
-    threshold_pts,
-    stroke_style={"width": 3, "dasharray": "12,6"},
-    dots_size=0,
-    show_dots=False,
-    color=INK_MUTED,
-)
-
-# Add data points - Negative (Class 0) - Okabe-Ito position 2 (vermillion)
-negative_pts = [(float(biomarker_levels[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 0]
-chart.add("Negative (0)", negative_pts, stroke=False, dots_size=12, color=IMPRINT[1])
-
-# Add data points - Positive (Class 1) - Okabe-Ito position 3 (blue)
-positive_pts = [(float(biomarker_levels[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 1]
-chart.add("Positive (1)", positive_pts, stroke=False, dots_size=12, color=IMPRINT[2])
-
-# Save as PNG and HTML with theme suffix
+# Save
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
     f.write(chart.render())

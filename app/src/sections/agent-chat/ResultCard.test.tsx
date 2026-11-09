@@ -1,3 +1,4 @@
+import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlotVersion } from 'src/hooks/useAgentSession';
@@ -196,6 +197,23 @@ describe('ResultCard', () => {
     expect(screen.queryByRole('button', { name: /^Run details/ })).not.toBeInTheDocument();
   });
 
+  it('says how long the plot took in its status line, and no time for one the page did not time', () => {
+    renderCard({ version: makeVersion({ readyMs: 72_400 }) });
+    // The working line's clock, frozen as the version shipped (the v4 mock's `ready in 1:12`).
+    expect(
+      screen.getByRole('button', { name: 'Run details: ready in 1:12 · second try · 1 change' })
+    ).toBeInTheDocument();
+    cleanup();
+    const version = makeVersion({ readyMs: 4.5 * 60_000 });
+    version.result = { ...version.result, attempts: 1, changes: [] };
+    renderCard({ version });
+    expect(screen.getByTestId('result-summary')).toHaveTextContent(/^ready in 4:30 · first try$/);
+    cleanup();
+    // The late read of a cut turn: no field, no time, never a wrong one.
+    renderCard();
+    expect(screen.getByTestId('result-summary')).not.toHaveTextContent(/ready in/);
+  });
+
   it('folds the code behind .show_code(), with .copy() and the downloads in view', async () => {
     renderCard();
     expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
@@ -261,14 +279,14 @@ describe('ResultCard', () => {
   it('sizes the image box to the loaded PNG, footer strip included', () => {
     renderCard();
     const box = screen.getByTestId('result-image-box');
-    expect(getComputedStyle(box).aspectRatio).toBe('3200/1864');
+    expect(getComputedStyle(box).aspectRatio).toBe('3200 / 1864');
 
     const image = screen.getByAltText('Adapted plot, version 2, light theme');
     Object.defineProperty(image, 'naturalWidth', { value: 2400 });
     Object.defineProperty(image, 'naturalHeight', { value: 2448 });
     fireEvent.load(image);
 
-    expect(getComputedStyle(box).aspectRatio).toBe('2400/2448');
+    expect(getComputedStyle(box).aspectRatio).toBe('2400 / 2448');
   });
 
   it('copies the PNG with the Clipboard API', async () => {
@@ -597,7 +615,7 @@ describe('ResultCard', () => {
       const frame = await screen.findByTitle('Interactive plot, version 2, light theme');
       expect(frame.style.width).toBe('1232px');
       expect(getComputedStyle(screen.getByTestId('result-image-box')).aspectRatio).toBe(
-        '1232/1232'
+        '1232 / 1232'
       );
     });
 

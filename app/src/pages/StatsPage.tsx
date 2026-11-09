@@ -12,6 +12,8 @@ import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { paths, specPath } from 'src/routes/paths';
+import { type MachineReadersResponse, readMachineReaders } from 'src/sections/stats/machineReaders';
+import { MachineReadersTile } from 'src/sections/stats/MachineReadersTile';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
@@ -144,6 +146,10 @@ export function StatsPage() {
   const { isDark } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [visitors, setVisitors] = useState<VisitorPoint[] | null>(null);
+  // `undefined` while loading, `null` for a failed request or an answer that is not `ok`.
+  const [machineReaders, setMachineReaders] = useState<MachineReadersResponse | null | undefined>(
+    undefined
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -167,6 +173,14 @@ export function StatsPage() {
     apiGet<VisitorsResponse>(endpoints.insightsVisitors)
       .then(res => setVisitors(res?.points ?? []))
       .catch(() => setVisitors([]));
+  }, []);
+
+  // Machine readers load on their own too: BigQuery not set up, an outage or an
+  // unreadable answer each fall through to the tile's placeholder.
+  useEffect(() => {
+    apiGet<unknown>(endpoints.insightsMachineReaders)
+      .then(body => setMachineReaders(readMachineReaders(body)))
+      .catch(() => setMachineReaders(null));
   }, []);
 
   if (loading)
@@ -210,7 +224,7 @@ export function StatsPage() {
         <title>stats | anyplot.ai</title>
         <meta
           name="description"
-          content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and more."
+          content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and which AI assistants and crawlers read the catalogue."
         />
         <link rel="canonical" href="https://anyplot.ai/stats" />
       </>
@@ -372,6 +386,10 @@ export function StatsPage() {
             </>
           )}
         </Box>
+
+        {/* Machine readers (last 28 days): verified crawlers and AI assistants,
+            from the content-free machine-read telemetry in BigQuery. */}
+        <MachineReadersTile answer={machineReaders} formatNum={formatNum} />
 
         {/* Library Stats — dual mini histograms per library */}
         <Box sx={{ mt: 4 }}>

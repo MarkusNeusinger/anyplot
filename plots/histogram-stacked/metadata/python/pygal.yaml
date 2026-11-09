@@ -2,121 +2,138 @@ library: pygal
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:59Z'
-updated: '2026-05-12T05:54:39Z'
-generated_by: claude-haiku
-workflow_run: 25715577181
+updated: '2026-11-09T11:13:02Z'
+generated_by: claude-opus
+workflow_run: 42605730150
 issue: 2601
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-dark.html
-quality_score: 73
+quality_score: 80
 review:
   strengths:
-  - Correct stacked histogram with clear three-way composition showing three plant
-    growth distributions
-  - Data shows realistic plant science scenario with distinct distributions centered
-    at different heights
-  - No overlapping elements, clean layout with adequate margins and proper histogram
-    calculations
-  - Renders properly in both light and dark themes with appropriate background and
-    text colors
+  - 'Contiguous stacked bins: the segments of each bin sit directly on one another
+    from a zero baseline, and the bins touch, so every bar top reads as the combined
+    frequency in both renders'
+  - One shared set of bin edges from np.histogram_bin_edges is applied to every group,
+    and the y range is derived from the tallest total (×1.1), so the axis is never
+    truncated
+  - 'Imprint palette in canonical order (#009E73, #C475FD, #4467A3) with identical
+    data colors in both themes; the chrome flips correctly through the Style tokens'
+  - Realistic, neutral scenario (plant heights by light condition, 450 plants) with
+    three overlapping distributions that show the composition shifting across the
+    bins
+  - 'Clean adaptable-code layout: column constants, a tidy df, and plain lists built
+    per group with groupby(sort=False), so the segment order is one stable order in
+    every bin'
+  - Native pygal interactive HTML output with per-segment tooltips alongside the PNG
   weaknesses:
-  - 'No theme-aware code architecture: hardcodes ''white'' background instead of reading
-    ANYPLOT_THEME environment variable'
-  - 'Wrong color palette: uses Python Blue (#306998) as first series instead of Okabe-Ito
-    brand green (#009E73); colors do not follow Okabe-Ito specification'
-  - 'Incorrect output API: saves as bare ''plot.png'' instead of ''plot-{THEME}.png'';
-    filenames not theme-adaptive'
-  - 'Minimal design refinement: library defaults with no visual hierarchy, no aesthetic
-    polish, awkward color combination (Python Blue + Yellow + Material Green)'
+  - 'VQ-05 (both): the x-axis title ''Plant Height (cm)'' sits on top of the bottom
+    legend row with almost no gap (its descenders nearly touch the legend text), so
+    the axis title and the legend crowd each other → a clear gap of about 30–40 px
+    between the axis title and the legend. Likely cause: legend_at_bottom with margin=60
+    and no extra legend spacing; the axis title at title_font_size=66 fills the space
+    between the tick labels and the legend.'
+  - 'CQ-01 (code): a class ContiguousStackedBar subclass overrides the private attribute
+    _series_margin to make the bins touch, which breaks the no-functions/no-classes
+    KISS structure → configure the chart without a class, for example by setting the
+    attribute on the chart instance (chart._series_margin = 0) or another flat configuration.
+    Likely cause: the subclass written to mirror pygal''s Histogram.'
+  - 'Suggestion: the rounded bin labels give uneven ranges (''24–29'' and ''49–54''
+    span 5 cm, the others 4 cm); one decimal or rounded bin edges would make the shared
+    bin width explicit.'
+  - 'Suggestion: the axis titles are drawn as large as the chart title; a smaller
+    axis-title size would give the title its own level in the hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at approximately #FAF8F1 - correct color
-      Chrome: Title, axis labels, tick labels all dark-colored and clearly readable against light background
-      Data: Three stacked segments in teal-green (Shade-grown), orange (Partial-sun), and blue (Full-sun); legend shows all labels clearly
-      Legibility verdict: PASS - all text is fully readable
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "histogram-stacked · python · pygal · anyplot.ai" centered at top in dark ink; y-axis title "Frequency (plants)" rotated, x-axis title "Plant Height (cm)"; tick labels 0–80 on y and twelve bin labels (12–16 … 58–62) on x, all dark and readable; dotted horizontal guides subtle but visible; legend at the bottom in three columns (Shade-grown, Partial-sun, Full-sun). The x-axis title sits very close above the legend row.
+      Data: twelve contiguous stacked bars; Shade-grown #009E73 at the bottom, Partial-sun #C475FD in the middle, Full-sun #4467A3 on top, same order in every bin, zero baseline, tallest total 76 in 37–41 below the 80 gridline. Thin segments in the tails (e.g. 1 Partial-sun in 12–16, 1 Shade-grown in 37–41) are visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at approximately #1A1A17 - correct color
-      Chrome: Title, axis labels, tick labels all light-colored and clearly readable against dark background
-      Data: Same three colors as light render (teal-green, orange, blue) - colors are identical between renders, only chrome has flipped
-      Legibility verdict: PASS - all text is fully readable, no dark-on-dark failures
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, axis titles, tick labels and legend text all in light ink and readable; no dark-on-dark text; dotted guides are faint but visible.
+      Data: identical colors and stacking to the light render (#009E73, #C475FD, #4467A3); brand green reads well on the dark surface; all three segments are distinguishable from each other and the background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: Text readable but relying on defaults rather than explicit theme-aware
-          sizing
+        comment: Explicit pygal sizes (title 66, ticks 44, legend 44); all text readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels and elements have clear spacing, no overlaps
+        comment: No text collides with text or data; bin labels fit their slots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked bars properly sized and fully visible with clear segment
-          distinction
+        comment: Solid segments, thin tail segments still visible; legend swatches
+          match the fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between colors, CVD-safe, not relying on red-green
+        comment: Green, purple and blue differ in hue and lightness; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Balanced layout with adequate margins, fills ~65% of canvas
+        passed: false
+        comment: 3200x1800; x-axis title crowds the bottom legend row (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Plant Height (cm) and Frequency'
+        comment: '''Plant Height (cm)'' with unit and ''Frequency (plants)'''
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Code specifies non-Okabe-Ito colors (#306998 instead of
-          #009E73), hardcoded white background instead of theme-adaptive values'
+        passed: true
+        comment: 'Imprint positions 1-3 in canonical order, first series #009E73,
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 6
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults with poorly chosen color palette (Python Blue +
-          Yellow + Material Green)
+        comment: Style-guide baseline; axis titles share the chart title's size, no
+          hierarchy decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Data displayed in a stable order; no focal point chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -126,25 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar histogram with proper stacking
+        comment: Stacked histogram with contiguous bins
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All stacking and grouping features present
+        comment: 'Shared bin edges, distinct colors, legend, totals = combined frequency,
+          one segment order in every bin, zero baseline, axis reaching past the tallest
+          total: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly assigned, all data visible
+        comment: Counts from np.histogram per group on shared edges; all data on the
+          axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Mandated title format; legend names the three light conditions
     data_quality:
       score: 15
       max: 15
@@ -154,78 +174,85 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three distributions with different shapes and
-          spreads'
+        comment: Three overlapping groups show changing composition across bins, thin
+          tail segments and a dominant group per region
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real plant science scenario with neutral, comprehensible context
+        comment: 'Plant heights by light condition: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Heights and sample sizes (150, 180, 120) are plausible and domain-realistic
+        comment: Heights 12-62 cm and per-bin counts up to 76 of 450 plants are sensible;
+          no Check values in the spec
     code_quality:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Clean organization: Imports → Data → Plot → Save'
+        passed: false
+        comment: A class subclass exists only to override _series_margin (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, Style)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, straightforward code with no fake functionality
+        comment: np.histogram_bin_edges / np.histogram compute the bins; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves as bare ''plot.png'' instead of ''plot-{THEME}.png'';
-          does not use ANYPLOT_THEME environment variable'
+        passed: true
+        comment: plot-{THEME}.png and plot-{THEME}.html, current pygal 3 API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses pygal.StackedBar and Style correctly, missing theme-aware environment
-          variable patterns
+        passed: false
+        comment: Style object for tokens, StackedBar, x_labels, legend_at_bottom_columns;
+          the bin contiguity rests on a private attribute
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Basic usage of Style object; no distinctive pygal features leveraged
-  verdict: REJECTED
+        comment: Nothing beyond the mandated Style object and HTML export
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T11:10:18Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
   styling: []

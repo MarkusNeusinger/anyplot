@@ -1,90 +1,102 @@
 """ anyplot.ai
 residual-plot: Residual Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-10
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 
-# Data - Generate realistic regression scenario
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — residuals take brand green, outliers the matte-red error anchor
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]
+OUTLIER_RED = IMPRINT_PALETTE[4]
+TREND_BLUE = IMPRINT_PALETTE[2]
+
+# Constants
+OUTLIER_SD = 2  # residuals beyond this many standard deviations count as outliers
+
+# Columns: set these to your table's column names
+Y_TRUE = "Sale price (thousand USD)"  # role: y_true
+Y_PRED = "Predicted price (thousand USD)"  # role: y_pred
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# House sale prices regressed linearly on floor area; prices rise faster than linearly with size
 np.random.seed(42)
+floor_area = np.linspace(50, 250, 150)  # m²
+sale_price = 40 + 1.1 * floor_area + 0.007 * floor_area**2 + np.random.randn(150) * 28
+slope, intercept = np.polyfit(floor_area, sale_price, 1)
+df = pd.DataFrame({Y_TRUE: sale_price, Y_PRED: intercept + slope * floor_area})
 
-# Independent variable with some structure
-X = np.linspace(0, 10, 150)
+# Plot: reads only df and the constants above
+residuals = df[Y_TRUE] - df[Y_PRED]
+sd = residuals.std(ddof=0)
+is_outlier = residuals.abs() > OUTLIER_SD * sd
+trend = lowess(residuals, df[Y_PRED], frac=0.5)
 
-# True relationship with some non-linearity to make residuals interesting
-# (quadratic component makes linear model show patterns in residuals)
-y_true = 2.5 * X + 0.3 * X**2 + np.random.randn(150) * 3
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Fit linear regression manually: y = a + b*x
-# Using least squares formulas
-x_mean = np.mean(X)
-y_mean = np.mean(y_true)
-b = np.sum((X - x_mean) * (y_true - y_mean)) / np.sum((X - x_mean) ** 2)
-a = y_mean - b * x_mean
-y_pred = a + b * X
+ax.axhspan(-OUTLIER_SD * sd, OUTLIER_SD * sd, color=INK_MUTED, alpha=0.08, linewidth=0, label=f"±{OUTLIER_SD}σ band")
+for sign in (-1, 1):
+    ax.axhline(sign * OUTLIER_SD * sd, color=INK_MUTED, linewidth=1.0, linestyle="--", alpha=0.8)
+ax.axhline(0, color=INK, linewidth=1.5, label="Zero residual", zorder=2)
 
-# Calculate residuals
-residuals = y_true - y_pred
-
-# Identify outliers (beyond 2 standard deviations)
-std_residuals = np.std(residuals)
-outlier_mask = np.abs(residuals) > 2 * std_residuals
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Plot normal points
 ax.scatter(
-    y_pred[~outlier_mask],
-    residuals[~outlier_mask],
-    s=150,
+    df.loc[~is_outlier, Y_PRED],
+    residuals[~is_outlier],
+    s=60,
     alpha=0.7,
-    color="#306998",
-    edgecolors="white",
+    color=BRAND,
+    edgecolors=PAGE_BG,
     linewidth=0.5,
     label="Residuals",
+    zorder=3,
 )
-
-# Plot outliers with different color
 ax.scatter(
-    y_pred[outlier_mask],
-    residuals[outlier_mask],
-    s=180,
-    alpha=0.9,
-    color="#FFD43B",
-    edgecolors="#306998",
-    linewidth=1.5,
-    label="Outliers (>2σ)",
+    df.loc[is_outlier, Y_PRED],
+    residuals[is_outlier],
+    s=90,
+    alpha=0.95,
+    color=OUTLIER_RED,
+    edgecolors=PAGE_BG,
+    linewidth=0.8,
+    label=f"Outliers (>{OUTLIER_SD}σ)",
+    zorder=4,
 )
+ax.plot(trend[:, 0], trend[:, 1], color=TREND_BLUE, linewidth=2.5, label="LOWESS trend", zorder=5)
 
-# Reference line at y=0
-ax.axhline(y=0, color="#333333", linewidth=2, linestyle="-", label="Perfect fit (y=0)")
+# Style
+title = "residual-plot · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight="bold", color=INK)
+ax.set_xlabel(Y_PRED, fontsize=10, color=INK)
+ax.set_ylabel(f"Residual of {Y_TRUE[:1].lower()}{Y_TRUE[1:]}", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
 
-# Add ±2 standard deviation bands
-ax.axhline(y=2 * std_residuals, color="#888888", linewidth=1.5, linestyle="--", alpha=0.7)
-ax.axhline(y=-2 * std_residuals, color="#888888", linewidth=1.5, linestyle="--", alpha=0.7)
-
-# Get x limits for the band
-xlim = (y_pred.min() - 2, y_pred.max() + 2)
-ax.fill_between(xlim, -2 * std_residuals, 2 * std_residuals, alpha=0.1, color="#306998", label="±2σ band")
-
-# Add trend line using polynomial fit to detect patterns
-z = np.polyfit(y_pred, residuals, 3)
-p = np.poly1d(z)
-x_smooth = np.linspace(y_pred.min(), y_pred.max(), 100)
-ax.plot(x_smooth, p(x_smooth), color="#D62728", linewidth=2.5, linestyle="-", alpha=0.8, label="Trend line")
-
-# Labels and styling
-ax.set_xlabel("Fitted Values", fontsize=20)
-ax.set_ylabel("Residuals (Observed - Predicted)", fontsize=20)
-ax.set_title("residual-plot · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=14, loc="upper left", framealpha=0.9)
-ax.grid(True, alpha=0.3, linestyle="--")
-ax.set_xlim(xlim)
+leg = ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=5, frameon=True)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
