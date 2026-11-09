@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -38,11 +38,12 @@ U_WIND = "Zonal wind u (kt)"  # role: u
 V_WIND = "Meridional wind v (kt)"  # role: v
 
 # Data: replace this block with your own table, for example df = pd.read_csv("stations.csv")
-# Surface wind observations from a 10 x 6 grid of weather stations
+# Surface wind observations from a 10 x 6 grid of stations over the North Sea and Denmark
 np.random.seed(42)
-lon, lat = (grid.flatten() for grid in np.meshgrid(np.arange(0, 10), np.arange(0, 6)))
-u = 15 + 10 * np.sin(lon * 0.5) + np.random.uniform(-5, 5, size=lon.shape)
-v = 5 + 8 * np.cos(lat * 0.8) + np.random.uniform(-5, 5, size=lat.shape)
+col, row = (grid.flatten() for grid in np.meshgrid(np.arange(10), np.arange(6)))
+lon, lat = 3.0 + col, 53.0 + row
+u = 15 + 10 * np.sin(col * 0.5) + np.random.uniform(-5, 5, size=col.shape)
+v = 5 + 8 * np.cos(row * 0.8) + np.random.uniform(-5, 5, size=row.shape)
 calm_stations, storm_stations = [0, 25, 45], [12, 38, 55]
 u[calm_stations] = np.random.uniform(-1, 1, size=3)
 v[calm_stations] = np.random.uniform(-1, 1, size=3)
@@ -59,7 +60,7 @@ spacing = np.median(distances.min(axis=1))  # typical distance from a station to
 # Barb geometry in data units, scaled to the station spacing: a staff of half the spacing
 # leaves clear room between neighbouring barbs whose feathers lean toward each other
 staff = 0.5 * spacing
-feather = 0.4 * staff  # full barb and pennant height; a half barb is half of it
+feather = 0.52 * staff  # full barb and pennant height; a half barb is half of it
 step = 0.17 * staff  # distance between feathers along the staff, over twice the stroke width
 flag_base = 0.22 * staff
 slant = 0.35  # feathers lean toward the staff's outer end, as drawn on synoptic charts
@@ -106,7 +107,7 @@ for xaxis, yaxis, xs, ys, us, vs in panels:
             x=[None if point is None else point[0] for point in lines],
             y=[None if point is None else point[1] for point in lines],
             mode="lines",
-            line={"color": BRAND, "width": 1.8},
+            line={"color": BRAND, "width": 2.4},
             hoverinfo="skip",
             showlegend=False,
             **axes,
