@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-09
@@ -6,7 +6,6 @@ Quality: 87/100 | Updated: 2026-11-09
 
 import os
 
-import matplotlib.patheffects as patheffects
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -28,7 +27,7 @@ IMPRINT_SEQ = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#446
 sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
 
 # Constants
-BAR_WIDTH = 0.06  # width of an axis bar, as a share of the spacing between two axes
+BAR_WIDTH = 0.46  # width of an axis bar, as a share of the spacing between two axes; wide enough to hold the labels
 RIBBON_ALPHA = 0.65 if THEME == "light" else 0.8  # the dark page needs denser ribbons to keep their hue
 
 # Columns: set these to your table's column names; the first one colors the ribbons
@@ -113,24 +112,12 @@ for i, (left, right) in enumerate(pairs):
         band = PathPatch(Path(vertices, codes), facecolor=ribbon_colors[level], edgecolor="none", alpha=RIBBON_ALPHA)
         ax.add_patch(band)
 
-# Category labels beside their segments, above the ribbons with a page-colored halo;
-# the first axis is labeled on its left, where no ribbon runs
-halo = [patheffects.withStroke(linewidth=2.8, foreground=PAGE_BG)]
+# Category labels inside their segments, where no ribbon runs: page-colored on the soft-ink bars,
+# a fixed light ink on the class colors, which are the same in both themes
 for i, dim in enumerate(DIMENSIONS):
-    side = -1 if i == 0 else 1
+    label_color = "#FAF8F1" if dim == color_dim else PAGE_BG
     for cat, y in (total - above[dim] - counts[dim] / 2).items():
-        ax.annotate(
-            cat,
-            (i + side * BAR_WIDTH / 2, y),
-            xytext=(side * 4, 0),
-            textcoords="offset points",
-            ha="right" if side < 0 else "left",
-            va="center",
-            fontsize=8,
-            color=INK,
-            path_effects=halo,
-            zorder=5,
-        )
+        ax.text(i, y, cat, ha="center", va="center", fontsize=7.5, color=label_color, zorder=5)
 
 # Style: dimension names head their axes; only segment lengths and ribbon widths carry counts
 ax.set_title("parallel-categories-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=10)
@@ -139,7 +126,7 @@ ax.tick_params(axis="x", length=0, labelsize=10, labelcolor=INK, pad=4)
 ax.set_xlabel("")
 ax.set_yticks([])
 ax.set_ylabel("")
-ax.set_xlim(-0.5 - BAR_WIDTH, len(DIMENSIONS) - 0.5 + BAR_WIDTH)
+ax.set_xlim(-BAR_WIDTH, len(DIMENSIONS) - 1 + BAR_WIDTH)
 ax.set_ylim(0, total)
 sns.despine(ax=ax, left=True, bottom=True)
 
