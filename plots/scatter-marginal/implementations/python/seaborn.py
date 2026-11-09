@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-05-09
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
 
 import os
