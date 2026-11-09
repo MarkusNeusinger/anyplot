@@ -1,7 +1,7 @@
 """anyplot.ai
 line-loss-training: Training Loss Curve
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-14
+Quality: pending | Updated: 2026-05-14
 """
 
 import os
