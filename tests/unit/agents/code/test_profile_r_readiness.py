@@ -1,13 +1,18 @@
 """Tests for agents/anyplot/code/profiles/r/readiness.py and coupling.py: blocked, coupled or clean."""
 
 import ast
+import re
 from collections import Counter
 
 import pytest
 
-from agents.anyplot.code.profiles.r.coupling import coupling, structure_reasons
-from agents.anyplot.code.profiles.r.normalise import normalise
+from agents.anyplot.code.profiles.r.coupling import coupling, is_layout_complete, structure_reasons
+from agents.anyplot.code.profiles.r.normalise import measure_canvas, normalise
 from agents.anyplot.code.profiles.r.readiness import scan
+from agents.anyplot.code.profiles.r.regions import find_regions
+from agents.anyplot.code.profiles.r.validate import validate_security
+from agents.anyplot.schemas import MAX_NOTE_CHARS as MAX_REASON_CHARS
+from core.spec_roles import MAP_SPECS
 
 from .conftest import R_CATALOGUE_FILES, R_CATALOGUE_NORMALISED, REPO_ROOT, source
 
@@ -156,63 +161,70 @@ def test_structure_reasons_of_a_good_file_are_empty() -> None:
     assert structure_reasons(R_CATALOGUE_NORMALISED) == []
 
 
-def test_catalogue_corpus() -> None:
-    """The split over the 325 normalised ggplot2 files (2026-10-29, owner rule: a missing marker never blocks):
-    4 clean (area-basic, box-basic, line-basic, line-timeseries: both markers and role-commented column
-    constants), 306 coupled, 15 blocked. Blocked: the 13 map specs, qrcode-basic (the qrcode package and a URL)
-    and maze-circular (`<<-`, owner decision of 2026-10-29). The 7 flow files with a `source` column and the 2
-    dataset-package files (dendrogram-basic, scatter-categorical: a synthetic-data hint) are coupled since the
-    owner narrowed the denied-name rule. Hints: data-block 306, synthetic-data 279, limits 134, annotations 71,
-    palette 39, statistics 18, color-scale 10; no canvas reason, because the normaliser puts every canvas on
-    target."""
-    status: Counter[str] = Counter()
-    blocked: list[str] = []
-    clean: list[str] = []
-    categories: Counter[str] = Counter()
-    for path in R_CATALOGUE_FILES:
-        spec_id = path.parts[-4]
-        readiness = scan(normalise(path.read_text(encoding="utf-8")), spec_id=spec_id, enabled_libraries=ENABLED)
-        status[readiness.status] += 1
-        if readiness.status == "blocked":
-            blocked.append(spec_id)
-        elif readiness.status == "clean":
-            clean.append(spec_id)
-        categories.update(reason.split(":")[0] for reason in readiness.reasons if readiness.status != "blocked")
+BLOCKING = frozenset({"map-spec", "library-disabled", "syntax", "security", "no-theme", "savefig-target"})
+"""The reason categories of `blocked` (`readiness.scan`); a clean or coupled file carries none of them."""
+DATA_LINE = re.compile(r"^# (?:--- )?Data\b", re.MULTILINE)
+PLOT_LINE = re.compile(r"^# (?:--- )?Plot\b", re.MULTILINE)
+COLUMN_LINE = re.compile(r'^[A-Z][A-Z0-9_]*\s*<-\s*"[^"\n]*"\s*# role: \w+\s*$', re.MULTILINE)
+ANY_DATA_MARKER = re.compile(r"^#.*\bData\b", re.MULTILINE)
+COMMON_HINTS = ("synthetic-data", "limits")
+"""Hint categories the catalogue always has somewhere, so a detection that stops firing fails the corpus test."""
 
-    assert status == Counter({"coupled": 306, "blocked": 15, "clean": 4})
-    assert clean == ["area-basic", "box-basic", "line-basic", "line-timeseries"]
-    assert sorted(blocked) == sorted(
-        [
-            *(
-                "bubble-map-geographic",
-                "cartogram-area-distortion",
-                "choropleth-basic",
-                "contour-map-geographic",
-                "flowmap-origin-destination",
-                "heatmap-geographic",
-                "map-connection-lines",
-                "map-marker-clustered",
-                "map-projections",
-                "map-route-path",
-                "map-tile-background",
-                "map-tilegrid",
-                "scatter-map-geographic",
-            ),
-            "qrcode-basic",
-            "maze-circular",
-        ]
-    )
-    assert categories == Counter(
-        {
-            "data-block": 306,
-            "synthetic-data": 279,
-            "limits": 134,
-            "annotations": 71,
-            "palette": 39,
-            "statistics": 18,
-            "color-scale": 10,
-        }
-    )
+
+def layout_in_text(text: str) -> bool | None:
+    """The adaptable-code layout read from the text alone: True for a `# Data` line, a later `# Plot` line and a
+    canonical column constant, False with no `# ... Data ...` comment at column 0, else None."""
+    data, plot = DATA_LINE.search(text), PLOT_LINE.search(text)
+    if data and plot and data.start() < plot.start() and COLUMN_LINE.search(text):
+        return True
+    return False if not ANY_DATA_MARKER.search(text) else None
+
+
+def blocking_categories(spec: str, normalised: str) -> set[str]:
+    """The reason categories `scan` must block `spec` for, from the three sources: the map-spec list, the SECURITY
+    profile and the structure check (whose syntax reason, when there is one, stands alone beside the map spec)."""
+    expected = {"map-spec"} if spec in MAP_SPECS else set()
+    structure = [reason.split(":", 1)[0] for reason in structure_reasons(normalised)]
+    if structure[:1] == ["syntax"]:
+        return expected | {"syntax"}
+    return expected | ({"security"} if validate_security(normalised) else set()) | set(structure)
+
+
+def test_catalogue_corpus() -> None:
+    """Every normalised ggplot2 file is classified, and each class keeps its meaning while the catalogue changes
+    (owner rule of 2026-10-29: a missing marker never blocks). The counts of a day (325 files on 2026-10-29: 4
+    clean, 306 coupled, 15 blocked; hints data-block 306, synthetic-data 279, limits 134, ...) move with every
+    regeneration, so the test holds rules: a file is blocked exactly when its spec is a map spec, the SECURITY
+    profile flags it or its structure fails, for exactly those reasons (`blocking_categories`); a clean file has no
+    reason; a coupled file has no blocking reason and
+    one hint per reason but the `canvas:` one, which appears exactly where the normaliser could not put the canvas
+    on target, and the `data-block` hint exactly when its layout is incomplete, which a plain reading of the text
+    confirms where it can; all three classes occur, and so do the `COMMON_HINTS`."""
+    statuses: Counter[str] = Counter()
+    hinted: Counter[str] = Counter()
+    for path in R_CATALOGUE_FILES:
+        spec = path.parts[-4]
+        normalised = normalise(path.read_text(encoding="utf-8"))
+        readiness = scan(normalised, spec_id=spec, enabled_libraries=ENABLED)
+        categories = [reason.split(":", 1)[0] for reason in readiness.reasons]
+        statuses[readiness.status] += 1
+        expected = blocking_categories(spec, normalised)
+        assert (readiness.status == "blocked") == bool(expected), (spec, readiness.reasons)
+        assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints), spec
+        if readiness.status == "blocked":
+            assert set(categories) == expected, (spec, readiness.reasons)
+            continue
+        assert not set(categories) & BLOCKING, (spec, readiness.reasons)
+        assert len(readiness.hints) == len([category for category in categories if category != "canvas"]), spec
+        assert ("canvas" in categories) == (measure_canvas(normalised).note is not None), spec
+        assert (readiness.status == "clean") == (not readiness.reasons), spec
+        complete = is_layout_complete(find_regions(normalised))
+        assert ("data-block" in categories) == (not complete), spec
+        assert layout_in_text(normalised) in (None, complete), spec  # the same answer from the text alone
+        hinted.update(categories)
+
+    assert sum(statuses.values()) == len(R_CATALOGUE_FILES) and set(statuses) == {"clean", "coupled", "blocked"}
+    assert all(hinted[category] for category in COMMON_HINTS), hinted
 
 
 @pytest.mark.parametrize("spec_id", ["dendrogram-basic", "scatter-categorical"])
