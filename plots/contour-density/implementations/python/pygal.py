@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-density: Density Contour Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -9,6 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 import pygal
+from contourpy import contour_generator
 from pygal.style import Style
 from scipy.stats import gaussian_kde
 
@@ -63,55 +64,9 @@ grid_x, grid_y = np.meshgrid(gx / scale[0], gy / scale[1])
 density = kde(np.vstack([grid_x.ravel(), grid_y.ravel()])).reshape(grid_x.shape)
 peak = density.max()
 
-# Marching squares: each level's crossings sit on grid edges; chaining them gives closed rings
-rings_by_level = []
-for share in LEVELS:
-    level = share * peak
-    above = density >= level
-    points, neighbors = {}, {}
-    for r in range(len(gy) - 1):
-        for c in range(len(gx) - 1):
-            corners = [above[r, c], above[r, c + 1], above[r + 1, c + 1], above[r + 1, c]]  # BL, BR, TR, TL
-            if all(corners) or not any(corners):
-                continue
-            # cell edges in order bottom, right, top, left: (key, end-a value, end-b value, end-a xy, end-b xy)
-            edges = [
-                (("h", r, c), density[r, c], density[r, c + 1], (gx[c], gy[r]), (gx[c + 1], gy[r])),
-                (("v", r, c + 1), density[r, c + 1], density[r + 1, c + 1], (gx[c + 1], gy[r]), (gx[c + 1], gy[r + 1])),
-                (("h", r + 1, c), density[r + 1, c], density[r + 1, c + 1], (gx[c], gy[r + 1]), (gx[c + 1], gy[r + 1])),
-                (("v", r, c), density[r, c], density[r + 1, c], (gx[c], gy[r]), (gx[c], gy[r + 1])),
-            ]
-            crossed = []
-            for key, za, zb, (xa, ya), (xb, yb) in edges:
-                if (za >= level) != (zb >= level):
-                    t = (level - za) / (zb - za)
-                    points[key] = (xa + t * (xb - xa), ya + t * (yb - ya))
-                    crossed.append(key)
-            if len(crossed) == 2:
-                pairs = [(crossed[0], crossed[1])]
-            else:  # saddle: the cell centre decides which corners stay connected
-                centre_above = density[r : r + 2, c : c + 2].mean() >= level
-                if corners[1] != centre_above:
-                    pairs = [(crossed[0], crossed[1]), (crossed[2], crossed[3])]
-                else:
-                    pairs = [(crossed[3], crossed[0]), (crossed[1], crossed[2])]
-            for a, b in pairs:
-                neighbors.setdefault(a, []).append(b)
-                neighbors.setdefault(b, []).append(a)
-    rings, seen = [], set()
-    for start in neighbors:
-        if start in seen:
-            continue
-        ring, previous, current = [], None, start
-        while current is not None:
-            seen.add(current)
-            ring.append(points[current])
-            following = [key for key in neighbors[current] if key != previous and key not in seen]
-            previous, current = current, (following[0] if following else None)
-        if start in neighbors[previous]:
-            ring.append(points[start])
-        rings.append(ring)
-    rings_by_level.append(rings)
+# Iso-density rings per level from contourpy, matplotlib's non-plotting contour engine (closed rings repeat their start)
+contours = contour_generator(x=gx, y=gy, z=density)
+rings_by_level = [[list(map(tuple, ring.tolist())) for ring in contours.lines(share * peak)] for share in LEVELS]
 
 # One series per level: its rings filled at low opacity, so the bands deepen towards each peak
 corner = (gx[0], gy[0])  # a fill path starts and ends on pygal's zero line; anchored here those stubs have no length
