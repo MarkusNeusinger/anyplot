@@ -23,7 +23,7 @@ from agents.anyplot.code.treesitter import (
     walk,
 )
 
-from .conftest import R_CATALOGUE_FILES, REPO_ROOT
+from .conftest import R_CATALOGUE_FILES, REPO_ROOT, merged_specs
 
 
 def test_versions_are_pinned_in_the_agents_extra_and_installed() -> None:
@@ -68,8 +68,11 @@ def test_only_the_served_grammars_load() -> None:
             treesitter.language(cast(treesitter.Grammar, grammar))
 
 
-def test_the_catalogue_has_325_r_files() -> None:
-    assert len(R_CATALOGUE_FILES) == 325
+def test_the_parse_gate_reads_every_merged_r_file() -> None:
+    """The parse gate below runs over every merged ggplot2 implementation, not a count of a day (325 on
+    2026-10-29): the glob finds exactly the specs whose metadata names one."""
+    assert R_CATALOGUE_FILES
+    assert {path.parts[-4] for path in R_CATALOGUE_FILES} == merged_specs("r", "ggplot2")
 
 
 @pytest.mark.parametrize("path", R_CATALOGUE_FILES, ids=lambda path: path.parts[-4])

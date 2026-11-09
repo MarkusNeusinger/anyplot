@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: horizon-basic
 created: '2025-12-25T07:10:03Z'
-updated: '2026-05-07T05:40:12Z'
-generated_by: claude-haiku
-workflow_run: 25477737917
+updated: '2026-11-09T11:20:30Z'
+generated_by: claude-opus
+workflow_run: 42606568995
 issue: 1877
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,32 +15,45 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Excellent text legibility in both light and dark themes with explicit font sizing
-  - Clean, effective faceted layout for comparing 6 time series in compact space
-  - Perfect theme-adaptive implementation with data colors identical and chrome flipping
-    correctly
-  - Realistic data generation showing daily cycles, weekly patterns, noise, and extreme
-    events
-  - Proper use of plotnine's faceting for small multiples visualization
+  - Bands are folded properly. Each sign has three bands of equal value range (band_size
+    = 98th percentile of |value| / 3), drawn with geom_area(position='identity') in
+    pale-to-dark order, so a darker band always sits on top of a paler one.
+  - 'The colors are discrete steps of imprint_div: the red #AE3030 and blue #4467A3
+    poles are blended toward the page colour of each theme. Warm red for positive
+    temperature anomalies and cold blue for negative ones fit the domain.'
+  - facet_grid(Station ~ .) gives one compact row per station on a shared datetime
+    axis. Left-aligned strip labels name each row, and the y-axis is dropped, so all
+    six stations compare at a glance.
+  - The legend uses scale_fill_manual breaks and labels to list the bands from the
+    largest positive value to the largest negative one, with readable value ranges
+    ('+3.5 to +6.9', '−6.9 and beyond').
+  - The theme tokens reach every piece of chrome (page, legend box, strips, ticks,
+    title), so both renders pass the readability check.
   weaknesses:
-  - 'Title contains wrong domain name: ''pyplots.ai'' instead of ''anyplot.ai'' (line
-    131)'
-  - 'Custom band colors violate Okabe-Ito hard rule: should use #009E73 as first categorical
-    series and follow canonical order (lines 112-119)'
+  - 'VQ-01 (both): the legend''s band labels are set at 7 pt, the smallest text on
+    the canvas, and blur when the chart is scaled down to the 400 px thumbnail → 8
+    pt, the same as the strip labels (+1 pt). Likely cause: legend_text=element_text(size=7).'
+  - 'CQ-04 (code): the hex-to-RGB parsing on lines 73 and 79 (`int(PAGE_BG[k : k +
+    2], 16) for k in (1, 3, 5)`) writes out what matplotlib.colors.to_rgb computes,
+    and the hour-by-hour AR(1) loop on lines 61–62 writes out scipy.signal.lfilter([1],
+    [1, -0.85], noise) → use those calls. Likely cause: hand-rolled helpers.'
+  - 'Suggestion: in the dark render the palest band (40 % strength) sits close to
+    the #1A1A17 page; a slightly higher first step such as 0.5 would make quiet rows
+    stand out more.'
+  - 'Suggestion: a descriptive title prefix such as ''Hourly Temperature Anomalies
+    by Station · '' would tell the reader what the chart shows.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct for light theme
-      Chrome: Title "Temperature Anomalies by Station · horizon-basic · plotnine · pyplots.ai" in dark text (dark error noted); axis labels "Temperature Deviation from Baseline (°C)" and "Time (hours)" in dark text; tick labels in dark gray; all clearly readable
-      Data: Orange bands for positive anomalies, blue bands for negative; displayed as stacked areas with smooth transitions; 6 stations in 2×3 faceted grid; legend on right showing anomaly ranges
-      Legibility verdict: PASS (perfect contrast, all text readable, no dark-on-light failures)
+      Background: warm off-white #FAF8F1 across the whole canvas; the legend box is in the elevated #FFFDF6 with an INK_SOFT frame.
+      Chrome: the bold title "horizon-basic · python · plotnine · anyplot.ai" spans about 52 % of the width; the x-axis title "Time" and the day ticks "Mon 06 Jul" … "Sun 12 Jul" are dark; the station names (Northern Ridge … Desert Plain) are dark labels to the right of each row; faint vertical day grid lines; no y-axis by design. All readable.
+      Data: six horizon rows over one week of hourly data. Positive anomalies are folded into three red steps (pale pink, medium, #AE3030-strength) and negative ones into three blue steps (pale, medium, #4467A3-strength). Desert Plain shows a strong warm spell on Wed 08 Jul in the darkest red, and Forest Edge a cold spell on Tue 07 Jul in the darkest blue. Peaks are cut flat at the top of their rows. Spec-semantic diverging colors, so no #009E73 first series applies.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct for dark theme
-      Chrome: Title in light text (domain name error same as light); axis labels in light text (#F0EFE8); tick labels in light gray (#B8B7B0); all clearly readable against dark surface
-      Data: Orange and blue bands identical to light render (data colors preserved across theme); same stacked area representation
-      Legibility verdict: PASS (perfect contrast, no dark-on-dark failures, all text readable in light gray/white against dark background, proper theme adaptation verified)
-
-    Both renders pass theme-readability checks.
+      Background: warm near-black #1A1A17; the legend box is #242420 with a light frame.
+      Chrome: the title, "Time", the station labels and the legend title are light (#F0EFE8); the ticks and legend text are INK_SOFT light grey. No dark-on-dark text.
+      Data: the same layout and the same poles. The band steps are blended toward the dark page (the theme-adaptive imprint_div midpoint), so the pale bands read as dim maroon and navy and the strongest band as bright red and blue. Every step stays distinguishable from its neighbours and from the background, though the palest band is subdued.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,74 +61,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt, facets
-          18pt), readable in both themes
+        comment: All text is readable in both themes; the 7 pt legend labels blur
+          in the thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Faceted grid layout, no overlapping elements
+        comment: No text collides with other text or with data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bands optimally sized for data density
+        comment: All six band steps are visible in both themes, and the legend swatches
+          match the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, distinguishable without hue alone
+        comment: Red and blue are a CVD-safe pair, and the intensity steps add a lightness
+          cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, 60-70% canvas utilization
+        comment: 3200×1800 canvas; balanced rows, the legend on the right, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Time'' on a datetime axis; the legend title carries the unit (°C)'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Custom colors used instead of Okabe-Ito (violation of hard rule for
-          categorical palette)
+        passed: true
+        comment: 'Discrete imprint_div steps between #AE3030 and #4467A3 with the
+          theme-adaptive page midpoint; backgrounds are correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Domain-appropriate warm/cool semantics, strong design choice but
-          not publication-level exceptional
+        passed: true
+        comment: 'Typographic hierarchy chosen for this chart: bold title, left-aligned
+          strip labels as row names, a legend with value ranges ordered from the largest
+          positive to the largest negative band'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (alpha=0.10), minimal chrome, some refinement visible
+        passed: true
+        comment: Tight panel_spacing_y, expand=(0,0) so the bands fill each row, the
+          redundant y-axis removed, only day grid lines kept
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed per spec; visual hierarchy comes from plot type itself,
-          not added interpretation
+        passed: true
+        comment: Warm and cold hues mapped to the sign of the temperature anomaly,
+          so heat and cold spells read straight away
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,26 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizon chart with folded bands
+        comment: A true horizon chart with no added layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bands, folding, multi-series, baseline'
+        comment: Three equal bands per sign, mirrored hues, a zero baseline, the same
+          bands in every row, labelled rows on a shared time axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hour→X, magnitude→Y, band→color, station→facet
+        comment: Bands computed from the data; marks sit at their values
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format correct but domain name wrong: ''pyplots.ai'' instead
-          of ''anyplot.ai'''
+        passed: true
+        comment: Mandated title; the legend title and band labels are written for
+          a reader
     data_quality:
       score: 15
       max: 15
@@ -152,21 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows daily cycles, weekly patterns, noise, extreme events
+        comment: Every row shows both signs and every band, and peaks are cut flat
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real environmental monitoring scenario, neutral context
+        comment: Hourly temperature anomalies at six named fictional stations
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature ranges and anomalies factually correct
+        comment: Anomalies of about ±10 °C over one week of hourly readings are plausible;
+          no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -174,55 +194,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean, no over-engineering
+        comment: Hand-parsed hex colours (lines 73, 79) and an AR(1) loop (lines 61–62)
+          where matplotlib.colors.to_rgb and scipy.signal.lfilter would do (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png naming
+        comment: Saves plot-{THEME}.png at 3200×1800
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ggplot + geom_area + facet_wrap pattern, proper plotnine idioms
+        comment: 'Grammar-native: facet_grid rows, geom_area with position=''identity'',
+          scale_fill_manual with breaks and labels, scale_x_datetime with date_breaks
+          and date_labels'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: facet_wrap is plotnine-distinctive, but generic usage beyond that
+        comment: facet_grid strips double as the horizon row labels, and ordered Categorical
+          levels control the order in which bands are drawn
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T11:17:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
+  - time-series
   styling:
-  - alpha-blending
-  - grid-styling
+  - minimal-chrome

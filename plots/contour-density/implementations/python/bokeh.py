@@ -1,124 +1,147 @@
 """ anyplot.ai
 contour-density: Density Contour Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-16
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-09
 """
 
 import os
-import sys
 import time
 from pathlib import Path
 
-
-# Fix import path collision with local library files in same directory
-sys.path = [p for p in sys.path if not p.endswith(("bokeh.py", "implementations/python"))]
-
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from scipy import stats  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, PrintfTickFormatter
+from bokeh.plotting import figure
+from scipy import stats
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-mpl_module = __import__("matplotlib")
-mpl_module.use("Agg")
-plt = __import__("matplotlib.pyplot", fromlist=["pyplot"])
-
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - bivariate distribution with clusters
+# Imprint sequential ramp (imprint_seq): brand green (low density) → blue (high density)
+SEQ_LOW, SEQ_HIGH = "#009E73", "#4467A3"
+ANYPLOT_SEQ256 = [
+    "#{:02X}{:02X}{:02X}".format(
+        *(
+            round(int(SEQ_LOW[k : k + 2], 16) * (1 - t / 255) + int(SEQ_HIGH[k : k + 2], 16) * t / 255)
+            for k in (1, 3, 5)
+        )
+    )
+    for t in range(256)
+]
+
+# Constants
+N_LEVELS = 8  # number of density contour levels
+
+# Columns: set these to your table's column names
+HEIGHT = "Height (cm)"  # role: x
+WEIGHT = "Weight (kg)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("body_measurements.csv")
+# Adult height and weight survey: two groups with their own centres, weight rising with height
 np.random.seed(42)
-n_points = 500
+n_group = 250
+height_f = np.random.normal(163, 6, n_group)
+height_m = np.random.normal(178, 7, n_group)
+weight_f = 62 + 0.6 * (height_f - 163) + np.random.normal(0, 6, n_group)
+weight_m = 82 + 0.7 * (height_m - 178) + np.random.normal(0, 7, n_group)
+df = pd.DataFrame({HEIGHT: np.concatenate([height_f, height_m]), WEIGHT: np.concatenate([weight_f, weight_m])})
 
-cluster1_x = np.random.normal(25, 4, n_points // 2)
-cluster1_y = np.random.normal(35, 5, n_points // 2)
-cluster2_x = np.random.normal(40, 6, n_points // 2)
-cluster2_y = np.random.normal(50, 4, n_points // 2)
+# Plot: reads only df and the constants above
+points = df[[HEIGHT, WEIGHT]].dropna()
+kde = stats.gaussian_kde(points.to_numpy().T)
 
-x = np.concatenate([cluster1_x, cluster2_x])
-y = np.concatenate([cluster1_y, cluster2_y])
+x_lo, x_hi = points[HEIGHT].min(), points[HEIGHT].max()
+y_lo, y_hi = points[WEIGHT].min(), points[WEIGHT].max()
+x_pad, y_pad = 0.08 * (x_hi - x_lo), 0.08 * (y_hi - y_lo)
+x_min, x_max, y_min, y_max = x_lo - x_pad, x_hi + x_pad, y_lo - y_pad, y_hi + y_pad
 
-# Compute 2D KDE
-kde = stats.gaussian_kde([x, y])
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, 160), np.linspace(y_min, y_max, 160))
+density = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+density /= density.max()  # relative density: the peak is 1
 
-# Create grid for contour evaluation
-x_min, x_max = x.min() - 3, x.max() + 3
-y_min, y_max = y.min() - 3, y.max() + 3
-xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
-positions = np.vstack([xx.ravel(), yy.ravel()])
-density = kde(positions).reshape(xx.shape)
+levels = np.linspace(0, 1, N_LEVELS + 2)[1:-1]
+level_colors = [ANYPLOT_SEQ256[round(i * 255 / (N_LEVELS - 1))] for i in range(N_LEVELS)]
 
-# Extract contour lines using matplotlib (for calculation only)
-fig_temp, ax_temp = plt.subplots()
-contour_set = ax_temp.contour(xx, yy, density, levels=8)
-plt.close(fig_temp)
-
-# Create Bokeh figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="contour-density · bokeh · anyplot.ai",
-    x_axis_label="Measurement A (units)",
-    y_axis_label="Measurement B (units)",
+    width=3200,
+    height=1800,
+    title="contour-density · python · bokeh · anyplot.ai",
+    x_axis_label=HEIGHT,
+    y_axis_label=WEIGHT,
     x_range=(x_min, x_max),
     y_range=(y_min, y_max),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=80,
 )
 
-# Contour colors - blue gradient (low to high density)
-colors = ["#e8f4f8", "#c6e4f2", "#94cfea", "#5bb4e0", "#306998", "#1f5070", "#143848", "#0a1c24"]
+# Scatter overlay: small faint points behind the contours, for context only
+source = ColumnDataSource(points)
+p.scatter(x=HEIGHT, y=WEIGHT, source=source, size=9, color=INK_MUTED, alpha=0.35, line_color=None)
 
-# Plot contour lines
-for i, level_segs in enumerate(contour_set.allsegs):
-    color = colors[min(i, len(colors) - 1)]
-    for seg in level_segs:
-        if len(seg) > 1:
-            p.line(x=seg[:, 0], y=seg[:, 1], line_width=3, line_color=color, line_alpha=0.9)
+# Density contours (native bokeh contour renderer), inner rings = higher density
+contours = p.contour(xx, yy, density, levels, line_color=level_colors, line_width=4.5, line_alpha=0.95)
 
-# Overlay scatter points (using Okabe-Ito first series)
-source = ColumnDataSource(data={"x": x, "y": y})
-p.scatter(x="x", y="y", source=source, size=8, color=BRAND, alpha=0.4, legend_label="Data points")
+color_bar = contours.construct_color_bar(
+    title="Relative density (peak = 1)",
+    title_text_font_size="30pt",
+    title_text_color=INK,
+    title_standoff=24,
+    major_label_text_font_size="30pt",
+    formatter=PrintfTickFormatter(format="%.2f"),
+    major_label_text_color=INK_SOFT,
+    major_tick_line_color=None,
+    width=60,
+    background_fill_color=PAGE_BG,
+    bar_line_color=None,
+    padding=30,
+)
+p.add_layout(color_bar, "right")
 
-# Styling
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "50pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
-p.legend.label_text_font_size = "18pt"
-p.legend.location = "top_left"
-p.legend.label_text_color = INK_SOFT
-p.legend.background_fill_color = PAGE_BG
-p.legend.border_line_color = INK_SOFT
-
 # Save HTML
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with Selenium
-W, H = 4800, 2700
+# Screenshot with headless Chrome
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -132,6 +155,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()

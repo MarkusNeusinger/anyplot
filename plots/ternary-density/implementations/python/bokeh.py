@@ -1,260 +1,196 @@
 """ anyplot.ai
 ternary-density: Ternary Density Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 72/100 | Updated: 2026-05-19
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColorBar, Label, LinearColorMapper
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColorBar, ColumnDataSource, Label, LinearColorMapper
+from bokeh.palettes import interp_palette
 from bokeh.plotting import figure
 from scipy.stats import gaussian_kde
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Generate synthetic compositional data (sediment: sand/silt/clay)
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: imprint_seq (brand green -> blue) as a 256-stop ramp for the density
+IMPRINT_SEQ256 = interp_palette(("#009E73", "#4467A3"), 256)
+
+# Columns: set these to your table's column names
+SAND = "Sand"  # role: component_a
+SILT = "Silt"  # role: component_b
+CLAY = "Clay"  # role: component_c
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sediments.csv")
 np.random.seed(42)
-n_points = 500
-
-# Create three clusters of compositions
-# Cluster 1: Sandy sediments (high sand)
-n1 = 200
-sand1 = np.random.beta(5, 2, n1) * 80 + 10
-silt1 = np.random.beta(2, 3, n1) * (100 - sand1) * 0.6
-clay1 = 100 - sand1 - silt1
-
-# Cluster 2: Silty sediments (high silt)
-n2 = 150
-silt2 = np.random.beta(5, 2, n2) * 70 + 20
-sand2 = np.random.beta(2, 3, n2) * (100 - silt2) * 0.5
-clay2 = 100 - sand2 - silt2
-
-# Cluster 3: Clayey sediments (high clay)
-n3 = 150
-clay3 = np.random.beta(5, 2, n3) * 60 + 30
-sand3 = np.random.beta(2, 3, n3) * (100 - clay3) * 0.4
-silt3 = 100 - sand3 - clay3
-
-# Combine all clusters
-sand = np.concatenate([sand1, sand2, sand3])
-silt = np.concatenate([silt1, silt2, silt3])
-clay = np.concatenate([clay1, clay2, clay3])
-
-# Normalize to ensure they sum to 100
-total = sand + silt + clay
-sand = sand / total * 100
-silt = silt / total * 100
-clay = clay / total * 100
-
-
-# Convert ternary to Cartesian coordinates
-def ternary_to_cartesian(a, b, c):
-    """Convert ternary coordinates (a, b, c) to Cartesian (x, y)."""
-    total = a + b + c
-    a, b, c = a / total, b / total, c / total
-    x = 0.5 * (2 * b + c)
-    y = (np.sqrt(3) / 2) * c
-    return x, y
-
-
-# Transform data points
-x_data, y_data = ternary_to_cartesian(sand, silt, clay)
-
-# Create density grid
-grid_resolution = 200
-x_grid = np.linspace(0, 1, grid_resolution)
-y_grid = np.linspace(0, np.sqrt(3) / 2, grid_resolution)
-xx, yy = np.meshgrid(x_grid, y_grid)
-
-# Create mask for valid ternary region (inside the triangle)
-# Triangle vertices: (0, 0), (1, 0), (0.5, sqrt(3)/2)
-mask = np.zeros_like(xx, dtype=bool)
-for i in range(grid_resolution):
-    for j in range(grid_resolution):
-        px, py = xx[i, j], yy[i, j]
-        # Check if point is inside triangle using barycentric coordinates
-        # Left edge: y <= sqrt(3) * x
-        # Right edge: y <= sqrt(3) * (1 - x)
-        # Bottom edge: y >= 0
-        if py >= 0 and py <= np.sqrt(3) * px + 1e-6 and py <= np.sqrt(3) * (1 - px) + 1e-6:
-            mask[i, j] = True
-
-# Compute kernel density estimation
-points = np.vstack([x_data, y_data])
-kde = gaussian_kde(points, bw_method="scott")
-
-# Evaluate on grid
-positions = np.vstack([xx.ravel(), yy.ravel()])
-density = kde(positions).reshape(xx.shape)
-
-# Apply mask (set values outside triangle to NaN)
-density_masked = np.where(mask, density, np.nan)
-
-# Create figure (4800 x 2700 for landscape format)
-p = figure(
-    width=4800,
-    height=2700,
-    title="Sediment Composition · ternary-density · bokeh · pyplots.ai",
-    x_range=(-0.15, 1.15),
-    y_range=(-0.12, 1.05),
-    tools="",
-    toolbar_location=None,
+# Sandy sediments (high sand)
+sand1 = np.random.beta(5, 2, 200) * 80 + 10
+silt1 = np.random.beta(2, 3, 200) * (100 - sand1) * 0.6
+# Silty sediments (high silt)
+silt2 = np.random.beta(5, 2, 150) * 70 + 20
+sand2 = np.random.beta(2, 3, 150) * (100 - silt2) * 0.5
+# Clayey sediments (high clay)
+clay3 = np.random.beta(5, 2, 150) * 60 + 30
+sand3 = np.random.beta(2, 3, 150) * (100 - clay3) * 0.4
+df = pd.DataFrame(
+    {
+        SAND: np.concatenate([sand1, sand2, sand3]),
+        SILT: np.concatenate([silt1, silt2, 100 - sand3 - clay3]),
+        CLAY: np.concatenate([100 - sand1 - silt1, 100 - sand2 - silt2, clay3]),
+    }
 )
 
-# Remove axes and grid (we'll draw our own ternary grid)
+# Plot: reads only df and the constants above
+H_TRI = np.sqrt(3) / 2
+comp = df[[SAND, SILT, CLAY]].dropna()
+comp = comp.div(comp.sum(axis=1), axis=0)  # closure: each composition sums to 1
+x_data = comp[SILT] + comp[CLAY] / 2  # Sand at (0, 0), Silt at (1, 0), Clay at the apex
+y_data = comp[CLAY] * H_TRI
+
+# KDE on a grid, masked to the triangle (vectorized barycentric test)
+grid_res = 300
+xx, yy = np.meshgrid(np.linspace(0, 1, grid_res), np.linspace(0, H_TRI, grid_res))
+inside = (yy <= np.sqrt(3) * xx + 1e-9) & (yy <= np.sqrt(3) * (1 - xx) + 1e-9)
+kde = gaussian_kde(np.vstack([x_data, y_data]), bw_method="scott")
+density = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+density = np.where(inside, density / density[inside].max(), np.nan)
+
+# Equal data units per pixel on both axes keep the triangle equilateral and centred in the frame
+W, H = 3200, 1800
+BORDER_TOP, BORDER_BOTTOM, BORDER_SIDE = 110, 40, 40
+FRAME_W, FRAME_H = W - 2 * BORDER_SIDE, H - BORDER_TOP - BORDER_BOTTOM
+y_lo, y_hi = -0.12, H_TRI + 0.1
+x_half = (y_hi - y_lo) * FRAME_W / FRAME_H / 2
+
+p = figure(
+    width=W,
+    height=H,
+    title="Sediment Composition · ternary-density · python · bokeh · anyplot.ai",
+    x_range=(0.5 - x_half, 0.5 + x_half),
+    y_range=(y_lo, y_hi),
+    tools="",
+    toolbar_location=None,
+    min_border_top=BORDER_TOP,
+    min_border_bottom=BORDER_BOTTOM,
+    min_border_left=BORDER_SIDE,
+    min_border_right=BORDER_SIDE,
+)
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.styles = {"background-color": PAGE_BG}  # page colour under the canvas hides the frame/border seam
 
-# Color mapper for density
-color_mapper = LinearColorMapper(
-    palette="Viridis256", low=np.nanmin(density_masked), high=np.nanmax(density_masked), nan_color="rgba(0, 0, 0, 0)"
+color_mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=0, high=1, nan_color="rgba(0, 0, 0, 0)")
+p.image(image=[density], x=0, y=0, dw=1, dh=H_TRI, color_mapper=color_mapper, alpha=0.9)
+
+# Ternary grid at 10 % steps: one line per component level, each kept inside the triangle
+levels = np.arange(1, 10) / 10
+grid = pd.DataFrame(
+    {
+        "xs": [[f / 2, 1 - f / 2] for f in levels]  # constant Clay
+        + [[f, (1 + f) / 2] for f in levels]  # constant Silt
+        + [[1 - f, (1 - f) / 2] for f in levels],  # constant Sand
+        "ys": [[f * H_TRI, f * H_TRI] for f in levels]
+        + [[0, (1 - f) * H_TRI] for f in levels]
+        + [[0, (1 - f) * H_TRI] for f in levels],
+    }
 )
+p.multi_line(xs="xs", ys="ys", source=ColumnDataSource(grid), line_color=INK, line_alpha=0.28, line_width=2)
+p.line([0, 1, 0.5, 0], [0, 0, H_TRI, 0], line_width=5, line_color=INK_SOFT)
 
-# Plot density as image
-p.image(image=[density_masked], x=0, y=0, dw=1, dh=np.sqrt(3) / 2, color_mapper=color_mapper, alpha=0.85)
-
-# Triangle vertices
-tri_x = [0, 1, 0.5, 0]
-tri_y = [0, 0, np.sqrt(3) / 2, 0]
-
-# Draw triangle outline
-p.line(tri_x, tri_y, line_width=4, line_color="#306998", line_alpha=0.9)
-
-# Draw grid lines inside triangle
-grid_alpha = 0.4
-grid_width = 2
-grid_color = "#306998"
-
-# Draw lines parallel to each edge (10%, 20%, ..., 90%)
-for pct in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-    # Lines parallel to bottom edge (constant clay %)
-    y_line = pct * np.sqrt(3) / 2
-    x_left = pct / 2
-    x_right = 1 - pct / 2
-    p.line([x_left, x_right], [y_line, y_line], line_width=grid_width, line_color=grid_color, line_alpha=grid_alpha)
-
-    # Lines parallel to left edge (constant silt %)
-    x_start = pct
-    y_start = 0
-    x_end = pct / 2 + 0.5
-    y_end = (1 - pct) * np.sqrt(3) / 2
-    p.line([x_start, x_end], [y_start, y_end], line_width=grid_width, line_color=grid_color, line_alpha=grid_alpha)
-
-    # Lines parallel to right edge (constant sand %)
-    x_start = 1 - pct
-    y_start = 0
-    x_end = (1 - pct) / 2
-    y_end = pct * np.sqrt(3) / 2
-    p.line([x_start, x_end], [y_start, y_end], line_width=grid_width, line_color=grid_color, line_alpha=grid_alpha)
-
-# Add vertex labels
-label_font_size = "32pt"
-label_offset = 0.08
-
-# Sand (bottom left)
-sand_label = Label(
-    x=0 - label_offset,
-    y=0 - label_offset / 2,
-    text="Sand",
-    text_font_size=label_font_size,
-    text_color="#306998",
-    text_font_style="bold",
-    text_align="center",
-)
-p.add_layout(sand_label)
-
-# Silt (bottom right)
-silt_label = Label(
-    x=1 + label_offset,
-    y=0 - label_offset / 2,
-    text="Silt",
-    text_font_size=label_font_size,
-    text_color="#306998",
-    text_font_style="bold",
-    text_align="center",
-)
-p.add_layout(silt_label)
-
-# Clay (top)
-clay_label = Label(
-    x=0.5,
-    y=np.sqrt(3) / 2 + label_offset,
-    text="Clay",
-    text_font_size=label_font_size,
-    text_color="#306998",
-    text_font_style="bold",
-    text_align="center",
-)
-p.add_layout(clay_label)
-
-# Add percentage labels along edges
-tick_font_size = "18pt"
-
-# Bottom edge (Sand percentage, from left to right is 100% to 0%)
-for pct in [20, 40, 60, 80]:
-    x_pos = pct / 100
+# Vertex labels
+for name, vx, vy, align, base in [
+    (SAND, -0.03, -0.03, "right", "top"),
+    (SILT, 1.03, -0.03, "left", "top"),
+    (CLAY, 0.5, H_TRI + 0.03, "center", "bottom"),
+]:
     p.add_layout(
         Label(
-            x=x_pos,
-            y=-0.05,
-            text=f"{100 - pct}%",
-            text_font_size=tick_font_size,
-            text_color="#666666",
-            text_align="center",
+            x=vx,
+            y=vy,
+            text=name,
+            text_font_size="44pt",
+            text_font_style="bold",
+            text_color=INK,
+            text_align=align,
+            text_baseline=base,
         )
     )
 
-# Left edge (Clay percentage, from bottom to top is 0% to 100%)
-for pct in [20, 40, 60, 80]:
-    x_pos = pct / 100 / 2
-    y_pos = pct / 100 * np.sqrt(3) / 2
-    p.add_layout(
-        Label(
-            x=x_pos - 0.06,
-            y=y_pos,
-            text=f"{pct}%",
-            text_font_size=tick_font_size,
-            text_color="#666666",
-            text_align="right",
+# Edge tick labels: Silt along the base, Clay up the right edge, Sand down the left edge
+for f in [0.2, 0.4, 0.6, 0.8]:
+    pct = f"{f * 100:.0f}%"
+    for tx, ty, align, base in [
+        (f, -0.025, "center", "top"),  # Silt share on the base
+        (1 - f / 2 + 0.025, f * H_TRI, "left", "middle"),  # Clay share on the right edge
+        ((1 - f) / 2 - 0.025, (1 - f) * H_TRI, "right", "middle"),  # Sand share on the left edge
+    ]:
+        p.add_layout(
+            Label(
+                x=tx, y=ty, text=pct, text_font_size="28pt", text_color=INK_SOFT, text_align=align, text_baseline=base
+            )
         )
-    )
 
-# Right edge (Silt percentage)
-for pct in [20, 40, 60, 80]:
-    x_pos = 1 - pct / 100 / 2
-    y_pos = pct / 100 * np.sqrt(3) / 2
-    p.add_layout(
-        Label(
-            x=x_pos + 0.06,
-            y=y_pos,
-            text=f"{pct}%",
-            text_font_size=tick_font_size,
-            text_color="#666666",
-            text_align="left",
-        )
-    )
-
-# Add color bar
 color_bar = ColorBar(
     color_mapper=color_mapper,
-    width=40,
-    location=(0, 0),
-    title="Density",
-    title_text_font_size="24pt",
-    major_label_text_font_size="18pt",
-    title_text_color="#306998",
-    major_label_text_color="#666666",
-    title_standoff=15,
-    margin=20,
+    width=50,
+    height=1100,
+    location=(FRAME_W - 560, (FRAME_H - 1100) / 2),
+    title="Relative density",
+    title_text_font_size="32pt",
+    title_text_color=INK,
+    title_text_font_style="normal",
+    major_label_text_font_size="28pt",
+    major_label_text_color=INK_SOFT,
+    major_tick_line_color=None,
+    bar_line_color=None,
+    background_fill_color=PAGE_BG,
+    title_standoff=20,
+    padding=30,
 )
-p.add_layout(color_bar, "right")
+p.add_layout(color_bar)
 
-# Title styling
-p.title.text_font_size = "36pt"
-p.title.text_color = "#306998"
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.title.text_font_style = "normal"
 p.title.align = "center"
 
 # Save
-export_png(p, filename="plot.png")
+output_file(f"plot-{THEME}.html")
+save(p)
+
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

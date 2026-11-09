@@ -43,12 +43,13 @@
  * `done` carries the session's `bindings` and `data_confirmed`, as the service
  * syncs them after a run, `language` (`{language, source}`, the session
  * language) and `dataset` after a turn that changed the data.
- * `PUT .../language` (the header's language chip) validates `{language}` like
- * the BFF (`^[A-Za-z][A-Za-z -]{0,39}$` on the value as sent, no other field),
- * stores it in the service's normalised form (a known name or endonym of the
- * ten common languages as its code, a two-letter value in lower case, anything
- * else as typed) with the source `chosen`, answers `{language, source}`, and
- * `409 run_active` while a turn runs.
+ * `PUT .../language` (the header's language chip, or an offer's `.switch()`)
+ * validates `{language, via?}` like the BFF (`^[A-Za-z][A-Za-z -]{0,39}$` on the
+ * value as sent, `via` `header` or `offer`, no other field), stores it in the
+ * service's normalised form (a known name or endonym of the ten common languages
+ * as its code, a two-letter value in lower case, anything else as typed) with
+ * the source `chosen`, or `offer` for an accepted offer, answers
+ * `{language, source}`, and `409 run_active` while a turn runs.
  * `GET .../bundle?include_data=&version=` (the page's `.save()`) answers the
  * session's feedback case from the mock's state, with the agents service's
  * top-level keys (the transcript of the turns, every version's code, result and
@@ -113,20 +114,19 @@
  * ("Beispieldaten", "random numbers with 3 categories") answers `422 data_request`:
  * the page sends either to the chat, or asks to shorten code over 2,000 characters.
  *
- * The session language in miniature: every session starts at `en`/`default`.
- * A paste whose notes or column names read German sets `de` (`pasted`) while
- * nothing typed or chosen has, and the dataset answer carries
- * `language: {language, source}`.
- * The first typed message that is not refused sets it (`detected`, the scope
- * judge's job in the service): `de` when it reads German (an umlaut or ß, or a
- * word such as "bitte", "und", "die", "mach", "zeichne", "beschriftung"), `en`
- * otherwise, but an English one only from three words on ("sin x" keeps the
- * default); a later message never changes it. "labels in german" or
- * "beschriftung auf englisch" (english, german, french, spanish; deutsch,
- * englisch, französisch, spanisch) is the root's `set_language`: `chosen`,
- * which detection never overrides, and a reply; when the session has a plot,
- * the refinement below follows. A question ("…?") in a German session gets the
- * German reply.
+ * The session language in miniature: every session starts at `en`/`default`
+ * and stays there until the user picks another. A paste whose notes or column
+ * names read German, or a typed message that is not refused and reads German
+ * (an umlaut or ß, or a word such as "bitte", "und", "die", "mach", "zeichne",
+ * "beschriftung"), offers German once: the dataset answer or the turn's `done`
+ * carries `language: {language, source, offer: {language, basis}}`. After the
+ * user took German (`PUT .../language` with `via: offer`, source `offer`), an
+ * English message of three words or more offers English back, once. "labels in
+ * german", "beschriftung auf englisch" or "auf deutsch bitte" (english, german,
+ * french, spanish; deutsch, englisch, französisch, spanisch) is the root's
+ * `set_language`: `chosen`, after which nothing is offered, and a reply; when
+ * the session has a plot, the refinement below follows. A question ("…?") in a
+ * German session gets the German reply.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
@@ -229,8 +229,11 @@
  * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all. A shipped plot's event
  * names the memory its version stands on, `memory: {kept, added}` by entry id, settled before the event as the
  * service does. A typed plot wish before the data is confirmed (also in the note sent with a paste), while the
- * library has no plot, is kept for its first plot as the root's `keep_plot_request` keeps it, which the stream
- * shows nothing of; that plot then remembers it.
+ * library has no plot of this data (a plot of data a new paste replaced is none), is kept for its first plot as
+ * the root's `keep_plot_request` keeps it, which the stream shows nothing of; that plot then remembers it. Every
+ * new data version (a paste, a change, an undo) drops the carry, and a switch takes only the asked theme of a plot
+ * of another data version. The paste answer's `columns_changed` says that a column the replaced data was bound to is not in the
+ * new data (by its exact name), as the service's does (owner decisions of 2026-11-08).
  *
  * What a turn changed: every `done` of a turn that ended well carries `turn` (`answer`, `data`, `plot`,
  * `language` or `kept`, the service's `stream.turn_outcome` for the paths the mock plays): a question, a
@@ -1177,6 +1180,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   // What the turn changed (`done.turn`, the service's `stream.turn_outcome`): `answer` until a path
   // names its change; `null` for a refusal or an error, whose `done` carries none, as a stop's.
   let turn = 'answer';
+  // The language the scope judge found in the typed message, offered with `done` (`offerLanguage`).
+  let turnOffer = null;
   try {
     send('ready', { v: 'anyplot/1', run_id: log.runId });
     // Pretend `QUEUE_START - 1` other turns wait ahead of this one.
@@ -1209,7 +1214,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       const needsData =
         /stock price|unemployment rate/.test(lower) && !(session.summaryPending && session.dataset);
       if (typeof body.text === 'string' && !outOfScope && !needsData) {
-        detectLanguage(session, text);
+        turnOffer = offerLanguage(session, text, text.trim().split(/\s+/).length);
       }
       const asked = outOfScope || needsData ? null : requestedLanguage(lower);
       if (asked) {
@@ -1244,7 +1249,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         const year = lower.match(/\b(?:nur|only)\s+(\d{4})\b/);
         // A plot wish in the note (a title, a label, a scale…) is kept for the first plot, as the
         // root's `keep_plot_request`; a question about the data changes nothing.
-        const wish = !year && plotWish(lower) && !libraryHasPlot(session);
+        const wish = !year && plotWish(lower) && !libraryHasPlotOfThisData(session);
         const acted = year
           ? keepYear(session, year[1])
           : /dezimal|decimal comma|tausender|thousands/.test(lower)
@@ -1363,12 +1368,13 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
           : !session.complete
             ? 'incomplete_bindings'
             : 'data_unconfirmed';
-        // A typed plot wish before the data is confirmed, while this library has no plot yet: the
-        // root's `keep_plot_request` keeps it for the first plot, which the stream shows nothing of.
+        // A typed plot wish before the data is confirmed, while this library has no plot of this
+        // data yet: the root's `keep_plot_request` keeps it for the first plot, which the stream
+        // shows nothing of.
         if (
           reason === 'data_unconfirmed' &&
           typeof body.text === 'string' &&
-          !libraryHasPlot(session)
+          !libraryHasPlotOfThisData(session)
         ) {
           // A language the same message chose comes first in the service's order.
           if (turn !== 'language') turn = 'kept';
@@ -1478,14 +1484,16 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         theme,
         themeAsked: askedTheme !== null,
         dataset: session.dataset,
+        // The data version it drew (`CodeVersion.data_version`).
+        dataNumber: session.version,
         bindings: session.bindings,
         // The session language the version's text was written in, as the service keeps it.
         language: session.language,
         pngs: {},
       };
       renderVersion(session, version, theme);
-      // The library's first plot: a wish kept for it in step 1 is its request.
-      const firstHere = !libraryHasPlot(session);
+      // The library's first plot of this data: a wish kept for it in step 1 is its request.
+      const firstHere = !libraryHasPlotOfThisData(session);
       session.versions.push(version);
       const x = columnOf(version, 'x');
       const y = yColumns(version).join(', ');
@@ -1553,7 +1561,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       tokens: 18734,
       bindings: session.bindings,
       data_confirmed: session.confirmed,
-      language: { language: session.language, source: session.languageSource },
+      language: languageBody(session, turnOffer),
       ...(session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {}),
       ...(session.changed ? { dataset: session.changed } : {}),
       ...(turn && !session.cancelled && !closed ? { turn } : {}),
@@ -1642,8 +1650,18 @@ function memoryKind(lower) {
 /** Whether a message is a wish for the plot (a title, a label, a scale…), not a question. */
 const plotWish = lower => !lower.trim().endsWith('?') && memoryKind(lower) !== 'other';
 
-/** Whether the session's library has a plot yet: a wish for its first plot is kept until then. */
+/** Whether the session's library has a plot yet. */
 const libraryHasPlot = session => session.versions.some(item => item.library === session.library);
+
+/**
+ * Whether the library has a plot of the current data: a version whose data number is the paste's
+ * or later (`CodeVersion.earlier_data` on the service). A wish for the first plot of this data is
+ * kept until then, also when the library has a plot of data a new paste replaced (2026-11-08).
+ */
+const libraryHasPlotOfThisData = session =>
+  session.versions.some(
+    item => item.library === session.library && (item.dataNumber ?? 0) >= session.first
+  );
 
 /**
  * The root's `keep_plot_request` in miniature: a plot wish before the data is confirmed is kept
@@ -1725,29 +1743,33 @@ function normaliseLanguage(value) {
 const GERMAN = /[äöüß]|\b(bitte|und|der|die|das|mit|zeichne|beschriftung|mach)\b/i;
 
 /**
- * The scope judge's `lang` for the session's first accepted typed message, once:
- * `de` for German, else `en`, which counts only from three words on (the judge
- * also answers `en` when it cannot tell, so "sin x" keeps the default).
+ * The service's `language.offer`, in miniature: the judges' `lang` (`de` for German text,
+ * else `en`) never sets the session language, it is offered once, as `{language, basis}`,
+ * and recorded as offered. `words` is a typed message's word count, `null` for a paste's
+ * notes and column names. Nothing after a pick (`chosen`), nothing for the session's own
+ * language or one offered before, and `en` only for a message of three words or more (the
+ * judge also answers `en` when it cannot tell, so "sin x" offers nothing), never for data.
  */
-function detectLanguage(session, text) {
-  // A language from the pasted data yields to the first typed message, as in the service.
-  if (session.languageSource !== 'default' && session.languageSource !== 'pasted') return;
+function offerLanguage(session, text, words) {
+  if (session.languageSource === 'chosen') return null;
   const code = GERMAN.test(text) ? 'de' : 'en';
-  if (code === 'en' && text.trim().split(/\s+/).length < 3) return;
-  session.language = code;
-  session.languageSource = 'detected';
+  if (code === session.language || session.languageOffered.includes(code)) return null;
+  if (code === 'en' && (words === null || words < 3)) return null;
+  session.languageOffered.push(code);
+  return { language: code, basis: words === null ? 'data' : 'message' };
 }
 
 /**
- * The service's `pasted_language`, in miniature: a paste before any typed message or
- * choice sets `de` (source `pasted`) when its text (the notes and the column names)
- * reads German; anything else is no signal and leaves the current language.
+ * The session language as the service answers it, `{language, source}`, with `offer` while it
+ * holds: never after a pick (the root's `set_language` may have made one in the same turn) and
+ * never for the language the session has now.
  */
-function pastedLanguage(session, text) {
-  if (session.languageSource !== 'default' && session.languageSource !== 'pasted') return;
-  if (!GERMAN.test(text)) return;
-  session.language = 'de';
-  session.languageSource = 'pasted';
+function languageBody(session, offer) {
+  const body = { language: session.language, source: session.languageSource };
+  if (offer && session.languageSource !== 'chosen' && offer.language !== session.language) {
+    body.offer = offer;
+  }
+  return body;
 }
 
 const ASKED_LANGUAGES = {
@@ -1761,11 +1783,15 @@ const ASKED_LANGUAGES = {
   spanisch: ['es', 'Spanish'],
 };
 
-/** "labels in german", "beschriftung auf englisch": the root's `set_language` request, or `null`. */
+/**
+ * "labels in german", "beschriftung auf englisch", "auf deutsch bitte": the root's
+ * `set_language` request, or `null`.
+ */
 function requestedLanguage(lower) {
   const match =
     lower.match(/\blabels? in (english|german|french|spanish)\b/) ??
-    lower.match(/\bbeschriftung (?:bitte )?auf (deutsch|englisch|französisch|spanisch)/);
+    lower.match(/\bbeschriftung (?:bitte )?auf (deutsch|englisch|französisch|spanisch)/) ??
+    lower.match(/^\s*auf (deutsch|englisch|französisch|spanisch)(?: bitte)?\W*$/);
   if (!match) return null;
   const [code, name] = ASKED_LANGUAGES[match[1]];
   return { code, name };
@@ -1833,17 +1859,24 @@ function storeVersion(session, parsed, changes) {
   session.top += 1;
   session.version = session.top;
   session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
+  // A new data version drops the switch's carry and a wish kept for the first plot, as the
+  // service's version delta does (2026-11-08).
+  session.carry = null;
+  session.keptWish = null;
 }
 
 /**
  * New data (a paste, a copy, a table computed without data): its first version, under the
- * session's next number, with no history to undo.
+ * session's next number, with no history to undo. A switch's carry and a kept wish go with the
+ * data before.
  */
 function newData(session) {
   session.history = [];
   session.top += 1;
   session.version = session.top;
   session.first = session.top;
+  session.carry = null;
+  session.keptWish = null;
 }
 
 /**
@@ -2583,9 +2616,11 @@ async function route(req, res) {
       transcript: [],
       // The quick feedback per result version: the latest submission, with its case id.
       feedback: {},
-      // The session language: English by default, whatever the browser's locale.
+      // The session language: English by default, whatever the browser's locale, and the
+      // languages offered so far (each comes once).
       language: 'en',
       languageSource: 'default',
+      languageOffered: [],
       // Opened by the admin's `.plot_all()` (`source: fanout`): the only kind of session a copy may go into.
       fanout: body.source === 'fanout',
       // The plot memory (`{id, kind, target, text, expect, turn}`, oldest first), its next id, the
@@ -2636,6 +2671,8 @@ async function route(req, res) {
     const target = body.library;
     const latestIn = library => session.versions.findLast(item => item.library === library);
     if (target !== session.library) {
+      // A plot of another data version carries its asked theme too; its texts and requests, which
+      // the mock does not carry, stay behind on the service (`switch.source_plot`, 2026-11-09).
       const plot = latestIn(session.library);
       const pending = session.carry;
       session.carry =
@@ -2729,13 +2766,18 @@ async function route(req, res) {
       await sleep(900);
       return json(res, 200, transcribed, ref);
     }
+    // A column the replaced data was bound to that the new data lacks (the service's `columns_changed`,
+    // which matches by name and meaning; the mock by the exact name).
+    const header = new Set(parsed.profile.columns.map(column => column.name));
+    const columnsChanged =
+      !!session.dataset && session.bindings.some(binding => !header.has(binding.column));
     session.dataset = parsed;
     session.bindings = defaultBindings(session, parsed.profile);
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // a new dataset is unchecked
     newData(session); // the session's next number, no history
     session.summaryPending = true; // the first turn on it summarizes it: the action, or the note
-    pastedLanguage(session, text);
+    const dataOffer = offerLanguage(session, text, null);
     return json(
       res,
       200,
@@ -2744,8 +2786,9 @@ async function route(req, res) {
         // A dropped file's name, kept apart from the notes as the service does (unscreened here).
         ...(typeof body?.source === 'string' ? { file_name: body.source.slice(0, 80) } : {}),
         ...(tables ? { tables, table } : {}),
+        columns_changed: columnsChanged,
         roles: SPECS[session.specId].roles,
-        language: { language: session.language, source: session.languageSource },
+        language: languageBody(session, dataOffer),
       },
       ref
     );
@@ -2800,6 +2843,7 @@ async function route(req, res) {
     newData(session); // the fan-out session's first version, 1
     session.language = origin.language;
     session.languageSource = origin.languageSource;
+    session.languageOffered = [...origin.languageOffered]; // the page's offers stand: a copy never offers
     return json(
       res,
       200,
@@ -2836,6 +2880,9 @@ async function route(req, res) {
     session.complete = checkBindings(session, session.bindings).complete;
     session.confirmed = false; // restored, but confirmed again by the user
     session.version = previous.number; // its own number again; the undone one is never given again
+    // A new data version drops the switch's carry and a kept wish (2026-11-08).
+    session.carry = null;
+    session.keptWish = null;
     return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
   }
   if (method === 'PUT' && rest === '/bindings') {
@@ -2853,15 +2900,28 @@ async function route(req, res) {
   }
   if (method === 'PUT' && rest === '/language') {
     if (session.active) return fail(res, 409, 'run_active', ref);
-    // The BFF's strict body: `language` only, matched as sent (a leading space is a 422).
-    const extra = body && typeof body === 'object' && Object.keys(body).some(k => k !== 'language');
+    // The BFF's strict body: `language` and `via` (`header` or `offer`), matched as sent.
+    const extra =
+      body &&
+      typeof body === 'object' &&
+      Object.keys(body).some(k => k !== 'language' && k !== 'via');
     const value = typeof body?.language === 'string' ? body.language : '';
-    if (extra || !LANGUAGE_RE.test(value)) return fail(res, 422, 'invalid', ref);
+    const via = body?.via ?? 'header';
+    if (extra || !LANGUAGE_RE.test(value) || !['header', 'offer'].includes(via)) {
+      return fail(res, 422, 'invalid', ref);
+    }
     session.language = normaliseLanguage(value);
-    session.languageSource = 'chosen';
+    // An accepted offer keeps a pick final: `offer` only while the user picked none.
+    session.languageSource =
+      via === 'offer' && session.languageSource !== 'chosen' ? 'offer' : 'chosen';
     // With data, the `.to_long()` offer recomputed in the new language, as the service answers it.
     const offer = session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {};
-    return json(res, 200, { language: session.language, source: 'chosen', ...offer }, ref);
+    return json(
+      res,
+      200,
+      { language: session.language, source: session.languageSource, ...offer },
+      ref
+    );
   }
   if (method === 'POST' && rest === '/dataset/convert') {
     // The renderer reads the file in production; here the first bytes pick a canned answer. A zip is a

@@ -289,12 +289,21 @@ export interface Binding {
 }
 
 /**
- * How the session language was set: `default` (nobody yet, English), `pasted`
- * (the notes or the column names of a paste before any typed message),
- * `detected` (the session's first typed message), `chosen` (the header's chip
- * or a request in the chat). Only `chosen` is final.
+ * How the session language was set: `default` (nobody yet, English), `chosen` (the header's
+ * chip or a request in the chat, final: no language is offered after it), `offer` (the user
+ * took the thread's offer of a language found in a message or a paste).
  */
-export type LanguageSource = 'default' | 'pasted' | 'detected' | 'chosen';
+export type LanguageSource = 'default' | 'chosen' | 'offer';
+
+/**
+ * A language the server offers, found in a typed message (`message`) or in a paste's notes or
+ * column names (`data`): the thread shows it once, with `.switch()`; ignored, nothing changes.
+ */
+export interface LanguageOffer {
+  /** The stored form: a code for a known language (`de`), any other as the judge named it. */
+  language: string;
+  basis: 'message' | 'data';
+}
 
 /**
  * The session language: the assistant's replies and every text in the plot.
@@ -414,10 +423,16 @@ export interface DatasetParsed {
    */
   original_version?: number;
   /**
-   * The paste's answer only: the session language after it, which a paste
-   * before any typed message or choice sets from the language of its notes or
-   * column names (`pasted`). Read it through `plotLanguage`; absent from an
-   * older server.
+   * The paste's answer only: the data replaces data, and a column a binding of the replaced
+   * data used is not in it. The page then shows the remembered decisions, which every next
+   * plot still applies, on the new data's chapter line with `.forget_all()`; only the user
+   * clears them. Read as true only when it is `true`; absent from an older server.
+   */
+  columns_changed?: unknown;
+  /**
+   * The paste's answer only: the session language, with `offer` when the notes or the
+   * column names are in another language the page has not been offered yet. Read it
+   * through `plotLanguage` and `languageOffer`; absent from an older server.
    */
   language?: unknown;
 }
@@ -1424,20 +1439,35 @@ export const agentApi = {
       body: JSON.stringify(bindings),
     }),
   /**
-   * The chat header's chip: the session language with the source `chosen`, which
-   * detection never overrides. Answers the stored form (`English` comes back as
-   * `en`); an answer the page cannot read falls back to the value as sent.
-   * `409 run_active` while a turn or a render runs, `422 invalid` for a value
-   * outside `LANGUAGE_PATTERN`. On a session with data the answer also carries
-   * `suggestion`, the `.to_long()` offer with its new column names in the new
-   * language (or `null`), so the data panel's card follows the language.
+   * A pick of the session language: the chat header's chip (source `chosen`, which ends
+   * every offer), or with `via` `offer` the `.switch()` of an offer line (source `offer`).
+   * Answers the stored form (`English` comes back as `en`); an answer the page cannot
+   * read falls back to the value as sent. `409 run_active` while a turn or a render
+   * runs, `422 invalid` for a value outside `LANGUAGE_PATTERN`. On a session with data
+   * the answer also carries `suggestion`, the `.to_long()` offer with its new column
+   * names in the new language (or `null`), so the data panel's card follows the language.
+   * The chip sends no `via`: a server from before the field refuses an unknown key with
+   * `422`, and an offer's pick then goes once more without it, as the chip's would.
    */
-  setLanguage: async (token: string, sid: string, language: string): Promise<LanguageAnswer> => {
-    const answer = await agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
-      method: 'PUT',
-      body: JSON.stringify({ language }),
-    });
-    const applied = plotLanguage(answer) ?? { language, source: 'chosen' as const };
+  setLanguage: async (
+    token: string,
+    sid: string,
+    language: string,
+    via?: 'offer'
+  ): Promise<LanguageAnswer> => {
+    const put = (body: Record<string, string>) =>
+      agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+    const answer = await (via ? put({ language, via }) : put({ language })).catch(
+      (err: unknown) => {
+        if (via && err instanceof AgentApiError && err.status === 422) return put({ language });
+        throw err;
+      }
+    );
+    const sent: LanguageSource = via === 'offer' ? 'offer' : 'chosen';
+    const applied = plotLanguage(answer) ?? { language, source: sent };
     return isRecord(answer) && 'suggestion' in answer
       ? { ...applied, suggestion: longSuggestion(answer.suggestion) }
       : applied;
@@ -1687,11 +1717,16 @@ export type AgentEvent =
        */
       dataset: DatasetChanged | null;
       /**
-       * The session language after the run (the first typed message or the
-       * assistant's `set_language` may have set it); `null` when the server sent
-       * none (a refused turn, a gone session, an older server).
+       * The session language after the run (the assistant's `set_language` may
+       * have set it); `null` when the server sent none (a refused turn, a gone
+       * session, an older server).
        */
       language: PlotLanguage | null;
+      /**
+       * The language the server offers for the turn's typed message (`language.offer`),
+       * or `null` for none: never after a pick, and never the session's own.
+       */
+      languageOffer: LanguageOffer | null;
       /**
        * The `.to_long()` offer after the run, its new column names in the
        * session language, which the turn may have changed: `null` for none,
@@ -1775,20 +1810,37 @@ function bindingList(value: unknown): Binding[] | null {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
 
-const LANGUAGE_SOURCES = new Set<string>(['default', 'pasted', 'detected', 'chosen']);
+const LANGUAGE_SOURCES = new Set<string>(['default', 'chosen', 'offer']);
+/** The sources a server from before the offer sends (`pasted`, `detected`, its detection): nobody's pick. */
+const LEGACY_SOURCES = new Set<string>(['pasted', 'detected']);
 
 /**
  * The session language of a `done` event, the dataset route's or the language
  * route's answer, or `null`: an object whose `language` matches
- * `LANGUAGE_PATTERN` and whose `source` is one of the four. The chip shows it
- * as it comes, so anything else is dropped whole.
+ * `LANGUAGE_PATTERN` and whose `source` is one of the three (a legacy one reads
+ * as `default`, nobody's pick). The chip shows it as it comes, so anything else
+ * is dropped whole.
  */
 export function plotLanguage(value: unknown): PlotLanguage | null {
   if (!isRecord(value)) return null;
   const { language, source } = value;
   if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;
-  if (typeof source !== 'string' || !LANGUAGE_SOURCES.has(source)) return null;
+  if (typeof source !== 'string') return null;
+  if (LEGACY_SOURCES.has(source)) return { language, source: 'default' };
+  if (!LANGUAGE_SOURCES.has(source)) return null;
   return { language, source: source as LanguageSource };
+}
+
+/**
+ * The offer a session language body carries (`{language, source, offer}`), or `null`: an
+ * `offer` whose `language` matches `LANGUAGE_PATTERN` and whose `basis` is `message` or `data`.
+ */
+export function languageOffer(value: unknown): LanguageOffer | null {
+  if (!isRecord(value) || !isRecord(value.offer)) return null;
+  const { language, basis } = value.offer;
+  if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;
+  if (basis !== 'message' && basis !== 'data') return null;
+  return { language, basis };
 }
 
 /** A switch answer's `target`, or `null` for anything but two non-empty strings. */
@@ -2080,6 +2132,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         dataConfirmed: typeof d.data_confirmed === 'boolean' ? d.data_confirmed : null,
         dataset: datasetChanged(d.dataset),
         language: plotLanguage(d.language),
+        languageOffer: languageOffer(d.language),
         ...('suggestion' in d ? { suggestion: longSuggestion(d.suggestion) } : {}),
         switch: chatSwitch(d.switch),
         ...(d.turn !== undefined && d.turn !== null ? { turn: turnOf(d.turn) } : {}),

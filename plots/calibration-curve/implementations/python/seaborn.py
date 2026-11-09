@@ -1,157 +1,151 @@
 """ anyplot.ai
 calibration-curve: Calibration Curve
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-10
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
-# Set seaborn style
-sns.set_theme(style="whitegrid")
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Generate synthetic binary classification data
+# Imprint palette: all eight positions, one per classifier in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+MARKERS = ["o", "s", "^", "D", "v", "P", "X", "*"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Constants
+N_BINS = 10  # equal-width probability bins: 0.0-0.1, 0.1-0.2, ...
+HIST_BINS = 20
+
+# Columns: set these to your table's column names
+Y_TRUE = "Defaulted"  # role: y_true
+Y_PROBS = ["Logistic regression", "Naive Bayes", "Random forest"]  # role: y_prob
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# Loan-default scores for 2000 hold-out applicants from three credit-risk classifiers
 np.random.seed(42)
 n_samples = 2000
+calibrated = np.clip(np.random.beta(2, 3.5, n_samples), 0.01, 0.99)  # imbalanced: ~36 % default
+y_true = np.random.binomial(1, calibrated)  # outcomes drawn from the calibrated probabilities
+logit = np.log(calibrated / (1 - calibrated))
+overconfident = np.clip(1 / (1 + np.exp(-2.5 * logit)), 0.01, 0.99)  # Naive Bayes: pushed towards 0 and 1
+underconfident = np.clip(0.5 + (calibrated - 0.5) * 0.45, 0.01, 0.99)  # forest votes: squeezed towards 0.5
+df = pd.DataFrame({Y_TRUE: y_true, Y_PROBS[0]: calibrated, Y_PROBS[1]: overconfident, Y_PROBS[2]: underconfident})
 
-# True labels - imbalanced for realism (35% positive class)
-y_true = np.random.binomial(1, 0.35, n_samples)
+# Plot: reads only df and the constants above
+MODEL = "Model"
+PRED = "Predicted probability"
+long = df.melt(id_vars=Y_TRUE, value_vars=Y_PROBS, var_name=MODEL, value_name=PRED).dropna()
+long[Y_TRUE] = long[Y_TRUE].astype(float)
+long["bin"] = pd.cut(long[PRED], np.linspace(0, 1, N_BINS + 1), include_lowest=True)
 
-# Simulate a well-calibrated classifier (predictions close to diagonal)
-base_probs = y_true * 0.7 + (1 - y_true) * 0.3 + np.random.normal(0, 0.2, n_samples)
-y_prob_calibrated = np.clip(base_probs, 0.01, 0.99)
+# Per-bin mean prediction vs observed frequency; empty bins drop out (observed=True)
+curve = long.groupby([MODEL, "bin"], sort=False, observed=True).agg(
+    mean_pred=(PRED, "mean"), frac_pos=(Y_TRUE, "mean"), count=(PRED, "size")
+)
+curve = curve.reset_index()
 
-# Simulate an overconfident classifier (S-shaped: below diagonal on left, above on right)
-y_prob_overconfident = 1 / (1 + np.exp(-5 * (y_prob_calibrated - 0.5)))
-y_prob_overconfident = np.clip(y_prob_overconfident, 0.01, 0.99)
+# Brier score and expected calibration error per model, shown in the legend
+labels = {}
+for model, group in long.groupby(MODEL, sort=False):
+    brier = np.mean((group[PRED] - group[Y_TRUE]) ** 2)
+    bins = curve[curve[MODEL] == model]
+    ece = np.sum(bins["count"] * np.abs(bins["frac_pos"] - bins["mean_pred"])) / bins["count"].sum()
+    labels[model] = f"{model} (Brier {brier:.3f}, ECE {ece:.3f})"
+curve[MODEL] = curve[MODEL].map(labels)
+long[MODEL] = long[MODEL].map(labels)
 
-# Simulate an underconfident classifier (inverted S: above diagonal on left, below on right)
-y_prob_underconfident = 0.5 + (y_prob_calibrated - 0.5) * 0.35
-y_prob_underconfident = np.clip(y_prob_underconfident, 0.01, 0.99)
+models = list(labels.values())
+palette = dict(zip(models, IMPRINT_PALETTE, strict=False))
+markers = dict(zip(models, MARKERS, strict=False))
 
-# Compute calibration curves (bin predictions, compute fraction of positives)
-n_bins = 10
-bin_edges = np.linspace(0, 1, n_bins + 1)
+# Square canvas: the reliability diagram is a symmetric 0-1 by 0-1 plot; the histogram below shares its x axis
+fig, (ax_cal, ax_hist) = plt.subplots(
+    2, 1, figsize=(6, 6), dpi=400, sharex=True, gridspec_kw={"height_ratios": [3, 1]}, layout="constrained"
+)
 
-# Well-calibrated model calibration curve
-bin_indices_calib = np.digitize(y_prob_calibrated, bin_edges[1:-1])
-prob_true_calib = [np.mean(y_true[bin_indices_calib == i]) for i in range(n_bins) if np.sum(bin_indices_calib == i) > 0]
-prob_pred_calib = [
-    np.mean(y_prob_calibrated[bin_indices_calib == i]) for i in range(n_bins) if np.sum(bin_indices_calib == i) > 0
-]
-
-# Overconfident model calibration curve
-bin_indices_over = np.digitize(y_prob_overconfident, bin_edges[1:-1])
-prob_true_over = [np.mean(y_true[bin_indices_over == i]) for i in range(n_bins) if np.sum(bin_indices_over == i) > 0]
-prob_pred_over = [
-    np.mean(y_prob_overconfident[bin_indices_over == i]) for i in range(n_bins) if np.sum(bin_indices_over == i) > 0
-]
-
-# Underconfident model calibration curve
-bin_indices_under = np.digitize(y_prob_underconfident, bin_edges[1:-1])
-prob_true_under = [np.mean(y_true[bin_indices_under == i]) for i in range(n_bins) if np.sum(bin_indices_under == i) > 0]
-prob_pred_under = [
-    np.mean(y_prob_underconfident[bin_indices_under == i]) for i in range(n_bins) if np.sum(bin_indices_under == i) > 0
-]
-
-# Calculate Brier scores (mean squared error of probability predictions)
-brier_calib = np.mean((y_prob_calibrated - y_true) ** 2)
-brier_over = np.mean((y_prob_overconfident - y_true) ** 2)
-brier_under = np.mean((y_prob_underconfident - y_true) ** 2)
-
-# Create figure with two subplots
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 9), gridspec_kw={"width_ratios": [2, 1]})
-
-# Colors: Python Blue, Python Yellow, and a third colorblind-safe color
-colors = ["#306998", "#FFD43B", "#8B4513"]
-
-# Plot calibration curves using seaborn lineplot
+ax_cal.plot([0, 1], [0, 1], linestyle="--", color=INK_MUTED, linewidth=1.4, label="Perfect calibration", zorder=1)
 sns.lineplot(
-    x=prob_pred_calib,
-    y=prob_true_calib,
-    ax=ax1,
-    marker="o",
-    markersize=14,
-    linewidth=3,
-    color=colors[0],
-    label=f"Well-Calibrated (Brier: {brier_calib:.3f})",
-)
-sns.lineplot(
-    x=prob_pred_over,
-    y=prob_true_over,
-    ax=ax1,
-    marker="s",
-    markersize=12,
-    linewidth=3,
-    color=colors[1],
-    label=f"Overconfident (Brier: {brier_over:.3f})",
-)
-sns.lineplot(
-    x=prob_pred_under,
-    y=prob_true_under,
-    ax=ax1,
-    marker="^",
-    markersize=12,
-    linewidth=3,
-    color=colors[2],
-    label=f"Underconfident (Brier: {brier_under:.3f})",
+    data=curve,
+    x="mean_pred",
+    y="frac_pos",
+    hue=MODEL,
+    style=MODEL,
+    hue_order=models,
+    style_order=models,
+    palette=palette,
+    markers=markers,
+    dashes=False,
+    estimator=None,
+    sort=True,
+    linewidth=2,
+    markersize=7,
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=0.8,
+    ax=ax_cal,
+    zorder=3,
 )
 
-# Diagonal reference line for perfect calibration
-ax1.plot([0, 1], [0, 1], "k--", linewidth=2, alpha=0.7, label="Perfectly Calibrated")
-
-# Styling for calibration plot
-ax1.set_xlabel("Mean Predicted Probability", fontsize=20)
-ax1.set_ylabel("Fraction of Positives", fontsize=20)
-ax1.set_title("calibration-curve · seaborn · pyplots.ai", fontsize=24, pad=15)
-ax1.tick_params(axis="both", labelsize=16)
-ax1.set_xlim(-0.02, 1.02)
-ax1.set_ylim(-0.02, 1.02)
-ax1.legend(fontsize=14, loc="lower right")
-ax1.grid(True, alpha=0.3, linestyle="--")
-ax1.set_aspect("equal")
-
-# Histogram of predicted probabilities using seaborn
 sns.histplot(
-    y_prob_calibrated,
-    ax=ax2,
-    bins=20,
-    color=colors[0],
-    alpha=0.5,
-    label="Well-Calibrated",
-    edgecolor="white",
-    linewidth=0.5,
-)
-sns.histplot(
-    y_prob_overconfident,
-    ax=ax2,
-    bins=20,
-    color=colors[1],
-    alpha=0.5,
-    label="Overconfident",
-    edgecolor="white",
-    linewidth=0.5,
-)
-sns.histplot(
-    y_prob_underconfident,
-    ax=ax2,
-    bins=20,
-    color=colors[2],
-    alpha=0.5,
-    label="Underconfident",
-    edgecolor="white",
-    linewidth=0.5,
+    data=long,
+    x=PRED,
+    hue=MODEL,
+    hue_order=models,
+    palette=palette,
+    bins=HIST_BINS,
+    binrange=(0, 1),
+    element="step",
+    alpha=0.12,
+    linewidth=1.4,
+    legend=False,
+    ax=ax_hist,
 )
 
-# Styling for histogram
-ax2.set_xlabel("Predicted Probability", fontsize=20)
-ax2.set_ylabel("Count", fontsize=20)
-ax2.set_title("Prediction Distribution", fontsize=22, pad=15)
-ax2.tick_params(axis="both", labelsize=16)
-ax2.legend(fontsize=12, loc="upper right")
-ax2.grid(True, alpha=0.3, linestyle="--")
+# Style
+fig.suptitle("calibration-curve · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+ax_cal.set_xlim(-0.02, 1.02)
+ax_cal.set_ylim(-0.02, 1.02)
+ax_cal.set_xlabel("")
+ax_cal.set_ylabel(f"Fraction of positives ({Y_TRUE})", fontsize=10)
+ax_cal.grid(True, linewidth=0.6)
+legend = ax_cal.legend(fontsize=7, loc="upper left", frameon=True, framealpha=0.95)
+legend.get_frame().set_linewidth(0.6)
+
+ax_hist.set_xlabel(f"{PRED} (curve: bin mean)", fontsize=10)
+ax_hist.set_ylabel("Count", fontsize=10)
+ax_hist.yaxis.grid(True, linewidth=0.6)
+
+for ax in (ax_cal, ax_hist):
+    ax.tick_params(axis="both", labelsize=8, length=0)
+    sns.despine(ax=ax)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

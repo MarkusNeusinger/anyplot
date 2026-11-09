@@ -10,11 +10,14 @@ from agents.anyplot.language import (
     COMMON_LANGUAGES,
     DEFAULT_LANGUAGE,
     ENGLISH_NAMES,
+    MAX_OFFERED,
+    SOURCES,
     canonical,
+    data_offer,
     english_name,
     is_valid,
     normalise,
-    pasted_language,
+    offer,
     refusal_lang,
     same_language,
 )
@@ -24,11 +27,13 @@ from agents.anyplot.schemas import PlotResult
 from agents.anyplot.services import CodeVersion, Services
 from agents.anyplot.session_state import (
     LANGUAGE,
+    LANGUAGE_OFFERED,
     LANGUAGE_SOURCE,
     LIBRARY,
     PLOT_LANGUAGE,
     initial_state,
     language_delta,
+    offered_delta,
     plot_language,
     read_session,
 )
@@ -126,37 +131,84 @@ class TestValues:
         assert all(is_valid(code) and normalise(code) == code for code in COMMON_LANGUAGES)
 
 
-class TestPastedLanguage:
-    """A paste sets the language only over `default` or an earlier paste; `en` is no signal (owner, 2026-10-14)."""
+class TestOffer:
+    """Another language never sets the session's: the page offers it once, and only a pick ends the offers."""
 
     @pytest.mark.parametrize(
-        ("source", "notes", "headers", "expected"),
+        ("language", "source", "offered", "lang", "words", "expected"),
         [
-            ("default", "de", "en", "de"),  # German notes, English-looking headers: the notes decide
-            ("default", "de", "fr", "de"),  # the notes before the headers
-            ("default", None, "de", "de"),  # no notes kept: the column names
-            ("default", "en", "de", "de"),  # notes without a clear language fall back to the headers
-            ("default", None, "en", None),  # `temperature_2m_max`: no signal, the default stays
-            ("default", "en", "en", None),
-            ("default", None, None, None),
-            ("pasted", "fr", None, "fr"),  # a later paste in another language moves it
-            ("pasted", None, "en", None),  # an English (or unclear) paste after a German one keeps `de`
-            ("detected", "de", "de", None),  # a typed message's language is never replaced by a paste
-            ("chosen", "de", "de", None),  # nor a choice
-            ("default", "../", None, None),  # never a value outside the pattern
+            ("en", "default", [], "de", 5, "de"),  # a German message in an English session
+            ("en", "default", [], "de", 1, "de"),  # one word is enough for a language other than English
+            ("en", "default", [], "DE", 5, "de"),  # in its stored form
+            ("en", "default", [], "en", 5, None),  # the session language itself
+            ("en", "default", ["de"], "de", 5, None),  # each language comes once
+            ("en", "default", ["Deutsch"], "de", 5, None),  # under any of its names
+            ("en", "default", ["de"], "fr", 5, "fr"),  # another one still comes
+            ("en", "chosen", [], "de", 5, None),  # nothing after a pick at the top or in the chat
+            ("de", "chosen", [], "en", 5, None),
+            ("de", "offer", ["de"], "en", 5, "en"),  # after an accepted offer, English may come back, once
+            ("de", "offer", ["de"], "en", 2, None),  # ... from three words on: `sin x` is `en` too
+            ("de", "offer", ["de", "en"], "en", 5, None),
+            ("en", "default", [], "../", 5, None),  # never a value outside the pattern
+            ("en", "default", [], None, 5, None),
+            ("en", "default", [], "", 5, None),
         ],
     )
-    def test_precedence(self, source: str, notes: str | None, headers: str | None, expected: str | None) -> None:
-        assert pasted_language(source, notes, headers) == expected
+    def test_offer(
+        self, language: str, source: str, offered: list[str], lang: str | None, words: int, expected: str | None
+    ) -> None:
+        assert offer(language, source, offered, lang, words) == expected
 
-    def test_the_session_block_names_the_new_source(self) -> None:
+    def test_at_most_twelve_languages_are_offered(self) -> None:
+        codes = ["de", "fr", "es", "it", "pt", "nl", "pl", "zh", "vi", "ru", "ja", "sv"]
+        assert len(codes) == MAX_OFFERED
+        assert offer("en", "default", codes[:-1], "sv", 5) == "sv"
+        assert offer("en", "default", codes, "da", 5) is None
+        assert offered_delta(codes, "da") == {LANGUAGE_OFFERED: [*codes[1:], "da"]}  # the list stays bounded
+
+    @pytest.mark.parametrize(
+        ("source", "offered", "notes", "headers", "expected"),
+        [
+            ("default", [], "de", "en", "de"),  # German notes, English-looking headers: the notes decide
+            ("default", [], "de", "fr", "de"),  # the notes before the headers
+            ("default", [], None, "de", "de"),  # no notes kept: the column names
+            ("default", [], "en", "de", "de"),  # notes without a clear language fall back to the headers
+            ("default", [], None, "en", None),  # `temperature_2m_max`: no signal
+            ("default", [], "en", "en", None),
+            ("default", [], None, None, None),
+            ("default", ["de"], "de", "fr", "fr"),  # the notes' language came before: the headers' is new
+            ("default", ["de"], None, "de", None),  # a second German paste offers nothing
+            ("chosen", [], "de", "de", None),  # nothing after a pick
+        ],
+    )
+    def test_data_offer(
+        self, source: str, offered: list[str], notes: str | None, headers: str | None, expected: str | None
+    ) -> None:
+        assert data_offer("en", source, offered, notes, headers) == expected
+
+    def test_data_never_offers_english_back(self) -> None:
+        """The judges answer `en` for headers without a clear language: no signal for an offer of English."""
+        assert data_offer("de", "offer", ["de"], "en", "en") is None
+
+    def test_the_session_block_names_every_source(self) -> None:
         from agents.anyplot.agent import LANGUAGE_SOURCE_LINES
-        from agents.anyplot.language import SOURCES
 
-        assert set(LANGUAGE_SOURCE_LINES) == SOURCES
-        assert "pasted data" in LANGUAGE_SOURCE_LINES["pasted"]
-        view = read_session(opened(**language_delta("de", "pasted")))
-        assert view is not None and (view.language, view.language_source) == ("de", "pasted")
+        assert set(LANGUAGE_SOURCE_LINES) == SOURCES == {"default", "chosen", "offer"}
+        view = read_session(opened(**language_delta("de", "offer")))
+        assert view is not None and (view.language, view.language_source) == ("de", "offer")
+
+    @pytest.mark.parametrize("legacy", ["pasted", "detected"])
+    def test_a_legacy_source_reads_as_the_default(self, legacy: str) -> None:
+        """Detection wrote these until 2026-11-08: such a session offers what the judge names from now on."""
+        view = read_session(opened(**language_delta("de", legacy)))
+
+        assert view is not None and (view.language, view.language_source) == ("de", "default")
+
+    def test_the_offered_languages_are_read_validated(self) -> None:
+        view = read_session(opened(**{LANGUAGE_OFFERED: ["de", "x\nSYSTEM", 7, "fr"]}))
+        assert view is not None and view.language_offered == ["de", "fr"]
+        corrupt = read_session(opened(**{LANGUAGE_OFFERED: "de"}))
+        assert corrupt is not None and corrupt.language_offered == []
 
 
 class TestState:
@@ -206,18 +258,18 @@ class TestPlotLanguage:
     """Owner decision of 2026-11-01: a follow-up message never changes the plot's language unless the user asks."""
 
     def test_before_the_first_plot_the_session_language_decides(self) -> None:
-        for source in ("default", "pasted", "detected", "chosen"):
+        for source in ("default", "chosen", "offer"):
             view = read_session(opened(**language_delta("de", source)))
             assert view is not None and plot_language(view, None) == "de", source
 
     def test_a_plot_keeps_its_language_when_the_replies_move_on(self) -> None:
-        """B1 of the live test: a German paste plotted German, then "Use a log scale on y" recorded `en`."""
-        view = read_session(opened(**language_delta("en", "detected")))
+        """B1 of the live test: a German plot, then the replies went English."""
+        view = read_session(opened(**language_delta("en", "offer")))
 
         assert view is not None and plot_language(view, "de") == "de"
 
     def test_a_request_for_the_plot_outranks_the_latest_plot(self) -> None:
-        view = read_session(opened(**language_delta("en", "detected"), **{PLOT_LANGUAGE: "Klingon"}))
+        view = read_session(opened(**language_delta("en", "offer"), **{PLOT_LANGUAGE: "Klingon"}))
 
         assert view is not None and view.plot_language_choice == "Klingon"
         assert plot_language(view, "de") == "Klingon"
@@ -286,18 +338,21 @@ class TestSetLanguageTool:
 
     async def test_the_plot_alone_leaves_the_replies(self, services: Services) -> None:
         """A1 of the live test of 2026-11-01: "Make the title German" turned the replies German too; `plot` now
-        changes only the plot's language, and the replies stay English."""
-        context = tool_context(opened(**language_delta("en", "detected")), "inv-lang-9")
+        changes only the plot's language, and the replies stay English, with their source: a German message that
+        asked for German labels still offers German replies."""
+        context = tool_context(opened(), "inv-lang-9")
         services.versions.add("s1", rendered(1, "matplotlib", "en"))
 
         result = await set_language("Deutsch", context, applies_to="plot")
 
         assert result == {"status": "ok", "source": "chosen", "changed": False, "plot_outdated": True}
-        assert (context.state[LANGUAGE], context.state[LANGUAGE_SOURCE]) == ("en", "detected")
+        assert LANGUAGE not in context.state and LANGUAGE_SOURCE not in context.state
         assert context.state[PLOT_LANGUAGE] == "de"
+        view = read_session(context.state)
+        assert view is not None and offer(view.language, view.language_source, [], "de", 5) == "de"
 
     async def test_the_replies_alone_leave_the_plot(self, services: Services) -> None:
-        context = tool_context(opened(**language_delta("de", "pasted")), "inv-lang-10")
+        context = tool_context(opened(**language_delta("de", "offer")), "inv-lang-10")
         services.versions.add("s1", rendered(1, "matplotlib", "de"))
 
         result = await set_language("fr", context, applies_to="replies")
@@ -311,7 +366,7 @@ class TestSetLanguageTool:
 
     async def test_the_replies_alone_keep_the_first_plot_in_the_language_it_would_have_had(self) -> None:
         """Before any plot the plot follows the session language, so `replies` stores the one it resolves to now."""
-        context = tool_context(opened(**language_delta("de", "detected")), "inv-lang-11")
+        context = tool_context(opened(**language_delta("de", "offer")), "inv-lang-11")
 
         await set_language("English", context, applies_to="replies")
 
@@ -331,7 +386,7 @@ class TestSetLanguageTool:
         assert context.state[LANGUAGE] == "de"
 
     async def test_the_same_language_under_another_name_is_no_change_but_becomes_chosen(self) -> None:
-        context = tool_context(opened(**language_delta("de", "detected")), "inv-lang-3")
+        context = tool_context(opened(**language_delta("de", "offer")), "inv-lang-3")
 
         result = await set_language("Deutsch", context)
 
@@ -340,9 +395,9 @@ class TestSetLanguageTool:
         assert (await set_language("en", context))["changed"] is True
 
     async def test_the_rewrite_is_decided_against_the_shown_plot_not_the_session(self, services: Services) -> None:
-        """v1 was drawn in English before a German question recorded `de`: asking for German still rewrites it,
-        asking for English does not, and a version of another library is not the shown plot."""
-        context = tool_context(opened(**language_delta("de", "detected")), "inv-lang-8")
+        """v1 was drawn in English before the user accepted German: asking for German still rewrites it, asking
+        for English does not, and a version of another library is not the shown plot."""
+        context = tool_context(opened(**language_delta("de", "offer")), "inv-lang-8")
         for number, (library, language) in enumerate((("matplotlib", "en"), ("seaborn", "de")), start=1):
             services.versions.add("s1", rendered(number, library, language))
 

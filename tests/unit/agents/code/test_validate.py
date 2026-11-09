@@ -1055,7 +1055,9 @@ class TestRng:
             "s = df.sample(frac=0.1, random_state=0)\n",
         ],
     )
-    def test_seeded_generator_for_jitter_and_subsampling(self, body: str) -> None:
+    def test_a_seeded_generator_passes_the_rng_check(self, body: str) -> None:
+        """The check is syntactic: it passes a sample of the rows too, which only the prompt forbids so far (the plot
+        draws every row it gets); a static row-change rule is a follow-up."""
         assert adaptation_rules(body) == set()
 
     @pytest.mark.parametrize(

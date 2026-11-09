@@ -105,6 +105,15 @@ def test_a_case_reads_its_fields_and_builds_its_snapshot(tmp_path: Path) -> None
     assert snapshot.spec_id == "scatter-basic" and "THEME" in snapshot.code
 
 
+def test_a_case_may_take_data_steps_before_its_plot(tmp_path: Path) -> None:
+    steps = [[{"op": "sort", "column": "b", "descending": True}], [{"op": "keep_rows", "n": 1}]]
+
+    case = load_case(_write(tmp_path / "stepped", {**VALID, "before_operations": steps}))
+
+    assert case.before_operations == tuple(tuple(operations) for operations in steps)
+    assert load_case(_write(tmp_path / "plain", VALID)).before_operations == ()
+
+
 @pytest.mark.parametrize("language", ["de", "Deutsch", "Klingon", "Old Norse"])
 def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, language: str) -> None:
     case = load_case(_write(tmp_path / "chosen", {**VALID, "language": language}))
@@ -124,6 +133,10 @@ def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, languag
         ({"language": " de"}, "language must match"),
         ({"language": "x" * 41}, "language must match"),
         ({"language": 7}, "language must match"),
+        ({"before_operations": []}, "a list of 1 to 5 operation lists"),
+        ({"before_operations": [[{"op": "sort", "column": "a"}]] * 6}, "a list of 1 to 5 operation lists"),
+        ({"before_operations": [[{"op": "fill", "column": "a"}]]}, "an operation list that prepare_data refuses"),
+        ({"before_operations": [{"op": "sort", "column": "a"}]}, "an operation list that prepare_data refuses"),
     ],
 )
 def test_invalid_fields_are_refused(tmp_path: Path, change: dict, message: str) -> None:

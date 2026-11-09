@@ -2,55 +2,59 @@ library: bokeh
 language: python
 specification_id: windbarb-basic
 created: '2026-01-11T20:53:01Z'
-updated: '2026-05-19T07:17:52Z'
-generated_by: claude-sonnet
-workflow_run: 26080471126
+updated: '2026-11-09T08:29:38Z'
+generated_by: claude-opus
+workflow_run: 42584181894
 issue: 3694
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Wind barb geometry calculation is mathematically correct (FROM convention, proper
-    speed decomposition into pennants/long/half barbs)
-  - Efficient use of Bokeh's multi_line and patches for rendering all barb elements
-    in bulk calls — idiomatic Bokeh pattern
-  - Clean ColumnDataSource pattern throughout; reproducible with np.random.seed(42)
-  - Real-world meteorological context (Great Plains surface winds) with accurate notation
-    legend at bottom
-  - Both renders show correct theme backgrounds (warm off-white / near-black) and
-    readable text in both light and dark themes
+  - 'Correct standard barb geometry: each staff starts at the station position and
+    points upwind (arctan2(-v, -u)), feathers sit at the far end, all on the left
+    side of the staff looking downwind (Northern Hemisphere), and speeds round to
+    the nearest 5 kt into pennants, full barbs and half barbs'
+  - 'The example data covers the whole notation: a cyclonic low over the US Plains
+    whose center station is calm (open circle, no staff), two pennant barbs (50 and
+    55 kt) in the strong south-west quadrant, and many full and half barb mixes elsewhere,
+    all turning counterclockwise around the low'
+  - Staff, feather and pennant lengths come from the median station spacing, so the
+    56 barbs stay apart and every feather can be counted in both themes
+  - match_aspect=True keeps the barb angles true in data space, and all line segments
+    are batched into one multi_line glyph and all pennants into one patches glyph
+    from ColumnDataSource
+  - The notation key is a bokeh Title layout placed below the plot in INK_SOFT at
+    30 pt, and decodes half barb, full barb, pennant and calm without competing with
+    the data
+  - 'Theme chrome is correct in both renders: #FAF8F1 and #1A1A17 backgrounds, INK
+    title and axis labels, INK_SOFT ticks and key, subtle dashed grid; the barbs are
+    #009E73 in both themes'
   weaknesses:
-  - 'Source code on disk uses #306998 (Python blue) and export_png with bare plot.png
-    — does not match generated images; must use Okabe-Ito #009E73, Selenium HTML→PNG
-    output, and ANYPLOT_THEME adaptation per bokeh.md'
-  - Calm wind circles (< 2.5 kt) are never demonstrated; add a few forced calm-wind
-    data points (u=v=0) to showcase this spec feature
-  - Top and right plot spines not removed — use p.outline_line_color = None for cleaner
-    appearance
-  - No color-by-speed encoding or HoverTool — Bokeh's interactive advantage (show
-    speed/direction on hover) is not leveraged
-  - Legend annotation uses fixed text_color='#444444' which may be low contrast on
-    dark background — should use INK_SOFT token
+  - 'Suggestion: draw the key with sample glyphs (one half barb, one full barb, one
+    pennant and a calm circle beside their values) instead of text only, so the reader
+    matches shape to value directly.'
+  - 'Suggestion: label the longitude axis as degrees east, for example "Longitude
+    (°E)", to match the "Latitude (°N)" label, since the tick values are negative.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface
-      Chrome: Title "Great Plains Surface Winds · windbarb-basic · python · bokeh · anyplot.ai" in dark ink at top — clearly readable. Y-axis label "Y Position (grid units)" rotated on left — readable. Tick labels visible in secondary ink. Bottom legend annotation readable at 18pt.
-      Data: 30 wind barbs in teal-green color consistent with Okabe-Ito #009E73. Various barb configurations: half-barbs (5 kt), long barbs (10 kt), pennants (50 kt triangles). Subtle dashed grid lines.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+      Background: warm off-white #FAF8F1 across the canvas and plot area; a thin INK_SOFT outline frames the plot area.
+      Chrome: bold dark title "windbarb-basic · python · bokeh · anyplot.ai" top left (about 60 % of the width); italic dark axis labels "Longitude (°)" and "Latitude (°N)"; dark-grey tick labels -104 … -90 and 30 … 44; a subtle dashed grid; a centered dark-grey key below the x-axis label: "Half barb = 5 kt · Full barb = 10 kt · Pennant = 50 kt · Open circle = calm (< 2.5 kt)". All text readable.
+      Data: 8 × 7 = 56 stations in #009E73. 55 wind barbs, plus one open circle at (-97, 39) near the low center. The barbs rotate counterclockwise around that center: southerly east of it, westerly south of it, northerly to the north-west. Two filled triangular pennants appear at (-99, 35) and (-97, 35), the second with an added half barb. Elsewhere there are mixes of one to five full barbs and half barbs, all on one side of the staff. No barbs collide.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — correct dark theme surface
-      Chrome: Title and axis labels render in light-colored text — readable against dark background. Tick labels visible in lighter tone. Bottom legend annotation has reduced contrast (fixed #444444 text color) but still legible.
-      Data: Teal-green barbs identical in color to light render — only chrome has flipped as expected. All barb elements (staffs, long barbs, half-barbs, pennants) remain clearly visible on dark surface. Brand green #009E73 highly visible on #1A1A17.
-      Legibility verdict: PASS — main text elements readable; minor concern with legend annotation contrast (fixed color not fully theme-adaptive)
+      Background: warm near-black #1A1A17, with a light-grey plot outline.
+      Chrome: title and axis labels in near-white INK, ticks and key in light grey INK_SOFT, dashed grid subtle but visible. No dark-on-dark text; everything readable.
+      Data: identical to the light render. Same #009E73 barbs, pennants and calm circle at the same positions; only the chrome flips. Brand green reads clearly on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,75 +62,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28pt, axis labels 22pt, tick labels 18pt, legend annotation
-          18pt — all explicitly set and readable in both themes
+        comment: All sizes explicitly set (title 50pt, axis labels 42pt, ticks 34pt,
+          key 30pt); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 30 barbs in 6x5 grid; well-spaced with no overlapping elements
+        comment: No text collisions; barbs stay clear of each other and of the axes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barb staffs, long barbs, half-barbs, and pennants all clearly distinguishable
+        comment: 5 px staffs and feathers, filled pennants and a 34 px calm circle;
+          every feather countable in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single teal-green on contrasting backgrounds; CVD-safe Okabe-Ito
-          color
+        comment: Single hue; encoding is shape-based, high contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills canvas well with balanced margins
+        comment: 2400×2400 square canvas, canvas gate passed; plot fills most of the
+          canvas with balanced margins; key sits directly under the axis
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with units, descriptive title in correct spec-id
-          format
+        comment: 'Longitude (°), Latitude (°N): descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Images show Okabe-Ito compliant green and correct theme backgrounds;
-          source code on disk contains #306998 (Python blue) and no ANYPLOT_THEME
-          adaptation — discrepancy between code and images'
+        passed: true
+        comment: 'Single series in Imprint #009E73 in both themes; backgrounds #FAF8F1
+          / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean professional meteorological layout; single-color scheme appropriate
-          but lacks color-by-speed encoding or other sophistication
+        passed: true
+        comment: 'Beyond baseline: a typographic hierarchy (bold INK title, INK_SOFT
+          key at a smaller size with middle-dot separators, centered under the axis)'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle dashed grid (alpha=0.3) refined; all four spines present (top/right
-          not removed); generous whitespace
+        passed: true
+        comment: 'Beyond baseline: feather length, feather gap and pennant base derived
+          from station spacing; tight 3 % range padding; dashed grid chosen for the
+          station lattice'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Geographic context via title; notation legend guides interpretation;
-          no visual hierarchy distinguishing notable wind patterns
+        passed: true
+        comment: 'Data choice gives a focal point: the calm station marks the low
+          center, and the pennants sit in the strongest quadrant, so the eye reads
+          the rotation'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,55 +139,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct meteorological wind barb chart with proper notation
+        comment: Standard wind barb plot; only the allowed key and calm circles beside
+          the barbs, no isobars or callouts
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Staff direction (FROM convention), long barbs, half barbs, pennants
-          all present; calm wind open circles NOT demonstrated
+        passed: true
+        comment: Upwind staffs, half/full barb and pennant notation on one side (NH
+          left), calm as open circle without staff, spacing prevents overlap, key
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Grid X/Y positions correctly mapped; u/v components correctly drive
-          barb geometry
+        comment: Staff anchored at each station's x/y; axes show all stations; no
+          displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive} · {spec-id} · {language} · {library}
-          · anyplot.ai format; bottom annotation explains notation
+        comment: Title matches the mandated format; the key text decodes the notation
+          correctly
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Varied speeds with half-barbs, long barbs, pennants; calm wind circles
-          absent (random uniform range never produces < 2.5 kt)
+        passed: true
+        comment: Calm, half barbs, full barbs, pennants and pennant+half combinations;
+          directions turning around a pressure center
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Great Plains surface winds is a genuine neutral meteorological scenario;
-          6x5 station grid realistic
+        comment: 'Surface stations over the US Plains around a deep low: real, neutral
+          meteorology'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds in 5-42 kt range are meteorologically appropriate for
-          surface observations
+        comment: 'Checked: counterclockwise rotation (NH cyclone) with inflow, calm
+          at the center station (-97, 39) where rotation cancels the 10 kt westerly,
+          peak of about 50–55 kt at (-99, 35) and (-97, 35) drawn as pennants. Speeds
+          round to 5 kt. Plausible for a deep low'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -190,37 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clear Imports → Data → Geometry → Plot → Save flow; no unnecessary
-          functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual wind barb geometry calculation is appropriate for this plot
-          type; well-structured loop
+        comment: Barb construction must be written out (bokeh has no barb glyph);
+          appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code uses export_png(p, filename='plot.png') — wrong method (should
-          use Selenium per bokeh.md); bare plot.png instead of plot-{THEME}.png; no
-          HTML output; no ANYPLOT_THEME adaptation
+        passed: true
+        comment: plot-{THEME}.html and plot-{THEME}.png via Selenium, current Bokeh
+          3 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -228,27 +235,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, multi_line, patches, scatter — idiomatic Bokeh
-          patterns; missing Selenium HTML→PNG output
+        comment: All segments batched into a single multi_line and all pennants into
+          one patches glyph via ColumnDataSource, scatter for calm circles
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: multi_line for bulk segment rendering and patches for pennants are
-          Bokeh-distinctive; no HoverTool for interactive wind speed/direction display
+        passed: true
+        comment: match_aspect=True to keep barb angles true, and a Title model added
+          as a 'below' layout as the notation key
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T08:26:24Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
   - patches
+  - layer-composition
   - html-export
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling

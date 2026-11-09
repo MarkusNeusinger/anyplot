@@ -33,6 +33,7 @@ from agents.anyplot.session_state import (
     DATASET_COPIED_FROM,
     DATASET_VERSION,
     LANGUAGE,
+    LANGUAGE_OFFERED,
     LANGUAGE_SOURCE,
     PLOT_LANGUAGE,
     SessionView,
@@ -264,17 +265,19 @@ async def test_the_page_plots_language_comes_along_when_the_replies_moved_on(
     source = await open_session(client)
     await paste(client, source)
     session = await runtime.session(USER, source)
-    await runtime.write_state(session, language_delta("en", "detected"))
+    await runtime.write_state(session, {**language_delta("en", "offer"), LANGUAGE_OFFERED: ["de", "en"]})
     services.versions.add(source, rendered_version(language="de"))
     target = await open_session(client, library="seaborn", fanout=True)
 
     response = await copy(client, target, source)
 
     assert response.status_code == 200, response.text
-    assert response.json()["language"] == {"language": "en", "source": "detected"}
+    assert response.json()["language"] == {"language": "en", "source": "offer"}  # a copy never offers
     copied_view, state = await view_of(runtime, target)
     assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
     assert plot_language(copied_view, services.versions.latest_language(target)) == "de"
+    # The page's offers stand for its copies: the fan-out session never offers German or English again.
+    assert copied_view.language_offered == ["de", "en"]
 
 
 async def test_the_copy_plots_without_a_confirmation_of_its_own(client: httpx.AsyncClient, swap_models) -> None:
