@@ -95,7 +95,7 @@ env:
   # Keep in sync with the claude-code-action pin in the review job (a test
   # checks it). Cells record it, and plan reuses a resumed cell only when it
   # matches.
-  ACTION_SHA: 6d5ae526d25ce88daa2200be073e1a373167f064
+  ACTION_SHA: 61a9c274fa7110a66dfafc1bbbced03833eb25fe
 
 concurrency:
   group: review-retest
