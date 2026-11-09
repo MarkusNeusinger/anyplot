@@ -32,7 +32,6 @@ from agents.anyplot.agent import (
     session_context,
 )
 from agents.anyplot.code.edits import apply_plan
-from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES, parse_dataset
 from agents.anyplot.data.transcribe import (
     MAX_TRANSCRIBE_CHARS,
@@ -2380,8 +2379,14 @@ async def test_a_plain_list_is_transcribed_but_json_and_tables_are_not(client: h
     sid = await open_session(client, with_data=False)
     judge.transcriptions = [_reading(["Tier", "Anzahl"], [["Hund", "7"], ["Katze", "3"]])]
 
-    listed = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hund 7\nKatze 3\n"})
+    # A list in words the transcriber reads; `Hund 7` lines are a pair list, which code reads (`layouts.py`).
+    listed = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hund sieben\nKatze drei\n"}
+    )
     assert listed.status_code == 200 and listed.json()["transcribed"] is True
+    pairs = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hund 7\nKatze 3\n"})
+    assert pairs.status_code == 200 and "transcribed" not in pairs.json()
+    assert pairs.json()["profile"]["source_format"] == "pair_list"
 
     one_column_json = await client.post(
         f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": '[{"Anzahl": 7}, {"Anzahl": 3}]'}
@@ -2462,8 +2467,9 @@ async def test_a_transcription_out_of_time_or_room_names_the_text_not_an_outage(
     """Live round 7: a slow reading of a long text or a cut-off one is the text's size; a short text timing out
     or an error is an outage, 503 (Fable and Gemini review of #12202: a stall is no "your text is too long")."""
     sid = await open_session(client, with_data=False)
-    short = "Hund 7\nKatze 3\nVogel 4\n"
-    long = "".join(f"Hund {i}\n" for i in range(MAX_TRANSCRIBE_LINES // 2))  # half the line cap
+    # Lines in words: `Hund 7` lines are a pair list, which code reads (`layouts.py`), never the transcriber.
+    short = "Hund sieben\nKatze drei\nVogel vier\n"
+    long = "".join(f"Hund {i}x\n" for i in range(MAX_TRANSCRIBE_LINES // 2))  # half the line cap
     assert near_transcribe_cap(long) and not near_transcribe_cap(short)
 
     judge.delay_s, judge.timeout_s = 0.2, 0.05
@@ -2493,7 +2499,8 @@ async def test_a_transcription_out_of_time_or_room_names_the_text_not_an_outage(
 @pytest.mark.parametrize(
     "text",
     [
-        pytest.param("".join(f"Hund {i}\n" for i in range(MAX_TRANSCRIBE_LINES + 1)), id="label-value-lines"),
+        # Lines that are no label/value pairs (`layouts.py` reads `Hund 7` lines by code since 2026-11-09).
+        pytest.param("".join(f"Hund {i}x\n" for i in range(MAX_TRANSCRIBE_LINES + 1)), id="label-lines"),
         pytest.param("".join(f"Name{i}\n" for i in range(250)), id="unique-names"),
     ],
 )
@@ -3459,14 +3466,14 @@ async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
     assert literal.status_code == 200 and "transcribed" not in literal.json()
     assert literal.json()["profile"]["rows"] == 2 and len(judge.transcribe_calls) == len(data)
 
-    # A formula the chat could not take (over `MAX_MESSAGE_CHARS`) is the transcriber's after
-    # all: the page's offer sends the refused text to the chat, so only text that fits a turn
-    # is refused, and the transcriber's rubric computes nothing.
+    # A formula the chat could not take (over `MAX_MESSAGE_CHARS`) reaches no model either: the
+    # transcriber reads no more than the chat takes (owner rule of 2026-11-09), so the parser's
+    # refusal stands, and the page keeps such text in the box over the cap anyway.
     long_formula = "y = sin(x) from -pi to pi\n" + "note: the curve is drawn for the quarterly report\n" * 45
-    assert MAX_MESSAGE_CHARS < len(long_formula) <= MAX_TRANSCRIBE_CHARS and looks_like_formula(long_formula)
-    judge.transcriptions = [_reading(["Name", "Wert"], [["a", "1"], ["b", "2"]])]  # the fake reader's table
-    read = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long_formula})
-    assert read.status_code == 200 and read.json()["transcribed"] is True
+    assert len(long_formula) > MAX_MESSAGE_CHARS == MAX_TRANSCRIBE_CHARS
+    refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long_formula})
+    assert (refused.status_code, refused.json()["detail"]) == (422, "unparseable")
+    assert len(judge.transcribe_calls) == len(data)
     assert [line["outcome"] for line in attribution_lines(caplog, "data_transcribe")].count("formula") == len(formulas)
 
 

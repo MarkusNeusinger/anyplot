@@ -26,24 +26,25 @@ import { isPlotAction, longSuggestion, MAX_MESSAGE_CHARS, tableChoice } from 'sr
 import { bindingHint } from 'src/sections/agent-chat/bindings';
 import { routeInput } from 'src/sections/agent-chat/routeInput';
 import type { PlotButtonKind } from 'src/sections/agent-chat/steps';
-import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
+import { type Attachment, overCap } from 'src/sections/agent-chat/useChatAttachment';
 
 /** What waits in the message box as data: an attachment, or a table typed into the box. */
 export type BoxData = 'attachment' | 'typed' | null;
 
 /**
- * What the message box holds that the plot button sends before it plots: the attachment, once it
- * is read and the dataset route can take it (a refused one again), or a table typed into the box,
- * which Enter would send as data too (`attachTyped`). `null` for nothing to send first. The box's
- * text goes with an attachment as its note, and like any message it never goes over the cap.
+ * What the message box holds that Enter and the plot button send as data: the attachment, once it
+ * is read and the dataset route can take it (a refused one again), or a table typed into the box
+ * (`attachTyped`). `null` for nothing to send as data. The box's text goes with an attachment as
+ * its note, and like any message it never goes over the cap; a table in the box counts by the
+ * dataset's own limits (`overCap`), so a long one goes too (owner rule of 2026-11-09).
  */
 export function boxData(attachment: Attachment | null, draft: string): BoxData {
   const text = draft.trim();
-  if (text.length > MAX_MESSAGE_CHARS) return null;
   if (attachment) {
+    if (text.length > MAX_MESSAGE_CHARS) return null;
     return attachment.status === 'ready' || attachment.status === 'failed' ? 'attachment' : null;
   }
-  return text && routeInput(text) === 'data' ? 'typed' : null;
+  return text && routeInput(text) === 'data' && !overCap(text) ? 'typed' : null;
 }
 
 /**

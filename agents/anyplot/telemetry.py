@@ -139,6 +139,8 @@ InputFormat = Literal[
     "semicolon",
     "pipe",
     "whitespace",
+    "cell_lines",
+    "pair_list",
     "json",
     "json_lines",
     "json_stat",

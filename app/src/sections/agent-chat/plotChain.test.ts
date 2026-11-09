@@ -279,8 +279,17 @@ describe('boxData', () => {
 
   it('sends a table typed into the box, and never a message', () => {
     expect(boxData(null, 'hours,score\n1.5,52\n2.0,58\n3.0,61\n')).toBe('typed');
+    expect(boxData(null, 'a:7,b:12,c:5')).toBe('typed');
     expect(boxData(null, 'make the bars blue')).toBeNull();
+    expect(boxData(null, 'make it 16:9')).toBeNull();
     expect(boxData(null, '   ')).toBeNull();
+  });
+
+  it('counts a table in the box by the dataset limits, and prose by the message cap', () => {
+    expect(boxData(null, `hours,score\n${'1.5,52\n'.repeat(400)}`)).toBe('typed');
+    expect(boxData(null, `${'words without a table '.repeat(100)}end`)).toBeNull();
+    // More rows than the server reads: no data either, so the box holds it as text over the cap.
+    expect(boxData(null, `x,y\n${'1,2\n'.repeat(20_100)}`)).toBeNull();
   });
 });
 

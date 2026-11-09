@@ -183,6 +183,8 @@ from ..schemas import (
     SourceFormat,
     listed_values,
 )
+from .layouts import MIN_ROWS as LAYOUT_MIN_ROWS
+from .layouts import Layout, is_pair, read_layout
 from .months import month_year, named_months
 
 
@@ -652,9 +654,27 @@ def parse_dataset(
     declared: set[str] = set()
     tables: list[str] = []
     if read is None:
-        read = _read_delimited(
-            text, warnings, find_table=find_table, context=context, declared=declared, table=table, tables=tables
-        )
+        # A paste the delimited reader finds no table in, or reads as one column or one row, may be one of the two
+        # layouts it does not see (`layouts.py`): a web table copied one cell per line, a list of label/value pairs.
+        layouts = find_table and not canonical and table == 1
+        said = list(warnings)
+        try:
+            read = _read_delimited(
+                text, warnings, find_table=find_table, context=context, declared=declared, table=table, tables=tables
+            )
+        except ParseError as exc:
+            layout = read_layout(text) if layouts and exc.code == "no_table" else None
+            if layout is None:
+                raise
+            read = _layout_read(layout, warnings, context)
+        else:
+            if layouts and _layout_may_read(read) and (layout := read_layout(text)) is not None:
+                # The delimited reading's notes and warnings were about a table that is not there.
+                warnings[:] = said
+                context.clear()
+                declared.clear()
+                tables.clear()
+                read = _layout_read(layout, warnings, context)
     elif table > 1:
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     marks = frozenset(declared)
@@ -699,6 +719,27 @@ def parse_dataset(
         if parsed.with_constants is not None:
             parsed = replace(parsed, with_constants=replace(parsed.with_constants, tables=tables, table=table))
     return replace(parsed, context_lines=context) if context else parsed
+
+
+def _layout_may_read(read: tuple[list[str], list[list[str]], SourceFormat]) -> bool:
+    """Whether a delimited reading may have missed one of the two layouts: one column (no delimiter split the lines),
+    fewer than two rows, or a header whose every name is a label with its value (`Hund 7`, `Katze 3`: no names). The
+    layout reads only when its own strict shape matches the whole text (`layouts.read_layout`)."""
+    headers, rows, _ = read
+    return len(headers) == 1 or len(rows) < LAYOUT_MIN_ROWS or all(is_pair(name) for name in headers)
+
+
+def _layout_read(
+    layout: Layout, warnings: list[str], context: list[str]
+) -> tuple[list[str], list[list[str]], SourceFormat]:
+    """The reader's triple of a layout's table, with the warning that says how the text was read; the lines the
+    layout left out (a title, the labels below the rows) join the notes as the delimited reader's do."""
+    warnings.append(layout.note)
+    lines, cut = _context_lines([[note] for note in layout.notes], None)
+    context.extend(lines)
+    if cut:
+        warnings.append(f"the notes around the table were cut at {MAX_CONTEXT_CHARS:,} characters")
+    return list(layout.headers), [list(row) for row in layout.rows], layout.kind
 
 
 # --- Limits ------------------------------------------------------------------------------

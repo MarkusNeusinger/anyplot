@@ -852,16 +852,19 @@ function AgentChat({
       return;
     }
     const text = draft.trim();
-    // Text over the cap is never cut: the counter is red and nothing goes until it fits.
-    if (!text || text.length > MAX_MESSAGE_CHARS || busy || chatLocked) return;
+    if (!text || busy || chatLocked) return;
     // A table in the box is data, as its paste would have been: the assistant reads no data from
-    // a message. It goes without a note, because the parser keeps the lines around it as notes.
-    const typed = attach.attachTyped(text);
-    setDraft('');
+    // a message. It goes without a note, because the parser keeps the lines around it as notes,
+    // and by the dataset's own limits, also when it is longer than a message (`boxData`).
+    const typed = boxSends === 'typed' ? attach.attachTyped(text) : null;
     if (typed) {
+      setDraft('');
       void sendAttachment(typed, '');
       return;
     }
+    // A message over the cap is never cut: the counter is red and nothing goes until it fits.
+    if (text.length > MAX_MESSAGE_CHARS) return;
+    setDraft('');
     void session.sendMessage(text);
   };
 
@@ -1523,6 +1526,7 @@ function AgentChat({
                   step2={step2}
                   hasPlot={hasPlot}
                   chatLocked={chatLocked}
+                  typedData={boxSends === 'typed'}
                   plot={{
                     kind: plotKind,
                     active: click !== null,

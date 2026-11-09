@@ -213,6 +213,8 @@ SourceFormat = Literal[
     "semicolon",
     "pipe",
     "whitespace",
+    "cell_lines",
+    "pair_list",
     "json_records",
     "json_lines",
     "json_columns",

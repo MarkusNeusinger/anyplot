@@ -115,8 +115,14 @@ class TestFixtures:
         # top 10, the pace per run after a weekly sum (a question), a dropped column back. Since 2026-11-08, two on a
         # line whose x repeats (`repeated_key`): its summary changes nothing, and a wish for one point per x is the
         # counted `aggregate`. And one that asks for a data change and its plot in one message (`change_and_plot`),
-        # after the summary: the change is the turn's answer, and the plot waits for the user's check.
-        assert len(cases) == 103
+        # after the summary: the change is the turn's answer, and the plot waits for the user's check. Since
+        # 2026-11-09, two summaries of the layouts code reads (`layout`): a web table copied one cell per line and an
+        # inline list of pairs, the owner's live cases in invented data.
+        assert len(cases) == 105
+        assert sorted(item.id for item in cases if "layout" in item.tags) == [
+            "en-summary-inline-pairs",
+            "en-summary-web-table-cell-lines",
+        ]
         assert sorted(item.id for item in cases if "repeated_key" in item.tags) == [
             "de-ein-punkt-pro-laenge",
             "en-summary-repeated-key",
@@ -183,7 +189,7 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 14 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 16 and {item.locale for item in cases} == {"de", "en"}
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a

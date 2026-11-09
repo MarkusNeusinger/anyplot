@@ -1,5 +1,5 @@
 {
-  "about": "Shared cases of the composer's paste routing (routeInput.ts). route is what the page does with pasted text: data becomes an attachment that Enter sends to the dataset route, message stays typed text, null is nothing to route. server is what the dataset route's classify_paste answers for the same text (agents/anyplot/data/classify.py): null for text the parser reads, else code, formula or data_request. routeInput.test.ts asserts route; tests/unit/agents/test_route_cases.py asserts server. repeat, when present, repeats text that many times. lines are single lines with the code veto's verdict, which both sides must give: strong (an import, a definition, an R assignment, a known data call, an arrow function) and shaped (strong, or a comment, a brace, return, a line ending in ; { or :).",
+  "about": "Shared cases of the composer's paste routing (routeInput.ts). route is what the page does with pasted text: data becomes an attachment that Enter sends to the dataset route, message stays typed text, null is nothing to route. server is what the dataset route's classify_paste answers for the same text (agents/anyplot/data/classify.py): null for text the parser reads, else code, formula or data_request. routeInput.test.ts asserts route; tests/unit/agents/test_route_cases.py asserts server. parsed, when present, is the table the server's parser reads from the text (agents/anyplot/data/layouts.py: its source format, its row count and its column names), which test_route_cases.py asserts too; a data case without it may be text the parser leaves to the transcriber (rule 14). Use invented data only. repeat, when present, repeats text that many times. lines are single lines with the code veto's verdict, which both sides must give: strong (an import, a definition, an R assignment, a known data call, an arrow function) and shaped (strong, or a comment, a brace, return, a line ending in ; { or :).",
   "cases": [
     { "id": 1, "text": "month,sales\nJan,5\nFeb,7", "route": "data", "rule": "7a", "server": null },
     {
@@ -73,8 +73,8 @@
       "id": 15,
       "text": "v = np.arange(10)\n",
       "repeat": 140,
-      "route": "data",
-      "rule": "2",
+      "route": "message",
+      "rule": "5",
       "server": "code"
     },
     {
@@ -139,9 +139,10 @@
     {
       "id": 27,
       "text": "Hund 7, Katze 3\nVogel 4, Maus 2",
-      "route": "message",
-      "rule": "11",
-      "server": null
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 4, "columns": ["label", "value"] }
     },
     {
       "id": 28,
@@ -161,8 +162,9 @@
       "id": 30,
       "text": "Hund 7, Katze 3\nVogel 4, Maus 2\nPferd 1, Esel 5",
       "route": "data",
-      "rule": "7b",
-      "server": null
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 6, "columns": ["label", "value"] }
     },
     {
       "id": 31,
@@ -239,6 +241,140 @@
       "text": "Hi there, team\nplease add a grid, thanks\nand blue bars, ok",
       "route": "message",
       "rule": "11",
+      "server": null
+    },
+    {
+      "id": 42,
+      "text": "runs · mean · min–max\n\nNorthwind\n\n214\n\n87.3\n\n58–99\n\nSouthgate\n\n198\n\n84.9\n\n61–97\n\nEastholm\n\n207\n\n90.1\n\n66–100\n\nruns\nmean\nmin–max",
+      "route": "data",
+      "rule": "12",
+      "server": null,
+      "parsed": {
+        "format": "cell_lines",
+        "rows": 3,
+        "columns": ["label", "runs", "mean", "min–max"]
+      }
+    },
+    {
+      "id": 43,
+      "text": "North\n12\nSouth\n9\nEast\n15",
+      "route": "data",
+      "rule": "12",
+      "server": null,
+      "parsed": { "format": "cell_lines", "rows": 3, "columns": ["label", "value"] }
+    },
+    {
+      "id": 44,
+      "text": "Station\nTemp\nRain\n\nAlder\n\n9.8\n\n812\n\nBirch\n\n9.1\n\n790",
+      "route": "data",
+      "rule": "12",
+      "server": null,
+      "parsed": { "format": "cell_lines", "rows": 2, "columns": ["Station", "Temp", "Rain"] }
+    },
+    {
+      "id": 45,
+      "text": "a:7,b:12,c:5",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["label", "value"] }
+    },
+    {
+      "id": 46,
+      "text": "a=7; b=12; c=5",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["label", "value"] }
+    },
+    {
+      "id": 47,
+      "text": "Apples 7, Pears 12",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 2, "columns": ["label", "value"] }
+    },
+    {
+      "id": 48,
+      "text": "Jan: 5\nFeb: 7\nMar: 9",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["label", "value"] }
+    },
+    {
+      "id": 49,
+      "text": "Monat Umsatz\nJan 5\nFeb 7\nMar 9",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["Monat", "Umsatz"] }
+    },
+    {
+      "id": 50,
+      "text": "a: 7,5; b: 12,0",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 2, "columns": ["label", "value"] }
+    },
+    {
+      "id": 51,
+      "text": "Q1:5,Q2:7,Q3:9",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["label", "value"] }
+    },
+    { "id": 52, "text": "3 5 7 9 11", "route": "data", "rule": "14", "server": null },
+    { "id": 53, "text": "Jan 5 Feb 7 Mar 9", "route": "data", "rule": "14", "server": null },
+    { "id": 54, "text": "make it 16:9", "route": "message", "rule": "4", "server": null },
+    { "id": 55, "text": "at 10:30", "route": "message", "rule": "4", "server": null },
+    {
+      "id": 56,
+      "text": "https://example.com/data?a=1,b=2",
+      "route": "message",
+      "rule": "4",
+      "server": null
+    },
+    { "id": 57, "text": "Anna\nBen\nCem", "route": "message", "rule": "11", "server": null },
+    { "id": 58, "text": "a:7", "route": "message", "rule": "4", "server": null },
+    {
+      "id": 59,
+      "text": "Set y from 0 to 100, x from 1 to 12",
+      "route": "message",
+      "rule": "4",
+      "server": "formula"
+    },
+    {
+      "id": 60,
+      "text": "The cohort grew 12% in 2024 and 9% in 2025.",
+      "route": "message",
+      "rule": "4",
+      "server": null
+    },
+    {
+      "id": 61,
+      "text": "Please use 3, 5 and 7 as ticks",
+      "route": "message",
+      "rule": "4",
+      "server": null
+    },
+    { "id": 62, "text": "4,5\n", "repeat": 600, "route": "data", "rule": "7a", "server": null },
+    {
+      "id": 63,
+      "text": "words without a table ",
+      "repeat": 100,
+      "route": "message",
+      "rule": "2",
+      "server": null
+    },
+    {
+      "id": 64,
+      "text": "12 apples, 7 pears and 30 plums, what do you think?",
+      "route": "message",
+      "rule": "4",
       "server": null
     }
   ],

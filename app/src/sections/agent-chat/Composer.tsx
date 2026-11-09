@@ -173,6 +173,8 @@ export interface ComposerProps {
   hasPlot: boolean;
   /** `all` holds the box in step 2: the fan-out takes no text. */
   chatLocked: boolean;
+  /** The box's text is a table that Enter sends as data (`plotChain.boxData`), not a message. */
+  typedData?: boolean;
   plot: PlotButtonState;
   /** `.example_data()` in the data line: whether its click acts now. */
   example: { active: boolean };
@@ -186,7 +188,7 @@ export function Composer(props: ComposerProps) {
   const { draft, onDraftChange, onPaste, onSubmit, messageRef, plotRef } = props;
   const { attachment, attachmentNotice, onRemoveAttachment, dropHint } = props;
   const { canOpen, fileInputRef, onFileChosen } = props;
-  const { ready, busy, hasData, step2, hasPlot, chatLocked, plot, example } = props;
+  const { ready, busy, hasData, step2, hasPlot, chatLocked, plot, example, typedData } = props;
   const { confirmError, onExampleData, onPlot } = props;
   // Read at the first render, so a phone never shows the long placeholder first.
   const narrow = useMediaQuery(PHONE_QUERY, { noSsr: true });
@@ -196,8 +198,9 @@ export function Composer(props: ComposerProps) {
   const lockedBox = chatLocked && !attachment;
   // An attachment goes once it is read and the dataset route can take it; a refused one again.
   const sendable = !attachment || attachment.status === 'ready' || attachment.status === 'failed';
-  // A message over the cap is never cut: the counter turns red and nothing sends until it fits.
-  const tooLong = draft.length > MAX_MESSAGE_CHARS;
+  // A message over the cap is never cut: the counter turns red and nothing sends until it fits. A
+  // table in the box is data, which goes by the dataset's own limits (`typedData`), so no cap holds it.
+  const tooLong = draft.length > MAX_MESSAGE_CHARS && !typedData;
   // What Enter and the `↵` send now: text or an attachment, while nothing else runs.
   const canSend =
     ready && !busy && sendable && !tooLong && (!!draft.trim() || !!attachment) && !lockedBox;
@@ -498,7 +501,7 @@ export function Composer(props: ComposerProps) {
           .filter(Boolean)
           .join('. ')}
       </Box>
-      {draft.length > MAX_MESSAGE_CHARS * 0.9 && (
+      {draft.length > MAX_MESSAGE_CHARS * 0.9 && !typedData && (
         <Box
           data-testid="message-counter"
           sx={{ ...labelSx, mt: -1, color: tooLong ? colors.error : 'var(--ink-muted)' }}

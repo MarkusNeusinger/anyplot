@@ -3867,6 +3867,18 @@ describe('AgentChatPage attachment', () => {
         'cells copied from a spreadsheet',
         ['hours\tscore', '1.5\t52', '2.0\t58', '3.0\t61'].join('\r\n'),
       ],
+      // The owner's two live cases of 2026-11-09, in invented data: a web table copied one cell
+      // per line (the server's code reads it, `layouts.py`), and an inline list of pairs.
+      [
+        'a web table copied one cell per line',
+        [
+          'runs · mean · min–max',
+          ...['Northwind', '214', '87.3', '58–99', 'Southgate', '198', '84.9', '61–97'],
+          ...['Eastholm', '207', '90.1', '66–100'],
+        ].join('\n\n') + '\n\nruns\nmean\nmin–max',
+      ],
+      ['an inline list of pairs', 'a:7,b:12,c:5'],
+      ['an inline list of labels and values', 'Apples 7, Pears 12'],
     ])('makes %s, the first paste of a fresh session, one click from its plot', async (_, text) => {
       cleanSummary();
       await openChat();
@@ -3888,6 +3900,65 @@ describe('AgentChatPage attachment', () => {
       expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
       expect(datasetPosts()).toHaveLength(1);
       expect(JSON.parse(String((datasetPosts()[0][1] as RequestInit).body)).text).toBe(text);
+    });
+
+    it('sends short text that is mostly values to the server, and stops at its reading for .use()', async () => {
+      // No rule of the page reads `Jan 5 Feb 7 Mar 9` as a table: the server's transcriber does.
+      routeDataset((path, init) =>
+        path.endsWith('/dataset') && init.method === 'POST' ? json(200, TRANSCRIBED) : undefined
+      );
+      await openChat();
+      expect(pasteText('Jan 5 Feb 7 Mar 9')).toBe(false);
+      const create = screen.getByRole('button', { name: 'Create plot' });
+      expect(create).not.toHaveAttribute('aria-disabled');
+      fireEvent.click(create);
+      await screen.findByTestId('transcription-card');
+      await waitFor(() =>
+        expect(step()).toHaveTextContent(
+          'step 1 of 2 · decide on the table first: .use() or .discard()'
+        )
+      );
+      expect(confirmAndTurns()).toEqual([]);
+    });
+
+    it.each([
+      ['a ratio', 'make it 16:9'],
+      ['a clock time', 'at 10:30'],
+      ['a URL', 'https://example.com/data?a=1,b=2'],
+      ['a list of names', 'Anna\nBen\nCem'],
+      ['a plot wish with numbers', 'Set y from 0 to 100, x from 1 to 12'],
+      ['long prose', `${'words without a table '.repeat(100)}end`],
+    ])('keeps %s a message: no chip, and the plot button stays inert', async (_, text) => {
+      await openChat();
+      // The browser's own paste goes ahead (the event is not cancelled).
+      expect(pasteText(text)).toBe(true);
+      expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+      fireEvent.change(message(), { target: { value: text } });
+      expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute(
+        'aria-disabled',
+        'true'
+      );
+    });
+
+    it('sends a long table in the box as data, by the dataset limits, with Enter as with the button', async () => {
+      cleanSummary();
+      await openChat();
+      const long = `hours,score\n${'1.5,52\n'.repeat(400)}`;
+      expect(long.length).toBeGreaterThan(2000);
+      fireEvent.change(message(), { target: { value: long } });
+      // No message cap holds a table: no red counter, and both keys take it.
+      expect(screen.queryByTestId('message-counter')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Create plot' })).not.toHaveAttribute(
+        'aria-disabled'
+      );
+      fireEvent.keyDown(message(), { key: 'Enter' });
+      expect(await screen.findByText(CLEAN)).toBeInTheDocument();
+      expect(datasetPosts()).toHaveLength(1);
+      expect(JSON.parse(String((datasetPosts()[0][1] as RequestInit).body)).text).toBe(long.trim());
+      // Long prose stays a message over the cap: the counter turns red and nothing goes.
+      await turnEnded();
+      fireEvent.change(message(), { target: { value: 'word '.repeat(450) } });
+      expect(screen.getByTestId('message-counter')).toBeInTheDocument();
     });
 
     it('reads a pasted table with all pressed, then plots it in every library', async () => {

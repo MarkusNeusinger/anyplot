@@ -53,6 +53,11 @@ SAMPLES: dict[str, str] = {
     "4 rows had empty fields past the header's 3 columns; those empty fields were left out": "trailing_empty_fields",
     "the data holds 2 tables, each under its own header; read table 1 (a, b: 3 rows) and left out table 2; the "
     "table picker in the data panel reads another one": "multiple_tables",
+    "read one cell per line: 3 rows of 4 columns; the first column is named label; left out 3 lines below the "
+    "table, kept as a note": "cell_lines_read",
+    "read one cell per line: 2 rows of 2 columns": "cell_lines_read",
+    "read a list of 3 label/value pairs as two columns, named label and value": "pair_list_read",
+    "read a list of 2 label/value pairs as two columns": "pair_list_read",
     HEADERLESS_LIST_WARNING: "headerless_list",
     "read 'Apples' as the column name": "category_header",
     "2 keys repeated; only the last value of a repeated key is kept": "repeated_keys",
