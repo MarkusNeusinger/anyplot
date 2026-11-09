@@ -320,7 +320,7 @@ user agent, whatever its version, because a farm that wears one shares it with
 real visitors, and nginx would drop their events without anyone seeing it.
 Such a farm is answered at the Cloudflare edge instead, where a person who gets
 caught sees a challenge and can pass it: see "Security rules" in
-[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#security-rules-pro-since-2026-11-09).
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
 `tests/unit/api/test_analytics_event_proxy.py` fails if a browser's user agent
 loses its events, and it carries the shapes farms have worn.
 
@@ -340,8 +340,11 @@ farm's user agents, Windows 10 Chrome 100 to 139. It was removed the same day:
 - The entry kept dropping the events of real visitors on a pinned old Chrome,
   about 1.8 % of visits (37 of 2,069 in the 28 days before 2026-11-08).
 
-The Managed Challenge for hosting-network ASNs at the edge is the one
-mechanism against the farm now.
+The one mechanism against the farm is now the Cloudflare Managed Challenge for
+four hosting-network ASNs: Tencent (132203 and 45090), Leaseweb (394380), and
+Huawei Cloud (136907), with verified bots excluded. The farm's residential
+share is deliberately left alone. See
+[A Managed Challenge for hosting-network ASNs](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
 
 ---
 
