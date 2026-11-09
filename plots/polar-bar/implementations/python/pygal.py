@@ -1,7 +1,7 @@
 """anyplot.ai
 polar-bar: Polar Bar Chart (Wind Rose)
 Library: pygal 3.1.3 | Python 3.14.9
-Quality: 96/100 | Updated: 2026-11-09
+Quality: pending | Updated: 2026-11-09
 """
 
 import os
