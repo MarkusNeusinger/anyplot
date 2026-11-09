@@ -142,13 +142,39 @@ const mockVisitors = {
   ],
 };
 
+/** 28 UTC days, oldest first, every one zero but the two given. */
+function machineReaderDays(
+  overrides: Record<
+    string,
+    Partial<Record<'for_person' | 'index_training' | 'search' | 'mcp', number>>
+  >
+) {
+  return Array.from({ length: 28 }, (_, offset) => {
+    const date = new Date(Date.UTC(2026, 9, 13 + offset)).toISOString().slice(0, 10);
+    return { date, for_person: 0, index_training: 0, search: 0, mcp: 0, ...overrides[date] };
+  });
+}
+
+const mockMachineReaders = {
+  status: 'ok',
+  days: 28,
+  points: machineReaderDays({
+    '2026-10-20': { index_training: 1 },
+    '2026-11-09': { for_person: 2, index_training: 16, search: 3, mcp: 4 },
+  }),
+  totals: { for_person: 2, index_training: 17, search: 3, mcp: 4, unverified: 26 },
+  generated_at: '2026-11-09T13:50:00Z',
+};
+
 /**
- * StatsPage performs two independent fetches: /insights/dashboard and
- * /insights/visitors. Route by URL so the visitors response isn't silently
- * replaced by the dashboard payload (and vice versa).
+ * StatsPage performs three independent fetches: /insights/dashboard,
+ * /insights/visitors and /insights/machine-readers. Route by URL so no
+ * response is silently replaced by the dashboard payload (and vice versa).
+ * A `null` machine readers payload answers 403, a non-retryable status.
  */
 function mockFetchSuccess(
-  visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors
+  visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors,
+  machineReadersPayload: unknown = mockMachineReaders
 ) {
   vi.stubGlobal(
     'fetch',
@@ -159,6 +185,13 @@ function mockFetchSuccess(
           json: () => Promise.resolve(visitorsPayload ?? { points: [] }),
         });
       }
+      if (url.includes('/insights/machine-readers')) {
+        return Promise.resolve(
+          machineReadersPayload === null
+            ? { ok: false, status: 403 }
+            : { ok: true, json: () => Promise.resolve(machineReadersPayload) }
+        );
+      }
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockDashboard),
@@ -168,14 +201,17 @@ function mockFetchSuccess(
 }
 
 function mockFetchError() {
-  // /insights/dashboard fails; visitors fetch can succeed-with-empty so the
-  // visitors `useEffect` resolves cleanly and the test asserts on the
-  // dashboard error path only.
+  // /insights/dashboard fails; visitors and machine readers can succeed so
+  // their `useEffect`s resolve cleanly and the test asserts on the dashboard
+  // error path only.
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
       if (url.includes('/insights/visitors')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
+      }
+      if (url.includes('/insights/machine-readers')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockMachineReaders) });
       }
       // A non-retryable status: apiGet would retry a 5xx with real backoff
       // (covered in lib/api.test.ts), outlasting waitFor's 1 s default.
@@ -433,6 +469,95 @@ describe('StatsPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/visitor data unavailable/)).toBeInTheDocument();
     });
+  });
+
+  it('renders the machine readers tile: header, total, legend, footnote and 28 days', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    // 2 + 17 + 3: the three audiences, the MCP requests apart.
+    await waitFor(() => {
+      expect(
+        screen.getByText(/verified crawlers and ai assistants · last 28 days · 22 requests/)
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText('machine readers')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'legal.privacy()' })).toHaveAttribute(
+      'href',
+      '/legal#machine-readers'
+    );
+    const legend = screen.getByTestId('machine-readers-legend');
+    expect(legend).toHaveTextContent('for a person 2');
+    expect(legend).toHaveTextContent('ai index & training 17');
+    expect(legend).toHaveTextContent('search engines 3');
+    expect(legend).toHaveTextContent('· 4 over mcp (all clients)');
+    const footnote = screen.getByTestId('machine-readers-footnote');
+    expect(footnote).toHaveTextContent('requests that reached the server');
+    expect(footnote).toHaveTextContent('people are counted in visitors above');
+    expect(footnote).toHaveTextContent(
+      "26 requests that carried a crawler's name without that verification are not counted."
+    );
+    expect(footnote).not.toHaveTextContent(/spoof/);
+
+    const days = screen.getAllByTestId('machine-readers-day');
+    expect(days).toHaveLength(28);
+    expect(days[27]).toHaveAttribute(
+      'aria-label',
+      '2026-11-09: 21 requests · 2 for a person · 16 ai index & training · 3 search engines'
+    );
+    expect(days[7]).toHaveAttribute(
+      'aria-label',
+      '2026-10-20: 1 request · 0 for a person · 1 ai index & training · 0 search engines'
+    );
+  });
+
+  it.each([
+    ['unavailable', { ...mockMachineReaders, status: 'unavailable', points: [] }],
+    ['not_configured', { ...mockMachineReaders, status: 'not_configured', points: [] }],
+    ['an unreadable answer', { status: 'ok', points: 'nope' }],
+  ])('shows the machine readers placeholder for %s', async (_, payload) => {
+    mockFetchSuccess(mockVisitors, payload);
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('machine reader data unavailable')).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(/verified crawlers and ai assistants · last 28 days$/)
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('machine-readers-day')).not.toBeInTheDocument();
+  });
+
+  it('draws 28 honest minimum bars for an ok answer with no reads', async () => {
+    mockFetchSuccess(mockVisitors, {
+      ...mockMachineReaders,
+      points: machineReaderDays({}),
+      totals: { for_person: 0, index_training: 0, search: 0, mcp: 0, unverified: 0 },
+    });
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('machine-readers-day')).toHaveLength(28);
+    });
+    expect(screen.getByText(/last 28 days · 0 requests/)).toBeInTheDocument();
+    expect(screen.getByTestId('machine-readers-legend')).toHaveTextContent(
+      '· 0 over mcp (all clients)'
+    );
+  });
+
+  it('still renders the dashboard when the machine readers request fails', async () => {
+    mockFetchSuccess(mockVisitors, null);
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('machine reader data unavailable')).toBeInTheDocument();
+    });
+    expect(screen.getByText('specifications')).toBeInTheDocument();
+    expect(screen.getByText(/unique visitors · last 28 days · 44 total/)).toBeInTheDocument();
   });
 
   it('routes tag links to /plots and fires tag_click on click', async () => {

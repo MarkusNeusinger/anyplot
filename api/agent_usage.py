@@ -13,9 +13,9 @@ deduplicates over the whole bucket with a window function, which no time filter 
 query filters `timestamp` (the log view's partition column) to the window first and
 deduplicates only those rows, so a load scans the window, never the whole 180 days. The window
 starts at `since`, the current time floored to `WINDOW_STEP_S` minus the days, passed as a
-query parameter: within one step the query text and its parameters stay byte-identical, so
-BigQuery may answer from its result cache, and on top of that this module keeps each answer for
-`CACHE_TTL_S` in the process (`_CACHE`), so reloading `/debug` runs no query at all.
+query parameter. BigQuery's result cache does not answer a repeat, because the linked `_AllLogs`
+view changes with every line that arrives, so this module keeps each answer for `CACHE_TTL_S` in
+the process (`_CACHE`), and reloading `/debug` runs no query at all.
 
 `AGENT_TELEMETRY_DATASET` unset answers `not_configured`; a query that fails (no table yet, no
 permission, a timeout) answers `unavailable`, logged with the exception class only. Both carry
@@ -23,8 +23,8 @@ zeros, so the page shows its empty state and never an error. Neither is cached.
 
 The per-day table (`GET /debug/agent-usage/daily`, `daily_sql`, `read_daily`) answers the last
 `DAILY_DAYS` UTC days, newest first, from a second query under the same rules: its window starts
-at 00:00 UTC `DAILY_DAYS - 1` days before today, constant for the whole day, so within a day the
-query text and its parameter stay byte-identical too. Each day counts the live chats that began
+at 00:00 UTC `DAILY_DAYS - 1` days before today, constant for the whole day, and its answer is
+kept per window start, so a new UTC day queries anew. Each day counts the live chats that began
 on it, the plots shipped, the cost (the `cost` view's sum of every turn step and data-input judge
 call, priced by the views dataset's `model_prices`), the limit refusals by code
 (`LIMIT_CODES`) and the 95th percentile of the run queue's wait (`pipeline_run.queue_wait_ms`,

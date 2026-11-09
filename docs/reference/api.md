@@ -339,6 +339,77 @@ Deterministically selects an implementation based on today's date. It prefers th
 
 Returns related specs sorted by Jaccard similarity with preview thumbnails and shared tags. The catalogue is cached once as an in-memory index under a single key. The index is refreshed in the background once it is an hour old, and it is cleared with the rest of the cache after a database sync. Each request ranks against that index in about a millisecond.
 
+### GET `/insights/visitors`
+
+**Purpose**: Unique visitors per day for the visitors strip on the stats page
+
+Queries the Plausible Stats API for today and the 27 days before it, oldest first, zero-filled:
+
+```json
+{
+  "points": [
+    {"date": "2026-10-13", "visitors": 41},
+    {"date": "2026-10-14", "visitors": 0}
+  ]
+}
+```
+
+`points` is empty when `PLAUSIBLE_API_KEY` is unset or Plausible fails, so the page shows its placeholder instead of an all-zero strip. Cached with stale-while-revalidate (1h refresh); an empty answer is cached too.
+
+### GET `/insights/machine-readers`
+
+**Purpose**: Verified crawler and AI assistant reads per day for the machine readers tile on the stats page
+
+Reads the machine-read telemetry in BigQuery (`api/machine_reads_query.py`) for today and the 27 UTC days before it, oldest first, zero-filled. A point counts live, served reads (2xx or 304) of pages, code, specs, and MCP that Cloudflare verified, by audience. `totals.mcp` counts the MCP requests of every client, verified or not; `totals.unverified` counts the reads of a named vendor in the same audiences that Cloudflare didn't verify. Counts only: no IP address, user agent, path, or query string.
+
+```json
+{
+  "status": "ok",
+  "days": 28,
+  "points": [
+    {"date": "2026-11-09", "for_person": 2, "index_training": 16, "search": 3, "mcp": 4}
+  ],
+  "totals": {"for_person": 2, "index_training": 16, "search": 3, "mcp": 4, "unverified": 26},
+  "generated_at": "2026-11-09T13:50:00Z"
+}
+```
+
+Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and neither is cached, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
+
+### GET `/debug/machine-readers`
+
+**Purpose**: Every machine read of the last 7 or 30 days for the machine readers section on `/debug`
+
+Admin-gated like the other `/debug/*` routes; `days=7` (default) or `days=30`, any other value is `400`. It counts every live line of the window, whatever its surface, status, or verdict, and the smoke checks' synthetic lines apart:
+
+```json
+{
+  "status": "ok",
+  "days": 7,
+  "generated_at": "2026-11-09T13:50:00Z",
+  "requests": 81,
+  "verified": 50,
+  "unverified": 31,
+  "mcp_calls": 4,
+  "synthetic": 10,
+  "vendors": [
+    {
+      "assistant": "ahrefs", "kind": "seo", "category": "Search Engine Optimization",
+      "requests": 25, "verified": 25, "unverified": 0,
+      "pages": 3, "code": 0, "og": 2, "mcp": 0, "not_found": 1,
+      "top_paths": [{"key": "plots_filter", "count": 3}]
+    }
+  ],
+  "daily": [
+    {"date": "2026-11-09", "for_person": 0, "index_training": 16, "search": 4, "seo": 30, "other": 0, "unverified": 31, "mcp": 4}
+  ]
+}
+```
+
+`vendors` holds one row per vendor and purpose, most requests first, with its five most requested routes; `daily` holds every day of the window, newest first. `status` is `not_configured` or `unavailable` as for `/insights/machine-readers`, with zeros and empty lists. An `ok` answer is kept for 10 minutes per window.
+
+Both machine-reader routes read the dataset named by `MACHINE_READS_DATASET` (`<project>.<dataset>` of the views, `anyplot.machine_reads`; the queries read its linked log dataset, the name plus `_logs`). In production it comes from the `_MACHINE_READS_DATASET` substitution of the `deploy-api` trigger, which `api/cloudbuild.yaml` writes on every deploy.
+
 ### GET `/specs/{spec_id}/{library}/code`
 
 **Purpose**: Lightweight endpoint for implementation code

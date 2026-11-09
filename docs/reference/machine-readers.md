@@ -1,10 +1,12 @@
 # Machine readers
 
 > **Status (2026-11-09):** both writers are in the repository: the API (`api/machine_reads.py`) and the site's
-> nginx (`app/nginx.conf`). The log bucket, the sink, and the `_Default` exclusion exist since 2026-11-09
-> (steps 1 to 3 of [Set up the Google Cloud side](#set-up-the-google-cloud-side)); the linked dataset, the views,
-> the two `READER` entries, and the trigger substitution (steps 4 to 8) wait for the owner's OK after the writers
-> merge. The public numbers on `/stats` and the owner's section on `/debug` come in a later change.
+> nginx (`app/nginx.conf`). Steps 1 to 8 of [Set up the Google Cloud side](#set-up-the-google-cloud-side) are
+> done since 2026-11-09: the log bucket, the sink, the `_Default` exclusion, the linked dataset, the views, the
+> two `READER` entries, and the trigger substitution. Step 9, the Worker redeploy, waits for the owner. The two
+> readers, the public tile on `/stats` and the owner's section on `/debug`, are in the repository too (see
+> [Where the numbers appear](#where-the-numbers-appear)); because the trigger already carries the dataset, the
+> API deploy that ships them fills both at once.
 
 A machine reader is a crawler, an AI assistant, or an MCP client that reads the catalogue. Every request one of
 them makes is recorded as one content-free JSON line: who sent it (the vendor, why it fetches, and whether
@@ -193,6 +195,59 @@ and the daily view carries it verbatim (a test keeps the two equal):
 Cloudflare treats `AI Search` as search behaviour; it folds into `index_training` here because an AI search
 index is what an assistant later answers from.
 
+## Where the numbers appear
+
+Two readers in `api/machine_reads_query.py` query the linked log dataset `anyplot.machine_reads_logs._AllLogs`
+directly, not the views: the `reads` view deduplicates over the whole bucket, while the readers filter
+`timestamp` to their window first and deduplicate only those rows on `line_id`. Both use the same audience CASE
+as the daily view (`AUDIENCE_SQL`) and answer counts only, keyed by closed names and catalogue ids. Both windows
+start at 00:00 UTC, so the queries of one day cover the same days. BigQuery's result cache doesn't answer a
+repeat (see [Cost](#cost)), so the readers' own caches bound how often a query runs.
+
+### The stats tile
+
+`GET /insights/machine-readers` is public (`api/routers/insights.py`) and feeds the `machine readers` tile on
+`/stats`, right after the visitors strip. It answers 28 points, one per UTC day from 00:00 UTC 27 days ago to
+today, oldest first, with zeros on a day without reads. A point counts the live lines that Cloudflare verified,
+on the content surfaces (`page`, `shell`, `code`, `spec`, and `mcp`), with a served status (2xx or 304), in three
+audiences: `for_person`, `index_training`, and `search`. The `seo`, `preview`, and `other` audiences are left
+out. Two totals stand beside them:
+
+- `mcp` counts the served MCP requests of every client, verified or not, because an MCP client other than
+  Claude is never a verified bot. The tile labels it "over mcp (all clients)".
+- `unverified` counts the served reads in the same three audiences by a named vendor (`assistant != 'other'`)
+  that Cloudflare didn't verify. The tile's footnote names them as not counted. A line without a vendor name, such
+  as a python MCP client or a crawler only Cloudflare named, is never in it, so "carried a crawler's name" holds.
+
+The public numbers rest on the verdict: a vendor Cloudflare doesn't verify, such as Perplexity's indexer on
+2026-11-09, is in the footnote, never in the bars.
+
+`status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a dataset name, answered before the
+cache, and `unavailable` when the BigQuery client can't start or the query fails on a cold cache, answered and
+never kept, so the next load tries again. An `ok` answer stays in the API's process cache and is refreshed in the
+background after an hour; a failed refresh keeps the last good answer. On top of that, every `/insights/*` answer
+carries `Cache-Control: public, max-age=300, stale-while-revalidate=3600`.
+
+### The debug section
+
+`GET /debug/machine-readers?days=7` (or `days=30`) is admin-only (`api/routers/debug.py`) and feeds the `machine
+readers` section on `/debug`, right after the agent usage section. It counts every live line of the last 7 or 30
+UTC days, today included, whatever its surface, status, or verdict:
+
+- The totals: `requests`, `verified`, `unverified`, `mcp_calls`, and `synthetic`, the lines of the smoke checks
+  and anyone else at a raw `*.run.app` origin, which no other count holds.
+- `vendors`: one row per vendor and purpose, most requests first, because a vendor can read for several purposes
+  (`claude` is a person's assistant, an index, and a training crawler). A row carries the category Cloudflare gave
+  most of its verified lines, the counts per surface, the 404s, and its five most requested routes. A route key is
+  the route name followed by the catalogue ids of a served answer, such as
+  `spec_detail scatter-basic/python/matplotlib`.
+- `daily`: one row per UTC day, newest first, with the verified lines by audience (`other` holds `preview` and
+  every other category), the unverified lines, and the MCP requests.
+
+`status` is `not_configured` or `unavailable` as for the tile, both with zeros. An `ok` answer is kept for 10
+minutes per window and start day, so a new UTC day queries anew; a failure is never kept. A `days` other than 7
+or 30 is a 400.
+
 ## Set up the Google Cloud side
 
 Every step below is a production write. Each one runs only on the owner's named OK for that exact command; the
@@ -205,8 +260,8 @@ right after the merge.
 | Steps | State |
 |---|---|
 | 1 to 3 (bucket, sink, `_Default` exclusion) | Done on 2026-11-09 at 08:40 UTC on the owner's OK, and read back: the bucket is `ACTIVE` with 180 days and analytics on; the sink and the exclusion carry the filter below |
-| 4 to 8 (link, views dataset, views, `READER` entries, trigger substitution) | Pending the owner's OK, after the writers merge |
-| 9 (Worker redeploy) | Pending the owner, after the writers merge |
+| 4 to 8 (link, views dataset, views, `READER` entries, trigger substitution) | Done on 2026-11-09 on the owner's OK, after the writers merged; the `deploy-api` trigger carries `_MACHINE_READS_DATASET=anyplot.machine_reads` |
+| 9 (Worker redeploy) | Pending the owner |
 
 1. Create the log bucket:
 
@@ -284,12 +339,32 @@ right after the merge.
 
 8. Point the API at the views through the deploy pipeline. `api/cloudbuild.yaml` writes `MACHINE_READS_DATASET`
    from the `_MACHINE_READS_DATASET` substitution on every deploy, so set it on the trigger, never with
-   `gcloud run services update`, which the next deploy overwrites:
+   `gcloud run services update`, which the next deploy overwrites. `deploy-api` is a second-generation trigger
+   on a repository connection, where `gcloud builds triggers update github ... --update-substitutions` fails with
+   `INVALID_ARGUMENT`; export the trigger, edit the file, and import it, as in
+   [Change a trigger's included files](../../agentic/docs/project-guide.md#change-a-triggers-included-files):
 
-   ```bash
-   gcloud builds triggers update github deploy-api --region=europe-west4 \
-     --update-substitutions=_MACHINE_READS_DATASET=anyplot.machine_reads
-   ```
+   1. Export the trigger into a scratch directory outside the repository (read-only):
+
+      ```bash
+      gcloud builds triggers describe deploy-api --region=europe-west4 --project=anyplot --format=yaml > before.yaml
+      ```
+
+   2. Copy `before.yaml` to `after.yaml` and add `_MACHINE_READS_DATASET: anyplot.machine_reads` under
+      `substitutions`. Leave every other key as exported.
+   3. Check that `diff before.yaml after.yaml` shows only that line.
+   4. Import the edited config. It keeps the trigger's `id`, so it updates the trigger in place:
+
+      ```bash
+      gcloud builds triggers import --source=after.yaml --region=europe-west4 --project=anyplot
+      ```
+
+   5. Read the trigger back and compare:
+
+      ```bash
+      gcloud builds triggers describe deploy-api --region=europe-west4 --project=anyplot --format=yaml > verify.yaml
+      diff after.yaml verify.yaml && echo "trigger matches the edited config"
+      ```
 
    The setting takes effect with the next API deploy; run the trigger by hand to have it at once:
 
@@ -401,4 +476,9 @@ broken install.
 | `app/nginx.conf` | nginx's maps, `log_format machine_read`, the one `access_log`, and the hop headers |
 | `infra/cloudflare/anyplot-api-proxy.js` | The Worker, which deletes the verdict headers on the apex path |
 | `api/telemetry/views/*.sql` | The two views |
+| `api/machine_reads_query.py` | The two readers' queries, windows, answers, and the owner's process cache |
+| `api/routers/insights.py`, `api/routers/debug.py` | `GET /insights/machine-readers` and `GET /debug/machine-readers` |
+| `app/src/sections/stats/MachineReadersTile.tsx`, `app/src/sections/stats/machineReaders.ts` | The tile on `/stats` and its client-side check of the answer |
+| `app/src/sections/debug/MachineReadersSection.tsx` | The section on `/debug` |
 | `tests/unit/api/test_machine_reads.py`, `tests/unit/api/test_machine_reads_nginx.py` | The two writers, held to the same keys and sets |
+| `tests/unit/api/test_machine_reads_query.py`, `TestInsightsRouter` in `tests/unit/api/test_routers.py` | The two readers |

@@ -14,17 +14,15 @@
  * Each fetches on its own and fails to one muted line, like the section above.
  */
 
-import { useEffect, useState } from 'react';
-
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 import { DEBUG_API_URL } from 'src/constants';
 import { type AgentBudget, budgetShare, countsOf, LIMIT_KINDS, readBudget } from 'src/lib/agent';
-import { fetchWithAuth } from 'src/lib/api';
 import { localClock } from 'src/sections/agent-chat/messages';
 import { formatUsd, formatUtc, timeAgo } from 'src/sections/debug/format';
-import { listMutedSx, listTextSx } from 'src/sections/debug/styles';
+import { listMutedSx, listTextSx, tableCellSx, tableHeadSx } from 'src/sections/debug/styles';
+import { useAnswer } from 'src/sections/debug/useAnswer';
 import { colors } from 'src/theme';
 
 // ============================================================================
@@ -125,35 +123,6 @@ function limitBreakdown(limits: Record<string, number>): string {
 // Today, live
 // ============================================================================
 
-interface Answer<T> {
-  key: string;
-  value: T | null;
-}
-
-function useAnswer<T>(
-  url: string,
-  token: string,
-  reloadCounter: number,
-  read: (body: unknown) => T | null
-): T | null | undefined {
-  const key = `${url}\n${token}\n${reloadCounter}`;
-  const [answer, setAnswer] = useState<Answer<T> | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetchWithAuth(url, token)
-      .then(async response => (response.ok ? read(await response.json()) : null))
-      .catch(() => null)
-      .then(value => {
-        if (!cancelled) setAnswer({ key, value });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [url, token, key, read]);
-  // `undefined` while this key's answer is out.
-  return answer && answer.key === key ? answer.value : undefined;
-}
-
 export interface DayViewProps {
   /** The admin token of the page (`X-Admin-Token`), or `''` behind Cloudflare Access. */
   token: string;
@@ -243,18 +212,6 @@ const DAILY_EMPTY: Record<'not_configured' | 'unavailable', string> = {
   unavailable: 'per-day numbers unavailable right now',
 };
 
-const cellSx = {
-  ...listTextSx,
-  px: 1,
-  py: 0.5,
-  borderBottom: '1px solid var(--rule)',
-  textAlign: 'right',
-  whiteSpace: 'nowrap',
-  fontVariantNumeric: 'tabular-nums',
-} as const;
-
-const headSx = { ...cellSx, fontWeight: 600, color: 'var(--ink-soft)' } as const;
-
 const COLUMNS = [
   'day (UTC)',
   'new chats',
@@ -302,7 +259,10 @@ export function AgentDailyTable({ token, reloadCounter }: DayViewProps) {
                       component="th"
                       key={column}
                       scope="col"
-                      sx={{ ...headSx, textAlign: index === 0 || index === 5 ? 'left' : 'right' }}
+                      sx={{
+                        ...tableHeadSx,
+                        textAlign: index === 0 || index === 5 ? 'left' : 'right',
+                      }}
                     >
                       {column}
                     </Box>
@@ -334,24 +294,24 @@ function DayRow({ day, today }: { day: UsageDay; today: boolean }) {
     day.unpriced_calls > 0 ? `${plural(day.unpriced_calls, 'model call')} without a price` : '';
   return (
     <Box component="tr">
-      <Box component="th" scope="row" sx={{ ...cellSx, textAlign: 'left', fontWeight: 400 }}>
+      <Box component="th" scope="row" sx={{ ...tableCellSx, textAlign: 'left', fontWeight: 400 }}>
         {day.date}
         {today ? ' · so far' : ''}
       </Box>
-      <Box component="td" sx={cellSx}>
+      <Box component="td" sx={tableCellSx}>
         {day.sessions.toLocaleString('en-US')}
       </Box>
-      <Box component="td" sx={cellSx}>
+      <Box component="td" sx={tableCellSx}>
         {day.plots_shipped.toLocaleString('en-US')}
       </Box>
-      <Box component="td" sx={cellSx} title={unpriced || undefined}>
+      <Box component="td" sx={tableCellSx} title={unpriced || undefined}>
         {formatUsd(day.cost_usd)}
         {unpriced ? '+' : ''}
       </Box>
-      <Box component="td" sx={{ ...cellSx, color: 'var(--ink-soft)' }}>
+      <Box component="td" sx={{ ...tableCellSx, color: 'var(--ink-soft)' }}>
         {formatUsd(day.fanout_cost_usd)}
       </Box>
-      <Box component="td" sx={{ ...cellSx, textAlign: 'left' }}>
+      <Box component="td" sx={{ ...tableCellSx, textAlign: 'left' }}>
         {hits.length === 0 ? (
           <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
             0
@@ -362,7 +322,7 @@ function DayRow({ day, today }: { day: UsageDay; today: boolean }) {
       </Box>
       <Box
         component="td"
-        sx={cellSx}
+        sx={tableCellSx}
         title={day.queue_waits > 0 ? `of ${plural(day.queue_waits, 'run')}` : undefined}
       >
         {day.queue_wait_p95_ms === null ? '—' : `${(day.queue_wait_p95_ms / 1000).toFixed(1)} s`}
