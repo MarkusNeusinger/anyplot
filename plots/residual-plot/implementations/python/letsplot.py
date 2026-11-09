@@ -1,14 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 residual-plot: Residual Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-09
 """
 # ruff: noqa: F405
-"""anyplot.ai
-residual-plot: Residual Plot
-Library: lets-plot | Python 3.13
-Quality: pending | Created: 2025-12-26
-"""
 
 import os
 
@@ -35,25 +30,24 @@ OUTLIER_COLOR = IMPRINT_PALETTE[4]
 
 # Constants
 OUTLIER_SIGMA = 2  # residuals beyond this many standard deviations count as outliers
-RESIDUAL = "Residual (observed − predicted)"
+RESIDUAL = "Residual: sale price − predicted ($k)"
 POINT_TYPE = "Point type"
 NORMAL_LABEL = "Within ±2σ"
 OUTLIER_LABEL = "Outlier (>2σ)"
 
 # Columns: set these to your table's column names
-OBSERVED = "Observed value"  # role: y_true
-FITTED = "Fitted value"  # role: y_pred
+OBSERVED = "Sale price ($k)"  # role: y_true
+FITTED = "Predicted sale price ($k)"  # role: y_pred
 
 # Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# House sales: price grows slightly faster than linearly with living area, fitted by a straight line
 np.random.seed(42)
 n = 150
-x = np.linspace(10, 100, n)
-noise = np.random.normal(0, 5, n)
-# Mild curvature and variance growing with x, fitted by a straight line
-y_true = 2.5 * x + 0.02 * x**2 + noise * (0.5 + 0.01 * x) + 50
-slope = np.sum((x - x.mean()) * (y_true - y_true.mean())) / np.sum((x - x.mean()) ** 2)
-intercept = y_true.mean() - slope * x.mean()
-df = pd.DataFrame({OBSERVED: y_true, FITTED: slope * x + intercept})
+living_area = np.linspace(40, 220, n)  # m²
+noise = np.random.normal(0, 6, n)
+sale_price = 60 + 1.2 * living_area + 0.005 * living_area**2 + noise * (0.5 + 0.006 * living_area)
+slope, intercept = np.polyfit(living_area, sale_price, 1)
+df = pd.DataFrame({OBSERVED: sale_price, FITTED: slope * living_area + intercept})
 
 # Plot: reads only df and the constants above
 plot_df = df.dropna(subset=[OBSERVED, FITTED]).copy()
