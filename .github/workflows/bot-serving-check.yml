@@ -361,8 +361,10 @@ jobs:
           # seo backend — including for a mapped crawler UA, which is the whole
           # point of the `location =` bypasses. robots.txt and sitemap.xml
           # join llms.txt below: the sitemap is proxied to the API for every
-          # client, and a broken proxy would hand a crawler the SPA shell.
-          check "$GOOGLEBOT" "$ORIGIN/robots.txt"  "User-agent: Bytespider"
+          # client, and a broken proxy would hand a crawler the SPA shell. The
+          # robots.txt marker is the Sitemap line: the API's own robots.txt
+          # shares every other directive with the site's file.
+          check "$GOOGLEBOT" "$ORIGIN/robots.txt"  "Sitemap: https://anyplot.ai/sitemap.xml"
           check "$GOOGLEBOT" "$ORIGIN/sitemap.xml" "<urlset"
 
           # The site card must be the FILE for a preview bot, not the proxy —
