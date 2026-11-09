@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-categorical: Categorical Scatter Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -36,9 +36,9 @@ PRODUCT = "Product"  # role: category
 np.random.seed(42)
 n_per_group = 50
 clusters = {  # per product: mean and spread of spend, then of engagement
-    "Product A": (25, 5, 30, 6),
-    "Product B": (50, 7, 70, 8),
-    "Product C": (75, 6, 50, 7),
+    "Sparkling Water": (25, 5, 30, 6),
+    "Cold Brew Coffee": (50, 7, 70, 8),
+    "Energy Drink": (75, 6, 50, 7),
 }
 frames = []
 for product, (x_mean, x_sd, y_mean, y_sd) in clusters.items():
