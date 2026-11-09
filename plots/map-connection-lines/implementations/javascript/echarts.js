@@ -1,7 +1,7 @@
 // anyplot.ai
 // map-connection-lines: Connection Lines Map (Origin-Destination)
-// Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-26
+// Library: echarts 6.1.0 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-11-09
 
 const t = window.ANYPLOT_TOKENS;
 
