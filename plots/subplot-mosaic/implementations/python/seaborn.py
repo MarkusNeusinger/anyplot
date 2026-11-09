@@ -1,159 +1,186 @@
 """ anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 73/100 | Updated: 2026-05-14
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-09
 """
 
+import os
+
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import EngFormatter, MaxNLocator
 
 
-# Data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions; single-series panels take the brand green
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Constants
+# Mosaic layout: a wide overview (A) and a wide detail (C), each beside one narrow panel, over three small metrics
+MOSAIC = "AAB;CCD;EFG"
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: x
+REVENUE = "Revenue ($)"  # role: y
+SPEND = "Marketing spend ($)"  # role: z
+CONVERSIONS = "Conversions"  # role: extra
+RESPONSE = "Response time (ms)"  # role: extra
+CHANNEL = "Channel"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("store_daily.csv")
+# 100 days of an online store, one row per day and sales channel
 np.random.seed(42)
-
-# Time series data for main overview (Panel A - wide)
 dates = pd.date_range("2024-01-01", periods=100, freq="D")
-revenue = np.cumsum(np.random.randn(100) * 500 + 200) + 50000
-df_overview = pd.DataFrame({"Date": dates, "Revenue ($)": revenue})
+channels = {
+    # channel: (daily revenue base, mean response time in ms)
+    "Online": (4500, 45),
+    "Retail": (3200, 50),
+    "Partner": (1800, 120),
+    "Direct": (2750, 40),
+}
+rows = []
+for channel, (base, latency) in channels.items():
+    trend = np.cumsum(np.random.randn(len(dates)) * 0.02 + 0.003)
+    spend = np.random.uniform(200, 1500, len(dates))
+    rows.append(
+        pd.DataFrame(
+            {
+                DATE: dates,
+                CHANNEL: channel,
+                REVENUE: base * np.exp(trend) * np.random.uniform(0.9, 1.1, len(dates)),
+                SPEND: spend,
+                CONVERSIONS: np.round(spend * 0.06 + np.random.randn(len(dates)) * 12 + 20).clip(0),
+                RESPONSE: np.random.gamma(16, latency / 16, len(dates)),
+            }
+        )
+    )
+df = pd.concat(rows, ignore_index=True)
 
-# Scatter data for panel B (top right)
-df_scatter = pd.DataFrame(
-    {
-        "Marketing Spend ($K)": np.random.uniform(10, 100, 50),
-        "Conversions": np.random.uniform(100, 1000, 50) + np.random.randn(50) * 100,
-    }
-)
+# Plot: reads only df and the constants above
+daily = df.groupby(DATE, sort=True).agg({REVENUE: "sum", CONVERSIONS: "sum"}).reset_index()
+order_value = "Order value ($)"
+daily[order_value] = daily[REVENUE] / daily[CONVERSIONS].replace(0, np.nan)
+n_channels = df[CHANNEL].nunique()
+channel_palette = IMPRINT_PALETTE[:n_channels]
 
-# Bar data for panel C (middle left detail)
-categories = ["Online", "Retail", "Partner", "Direct"]
-df_bar = pd.DataFrame({"Channel": categories, "Sales ($K)": [450, 320, 180, 275]})
-
-# Histogram data for panel D (middle right detail)
-response_times = np.concatenate([np.random.normal(45, 10, 300), np.random.normal(120, 25, 100)])
-df_hist = pd.DataFrame({"Response Time (ms)": response_times})
-
-# Line data for panel E (bottom left metric)
-hours = np.arange(24)
-cpu_usage = 30 + 20 * np.sin(hours * np.pi / 12) + np.random.randn(24) * 5
-df_cpu = pd.DataFrame({"Hour": hours, "CPU Usage (%)": cpu_usage})
-
-# Line data for panel F (bottom center metric)
-memory_usage = 55 + 15 * np.sin(hours * np.pi / 10 + 2) + np.random.randn(24) * 3
-df_memory = pd.DataFrame({"Hour": hours, "Memory Usage (%)": memory_usage})
-
-# Box data for panel G (bottom right metric)
-regions = ["North", "South", "East", "West"]
-df_box = pd.DataFrame(
-    {
-        "Region": np.repeat(regions, 30),
-        "Latency (ms)": np.concatenate(
-            [
-                np.random.normal(25, 5, 30),
-                np.random.normal(35, 8, 30),
-                np.random.normal(28, 4, 30),
-                np.random.normal(40, 10, 30),
-            ]
-        ),
-    }
-)
-
-# Create mosaic layout: "AAB;CCD;EFG" pattern
-# A spans 2 cols (wide overview), B is 1 col (scatter)
-# C spans 2 cols (bar chart middle), D is 1 col (histogram)
-# E, F, G each 1 col (three small metrics)
 fig, axes = plt.subplot_mosaic(
-    [["A", "A", "B"], ["C", "C", "D"], ["E", "F", "G"]], figsize=(16, 9), height_ratios=[1.2, 1, 0.8]
+    MOSAIC, figsize=(8, 4.5), dpi=400, height_ratios=[1.35, 1, 0.85], layout="constrained", facecolor=PAGE_BG
 )
 
-# Panel A: Revenue Overview (Line plot - wide)
-sns.lineplot(data=df_overview, x="Date", y="Revenue ($)", ax=axes["A"], color="#306998", linewidth=2.5)
-axes["A"].set_title("Revenue Trend Overview", fontsize=18, fontweight="bold")
-axes["A"].set_xlabel("Date", fontsize=14)
-axes["A"].set_ylabel("Revenue ($)", fontsize=14)
-axes["A"].tick_params(axis="both", labelsize=11)
-axes["A"].xaxis.set_major_locator(plt.MaxNLocator(6))
-axes["A"].grid(True, alpha=0.3, linestyle="--")
+# A: primary panel, total daily revenue over all channels
+sns.lineplot(data=daily, x=DATE, y=REVENUE, ax=axes["A"], color=IMPRINT_PALETTE[0], linewidth=1.8)
+axes["A"].set_title("Total daily revenue", fontsize=10, fontweight="bold", loc="left")
 
-# Panel B: Marketing vs Conversions (Scatter)
+# B: marketing spend against conversions, one point per day and channel
 sns.scatterplot(
-    data=df_scatter,
-    x="Marketing Spend ($K)",
-    y="Conversions",
+    data=df,
+    x=SPEND,
+    y=CONVERSIONS,
     ax=axes["B"],
-    color="#FFD43B",
-    s=100,
-    alpha=0.7,
-    edgecolor="#306998",
-    linewidth=1,
+    color=IMPRINT_PALETTE[0],
+    s=10,
+    alpha=0.55,
+    edgecolor=PAGE_BG,
+    linewidth=0.3,
 )
-axes["B"].set_title("Marketing ROI", fontsize=16, fontweight="bold")
-axes["B"].set_xlabel("Marketing Spend ($K)", fontsize=13)
-axes["B"].set_ylabel("Conversions", fontsize=13)
-axes["B"].tick_params(axis="both", labelsize=10)
-axes["B"].grid(True, alpha=0.3, linestyle="--")
+axes["B"].set_title("Marketing ROI", fontsize=9, fontweight="bold", loc="left")
 
-# Panel C: Sales by Channel (Bar - wide)
+# C: revenue summed per channel
 sns.barplot(
-    data=df_bar,
-    x="Channel",
-    y="Sales ($K)",
+    data=df,
+    x=CHANNEL,
+    y=REVENUE,
+    hue=CHANNEL,
+    palette=channel_palette,
+    estimator="sum",
+    errorbar=None,
+    saturation=1,
+    edgecolor=PAGE_BG,
+    legend=False,
     ax=axes["C"],
-    hue="Channel",
-    palette=["#306998", "#FFD43B", "#4B8BBE", "#FFE873"],
-    legend=False,
 )
-axes["C"].set_title("Sales by Channel", fontsize=16, fontweight="bold")
-axes["C"].set_xlabel("Channel", fontsize=13)
-axes["C"].set_ylabel("Sales ($K)", fontsize=13)
-axes["C"].tick_params(axis="both", labelsize=10)
-axes["C"].grid(True, axis="y", alpha=0.3, linestyle="--")
+axes["C"].set_title("Revenue by channel", fontsize=9, fontweight="bold", loc="left")
+axes["C"].set_ylabel(f"Total {REVENUE.lower()}")
 
-# Panel D: Response Time Distribution (Histogram)
-sns.histplot(data=df_hist, x="Response Time (ms)", ax=axes["D"], bins=30, color="#306998", alpha=0.7, edgecolor="white")
-axes["D"].set_title("Response Times", fontsize=16, fontweight="bold")
-axes["D"].set_xlabel("Response Time (ms)", fontsize=13)
-axes["D"].set_ylabel("Count", fontsize=13)
-axes["D"].tick_params(axis="both", labelsize=10)
-axes["D"].grid(True, axis="y", alpha=0.3, linestyle="--")
+# D: distribution of daily response times
+sns.histplot(
+    data=df, x=RESPONSE, bins=30, color=IMPRINT_PALETTE[0], alpha=1, edgecolor=PAGE_BG, linewidth=0.4, ax=axes["D"]
+)
+axes["D"].set_title("Response times", fontsize=9, fontweight="bold", loc="left")
+axes["D"].set_ylabel("Channel-days")
 
-# Panel E: CPU Usage (Small line)
-sns.lineplot(data=df_cpu, x="Hour", y="CPU Usage (%)", ax=axes["E"], color="#306998", linewidth=2)
-axes["E"].set_title("CPU Usage", fontsize=14, fontweight="bold")
-axes["E"].set_xlabel("Hour", fontsize=11)
-axes["E"].set_ylabel("CPU (%)", fontsize=11)
-axes["E"].tick_params(axis="both", labelsize=9)
-axes["E"].set_xticks([0, 6, 12, 18, 23])
-axes["E"].grid(True, alpha=0.3, linestyle="--")
+# E, F, G: small supporting metrics
+sns.lineplot(data=daily, x=DATE, y=CONVERSIONS, ax=axes["E"], color=IMPRINT_PALETTE[0], linewidth=1.2)
+axes["E"].set_title("Daily conversions", fontsize=8, fontweight="bold", loc="left")
 
-# Panel F: Memory Usage (Small line)
-sns.lineplot(data=df_memory, x="Hour", y="Memory Usage (%)", ax=axes["F"], color="#FFD43B", linewidth=2)
-axes["F"].set_title("Memory Usage", fontsize=14, fontweight="bold")
-axes["F"].set_xlabel("Hour", fontsize=11)
-axes["F"].set_ylabel("Memory (%)", fontsize=11)
-axes["F"].tick_params(axis="both", labelsize=9)
-axes["F"].set_xticks([0, 6, 12, 18, 23])
-axes["F"].grid(True, alpha=0.3, linestyle="--")
+sns.lineplot(data=daily, x=DATE, y=order_value, ax=axes["F"], color=IMPRINT_PALETTE[0], linewidth=1.2)
+axes["F"].set_title("Revenue per conversion", fontsize=8, fontweight="bold", loc="left")
 
-# Panel G: Latency by Region (Small box)
 sns.boxplot(
-    data=df_box,
-    x="Region",
-    y="Latency (ms)",
-    ax=axes["G"],
-    hue="Region",
-    palette=["#306998", "#FFD43B", "#4B8BBE", "#FFE873"],
+    data=df,
+    x=CHANNEL,
+    y=RESPONSE,
+    hue=CHANNEL,
+    palette=channel_palette,
     legend=False,
+    saturation=1,
+    width=0.6,
+    linewidth=0.7,
+    fliersize=1.5,
+    linecolor=INK_SOFT,
+    ax=axes["G"],
 )
-axes["G"].set_title("Latency", fontsize=14, fontweight="bold")
-axes["G"].set_xlabel("Region", fontsize=11)
-axes["G"].set_ylabel("Latency (ms)", fontsize=11)
-axes["G"].tick_params(axis="both", labelsize=9)
-axes["G"].grid(True, axis="y", alpha=0.3, linestyle="--")
+axes["G"].set_title("Response time by channel", fontsize=8, fontweight="bold", loc="left")
 
-# Main title
-fig.suptitle("subplot-mosaic · seaborn · pyplots.ai", fontsize=22, fontweight="bold", y=0.98)
+# Style
+fig.suptitle("subplot-mosaic · python · seaborn · anyplot.ai", fontsize=12, fontweight="bold", color=INK)
+for key in ("A", "E", "F"):
+    locator = mdates.AutoDateLocator(maxticks=6 if key == "A" else 3)
+    axes[key].xaxis.set_major_locator(locator)
+    axes[key].xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+    axes[key].set_xlabel("")
+    axes[key].xaxis.get_offset_text().set_size(7)
+for key in ("A", "C"):
+    axes[key].yaxis.set_major_formatter(EngFormatter(sep=""))
+for key, ax in axes.items():
+    small = key in "EFG"
+    ax.tick_params(axis="both", labelsize=7 if small else 7.5, length=2)
+    ax.xaxis.label.set_size(7 if small else 8)
+    ax.yaxis.label.set_size(7 if small else 8)
+    ax.yaxis.set_major_locator(MaxNLocator(4 if small else 5))
+    ax.yaxis.grid(True, linewidth=0.5)
+    ax.set_axisbelow(True)
+    sns.despine(ax=ax)
+for key in ("E", "F", "G"):
+    axes[key].set_ylabel(axes[key].get_ylabel(), labelpad=2)
+axes["C"].set_xlabel("")
+axes["G"].set_xlabel("")
+fig.get_layout_engine().set(h_pad=0.05, w_pad=0.06, hspace=0.04, wspace=0.04)
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
