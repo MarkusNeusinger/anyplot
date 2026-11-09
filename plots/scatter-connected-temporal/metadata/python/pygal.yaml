@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-connected-temporal
 created: '2026-03-13T15:25:29Z'
-updated: '2026-11-09T00:28:42Z'
+updated: '2026-11-09T00:34:18Z'
 generated_by: claude-opus-5-5
 adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
 workflow_run: 42540024958
@@ -16,48 +16,31 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 quality_score: 87
 review:
   strengths:
-  - 'The path is split into five consecutive eras, each coloured by a discrete step
-    of imprint_seq (#009E73 to #4467A3). Each era runs into the first point of the
-    next, so the line stays unbroken and the green-to-blue gradient shows the direction
-    of time in both themes.'
-  - The start (1980) and end (2023) points get enlarged 22 px markers in the first
-    and last era colours. Together with the '(start)'/'(end)' text, they make the
-    reading direction obvious at a glance.
-  - Six evenly spaced time labels are placed off the path by a clearance search over
-    the sampled segments. Every label sits clear of markers, segments and the other
-    labels, and the marks themselves stay at their data values.
-  - 'Native pygal idioms: an XY chart with a fully themed Style object, x_value_formatter/value_formatter
-    for the % and decimal ticks, print_labels with per-point label dicts, legend_at_bottom_columns,
-    and an inline css rule to centre the label text. The HTML output keeps pygal''s
-    hover tooltips.'
-  - 'Theme tokens are threaded through every chrome element; the data colours are
-    identical in both renders and all text is readable on #FAF8F1 and #1A1A17.'
-  - Plausible demographic scenario (fertility falling from 5.5 to 2.9 while urbanisation
-    rises from 29% to 63%) with a seeded 2000–2003 migration stall and a 2015–2017
-    pronatalist rebound that make the path double back.
+  - Path drawn in strict year order with straight segments and a marker at every observation,
+    so the 2000-2004 reversal visibly doubles back and crosses itself
+  - Five-step imprint_seq gradient from brand green to blue, explained by a one-row
+    era legend, makes the direction of time readable at a glance in both themes
+  - Enlarged start and end markers plus six time labels placed on the clear side of
+    the path, none touching a marker, segment or another label
+  - Uses pygal's print_labels on value dicts with an inline CSS anchor rule for the
+    time labels, and keeps native SVG tooltips in the HTML output
   weaknesses:
-  - 'DQ-01 (both): the path is an almost monotone diagonal from upper left to lower
-    right; only the short 2000–2003 kink and the small 2015–2017 rebound show the
-    doubling back and regime changes this plot type exists to reveal (Description:
-    cyclical patterns, regime changes) → make the seeded stall and rebound move further,
-    for example a multi-year rebound that turns the path back on itself in x or y,
-    so at least one clear turn or loop reads in the render. Likely cause: urban_step[20:24]
-    and fertility_step[35:38] perturbations are too small relative to the steady trend.'
-  - 'Suggestion: add a few pixels of space between each legend swatch and its era
-    text; at the moment the labels sit directly against the squares.'
-  - 'Suggestion: the empty band below 2.8 on the y-axis (range starts at 2.5) could
-    be trimmed so the path fills more of the plot area.'
+  - 'Suggestion: the middle eras (1989–1997, 1998–2006) are close teal steps, so the
+    direction inside the self-crossing loop is hard to follow; a small arrowhead on
+    a segment of the loop would make it explicit.'
+  - 'Suggestion: a small gap between each legend swatch and its text would make the
+    bottom legend breathe.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across canvas and plot area.
-      Chrome: title "Fertility vs Urbanization · scatter-connected-temporal · python · pygal · anyplot.ai" centred at top (~65% width), dark ink; y-axis title "Fertility rate (births per woman)" rotated, x-axis title "Urban population (% of total)", ticks 2.8–6.0 and 30%–60% in dark ink; subtle grid lines; legend at bottom with five era swatches (1980–1988 … 2016–2023). All readable.
-      Data: 44 connected markers running from upper left (29%, 5.54) to lower right (63%, 2.87), coloured in five steps from brand green #009E73 to blue #4467A3; a kink around 46% / 4.1–3.9 (2000–2003 stall) and a small rebound near 57% / 3.25 (2015–2017); enlarged start and end markers; time labels 1980 (start), 1989, 1997, 2006, 2014, 2023 (end) clear of the path.
+      Chrome: title "Fertility vs Urbanization · scatter-connected-temporal · python · pygal · anyplot.ai" in dark ink at the top, about 68 % of the width; x-axis "Urban population (% of total)" with ticks 28%-60%, y-axis "Fertility rate (births per woman)" with ticks 3.6-5.4; subtle grid in both directions; bottom legend of five era swatches 1980–1988 … 2016–2023. All readable.
+      Data: 44 markers joined by straight segments in year order, coloured in five steps from brand green #009E73 (1980s) to blue #4467A3 (2016–2023); enlarged start marker at 29 %/5.47 and end marker at 58 %/3.52; the path falls steadily, doubles back around 41–46 % / 4.1–4.4 (2000–2004 reversal) and shows a rebound peak at about 52.5 %/3.95. Labels 1980 (start), 1989, 1997, 2006, 2014, 2023 (end) sit clear of the path.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, tick labels, time labels and legend text all flip to light ink (#F0EFE8 / #B8B7B0) and read clearly; grid lines subtle; no dark-on-dark text.
-      Data: marker and line colours identical to the light render (same green-to-blue era steps); brand green stays visible; layout unchanged.
+      Chrome: title, axis titles, ticks, legend and time labels in light ink; grid subtle but visible; no dark-on-dark text.
+      Data: era colours, markers and path identical to the light render; brand green start reads clearly.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -69,47 +52,54 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title scaled to its length, ticks 46, labels
-          44); all text readable in both themes
+        comment: Font sizes set explicitly (ticks 46, legend 44, time labels 44, title
+          scaled to its length); all text reads clearly in both themes and survives
+          the 400 px thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Time labels clear of path, markers and each other; no text collisions
+        comment: The six time labels sit clear of the path, the markers and each other;
+          the self-crossing loop of 1997-2006 is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 44 points at dots_size 10 on a 5 px line, start/end enlarged; legend
-          swatches visible in both themes
+        comment: 44 points with 10 px markers on a 5 px line, enlarged start and end
+          markers; the legend swatches match the era colours in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp is CVD-safe; time also carried by text labels
+        comment: Green-to-blue single-hue ramp, no red-green signal; direction also
+          carried by the start/end labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axes, no overflow or clipping
+        comment: 3200x1800, title about 68 % of the width, balanced axis titles, legend
+          in one bottom row, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (% of total, births per woman)
+        comment: '''Urban population (% of total)'' and ''Fertility rate (births per
+          woman)'' carry their units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Discrete imprint_seq steps starting at #009E73; correct theme backgrounds'
+        comment: 'Eras in five steps of imprint_seq (#009E73 to #4467A3), first step
+          brand green; backgrounds #FAF8F1 / #1A1A17; data colours identical across
+          themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -117,22 +107,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Marker-size hierarchy (22 px start/end vs 10 px path) and an era
-          legend that doubles as a time key, beyond the baseline
+        comment: Title font size derived from the title length, '%' and one-decimal
+          tick formatters, a calm hierarchy between the large endpoint markers and
+          the small path markers
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clearance-searched label placement keeps all six time labels off
-          the path; centred label anchor via inline css
+        comment: Time labels placed on the side of the path that keeps them clear,
+          legend laid out as one row of eras matching the path order
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Enlarged endpoints and era bands give a clear start-to-end reading;
-          seeded stall and rebound create focal points
+        comment: Enlarged start and end markers give the path two anchors, and the
+          era legend turns the gradient into readable periods; beyond that the data
+          is displayed without a chosen focal point
     spec_compliance:
       score: 15
       max: 15
@@ -142,53 +134,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected scatter in time order
+        comment: Connected scatter with a temporal path, nothing unasked added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Chronological straight segments, markers at every point, start/end
-          and key years labelled, light-to-dark gradient whose light end shows in
-          both themes
+          and key years labelled, light-to-dark gradient along time; all four 'A good
+          version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at exact (x, y); path sorted by year, not by x; no smoothing
+        comment: Path sorted by year, never by x, no smoothing; marks sit at their
+          values, only the text labels are offset; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with descriptive prefix; legend entries are
-          readable year ranges
+        comment: '''Fertility vs Urbanization · scatter-connected-temporal · python
+          · pygal · anyplot.ai''; legend entries are readable year ranges'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Path is nearly monotone; the doubling back is only a short kink (defect
-          line)
+        comment: 'Long monotone stretch, a reversal that doubles back and crosses
+          itself, and a late rebound peak: the path shows the plot type''s range'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Fertility vs urbanisation for an emerging economy: plausible and
-          neutral'
+        comment: 'Fertility against urbanisation for an unnamed emerging economy,
+          1980-2023: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fertility 5.5 to 2.9 and urban share 29% to 63% over 1980–2023 are
-          realistic; no Check values in the spec
+        comment: 'Urban share 29-58 %, fertility 5.5 to 3.5 births per woman over
+          44 years: plausible magnitudes; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -210,21 +203,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Label-placement search is compact and has no library equivalent in
-          pygal; colour lerp follows the library prompt
+        comment: The label-placement loop has no pygal equivalent; the colour interpolation
+          follows the library prompt's endorsed manual ramp
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
-          API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png with the Pygal 3 API
     library_mastery:
       score: 6
       max: 10
@@ -234,19 +226,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with xrange/range, value formatters, legend_at_bottom_columns,
-          truncate_legend
+        comment: pygal.XY with one series per era, x_value_formatter/value_formatter,
+          legend_at_bottom_columns, per-series dots_size and stroke flags
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: print_labels with per-point label dicts and an inline css rule injected
-          via the css config
-  verdict: REJECTED
+        comment: Time labels via print_labels on value dicts with an inline CSS rule
+          for their anchor; native SVG tooltips in the HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T00:25:41Z'
+  rendered_at: '2026-11-09T00:31:12Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -260,4 +252,4 @@ impl_tags:
   dataprep:
   - cumulative-sum
   styling:
-  - gradient-fill
+  - grid-styling
