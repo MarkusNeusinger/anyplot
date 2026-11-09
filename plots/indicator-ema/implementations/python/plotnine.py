@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -21,6 +21,7 @@ from plotnine import (
     guides,
     labs,
     scale_color_manual,
+    scale_fill_manual,
     scale_size_manual,
     scale_x_datetime,
     theme,
@@ -42,6 +43,7 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 EMA_SPANS = [12, 26]  # short and long EMA periods
 SERIES = "Series"
 VALUE = "Value"
+SIGNAL = "Signal"
 PRICE_WIDTH = 1.0
 EMA_WIDTH = 0.6
 
@@ -68,15 +70,8 @@ series_order = [CLOSE, *ema_labels]
 long = wide.melt(id_vars=DATE, value_vars=series_order, var_name=SERIES, value_name=VALUE)
 
 # Crossovers: dates where the short EMA changes side of the long EMA
-ema_short = wide[short_label].to_numpy()
-ema_long = wide[long_label].to_numpy()
-crossover_indices = []
-for i in range(1, len(ema_short)):
-    if (ema_short[i - 1] <= ema_long[i - 1] and ema_short[i] > ema_long[i]) or (
-        ema_short[i - 1] >= ema_long[i - 1] and ema_short[i] < ema_long[i]
-    ):
-        crossover_indices.append(i)
-crossovers = wide.iloc[crossover_indices]
+crossover_indices = np.flatnonzero(np.diff(np.sign(wide[short_label] - wide[long_label])) != 0) + 1
+crossovers = wide.iloc[crossover_indices].assign(**{SIGNAL: "EMA crossover"})
 
 plot = (
     ggplot(long, aes(x=DATE, y=VALUE, color=SERIES, size=SERIES))
@@ -85,16 +80,11 @@ plot = (
     )
     + geom_line(alpha=0.95)
     + geom_point(
-        crossovers,
-        aes(x=DATE, y=short_label),
-        fill=IMPRINT_PALETTE[3],
-        color=PAGE_BG,
-        size=2.6,
-        stroke=0.4,
-        inherit_aes=False,
+        crossovers, aes(x=DATE, y=short_label, fill=SIGNAL), color=PAGE_BG, size=2.6, stroke=0.4, inherit_aes=False
     )
     + scale_color_manual(values=IMPRINT_PALETTE, limits=series_order)
     + scale_size_manual(values=[PRICE_WIDTH] + [EMA_WIDTH] * len(ema_labels), limits=series_order)
+    + scale_fill_manual(values=[IMPRINT_PALETTE[3]])
     + guides(size=None)
     + scale_x_datetime(date_breaks="1 month", date_labels="%b %Y")
     + labs(title="indicator-ema · python · plotnine · anyplot.ai", x=DATE, y=CLOSE)
