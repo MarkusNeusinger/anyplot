@@ -142,11 +142,16 @@ SCOPE_VERDICTS = frozenset(
         "service_paused",
         "budget",
         "guard_unavailable",
-        # A paste note's rescue, the session's closing and its warning, the session language's detection.
+        # A paste note's rescue, the session's closing and its warning.
         "paste_note_rescues_spent",
         "paste_note_in_scope",
         "session_closed",
         "close_warning",
+        # A served library named in any spelling, and the language offer; the two detection verdicts stay so a
+        # record written before the offer replaced the detection still reads as itself.
+        "served_library_in_scope",
+        "language_offer",
+        "language_offer_failed",
         "language_detected",
         "language_write_failed",
     }
@@ -155,7 +160,7 @@ HOOK_VERDICTS: dict[str, frozenset[str]] = {
     "scope_guard": SCOPE_VERDICTS,
     "output_guard": frozenset({"reply_too_long", "shortened", "reply_cut"}),
     "empty_reply": frozenset({"reasked", "empty_kept", "no_reply"}),
-    "reply_language": frozenset({"mismatch", "reasked", "reask_failed", "error"}),
+    "reply_language": frozenset({"mismatch", "reasked", "reask_failed", "error", "not_offered"}),
     "shipped_reply": frozenset({"dropped", "kept"}),
     "plot_button": frozenset({"dropped", "kept", "asked"}),
     "budget_exempt": frozenset({"exempt"}),
@@ -181,8 +186,12 @@ HookVerdict = Literal[
     "paste_note_in_scope",
     "session_closed",
     "close_warning",
+    "served_library_in_scope",
+    "language_offer",
+    "language_offer_failed",
     "language_detected",
     "language_write_failed",
+    "not_offered",
     "reply_too_long",
     "shortened",
     "reply_cut",
