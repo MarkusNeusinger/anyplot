@@ -3651,7 +3651,8 @@ class _Scan:
                 self.add("rng", f"random sampling '{_snippet(attribute)}' is not allowed", attribute)
 
     def _check_default_rng(self, call: ast.Call) -> None:
-        """The one allowance: a seeded generator used for jitter and subsampling only."""
+        """The one allowance: a seeded generator, for jitter only. The check is syntactic: the same methods could
+        sample the rows, which the prompt and the repair line forbid, since the plot draws every row it gets."""
         seed = call.args[0] if len(call.args) == 1 and not call.keywords else None
         if not call.args and len(call.keywords) == 1 and call.keywords[0].arg == "seed":
             seed = call.keywords[0].value
