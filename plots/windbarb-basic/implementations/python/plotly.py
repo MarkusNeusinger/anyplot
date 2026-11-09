@@ -4,203 +4,232 @@ Library: plotly 6.7.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-19
 """
 
+import os
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
+from scipy.spatial.distance import cdist
 
 
-# Data - Surface wind observations from a grid of weather stations
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1: the barbs are the one data series
+
+# Constants: the standard barb notation
+CALM_KT = 2.5  # below this a station reports calm: an open circle and no staff
+PENNANT_KT, FULL_KT, HALF_KT = 50, 10, 5  # what a pennant, a full barb and a half barb add
+KEY_ROWS = [
+    (0, "Calm, under 2.5 kt"),
+    (5, "Half barb  5 kt"),
+    (10, "Full barb  10 kt"),
+    (50, "Pennant  50 kt"),
+    (65, "50 + 10 + 5 = 65 kt"),
+]
+
+# Columns: set these to your table's column names
+LON = "Longitude (°E)"  # role: x
+LAT = "Latitude (°N)"  # role: y
+U_WIND = "Zonal wind u (kt)"  # role: u
+V_WIND = "Meridional wind v (kt)"  # role: v
+
+# Data: replace this block with your own table, for example df = pd.read_csv("stations.csv")
+# Surface wind observations from a 10 x 6 grid of weather stations
 np.random.seed(42)
+lon, lat = (grid.flatten() for grid in np.meshgrid(np.arange(0, 10), np.arange(0, 6)))
+u = 15 + 10 * np.sin(lon * 0.5) + np.random.uniform(-5, 5, size=lon.shape)
+v = 5 + 8 * np.cos(lat * 0.8) + np.random.uniform(-5, 5, size=lat.shape)
+calm_stations, storm_stations = [0, 25, 45], [12, 38, 55]
+u[calm_stations] = np.random.uniform(-1, 1, size=3)
+v[calm_stations] = np.random.uniform(-1, 1, size=3)
+u[storm_stations] = 40 + np.random.uniform(0, 15, size=3)
+v[storm_stations] = 30 + np.random.uniform(0, 10, size=3)
+df = pd.DataFrame({LON: lon, LAT: lat, U_WIND: u, V_WIND: v})
 
-# Create a grid of observation points (simulating weather station network)
-x_grid = np.arange(0, 10, 1)
-y_grid = np.arange(0, 6, 1)
-X, Y = np.meshgrid(x_grid, y_grid)
-X = X.flatten()
-Y = Y.flatten()
+# Plot: reads only df and the constants above; a station with a missing value has no barb to draw
+stations = df.dropna(subset=[LON, LAT, U_WIND, V_WIND])
+positions = stations[[LON, LAT]].to_numpy(dtype=float)
+distances = cdist(positions, positions) + np.diag(np.full(len(positions), np.inf))
+spacing = np.median(distances.min(axis=1))  # typical distance from a station to its nearest neighbour
 
-# Generate wind components (u: east-west, v: north-south) in knots
-# Create a realistic wind pattern with some spatial coherence
-base_u = 15 + 10 * np.sin(X * 0.5)
-base_v = 5 + 8 * np.cos(Y * 0.8)
-U = base_u + np.random.uniform(-5, 5, size=X.shape)
-V = base_v + np.random.uniform(-5, 5, size=Y.shape)
+# Barb geometry in data units, scaled to the station spacing: a staff of half the spacing
+# leaves clear room between neighbouring barbs whose feathers lean toward each other
+staff = 0.5 * spacing
+feather = 0.4 * staff  # full barb and pennant height; a half barb is half of it
+step = 0.17 * staff  # distance between feathers along the staff, over twice the stroke width
+flag_base = 0.22 * staff
+slant = 0.35  # feathers lean toward the staff's outer end, as drawn on synoptic charts
+row_step = 0.8 * staff
 
-# Include some calm winds (< 2.5 knots) for demonstration
-calm_indices = [0, 25, 45]
-U[calm_indices] = np.random.uniform(-1, 1, size=len(calm_indices))
-V[calm_indices] = np.random.uniform(-1, 1, size=len(calm_indices))
+# Two panels share the barb code: the station map, and the key's westerly samples at the same scale
+key_x = np.full(len(KEY_ROWS), 1.2 * staff)
+key_y = -row_step * np.arange(len(KEY_ROWS))
+key_speeds = np.array([speed for speed, _ in KEY_ROWS], dtype=float)
+panels = [
+    ("x", "y", positions[:, 0], positions[:, 1], stations[U_WIND].to_numpy(float), stations[V_WIND].to_numpy(float)),
+    ("x2", "y2", key_x, key_y, key_speeds, np.zeros(len(KEY_ROWS))),
+]
+hover = {"x": None, "x2": "skip"}  # only the map's stations answer a hover
+drawn = {}
 
-# Include strong winds with pennants (50+ knots) for variety
-strong_indices = [12, 38, 55]
-U[strong_indices] = 40 + np.random.uniform(0, 15, size=len(strong_indices))
-V[strong_indices] = 30 + np.random.uniform(0, 10, size=len(strong_indices))
-
-
-# Wind barb parameters
-barb_length = 0.35
-barb_width = 0.14
-
-# Collect all wind barb line segments
-all_barb_x = []
-all_barb_y = []
-
-# Draw each wind barb inline
-for i in range(len(X)):
-    x0, y0 = X[i], Y[i]
-    u, v = U[i], V[i]
-    speed = np.sqrt(u**2 + v**2)
-
-    # Calm wind (< 2.5 knots) - draw open circle
-    if speed < 2.5:
-        theta = np.linspace(0, 2 * np.pi, 20)
-        circle_r = barb_length * 0.25
-        cx = x0 + circle_r * np.cos(theta)
-        cy = y0 + circle_r * np.sin(theta)
-        all_barb_x.extend(list(cx) + [None])
-        all_barb_y.extend(list(cy) + [None])
-        continue
-
-    # Calculate direction (wind comes FROM this direction)
-    wind_dir = np.arctan2(-v, -u)
-
-    # Staff endpoint (pointing into the wind direction)
-    x_end = x0 + barb_length * np.cos(wind_dir)
-    y_end = y0 + barb_length * np.sin(wind_dir)
-
-    # Staff line
-    all_barb_x.extend([x0, x_end, None])
-    all_barb_y.extend([y0, y_end, None])
-
-    # Perpendicular direction for barbs (to the left of staff)
-    perp_dir = wind_dir + np.pi / 2
-
-    # Calculate number of pennants, full barbs, and half barbs
-    speed_knots = speed
-    pennants = int(speed_knots // 50)
-    remaining = speed_knots % 50
-    full_barbs = int(remaining // 10)
-    half_barbs = 1 if (remaining % 10) >= 5 else 0
-
-    # Position along the staff (from tip towards base)
-    spacing = barb_length * 0.12
-    current_pos = 0.95
-
-    # Draw pennants (triangular flags for 50 knots)
-    for _ in range(pennants):
-        px1 = x0 + current_pos * barb_length * np.cos(wind_dir)
-        py1 = y0 + current_pos * barb_length * np.sin(wind_dir)
-        current_pos -= 0.15
-        px2 = x0 + current_pos * barb_length * np.cos(wind_dir)
-        py2 = y0 + current_pos * barb_length * np.sin(wind_dir)
-        px_tip = px1 + barb_width * 1.2 * np.cos(perp_dir)
-        py_tip = py1 + barb_width * 1.2 * np.sin(perp_dir)
-        all_barb_x.extend([px1, px_tip, px2, px1, None])
-        all_barb_y.extend([py1, py_tip, py2, py1, None])
-        current_pos -= 0.05
-
-    # Draw full barbs (10 knots each)
-    for _ in range(full_barbs):
-        bx1 = x0 + current_pos * barb_length * np.cos(wind_dir)
-        by1 = y0 + current_pos * barb_length * np.sin(wind_dir)
-        bx2 = bx1 + barb_width * np.cos(perp_dir)
-        by2 = by1 + barb_width * np.sin(perp_dir)
-        all_barb_x.extend([bx1, bx2, None])
-        all_barb_y.extend([by1, by2, None])
-        current_pos -= spacing / barb_length
-
-    # Draw half barb (5 knots)
-    if half_barbs:
-        bx1 = x0 + current_pos * barb_length * np.cos(wind_dir)
-        by1 = y0 + current_pos * barb_length * np.sin(wind_dir)
-        bx2 = bx1 + barb_width * 0.5 * np.cos(perp_dir)
-        by2 = by1 + barb_width * 0.5 * np.sin(perp_dir)
-        all_barb_x.extend([bx1, bx2, None])
-        all_barb_y.extend([by1, by2, None])
-
-
-# Create figure
 fig = go.Figure()
-
-# Add wind barbs as a single scatter trace with lines (thicker for visibility)
-fig.add_trace(
-    go.Scatter(
-        x=all_barb_x,
-        y=all_barb_y,
-        mode="lines",
-        line={"color": "#306998", "width": 5},
-        name="Wind Barbs",
-        hoverinfo="skip",
-        showlegend=False,
+for xaxis, yaxis, xs, ys, us, vs in panels:
+    axes = {"xaxis": xaxis, "yaxis": yaxis}
+    speeds = np.hypot(us, vs)
+    lines, flags = [], []
+    for x0, y0, wind_u, wind_v, speed in zip(xs, ys, us, vs, speeds, strict=True):
+        if speed < CALM_KT:
+            continue
+        rounded = HALF_KT * np.floor(speed / HALF_KT + 0.5)
+        pennants, rest = divmod(rounded, PENNANT_KT)
+        fulls, rest = divmod(rest, FULL_KT)
+        into_wind = np.array([-wind_u, -wind_v]) / speed  # the staff points to where the wind comes from
+        side = np.array([into_wind[1], -into_wind[0]])  # left of the wind's travel: Northern Hemisphere
+        tip = np.array([x0, y0]) + staff * into_wind
+        lines += [(x0, y0), tuple(tip), None]
+        along = 0.0 if pennants or fulls else step  # a lone half barb sits one step in from the tip
+        for _ in range(int(pennants)):
+            outer = tip - along * into_wind
+            flags += [tuple(outer), tuple(outer + feather * side), tuple(outer - flag_base * into_wind), None]
+            along += flag_base + 0.4 * step
+        for length in [feather] * int(fulls) + [feather / 2] * int(rest >= HALF_KT):
+            root = tip - along * into_wind
+            lines += [tuple(root), tuple(root + length * (side + slant * into_wind)), None]
+            along += step
+    drawn[xaxis] = np.array([point for point in lines + flags if point is not None] + list(zip(xs, ys, strict=True)))
+    fig.add_trace(
+        go.Scatter(
+            x=[None if point is None else point[0] for point in lines],
+            y=[None if point is None else point[1] for point in lines],
+            mode="lines",
+            line={"color": BRAND, "width": 1.8},
+            hoverinfo="skip",
+            showlegend=False,
+            **axes,
+        )
     )
+    fig.add_trace(
+        go.Scatter(
+            x=[None if point is None else point[0] for point in flags],
+            y=[None if point is None else point[1] for point in flags],
+            mode="lines",
+            fill="toself",
+            fillcolor=BRAND,
+            line={"color": BRAND, "width": 1},
+            hoverinfo="skip",
+            showlegend=False,
+            **axes,
+        )
+    )
+    # Stations: an open circle when calm, else a dot at the staff's foot that carries the reading
+    calm = speeds < CALM_KT
+    reading = np.column_stack([speeds, (270 - np.degrees(np.arctan2(vs, us))) % 360])
+    for selected, marker in ((calm, {"symbol": "circle-open", "size": 11}), (~calm, {"size": 4})):
+        fig.add_trace(
+            go.Scatter(
+                x=xs[selected],
+                y=ys[selected],
+                mode="markers",
+                marker={**marker, "color": BRAND, "line": {"width": 2, "color": BRAND}},
+                customdata=reading[selected],
+                hovertemplate="%{customdata[0]:.0f} kt from %{customdata[1]:.0f}°<extra></extra>",
+                hoverinfo=hover[xaxis],
+                showlegend=False,
+                **axes,
+            )
+        )
+
+# Map extent: every station, staff, feather and pennant, padded by a fifth of the station spacing
+pad = 0.2 * spacing
+map_range = {axis: [drawn["x"][:, i].min() - pad, drawn["x"][:, i].max() + pad] for i, axis in enumerate("xy")}
+
+# Key: each notation element drawn at the map's scale, labelled to its right
+for (_, label), x, y in zip(KEY_ROWS, key_x, key_y, strict=True):
+    fig.add_annotation(
+        x=x,
+        y=y,
+        xref="x2",
+        yref="y2",
+        text=label,
+        showarrow=False,
+        xanchor="left",
+        xshift=10,
+        font={"size": 10, "color": INK_SOFT},
+    )
+fig.add_annotation(
+    x=0,
+    y=1,
+    xref="x2 domain",
+    yref="y2 domain",
+    text="Barb key",
+    showarrow=False,
+    xanchor="left",
+    yanchor="bottom",
+    font={"size": 11, "color": INK},
 )
 
-# Add station markers at observation points
-fig.add_trace(
-    go.Scatter(
-        x=X,
-        y=Y,
-        mode="markers",
-        marker={"size": 10, "color": "#306998", "symbol": "circle"},
-        name="Weather Stations",
-        hovertemplate="Station (%{x}, %{y})<br>U: %{customdata[0]:.1f} kt<br>V: %{customdata[1]:.1f} kt<br>Speed: %{customdata[2]:.1f} kt<extra></extra>",
-        customdata=np.column_stack([U, V, np.sqrt(U**2 + V**2)]),
-    )
-)
-
-# Layout with tighter axis range and improved legend positioning
+# Style
 fig.update_layout(
-    title={"text": "windbarb-basic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    width=800,
+    height=450,
+    margin={"l": 70, "r": 30, "t": 80, "b": 60},
+    title={"text": "windbarb-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    showlegend=False,
     xaxis={
-        "title": {"text": "Longitude (°E)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "range": [-0.5, 9.8],
-        "dtick": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
-        "gridwidth": 1,
+        "domain": [0, 0.78],
+        "range": map_range["x"],
+        "constrain": "domain",
+        "title": {"text": LON, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "zeroline": False,
+        "showline": True,
+        "linecolor": INK_SOFT,
+        "ticks": "",
     },
     yaxis={
-        "title": {"text": "Latitude (°N)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "range": [-0.5, 5.8],
-        "dtick": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
-        "gridwidth": 1,
+        "range": map_range["y"],
         "scaleanchor": "x",
         "scaleratio": 1,
+        "constrain": "domain",
+        "title": {"text": LAT, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "zeroline": False,
+        "showline": True,
+        "linecolor": INK_SOFT,
+        "ticks": "",
     },
-    template="plotly_white",
-    showlegend=True,
-    legend={
-        "font": {"size": 18},
-        "x": 0.02,
-        "y": 0.98,
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "#306998",
-        "borderwidth": 1,
+    xaxis2={
+        "domain": [0.82, 1],
+        "anchor": "y2",
+        "range": [0, 1.3 * staff],
+        "scaleanchor": "x",
+        "scaleratio": 1,
+        "constrain": "range",
+        "constraintoward": "left",
+        "visible": False,
     },
-    margin={"l": 100, "r": 80, "t": 100, "b": 100},
-    annotations=[
-        {
-            "x": 0.02,
-            "y": 0.02,
-            "xref": "paper",
-            "yref": "paper",
-            "text": "<b>Wind Barb Key</b><br>○ Calm (&lt;2.5 kt)<br>╲ Half barb = 5 kt<br>╲╲ Full barb = 10 kt<br>▲ Pennant = 50 kt",
-            "showarrow": False,
-            "font": {"size": 16, "family": "monospace"},
-            "align": "left",
-            "bgcolor": "rgba(255,255,255,0.95)",
-            "bordercolor": "#306998",
-            "borderwidth": 2,
-            "borderpad": 10,
-            "xanchor": "left",
-            "yanchor": "bottom",
-        }
-    ],
+    yaxis2={
+        "domain": [0, 0.92],
+        "anchor": "x2",
+        "range": [-row_step * (len(KEY_ROWS) - 1) - 0.3 * staff, feather + 0.1 * staff],
+        "scaleanchor": "x2",
+        "scaleratio": 1,
+        "constrain": "range",
+        "constraintoward": "top",
+        "visible": False,
+    },
 )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
