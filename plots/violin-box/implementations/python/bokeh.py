@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -33,17 +33,18 @@ TEST_SCORE = "Test Score"  # role: value
 
 # Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-method_a = np.random.normal(72, 12, 120)  # standard distribution
-method_b = np.concatenate([np.random.normal(78, 8, 100), [48, 52, 95, 98]])  # outliers at both ends
-method_c = np.random.normal(65, 15, 120)  # wider spread
-method_d = np.concatenate([np.random.normal(80, 6, 90), np.random.normal(55, 3, 20), [38, 40, 42]])  # bimodal
+lecture = np.random.normal(72, 12, 120)  # standard distribution
+flipped = np.concatenate([np.random.normal(78, 8, 100), [48, 52, 95, 98]])  # outliers at both ends
+self_study = np.random.normal(65, 15, 120)  # wider spread
+peer_tutoring = np.concatenate([np.random.normal(80, 6, 90), np.random.normal(55, 3, 20), [38, 40, 42]])  # bimodal
 df = pd.DataFrame(
     {
-        STUDY_METHOD: ["Method A"] * len(method_a)
-        + ["Method B"] * len(method_b)
-        + ["Method C"] * len(method_c)
-        + ["Method D"] * len(method_d),
-        TEST_SCORE: np.concatenate([method_a, method_b, method_c, method_d]),
+        STUDY_METHOD: ["Lecture"] * len(lecture)
+        + ["Flipped Classroom"] * len(flipped)
+        + ["Self-Study"] * len(self_study)
+        + ["Peer Tutoring"] * len(peer_tutoring),
+        # Test scores live on a 0–100 scale
+        TEST_SCORE: np.clip(np.concatenate([lecture, flipped, self_study, peer_tutoring]), 0, 100),
     }
 )
 
