@@ -145,24 +145,40 @@ export function useAgentStatus({
     };
   }, []);
 
-  /** An answer for the meters, and for the mood unless a turn is in flight. */
-  const publish = useCallback((status: AgentStatus) => {
+  /**
+   * An answer for the meters, and for the mood unless a turn was in flight when it was asked for
+   * or is in flight now: a snapshot from inside a run never becomes the mood, also when the run
+   * ended before the answer came.
+   */
+  const publish = useCallback((status: AgentStatus, askedDuringRun = false) => {
     if (typeof status.in_flight === 'number') setInFlight(count(status.in_flight));
-    if (!runningRef.current) setLoad(loadOf(status));
+    if (!askedDuringRun && !runningRef.current) setLoad(loadOf(status));
   }, []);
 
+  // A poll that found another read out goes once that read is done, so the read after a run is
+  // never lost to the admin menu's read that was still out when the run ended.
+  const again = useRef(false);
   const read = useCallback(
     async (duringRun: boolean) => {
-      if (reading.current || (!duringRun && runningRef.current)) return;
-      reading.current = true;
-      try {
-        const status: unknown = await agentApi.status(token);
-        if (mounted.current && isStatus(status)) publish(status);
-      } catch {
-        // No answer, or a refusal: the last answer stays.
-      } finally {
-        reading.current = false;
+      if (!duringRun && runningRef.current) return;
+      if (reading.current) {
+        if (!duringRun) again.current = true;
+        return;
       }
+      do {
+        again.current = false;
+        reading.current = true;
+        const askedDuringRun = runningRef.current;
+        try {
+          const status: unknown = await agentApi.status(token);
+          if (mounted.current && isStatus(status)) publish(status, askedDuringRun);
+        } catch {
+          // No answer, or a refusal: the last answer stays.
+        } finally {
+          reading.current = false;
+        }
+        // A poll skipped meanwhile reads now, as a poll: not during a run.
+      } while (again.current && mounted.current && !runningRef.current);
     },
     [token, publish]
   );
@@ -197,12 +213,15 @@ export function useAgentStatus({
       })
       .finally(() => {
         // A read the effect dropped (a remount) leaves the guard to the read that replaced it.
-        if (!cancelled) reading.current = false;
+        if (cancelled) return;
+        reading.current = false;
+        // A poll that came while the first read was out reads now.
+        if (again.current) void read(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [token, lane, publish]);
+  }, [token, lane, publish, read]);
 
   // Every 60 s while the tab is visible, and as it becomes visible again.
   useEffect(() => {

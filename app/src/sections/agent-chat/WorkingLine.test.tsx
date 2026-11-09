@@ -70,6 +70,25 @@ describe('RunClock', () => {
     expect(screen.getByTestId('run-clock')).toHaveTextContent(/^1:01$/);
   });
 
+  it('turns over on the whole second, so two clocks of one run never disagree', () => {
+    // The working line's clock and the status line's mount a moment apart.
+    const from = T0 - 42_300;
+    vi.useFakeTimers({ now: T0 });
+    render(<RunClock from={from} />);
+    act(() => vi.advanceTimersByTime(400));
+    render(<RunClock from={from} />);
+    const [first, second] = screen.getAllByTestId('run-clock');
+    expect(first).toHaveTextContent(/^0:42$/);
+    expect(second).toHaveTextContent(/^0:42$/);
+    act(() => vi.advanceTimersByTime(300));
+    expect(first).toHaveTextContent(/^0:43$/);
+    expect(second).toHaveTextContent(/^0:43$/);
+    act(() => vi.advanceTimersByTime(999));
+    expect(first).toHaveTextContent(/^0:43$/);
+    act(() => vi.advanceTimersByTime(1));
+    expect([first.textContent, second.textContent]).toEqual(['0:44', '0:44']);
+  });
+
   it('stops ticking when it goes', () => {
     vi.useFakeTimers({ now: T0 });
     const { unmount } = render(<RunClock from={T0} />);

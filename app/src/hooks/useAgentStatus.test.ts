@@ -178,14 +178,42 @@ describe('useAgentStatus', () => {
     status.mockImplementationOnce(() => new Promise(resolve => (release = resolve)));
     rerender({ token: PUBLIC_LANE, lane: 'public', takeAdminStatus: () => null, running: false });
     expect(status).toHaveBeenCalledTimes(3);
-    // A read while one is out is skipped.
+    // A read while one is out never runs beside it: the menu's is dropped, a poll waits for it.
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'));
       await result.current.refresh();
     });
     expect(status).toHaveBeenCalledTimes(3);
+    status.mockResolvedValueOnce(answer({ waiting: 4 }));
     await act(async () => release(answer({ waiting: 2 })));
-    expect(result.current.load?.waiting).toBe(2);
+    await settle();
+    expect(status).toHaveBeenCalledTimes(4);
+    expect(result.current.load?.waiting).toBe(4);
+  });
+
+  it('never makes the mood of an answer asked for during a run, and still reads after it', async () => {
+    const { result, rerender } = mount();
+    await settle();
+    rerender({ token: PUBLIC_LANE, lane: 'public', takeAdminStatus: () => null, running: true });
+    // The admin menu opens during the run; the run ends before its answer comes.
+    let release: (value: AgentStatus) => void = () => undefined;
+    status.mockImplementationOnce(() => new Promise(resolve => (release = resolve)));
+    let menuRead: Promise<void> = Promise.resolve();
+    act(() => {
+      menuRead = result.current.refresh();
+    });
+    rerender({ token: PUBLIC_LANE, lane: 'public', takeAdminStatus: () => null, running: false });
+    expect(status).toHaveBeenCalledTimes(2);
+    status.mockResolvedValueOnce(answer({ waiting: 1, in_flight: 0 }));
+    await act(async () => {
+      release(answer({ waiting: 9, in_flight: 3 }));
+      await menuRead;
+    });
+    await settle();
+    // The in-run snapshot fed the meters only; the read after the run, which waited for it, the mood.
+    expect(status).toHaveBeenCalledTimes(3);
+    expect(result.current.load).toEqual({ waiting: 1, inFlight: 0, pausedUntil: null });
+    expect(result.current.inFlight).toBe(0);
   });
 
   it('rests at a pause until its reset, and at once on a refusal', async () => {

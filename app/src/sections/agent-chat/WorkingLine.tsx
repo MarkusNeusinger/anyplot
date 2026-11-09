@@ -3,7 +3,8 @@
  * site's inline loader (`LoaderSpinner`, kit 6 option A) beside what the turn does now
  * (`workingLine` in `steps.ts`): `drawing your plot · second try · 0:42`, `waiting · you are 3rd`,
  * `summarizing your data`, `writing the reply` below a run's card, the stop and the reconnect.
- * On a phone a plot reads `drawing · 0:42`. It took the place of the thread's in-progress line, of
+ * On a phone a plot reads `drawing · 0:42`, and from the second try on `drawing · second try ·
+ * 0:42`, the try kept. It took the place of the thread's in-progress line, of
  * the progress timeline below the thread, whose grid is the admin menu's now, and of the queue
  * counter. The first reply takes its place without a jump: it stands in the reply's slot, in the
  * reply's line height.

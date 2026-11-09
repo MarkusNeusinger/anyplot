@@ -420,7 +420,8 @@ export function trySegment(run: RunState): string | null {
  * the turn in flight does now, beside the site's loader. It took the place of the thread's
  * in-progress line, the progress timeline below the thread and the queue counter.
  *
- * - While a plot is drawn: `drawing your plot · second try · 0:42` (on a phone `drawing · 0:42`),
+ * - While a plot is drawn: `drawing your plot · second try · 0:42` (on a phone `drawing · 0:42`,
+ *   from the second try on `drawing · second try · 0:42`),
  *   the try from the second on (`trySegment`), the clock from `RunState.startedAt`.
  * - While the own turn waits in the run queue: `waiting · you are 3rd`, without a clock (owner,
  *   2026-11-09: the line in view says where, the frame's tab only `busy`).
