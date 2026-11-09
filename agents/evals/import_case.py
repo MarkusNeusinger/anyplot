@@ -280,18 +280,18 @@ def _bindings(bundle: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def session_language(session: dict[str, Any], version: dict[str, Any]) -> str | None:
-    """The session language the case chooses before its first turn, or `None` to keep the default and detection.
+    """The session language the case chooses before its first turn, or `None` to keep the default.
 
     A session whose language source is still `default` never changed its language, so
-    its versions are English and the replay's own detection repeats that. Otherwise the
-    case takes the language the version's plot text was written in (the session's for a
-    version without one): the replay sends its first plot as `create_plot`, which
-    detects nothing, so without the choice it would draw English text where the
-    reported plot had another language.
+    its versions are English, and so is the replay. Otherwise (a pick, an accepted offer, or
+    a case from before 2026-11-08, whose detection set `pasted` or `detected`) the case
+    takes the language the version's plot text was written in (the session's for a version
+    without one): the replay accepts no offer, so without the choice it would draw English
+    text where the reported plot had another language.
     """
     from agents.anyplot.language import is_valid
 
-    if session.get("plot_language_source") not in ("pasted", "detected", "chosen"):
+    if session.get("plot_language_source") not in ("pasted", "detected", "chosen", "offer"):
         return None
     value = version.get("language")
     if not isinstance(value, str):

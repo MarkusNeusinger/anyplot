@@ -2,118 +2,131 @@ library: matplotlib
 language: python
 specification_id: heatmap-clustered
 created: '2025-12-25T19:20:03Z'
-updated: '2026-05-09T09:06:06Z'
-generated_by: claude-haiku
-workflow_run: 25596784513
+updated: '2026-11-09T10:42:42Z'
+generated_by: claude-opus
+workflow_run: 42601513202
 issue: 2021
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 88
 review:
   strengths:
-  - Correct clustered heatmap with proper hierarchical clustering and reordering
-  - Realistic gene expression data showing natural clustering patterns
-  - Effective dendrogram layout using gridspec for coordinate alignment
-  - RdBu_r diverging colormap well-suited for centered expression values
-  - Clean code structure with reproducible random seed
+  - 'Clustermap layout built with a 2×2 gridspec: the column dendrogram above and
+    the row dendrogram on the left line up leaf for leaf with the 12 sample columns
+    and 15 gene rows, and the row axis is inverted so the dendrogram reads top-down
+    like the imshow rows'
+  - 'Rows and columns are reordered by Ward/Euclidean linkage from scipy, and the
+    reorder shows clear blocks: the normal samples (N1/N2) split from the tumour samples
+    (T1/T2), and the cell-cycle, metabolism and immune gene groups each form their
+    own block'
+  - 'Imprint diverging colormap (#AE3030 ↔ page color ↔ #4467A3) is centred on zero
+    with symmetric vmin/vmax from the data, and the colorbar spans exactly the heatmap
+    height with a clear ''Expression (z-score)'' label'
+  - Cell gaps drawn as page-colored minor-tick grid lines, gene labels moved to the
+    right with yaxis.tick_right() like a clustermap, and thin INK_SOFT dendrogram
+    lines with no spines give a clean, theme-consistent finish in both renders
+  - 'All chrome is threaded through the INK/INK_SOFT/PAGE_BG theme tokens: the dark
+    render has no dark-on-dark text, and the data colors are identical across both
+    themes'
   weaknesses:
-  - 'Dark render has pure-black background (#000000) instead of warm #1A1A17 — critical
-    theme-chrome failure'
-  - 'Dendrogram colors hardcoded to #306998 (Python Blue), not theme-adaptive'
-  - 'No theme-adaptive implementation: code doesn''t read ANYPLOT_THEME environment
-    variable'
-  - Title and label colors not explicitly set for theme adaptation
-  - Minimal visual refinement beyond library defaults
+  - 'Suggestion: the lowest merges in the immune-gene branch of the row dendrogram
+    crowd into about 30 px, so their heights are hard to tell apart; a slightly wider
+    row-dendrogram column (width_ratios) would spread them.'
+  - 'Suggestion: an optional sample-group color strip (tumour vs normal), explained
+    by a legend, would make the column split easier to read at a glance.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 - correct
-      Chrome: Title "heatmap-clustered · matplotlib · anyplot.ai" in dark text, clearly visible. Row gene labels (CDK1, CCNB1, etc.) and column sample labels (N1_A, T2_B, etc.) all readable. Colorbar label "Expression (z-score)" with tick labels visible.
-      Data: RdBu_r diverging colormap shows blue (negative z-scores) and red (positive z-scores) with white at center. Column dendrogram at top in gray lines, row dendrogram on left. All cells clearly distinguishable.
-      Legibility verdict: PASS - excellent contrast and readability
+      Background: warm off-white #FAF8F1 across the whole square 2400×2400 canvas.
+      Chrome: centred title "heatmap-clustered · python · matplotlib · anyplot.ai" in dark ink at about 75 % of the width; 15 gene labels (IL6 … ENO1) on the right and 12 rotated sample labels (N1_B … T1_B) below, in dark grey; colorbar on the right with ticks −2…2 and the label "Expression (z-score)". All of it is readable.
+      Data: a 15×12 heatmap in the Imprint diverging ramp (matte red → cream → blue) with cream gaps between the cells; a column dendrogram on top and a row dendrogram on the left, both in thin dark-grey lines, each leaf aligned with its column or row. The clustering splits N vs T samples, and the cell-cycle genes form a strong red/blue block. This is continuous data, so there is no categorical series.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Pure black or very dark (appears #000000), WRONG - should be warm near-black #1A1A17
-      Chrome: Title and labels appear white/light gray but on wrong background. Colorbar labels visible but background is incorrect. Dendrogram lines appear white (not theme-adaptive #306998).
-      Data: Same RdBu_r colormap as light - data colors #009E73 positions are NOT visible in this plot type (it's diverging red/blue), but the red/blue data values ARE identical to light render, confirming data color consistency
-      Legibility verdict: FAIL - pure-black background violates theme requirements; dark-on-dark theme chrome failure (background color wrong)
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, tick labels and colorbar ticks in light grey #B8B7B0, colorbar label in light ink. Nothing is dark-on-dark.
+      Data: the same red and blue anchors, with the ramp midpoint flipped to the dark surface as the style guide requires; near-zero cells fade into the background by design. Cell gaps are drawn in the page color, and the dendrogram lines are light grey and clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: Light render readable; dark render has poor contrast from pure-black
-          background
+        passed: true
+        comment: Title 12pt, colorbar label 10pt, ticks 8pt; all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels readable with proper rotation on columns
+        comment: No text collisions; rotated sample labels clear each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dendrograms and heatmap cells all clearly visible
+        comment: Cells separated by gaps, and the dendrogram lines are visible on
+          both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdBu_r colormap is colorblind-safe diverging scale
+        comment: Red-blue diverging ramp is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent gridspec layout with balanced dendrogram/heatmap/colorbar
-          coordination
+        comment: 2400x2400 square canvas; the dendrograms take a smaller share than
+          the matrix, and nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labeled with units; descriptive sample/gene labels
+        comment: Colorbar labelled with the quantity and unit; categorical tick labels
+          are self-describing
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dark render has pure-black background (not #1A1A17); dendrogram
-          colors hardcoded #306998; no theme-adaptive text colors'
+        passed: true
+        comment: imprint_div with a theme-adaptive midpoint; correct backgrounds in
+          both renders
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-structured but generic; standard library defaults without exceptional
-          design polish
+        passed: true
+        comment: 'Clustermap composition: labels on the right, colorbar matched to
+          the heatmap height, restrained INK_SOFT dendrogram strokes'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization; spines remain visible, no grid styling
+        passed: true
+        comment: Page-colored cell gaps from the minor-tick grid, tight 0.01 gridspec
+          spacing, no spines on any panel
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Hierarchical clustering provides visual hierarchy, but storytelling
-          is understated
+        passed: true
+        comment: The data is designed so the clustering shows a clear tumour/normal
+          split and gene-group blocks
     spec_compliance:
       score: 15
       max: 15
@@ -123,49 +136,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered heatmap with dendrograms
+        comment: Clustered heatmap with dendrograms on both axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchical clustering, reordering, dendrograms, colorbar all present
+        comment: Both dendrograms aligned, reordered rows and columns, diverging map
+          centred on zero, colorbar; optional color strips not drawn (no deduction)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows and columns correctly mapped with proper labels
+        comment: Every label sits at its own reordered row or column; the dendrogram
+          leaves match
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar has descriptive label
+        comment: Mandated title format; the colorbar serves as the legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows gene clustering, tumor vs normal patterns, expression variation
+        comment: Distinct clusters at several levels plus mixed immune rows show the
+          purpose of the plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gene expression analysis scenario is real, neutral, and scientifically
-          plausible
+        comment: Real gene symbols (CDK1, GAPDH, IL6 …) across tumour and normal samples;
+          neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Z-score values appropriate and factually realistic for gene expression
-          data
+        comment: z-score values within about ±2.7, plausible for standardized expression;
+          the spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -175,31 +191,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear code: data → clustering → visualization → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible results
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All scipy imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, no over-engineering or fake functionality
+        comment: scipy linkage/dendrogram used directly; no hand-rolled clustering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Output files generated correctly (plot-light.png, plot-dark.png)
+        comment: Saves plot-{THEME}.png, no bbox_inches=tight
     library_mastery:
       score: 6
       max: 10
@@ -209,25 +225,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of gridspec for layout; standard dendrogram API usage
+        comment: Axes methods, gridspec, imshow, fig.colorbar with a dedicated cax
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Gridspec coordination is present but not exceptional; could leverage
-          more matplotlib-specific features
+        comment: Minor-tick grid for cell gaps, yaxis.tick_right(), scipy dendrogram
+          drawn into matplotlib axes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T10:39:43Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - colorbar
   - subplots
   - manual-ticks
-  - colorbar
   patterns:
   - data-generation
-  - matrix-construction
+  - explicit-figure
   dataprep:
   - hierarchical-clustering
-  styling: []
+  styling:
+  - publication-ready
+  - custom-colormap
+  - minimal-chrome

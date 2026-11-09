@@ -1522,6 +1522,21 @@ class TestSessionLanguage:
         assert upstream.last_json == {"language": "Klingon"}
         assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
 
+    def test_an_accepted_offer_forwards_its_via(self, client, upstream) -> None:
+        """The button on an offer line: `via: offer` reaches the agents service, which sets the source `offer`."""
+        upstream.handler = lambda request: httpx.Response(200, json={"language": "de", "source": "offer"})
+
+        response = client.put(self.PATH, json={"language": "de", "via": "offer"}, headers=CLIENT_HEADERS)
+
+        assert response.status_code == 200 and response.json() == {"language": "de", "source": "offer"}
+        assert upstream.last_json == {"language": "de", "via": "offer"}
+
+    def test_the_chips_via_is_the_default_and_never_forwarded(self, client, upstream) -> None:
+        """An agents service from before `via` refuses the unknown key: the chip's pick goes out as it always did."""
+        response = client.put(self.PATH, json={"language": "de", "via": "header"}, headers=CLIENT_HEADERS)
+
+        assert response.status_code == 200 and upstream.last_json == {"language": "de"}
+
     def test_the_agents_service_stores_the_value_and_the_answer_carries_its_form(self, client, upstream) -> None:
         """The BFF forwards the value as sent; the agents service normalises it (`English` is `en`)."""
         upstream.handler = lambda request: httpx.Response(200, json={"language": "en", "source": "chosen"})
@@ -1551,6 +1566,7 @@ class TestSessionLanguage:
             (PATH, {"language": 7}),
             (PATH, {"lang": "de"}),
             (PATH, {"language": "de", "x": 1}),
+            (PATH, {"language": "de", "via": "chat"}),
             (PATH, {}),
             ("/debug/agent/sessions/s.1/language", {"language": "de"}),
         ],
