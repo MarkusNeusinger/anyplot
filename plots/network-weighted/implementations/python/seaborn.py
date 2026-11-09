@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -76,9 +76,9 @@ df = pd.DataFrame(
         ("Brazil", "China", 100),
         ("Canada", "UK", 25),
         ("Mexico", "Canada", 20),
-        ("Australia", "Japan", 60),
+        ("India", "Germany", 30),
         ("S. Korea", "USA", 120),
-        ("Netherlands", "UK", 70),
+        ("Spain", "Mexico", 20),
         ("Italy", "Spain", 50),
     ],
     columns=[COUNTRY_A, COUNTRY_B, TRADE],
@@ -132,7 +132,7 @@ segments = pd.DataFrame(
 )
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
-fig.subplots_adjust(left=0.02, right=0.71, top=0.9, bottom=0.03)
+fig.subplots_adjust(left=0.02, right=0.68, top=0.9, bottom=0.03)
 
 # Edges: one line per edge, its width mapped from the weight by seaborn's size semantic
 sns.lineplot(
@@ -199,7 +199,7 @@ for i, name in enumerate(names):
     )
 
 # Legends: one for the edge widths, one for the node areas, each labeled with the values it stands for
-legend_kws = {"fontsize": 7, "title_fontsize": 8, "frameon": True, "borderpad": 0.8}
+legend_kws = {"fontsize": 9, "title_fontsize": 9, "frameon": True, "borderpad": 0.8}
 edge_legend = ax.legend(
     edge_handles,
     edge_labels,
@@ -218,8 +218,8 @@ ax.legend(
     title=node_total,
     loc="upper left",
     bbox_to_anchor=(1.02, 1.0),
-    handleheight=largest / 7,
-    handlelength=largest / 7,
+    handleheight=largest / legend_kws["fontsize"],
+    handlelength=largest / legend_kws["fontsize"],
     labelspacing=0.9,
     **legend_kws,
 )
