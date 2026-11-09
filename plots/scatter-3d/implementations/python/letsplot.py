@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -48,21 +48,23 @@ AZIMUTH = np.radians(-55)
 PANEL_ASPECT = 1.7  # width / height of the panel left beside the title and color bar
 
 # Columns: set these to your table's column names
-X_POS = "X position (m)"  # role: x
-Y_POS = "Y position (m)"  # role: y
+X_POS = "Easting (m)"  # role: x
+Y_POS = "Northing (m)"  # role: y
 Z_POS = "Altitude (m)"  # role: z
 
-# Data: replace this block with your own table, for example df = pd.read_csv("sensors.csv")
-# Simulated sensor readings in a volume: a dense sphere, an elongated ellipsoid and a flat disk
+# Data: replace this block with your own table, for example df = pd.read_csv("gps_fixes.csv")
+# GPS fixes of tagged starlings around a reed-bed roost at dusk: a flock swirling
+# above the roost, a commuting line arriving high along the hedgerow, and a group
+# still foraging on the meadow just above the ground
 np.random.seed(42)
-sphere = [np.random.randn(60) * 0.5 + 3, np.random.randn(60) * 0.5 + 2, np.random.randn(60) * 0.5 + 1]
-ellipsoid = [np.random.randn(50) * 1.8 - 2, np.random.randn(50) * 0.4 - 1, np.random.randn(50) * 0.6 + 3.5]
-disk = [np.random.randn(40) * 1.2 + 0.5, np.random.randn(40) * 1.2 - 2.5, np.random.randn(40) * 0.2 - 1.5]
+roost_swirl = [np.random.randn(60) * 5 + 30, np.random.randn(60) * 5 + 20, np.random.randn(60) * 5 + 25]
+hedgerow_line = [np.random.randn(50) * 18 - 20, np.random.randn(50) * 4 - 10, np.random.randn(50) * 6 + 45]
+meadow_group = [np.random.randn(40) * 12 + 5, np.random.randn(40) * 12 - 25, np.abs(np.random.randn(40) * 1.0) + 0.5]
 df = pd.DataFrame(
     {
-        X_POS: np.concatenate([sphere[0], ellipsoid[0], disk[0]]),
-        Y_POS: np.concatenate([sphere[1], ellipsoid[1], disk[1]]),
-        Z_POS: np.concatenate([sphere[2], ellipsoid[2], disk[2]]),
+        X_POS: np.concatenate([roost_swirl[0], hedgerow_line[0], meadow_group[0]]),
+        Y_POS: np.concatenate([roost_swirl[1], hedgerow_line[1], meadow_group[1]]),
+        Z_POS: np.concatenate([roost_swirl[2], hedgerow_line[2], meadow_group[2]]),
     }
 )
 
@@ -132,10 +134,11 @@ for frame in (tick_labels, axis_titles):
 
 # Widen the x window to the panel's aspect so the cube keeps equal page units on both axes
 text_y = pd.concat([tick_labels["y"], axis_titles["y"]])
-text_x = pd.concat([tick_labels["x"], axis_titles["x"]])
+text_x = pd.concat([tick_labels["x"], axis_titles["x"], edges["x"], edges["xend"]])
 y_limits = [text_y.min() - 0.05, text_y.max() + 0.05]
 x_half = (y_limits[1] - y_limits[0]) * PANEL_ASPECT / 2
-x_limits = [text_x.mean() - x_half, text_x.mean() + x_half]
+x_center = (text_x.min() + text_x.max()) / 2  # center the extent, not the mean, so margins balance
+x_limits = [x_center - x_half, x_center + x_half]
 
 tooltips = (
     layer_tooltips()
@@ -169,8 +172,8 @@ plot = (
         shape=21,
         tooltips=tooltips,
     )
-    + geom_text(data=tick_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=4.2)
-    + geom_text(data=axis_titles, mapping=aes(x="x", y="y", label="label"), color=INK, size=5.0)
+    + geom_text(data=tick_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=5.5)
+    + geom_text(data=axis_titles, mapping=aes(x="x", y="y", label="label"), color=INK, size=6.2)
     + scale_fill_gradient(low=IMPRINT_PALETTE[0], high=IMPRINT_PALETTE[2], name=Z_POS)
     + scale_size_identity()
     + coord_cartesian(xlim=x_limits, ylim=y_limits)
