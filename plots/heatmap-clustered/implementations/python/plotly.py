@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -77,8 +77,8 @@ z_limit = np.nanmax(np.abs(ordered.to_numpy()))
 fig = make_subplots(
     rows=2,
     cols=3,
-    column_widths=[0.13, 0.035, 0.835],
-    row_heights=[0.15, 0.85],
+    column_widths=[0.22, 0.03, 0.75],
+    row_heights=[0.2, 0.8],
     horizontal_spacing=0.006,
     vertical_spacing=0.008,
     specs=[[None, None, {}], [{}, {}, {}]],
