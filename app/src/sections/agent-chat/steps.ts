@@ -264,10 +264,11 @@ export function awaitsReply(state: AgentSessionState): boolean {
  * What the working line says while a turn without plot work waits for its reply: the summary of
  * the data, example data, a question, a data request. It shows exactly while the turn's own
  * prompt is the last item, so the first reply (a message, a refusal, an error, a plot) takes its
- * place. A plot run (`create_plot`, `carry_plot`) gets none here, and neither does a turn that
- * reached a pipeline step: that is plot work (`plotWork`), which the working line words itself.
- * A wait in the run queue keeps the line (`workingLine` says where the turn waits). Once a run's
- * card is in, the line stands below the card until the reply takes its place (`awaitsReply`).
+ * place. A plot run (`create_plot`, `carry_plot`, `plot_new_data`) gets none here, and neither
+ * does a turn that reached a pipeline step: that is plot work (`plotWork`), which the working
+ * line words itself. A wait in the run queue keeps the line (`workingLine` says where the turn
+ * waits). Once a run's card is in, the line stands below the card until the reply takes its place
+ * (`awaitsReply`).
  */
 export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
@@ -275,7 +276,7 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
     if (run.reconnecting && !run.stopping) return 'reconnecting';
     return run.stopping ? 'stopping' : 'writing';
   }
-  if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
+  if (!run || isPlotAction(run.kind)) return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
   // A cut stream the page reads again: the turn's only indicator, also after its reply arrived.
   if (run.reconnecting && !run.stopping) return 'reconnecting';

@@ -25,7 +25,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (the target's first version, numbered 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`, with `offer: {language, basis: "message"}` when the scope judge named another language for the typed message that the page has not been offered yet and the user picked none) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `plot_new_data`, "plot the new data": from the library's latest version while it drew the same paste with the same bindings, else the fresh plot; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`, with `offer: {language, basis: "message"}` when the scope judge named another language for the typed message that the page has not been offered yet and the user picked none) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `GET /v1/sessions/{sid}/turn` | header `Last-Event-ID: <run_id>.<n>` | SSE `anyplot/1`: the session's latest turn from its event `n + 1` on, as the turn's stream sent it, live until that stream ends; for a page that lost the stream (`agents/turn_log.py`); a read, which never holds or stops the run | `404 not_found` (another turn is the latest, or none), `422` (an id of another form) |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -341,10 +341,11 @@ USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
 LOCALE_PATTERN = r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$"
-Action = Literal["create_plot", "carry_plot", "summarize_data", "example_data"]
+Action = Literal["create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"]
 ACTION_MESSAGES: dict[str, str] = {
     "create_plot": "[action] Create the plot from my dataset and bindings.",
     "carry_plot": "[action] Create the plot from my dataset and bindings, with the decisions I made so far.",
+    "plot_new_data": "[action] Create the plot from my changed dataset and bindings.",
     "summarize_data": "[action] Summarize the dataset for the user.",
     "example_data": "[action] Make example data to try this plot.",
 }
@@ -357,9 +358,11 @@ call nor makes an offer of a language (`language.py`), and it leaves the session
 `create_plot` (`.create_plot()`, `.start_over()`) starts from the catalogue code (`RequestLedger.fresh_start`): its
 run takes no switch's carry but applies the plot memory, which only the user clears. `carry_plot` (2026-11-02) is
 the page's "plot in <library> with your
-decisions" after a switch: its run takes the carry and the memory (`switch.py`); the root calls the same bare
-`plot_pipeline` for both."""
-PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot"})
+decisions" after a switch: its run takes the carry and the memory (`switch.py`). `plot_new_data` (2026-11-08) is the
+page's "plot the new data" after a data change or a paste: its run starts from the library's latest version while
+that version drew the same paste with the same bindings, else as `create_plot` does (`RequestLedger.new_data`,
+`pipeline.new_data_base`); the root calls the same bare `plot_pipeline` for all three."""
+PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot", "plot_new_data"})
 """The actions of the page's plot buttons: the click confirmed the data and bindings as shown, so the turn plots them
 as they are (`RequestLedger.plot_action`, the guard in `plugins/tool_safety.py`)."""
 ACTION_LANGUAGE_LINE = "Reply in {name}, the session language."
@@ -2600,6 +2603,7 @@ async def post_message(
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
         fresh_start=body.action == "create_plot",
+        new_data=body.action == "plot_new_data",
         plot_action=body.action in PLOT_ACTIONS,
     )
     _stamp(ledger, view, session)

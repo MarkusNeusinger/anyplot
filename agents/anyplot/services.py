@@ -29,7 +29,16 @@ from .render import make_backend
 from .render.contract import RenderBackend
 from .render.serial import SerialRenderer
 from .render.store import RenderStore
-from .schemas import DEFAULT_CODE_ARTIFACT, AdaptPlan, ArtifactName, CodeArtifact, PlotResult, Theme, artifact_names
+from .schemas import (
+    DEFAULT_CODE_ARTIFACT,
+    AdaptPlan,
+    ArtifactName,
+    Binding,
+    CodeArtifact,
+    PlotResult,
+    Theme,
+    artifact_names,
+)
 from .settings import get_settings
 from .turn_record import TurnRecords
 
@@ -104,6 +113,15 @@ class CodeVersion:
     """The session's number of the data version the run drew (`StoredDataset.number`, `DATASET_VERSION`), so a later
     turn tells a plot of the current data from one of data a new paste replaced (`earlier_data`); None for a version
     stored without it, which reads as a plot of the current data, as before the stamp."""
+    data_source: str | None = None
+    """Where the table the run drew comes from (`StoredDataset.source`): set for a table `generate_data` or
+    `run_data_code` computed and the versions made from it, None for a paste and its changes. With `data_version`, what
+    tells the page's "plot the new data" a change of the same table from a table that replaced it in the same lineage
+    (`pipeline.new_data_base`)."""
+    bindings: list[Binding] | None = None
+    """The bindings the run drew with (`SessionView.bindings`), which the page's "plot the new data" compares with the
+    ones in force before it starts from this version (`pipeline.new_data_base`); None for a version stored without
+    them, which never counts as the same."""
 
     @property
     def target(self) -> tuple[str, str]:

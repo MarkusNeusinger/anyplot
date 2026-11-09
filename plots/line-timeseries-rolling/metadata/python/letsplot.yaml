@@ -2,50 +2,56 @@ library: letsplot
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:50:31Z'
-updated: '2026-05-13T13:36:45Z'
-generated_by: claude-haiku
-workflow_run: 25801401757
+updated: '2026-11-09T13:00:20Z'
+generated_by: claude-opus
+workflow_run: 42619724692
 issue: 2786
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Excellent theme adaptation with identical data colors and properly flipped chrome
-    between light and dark
-  - Strong visual hierarchy with thin semi-transparent line vs. thick smooth line
-    effectively distinguishing raw vs. smoothed data
-  - Perfect text legibility in both themes with no dark-on-dark or light-on-light
-    issues
-  - Complete spec compliance with all required features present and correctly labeled
-  - Deterministic reproducibility with explicit random seed
+  - Raw readings drawn as a thin purple line (size 0.5, alpha 0.55) that recedes behind
+    the prominent green 14-day rolling average (size 1.6) in both themes, exactly
+    the layering the spec asks for
+  - Rolling average computed with pandas rolling(window=14).mean() and its NaN head
+    dropped, so the green line starts only once the window is filled in mid-January
+    instead of being padded back to 1 January
+  - Window size named in the legend entry '14-Day Rolling Average', next to 'Raw Data',
+    in an untitled legend placed above the panel
+  - Alpha and line width mapped through scale_alpha_manual / scale_size_manual on
+    one geom_line, so a single grammar-of-graphics layer carries both series and one
+    shared legend
+  - layer_tooltips() shows the series name and temperature on hover in the HTML output
+  - 'Plausible, neutral weather-station scenario: a seasonal cycle running from about
+    1 °C in January to about 21 °C at the end of June, with 3 °C day-to-day noise,
+    matching Vienna climatology'
+  - Theme tokens threaded through every chrome element; both renders are fully readable
+    and the data colors are identical
   weaknesses:
-  - 'Palette violation: first series uses #306998 (blue) instead of required #009E73
-    (brand green)'
-  - 'Output files not theme-suffixed: saves plot.png instead of plot-{THEME}.png;
-    doesn''t read ANYPLOT_THEME environment variable'
-  - 'Generic design without distinctive visual refinement: no spine removal, standard
-    theme_minimal defaults'
-  - 'Limited library mastery: no letsplot-specific features beyond standard ggplot'
+  - 'Suggestion: a short direct label at the right end of the rolling line (its final
+    value) could give the trend a focal point.'
+  - 'Suggestion: ELEVATED_BG is defined but never used; dropping it would trim the
+    token block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 — correct theme surface
-      Chrome: Title "line-timeseries-rolling · letsplot · anyplot.ai" is dark and readable (24pt). Axis labels "Date" and "Temperature (°C)" are dark and clear (20pt). Tick labels are readable (16pt). Grid lines are subtle but visible.
-      Data: Thin cyan/teal line represents Raw Data (semi-transparent), thick orange line represents 14-Day Rolling Avg (solid). Both colors are clearly distinguishable. Legend at top shows both series correctly labeled.
-      Legibility verdict: PASS — all text is readable, no light-on-light issues, data elements distinct from background
+      Background: warm off-white #FAF8F1 across plot and panel, no frame.
+      Chrome: title "line-timeseries-rolling · python · letsplot · anyplot.ai" top-left in dark ink (~55 % of width); legend centered above the panel with "14-Day Rolling Average" (thick green swatch) and "Raw Data" (thin purple swatch), no legend title; x axis "Date" with monthly ticks Jan 2024 to Jul 2024; y axis "Vienna Daily Mean Temperature (°C)" with ticks -5 to 30. Subtle major grid on both axes, axis lines in INK_SOFT. All text readable.
+      Data: thin semi-transparent purple (#C475FD, alpha 0.55) raw daily line spiking between about -5 and 29 °C; prominent green (#009E73) rolling line starting mid-January at about 1 °C, dipping slightly below 0 in late January and rising steadily to about 21 °C at the end of June.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17 — correct theme surface
-      Chrome: Title, axis labels, and tick labels are light and readable against dark background. No dark-on-dark text issues detected. Grid lines are subtly visible.
-      Data: Cyan/teal thin line (Raw Data) and orange thick line (14-Day Rolling Avg) are identical in color to the light render — only chrome has flipped from dark text/light grid to light text/dark grid. This is correct theme adaptation.
-      Legibility verdict: PASS — all text is readable, no dark-on-dark failures, colors are identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick and legend labels in light grey INK_SOFT; grid lines subtle but visible; no dark-on-dark text anywhere.
+      Data: the same #009E73 rolling line and #C475FD raw line at alpha 0.55 (reads as a muted violet on the dark page but still clearly visible); identical to the light render, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,73 +59,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes (title 24pt, axis labels 20pt, ticks 16pt) readable
-          in both themes
+        comment: Explicit sizes (title 16, axis titles 12, ticks/legend 10); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Clear separation between series.
+        comment: No text collisions; legend sits above the panel clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both lines clearly distinguishable. Thin vs. thick effectively shows
-          data emphasis.
+        comment: Raw line thin and translucent yet visible on both backgrounds; rolling
+          line prominent; legend swatches match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Cyan and orange are distinct. No colorblind accessibility issues
-          with color contrast.
+        comment: Green vs purple plus width and alpha differences; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (4800×2700 landscape). Nothing cut off. Generous
-          spacing.
+        comment: 3200x1800, canvas gate passed; balanced margins, title ~55 % width,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title shows spec-id, library, domain. Axes labeled with units.
+        comment: '''Date'' and ''Vienna Daily Mean Temperature (°C)'' with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Code uses #306998 (blue) and #FFD43B (yellow) instead
-          of required Okabe-Ito starting with #009E73 (brand green)'
+        passed: true
+        comment: 'First series (rolling average) #009E73, raw data #C475FD (Imprint
+          position 2); backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Custom colors/alpha/sizes applied, but palette violation and generic
-          approach limit sophistication
+        passed: true
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Theme_minimal() applied with subtle grid, but no spine removal or
-          enhanced whitespace management
+        passed: true
+        comment: Untitled legend moved above the panel, ticks removed and minor grid
+          dropped, freeing the full width for the series
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: thin raw vs. thick smoothed effectively
-          guides viewer to trend identification'
+        comment: The emphasis of the rolling line over the raw data is what the Notes
+          prescribe; no further hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series with rolling average overlay
+        comment: Time series line with rolling-average overlay, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw data, rolling average, legend, grid, title all present as spec
-          requires
+        comment: 'All Notes and A-good-version bullets met: light translucent raw
+          line, prominent contrasting rolling line, window named in legend, grid on
+          both axes, shorter rolling line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=temperature correct mapping
+        comment: Date on x, temperature on y, all data in range, marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title shows spec-id/library/domain. Window size (14-day) in legend.
+        comment: Mandated title; legend entries 'Raw Data' and '14-Day Rolling Average'
     data_quality:
       score: 15
       max: 15
@@ -158,21 +163,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both raw observations and rolling average clearly
+        comment: Noisy spiky raw data, lagging smoothed average, late start of the
+          rolling line, a clear trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature data with seasonal variation and warming trend is plausible
+        comment: Neutral weather-station temperature record
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 12-34°C sensible for seasonal sensor data
+        comment: 'Checked: model gives ~1.2 °C on 1 Jan and ~20.6 °C on day 179 (line
+          40), rolling line reads ~1 °C mid-Jan and ~21 °C end of June off the axis;
+          consistent with Vienna climatology; 3 °C daily noise plausible'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,32 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple code, no unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, numpy, pandas, lets_plot all used; star import is the library
+          prompt's pattern
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no faked UI
+        comment: Rolling mean via pandas rolling(); reshape is short
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'ERROR: Saves plot.png instead of plot-{THEME}.png. Doesn''t read
-          ANYPLOT_THEME environment variable.'
+        passed: true
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html; current API
     library_mastery:
       score: 6
       max: 10
@@ -215,22 +223,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard ggplot + geom_line + manual scales. Idiomatic but not sophisticated.
+        comment: Alpha and size mapped as aesthetics with manual scales on one geom_line,
+          scale_x_datetime(format=...) for the date axis
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: No letsplot-specific features beyond basic ggplot. Generic approach.
+        passed: true
+        comment: layer_tooltips() with custom lines for the HTML hover
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T12:57:12Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - wide-to-long
   dataprep:
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
+  - grid-styling

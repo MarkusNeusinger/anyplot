@@ -238,8 +238,11 @@
  * library has no plot of this data (a plot of data a new paste replaced is none), is kept for its first plot as
  * the root's `keep_plot_request` keeps it, which the stream shows nothing of; that plot then remembers it. Every
  * new data version (a paste, a change, an undo) drops the carry, and a switch takes only the asked theme of a plot
- * of another data version. The paste answer's `columns_changed` says that a column the replaced data was bound to is not in the
- * new data (by its exact name), as the service's does (owner decisions of 2026-11-08).
+ * of another data version. The paste answer's `columns_changed` says that a column the replaced data was bound to
+ * is not in the new data (by its exact name), as the service's does (owner decisions of 2026-11-08).
+ * `{action: "plot_new_data"}` ("plot the new data") changes the library's latest version for the new data while it
+ * drew the current paste with the same bindings, else plots from the catalogue code in the theme asked for before,
+ * and its plot names which (`new_data`: `previous`, `other_paste`, `bindings_changed`, `kept_note`, `no_plot`).
  *
  * What a turn changed: every `done` of a turn that ended well carries `turn` (`answer`, `data`, `plot`,
  * `language` or `kept`, the service's `stream.turn_outcome` for the paths the mock plays): a question, a
@@ -413,6 +416,7 @@ const ACTION_MESSAGES = {
   create_plot: '[action] Create the plot from my dataset and bindings.',
   carry_plot:
     '[action] Create the plot from my dataset and bindings, with the decisions I made so far.',
+  plot_new_data: '[action] Create the plot from my changed dataset and bindings.',
   summarize_data: '[action] Summarize the dataset for the user.',
   example_data: '[action] Make example data to try this plot.',
 };
@@ -1423,10 +1427,18 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         });
         return;
       }
-      // `create_plot` and `carry_plot` start from the catalogue code; a typed change refines the latest version.
-      const refine = body.action !== 'create_plot' && body.action !== 'carry_plot';
+      // "Plot the new data" (`pipeline.new_data_base`): from the library's latest version while it
+      // drew the current data's paste with the same bindings, else from the catalogue code.
+      const newData = body.action === 'plot_new_data' ? newDataBase(session) : null;
+      // `create_plot` and `carry_plot` start from the catalogue code, and so does "plot the new
+      // data" without the latest version as its base; a typed change refines the latest version.
+      const refine =
+        body.action === 'plot_new_data'
+          ? newData === 'previous'
+          : body.action !== 'create_plot' && body.action !== 'carry_plot';
       // A refinement repairs once; with MOCK_REPAIR=1 a first plot does too, as a first try the review fails.
-      const repaired = refine || REPAIR;
+      // The new data on the latest version passes at once, as the server's request changes little.
+      const repaired = (refine && newData === null) || REPAIR;
       const steps = repaired
         ? [
             ['adapting', 1],
@@ -1495,10 +1507,17 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // A switch's carry for this library (`switch.Carry`): the first run here takes it, a fresh
       // `create_plot` never does; it brings the theme the user asked for in the library before.
       const carried =
-        session.carry?.target === session.library && body.action !== 'create_plot'
+        session.carry?.target === session.library &&
+        body.action !== 'create_plot' &&
+        body.action !== 'plot_new_data'
           ? session.carry
           : null;
-      let askedTheme = previous?.themeAsked ? previous.theme : (carried?.theme ?? null);
+      // "Plot the new data" from the catalogue code keeps the theme asked for on the latest version.
+      const latestHere = session.versions.findLast(item => item.library === session.library);
+      const keptTheme = newData !== null && latestHere?.themeAsked ? latestHere.theme : null;
+      let askedTheme = previous?.themeAsked
+        ? previous.theme
+        : (carried?.theme ?? keptTheme ?? null);
       if (/\blight\b/.test(lower)) askedTheme = 'light';
       else if (/\bdark\b/.test(lower)) askedTheme = 'dark';
       const theme = askedTheme ?? siteTheme ?? previous?.theme ?? 'light';
@@ -1529,9 +1548,12 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         reason: null,
         attempts: repaired ? 2 : 1,
         artifacts: artifactNames(version),
-        changes: refine
-          ? ['Applied your change request', 'Marker size raised from 110 to 160']
-          : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
+        changes:
+          newData === 'previous'
+            ? ['Drew the new data', 'Kept the title, the colours and the labels']
+            : refine
+              ? ['Applied your change request', 'Marker size raised from 110 to 160']
+              : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
         // In the review's grammar, as the service writes them: the card reads them in plain words.
         residual_defects: repaired
           ? [
@@ -1542,6 +1564,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         // The stored version's number, which the artifact and theme routes take.
         version: version.number,
         rounds,
+        // Where "plot the new data" started, only on its plot.
+        ...(newData ? { new_data: newData } : {}),
       };
       // The plot memory, settled with the version before its event (`pipeline.settle_memory`): a
       // typed change keeps its decision, the first plot of a library the wish kept for it in step
@@ -1549,8 +1573,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // is spent. The event names what the version stands on (`pipeline.memory_ids`): the kept
       // entries from before the run and the added ones; one a change replaced is in neither.
       const before = new Set(session.memory.map(entry => entry.id));
-      if (refine) rememberChange(session, text);
-      else if (session.keptWish && firstHere) {
+      if (refine && newData === null) rememberChange(session, text);
+      else if (session.keptWish && (firstHere || newData === 'kept_note')) {
         rememberChange(session, session.keptWish);
         session.keptWish = null;
       }
@@ -1566,12 +1590,15 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // The root writes its reply after the plot: seconds in production (MOCK_REPLY_MS).
       await sleep(REPLY_MS ?? STEP_MS / 2);
       const decisions = session.memory.length;
+      const kept = decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : '';
       send('message', {
-        text: refine
-          ? 'Done. One note remains: two markers sit close to the y axis label.'
-          : body.action === 'carry_plot'
-            ? `Here is the plot in ${session.library}, from its catalogue code${decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : ''}.`
-            : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
+        text: newData
+          ? NEW_DATA_REPLIES[newData](latestHere?.number, kept)
+          : refine
+            ? 'Done. One note remains: two markers sit close to the y axis label.'
+            : body.action === 'carry_plot'
+              ? `Here is the plot in ${session.library}, from its catalogue code${decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : ''}.`
+              : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
       });
     } finally {
       runsInFlight -= 1;
@@ -1599,7 +1626,40 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
 }
 
 /** The turns MOCK_CUT_AFTER cuts: a session's first plot turn only, so its next one runs through. */
-const PLOT_ACTIONS = new Set(['create_plot', 'carry_plot']);
+const PLOT_ACTIONS = new Set(['create_plot', 'carry_plot', 'plot_new_data']);
+
+/**
+ * Where "plot the new data" starts, as the service's `pipeline.new_data_base`: `previous` while the
+ * library's latest version drew a version of the current data's paste (`dataNumber` at or above
+ * `session.first`) with the same bindings, role for role, and no wish waits for a first plot; else
+ * why it starts from the catalogue code. The mock has no computed table in a paste's lineage, so
+ * never `other_data`.
+ */
+function newDataBase(session) {
+  const latest = session.versions.findLast(item => item.library === session.library);
+  if (!latest) return 'no_plot';
+  if ((latest.dataNumber ?? 0) < session.first) return 'other_paste';
+  const pairs = bindings =>
+    JSON.stringify(
+      bindings
+        .map(binding => [binding.role, binding.column ?? null])
+        .sort((a, b) => String(a).localeCompare(String(b)))
+    );
+  if (pairs(latest.bindings) !== pairs(session.bindings)) return 'bindings_changed';
+  return session.keptWish ? 'kept_note' : 'previous';
+}
+
+/** The root's reply after "plot the new data", by where it started (`new_data`). */
+const NEW_DATA_REPLIES = {
+  previous: from => `Here is plot v${from} on the new data; everything else stays as you tuned it.`,
+  other_paste: (_from, kept) =>
+    `This is a new table, so the plot starts from the catalogue plot${kept}.`,
+  bindings_changed: (_from, kept) =>
+    `The bindings changed, so the plot starts from the catalogue plot${kept}.`,
+  kept_note: (_from, kept) =>
+    `Your kept wish is a first plot's, so the plot starts from the catalogue plot${kept}.`,
+  no_plot: (_from, kept) => `Here is the first plot in this library${kept}.`,
+};
 
 /**
  * `GET .../turn`: the session's latest turn after the event `Last-Event-ID` names, then live until

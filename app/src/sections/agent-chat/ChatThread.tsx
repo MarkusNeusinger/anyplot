@@ -80,6 +80,7 @@ import {
   ANSWER_LABEL_SPOKEN,
   ERROR_TEXT,
   localClock,
+  NEW_DATA_PLOT,
   PLOT_FAILED_TEXT,
   QUESTION_WORD,
   refusalLabel,
@@ -134,6 +135,7 @@ function ReplyText({ text }: { text: string }) {
  */
 function actionText(item: Extract<ChatItem, { kind: 'action' }>): string {
   if (item.label) return item.label;
+  if (item.action === 'plot_new_data') return NEW_DATA_PLOT;
   return item.action === 'carry_plot'
     ? `plot in ${item.library} with your decisions`
     : `.${item.action}()`;
@@ -462,7 +464,12 @@ export function ChatThread(props: ChatThreadProps) {
   const numbers = Object.keys(versions).map(Number);
   const latestVersion = numbers.length ? Math.max(...numbers) : 0;
   const summaries = useMemo(
-    () => plotSummaries(items, version => versions[version]?.library),
+    () =>
+      plotSummaries(
+        items,
+        version => versions[version]?.library,
+        version => versions[version]?.result.new_data
+      ),
     [items, versions]
   );
   const { memoryTurn, memory } = props.state;

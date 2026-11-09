@@ -151,8 +151,10 @@
  * run waits for the user's click. The offer ends once a plot in that library
  * ships, whatever turn shipped it, with the next switch, whose answer
  * brings its own offer or none, or with a new data version (a paste, a change,
- * an undo), for which the server drops its carry too. `createPlot` stays the fresh plot without the
- * decisions (`.create_plot()`, `.start_over()`). The plot memory is the
+ * an undo), for which the server drops its carry too. `createPlot` stays the fresh plot from the
+ * catalogue code, without the carry but with the remembered decisions (`.create_plot()`,
+ * `.start_over()`), and `plotNewData` is "plot the new data" (`plot_new_data`), which the server
+ * starts from the latest plot when its guard allows it. The plot memory is the
  * server's list of the decisions a plot takes over (`memory`): the hook reads
  * it after every turn's `done` (a shipped run adds entries, the assistant's
  * `forget` removes them; nothing else empties it), after a switch, and
@@ -3306,11 +3308,23 @@ export function useAgentSession({
   );
 
   /**
-   * `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions.
+   * `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without a switch's
+   * carry; the server still applies the plot memory's decisions, which only the user clears.
    * `label` is the button pressed, which the thread shows.
    */
   const createPlot = useCallback(
     (label?: string) => runTurn({ action: 'create_plot' }, label),
+    [runTurn]
+  );
+
+  /**
+   * `plot the new data` with an empty box: the server starts from the library's latest plot when
+   * the data comes from its paste with its bindings, with a request of its own for the new data,
+   * else from the catalogue code as `createPlot` does; the plot's `new_data` says which (owner
+   * decision of 2026-11-08). `label` is the button as it read, for the thread.
+   */
+  const plotNewData = useCallback(
+    (label?: string) => runTurn({ action: 'plot_new_data' }, label),
     [runTurn]
   );
 
@@ -3787,6 +3801,7 @@ export function useAgentSession({
     confirmData,
     undoData,
     createPlot,
+    plotNewData,
     exampleData,
     carryPlot,
     followChatSwitch,
