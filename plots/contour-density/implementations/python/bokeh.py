@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-density: Density Contour Plot
 Library: bokeh 3.10.1 | Python 3.14.10
-Quality: 81/100 | Updated: 2026-11-09
+Quality: 87/100 | Updated: 2026-11-09
 """
 
 import os

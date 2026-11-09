@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: contour-density
 created: '2025-12-30T09:35:16Z'
-updated: '2026-11-09T10:03:19Z'
+updated: '2026-11-09T10:09:47Z'
 generated_by: claude-opus
 workflow_run: 42597017510
 issue: 2552
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/bokeh/plot-dark.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Native Bokeh 3 p.contour(...) ContourRenderer draws the KDE iso-lines directly
-    from the grid, and construct_color_bar() builds a matching contour colour bar
-    that states which way density rises.
-  - 'scipy.stats.gaussian_kde with the default bandwidth fits the data: two clusters
-    keep their own nested ring sets, the outer rings merge them, and no islands form
-    around single points.'
-  - Contour levels in discrete steps of imprint_seq (green low to blue high), identical
-    in both themes; theme tokens threaded through every text and axis element.
-  - Scatter overlay as small faint points at exact values, behind the contours, so
-    the contours stay the main signal.
+  - Uses bokeh 3's native contour renderer (p.contour on the KDE grid) and contours.construct_color_bar(),
+    so the color bar's level samples are generated from the same renderer as the rings,
+    not a hand-built legend
+  - Density computed with scipy.stats.gaussian_kde and normalised to a peak of 1;
+    the color bar title 'Relative density (peak = 1)' and %.2f level labels state
+    plainly which way density rises
+  - Two height/weight groups each sit inside their own nested rings, with a visible
+    saddle between them; the smoothing keeps both peaks apart without islands around
+    single points
+  - Scatter overlay drawn as small, faint INK_MUTED points (size 9, alpha 0.35) behind
+    the contours, so the rings stay the main signal and can be checked against the
+    points
+  - Contour colors step through imprint_seq from brand green (lowest level) to blue
+    (highest), identical in both renders; chrome flips cleanly through the theme tokens
+  - Uses ColumnDataSource built from the tidy df and the column-name constants for
+    axis titles, per the adaptable-code layout
   weaknesses:
-  - 'DQ-02 (both): the variables are labelled "Measurement A (units)" and "Measurement
-    B (units)", abstract labels with no scenario → name a real bivariate pair from
-    the spec''s examples (e.g. "Height (cm)" / "Weight (kg)" with matching cluster
-    means). Likely cause: the MEASUREMENT_A / MEASUREMENT_B constants.'
-  - 'VQ-06 (both): the axis titles carry the placeholder "(units)" instead of a unit
-    → descriptive titles with real units. Likely cause: the MEASUREMENT_A / MEASUREMENT_B
-    constant strings.'
-  - 'Suggestion: a HoverTool on the scatter points would add value inspection to the
-    HTML view.'
-  - 'Suggestion: the unused ELEVATED_BG token could be dropped.'
+  - 'Suggestion: a HoverTool on the scatter overlay showing height and weight would
+    add value in the HTML detail view.'
+  - 'Suggestion: a thin rule or slightly wider padding between the plot area and the
+    color bar would separate the level legend more clearly from the data region.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: bold near-black title "contour-density · python · bokeh · anyplot.ai"; italic axis titles "Measurement A (units)" / "Measurement B (units)"; soft-gray tick labels 20-60; faint grid; L-shaped axes; contour colour bar on the right (levels 0.11-0.89, title "Relative density (peak = 1)") - all readable
-      Data: eight nested KDE contour lines in imprint_seq steps, brand green #009E73 at the outer 0.11 level to blue #4467A3 at the 0.89 peak; two clusters near (25, 35) and (40, 50) each inside its own rings; 500 faint gray scatter points behind
+      Background: warm off-white #FAF8F1 across plot and border; no outline frame, subtle grid at ~10 % ink.
+      Chrome: bold title "contour-density · python · bokeh · anyplot.ai" top-left (~50 % width); italic axis titles "Height (cm)" and "Weight (kg)"; tick labels 150–200 and 40–100 in INK_SOFT; color bar on the right with level samples 0.11–0.89 and the rotated title "Relative density (peak = 1)". All text dark on light and readable.
+      Data: eight KDE contour lines stepping from brand green #009E73 (outermost, 0.11) to blue #4467A3 (innermost, 0.89); two nested ring sets, a higher peak near (162 cm, 62 kg) and a second near (177 cm, 81 kg), joined by a saddle; ~500 faint gray points behind the rings, with tail points outside the outermost ring.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: title and axis titles in light ink, tick and colour-bar labels light gray, subtle grid - no dark-on-dark text
-      Data: contour colours identical to the light render; scatter points muted gray, still visible; brand green clearly visible
+      Background: warm near-black #1A1A17; grid faint but visible.
+      Chrome: title, axis titles, tick labels and color bar labels in light ink tokens; no dark-on-dark text anywhere.
+      Data: contour colors identical to the light render (green outer → blue inner); scatter points in the lighter muted ink, faint but visible; brand green outer ring reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,68 +58,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit 50/42/34/30 pt sizes; all text readable in both themes
+        comment: Title 50pt, axis titles 42pt, ticks and color bar labels 30–34pt;
+          readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; contours and faint points do not hide each other
+        comment: No text collisions; rings and faint points coexist without hiding
+          information
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4.5 px contour lines clear; 500 faint 9 px points suit the density;
-          colour-bar line samples visible in both themes
+        comment: 4.5 px contour lines clear; ~500 points at size 9, alpha 0.35 suit
+          the density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp, nesting carries the order; no red-green signal
+        comment: Green→blue sequential ramp, no red-green signal; levels also readable
+          by nesting
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing clipped
+        comment: 3200×1800; balanced margins, nothing clipped, color bar fits on the
+          right
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '''(units)'' is a placeholder, not a unit (defect line)'
+        passed: true
+        comment: Height (cm), Weight (kg) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq steps for levels, identical across themes; #FAF8F1 /
-          #1A1A17 backgrounds'
+        comment: 'imprint_seq ramp for density levels; #FAF8F1 / #1A1A17 backgrounds;
+          chrome theme-correct'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Style-guide baseline typography and palette, nothing beyond
+        comment: 'Beyond baseline: muted-ink scatter layered behind the rings and
+          a color bar with matching background, no border, %.2f levels and a self-explaining
+          ''peak = 1'' title'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Borderless colour bar without tick lines, plot outline and minor
-          ticks removed
+        comment: 'Beyond baseline: plot outline removed and color bar frame dropped,
+          padding tuned so the legend sits flush with the plot'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: Data displayed as the Notes ask; no hierarchy chosen beyond them
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -135,23 +141,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: KDE, 8 nested levels, colour bar showing density direction, faint
-          overlay, smoothing fits the two clusters
+        comment: KDE, multiple nested levels, color bar showing density direction,
+          faint overlay; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correct, all points in range, marks at their values
+        comment: Height on x, weight on y; ranges padded from data; points at exact
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; colour bar titled 'Relative density (peak
-          = 1)'
+        comment: Title format correct; color bar title reader-friendly
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -159,20 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two clusters with own ring sets, density gradients, sparse tails
+        comment: Two clusters with their own rings, saddle, gradient of levels, sparse
+          tails
       - id: DQ-02
         name: Realistic Context
-        score: 1
+        score: 5
         max: 5
-        passed: false
-        comment: Abstract 'Measurement A/B' labels (defect line)
+        passed: true
+        comment: Adult height/weight survey with two groups, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: cluster centres at (25, 35) and (40, 50) match the generated
-          means; levels normalised to peak = 1. No check values in spec'
+        comment: Heights 147–200 cm and weights 41–100 kg are plausible; weight rises
+          with height; no Check values in Notes
     code_quality:
       score: 10
       max: 10
@@ -200,13 +207,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: KDE via gaussian_kde, contours via p.contour; no hand-rolled algorithm
+        comment: KDE via gaussian_kde, contours via native p.contour; palette token
+          block not deducted
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png + .html, current Bokeh 3 API
+        comment: plot-{THEME}.html and .png via Selenium per library prompt; current
+          Bokeh 3 API
     library_mastery:
       score: 7
       max: 10
@@ -216,17 +225,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, figure ranges from data, native contour renderer
+        comment: 'Beyond mandate: native p.contour(xx, yy, z, levels) renderer and
+          its construct_color_bar() instead of manual line drawing'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Bokeh 3 ContourRenderer via p.contour with construct_color_bar
-  verdict: REJECTED
+        comment: Bokeh 3's ContourRenderer with auto-constructed contour color bar
+          is a library-specific feature
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T10:00:17Z'
+  rendered_at: '2026-11-09T10:06:58Z'
 impl_tags:
   dependencies:
   - scipy
@@ -234,9 +245,15 @@ impl_tags:
   techniques:
   - colorbar
   - layer-composition
+  - html-export
   patterns:
   - data-generation
+  - columndatasource
+  - matrix-construction
   dataprep:
   - kde
+  - normalization
   styling:
+  - custom-colormap
   - alpha-blending
+  - grid-styling
