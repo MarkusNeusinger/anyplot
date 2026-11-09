@@ -664,7 +664,8 @@ class TestPage:
         fake.gate.set()
 
         assert other.status_code == 409 and other.json() == {"detail": "job_conflict"}
-        assert (await first).status_code == (await replay).status_code == 200
+        built, replayed = await first, await replay
+        assert built.status_code == replayed.status_code == 200 and built.content == replayed.content
         assert fake.calls == [("page123", "page-light")]
 
     async def test_a_language_without_its_toolchain_is_refused(
