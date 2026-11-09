@@ -186,13 +186,22 @@ class TestRecord:
         ("setup", "name", "args", "verdict"),
         [
             ({"switch_request": {"library": "seaborn", "plot": True}}, "plot_pipeline", {}, "switch_requested"),
-            ({"pipeline_calls": 1}, "switch_plot", {"library": "seaborn"}, "plot_already_run"),
+            ({"tools": ["plot_pipeline"]}, "switch_plot", {"library": "seaborn"}, "plot_already_run"),
+            ({"tools": ["plot_pipeline"]}, "plot_pipeline", {}, "one_pipeline_per_turn"),
             (
-                {"data_code_calls": 2},
+                {"tools": ["run_data_code"] * 2},
                 "run_data_code",
                 {"code": "df = 1", "source_language": "python"},
                 "too_many_data_runs",
             ),
+            ({"tools": ["prepare_data"] * 2}, "prepare_data", {"operations": [DERIVE]}, "too_many_prepare_calls"),
+            (
+                {"tools": ["generate_data"] * 2},
+                "generate_data",
+                {"variables": [{"name": "x", "start": "0", "stop": "1"}], "series": [{"name": "y", "expression": "x"}]},
+                "too_many_generate_calls",
+            ),
+            ({"tools": ["query_data"] * 3}, "query_data", {"operations": []}, "too_many_query_calls"),
             ({}, "plot_pipeline", {"change_request": "as on https://example.com/chart"}, "url_or_path_not_allowed"),
         ],
     )
@@ -214,8 +223,8 @@ class TestRecord:
         await call(plugin, "prepare_data", {"operations": [DERIVE]}, {"status": "ok", "unexpected": 1})
 
         assert ledger.tool_calls == [
-            ToolCall("get_dataset_profile", "allowed", "error"),  # the root got `invalid_result`
-            ToolCall("prepare_data", "allowed", "changed"),  # the version is stored all the same
+            ToolCall("get_dataset_profile", "allowed", "error", "invalid_result"),  # the root got `invalid_result`
+            ToolCall("prepare_data", "allowed", "changed", "invalid_result"),  # the version is stored all the same
         ]
 
     def test_a_code_outside_the_verdicts_reads_unknown(self) -> None:

@@ -152,6 +152,7 @@ from .data.fidelity import left_out_line
 from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
+from .dataset_versions import original_number
 from .grounding import (
     EXPECT_LINE_ID,
     UNVERIFIED_LINE,
@@ -170,6 +171,7 @@ from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes import runtime_for
+from .repeated_keys import combine_repeated_key
 from .schemas import (
     EXPECTED_TEXT,
     MAX_CHANGE_CHARS,
@@ -559,6 +561,10 @@ class Run:
     """The server's line for the rows a bound mark has no value for, with the count per role (`fidelity.left_out_line`,
     owner decision of 2026-11-08: the plot draws every row, and a row it cannot draw is announced with its count):
     in `changes` right after `loader_notes`, never a residual note, so the status stays as the render earns it."""
+    data_notes: list[str] = field(default_factory=list)
+    """The server's line for a repeated key it combined into a new data version before the run
+    (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09): the first line of `changes`, never a residual
+    note, and on a run that ships nothing the result's one change, since the data changed all the same."""
     data_json: str | None = None
     """The run's table as typed JSON for a runtime whose code reads no `data.csv` (`RuntimeAdapter.data_json`:
     JavaScript), built once per run; every render job of the run and the shipped version carry it."""
@@ -734,6 +740,14 @@ def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason 
     return True
 
 
+def plot_shows_replaced_data(services: Services, session_id: str, view: SessionView) -> bool:
+    """Whether the library's latest plot drew data that a later paste replaced (`CodeVersion.earlier_data`): it is no
+    plot of the current data, so a wish for the plot of the new data is a first-plot note (owner decision of
+    2026-11-08), kept by `keep_plot_request` and by a blocked run whatever base the root chose."""
+    latest = services.versions.latest_rendered(session_id, target=view.target)
+    return latest is not None and latest.earlier_data(original_number(services.datasets, session_id, view))
+
+
 def hold_request(state: Any, args: PipelineArgs) -> None:
     """Keep a first plot's `change_request` for the next run, joined to one kept already (`merged_request`).
 
@@ -748,6 +762,61 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
         # The bindings the note was written for: the run takes it while they stand, open roles filled or not.
         bindings = state.get(BINDINGS)
         state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
+
+
+def run_args(ledger: RequestLedger, args: PipelineArgs) -> PipelineArgs:
+    """The arguments a `plot_pipeline` call of this turn runs with: a fresh start's base, an action's empty request,
+    and only the expected texts the user wrote (`in_users_words`). The run and ToolSafety's refusal before it
+    (`stop_not_ready`) read the same ones, so both keep the same request."""
+    if ledger.fresh_start and args.base == "previous":
+        # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
+        # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
+        args = args.model_copy(update={"base": "catalogue"})
+    if ledger.kind == "action":
+        # The page's buttons bring no request: the kept note and the plot memory carry the user's words. A request,
+        # texts or decisions the root passes on that turn come from its memory of earlier turns, which may hold a
+        # request the user has since overtaken by rebinding a column, as the root re-sent "the prices" after values
+        # had been bound to Stock by hand.
+        args = args.model_copy(update={"change_request": "", "expected_texts": [], "remember": []})
+    return in_users_words(args, ledger.user_words)
+
+
+def stop_not_ready(
+    ctx: Context, ledger: RequestLedger, args: PipelineArgs, view: SessionView | None, reason: NotReadyReason
+) -> PlotResult:
+    """A plot the session is not ready for (`load_inputs`), from `run_args`: keep a first plot's request, write the
+    `pipeline_run` line and the last run, and answer `not_ready`.
+
+    Both the run and ToolSafety's refusal before it end here: a call after the turn's own data change
+    (`data_changed_this_turn`) or on the summary turn of an unconfirmed paste (`summary_turn`) keeps the wish and
+    leaves the same records as a run that found the data unconfirmed."""
+    if args.base == "previous" and view is not None and plot_shows_replaced_data(get_services(), ctx.session.id, view):
+        # A change of a plot of data a later paste replaced is the first plot of the new data: the live eval of
+        # 2026-11-08 had the root send the title pasted with the new data as a change of the old plot, on data not
+        # confirmed yet, which a change of an existing version never keeps.
+        args = args.model_copy(update={"base": "catalogue"})
+    kept = keep_pending_request(ctx.state, args, reason)
+    if kept:
+        ledger.kept_note = args  # held for the bindings and data this turn ends with
+    versions = get_services().versions
+    language = plot_language(view, versions.latest_language(ctx.session.id)) if view is not None else None
+    # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
+    index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
+    telemetry.write(
+        telemetry.PipelineRun,
+        ledger,
+        attempt=f"run{index}",
+        run_index=index,
+        base=args.base,
+        status="not_ready",
+        reason=reason,
+        plot_language=telemetry.plot_language(language),
+        readiness=telemetry.readiness(view.readiness) if view is not None else None,
+        lane=ledger.tier,
+    )
+    result = PlotResult.not_ready(reason, request_kept=kept)
+    record_last_run(ctx.state, result, turn=ledger.turn)
+    return result
 
 
 def has_request(args: PipelineArgs) -> bool:
@@ -1479,9 +1548,11 @@ def finish(run: Run) -> PlotResult:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
     # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
-    # server's notes come first, the loader's and then the rows without a value to draw, so the cap never drops them
-    # (owner decisions of 2026-10-29, "what changed", and 2026-11-08, every row the plot cannot draw counted).
-    server = [*run.loader_notes[: MAX_CHANGES - len(run.row_notes)], *run.row_notes]
+    # server's notes come first, the data step it made, the loader's and then the rows without a value to draw, so
+    # the cap never drops them (owner decisions of 2026-10-29, "what changed", 2026-11-08, every row the plot cannot
+    # draw counted, and 2026-11-09, a repeated key combined as a data step).
+    fixed = [*run.data_notes, *run.row_notes]
+    server = [*run.data_notes, *run.loader_notes[: MAX_CHANGES - len(fixed)], *run.row_notes]
     adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(server))
     changes = [change[:MAX_CHANGE_CHARS] for change in [*server, *adapted]]
     return PlotResult(
@@ -1550,6 +1621,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             requests=standing_requests([*run.user_requests, run.change_request]),
             expected_texts=list(run.expected_texts),
             turn=ledger_for(ctx.invocation_id).turn,
+            data_version=run.dataset.number,
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
@@ -1716,41 +1788,12 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     services = get_services()
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
-    if ledger.fresh_start and node_input.base == "previous":
-        # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
-        # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
-        node_input = node_input.model_copy(update={"base": "catalogue"})
-    if ledger.kind == "action":
-        # The page's buttons bring no request: the kept note and the plot memory carry the user's words. A request,
-        # texts or decisions the root passes on that turn come from its memory of earlier turns, which may hold a
-        # request the user has since overtaken by rebinding a column, as the root re-sent "the prices" after values
-        # had been bound to Stock by hand.
-        node_input = node_input.model_copy(update={"change_request": "", "expected_texts": [], "remember": []})
-    node_input = in_users_words(node_input, ledger.user_words)
+    node_input = run_args(ledger, node_input)
     view, dataset, not_ready = load_inputs(ctx, services)
-    language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:
-        kept = keep_pending_request(ctx.state, node_input, not_ready)
-        if kept:
-            ledger.kept_note = node_input  # held for the bindings and data this turn ends with
-        # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
-        index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
-        telemetry.write(
-            telemetry.PipelineRun,
-            ledger,
-            attempt=f"run{index}",
-            run_index=index,
-            base=node_input.base,
-            status="not_ready",
-            reason=not_ready or "no_dataset",
-            plot_language=telemetry.plot_language(language),
-            readiness=telemetry.readiness(view.readiness) if view is not None else None,
-            lane=ledger.tier,
-        )
-        result = PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept)
-        record_last_run(ctx.state, result, turn=ledger.turn)
-        yield _result_event(result)
+        yield _result_event(stop_not_ready(ctx, ledger, node_input, view, not_ready or "no_dataset"))
         return
+    language = plot_language(view, services.versions.latest_language(ctx.session.id))
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
@@ -1780,9 +1823,14 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous, carry)
     # The memory with this change's own decisions applied: the adapter sees what will stand once it ships.
     memory_plan = plan_memory(ctx.state, node_input, turn=ledger.turn)
+    # A key the rows repeat is combined first, as a data step with a number, a change line and an undo, so the plot
+    # draws every row of the version it gets (owner decision of 2026-11-09). After the kept note was taken: a new
+    # version drops a kept note, and this run carries it (`settle_pending_request` writes it back if nothing ships).
+    view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger)
     run = Run(
         view=view,
         dataset=dataset,
+        data_notes=[data_step] if data_step is not None else [],
         theme=theme,
         theme_asked=theme_asked,
         language=language or view.language,
@@ -1835,6 +1883,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # The bindings the run drew with, and what became of a kept note: the root's reply rests on them, not on what an
     # earlier turn said, since the user may have rebound a column in the data panel in between.
     result = result.model_copy(update={"bindings": list(view.bindings), "kept_request": kept_request})
+    if data_step is not None:
+        # The data changed whether the plot shipped or not: a run that ships nothing announces the step alone.
+        changes = result.changes if result.status in ("ok", "needs_attention") else run.data_notes
+        result = result.model_copy(update={"combined": True, "changes": changes})
     settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
     settle_memory(ctx.state, run, ledger.plot_shipped)
     # The memory the stored version stands on, for its `plot` event: known only once settled with the version.
@@ -1844,6 +1896,32 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
     yield close_scope(scope)
     yield _result_event(result)
+
+
+def _combine_repeated_key(
+    ctx: Context, services: Services, view: SessionView, dataset: StoredDataset, ledger: RequestLedger
+) -> tuple[SessionView, StoredDataset, str | None]:
+    """The view and dataset the run draws, and the announcement of the server's data step for a repeated key
+    (`repeated_keys.combine_repeated_key`), or None when nothing was combined.
+
+    The step is written into the session state, the turn's data changes (the `done` event's card) and the ledger
+    (`RequestLedger.data_step`), so a run ADK re-runs on resume, which finds the key combined already, announces it
+    all the same. Never raises: without the step the run draws the data as it is, and the warning stands.
+    """
+    if ledger.data_step is not None and ledger.data_step[0] == view.dataset_id:
+        return view, dataset, ledger.data_step[1]
+    try:
+        combined = combine_repeated_key(services.datasets, ctx.session.id, view, dataset)
+    except Exception as exc:  # a bug in the data step must not cost the user the plot; the class only
+        logger.warning("combining a repeated key failed: %s", type(exc).__name__)
+        return view, dataset, None
+    if combined is None:
+        return view, dataset, None
+    for key, value in combined.delta().items():
+        ctx.state[key] = value
+    ledger.dataset_changes.extend(combined.changes)
+    ledger.data_step = (combined.version.dataset_id, combined.line)
+    return read_session(ctx.state) or view, combined.version.stored, combined.line
 
 
 def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> None:

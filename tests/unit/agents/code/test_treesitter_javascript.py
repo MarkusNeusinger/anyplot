@@ -1,7 +1,5 @@
 """Tests for the JavaScript helpers of agents/anyplot/code/treesitter.py: the grammars, literals and the scopes."""
 
-from collections import Counter
-
 import pytest
 
 from agents.anyplot.code.treesitter import (
@@ -17,7 +15,7 @@ from agents.anyplot.code.treesitter import (
     walk,
 )
 
-from .conftest import JS_CATALOGUE_FILES, js_library
+from .conftest import JS_CATALOGUE_FILES, js_library, merged_specs
 
 
 def grammar(path) -> str:
@@ -28,15 +26,20 @@ def first(source: Source, kind: str):
     return next(node for node in walk(source.root) if node.type == kind)
 
 
-def test_the_catalogue_has_1617_javascript_files() -> None:
-    assert len(JS_CATALOGUE_FILES) == 1617
-    assert Counter(js_library(path) for path in JS_CATALOGUE_FILES) == {
-        "chartjs": 321,
-        "d3": 325,
-        "echarts": 325,
-        "highcharts": 323,
-        "muix": 323,
-    }
+JS_SUFFIXES = {"chartjs": ".js", "d3": ".js", "echarts": ".js", "highcharts": ".js", "muix": ".tsx"}
+"""Each JavaScript library and the suffix of its catalogue file, which decides the grammar (`grammar` below)."""
+
+
+def test_the_parse_gate_reads_every_merged_javascript_file() -> None:
+    """The parse gate below runs over every merged implementation of the five libraries, not the counts of a day
+    (1,617 files on 2026-10-30): each file is one library's with that library's suffix, and per library the glob finds
+    exactly the specs whose metadata names one."""
+    files: dict[str, set[str]] = {library: set() for library in JS_SUFFIXES}
+    for path in JS_CATALOGUE_FILES:
+        assert path.suffix == JS_SUFFIXES.get(js_library(path)), path
+        files[js_library(path)].add(path.parts[-4])
+    for library, specs in files.items():
+        assert specs and specs == merged_specs("javascript", library), library
 
 
 @pytest.mark.parametrize("path", JS_CATALOGUE_FILES, ids=lambda path: f"{path.parts[-4]}-{path.stem}")

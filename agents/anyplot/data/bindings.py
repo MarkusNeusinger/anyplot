@@ -613,14 +613,46 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
 
     A replacing paste used to take the defaults, which bind in column order: the user's `x = Land area km2,
     y = Population` became `x = Population, y = Area km2` on a table that lists the population first, and the
-    plot turned on its side. So each old binding's column is carried to the new column of the same meaning, by
-    name: the same name once normalised (`_norm`), else the one column whose `name_similarity` reaches
-    `CARRY_SIMILARITY` (`Land area km2` and `Area km2`, one inside the other), never a tie. The new column must
-    fit the role without an error or a warning (`check_bindings`), and it takes the place of one old column only,
-    the closest one: a column the user bound to several roles is carried to each of them, two old columns never
-    land on one new column (the same series twice). Every role left open gets the defaults on the columns left
-    free (`filled_bindings`); with nothing carried, the result is `default_bindings`.
+    plot turned on its side. So each old binding's column is carried to the new column of the same meaning
+    (`carried_by_name`). Every role left open gets the defaults on the columns left free (`filled_bindings`); with
+    nothing carried, the result is `default_bindings`.
     """
+    carried = carried_by_name(bindings, roles, profile)
+    if not carried:
+        return default_bindings(roles, profile)
+    return filled_bindings(carried, roles, profile)
+
+
+def carried_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
+    """The old bindings whose column the new data has again (`column_matches`), each on its new column, in their
+    order. The new column must fit the role without an error or a warning (`check_bindings`); a column that is there
+    but no longer fits (a number column that became text) is left behind, though it is no column that went
+    (`columns_gone`).
+    """
+    target = column_matches(bindings, profile)
+    carried: list[Binding] = []
+    # The warnings of the unbound table (an open role whose every column is negative) are no fault of a carry.
+    # Each binding is judged with the ones carried before it, so the second role of a lower and upper bound pair
+    # is left behind when the pair would come out inverted on the new data. A key the new rows repeat is a fact of
+    # the rows, not of the column's meaning: the binding carries, and its warning stands (`fit_warnings`).
+    allowed = set(check_bindings([], roles, profile).fit_warnings)
+    for binding in bindings:
+        new = target.get(binding.column)
+        if new is None:
+            continue
+        moved = Binding(role=binding.role, column=new)
+        check = check_bindings([*carried, moved], roles, profile)
+        if not check.errors and set(check.fit_warnings) <= allowed:
+            carried.append(moved)
+    return carried
+
+
+def column_matches(bindings: Sequence[Binding], profile: DatasetProfile) -> dict[str, str]:
+    """Each old bound column's column in the new data, by name: the same name once normalised (`_norm`), else the
+    one column whose `name_similarity` reaches `CARRY_SIMILARITY` (`Land area km2` and `Area km2`, one inside the
+    other), never a tie. A new column takes the place of one old column only, the closest one: a column the user
+    bound to several roles matches once for all of them, two old columns never land on one new column (the same
+    series twice). An old column without a match is not in the new data."""
     old = list(dict.fromkeys(binding.column for binding in bindings))
     scored: list[tuple[float, int, str, str]] = []
     for position, name in enumerate(old):
@@ -636,23 +668,15 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
         if match not in taken:
             target[name] = match
             taken.add(match)
-    carried: list[Binding] = []
-    # The warnings of the unbound table (an open role whose every column is negative) are no fault of a carry.
-    # Each binding is judged with the ones carried before it, so the second role of a lower and upper bound pair
-    # is left behind when the pair would come out inverted on the new data. A key the new rows repeat is a fact of
-    # the rows, not of the column's meaning: the binding carries, and its warning stands (`fit_warnings`).
-    allowed = set(check_bindings([], roles, profile).fit_warnings)
-    for binding in bindings:
-        new = target.get(binding.column)
-        if new is None:
-            continue
-        moved = Binding(role=binding.role, column=new)
-        check = check_bindings([*carried, moved], roles, profile)
-        if not check.errors and set(check.fit_warnings) <= allowed:
-            carried.append(moved)
-    if not carried:
-        return default_bindings(roles, profile)
-    return filled_bindings(carried, roles, profile)
+    return target
+
+
+def columns_gone(bindings: Sequence[Binding], profile: DatasetProfile) -> bool:
+    """Whether a column the old data was bound to is not in the new data (`column_matches`), whether or not the ones
+    that are there still fit their roles: the paste answer's `columns_changed`, on which the page shows the
+    remembered decisions on the new data's line, where the user can forget them (owner decision of 2026-11-08)."""
+    matched = column_matches(bindings, profile)
+    return any(binding.column not in matched for binding in bindings)
 
 
 def _carry_score(old: str, new: str) -> float:

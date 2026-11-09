@@ -13,6 +13,7 @@ import pytest
 from agents.anyplot.code.profiles.javascript.allowlist import REMOVED_EXPORTS
 from agents.anyplot.data.bindings import check_bindings
 from agents.anyplot.data.parse import RESPELLED, parse_dataset
+from agents.anyplot.data.prepare import PrepareArgs, apply_and_parse
 from agents.anyplot.dev_fixture import CASES_DIR, snapshot_from_repo
 from agents.anyplot.opening import assess
 from agents.anyplot.schemas import Binding
@@ -28,7 +29,6 @@ from agents.evals.make_fixtures import (
     case_id,
     render_cases,
 )
-from core.spec_roles import parse_roles
 
 
 CASE_KEYS = {"spec_id", "library", "locale", "perturbation", "bindings", "expected", "tags", "source"}
@@ -118,7 +118,8 @@ def test_case_json_schema(files: dict[str, str]) -> None:
         if not name.endswith("case.json"):
             continue
         case = json.loads(text)
-        assert set(case) == CASE_KEYS, name
+        assert set(case) - {"before_operations"} == CASE_KEYS, name
+        assert ("before_operations" in case) == ("aggregation" in case["tags"]), name
         assert case["expected"] == "accepted"
         assert case["perturbation"] in PERTURBATIONS
         assert case["library"] in LIBRARIES
@@ -181,7 +182,10 @@ def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> Non
 def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture, files: dict[str, str]) -> None:
     """The cases test the adaptation, never the parser: no warning, complete bindings, an eligible pair.
 
-    The `BLOCKED` pairs are the exception: blocked, and for SECURITY findings, not for a disabled library.
+    The `BLOCKED` pairs are the exception: blocked, and for SECURITY findings, not for a disabled library. The
+    plot draws every row it gets (owner decision of 2026-11-08), so no case hands it a key that the rows repeat: the
+    raw records of `n5000` that repeat one take their data step first (`before_operations`), and the bindings hold
+    on the table it leaves.
     """
     settings = AgentSettings(libraries=list(LIBRARIES))  # the default enables matplotlib and seaborn only
     for library in LIBRARIES:
@@ -192,15 +196,22 @@ def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture
             assert any(reason.startswith("security: ") for reason in eligibility.reasons), eligibility.reasons
         else:
             assert eligibility.status in ("clean", "coupled"), (library, eligibility.reasons)
-        roles = parse_roles(snapshot.data_roles)
+        roles = snapshot.roles()  # as the session reads them, the key roles marked (`fidelity.mark_keys`)
         for perturbation in PERTURBATIONS:
             directory = case_id(spec.spec_id, library, perturbation)
             case = json.loads(files[f"{directory}/case.json"])
             parsed = parse_dataset(files[f"{directory}/data.csv"])
             # The spelling line (`12.50` written `12.5`) says what the canonical form changed; it is no parse issue.
             assert [warning for warning in parsed.warnings if RESPELLED not in warning] == [], directory
-            check = check_bindings([Binding(**item) for item in case["bindings"]], roles, parsed.profile)
-            assert check.complete and not check.errors, (directory, check.errors)
+            bindings = [Binding(**item) for item in case["bindings"]]
+            raw = check_bindings(bindings, roles, parsed.profile)
+            assert raw.complete and not raw.errors, (directory, raw.errors)
+            for operations in case.get("before_operations", []):
+                args = PrepareArgs.model_validate({"operations": operations})
+                _, parsed = apply_and_parse(parsed, args.operations, language="en")
+            check = check_bindings(bindings, roles, parsed.profile)
+            assert check.complete and not check.errors and check.repeated_key is None, (directory, check.warnings)
+            assert ("before_operations" in case) == (raw.repeated_key is not None), directory
 
 
 MUIX_7 = re.compile(r"^// Library: muix 7\.", re.MULTILINE)
@@ -287,6 +298,7 @@ def test_perturbations_change_what_they_name(spec: make_fixtures.SpecFixture, fi
 
 
 def test_n5000_needs_aggregation_where_the_spec_draws_one_mark_per_group(files: dict[str, str]) -> None:
+    """Those raw records repeat their keys, and the data step combines them per key before the plot."""
     for spec in SPECS:
         directory = case_id(spec.spec_id, "seaborn", "n5000")
         rows = _rows(files[f"{directory}/data.csv"])[1:]
@@ -294,10 +306,17 @@ def test_n5000_needs_aggregation_where_the_spec_draws_one_mark_per_group(files: 
         groups = [index for index, column in enumerate(columns) if column.role and not column.measure]
         repeats = Counter(tuple(row[index] for index in groups) for row in rows)
         base = Counter(tuple(row[index] for index in groups) for row in _rows(to_text(spec, files))[1:])
-        if spec.aggregates:
+        case = json.loads(files[f"{directory}/case.json"])
+        if spec.aggregate:
             assert max(repeats.values()) > 1 and max(base.values()) == 1, spec.spec_id
-        tags = json.loads(files[f"{directory}/case.json"])["tags"]
-        assert ("aggregation" in tags) == spec.aggregates
+            keys = [columns[index].name for index in groups]
+            (value,) = (column.name for column in columns if column.role and column.measure)
+            assert case["before_operations"] == [
+                [{"op": "aggregate", "by": keys, "column": value, "how": spec.aggregate}]
+            ]
+        else:
+            assert "before_operations" not in case
+        assert ("aggregation" in case["tags"]) == (spec.aggregate is not None)
 
 
 def to_text(spec: make_fixtures.SpecFixture, files: dict[str, str]) -> str:

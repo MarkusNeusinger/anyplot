@@ -2,46 +2,62 @@ library: letsplot
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:12:01Z'
-updated: '2026-05-17T09:13:36Z'
-generated_by: claude-haiku
-workflow_run: 25986528431
+updated: '2026-11-09T08:44:33Z'
+generated_by: claude-opus
+workflow_run: 42586352829
 issue: 3414
-language_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/letsplot/plot-dark.html
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with explicit text sizing readable in both light and dark
-    themes
-  - Complete spec compliance with all boxen plot features (nested boxes, outlier display,
-    legend)
-  - Realistic server response time data with appropriate distributions and outliers
-  - Excellent theme adaptation with no dark-on-dark or light-on-light failures
-  - Clean, reproducible code with proper random seeding and idiomatic letsplot patterns
+  - Letter values computed with np.quantile at depths 0.5**(i+2) and drawn with geom_rect,
+    so every box edge sits at its quantile on the value axis and each deeper level
+    narrows by a constant 0.85 factor around the category center
+  - 'scale_y_log10 suits the right-skewed response-time data: four endpoints spanning
+    about 8 ms to 1,500 ms stay readable on one axis'
+  - Median segment in the INK token flips between near-black and near-white, so it
+    contrasts with the green quartile box in both themes
+  - Outliers beyond the deepest letter value are drawn as individual translucent INK_SOFT
+    points at their values, and the quantile legend uses scale_fill_manual with explicit
+    breaks in level order
+  - 'All chrome is threaded through the theme tokens: page and elevated backgrounds,
+    INK/INK_SOFT text, legend frame; both renders are fully legible'
   weaknesses:
-  - 'LM-02: Does not use distinctive letsplot-specific features beyond basic geoms
-    (could leverage interactive tooltips or more advanced layer composition)'
-  - 'DE-01/DE-02: Straightforward minimal styling without additional design refinements
-    (though appropriate for the plot type)'
+  - 'VQ-07 (both): the deeper quantile levels are mixed with up to 60 % white (#B5C4DD-like
+    lavender at 98.44 %), so four of the six legend steps are custom tints that lie
+    off the imprint_seq ramp #009E73 → #4467A3 → use plain steps of imprint_seq (and,
+    if neighbouring steps need more separation, the box outlines rather than off-ramp
+    tints). Likely cause: the MAX_TINT white-mixing term in the level_colors comprehension.'
+  - 'CQ-04 (code): the level colors are interpolated by parsing and re-formatting
+    hex strings by hand (the start/end int(c[j:j+2], 16) parse and the "#{:02X}..."
+    format, lines ~107–115), and IMPRINT_PALETTE is defined but never used → build
+    the steps with matplotlib.colors (LinearSegmentedColormap.from_list("imprint_seq",
+    IMPRINT_SEQ) plus to_hex) and delete the unused constant. Likely cause: hand-rolled
+    color math instead of the available matplotlib.colors utilities.'
+  - 'Suggestion: a legend title such as ''Central share of observations'' would make
+    the 50 % … 98.44 % labels self-explanatory.'
+  - 'Suggestion: a very faint horizontal grid at the log decades (1, 10, 100, 1,000
+    ms) would make the box edges easier to read off the log axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle elevated background for legend frame (#FFFDF6)
-      Chrome: Title "boxen-basic · letsplot · anyplot.ai" in dark text (size 24); axis labels "Server Endpoint" and "Response Time (ms)" in dark text (size 20); axis ticks in soft dark (size 16). All text clearly readable.
-      Data: Four server endpoints displayed with nested boxes in a blue gradient (#306998 to #E6E5FF representing quantile levels 50% to 99.6%). Boxes decrease in width for deeper quantiles. Yellow median line (#FFD43B) visible through each box. Red outlier points (#DC2626) shown with alpha=0.6 beyond deepest level. Legend clearly identifies quantile ranges.
-      Legibility verdict: PASS - All text and data elements are clearly visible and readable against the light background.
+      Background: warm off-white #FAF8F1, landscape 3200x1800, no grid; thin INK_SOFT axis lines on left and bottom.
+      Chrome: title "boxen-basic · python · letsplot · anyplot.ai" top-left in dark ink (~47 % width); y-axis "Response Time (ms)" on a log scale with ticks 10, 100, 1,000; x-axis "Server Endpoint" with API Gateway, Auth Service, Database, Cache Layer; legend "Quantile Range" at right in a #FFFDF6 framed box with six entries 50 %, 75 %, 87.5 %, 93.75 %, 96.88 %, 98.44 %. All text dark and readable.
+      Data: four letter-value stacks; the widest box (50 %, the quartiles) is brand green #009E73 with a thick near-black median line; deeper levels narrow step by step and move through teal to grey-blue to pale lavender toward the tails; long upper tails, short lower tails; grey translucent outlier points above each top box and a few at the bottom. Boxes have thin dark grey outlines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with elevated legend frame (#242420)
-      Chrome: All text elements (title, axis labels, ticks) rendered in light colors (INK and INK_SOFT tokens). Title in #F0EFE8, axis ticks in #B8B7B0. All text clearly readable without dark-on-dark failures.
-      Data: Nested box colors identical to light render (blue gradient preserved). Yellow median line equally visible. Red outliers equally distinct. Legend colors and layout maintained.
-      Legibility verdict: PASS - All text is readable in light colors; no dark-on-dark failures. Data colors properly preserved across theme switch.
+      Background: warm near-black #1A1A17; legend box #242420 with a light grey frame.
+      Chrome: title and axis titles in near-white, tick and legend labels in light grey #B8B7B0; no dark-on-dark text anywhere.
+      Data: box fills are identical to the light render (green quartile box, teal → blue → lavender deeper levels); only the median line flips to near-white and the box outlines and outlier points to light grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,68 +65,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10, legend 10/11);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clear spacing throughout
+        comment: No text collisions; outlier stacking at the tails is expected
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nested boxes, median line, outliers all optimally visible
+        comment: Boxes outlined, outliers visible at alpha 0.6, legend swatches match
+          the box fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; distinct colors; CVD-safe palette
+        comment: Levels differ in hue and lightness; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape (1600×900 scaled 3x); perfect proportions
+        comment: 3200x1800, balanced layout, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct format; descriptive labels with units
+        comment: Response Time (ms), Server Endpoint
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Theme-adaptive backgrounds correct; appropriate gradient palette
-          for letter-value plot
+        passed: false
+        comment: 'Backgrounds correct and the quartile box is #009E73, but deeper
+          levels are white-tinted custom colors off the imprint_seq ramp (defect line)'
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom blue gradient palette shows intentional design; good visual
-          hierarchy
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit sizes, framed legend'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Minimal styling with transparent grid; standard refinement approach
+        passed: false
+        comment: Thin theme-adaptive box outlines separate the nested levels cleanly
+          and the median spans the quartile box; otherwise baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Gradient guides eye inward; yellow median creates focal point; clear
-          comparison across endpoints
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect boxen/letter-value implementation
+        comment: Letter-value plot; no whiskers, strip points, mean marks or reference
+          lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: nested boxes, width variation, colors,
-          outliers, labels, legend'
+        comment: Nested boxes to the 1/128 level, narrowing widths centered on the
+          category, shading by level, outliers as points, legend explaining the levels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct; full data range shown; multiple groups properly displayed
+        comment: Box edges at np.quantile values, outliers at their values, log axis
+          shows all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend accurately explains quantile levels
+        comment: Mandated title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -149,23 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full letter-value range; both typical and outlier behavior; large
-          dataset (2000/group)
+        comment: Skewed tails of differing lengths, outliers, four groups at different
+          scales
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times realistic; real endpoint types; appropriate
-          value ranges and distributions
+        comment: Server response times by endpoint, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Millisecond scale appropriate; no artificial scaling
+        comment: 2000 obs per group (within 1000+), ms values plausible for cache
+          through database; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -173,56 +192,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward implementation; no unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Proper seeding with np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI; clear variable names; efficient computation
+        passed: false
+        comment: Hand-rolled hex parsing/formatting for the ramp and an unused IMPRINT_PALETTE
+          constant (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming (plot-{THEME}.png/html); current API
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Excellent ggplot grammar; proper aes(), geoms, scales, and theme
-          layers
+        comment: Grammar-of-graphics layering with per-layer data, scale_fill_manual
+          breaks, scale_y_log10; letsplot has no boxen geom, so geom_rect is reasonable
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Basic geom usage without distinctive letsplot features like interactive
-          tooltips
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T08:41:27Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - edge-highlighting
   - alpha-blending
