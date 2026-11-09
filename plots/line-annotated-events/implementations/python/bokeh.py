@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-16
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-09
 """
 
 import os
