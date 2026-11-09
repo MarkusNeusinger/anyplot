@@ -254,7 +254,13 @@ from agents.anyplot.plugins.ledger import (
     utc_stamp,
     weighted_usd,
 )
-from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, paste_table_line, scope_refusals
+from agents.anyplot.plugins.scope_guard import (
+    LOCKED_OUT,
+    SESSION_CLOSED,
+    paste_table_line,
+    scope_refusals,
+    served_library_request,
+)
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.contract import ConvertJob, PageFailed, PageUnsupported, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
@@ -1714,7 +1720,9 @@ async def _screen_notes(
     `parsed.context_lines` (a title, an export's metadata, a source line, "values in
     Fahrenheit, make it a line chart") reach the root as the user's words, so they are
     checked like a chat message: first the deterministic pre-filter (`INSTRUCTION_LIKE`),
-    then the scope judge with the scope rubric on the lines inside `<user_notes>`. It runs
+    then the scope judge with the scope rubric on the lines inside `<user_notes>`; an
+    `other_library` for notes that name only libraries served here goes on as `in_scope`,
+    as in the chat (`scope_guard.served_library_request`). It runs
     after the dataset judge, so a refused table spends no call on its notes. A hit, a
     verdict other than `in_scope` or no verdict (`JudgeUnavailable`: fail closed) drops
     every note with a warning (`without_context`), and the table is stored all the same.
@@ -1747,6 +1755,10 @@ async def _screen_notes(
         judge_output=answer.output_tokens,
         **counts,
     )
+    if answer.verdict == "other_library" and served_library_request("\n".join(lines), get_settings().libraries):
+        # "please do this in d3" around a table asks for a library the user may switch to (`served_library_request`).
+        attribution("notes_judge", ledger, verdict="served_library_in_scope", **counts)
+        answer = answer.model_copy(update={"verdict": "in_scope"})
     if answer.verdict != "in_scope":
         return without_context(parsed, NOTES_REFUSED_WARNING), None
     return parsed, answer.lang
@@ -2560,7 +2572,7 @@ async def post_message(
         kind="action" if body.action else "text",
         tier=tier,
         # The refusals sent before the judge (the budget, unsupported content) follow the
-        # session language, never the browser's locale; after the judge, the message's.
+        # session language, never the browser's locale, and so do the ones after the judge.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
         fresh_start=body.action == "create_plot",
