@@ -342,7 +342,7 @@ class TestCreateResponsiveVariants:
                 # Lossy WebP shifts a near-grey a few levels (chroma subsampling); black would be 26 levels off.
                 assert all(abs(a - b) <= 4 for a, b in zip(corner, surface, strict=True)), (name, corner)
                 center = rgb.getpixel((400, 200))
-                assert abs(center[1] - 158) <= 4, (name, center)
+                assert all(abs(a - b) <= 4 for a, b in zip(center, (0, 158, 115), strict=True)), (name, center)
 
     def test_correct_dimensions(self, tmp_path: Path) -> None:
         """Resized variants should have correct width and maintained aspect ratio."""
