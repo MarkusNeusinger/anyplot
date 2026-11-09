@@ -959,7 +959,7 @@ jobs:
         if: steps.adapt.outputs.review_skipped != 'true'
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064  # v1
+        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe  # v1
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
