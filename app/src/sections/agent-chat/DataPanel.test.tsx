@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   type AgentSessionState,
@@ -302,6 +302,166 @@ describe('DataPanel card', () => {
     expect(screen.queryByTestId('data-actions')).not.toBeInTheDocument();
     const line = screen.getByTestId('bindings-line').parentElement as HTMLElement;
     expect(within(line).getByRole('button', { name: 'Change the bindings' })).toBeInTheDocument();
+  });
+});
+
+describe('DataPanel bindings line pairs', () => {
+  // jsdom has no picker: the stub stands in for the browser's `showPicker` on a dropdown.
+  const showPicker = vi.fn();
+  beforeEach(() => {
+    Object.defineProperty(HTMLSelectElement.prototype, 'showPicker', {
+      value: showPicker,
+      configurable: true,
+    });
+  });
+  afterEach(() => {
+    delete (HTMLSelectElement.prototype as Partial<HTMLSelectElement>).showPicker;
+    showPicker.mockReset();
+  });
+
+  const panel = (state: AgentSessionState, props: Partial<PanelProps> = {}) => (
+    <Panel
+      state={state}
+      onParse={vi.fn()}
+      onConfirmTranscription={vi.fn()}
+      onDiscardTranscription={vi.fn()}
+      onBind={vi.fn()}
+      onUndo={vi.fn()}
+      onLoadData={vi.fn(async () => '')}
+      {...props}
+    />
+  );
+  const line = () => within(screen.getByTestId('bindings-line'));
+
+  it('makes each pair a button named by its action and its words, the line reading as before', () => {
+    const roles = [...ROLES, role('size')];
+    render(
+      panel(stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { roles, missingRoles: ['size'] }))
+    );
+    const pairs = line().getAllByRole('button');
+    expect(pairs).toHaveLength(3);
+    expect(pairs[0]).toHaveAccessibleName('Change the column for x (across): month');
+    expect(pairs[1]).toHaveAccessibleName('Change the columns for y (up): shoes, hats');
+    expect(pairs[2]).toHaveAccessibleName('Pick a column for size: none yet');
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(
+      /^x \(across\): month · y \(up\): shoes, hats · size: —no column yet$/
+    );
+  });
+
+  it('opens the dropdowns on a click on a pair, that role’s dropdown focused and its list open', () => {
+    const onLook = vi.fn();
+    render(panel(stateWith({ x: 'month', y1: 'shoes' }), { onLook }));
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+
+    fireEvent.click(
+      line().getByRole('button', { name: 'Change the column for x (across): month' })
+    );
+    expect(screen.getByTestId('bindings-editor')).toBeInTheDocument();
+    const x = screen.getByLabelText(/^x/);
+    expect(x).toHaveFocus();
+    expect(showPicker.mock.contexts).toEqual([x]);
+    // A look at the data, as `.change()`; the toggle says the dropdowns are open.
+    expect(onLook).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Hide the bindings' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+
+    // Open already, a family's pair puts the focus on its `+`; its menu stays closed.
+    fireEvent.click(line().getByRole('button', { name: 'Change the column for y (up): shoes' }));
+    expect(screen.getByRole('button', { name: '+ y: add a column' })).toHaveFocus();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(showPicker).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the focus on the dropdown when the browser opens no list for the page', () => {
+    showPicker.mockImplementationOnce(() => {
+      throw new DOMException('no user activation', 'NotAllowedError');
+    });
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    fireEvent.click(
+      line().getByRole('button', { name: 'Change the column for x (across): month' })
+    );
+    expect(screen.getByLabelText(/^x/)).toHaveFocus();
+  });
+
+  it('puts the focus on a family’s last × once every column is taken', () => {
+    const all = { y1: 'month', y2: 'shoes', y3: 'hats', y4: 'scarves', y5: 'region' };
+    render(panel(stateWith({ x: 'month', ...all })));
+    fireEvent.click(line().getByRole('button', { name: /^Change the columns for y/ }));
+    expect(screen.queryByRole('button', { name: '+ y: add a column' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove region from y' })).toHaveFocus();
+  });
+
+  it('keeps the pairs words while the dropdowns would not answer', () => {
+    const words = /^x \(across\): month · y \(up\): shoes$/;
+    const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(words);
+    expect(line().queryAllByRole('button')).toEqual([]);
+    // `.change()` still opens them, to look: they are disabled.
+    expect(screen.getByRole('button', { name: 'Change the bindings' })).toBeEnabled();
+
+    // The fan-out's panel copies the data.
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' }), { locked: true }));
+    expect(line().queryAllByRole('button')).toEqual([]);
+
+    // No session to bind on.
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' }, { sessionId: null })));
+    expect(line().queryAllByRole('button')).toEqual([]);
+
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    expect(line().getAllByRole('button')).toHaveLength(2);
+    expect(screen.getByTestId('bindings-line')).toHaveTextContent(words);
+  });
+
+  it('reaches each pair by Tab, opens on Enter and gives the focus back after Escape', async () => {
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    screen.getByRole('button', { name: 'View all 1 row' }).focus();
+    await userEvent.tab();
+    const x = line().getByRole('button', { name: 'Change the column for x (across): month' });
+    expect(x).toHaveFocus();
+    await userEvent.tab();
+    expect(
+      line().getByRole('button', { name: 'Change the column for y (up): shoes' })
+    ).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Change the bindings' })).toHaveFocus();
+
+    x.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByLabelText(/^x/)).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+    expect(x).toHaveFocus();
+  });
+
+  it('closes a family’s menu on Escape first, then the dropdowns, the focus back on the pair', async () => {
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    const y = line().getByRole('button', { name: 'Change the column for y (up): shoes' });
+    await userEvent.click(y);
+    const add = screen.getByRole('button', { name: '+ y: add a column' });
+    await userEvent.click(add);
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    expect(screen.getByTestId('bindings-editor')).toBeInTheDocument();
+    expect(add).toHaveFocus();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+    expect(y).toHaveFocus();
+  });
+
+  it('gives the focus to .change() after Escape in the dropdowns it opened', async () => {
+    render(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    const toggle = screen.getByRole('button', { name: 'Change the bindings' });
+    await userEvent.click(toggle);
+    screen.getByLabelText(/^x/).focus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByTestId('bindings-editor')).not.toBeInTheDocument();
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAccessibleName('Change the bindings');
   });
 });
 

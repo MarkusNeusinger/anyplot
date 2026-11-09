@@ -7,17 +7,22 @@
  * sits at the composer's end too.
  *
  * The bindings stand in one line under the preview (`BindingsLine`), with `.change()`, which
- * opens the dropdowns (`BindingsBlock`) and turns into `.hide()`. The dropdowns open by
- * themselves when a required role has no column or the server refused the bindings, and stay
- * open after the user fixed it, so the focus never loses its control; `.hide()` closes them.
- * While they are closed, a warning on a bound column (negative values, a wide table's number
- * column) stands under the line.
+ * opens the dropdowns (`BindingsBlock`) and turns into `.hide()`. Each `role: column` pair of the
+ * line opens them too, with the focus on that role's control: a single role's dropdown, its list
+ * open where the browser lets a page open it; a family's `+`. While the dropdowns would not
+ * answer (a step in flight, the fan-out's panel open) the pairs are words, as the dropdowns are
+ * disabled then. The dropdowns open by themselves when a required role has no column or the
+ * server refused the bindings, and stay open after the user fixed it, so the focus never loses
+ * its control; `.hide()` closes them, and Escape inside them, which gives the focus back to the
+ * pair that opened them (to `.change()` otherwise). While they are closed, a warning on a bound
+ * column (negative values, a wide table's number column) stands under the line.
  *
  * At phone width the card shows no preview table: `.view_all()` opens every row, and it stands
  * with `.change()` on the card's action line under the bindings line.
  */
 
-import { Suspense, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import Box from '@mui/material/Box';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -30,6 +35,8 @@ import {
   bindingRows,
   boundRoles,
   checkOnlyWarnings,
+  pairId,
+  roleControlId,
 } from 'src/sections/agent-chat/bindings';
 import { fileSource } from 'src/sections/agent-chat/cardLabels';
 import { countOf } from 'src/sections/agent-chat/countOf';
@@ -67,6 +74,28 @@ const loadDataView = () => import('src/sections/agent-chat/DataView');
 const DataView = lazyOrFallback(loadDataView, DataViewUnavailable);
 // A preload that fails stays quiet: opening the view shows the line above.
 const preloadDataView = () => void loadDataView().catch(() => undefined);
+
+/**
+ * The focus on a role's control in the open dropdowns, for a click on its pair: a single role's
+ * dropdown, with its list open where the browser lets a page open it (`showPicker`); a family's
+ * `+`, or its last `×` once every column is taken. The family's menu stays closed, so its chips,
+ * which the user may have come to remove, stay in view.
+ */
+function focusRoleControl(name: string) {
+  const control = document.getElementById(roleControlId(name));
+  if (control instanceof HTMLSelectElement) {
+    control.focus();
+    try {
+      control.showPicker();
+    } catch {
+      // No picker from the page here (an older browser, the click's activation gone): the
+      // focused dropdown opens on the next key.
+    }
+    return;
+  }
+  const buttons = control?.querySelectorAll('button');
+  buttons?.[buttons.length - 1]?.focus();
+}
 
 export interface DataCardProps {
   state: AgentSessionState;
@@ -144,12 +173,37 @@ export function DataCard(props: DataCardProps) {
 
   const checkOnly = dataset ? checkOnlyWarnings(state.bindingWarnings) : [];
 
+  // What opened the dropdowns, for Escape to give the focus back to: a pair's role, or `null` for
+  // `.change()` and for the dropdowns that opened by themselves.
+  const opener = useRef<string | null>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  // The pairs are buttons on the dropdowns' own rule: they answer when the dropdowns do.
+  const pairsAnswer = ready && !busy;
+  // A click on a pair: the dropdowns render at once, so the role's control is there to take the
+  // focus, and its list to open, within the click that asked for it.
+  const openRole = (name: string) => {
+    onLook?.();
+    opener.current = name;
+    flushSync(() => setEditing(true));
+    focusRoleControl(name);
+  };
+  // Escape in the dropdowns: the focus goes back to the pair that opened them while it is a
+  // button, else to `.change()`, before the dropdowns close under it.
+  const closeOnEscape = () => {
+    const pair = opener.current === null ? null : document.getElementById(pairId(opener.current));
+    opener.current = null;
+    (pair ?? toggleRef.current)?.focus();
+    setEditing(false);
+  };
+
   const bindingsToggle = (
     <Box
       component="button"
       type="button"
+      ref={toggleRef}
       onClick={() => {
         if (!editing) onLook?.();
+        opener.current = null;
         setEditing(open => !open);
       }}
       aria-expanded={editing}
@@ -340,6 +394,7 @@ export function DataCard(props: DataCardProps) {
               hasRoles={rows.length > 0}
               checking={state.bindingsBusy}
               toggle={narrow ? undefined : bindingsToggle}
+              onRole={pairsAnswer ? openRole : undefined}
             />
             {hints.map(hint => (
               <Box
@@ -392,6 +447,7 @@ export function DataCard(props: DataCardProps) {
                 busy={busy}
                 suggestion={suggestion}
                 onBind={onBind}
+                onEscape={closeOnEscape}
               />
             )}
           </Box>

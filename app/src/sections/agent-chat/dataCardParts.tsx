@@ -27,6 +27,9 @@ import {
   emptyChoice,
   fits,
   kindsHint,
+  pairId,
+  pairName,
+  roleControlId,
 } from 'src/sections/agent-chat/bindings';
 import { CellText } from 'src/sections/agent-chat/CellText';
 import { countOf } from 'src/sections/agent-chat/countOf';
@@ -490,6 +493,8 @@ interface BindingsBlockProps {
   busy: boolean;
   suggestion: LongSuggestion | null;
   onBind: (role: string, column: string | null) => void;
+  /** Escape in the block, outside a menu of its own: the block closes. */
+  onEscape?: () => void;
 }
 
 /** A chip's height: a phone's touch target, smaller with a pointer. */
@@ -538,6 +543,7 @@ function FamilyChips({
   row,
   columns,
   disabled,
+  listId,
   labelId,
   hintOf,
   onBind,
@@ -545,6 +551,8 @@ function FamilyChips({
   row: BindingRow;
   columns: ColumnProfile[];
   disabled: boolean;
+  /** The chips' list, where a click on the family's pair puts the focus (`roleControlId`). */
+  listId: string;
   labelId: string;
   hintOf: (column: string) => string | null;
   onBind: (role: string, column: string | null) => void;
@@ -589,6 +597,7 @@ function FamilyChips({
       <Box
         component="ul"
         ref={listRef}
+        id={listId}
         aria-labelledby={labelId}
         aria-describedby={hints.length ? `${labelId}-hints` : undefined}
         sx={{
@@ -699,15 +708,57 @@ interface BindingsLineProps {
   checking: boolean;
   /** At the line's end: `.change()` from `sm` up; at phone width it stands on the action line. */
   toggle?: React.ReactNode;
+  /**
+   * A click on a pair: the dropdowns open on that role's control. Absent while the dropdowns would
+   * not answer (a step in flight, the fan-out's panel open), and the pairs are words then.
+   */
+  onRole?: (name: string) => void;
 }
+
+/**
+ * A pair of the bindings line that a click changes: the line's own words with a dotted underline,
+ * green on hover, the site's focus ring. A 32 px target at phone width, as the chapter line's
+ * controls: each row of a line that wraps grows to hold it, so the targets of two rows meet and
+ * never overlap. 24 px from `sm` up, where its negative margin keeps the line's height. The padding
+ * and its negative margin keep the words where plain words stand.
+ */
+const pairSx = {
+  font: 'inherit',
+  letterSpacing: 'inherit',
+  color: 'inherit',
+  bgcolor: 'transparent',
+  border: 'none',
+  borderRadius: '4px',
+  p: 0,
+  px: 0.25,
+  mx: -0.25,
+  display: 'inline-flex',
+  alignItems: 'center',
+  maxWidth: '100%',
+  minHeight: { xs: 32, sm: 24 },
+  my: { xs: 0, sm: -0.25 },
+  textAlign: 'start',
+  overflowWrap: 'anywhere',
+  cursor: 'pointer',
+  textDecoration: 'underline dotted',
+  textUnderlineOffset: '3px',
+  // Green as text in the shade that reads 4.5:1 in each theme; the underline in the brand green.
+  '&:hover': {
+    color: 'var(--code-comment)',
+    textDecorationColor: colors.primary,
+    '& *': { color: 'inherit' },
+  },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 1 },
+} as const;
 
 /**
  * The bindings in one line under the preview: `x (across): month · y (up): revenue · color:
  * region`, each column in ink, a family's columns side by side, a required role without a column
  * as `—`. Only `x` and `y` say which way they run (`axisWord`). An optional role left open says
- * nothing. The dropdowns stand behind `.change()` (`BindingsBlock`).
+ * nothing. The dropdowns stand behind `.change()` (`BindingsBlock`), and each pair opens them on
+ * its own role while they answer (`onRole`); a pair wraps whole.
  */
-export function BindingsLine({ roles, hasRoles, checking, toggle }: BindingsLineProps) {
+export function BindingsLine({ roles, hasRoles, checking, toggle, onRole }: BindingsLineProps) {
   const empty = !hasRoles
     ? checking
       ? 'checking roles…'
@@ -729,25 +780,48 @@ export function BindingsLine({ roles, hasRoles, checking, toggle }: BindingsLine
         }}
       >
         {roles.length === 0 && empty}
-        {roles.map((role, index) => (
-          <Box component="span" key={role.name}>
-            {index > 0 && ' · '}
-            {role.name}
-            {axisWord(role.name)}:{' '}
-            {role.missing ? (
-              <>
-                <span aria-hidden>—</span>
-                <Box component="span" sx={visuallyHiddenSx}>
-                  no column yet
+        {roles.map((role, index) => {
+          const words = (
+            <>
+              {role.name}
+              {axisWord(role.name)}:{' '}
+              {role.missing ? (
+                <>
+                  <span aria-hidden>—</span>
+                  <Box component="span" sx={visuallyHiddenSx}>
+                    no column yet
+                  </Box>
+                </>
+              ) : (
+                <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>
+                  {role.columns.join(', ')}
                 </Box>
-              </>
-            ) : (
-              <Box component="span" sx={{ color: 'var(--ink)', fontWeight: 600 }}>
-                {role.columns.join(', ')}
-              </Box>
-            )}
-          </Box>
-        ))}
+              )}
+            </>
+          );
+          return (
+            <Box component="span" key={role.name}>
+              {index > 0 && ' · '}
+              {onRole ? (
+                <Box
+                  component="button"
+                  type="button"
+                  id={pairId(role.name)}
+                  aria-label={pairName(role)}
+                  onClick={() => onRole(role.name)}
+                  sx={pairSx}
+                >
+                  {/* One flex item, so the space after the colon stays. */}
+                  <Box component="span" sx={{ minWidth: 0 }}>
+                    {words}
+                  </Box>
+                </Box>
+              ) : (
+                words
+              )}
+            </Box>
+          );
+        })}
       </Box>
       {toggle}
     </Box>
@@ -763,7 +837,7 @@ const HEADING = {
 
 /**
  * Every spec role's column dropdown, its accepted kinds, and its sign/wide-table hints: what
- * `.change()` on the bindings line opens (`BindingsLine`).
+ * `.change()` on the bindings line opens, or a click on one of its pairs (`BindingsLine`).
  */
 export function BindingsBlock({
   id,
@@ -779,10 +853,18 @@ export function BindingsBlock({
   busy,
   suggestion,
   onBind,
+  onEscape,
 }: BindingsBlockProps) {
   const heading = working ? (parsing ? HEADING.parsing : HEADING.working) : HEADING.idle;
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    // A family's menu stands in a portal outside the block and takes its own Escape first.
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    if (!event.currentTarget.contains(event.target as Node)) return;
+    event.preventDefault();
+    onEscape?.();
+  };
   return (
-    <Box id={id} data-testid="bindings-editor">
+    <Box id={id} data-testid="bindings-editor" onKeyDown={onEscape ? handleKeyDown : undefined}>
       {/* While the server works, the heading itself says why the dropdowns do not answer: the
           server runs one thing per session. A line of its own under the heading read as the
           heading twice and moved the dropdowns as it came and went. The other headings stand
@@ -817,7 +899,7 @@ export function BindingsBlock({
       >
         {rows.map(row => {
           const missing = missingRoles.includes(row.role.name);
-          const id = `agent-role-${row.name}`;
+          const id = roleControlId(row.name);
           const family = row.role.variadic;
           const bound = bindings[row.name];
           const hintOf = (column: string | undefined) =>
@@ -852,6 +934,7 @@ export function BindingsBlock({
                   row={row}
                   columns={columns}
                   disabled={!ready || busy}
+                  listId={id}
                   labelId={`${id}-label`}
                   hintOf={hintOf}
                   onBind={onBind}
