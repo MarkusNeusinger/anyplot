@@ -2,56 +2,55 @@ library: altair
 language: python
 specification_id: line-timeseries-rolling
 created: '2025-12-30T17:49:27Z'
-updated: '2026-05-13T13:17:03Z'
-generated_by: claude-haiku
-workflow_run: 25800977791
+updated: '2026-11-09T12:50:40Z'
+generated_by: claude-opus
+workflow_run: 42618891941
 issue: 2786
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders with correct backgrounds
-    and readable text
-  - 'Excellent spec compliance: all required features present (raw data line, rolling
-    average, legend with clear labels)'
-  - 'High-quality, realistic dataset: 180-day temperature time series with 7-day rolling
-    average demonstrates spec features well'
-  - Clean, reproducible code with proper seed and logical structure
-  - Effective visual hierarchy through line width (1.5px vs 4px) and opacity (0.5
-    vs 1.0) to emphasize rolling average
-  - No text overlap or legibility issues in either render
+  - Color, strokeWidth and opacity are all encoded on the same Series field with explicit
+    domains, so Vega-Lite merges them into one legend whose swatches match the thin
+    translucent raw line and the bold rolling line in both themes
+  - Trailing pandas rolling(window=7, min_periods=7) plus dropna makes the rolling
+    average start on Jan 07 instead of being padded back to Jan 01, exactly as the
+    spec's characteristic section asks
+  - Legend placed top-left inside the plot in the empty region above the cold January
+    values, framed with the elevated surface token and rounded corners, so it never
+    touches the data
+  - Long-form data via pd.concat with series labels as values keeps the chart one
+    declarative mark_line with a single legend instead of two hand-layered charts
+  - 'Theme tokens thread through title, axis, grid and legend in both renders; Imprint
+    #009E73 for raw data and #C475FD for the average are identical across themes'
+  - HTML output adds tooltips (date, series, value to 0.1 °C) and .interactive() zoom/pan
+    for detailed inspection
   weaknesses:
-  - 'Color palette violation: uses #306998 (Python blue) and #FFD43B (Python yellow)
-    instead of Okabe-Ito required palette (#009E73 for first series, #D55E00 for second)'
-  - 'Output API violation: saves to generic ''plot.png'' and ''plot.html'' instead
-    of theme-specific ''plot-light.png''/''plot-dark.png'' and ''plot-light.html''/''plot-dark.html'''
-  - Missing explicit theme-adaptive chrome configuration in source code (configure_axis,
-    configure_title, etc. with theme tokens)
-  - 'Generic design aesthetics: styled as configured defaults without distinctive
-    sophistication or custom refinement'
-  - 'Title discrepancy: code shows ''pyplots.ai'' but rendered images show ''anyplot.ai'''
+  - 'Suggestion: the x-axis grid draws a line at every weekly tick (about 26 vertical
+    lines) while labels appear every two weeks; a grid at the labelled two-week ticks
+    only would read calmer.'
+  - 'Suggestion: naming the station or city (for example a mid-latitude city''s daily
+    mean temperature) in the axis title or a title prefix would anchor the scenario.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1, matching specification
-      Chrome: Title "line-timeseries-rolling · altair · anyplot.ai" dark and readable; X-axis label "Date" clear; Y-axis label "Temperature (°C)" with units clear; tick labels all readable with proper contrast
-      Data: Raw Data series in cyan/teal color with 0.5 opacity (thin, 1.5px); 7-Day Rolling Average in orange/yellow with 1.0 opacity (prominent, 4px); legend shows both series clearly
-      Layout: Grid lines subtle (dashed, 0.3 opacity) aid readability without competing with data
-      Legibility verdict: PASS - All text and elements clearly visible and readable against light background
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas (chart centred with page-colored padding).
+      Chrome: bold dark title "line-timeseries-rolling · python · altair · anyplot.ai" centred at the top (~47% of width); bold axis titles "Temperature (°C)" and "Date"; soft-ink tick labels -10..35 and "Jan 07" .. "Jun 23" in two-week steps; left and bottom domain lines only; subtle grid on both axes. All text readable.
+      Data: thin translucent green (#009E73, alpha 0.55) raw daily line, noisy around a rising seasonal trend from about -7 °C to 30 °C; thick purple (#C475FD) 7-day rolling average starting at Jan 07 and tracking the level. Legend top-left in an elevated box: "Raw Data" (thin green) and "7-Day Rolling Average" (thick purple).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17, matching specification
-      Chrome: Title, axis labels, and tick labels all light-colored and clearly readable against dark background; no dark-on-dark failures detected
-      Data: Same cyan/teal for Raw Data and orange/yellow for Rolling Average (colors identical to light render, confirming proper theme adaptation of only chrome elements); both lines clearly distinguishable
-      Layout: Grid lines remain subtle and visible; legend properly readable
-      Legibility verdict: PASS - All text and elements clearly visible and readable against dark background; theme adaptation perfect
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light soft ink, grid lines subtle light at low opacity, legend box on the #242420 elevated fill with a light outline and light labels. No dark-on-dark text.
+      Data: same #009E73 raw line (recedes more on dark but stays visible) and same #C475FD rolling line as in light; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,68 +58,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders
+        comment: Explicit font sizes per library prompt; all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: Legend sits in empty top-left area; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raw and rolling lines clearly visible with opacity/width differentiation
+        comment: Thin translucent raw line visible in both themes, rolling line prominent;
+          legend glyphs match marks
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito colors (#306998, #FFD43B) not CVD-safe'
+        passed: true
+        comment: Green vs purple plus width/opacity difference; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off at edges
+        comment: 3200x1800, balanced margins, title ~47% width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Date, Temperature °C)
+        comment: '''Temperature (°C)'' and ''Date'' descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Uses Python brand colors instead of Okabe-Ito. First series
-          must be #009E73 (bluish green)'
+        passed: true
+        comment: 'Imprint #009E73 first, #C475FD second; correct backgrounds and chrome
+          in both themes'
     design_excellence:
       score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
-        passed: false
-        comment: Custom color attempt but violates palette guidelines; otherwise generic
-          defaults
+        passed: true
+        comment: Style-guide baseline with clean typography; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Dashed grid visible but minimal refinement; uses standard styling
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Good visual hierarchy via opacity/stroke variation, but color choice
-          undermines brand
+        comment: Legend deliberately placed inside the empty top-left region with
+          elevated rounded box; view stroke removed. Weekly vertical grid is denser
+          than needed
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Raw-vs-average hierarchy is what the Notes prescribe; no further
+          focal point
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series line chart
+        comment: Time series with rolling average overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Raw data, rolling average, legend, window size all present
+        comment: Translucent thin raw line, prominent contrasting average, legend
+          with window size, grid on both axes, shorter rolling line — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X (date) and Y (temperature) correct; all data shown
+        comment: Temporal x, quantitative y, all data shown, marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; legend labels match specification
+        comment: Mandated title format; legend 'Raw Data' / '7-Day Rolling Average'
     data_quality:
       score: 15
       max: 15
@@ -158,21 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of time series with rolling average
+        comment: Noise around trend, lag and flattening of the average, shorter rolling
+          span all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperature with seasonal trend is realistic and neutral
+        comment: Daily temperature Jan–Jun with seasonal warming; plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range (-10 to 34°C) is sensible for 6-month period
+        comment: 'Checked: -7..30 °C plausible for mid-latitude winter to summer;
+          rolling line begins Jan 07 (7th day) from trailing window'
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,63 +185,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for determinism
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports numpy, pandas, altair
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses alt.condition for conditional styling appropriately
+        comment: pandas rolling, concat to long form; no hand-rolled algorithms
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves to ''plot.png''/''plot.html'' instead of ''plot-{THEME}.png''.
-          Theme-based execution requires theme-aware filenames'
+        passed: true
+        comment: plot-{THEME}.png and .html, Altair 6 API, pad-only canvas block
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: 'CRITICAL: Missing theme token implementation. Per altair.md, must
-          read ANYPLOT_THEME env var and apply theme-adaptive backgrounds (PAGE_BG)
-          and text colors (INK, INK_SOFT) to properties, configure_view, configure_axis,
-          configure_title, configure_legend'
+        passed: true
+        comment: Long-form data with encoding-driven series styling (color/strokeWidth/opacity
+          scales) instead of layered charts
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 2
         max: 5
-        passed: false
-        comment: Uses alt.condition for multi-series (expected), no distinctive Altair
-          features applied
+        passed: true
+        comment: Vega-Lite legend merging of several channels on one field gives matching
+          line glyphs
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T12:47:54Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
-  - conditional-encoding
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - wide-to-long
   dataprep:
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - grid-styling

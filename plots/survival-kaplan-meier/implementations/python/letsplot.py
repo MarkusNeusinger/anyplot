@@ -1,7 +1,7 @@
 """ anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-11
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-09
 """
 
 import os
@@ -9,9 +9,11 @@ import shutil
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -24,6 +26,7 @@ from lets_plot import (
     labs,
     scale_color_manual,
     scale_fill_manual,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -37,133 +40,111 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette (brand color #009E73 is first series)
-IMPRINT = ["#009E73", "#C475FD"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulated clinical trial survival data for two treatment groups
+# Constants
+Z_95 = 1.96  # normal quantile for the 95% confidence band
+SURVIVAL = "Survival Probability"  # derived Kaplan-Meier estimate
+CI_LOW = "CI lower"  # derived lower band edge
+CI_HIGH = "CI upper"  # derived upper band edge
+
+# Columns: set these to your table's column names
+TIME = "Time (months)"  # role: time
+EVENT = "Event"  # role: event
+GROUP = "Group"  # role: group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trial.csv")
 np.random.seed(42)
-
 n_per_group = 80
+follow_up = 36  # months of follow-up
+frames = []
+for group_name, hazard_rate in [("Treatment", 0.04), ("Control", 0.08)]:
+    times = np.clip(np.random.exponential(scale=1 / hazard_rate, size=n_per_group), 0, follow_up)
+    event = (times < follow_up).astype(int)
+    event[np.random.random(n_per_group) < 0.2] = 0  # 20% random censoring
+    frames.append(pd.DataFrame({TIME: times, EVENT: event, GROUP: group_name}))
+df = pd.concat(frames, ignore_index=True)
 
+# Plot: reads only df and the constants above
+obs = df.dropna(subset=[TIME, EVENT])
+groups = list(obs[GROUP].unique())
+colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(groups)}
 
-def generate_survival_data(n, hazard_rate, group_name):
-    """Generate survival data with exponential distribution."""
-    times = np.random.exponential(scale=1 / hazard_rate, size=n)
-    times = np.clip(times, 0, 36)  # Max follow-up 36 months
-    censored = times >= 36
-    times[censored] = 36
-    event = (~censored).astype(int)
-    # Add random censoring (20% of non-terminal events)
-    random_censor = np.random.random(n) < 0.2
-    event[random_censor] = 0
-    return pd.DataFrame({"time": times, "event": event, "group": group_name})
+curves = []
+censored = []
+for name, sub in obs.groupby(GROUP, sort=False):
+    t = sub[TIME].to_numpy(dtype=float)
+    fit = sm.SurvfuncRight(t, sub[EVENT].to_numpy(dtype=float))  # product-limit estimate, Greenwood SE
+    se = np.nan_to_num(fit.surv_prob_se)
+    km = pd.DataFrame(
+        {
+            TIME: np.r_[0.0, fit.surv_times],
+            SURVIVAL: np.r_[1.0, fit.surv_prob],
+            CI_LOW: np.r_[1.0, np.clip(fit.surv_prob - Z_95 * se, 0, 1)],
+            CI_HIGH: np.r_[1.0, np.clip(fit.surv_prob + Z_95 * se, 0, 1)],
+        }
+    )
+    # Hold the last estimate to the end of follow-up so the censored tail shows
+    if t.max() > km[TIME].iloc[-1]:
+        km = pd.concat([km, km.iloc[[-1]].assign(**{TIME: t.max()})], ignore_index=True)
+    km[GROUP] = name
+    curves.append(km)
 
+    # Censoring ticks sit on the curve at their censoring time
+    cens = sub[sub[EVENT] == 0][[TIME, GROUP]].copy()
+    idx = np.searchsorted(km[TIME].to_numpy(), cens[TIME].to_numpy(), side="right") - 1
+    cens[SURVIVAL] = km[SURVIVAL].to_numpy()[idx]
+    censored.append(cens)
 
-# Treatment group (lower hazard = better survival)
-treatment = generate_survival_data(n_per_group, hazard_rate=0.04, group_name="Treatment")
-# Control group (higher hazard = worse survival)
-control = generate_survival_data(n_per_group, hazard_rate=0.08, group_name="Control")
-df = pd.concat([treatment, control], ignore_index=True)
+km_data = pd.concat(curves, ignore_index=True)
 
+# The band steps with its curve: hold each bound until the next event time
+bands = []
+for _, km in km_data.groupby(GROUP, sort=False):
+    held = km.shift(1).iloc[1:].assign(**{TIME: km[TIME].iloc[1:].to_numpy()})
+    bands.append(pd.concat([held, km]).sort_values(TIME, kind="stable"))
+band_data = pd.concat(bands, ignore_index=True)
+band_data[GROUP] = band_data[GROUP].astype(str)
+censored_data = pd.concat(censored, ignore_index=True)
 
-# Kaplan-Meier estimator function
-def kaplan_meier(time, event):
-    """Compute Kaplan-Meier survival curve with confidence intervals."""
-    df_km = pd.DataFrame({"time": time, "event": event}).sort_values("time")
-    unique_times = np.sort(df_km["time"].unique())
-    n_at_risk = len(df_km)
-    survival = 1.0
-    results = [{"time": 0, "survival": 1.0, "ci_lower": 1.0, "ci_upper": 1.0, "n_at_risk": n_at_risk}]
-    var_sum = 0
+title = "survival-kaplan-meier · python · letsplot · anyplot.ai"
+title_size = round(16 * (67 / len(title) if len(title) > 67 else 1.0))
 
-    for t in unique_times:
-        at_time = df_km[df_km["time"] == t]
-        d = at_time["event"].sum()  # Number of events
-        n = n_at_risk  # Number at risk
-        if n > 0 and d > 0:
-            survival *= 1 - d / n
-            var_sum += d / (n * (n - d)) if n > d else 0
-        # Greenwood's formula for variance
-        se = survival * np.sqrt(var_sum) if var_sum > 0 else 0
-        ci_lower = max(0, survival - 1.96 * se)
-        ci_upper = min(1, survival + 1.96 * se)
-        results.append({"time": t, "survival": survival, "ci_lower": ci_lower, "ci_upper": ci_upper, "n_at_risk": n})
-        n_at_risk -= len(at_time)
-
-    return pd.DataFrame(results)
-
-
-# Compute Kaplan-Meier for each group
-km_treatment = kaplan_meier(treatment["time"], treatment["event"])
-km_treatment["group"] = "Treatment"
-km_control = kaplan_meier(control["time"], control["event"])
-km_control["group"] = "Control"
-km_data = pd.concat([km_treatment, km_control], ignore_index=True)
-
-# Find censored observations for tick marks
-censored_treatment = treatment[treatment["event"] == 0].copy()
-censored_control = control[control["event"] == 0].copy()
-
-
-def get_survival_at_time(km_df, t):
-    """Get survival probability at a given time."""
-    km_df = km_df.sort_values("time")
-    idx = km_df[km_df["time"] <= t].index
-    if len(idx) == 0:
-        return 1.0
-    return km_df.loc[idx[-1], "survival"]
-
-
-censored_treatment["survival"] = censored_treatment["time"].apply(lambda t: get_survival_at_time(km_treatment, t))
-censored_treatment["group"] = "Treatment"
-censored_control["survival"] = censored_control["time"].apply(lambda t: get_survival_at_time(km_control, t))
-censored_control["group"] = "Control"
-censored_data = pd.concat([censored_treatment, censored_control], ignore_index=True)
-
-# Plot
 plot = (
     ggplot()
     # Confidence interval ribbons
-    + geom_ribbon(aes(x="time", ymin="ci_lower", ymax="ci_upper", fill="group"), data=km_data, alpha=0.2)
+    + geom_ribbon(aes(x=TIME, ymin=CI_LOW, ymax=CI_HIGH, fill=GROUP), data=band_data, alpha=0.2, size=0)
     # Step functions for survival curves
-    + geom_step(aes(x="time", y="survival", color="group"), data=km_data, size=1.5)
+    + geom_step(aes(x=TIME, y=SURVIVAL, color=GROUP), data=km_data, size=1.0)
     # Censored observation tick marks
-    + geom_point(
-        aes(x="time", y="survival", color="group"),
-        data=censored_data,
-        shape=3,  # Plus sign for censoring ticks
-        size=4,
-        stroke=2,
-    )
-    + scale_color_manual(values=IMPRINT)
-    + scale_fill_manual(values=IMPRINT)
-    + labs(
-        x="Time (months)",
-        y="Survival Probability",
-        title="survival-kaplan-meier · letsplot · pyplots.ai",
-        color="Group",
-        fill="Group",
-    )
+    + geom_point(aes(x=TIME, y=SURVIVAL, color=GROUP), data=censored_data, shape=3, size=2.5, stroke=1.0)
+    + scale_color_manual(values=colors, breaks=groups)
+    + scale_fill_manual(values=colors, breaks=groups)
+    + scale_y_continuous(limits=[0, 1])
+    + labs(x=TIME, y=SURVIVAL, title=title, color=GROUP, fill=GROUP)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_MUTED, size=0.3),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
+        panel_grid_major=element_line(color=GRID, size=0.3),
+        panel_grid_minor=element_line(color=GRID, size=0.2),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK),
+        plot_title=element_text(size=title_size, color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
 # lets-plot creates a subdirectory; move files to current directory

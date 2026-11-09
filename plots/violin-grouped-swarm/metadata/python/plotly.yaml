@@ -2,48 +2,52 @@ library: plotly
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:46:43Z'
-updated: '2026-05-18T03:20:15Z'
-generated_by: claude-haiku
-workflow_run: 26011340995
+updated: '2026-11-09T12:17:11Z'
+generated_by: claude-opus
+workflow_run: 42581922859
 issue: 3529
-language_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Excellent visual quality with perfect legibility in both light and dark themes
-  - 'Proper Okabe-Ito palette usage (#009E73 green, #D55E00 orange) with flawless
-    theme-adaptive chrome'
-  - 'Complete spec compliance: grouped violins with swarm overlay, proper data mapping,
-    correct legend format'
-  - Realistic data context (response times across task complexity/expertise) with
-    appropriate distributions
-  - Clean, reproducible code with proper seeding and theme environment variable handling
-  - Strong visual hierarchy combining violin distributions with individual data transparency
-    via swarm points
+  - 'Swarm offsets are fitted inside each violin outline: the code reproduces Plotly''s
+    Silverman KDE (min(std, IQR/1.349)) per violin and shrinks the row spacing where
+    needed, so the points never spill past the outline even in the narrow Complex
+    violins'
+  - Every swarm point sits exactly at its response time; only the category direction
+    carries the swarm offset, and each swarm is centered on its own group's dodged
+    violin
+  - legendgroup ties each violin to its swarm, so clicking Novice or Expert in the
+    HTML legend toggles both together; the hovertemplate with customdata reports group,
+    task and the value for each point
+  - 'Translucent fills (opacity 0.45) with page-colored marker outlines keep the packed
+    swarm points distinguishable in both themes; the Imprint #009E73 and #C475FD colors
+    are identical across renders'
+  - 'The data story is clear: the novice-expert gap and the novice spread grow from
+    Simple to Complex tasks'
   weaknesses:
-  - Swarm points use manual jittering rather than true swarm algorithm (Plotly limitation,
-    acceptable workaround)
-  - Design excellence is competent but relies on standard Plotly styling without distinctive
-    customization
-  - Meanline visualization is a nice addition but not highlighted or emphasized enough
-    in visual narrative
+  - 'Suggestion: the clip to 1200 ms produces a Complex/Novice point that sits exactly
+    on the ceiling; drawing without the hard upper clip (or with a skewed, log-normal
+    response-time model) would avoid a value that looks artificial.'
+  - 'Suggestion: the dashed mean lines are mostly hidden under the dense swarms; a
+    slightly heavier line or dropping them would make the choice explicit.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) per spec
-      Chrome: Title centered and clearly visible in dark text (INK color). Axis labels "Task Complexity" and "Response Time (ms)" in dark text. Tick labels for categories and numeric values in muted gray (INK_SOFT). Legend titled "Expertise Level" with proper coloring and border on elevated background.
-      Data: Two violin plots per task complexity category. Novice (green #009E73) positioned left, Expert (orange #D55E00) positioned right. Violins semi-transparent (0.5 opacity) with meanlines visible. Swarm points overlaid with white edge borders for definition. Data ranges from 0-1400 ms with good spread visualization across all groups.
-      Legibility verdict: PASS - All text elements readable against light background, excellent contrast, no dark-on-light failures
+      Background: warm off-white #FAF8F1 on both paper and plot area.
+      Chrome: centered title "violin-grouped-swarm · python · plotly · anyplot.ai" in dark ink (~44% width); y-axis "Response time (ms)" 0-1400, x-axis "Task complexity" with Simple / Moderate / Complex; subtle horizontal grid, bottom axis line, no x grid; boxed legend top-left titled "Expertise level" with Novice / Expert swatches. All text readable.
+      Data: three categories, each with two dodged violins — Novice in #009E73 and Expert in #C475FD, fills at 0.45 opacity, dashed ink mean lines — overlaid by 40 swarm points per violin in the violin's hue with thin page-colored outlines. The swarms stay inside the violin outlines; Complex/Novice is a tall narrow violin (570-1200 ms) with a mostly vertical swarm column.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) per spec
-      Chrome: Title visible in light text color (INK adjusted to #F0EFE8). Axis labels and tick labels in light gray (INK_SOFT adjusted to #B8B7B0). All text elements display correctly against dark background with proper contrast. Legend background correctly uses elevated dark tone (#242420).
-      Data: Identical data colors to light render - green #009E73 for Novice, orange #D55E00 for Expert. Violin shapes and swarm point distributions match light render perfectly. Meanlines visible. White edges on swarm points maintain good contrast against dark background.
-      Legibility verdict: PASS - All text readable in light colors, no dark-on-dark failures detected, excellent theme adaptation with data colors remaining constant
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light grey; grid subtle; legend box on the elevated #242420 surface with a light border. No dark-on-dark text.
+      Data: same #009E73 / #C475FD colors as the light render; the translucent fills read darker against the dark page but the swarm points (now with dark outlines) stay clearly visible. Layout identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,50 +58,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark themes with proper
-          font sizing and color contrast
+        comment: Title 16, axis titles 12, ticks and legend 10 set explicitly; readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Violins properly spaced with adequate separation, no text collisions,
-          swarm points clearly distinguishable
+        comment: No text collisions; the legend sits in empty space top-left; packed
+          swarm points are permitted and stay distinguishable by their outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins, swarm points, and meanlines all visible with good balance
-          of transparency and clarity
+        comment: 5.5 px points with page-colored outline suit 240 points in narrow
+          violins; legend swatches match the violin fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with CVD-safe colors, white marker edges provide
-          additional visual definition
+        comment: Green vs. purple is CVD-safe with a clear luminance difference
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, proper spacing, nothing cut off
+        comment: 3200x1800, plot fills the canvas, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axis labels descriptive with units (ms)
+        comment: '''Response time (ms)'' and ''Task complexity'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, second is orange #D55E00 (Okabe-Ito
-          order), backgrounds theme-correct'
+        comment: 'Imprint #009E73 then #C475FD, identical across themes; #FAF8F1 /
+          #1A1A17 backgrounds, theme-correct chrome'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -105,23 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean professional design with proper colors and transparency, but
-          standard styling without distinctive customization
+        comment: 'Beyond baseline: page-colored marker outlines separate the packed
+          points, ink mean lines, title size scaled to its length'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Good whitespace and subtle grid, legend with border, competent refinement
-          but not exceptional
+        comment: 'Beyond baseline: swarm width fitted to each violin''s KDE outline,
+          x grid and tick marks dropped for a single axis line, x range trimmed around
+          the groups'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy with violins as primary focus and swarm points
-          providing detail transparency, but narrative is straightforward rather than
-          exceptional
+        comment: The chosen data makes the growing novice-expert gap and the widening
+          novice spread the focal pattern; no further emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin plot with swarm overlay, multiple categories
-          and groups
+        comment: Grouped violins with swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: violins, swarm overlay, color grouping, transparency,
-          clear legend'
+        comment: Distinct group colors + legend, alpha 0.45, small points, spaced
+          violins, hue-matched and dodged swarms — all Notes and good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows task complexity categories, Y-axis shows response time
-          values, color indicates expertise level
+        comment: Points at their values; only the categorical swarm offset (exempt)
+          moves them sideways
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: spec-id · Language · library · anyplot.ai,
-          legend properly titled and labeled'
+        comment: Mandated title; legend 'Expertise level' with Novice / Expert
     data_quality:
       score: 15
       max: 15
@@ -163,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: distribution shapes, individual points, two grouping
-          factors, mean visualization'
+        comment: Different locations, spreads and widths per cell; an interaction
+          between task and expertise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Response times across task types and expertise realistic, novice
-          slower than expert makes sense, neutral context
+        comment: Response times by task complexity and expertise — neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response time values sensible for domain, 40 observations per group,
-          appropriate y-axis range
+        comment: 'Checked: 150-800 ms means, rising with complexity and lower for
+          experts, plausible; no check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -188,59 +189,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple straightforward code, no unnecessary functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42), fully deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports what is used: os, numpy, pandas, plotly'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or interactive simulation, readable code, good use of
-          dictionaries and loops
+        comment: The written-out KDE reproduces Plotly's own bandwidth rule (min(std,
+          IQR/1.349)), which scipy's 'silverman' does not; the swarm layout has no
+          library call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with current API
+        comment: plot-{THEME}.png and .html, current Plotly 7 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Good use of go.Violin, go.Scatter, legend grouping, theme-adaptive
-          styling via environment variables
+        comment: Correct go.Violin/go.Scatter usage; positions computed by hand rather
+          than violinmode='group' with offsetgroup
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses interactive hover templates and meanline visualization, but
-          swarm is simulated via jitter rather than library-specific swarm algorithm
+        comment: legendgroup linking violin and swarm toggling, hovertemplate with
+          customdata, native violin meanline
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-09T08:01:47Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - kde
+  - binning
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
