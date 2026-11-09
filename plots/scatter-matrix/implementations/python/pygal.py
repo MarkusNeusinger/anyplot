@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -35,8 +35,8 @@ df = pd.DataFrame(
     {
         SEPAL_LENGTH: 5.8 + size * 0.8 + np.random.randn(100) * 0.3,
         SEPAL_WIDTH: 3.0 - size * 0.4 + np.random.randn(100) * 0.25,
-        PETAL_LENGTH: 3.8 * np.exp(size * 0.4 + np.random.randn(100) * 0.1),
-        PETAL_WIDTH: 1.2 * np.exp(size * 0.5 + np.random.randn(100) * 0.15),
+        PETAL_LENGTH: 3.7 * np.exp(size * 0.25 + np.random.randn(100) * 0.08),
+        PETAL_WIDTH: 1.1 * np.exp(size * 0.33 + np.random.randn(100) * 0.12),
     }
 ).round(1)
 
@@ -64,7 +64,8 @@ for i, row_var in enumerate(VARIABLES):
         grid += [(x0, y0), (x0 + 1, y0), (x0 + 1, y0 + 1), (x0, y0 + 1), (x0, y0), (None, None)]
         for tick in ticks[col_var]:
             x = x0 + (tick - lo[col_var]) / (hi[col_var] - lo[col_var])
-            grid += [(x, y0), (x, y0 + 1), (None, None)]
+            if 0.01 < x - x0 < 0.99:  # a guide on the frame would double the cell edge
+                grid += [(x, y0), (x, y0 + 1), (None, None)]
         if i == j:
             # Diagonal: the variable's histogram as one filled step outline on the cell's floor
             counts, edges = np.histogram(df[col_var].dropna().astype(float), bins="sturges")
@@ -77,7 +78,8 @@ for i, row_var in enumerate(VARIABLES):
             continue
         for tick in ticks[row_var]:
             y = y0 + (tick - lo[row_var]) / (hi[row_var] - lo[row_var])
-            grid += [(x0, y), (x0 + 1, y), (None, None)]
+            if 0.01 < y - y0 < 0.99:
+                grid += [(x0, y), (x0 + 1, y), (None, None)]
         pair = pd.DataFrame({"x": scaled[col_var], "y": scaled[row_var]}).dropna()
         points += list(zip(x0 + pair["x"], y0 + pair["y"], strict=True))
 
