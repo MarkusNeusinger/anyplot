@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
