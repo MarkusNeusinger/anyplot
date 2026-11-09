@@ -1176,6 +1176,10 @@ class TestSeoProxyRouter:
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text
         assert "rubric of 24 criteria" in response.text
+        # The MCP section's pointer at the machine readers on the stats page, as AboutPage.tsx has it.
+        assert "how many assistants and crawlers read the catalogue and how many came on behalf of a person" in (
+            response.text
+        )
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
 

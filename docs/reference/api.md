@@ -360,7 +360,7 @@ Queries the Plausible Stats API for today and the 27 days before it, oldest firs
 
 **Purpose**: Verified crawler and AI assistant reads per day for the machine readers tile on the stats page
 
-Reads the machine-read telemetry in BigQuery (`api/machine_reads_query.py`) for today and the 27 UTC days before it, oldest first, zero-filled. A point counts live, served reads (2xx or 304) of pages, code, specs, and MCP that Cloudflare verified, by audience. `totals.mcp` counts the MCP requests of every client, verified or not; `totals.unverified` counts the reads of a named vendor in the same audiences that Cloudflare didn't verify. Counts only: no IP address, user agent, path, or query string.
+Reads the machine-read telemetry in BigQuery (`api/machine_reads_query.py`) for today and the 27 UTC days before it, oldest first, zero-filled. A point counts live, served reads (2xx or 304) of pages, code, specs, and MCP that Cloudflare verified, by audience. Each point's `mcp`, and so `totals.mcp`, counts the served MCP requests of every client, verified or not; only the three audience fields are verified-only. `totals.unverified`, a total only, counts the reads of a named vendor in the same audiences that Cloudflare didn't verify. Counts only: no IP address, user agent, path, or query string.
 
 ```json
 {

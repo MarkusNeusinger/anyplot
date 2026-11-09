@@ -230,8 +230,8 @@ the `mcp-remote` bridge. The legacy SSE endpoint (`https://api.anyplot.ai/sse/`)
 [MCP server](docs/reference/mcp.md).
 
 Each MCP request is counted as one content-free line: the tool's name and any catalogue id it looked up, never its
-other arguments or its results. The [stats page](https://anyplot.ai/stats) shows how many arrived per day; see
-[Machine readers](docs/reference/machine-readers.md).
+other arguments or its results. The [stats page](https://anyplot.ai/stats) shows how many arrived in the last 28
+days, beside the verified crawler reads per day; see [Machine readers](docs/reference/machine-readers.md).
 
 ## Tech stack
 

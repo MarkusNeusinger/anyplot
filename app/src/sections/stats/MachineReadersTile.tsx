@@ -4,14 +4,18 @@
  * audiences of `GET /insights/machine-readers` (`machineReaders.ts`).
  *
  * - Bars: one stacked column per day, the same 28-day window and geometry as the
- *   visitors strip above it. Bottom to top: reads for a person (the brand green),
- *   AI index and training reads (the bulk, de-emphasised in muted ink), search
- *   engines (blue). A 2px gap in the page colour separates the segments; each
- *   day's column is its own hover target and tooltip.
+ *   visitors strip above it. The column's height alone encodes the day's total
+ *   (`columnPx`); its segments split that height, bottom to top: reads for a
+ *   person (the brand green), AI index and training reads (the bulk,
+ *   de-emphasised in muted ink), search engines (blue). A 2px gap in the page
+ *   colour, carved out of the height, separates them (`segmentGapPx`). Each day's
+ *   full-height column is its own hover and keyboard-focus target and tooltip.
  * - Colours: green and blue at full strength, the muted ink at 35%, checked with
  *   the dataviz validator against both page backgrounds: adjacent segments stay
  *   apart for normal and colour-blind vision in light and dark. The muted
- *   segment is below 3:1 on purpose; the legend carries every total in text.
+ *   segment is below 3:1 on purpose: the legend carries the window's totals in
+ *   text, and each day's values are reachable through its column's name and its
+ *   focus and hover tooltip.
  * - Below: the first and last date, a legend with the totals and the MCP
  *   requests of every client, and a footnote naming the unverified requests that
  *   are not counted. Public copy says "unverified", never "spoofed".
@@ -24,7 +28,13 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { paths } from 'src/routes/paths';
-import type { MachineReaderPoint, MachineReadersResponse } from 'src/sections/stats/machineReaders';
+import {
+  CHART_PX,
+  columnPx,
+  type MachineReaderPoint,
+  type MachineReadersResponse,
+  segmentGapPx,
+} from 'src/sections/stats/machineReaders';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
 /** The three audiences, bottom to top, with their colour and the label the legend and tooltip use. */
@@ -38,11 +48,6 @@ const SEGMENTS = [
   },
   { key: 'search', label: 'search engines', color: colors.info, opacity: 1 },
 ] as const;
-
-const CHART_PX = 70;
-const GAP_PX = 2;
-/** A day without reads still draws an honest stub (3% of the strip), as the visitors strip does. */
-const MIN_BAR_PX = CHART_PX * 0.03;
 
 const dayTotal = (point: MachineReaderPoint): number =>
   point.for_person + point.index_training + point.search;
@@ -112,8 +117,6 @@ function MachineReadersChart({
 }) {
   const { points, totals } = answer;
   const maxTotal = Math.max(...points.map(dayTotal), 1);
-  // The tallest column's three segments and their two gaps fill the strip's height.
-  const scale = (CHART_PX - 2 * GAP_PX) / maxTotal;
 
   return (
     <>
@@ -131,6 +134,7 @@ function MachineReadersChart({
         {points.map(point => {
           const parts = SEGMENTS.filter(segment => point[segment.key] > 0);
           const n = dayTotal(point);
+          const height = columnPx(n, maxTotal);
           const title =
             `${point.date}: ${n} ${requests(n)} · ${point.for_person} for a person · ` +
             `${point.index_training} ai index & training · ${point.search} search engines`;
@@ -147,8 +151,8 @@ function MachineReadersChart({
                   flex: 1,
                   height: '100%',
                   display: 'flex',
-                  flexDirection: 'column-reverse',
-                  gap: `${GAP_PX}px`,
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
                   borderRadius: '2px 2px 0 0',
                   outline: 'none',
                   '&:hover, &:focus-visible': { bgcolor: 'var(--rule)' },
@@ -159,33 +163,38 @@ function MachineReadersChart({
                   transition: 'background-color 0.15s ease',
                 }}
               >
-                {parts.length === 0 ? (
-                  <Box
-                    sx={{
-                      height: `${MIN_BAR_PX}px`,
-                      flexShrink: 0,
+                {/* The day's bar: a fixed height its segments share by their counts, rounded
+                    at the data end only; gaps come out of the height, never on top of it. */}
+                <Box
+                  data-testid="machine-readers-bar"
+                  sx={{
+                    height: `${height}px`,
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column-reverse',
+                    gap: `${segmentGapPx(height, parts.length)}px`,
+                    overflow: 'hidden',
+                    borderRadius: '2px 2px 0 0',
+                    ...(parts.length === 0 && {
                       bgcolor: semanticColors.mutedText,
                       opacity: 0.35,
-                      borderRadius: '2px 2px 0 0',
-                    }}
-                  />
-                ) : (
-                  parts.map((segment, index) => (
+                    }),
+                  }}
+                >
+                  {parts.map(segment => (
                     <Box
                       key={segment.key}
                       className={segment.opacity < 1 ? 'machine-readers-muted' : undefined}
                       sx={{
-                        height: `${Math.max(point[segment.key] * scale, 1)}px`,
-                        flexShrink: 0,
+                        flex: `${point[segment.key]} 1 0px`,
+                        minHeight: '1px',
                         bgcolor: segment.color,
                         opacity: segment.opacity,
-                        // Rounded at the data end only: the topmost segment.
-                        borderRadius: index === parts.length - 1 ? '2px 2px 0 0' : 0,
                         transition: 'opacity 0.15s ease',
                       }}
                     />
-                  ))
-                )}
+                  ))}
+                </Box>
               </Box>
             </Tooltip>
           );

@@ -148,11 +148,20 @@ class TestQueries:
     def test_the_tile_counts_mcp_over_every_client_and_unverified_only_for_a_named_vendor(self) -> None:
         sql = public_sql(DATASET)
         assert "COUNTIF(surface = 'mcp') AS mcp" in sql
-        assert "verified_category IS NULL AND assistant != 'other'" in sql
+        # The literal, not PUBLIC_AUDIENCES: widening the tile's audiences must fail here too.
+        assert (
+            "COUNTIF(verified_category IS NULL AND assistant != 'other' "
+            "AND audience IN ('for_person', 'index_training', 'search')) AS unverified"
+        ) in sql
 
     def test_the_owner_query_counts_every_live_line_and_the_synthetic_apart(self) -> None:
         sql = detail_sql(DATASET)
-        assert "verified_category IS NOT NULL" in sql
+        live_cte = f"live AS (\n  SELECT *, {AUDIENCE_SQL} AS audience FROM lines WHERE source = 'live'\n)"
+        assert live_cte in sql
+        # After the `live` CTE, only the synthetic total reads `lines`; every other count reads `live`.
+        rest = sql.split(live_cte, 1)[1]
+        assert rest.count("FROM lines") == 1 and "COUNTIF(source = 'synthetic') FROM lines" in rest
+        assert "COUNTIF(verified_category IS NOT NULL) AS verified" in sql
         assert "status BETWEEN" not in sql  # every status: the matrix has a 404 column
         assert "COUNTIF(source = 'synthetic') FROM lines" in sql
         assert "PARTITION BY assistant, kind ORDER BY COUNT(*) DESC, key) <= 5" in sql

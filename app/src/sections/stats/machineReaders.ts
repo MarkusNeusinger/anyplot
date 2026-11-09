@@ -31,6 +31,29 @@ export interface MachineReadersResponse {
   generated_at: string | null;
 }
 
+/** The strip's height, in px. */
+export const CHART_PX = 70;
+/** The floor every day's column is drawn with (3% of the strip), as the visitors strip does. */
+export const MIN_BAR_PX = CHART_PX * 0.03;
+
+/**
+ * A day's column height in px, the only thing that encodes its total: proportional to it, the
+ * busiest day filling the strip, and one floor for every day, so a busier day is never shorter.
+ * A day without reads draws the floor.
+ */
+export function columnPx(total: number, maxTotal: number): number {
+  if (total <= 0 || maxTotal <= 0) return MIN_BAR_PX;
+  return Math.max((Math.min(total, maxTotal) / maxTotal) * CHART_PX, MIN_BAR_PX);
+}
+
+/**
+ * The gap between a column's segments, carved out of the column's height: 2px where the column
+ * has room for it, none on a column too short to show colour between two gaps.
+ */
+export function segmentGapPx(height: number, segments: number): number {
+  return segments > 1 && height >= 8 * (segments - 1) ? 2 : 0;
+}
+
 const count = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 

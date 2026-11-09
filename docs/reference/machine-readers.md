@@ -211,13 +211,15 @@ repeat (see [Cost](#cost)), so the readers' own caches bound how often a query r
 today, oldest first, with zeros on a day without reads. A point counts the live lines that Cloudflare verified,
 on the content surfaces (`page`, `shell`, `code`, `spec`, and `mcp`), with a served status (2xx or 304), in three
 audiences: `for_person`, `index_training`, and `search`. The `seo`, `preview`, and `other` audiences are left
-out. Two totals stand beside them:
+out. Only those three audience fields are verified-only. Two more counts stand beside them:
 
-- `mcp` counts the served MCP requests of every client, verified or not, because an MCP client other than
-  Claude is never a verified bot. The tile labels it "over mcp (all clients)".
-- `unverified` counts the served reads in the same three audiences by a named vendor (`assistant != 'other'`)
-  that Cloudflare didn't verify. The tile's footnote names them as not counted. A line without a vendor name, such
-  as a python MCP client or a crawler only Cloudflare named, is never in it, so "carried a crawler's name" holds.
+- `mcp`, on each point and in `totals`, counts the served MCP requests of every client, verified or not, because
+  an MCP client other than Claude is never a verified bot. The tile shows the 28-day total, labelled "over mcp
+  (all clients)".
+- `unverified`, in `totals` only, counts the served reads in the same three audiences by a named vendor
+  (`assistant != 'other'`) that Cloudflare didn't verify. The tile's footnote names them as not counted. A line
+  without a vendor name, such as a python MCP client or a crawler only Cloudflare named, is never in it, so
+  "carried a crawler's name" holds.
 
 The public numbers rest on the verdict: a vendor Cloudflare doesn't verify, such as Perplexity's indexer on
 2026-11-09, is in the footnote, never in the bars.
