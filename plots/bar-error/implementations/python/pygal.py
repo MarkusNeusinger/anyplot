@@ -1,72 +1,97 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-error: Bar Chart with Error Bars
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-10
 """
 
+import os
+
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
-# Data: Experimental results comparing treatment effectiveness
-# Mean values with standard deviations (±1 SD)
-categories = ["Control", "Treatment A", "Treatment B", "Treatment C", "Treatment D"]
-values = [45.2, 62.8, 78.3, 55.1, 71.5]
-errors = [8.5, 12.3, 9.7, 15.2, 11.8]
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Custom style for 4800x2700 canvas
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#4CAF50", "#E91E63", "#9C27B0"),
-    font_family="DejaVu Sans, Verdana, sans-serif",
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=48,
-    legend_font_size=48,
-    value_font_size=36,
-    value_label_font_size=36,
-    tooltip_font_size=36,
+# Imprint palette: all eight positions, the single series takes position 1
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Columns: set these to your table's column names
+GROUP = "Treatment Group"  # role: category
+RESPONSE = "Response Value (units)"  # role: value
+SD = "Standard deviation (units)"  # role: error
+
+# Data: replace this block with your own table, for example df = pd.read_csv("experiment.csv")
+# Mean response per group with ±1 standard deviation, control group first
+df = pd.DataFrame(
+    {
+        GROUP: ["Control", "Treatment A", "Treatment B", "Treatment C", "Treatment D"],
+        RESPONSE: [45.2, 62.8, 78.3, 55.1, 71.5],
+        SD: [8.5, 12.3, 9.7, 15.2, 11.8],
+    }
 )
 
-# Create bar chart with error bars (confidence intervals)
+# Plot: reads only df and the constants above
+top = (df[RESPONSE] + df[SD]).max()
+bars = [
+    None
+    if pd.isna(mean)
+    else {"value": float(mean)}
+    if pd.isna(err)
+    else {"value": float(mean), "ci": {"low": float(mean - err), "high": float(mean + err)}}
+    for mean, err in zip(df[RESPONSE], df[SD], strict=True)
+]
+
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,  # axis titles and error bars (pygal strokes .ci with foreground)
+    foreground_strong=INK,
+    foreground_subtle=RULE,  # y guides
+    colors=IMPRINT_PALETTE,
+    font_family="DejaVu Sans, Verdana, sans-serif",
+    title_font_size=66,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    tooltip_font_size=36,
+    opacity=1,
+    stroke_width=5,
+    guide_stroke_dasharray="1,0",
+    major_guide_stroke_dasharray="1,0",
+)
+
 chart = pygal.Bar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="bar-error \u00b7 pygal \u00b7 pyplots.ai",
-    x_title="Treatment Group",
-    y_title="Response Value (units)",
+    title="bar-error · python · pygal · anyplot.ai",
+    x_title=GROUP,
+    y_title=RESPONSE,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=1,
     show_y_guides=True,
     show_x_guides=False,
     print_values=False,
-    range=(0, 100),
+    range=(0, top * 1.15),
+    include_x_axis=True,
     spacing=40,
     margin=100,
-    margin_bottom=250,
-    margin_left=200,
-    margin_top=180,
-    dots_size=8,
-    stroke_style={"width": 4},
+    margin_bottom=120,
+    margin_left=160,
+    margin_top=120,
 )
 
-# X-axis labels
-chart.x_labels = categories
+chart.x_labels = df[GROUP].astype(str).tolist()
+chart.add("Mean ± 1 SD (error bars)", bars)
 
-# Add data with confidence intervals (error bars)
-# Each value is a dict with 'value' and 'ci' containing 'low' and 'high'
-data_with_errors = []
-for val, err in zip(values, errors, strict=True):
-    data_with_errors.append({"value": val, "ci": {"low": val - err, "high": val + err}})
-
-chart.add("Mean \u00b1 1 SD", data_with_errors)
-
-# Save as PNG and HTML (interactive)
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
