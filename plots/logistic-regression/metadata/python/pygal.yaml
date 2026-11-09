@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: logistic-regression
 created: '2026-01-09T23:32:39Z'
-updated: '2026-11-09T13:00:18Z'
+updated: '2026-11-09T13:05:49Z'
 generated_by: claude-opus
 workflow_run: 42620560092
 issue: 3550
@@ -12,55 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - 'The pygal XY chart has every required layer: jittered class rows at 0 and 1,
-    a smooth S-shaped fit, a semi-transparent band drawn as one closed polygon, and
-    a dashed 0.5 threshold that spans the whole x range'
-  - 'The CSS hierarchy is native to pygal: inline css overrides set the fit at 7 px,
-    the threshold at 3.5 px and the band edge at 1.5 px, which keeps the fit dominant
-    over the band and the threshold'
-  - 'The palette and theme are correct in both renders: the fit and band use #009E73,
-    the classes use Imprint positions 2 and 3, and chrome comes from the INK and INK_MUTED
-    tokens; text is readable on #FAF8F1 and on #1A1A17'
-  - The medical biomarker scenario is plausible, and the axis titles come from the
-    column constants
-  - The HTML output keeps pygal's native hover tooltips for every observation
+  - Real statsmodels Logit fit with a 95% CI built on the logit scale and mapped through
+    expit, so the band stays inside 0–1 and widens toward the sparse ends
+  - 'Clear stroke hierarchy via pygal inline CSS: 7 px fit over a 0.18-opacity band
+    with a thin outline, a subordinate 3.5 px dashed threshold across the full x range'
+  - Class points jittered only along y at their exact x values, 0.6 fill opacity so
+    dense stretches read darker, in Imprint positions 2 and 3 identical across themes
+  - 'Theme tokens threaded through the pygal Style: all chrome readable on both #FAF8F1
+    and #1A1A17'
+  - Native pygal HTML output keeps per-point tooltips for inspection
   weaknesses:
-  - 'SC-02 (both): the observation dots render fully opaque (pygal''s graph.css sets
-    .dot{fill-opacity:1}, which overrides Style(opacity=0.6)), so the pile-up around
-    biomarker 35 on the 0 row does not read darker → points at about 0.6 fill opacity,
-    as the Notes and the ''moderate transparency'' bullet ask. Likely cause: no inline
-    css rule for the class series such as ''.serie-3 .dot, .serie-4 .dot{fill-opacity:0.6
-    !important}''.'
-  - 'CQ-04 (code): lines 43–51 hand-roll gradient-descent logistic regression and
-    a heuristic band (se = sqrt(p(1-p)/n) * 1.5) → use statsmodels.api.Logit(outcome,
-    sm.add_constant(x)).fit() and take the 95% CI of the predicted probability from
-    get_prediction / the coefficient covariance. Likely cause: the fit is written
-    out instead of using an available call.'
-  - 'DQ-03 (code): the band labelled ''95% CI'' is not a confidence interval of the
-    fitted model; it is p ± 1.96·1.5·sqrt(p(1-p)/n), a binomial-proportion formula
-    with a fudge factor, so its width does not follow from the coefficient uncertainty
-    → compute ci_lower and ci_upper from the model''s covariance on the logit scale
-    and transform them back. Likely cause: the se line 51.'
-  - 'Suggestion: a small annotation with the fitted coefficients or the accuracy,
-    which the Notes offer as optional, would add model context.'
+  - 'VQ-06 (both): the x-axis title ''Biomarker Level'' names no unit, so the 0–100
+    scale reads as unitless → name the unit, e.g. ''Biomarker Level (ng/mL)''. Likely
+    cause: the BIOMARKER column constant.'
+  - 'Suggestion: the CI on the logit scale could come from model.get_prediction(design,
+    which="linear") instead of the hand-written einsum on lines 48–49.'
+  - 'Suggestion: a fitted-coefficient or accuracy annotation, which the Notes allow,
+    could state the model''s midpoint.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, 3200x1800.
-      Chrome: the title "logistic-regression · python · pygal · anyplot.ai" is centred and spans about 60 % of the width. Axis titles are "Biomarker Level" and "Probability of Disease". Ticks run 0–100 and 0–1 in steps of 0.1, with dotted x and y guides. A two-row bottom legend lists 95% CI, Logistic fit, Threshold (p = 0.5), Negative (0) and Positive (1). All text is dark and readable.
-      Data: a #009E73 sigmoid fit, about 7 px wide, rising from about 0.01 at 0 to 0.99 at 100 and crossing 0.5 near 49. It sits inside a light green band with a thin green edge. A grey dashed threshold line at 0.5 spans the x range. Negative observations are purple #C475FD dots jittered around 0; positive ones are blue #4467A3 dots around 1. The classes overlap between about 20 and 75. The dots are opaque.
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "logistic-regression · python · pygal · anyplot.ai" centered at top in dark ink; y-axis title "Probability of Disease", x-axis title "Biomarker Level"; ticks 0–1 by 0.1 and 0–100 by 10, dark and readable; dotted muted x and y guides; legend at the bottom in three columns (95% CI, Logistic fit, Threshold (p = 0.5), Negative (0), Positive (1)).
+      Data: green #009E73 S-curve (thick) rising from ~0.01 at x=0 to ~0.99 at x=100 inside a light green 95% CI band that widens toward the ends; grey dashed threshold at 0.5 across the full x range; purple #C475FD negative points jittered around 0, blue #4467A3 positive points jittered around 1, semi-transparent.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: the title, axis titles, ticks and legend are in light ink (#F0EFE8 / #A8A79F), all readable, with no dark-on-dark text. The guides are subtle.
-      Data: the colors are identical to the light render (#009E73 fit and band, #C475FD and #4467A3 dots). The band reads as a dark green tint with the guides visible through it. The threshold is a light grey dash.
+      Chrome: title, axis titles, tick labels and legend text in light ink, all readable; no dark-on-dark text; guides subtle but visible.
+      Data: same colors as light — green curve and band (band reads as a dark translucent green), light-grey dashed threshold, purple and blue class points; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,46 +54,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes; all text is readable in both themes and at thumbnail
-          size
+        comment: Title 66, axis titles and ticks 44, legend 44 source px; all text
+          readable in both themes, ticks still legible at 400 px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; dot overlap on the class rows is expected
+        comment: No text collisions; point overlap in the class rows is handled with
+          0.6 fill opacity
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 px dots suit the 150 points; the fit is prominent; the legend
-          swatches are visible
+        comment: 150 points at dots_size 11 are clearly visible; fit at 7 px dominates,
+          band and threshold subordinate; legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Purple and blue classes are CVD-distinguishable and also separated
-          by position
+        comment: Purple vs blue classes plus green fit are CVD-distinguishable; classes
+          also separated by y position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing clipped
+        comment: 3200x1800, plot area fills the canvas, title ~60% width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Biomarker Level / Probability of Disease
+        passed: false
+        comment: x-axis 'Biomarker Level' carries no unit (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first, classes at Imprint positions 2 and 3, correct backgrounds'
+        comment: 'Fit and band #009E73, classes Imprint positions 2 and 3 (#C475FD,
+          #4467A3), threshold in INK_MUTED; backgrounds #FAF8F1 / #1A1A17; data colors
+          identical across themes'
     design_excellence:
       score: 9
       max: 20
@@ -117,22 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: A deliberate stroke hierarchy through CSS (fit 7 px, threshold 3.5
-          px, band edge 1.5 px) beyond the baseline
+        comment: 'Deliberate stroke hierarchy beyond the baseline: fit 7 px, threshold
+          3.5 px, band outline 1.5 px with an 0.18 fill'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
-        passed: false
-        comment: Default dotted guides on both axes; nothing beyond the baseline
+        passed: true
+        comment: Grid and spine rules met (default dotted x and y guides); nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed as the Notes ask; no focal point of its own
+        passed: true
+        comment: Data displayed as the Notes require; no hierarchy chosen beyond them
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,29 +131,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Logistic curve with class points
+        comment: Logistic curve with CI band, jittered binary points and threshold
+          line
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Jitter, band, dashed 0.5 line, distinct colors and the prominent
-          fit are all present; the moderate transparency on the points is missed:
-          dots are opaque (defect line)'
+        passed: true
+        comment: Y-only jitter, distinct class colors, smooth solid prominent curve,
+          semi-transparent 95% CI band, dashed 0.5 line across the full x range, alpha
+          0.6 points, y axis 'Probability of Disease' 0-1; all five 'A good version
+          shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their exact x values; jitter only on y, as the Notes ask
+        comment: Points at their exact x values, jitter only along y as the spec asks;
+          band encloses curve at every x
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; readable legend labels
+        comment: Title 'logistic-regression · python · pygal · anyplot.ai'; legend
+          entries readable (95% CI, Logistic fit, Threshold (p = 0.5), Negative (0),
+          Positive (1))
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +166,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: S-shape, class overlap in the middle, saturation at both ends
+        comment: Class overlap in the middle, outliers on the other side, band widening
+          toward the ends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Disease probability by biomarker level, neutral and plausible
+        comment: Medical diagnostic biomarker scenario, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Probabilities stay in [0,1] and the curve crosses 0.5 near 49; the
-          band labelled 95% CI is a heuristic, not the model's CI (defect line)
+        passed: true
+        comment: 'Checked: curve crosses 0.5 near x~49, matching the generating midpoint
+          50; probabilities and CI stay within 0-1 as expit of a fitted statsmodels
+          Logit'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,43 +206,47 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lines 43–51 hand-roll gradient descent where statsmodels Logit is
-          available (defect line)
+        passed: true
+        comment: Fit by statsmodels Logit, CI from its covariance; band as one closed
+          polygon
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Standard XY chart with a Style object
+        comment: pygal.XY with per-series fill/show_dots/stroke_style options and
+          xrange/range; Style object for all tokens
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Inline CSS injection for per-series stroke widths, stroke_style dasharray
-          and a closed fill polygon for the band
-  verdict: REJECTED
+        passed: true
+        comment: pygal's inline CSS injection (css=[..., 'inline:...']) for per-series
+          stroke widths and dot opacity; native interactive SVG tooltips in the HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T12:57:31Z'
+  rendered_at: '2026-11-09T13:02:54Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
+  - scipy
   techniques:
-  - confidence-interval
-  - custom-css
+  - confidence-band
+  - reference-lines
+  - custom-legend
   - html-export
   patterns:
   - data-generation
@@ -254,4 +256,4 @@ impl_tags:
   - jitter
   styling:
   - alpha-blending
-  - theme-tokens
+  - custom-css
