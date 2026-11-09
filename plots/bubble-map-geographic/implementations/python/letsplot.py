@@ -1,7 +1,7 @@
 """anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-11-09
+Quality: pending | Updated: 2026-11-09
 """
 
 import os
