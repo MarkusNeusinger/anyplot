@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: network-weighted
 created: '2026-01-08T16:02:31Z'
-updated: '2026-11-09T16:57:50Z'
+updated: '2026-11-09T17:03:11Z'
 generated_by: claude-opus
 workflow_run: 42658770406
 issue: 3290
@@ -12,49 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-w
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Edge width grows linearly with trade volume between 0.6 and 5.0, so the 25 B India–Australia
-    link stays visible in both themes while the 550 B USA–China link reads as the
-    heaviest without burying nodes
-  - Weighted Fruchterman-Reingold layout pulls heavy trade pairs together (USA–Mexico–Canada,
-    China–Japan–S.Korea, Germany–France–Netherlands) and pushes nodes off foreign
-    edges, so no edge runs hidden under a third country
-  - scale_size_identity with guide='legend' and labelled breaks gives a weight legend
-    whose key widths are exactly the edge widths they label, and override_aes recolors
-    the keys to the blended color translucent edges show on the page
-  - Node size encodes weighted degree by area (square-root diameter) and the caption
-    names that encoding
-  - Country labels sit on page-colored geom_label plates nudged by nudge_unit='size'
-    above the largest node radius, so labels read cleanly on top of edges in both
-    themes
-  - layer_tooltips on edges (trade volume) and nodes (country, total trade) add native
-    lets-plot hover detail in the HTML output
-  - Theme tokens thread through every chrome element; nodes get a page-colored ring
-    that separates them from converging edges
+  - Edge thickness grows linearly with trade volume (0.6 to 5.0) and the legend keys
+    100–800 are drawn through scale_size_identity with labels computed from the same
+    mapping, so the legend agrees exactly with the edges
+  - Legend keys are recolored with override_aes to the blended color a translucent
+    edge actually shows on the page, so the swatches match the marks in both themes
+  - A weighted Fruchterman-Reingold layout written in vectorized numpy (networkx is
+    not available) pulls heavy pairs together and pushes nodes off foreign edges,
+    so no edge runs hidden under a third country
+  - Node size encodes weighted degree with area proportional to total trade, explained
+    in the caption; page-colored node outlines and label plates keep nodes and names
+    on top of the edges
+  - 'Theme tokens are threaded through every element: both renders are fully readable,
+    with identical #009E73 nodes and only chrome flipping'
+  - layer_tooltips give per-edge trade volume and per-node total trade in the HTML
+    output
   weaknesses:
-  - 'DQ-03 (code): USA–Mexico (420 B) and USA–Canada (380 B) are drawn well below
-    USA–China (550 B), while actual US goods trade with Mexico (~840 B) and Canada
-    (~760 B) exceeds trade with China (~580 B), so the heaviest North American links
-    read lighter than they are → keep the relative order of the real figures (Mexico
-    ≥ Canada > China for the USA links, about +400 B on each). Likely cause: the weights
-    in edge_list.'
-  - 'Suggestion: the caption sits right of center while title and subtitle are left-aligned;
-    aligning it with the title block would tidy the frame.'
-  - 'Suggestion: the weight legend floats far from the network; a slightly smaller
-    right margin would tie it closer to the edges it explains.'
+  - 'Suggestion: left-align the caption with the title and subtitle instead of letting
+    it sit right-aligned under the panel, so the three text blocks share one edge.'
+  - 'Suggestion: the band between the subtitle and the top node is generous; tightening
+    the upper y limit would give the network a little more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no axes, no grid.
-      Chrome: bold dark title "network-weighted · python · letsplot · anyplot.ai" top left (~55 % width), grey subtitle, grey caption at the bottom naming the node-size encoding, legend "Trade volume (billion USD)" at the right with five line keys 100–500; all text dark and readable.
-      Data: 20 country nodes in brand green #009E73 with page-colored rings, sized by weighted degree (USA, China, Germany largest); grey translucent edges from hairline (India–Australia) to thick (USA–China, USA–Mexico, USA–Canada); bold country labels on page-colored plates above each node.
+      Background: warm off-white #FAF8F1 (pixel-checked), 3200x1800.
+      Chrome: bold dark title "network-weighted · python · letsplot · anyplot.ai" top-left (~55% width), soft-ink subtitle, caption at the bottom explaining node size, legend "Trade volume (billion USD)" on the right with eight line keys 100–800 of growing width. No axes or grid. All text dark on light and readable.
+      Data: 18 country nodes in #009E73 with page-colored outlines, sized by weighted degree (USA and China largest); grey translucent edges whose width grows with trade volume (USA–Mexico, USA–Canada, USA–China thickest; Brazil–India and India–Australia thinnest but visible). Bold country labels on page-colored plates above each node.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and labels in light ink, subtitle, caption and legend text in soft light grey; no dark-on-dark text anywhere.
-      Data: identical layout and identical #009E73 nodes; edges in lighter grey ink, node rings in the dark page color; label plates dark. Only chrome flips.
+      Background: warm near-black #1A1A17 (pixel-checked).
+      Chrome: title and labels in light ink, subtitle, caption and legend text in light soft ink; no dark-on-dark text anywhere.
+      Data: identical #009E73 nodes and identical layout; edges in the lighter soft ink with the same widths; node outlines and label plates in the dark page color. Legend keys match the edges.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,45 +57,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sized explicitly and readable in both themes
+        comment: Explicit sizes for title, subtitle, caption, legend and node labels;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; labels sit on plates on top of edges as the spec
+        comment: No text collisions; labels sit on plates above the edges as the spec
           asks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thinnest edge visible in both themes; legend keys match edge widths
-          and color
+        comment: Thinnest edge visible, thickest does not bury nodes; legend keys
+          match the translucent edges
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green node series on neutral grey edges; CVD-safe
+        comment: Single green node series plus neutral edges; no color-only distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, network fills the canvas, nothing clipped
+        comment: 3200x1800, nothing clipped, network fills the panel with the legend
+          at the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design; legend title carries the unit
+        comment: No axes by design; legend title carries the unit (billion USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Nodes #009E73, backgrounds #FAF8F1/#1A1A17, chrome theme-correct'
+        comment: 'Nodes #009E73, edges in INK_SOFT, correct backgrounds in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -114,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle/caption hierarchy, page-colored label plates and node
-          rings beyond the baseline
+        comment: Title/subtitle/caption hierarchy and page-colored label plates and
+          node outlines beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Edge-clearance pass in the layout, label nudge by node radius, legend
-          keys blended to the on-page edge color
+        comment: Legend key color blended to match translucent edges; layout pushes
+          nodes off foreign edges
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Hubs read through the spec's own encodings; no hierarchy chosen beyond
-          the Notes
+        comment: Hub emphasis comes from the weighted-degree sizing the Notes allow;
+          no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -145,22 +138,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Proportional widths, spring layout, weight legend, weighted-degree
-          node size named in caption, labels on top
+        comment: Thickness grows with weight; spring layout without axes; weight legend
+          with labeled widths; node size by weighted degree named in caption; labels
+          on top of edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; widths map weights linearly
+        comment: Layout-positioned type; widths linear in weight
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend title readable with unit
+        comment: Mandated title; legend title is readable text with unit
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -168,20 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hubs, heavy and light links, peripheral nodes, clusters
+        comment: Hubs, heavy vs light links, peripheral nodes, crossings all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: International trade network, neutral, as the spec suggests
+        comment: 18-country trade network with plausible bilateral volumes, the spec's
+          own example
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: USA–Mexico and USA–Canada understated against USA–China (defect line);
-          other bilateral values plausible
+        comment: 25–840 billion USD, sensible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -191,7 +185,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,19 +197,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All used
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized FR layout; no installed package computes it
+        comment: Layout hand-written because networkx is not available; vectorized
+          numpy
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html via ggsave
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -225,30 +220,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_segment/geom_point/geom_label layers, scale_size_identity with
-          guide_legend override_aes
+        comment: scale_size_identity with guide='legend' and computed breaks/labels,
+          guides(override_aes), geom_label plates
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips on edges and nodes, nudge_unit='size' on geom_label
-  verdict: REJECTED
+        comment: layer_tooltips for edges and nodes, nudge_unit='size' to place labels
+          by marker radius
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T16:54:39Z'
+  rendered_at: '2026-11-09T17:00:06Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - network-layout
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
