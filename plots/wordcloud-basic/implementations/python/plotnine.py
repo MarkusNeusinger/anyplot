@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-09
@@ -9,6 +9,8 @@ import os
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap, to_hex
+from matplotlib.font_manager import FontProperties
+from matplotlib.textpath import TextPath
 from plotnine import (
     aes,
     coord_cartesian,
@@ -37,137 +39,153 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # both ends keep at least 3:1 against the page in either theme
 IMPRINT_SEQ = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
-# Word frequency data - technology survey responses; common words in lowercase,
-# acronyms and proper nouns in their usual case
-words_data = {
-    "word": [
-        "Python",
-        "data",
-        "machine",
-        "learning",
-        "AI",
-        "cloud",
-        "API",
-        "database",
-        "security",
-        "DevOps",
-        "analytics",
-        "automation",
-        "software",
-        "code",
-        "development",
-        "integration",
-        "platform",
-        "infrastructure",
-        "testing",
-        "deployment",
-        "monitoring",
-        "framework",
-        "Docker",
-        "AWS",
-        "Azure",
-        "Kubernetes",
-        "Terraform",
-        "GraphQL",
-        "Redis",
-    ],
-    "frequency": [
-        95,
-        88,
-        82,
-        78,
-        75,
-        70,
-        65,
-        62,
-        58,
-        55,
-        52,
-        48,
-        45,
-        42,
-        38,
-        35,
-        32,
-        30,
-        28,
-        26,
-        24,
-        22,
-        20,
-        18,
-        16,
-        14,
-        11,
-        8,
-        6,
-    ],
-}
+# Constants
+PANEL_W, PANEL_H = 564, 265  # panel size in points under this figure size, title and top legend
+MIN_SIZE = 8  # smallest font size in pt, still readable in the thumbnail
+PAD = 5.0  # clearance in pt kept around every word
+ROTATE_EVERY = 5  # every fifth word by rank is set vertically for an organic outline
+TIER_SHARES = [0.0, 0.15, 0.35, 0.65, np.inf]  # tier edges as shares of the top frequency
+TIER_LABELS = ["Low", "Low-Med", "Medium", "High"]
 
-df = pd.DataFrame(words_data)
+# Columns: set these to your table's column names
+WORD = "word"  # role: word
+FREQUENCY = "frequency"  # role: frequency
 
-# Font sizes (6-25 pt) carry the frequency; size alone, no alpha ramp, so small words stay readable
-min_freq, max_freq = df["frequency"].min(), df["frequency"].max()
-freq_norm = (df["frequency"] - min_freq) / (max_freq - min_freq)
-df["size"] = 6 + freq_norm * 19
+# Data: replace this block with your own table, for example df = pd.read_csv("terms.csv")
+# Technology survey responses; common words in lowercase, acronyms and proper nouns in their usual case
+df = pd.DataFrame(
+    {
+        WORD: [
+            "Python",
+            "data",
+            "machine",
+            "learning",
+            "AI",
+            "cloud",
+            "API",
+            "database",
+            "security",
+            "DevOps",
+            "analytics",
+            "automation",
+            "software",
+            "code",
+            "development",
+            "integration",
+            "platform",
+            "infrastructure",
+            "testing",
+            "deployment",
+            "monitoring",
+            "framework",
+            "Docker",
+            "AWS",
+            "Azure",
+            "Kubernetes",
+            "Terraform",
+            "GraphQL",
+            "Redis",
+        ],
+        FREQUENCY: [
+            95,
+            88,
+            82,
+            78,
+            75,
+            70,
+            65,
+            62,
+            58,
+            55,
+            52,
+            48,
+            45,
+            42,
+            38,
+            35,
+            32,
+            30,
+            28,
+            26,
+            24,
+            22,
+            20,
+            18,
+            16,
+            14,
+            11,
+            8,
+            6,
+        ],
+    }
+)
 
-# Sort by frequency descending
-df = df.sort_values("frequency", ascending=False).reset_index(drop=True)
+# Plot: reads only df and the constants above
+cloud = df.dropna(subset=[WORD, FREQUENCY]).sort_values(FREQUENCY, ascending=False).reset_index(drop=True)
+freq = cloud[FREQUENCY].astype(float)
+span = freq.max() - freq.min()
+freq_norm = (freq - freq.min()) / span if span > 0 else pd.Series(1.0, index=cloud.index)
+font = FontProperties(family=["sans-serif"])
+glyph_box = {}
+for word in cloud[WORD].astype(str):
+    ext = TextPath((0, 0), word, size=1, prop=font).get_extents()
+    glyph_box[word] = (ext.width, 1.2)  # width per pt of font size; line height incl. descenders
 
-# Hand-crafted positions to ensure no overlap
-positions = [
-    (45, 28),  # Python (largest) - center
-    (70, 36),  # data
-    (22, 24),  # machine
-    (72, 22),  # learning
-    (30, 36),  # AI
-    (55, 16),  # cloud
-    (18, 42),  # API
-    (45, 42),  # database
-    (68, 46),  # security
-    (25, 10),  # DevOps
-    (50, 6),  # analytics
-    (78, 8),  # automation
-    (6, 28),  # software
-    (88, 28),  # code
-    (35, 50),  # development
-    (60, 50),  # integration
-    (12, 50),  # platform
-    (82, 50),  # infrastructure
-    (6, 16),  # testing
-    (6, 40),  # deployment
-    (55, 36),  # monitoring
-    (88, 40),  # framework
-    (30, 6),  # Docker
-    (6, 6),  # AWS
-    (86, 16),  # Azure - free gap right of learning, clear of automation
-    (94, 10),  # Kubernetes - fills empty right margin
-    (94, 24),  # Terraform - fills empty right margin
-    (78, 53),  # GraphQL - fills empty upper-right quadrant
-    (42, 20),  # Redis - fills gap between the mid-canvas clusters
-]
+# Spiral placement in panel points: each word, largest first, goes to the first free spot along an
+# Archimedean spiral stretched to the panel's aspect; the size range shrinks until every word fits,
+# so the cloud fills the panel instead of floating in it
+t_steps = np.arange(0, 600, 0.05)
+spiral_x = t_steps * np.cos(t_steps) * PANEL_W / PANEL_H
+spiral_y = t_steps * np.sin(t_steps)
+size_span = 40.0
+while True:
+    sizes = MIN_SIZE + freq_norm.to_numpy() * size_span
+    placed, layout = [], []
+    for rank, (word, size) in enumerate(zip(cloud[WORD].astype(str), sizes, strict=True)):
+        w, h = glyph_box[word][0] * size + PAD, glyph_box[word][1] * size + PAD
+        angle = 90 if (rank + 1) % ROTATE_EVERY == 0 else 0
+        if angle:
+            w, h = h, w
+        spot = None
+        for sx, sy in zip(spiral_x, spiral_y, strict=True):
+            x0, y0 = PANEL_W / 2 + sx - w / 2, PANEL_H / 2 + sy - h / 2
+            if x0 < 0 or y0 < 0 or x0 + w > PANEL_W or y0 + h > PANEL_H:
+                if abs(sx) > PANEL_W and abs(sy) > PANEL_H:
+                    break
+                continue
+            if all(x0 + w <= a or a + c <= x0 or y0 + h <= b or b + d <= y0 for a, b, c, d in placed):
+                spot = (x0, y0)
+                break
+        if spot is None:
+            break
+        placed.append((spot[0], spot[1], w, h))
+        layout.append((spot[0] + w / 2, spot[1] + h / 2, size, angle))
+    if len(layout) == len(cloud) or size_span <= 1:
+        break
+    size_span *= 0.92
 
-df["x"] = [p[0] for p in positions]
-df["y"] = [p[1] for p in positions]
+cloud = cloud.iloc[: len(layout)].copy()
+cloud["x"], cloud["y"], cloud["size"], cloud["angle"] = map(list, zip(*layout, strict=True))
 
-# AWS sits alone in the bottom-left corner - rotate it for an organic word-cloud feel
-df["angle"] = np.where(df["word"] == "AWS", 90, 0)
-
-# Frequency tiers, highest first, each with its ramp step
-tiers = ["High (65+)", "Medium (35-64)", "Low-Med (15-34)", "Low (<15)"]
-df["tier"] = pd.cut(df["frequency"], bins=[-np.inf, 15, 35, 65, np.inf], right=False, labels=tiers[::-1])
+# Frequency tiers relative to the top frequency, highest first, each with its ramp step
+edges = [share * freq.max() if np.isinf(share) else round(share * freq.max()) for share in TIER_SHARES]
+tiers = [
+    f"{label} ({lo}+)" if np.isinf(hi) else f"{label} ({lo}-{hi - 1})"
+    for label, lo, hi in zip(TIER_LABELS, edges[:-1], edges[1:], strict=True)
+][::-1]
+cloud["tier"] = pd.cut(cloud[FREQUENCY].astype(float), bins=edges, right=False, labels=tiers[::-1])
 tier_colors = [to_hex(IMPRINT_SEQ(v)) for v in np.linspace(0, 1, len(tiers))]
 
-# Create plot; the invisible points only give the legend its colour swatches
+# The invisible points only give the legend its colour swatches
 plot = (
-    ggplot(df, aes(x="x", y="y", color="tier"))
-    + geom_text(aes(label="word", size="size", angle="angle"), family="sans-serif", show_legend=False)
+    ggplot(cloud, aes(x="x", y="y", color="tier"))
+    + geom_text(aes(label=WORD, size="size", angle="angle"), family="sans-serif", show_legend=False)
     + geom_point(alpha=0, size=0.1)
     + scale_size_identity()
     + scale_color_manual(values=tier_colors, limits=tiers, drop=False)
     + guides(color=guide_legend(nrow=1, override_aes={"alpha": 1, "size": 4, "shape": "s"}))
-    + coord_cartesian(xlim=(0, 100), ylim=(0, 56.25), expand=False)
-    + labs(title="wordcloud-basic · python · plotnine · anyplot.ai", color="Frequency")
+    + coord_cartesian(xlim=(0, PANEL_W), ylim=(0, PANEL_H), expand=False)
+    + labs(title="wordcloud-basic · python · plotnine · anyplot.ai", color=FREQUENCY.capitalize())
     + theme(
         figure_size=(8, 4.5),
         plot_title=element_text(size=12, ha="center", weight="bold", color=INK, margin={"b": 6}),
@@ -180,6 +198,7 @@ plot = (
         axis_title=element_blank(),
         axis_ticks=element_blank(),
         legend_position="top",
+        legend_box_spacing=0.01,
         legend_background=element_rect(fill=PAGE_BG, color=None),
         legend_key=element_rect(fill=PAGE_BG, color=None),
         legend_title=element_text(size=9, weight="bold", color=INK),
