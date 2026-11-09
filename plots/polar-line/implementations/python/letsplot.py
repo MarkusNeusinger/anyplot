@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 polar-line: Polar Line Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -44,18 +44,19 @@ IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABC
 
 # Columns: set these to your table's column names
 THETA = "Angle (°)"  # role: theta
-RADII = ["City A", "City B"]  # role: radius
+RADII = ["Lisbon", "Madrid"]  # role: radius
 MONTH = "Month"  # role: extra
 RADIUS_TITLE = "Mean temperature (°C)"  # what the radius columns measure: the radial axis title
 
 # Data: replace this block with your own table, for example df = pd.read_csv("monthly_temperatures.csv")
-# Monthly mean temperatures of two cities, one month every 30 degrees around the circle
+# Monthly mean temperatures (1981–2010 normals), one month every 30 degrees around the circle:
+# maritime Lisbon swings little over the year, continental Madrid is colder in winter and hotter in summer
 df = pd.DataFrame(
     {
         MONTH: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         THETA: range(0, 360, 30),
-        RADII[0]: [2, 4, 10, 15, 20, 25, 28, 27, 22, 14, 7, 3],
-        RADII[1]: [5, 7, 12, 17, 22, 27, 30, 29, 24, 16, 10, 6],
+        RADII[0]: [11.6, 12.6, 14.9, 16.0, 18.2, 21.3, 23.1, 23.6, 22.2, 19.0, 15.0, 12.6],
+        RADII[1]: [6.3, 7.9, 11.2, 12.9, 16.9, 22.6, 25.6, 25.2, 20.8, 15.1, 9.9, 6.9],
     }
 )
 
