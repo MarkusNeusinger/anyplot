@@ -2,126 +2,136 @@ library: altair
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:13Z'
-updated: '2026-05-09T16:57:31Z'
-generated_by: claude-haiku
-workflow_run: 25606138740
+updated: '2026-11-09T00:51:58Z'
+generated_by: claude-opus-5-5
+adopted_from: 671573dfa41f9e5747d3222d7dd509e8c3f3d2d3 (671573dfa41f9e5747d3222d7dd509e8c3f3d2d3)
+workflow_run: 42542076262
 issue: 2272
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-dark.html
-quality_score: 72
+quality_score: 87
 review:
   strengths:
-  - Correct confusion matrix heatmap implementation
-  - Clear cell annotations with counts
-  - Appropriate blues sequential colormap for continuous data
-  - Good cell separation with white grid lines
-  - Realistic and diverse example data showing classification patterns
-  - Seed-based reproducibility
-  - Light render is visually readable
+  - 'Correct confusion-matrix grid: True Label on y, Predicted Label on x, the same
+    class order (Dog, Cat, Bird, Fish) on both axes so the correct predictions fall
+    on one diagonal'
+  - Matrix computed with sklearn.metrics.confusion_matrix from tidy per-sample true/predicted
+    labels, with the class order derived from the data
+  - 'Imprint imprint_seq (#009E73 to #4467A3) on a quantitative color scale with a
+    horizontal color bar titled ''Count (samples)'' naming the raw-count normalization'
+  - Every cell carries a bold 22 px count whose ink is chosen per cell by WCAG contrast
+    against its fill, so numbers stay legible on green and blue cells in both themes
+  - Page-colored 2.5 px cell strokes form clean gutters between tiles, axis ticks
+    and domain lines removed, color bar aligned with the grid's left edge
+  - 'Idiomatic Vega-Lite layering: shared x/y encodings across a mark_rect and a mark_text
+    layer, scale=None identity color channel for the per-cell ink, resolve_scale to
+    keep the two color channels independent'
+  - Tooltips with readable titles on both layers for the HTML output; theme tokens
+    threaded through title, axes and legend so both renders are theme-correct
   weaknesses:
-  - 'Output filenames wrong: saves ''plot.png'' instead of ''plot-light.png'' and
-    ''plot-dark.png'' - breaks pipeline'
-  - 'No theme-adaptive chrome: code doesn''t read ANYPLOT_THEME environment variable
-    or use theme tokens'
-  - 'Title domain incorrect: says ''pyplots.ai'' instead of ''anyplot.ai'''
-  - 'Dark render fails theme-readability: background is pure black not warm #1A1A17,
-    axis labels barely readable'
-  - 'Hardcoded text colors #306998 and ''white'' don''t adapt to themes - text has
-    poor contrast in dark mode'
-  - 'VQ-07 critical failure: wrong background colors (pure white/black instead of
-    theme-adaptive #FAF8F1/#1A1A17)'
+  - 'Suggestion: the diagonal highlight the Notes allow, as a thin ink-colored outline
+    on the four diagonal cells, would underline the correct predictions without touching
+    cell colors or numbers.'
+  - 'Suggestion: a row-normalized (recall) variant shown as a small percentage under
+    each count would demonstrate one of the normalization options the Notes list.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Appears to be off-white, acceptable for light theme (should be #FAF8F1)
-      Chrome: Title, axis labels, tick labels are clearly visible against the light background
-      Data: Blue sequential colormap appropriately shows confusion matrix values; white text on dark cells readable; brown text (#306998) on light cells readable
-      Legibility verdict: PASS - all text readable on light background
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas (the padded border matches the page color).
+      Chrome: bold dark title "confusion-matrix · python · altair · anyplot.ai" at about 56 % of the width; y-axis title "True Label" (rotated) and x-axis title "Predicted Label" in dark ink; class tick labels Dog, Cat, Bird, Fish in soft dark gray on both axes; no ticks, no domain lines, no grid; horizontal color bar under the grid titled "Count (samples)" with ticks 0–80. All text readable.
+      Data: 4x4 grid of square tiles separated by page-colored gutters; off-diagonal cells in brand green #009E73 (counts 2–12, near-identical shade), diagonal cells (85, 78, 82, 91) in imprint_seq blue around #4467A3. Off-diagonal counts in bold near-black ink, diagonal counts in bold off-white ink; all numbers clearly legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Appears to be pure black or very near black, NOT the warm near-black (#1A1A17) specified in style guide
-      Chrome: Title is readable (white), but axis labels and tick labels are rendered in tan/brown color with poor contrast on dark background - HARD TO READ
-      Data: Colors identical to light render (correct), white text on dark cells readable, but brown text (#306998) on light blue cells barely visible - poor contrast
-      Legibility verdict: FAIL - dark render has serious theme-adaptation failures: wrong background color, unreadable axis labels due to dark-on-dark text, text color not theme-aware
+      Background: warm near-black #1A1A17, gutters between tiles in the same near-black.
+      Chrome: title, axis titles in light ink #F0EFE8; tick labels and color-bar tick labels in light gray #B8B7B0; color-bar title light. No dark-on-dark text anywhere.
+      Data: cell fills identical to the light render (green off-diagonal, blue diagonal); per-cell count ink identical too (dark on green, light on blue), which reads well on both fills. Brand green clearly visible against the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: 'Light render readable but dark render has serious issues: dark text
-          on dark background, axis labels barely visible. Font sizes not explicitly
-          customized.'
+        passed: true
+        comment: All sizes set explicitly (title 16, axis titles 13, ticks 12, legend
+          11/10, counts 22 bold), at or above the altair defaults; title ~56 % of
+          width; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced, no overlaps
+        comment: No text collisions; counts centered in their tiles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles and text clearly visible
+        comment: Large tiles, visible gutters, color-bar gradient visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blues colormap is accessible, CVD-safe
+        comment: Green-to-blue ramp carries a luminance step; every value is also
+          printed, ink chosen by WCAG contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced use of canvas
+        comment: Square canvas for a square grid, balanced left/right margins, legend
+          directly under the plot, no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axes labeled correctly but title has wrong domain (pyplots.ai vs
-          anyplot.ai)
+        passed: true
+        comment: '''True Label'' / ''Predicted Label'' as the spec asks; color bar
+          ''Count (samples)'' carries the unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Critical failure: background is pure black/white not warm theme
-          colors; no theme-adaptive chrome; text colors hardcoded'
+        passed: true
+        comment: 'imprint_seq two-stop range (#009E73 to #4467A3) for continuous counts;
+          #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Generic default styling with blues colormap, no customization
+        passed: true
+        comment: 'Beyond baseline: bold 22 px counts as the dominant typographic layer
+          over light-weight axis titles, per-cell ink computed by WCAG contrast'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: White cell borders provide some refinement, otherwise minimal customization
+        passed: true
+        comment: 'Beyond baseline: page-colored 2.5 px tile gutters, ticks and domain
+          removed, label padding, horizontal color bar aligned with the grid''s left
+          edge'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: false
-        comment: Diagonal naturally emphasized by darker colors, but no intentional
-          visual hierarchy
+        passed: true
+        comment: 'Default: the diagonal stands out through the colormap alone; no
+          hierarchy chosen beyond it'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,25 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap for confusion matrix
+        comment: Confusion-matrix heatmap, square grid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Has annotations, colorbar, and clear axes but title domain is wrong
+        passed: true
+        comment: Axis titles as named, every cell annotated, sequential cmap, color
+          bar, raw-count normalization named by the color bar; optional diagonal highlight
+          not drawn (allowed)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, all data visible
+        comment: True on y, predicted on x, same class order on both axes, all 16
+          cells shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Format close but wrong domain in title
+        passed: true
+        comment: Title in the mandated format; color-bar title readable
     data_quality:
       score: 15
       max: 15
@@ -157,22 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: TP (diagonal), FP/FN (off-diagonal), realistic
-          patterns'
+        comment: Strong diagonal, asymmetric off-diagonal errors, a clear confusion
+          pair (Dog/Cat 10 and 12)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic classification results with sensible patterns
+        comment: Animal image classifier with real class names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for 4-class classification
+        comment: 'Checked: each true-class row sums to 100 test samples; diagonal
+          78–91 % accuracy plausible; color-bar domain 0 to max count (91); no Check
+          values in the spec'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,58 +195,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure, no unnecessary complexity
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic hard-coded counts
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Code is clean and Pythonic but doesn't follow theme-adaptive pattern
-          from altair.md guide
+        passed: true
+        comment: Matrix via sklearn confusion_matrix; the WCAG ink pick is a short
+          hand-roll no available call reproduces
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves as plot.png instead of plot-light.png and plot-dark.png,
-          breaks pipeline'
+        passed: true
+        comment: plot-{THEME}.png padded to 2400x2400 plus plot-{THEME}.html; Altair
+          6 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Altair mark_rect and conditional encoding properly, but doesn't
-          leverage theme customization
+        passed: true
+        comment: Reusable alt.X/alt.Y/tooltip objects shared across layers, alt.layer
+          composition, escaped fields with type= and title=
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Generic heatmap with no library-specific features
-  verdict: REJECTED
+        passed: true
+        comment: Vega-Lite identity color channel (scale=None) for per-cell ink and
+          resolve_scale(color='independent') between layers
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T00:48:50Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - sklearn
+  - pillow
   techniques:
-  - annotations
   - colorbar
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - edge-highlighting
