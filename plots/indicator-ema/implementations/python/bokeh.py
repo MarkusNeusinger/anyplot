@@ -1,123 +1,168 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-19
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Legend
-from bokeh.plotting import figure, output_file, save
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Generate synthetic stock price data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+SHORT_SPAN = 12  # short-period EMA
+LONG_SPAN = 26  # long-period EMA
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+CLOSE = "Price (USD)"  # role: close
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv")
 np.random.seed(42)
 n_days = 120
-
-# Generate realistic price movement using random walk with drift
 dates = pd.date_range("2025-01-01", periods=n_days, freq="B")  # Business days
 returns = np.random.normal(0.0008, 0.018, n_days)  # Daily returns
 price = 150 * np.cumprod(1 + returns)
-
-# Add some trend changes for visual interest
 price[40:80] = price[40:80] * np.linspace(1, 1.15, 40)  # Uptrend
 price[80:100] = price[80:100] * np.linspace(1, 0.92, 20)  # Downtrend
+df = pd.DataFrame({DATE: dates, CLOSE: price})
 
-# Create DataFrame
-df = pd.DataFrame({"date": dates, "close": price})
+# Plot: reads only df and the constants above
+ema_short_label = f"EMA {SHORT_SPAN}"
+ema_long_label = f"EMA {LONG_SPAN}"
+plot_df = df[[DATE, CLOSE]].copy()
+plot_df[ema_short_label] = plot_df[CLOSE].ewm(span=SHORT_SPAN, adjust=False).mean()
+plot_df[ema_long_label] = plot_df[CLOSE].ewm(span=LONG_SPAN, adjust=False).mean()
+source = ColumnDataSource(plot_df)
 
-# Calculate EMAs using pandas ewm
-df["ema_12"] = df["close"].ewm(span=12, adjust=False).mean()
-df["ema_26"] = df["close"].ewm(span=26, adjust=False).mean()
+# Crossovers: the exact intersection of the two EMA segments between consecutive dates
+diff = (plot_df[ema_short_label] - plot_df[ema_long_label]).to_numpy()
+crossed = np.where(np.sign(diff[1:]) * np.sign(diff[:-1]) < 0)[0]
+frac = diff[crossed] / (diff[crossed] - diff[crossed + 1])
+t0 = plot_df[DATE].iloc[crossed].to_numpy()
+t1 = plot_df[DATE].iloc[crossed + 1].to_numpy()
+y0 = plot_df[ema_short_label].iloc[crossed].to_numpy()
+y1 = plot_df[ema_short_label].iloc[crossed + 1].to_numpy()
+crossover_source = ColumnDataSource(data={DATE: t0 + (t1 - t0) * frac, CLOSE: y0 + (y1 - y0) * frac})
 
-# Create ColumnDataSource
-source = ColumnDataSource(df)
+title = "indicator-ema · python · bokeh · anyplot.ai"
+title_size = max(34, round(50 * min(1.0, 67 / len(title))))
 
-# Create figure with datetime axis
 p = figure(
-    width=4800,
-    height=2700,
-    title="indicator-ema \u00b7 bokeh \u00b7 pyplots.ai",
-    x_axis_label="Date",
-    y_axis_label="Price (USD)",
+    width=3200,
+    height=1800,
+    title=title,
+    x_axis_label=DATE,
+    y_axis_label=CLOSE,
     x_axis_type="datetime",
     tools="pan,wheel_zoom,box_zoom,reset,save",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Plot price line (prominent)
-price_line = p.line("date", "close", source=source, line_width=5, line_color="#306998", alpha=1.0)
+# Price is the dominant series; the EMAs are thinner overlays on the same axis
+price_line = p.line(DATE, CLOSE, source=source, line_width=6, line_color=IMPRINT_PALETTE[0])
+ema_short_line = p.line(DATE, ema_short_label, source=source, line_width=3.5, line_color=IMPRINT_PALETTE[2])
+ema_long_line = p.line(DATE, ema_long_label, source=source, line_width=3.5, line_color=IMPRINT_PALETTE[3])
+crossover_marks = p.scatter(
+    DATE, CLOSE, source=crossover_source, size=22, marker="circle", fill_color=PAGE_BG, line_color=INK, line_width=3.5
+)
 
-# Plot EMA 12 (short-term, thinner)
-ema_12_line = p.line("date", "ema_12", source=source, line_width=3, line_color="#FFD43B", alpha=0.9)
-
-# Plot EMA 26 (longer-term, thinner)
-ema_26_line = p.line("date", "ema_26", source=source, line_width=3, line_color="#E74C3C", alpha=0.9)
-
-# Find and mark crossover points
-crossover_indices = []
-for i in range(1, len(df)):
-    ema12_prev = df["ema_12"].iloc[i - 1]
-    ema26_prev = df["ema_26"].iloc[i - 1]
-    ema12_curr = df["ema_12"].iloc[i]
-    ema26_curr = df["ema_26"].iloc[i]
-
-    # Detect crossover (EMA12 crosses EMA26)
-    if (ema12_prev < ema26_prev and ema12_curr >= ema26_curr) or (ema12_prev > ema26_prev and ema12_curr <= ema26_curr):
-        crossover_indices.append(i)
-
-# Mark crossovers with circles
-crossover_scatter = None
-if crossover_indices:
-    crossover_source = ColumnDataSource(
-        data={
-            "date": [df["date"].iloc[i] for i in crossover_indices],
-            "price": [df["close"].iloc[i] for i in crossover_indices],
-        }
-    )
-    crossover_scatter = p.scatter("date", "price", source=crossover_source, size=25, color="#9B59B6", marker="circle")
-
-# Create legend manually for better control
-legend_items = [("Close Price", [price_line]), ("EMA 12", [ema_12_line]), ("EMA 26", [ema_26_line])]
-if crossover_scatter:
-    legend_items.append(("Crossover Signal", [crossover_scatter]))
-
-legend = Legend(items=legend_items, location="top_left")
+legend = Legend(
+    items=[
+        ("Close price", [price_line]),
+        (ema_short_label, [ema_short_line]),
+        (ema_long_label, [ema_long_line]),
+        ("EMA crossover", [crossover_marks]),
+    ]
+)
 p.add_layout(legend, "right")
 
-# Style the plot
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label_text_font_size = "26pt"
-p.yaxis.axis_label_text_font_size = "26pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+# Style
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
 
-# Legend styling
-p.legend.label_text_font_size = "22pt"
-p.legend.glyph_width = 50
-p.legend.glyph_height = 30
-p.legend.spacing = 15
-p.legend.padding = 20
-p.legend.background_fill_alpha = 0.9
-
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
-
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
-
-# Axis styling
+p.title.text_font_size = f"{title_size}pt"
+p.title.text_font_style = "normal"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+p.yaxis.formatter.use_scientific = False
 
-# Save PNG
-export_png(p, filename="plot.png")
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
 
-# Save interactive HTML
-output_file("plot.html", title="EMA Indicator - bokeh - pyplots.ai")
+p.legend.label_text_font_size = "34pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.glyph_width = 60
+p.legend.glyph_height = 40
+p.legend.spacing = 18
+p.legend.padding = 24
+p.legend.margin = 30
+
+# Save
+output_file(f"plot-{THEME}.html", title=title)
 save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
