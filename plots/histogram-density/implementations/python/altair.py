@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-density: Density Histogram
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -16,7 +16,6 @@ from scipy import stats
 # Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
@@ -50,11 +49,26 @@ kde_df = pd.DataFrame({"x": kde_x, "density": kde(kde_x)})
 y_top = max(density.max(), kde_df["density"].max()) * 1.1
 x_scale = alt.Scale(domain=[edges[0], edges[-1]], nice=False, zero=False)
 y_scale = alt.Scale(domain=[0, y_top], nice=False)
-legend_color = alt.Color(
+# Each layer gets its own legend so the glyph matches the mark: a square swatch for the bars, a dashed stroke for the curve
+hist_color = alt.Color(
     "series:N",
     title=None,
-    scale=alt.Scale(domain=[HIST_LABEL, KDE_LABEL], range=[BRAND, ANYPLOT_NEUTRAL]),
-    legend=alt.Legend(orient="top-right", symbolStrokeWidth=3, symbolSize=200),
+    scale=alt.Scale(domain=[HIST_LABEL], range=[BRAND]),
+    legend=alt.Legend(orient="none", legendX=470, legendY=8, symbolType="square", symbolSize=200, symbolOpacity=0.85),
+)
+kde_dash = alt.StrokeDash(
+    "series:N",
+    title=None,
+    scale=alt.Scale(domain=[KDE_LABEL], range=[[6, 3]]),
+    legend=alt.Legend(
+        orient="none",
+        legendX=470,
+        legendY=28,
+        symbolType="stroke",
+        symbolSize=300,
+        symbolStrokeWidth=2.5,
+        symbolStrokeColor=ANYPLOT_NEUTRAL,
+    ),
 )
 
 histogram = (
@@ -65,7 +79,7 @@ histogram = (
         x=alt.X("bin_start", type="quantitative", scale=x_scale, title=REACTION_TIME),
         x2="bin_end",
         y=alt.Y("density", type="quantitative", scale=y_scale, title="Density (probability per ms)"),
-        color=legend_color,
+        color=hist_color,
         tooltip=[
             alt.Tooltip("bin_start", type="quantitative", title="Bin start", format=".0f"),
             alt.Tooltip("bin_end", type="quantitative", title="Bin end", format=".0f"),
@@ -77,11 +91,11 @@ histogram = (
 kde_line = (
     alt.Chart(kde_df)
     .transform_calculate(series=f"'{KDE_LABEL}'")
-    .mark_line(strokeWidth=2.5, strokeDash=[6, 3])
+    .mark_line(strokeWidth=2.5, color=ANYPLOT_NEUTRAL)
     .encode(
         x=alt.X("x", type="quantitative", scale=x_scale),
         y=alt.Y("density", type="quantitative", scale=y_scale),
-        color=legend_color,
+        strokeDash=kde_dash,
     )
 )
 
@@ -107,9 +121,7 @@ chart = (
     )
     .configure_axisX(grid=False)
     .configure_title(color=INK)
-    .configure_legend(
-        labelFontSize=10, labelColor=INK_SOFT, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, padding=8, cornerRadius=3
-    )
+    .configure_legend(labelFontSize=10, labelColor=INK_SOFT, padding=2)
 )
 
 # Save
