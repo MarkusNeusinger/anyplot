@@ -207,7 +207,10 @@ class TestRepairPushGate:
             repo.push()
         result = self._gate(repo, shell)
         assert result.returncode == 1
-        assert f"gate=the repair pushed no change to {IMPL} since {repo.start_sha[:7]}\n" == repo.read("output")
+        assert repo.read("output") == (
+            f"gate=the repair pushed no change to {IMPL} since {repo.start_sha[:7]}"
+            " (a retry after a run whose push landed has to change the file again)\n"
+        )
 
     def test_a_change_committed_but_not_pushed_fails(self, tmp_path, shell):
         repo = Repo(tmp_path)
@@ -400,6 +403,11 @@ class TestReviewCheck:
         ],
     )
     def test_one_comment_per_status_and_head(self, tmp_path, shell, heads, env, posted):
+        """A resumed review of the same head adds no comment, so the pause stays the PR's last bot comment.
+
+        The review's pause dedupe compares that last comment's first line with
+        its marker; a hash comment posted on every run would sit in between.
+        """
         listing = tmp_path / "heads"
         result, repo = self._review(tmp_path, shell, None, GH_HEADS=str(listing), **env)
         assert result.returncode == 0  # first run: posts

@@ -482,7 +482,7 @@ jobs:
             || fail "could not fetch ${BRANCH} to check the repair's push"
           rc=0; git diff --quiet "$START_SHA" "origin/$BRANCH" -- "$IMPL_FILE" || rc=$?
           if [ "$rc" = 0 ]; then
-            fail "the repair pushed no change to ${IMPL_FILE} since ${START_SHA:0:7}"
+            fail "the repair pushed no change to ${IMPL_FILE} since ${START_SHA:0:7} (a retry after a run whose push landed has to change the file again)"
           elif [ "$rc" != 1 ]; then
             fail "could not compare ${IMPL_FILE} with ${START_SHA:0:7} (git diff exit ${rc})"
           fi
