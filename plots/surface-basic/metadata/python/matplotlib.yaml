@@ -2,128 +2,127 @@ library: matplotlib
 language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:26Z'
-updated: '2026-05-06T22:05:29Z'
-generated_by: claude-haiku
-workflow_run: 25389452116
+updated: '2026-11-09T07:21:51Z'
+generated_by: claude-opus
+workflow_run: 42577594707
 issue: 1013
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - 'Excellent spec compliance: correct 3D surface, viridis colormap, colorbar, all
-    three axis labels, 40x40 grid within spec range'
-  - 'Strong data quality: damped radial ripple is mathematically interesting, neutral,
-    and demonstrates surface height variation well'
-  - Good viewing angle (30, 45) creates strong 3D depth perception and highlights
-    the central peak
-  - edgecolor=none and antialiased=True produce a clean, smooth surface without edge
-    noise
-  - Both rendered themes appear visually correct with appropriate backgrounds and
-    readable text contrast
+  - 'Native plot_surface with the imprint_seq colormap (#009E73 → #4467A3): color
+    follows height and the color bar names the quantity, Wave Height (m)'
+  - 'Theme tokens reach every 3D chrome element in both renders: transparent panes
+    with INK_SOFT edges, axis lines, ticks, color-bar outline, and a pane grid set
+    through rcParams before the axes is created'
+  - set_box_aspect((1.5, 1.5, 0.75), zoom=1.08) together with view_init(elev=30, azim=45)
+    gives an oblique view that fills the 16:9 canvas and shows the central crater
+    and the surrounding flat water together
+  - A smooth 40 × 40 grid with linewidth=0 and default shading reads as one continuous
+    surface without holes or visible facets
+  - The data flows through the tidy df and the column constants into pivot_table,
+    so the axis and color-bar labels come from the data
   weaknesses:
-  - Code saves to bare plot.png instead of plot-{THEME}.png — must use os.getenv(ANYPLOT_THEME)
-    and save as plot-light.png / plot-dark.png
-  - 'Wrong URL in title: code has pyplots.ai instead of anyplot.ai — will render incorrectly
-    when executed'
-  - 'Missing ANYPLOT_THEME-based theme adaptation: no PAGE_BG, INK, INK_SOFT tokens
-    set on figure, axes, ticks, labels, or colorbar'
-  - 'Axis label font sizes below spec: 18pt (should be 20pt) and tick labels 14pt
-    (should be 16pt)'
-  - 'Design Excellence is mid-range: no custom typography, no special emphasis, no
-    annotations beyond the natural function peak'
+  - 'DQ-03 (both): the ripple on a pond peaks at about 0.8 m wave height over an 8
+    m × 8 m domain, which is implausible for a pond ripple → an amplitude of about
+    0.05–0.1 m (about −0.7 m), or a different physical scenario whose scale fits a
+    0.8 m height. Likely cause: the Z formula sin(r)·exp(−0.1 r²) is used with amplitude
+    1 and no scale factor.'
+  - 'Suggestion: lowering the elevation slightly (for example elev=25) would make
+    the crater inside the peak read more clearly as a dip.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface approximately #FAF8F1 — not pure white
-      Chrome: Title "surface-basic · matplotlib · anyplot.ai" in dark text at top — clearly readable. X Axis, Y Axis, Z Axis labels in dark text on 3D box edges — readable. Tick labels in dark text on all three axes — readable. Colorbar on right labeled "Amplitude" with dark tick labels.
-      Data: Viridis colormap from deep purple (periphery/low values) through teal/green (mid) to bright yellow (peak at center). Smooth 3D surface of a damped radial ripple function. First series is continuous data using viridis (not categorical Okabe-Ito).
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: warm off-white #FAF8F1 across the figure; the 3D panes are transparent with thin INK_SOFT edges and a subtle grey grid.
+      Chrome: title "surface-basic · python · matplotlib · anyplot.ai" centered at the top in dark ink; axis labels "Distance East (m)", "Distance North (m)", "Wave Height (m)" in dark ink; tick labels −4…4 and 0.0…0.8 in soft dark grey; the color bar on the right is labeled "Wave Height (m)" with ticks 0.0–0.8. All text readable.
+      Data: one continuous surface, a damped radial ripple — a broad mound with a shallow crater at its top, flat water around it — colored by height from brand green #009E73 at the bottom to blue #4467A3 at the crest; default shading darkens the steep faces slightly. No mesh lines, no holes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — not pure black
-      Chrome: Title "surface-basic · matplotlib · anyplot.ai" in light/white text — clearly readable. Axis labels in light text — readable. Tick labels in light text on all three axes — readable. No dark-on-dark failures observed. Colorbar tick labels and "Amplitude" label appear in light text.
-      Data: Viridis colormap colors are IDENTICAL to light render — purple periphery to yellow peak unchanged. Only the background/chrome flipped.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected
+      Background: warm near-black #1A1A17; transparent panes with light-grey edges and a subtle light grid.
+      Chrome: title, axis labels and color-bar label in light ink; tick labels in light grey; color-bar outline light grey. No dark-on-dark text anywhere.
+      Data: surface colors identical to the light render (green #009E73 → blue #4467A3); only the chrome flipped. The brand green stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly set and readable in both themes; axis labels
-          18pt (spec: 20pt) and tick labels 14pt (spec: 16pt) slightly below guidelines'
+        comment: Explicit sizes (title 12, labels 10, ticks 8); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in 3D layout
+        comment: No text collisions; the z label clears its ticks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Surface clearly visible, smooth viridis gradient well rendered
+        comment: Surface clearly visible against both backgrounds; color bar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe
+        comment: Green-to-blue ramp is CVD-safe and also carried by height
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, colorbar well-positioned, nothing cut off
+        comment: 3200x1800; the zoomed box fills the canvas, nothing cut off, title
+          proportion as expected
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X Axis, Y Axis, Z Axis labels present; colorbar labeled; title present
+        comment: All three axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: viridis correct for continuous data; images show correct warm off-white
-          and near-black backgrounds; both renders theme-correct
+        comment: 'imprint_seq for continuous height; backgrounds #FAF8F1 / #1A1A17;
+          both themes correct'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Standard matplotlib 3D surface; professional but defaults-based,
-          not custom design
+        comment: Raised for a box aspect with a flattened z (1.5, 1.5, 0.75) and zoom
+          chosen for this surface on the 16:9 canvas
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: edgecolor=none removes edge clutter, alpha=0.9 adds subtle transparency,
-          antialiased=True for smooth rendering
+        comment: Raised for transparent panes with theme-colored pane edges and a
+          pane grid tuned through rcParams, which lighten the 3D box
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Radial ripple creates natural visual hierarchy with central peak;
-          viewing angle (30, 45) thoughtfully chosen for 3D perspective
+        comment: 'Default: data displayed, no hierarchy chosen beyond the Notes'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D surface plot using plot_surface
+        comment: A single 3D surface, no contours, markers or reference planes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth colormap (viridis), colorbar, X/Y/Z axis labels, 40x40 grid
-          within spec's 30-50 range
+        comment: Smooth colormap, three axis labels, color bar naming the quantity,
+          oblique view, smooth 40x40 grid — all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid correctly mapped, Z encoded as both surface height and colormap
+        comment: x, y, z mapped correctly; full grid shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Images show correct format but source code contains pyplots.ai instead
-          of anyplot.ai — code will render wrong URL
+        passed: true
+        comment: Title format correct; legend N/A, color-bar label matches
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,24 +159,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows height variation via both 3D geometry and color encoding; colorbar
-          provides explicit value scale
+        comment: Peak, crater and flat surroundings show the surface's shape and the
+          height-color mapping
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Damped radial ripple sin(sqrt(x^2+y^2))*exp(-0.1*(x^2+y^2)) is a
-          well-known mathematical function, neutral and science-appropriate
+        comment: Neutral physical scenario (ripple on a pond)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: X/Y range -4 to 4, Z range approx -1 to 0.9, all physically sensible
-          for this function
+        comment: Grid 40x40 within the 30–50 range; a 0.8 m ripple height on an 8
+          m pond is implausible (defect line)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,34 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear code: imports -> data -> plot -> save; no functions or classes'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Mathematical function is deterministic; no random seed needed
+        comment: Deterministic analytic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; no fake UI elements
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves to plot.png (bare) instead of plot-{THEME}.png; pipeline
-          images must be from prior version
+        passed: true
+        comment: Saves plot-{THEME}.png without bbox_inches; current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,26 +217,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct matplotlib 3D API: projection=3d, ax.plot_surface, ax.view_init,
-          fig.colorbar — all idiomatic'
+        comment: 'Raised for idiomatic mplot3d: plot_surface with cmap, view_init,
+          fig.colorbar on the ScalarMappable, pane objects styled through axis.pane'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses matplotlib mpl_toolkits 3D projection system, antialiased=True
-          for smooth surface, view_init for custom perspective — library-specific
-          3D capabilities
+        comment: Raised for set_box_aspect with zoom and 3D pane/rcParams grid control,
+          specific to matplotlib's mplot3d
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T07:18:52Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - 3d-projection
+  - colorbar
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - long-to-wide
   styling:
   - custom-colormap
-  - alpha-blending
+  - grid-styling
