@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -147,7 +147,7 @@ for group, median in medians.items():
         textcoords="offset points",
         ha="left",
         va="bottom",
-        fontsize=7,
+        fontsize=8,
         color=INK_SOFT,
     )
 
