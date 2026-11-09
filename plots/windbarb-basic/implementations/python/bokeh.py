@@ -1,7 +1,7 @@
 """anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: bokeh 3.10.1 | Python 3.14.9
-Quality: 82/100 | Updated: 2026-11-09
+Quality: pending | Updated: 2026-11-09
 """
 
 import os
