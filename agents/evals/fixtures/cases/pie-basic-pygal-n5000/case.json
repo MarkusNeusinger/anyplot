@@ -13,6 +13,18 @@
       "column": "Amount (CHF)"
     }
   ],
+  "before_operations": [
+    [
+      {
+        "op": "aggregate",
+        "by": [
+          "Expense Category"
+        ],
+        "column": "Amount (CHF)",
+        "how": "sum"
+      }
+    ]
+  ],
   "expected": "accepted",
   "tags": [
     "pie",

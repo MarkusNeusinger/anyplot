@@ -837,6 +837,10 @@ class PlotResult(_ServerContract):
     first-plot note (`pipeline.pending_fate`: `used`, or `dropped` because the user rebound a column it was written
     for; None without one). The root describes the plot by them, never by what an earlier turn said: the user may
     have rebound a column in the data panel since. Root-only too; the root reads the bindings fenced as user data.
+
+    `combined` is `true` on a run that first combined the rows sharing a repeated key into a new data version
+    (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09), which the first line of `changes` announces
+    with its counts, also on a run that shipped nothing. Root-only too: the root reads it as `data_changed: true`.
     """
 
     status: PlotStatus
@@ -852,6 +856,7 @@ class PlotResult(_ServerContract):
     memory_full: bool | None = None
     bindings: list[Binding] | None = Field(default=None, max_length=MAX_COLUMNS)
     kept_request: Literal["used", "dropped"] | None = None
+    combined: bool | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:
